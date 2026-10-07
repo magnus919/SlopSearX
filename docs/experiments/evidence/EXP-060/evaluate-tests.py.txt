@@ -1,0 +1,90 @@
+"""Offline integrated fresh comparator/candidate execution and fail-stop tests."""
+from pathlib import Path
+import importlib.machinery
+import importlib.util
+import json
+import unittest
+
+HERE=Path(__file__).resolve().parent
+loader=importlib.machinery.SourceFileLoader("exp060_evaluation_tests",str(HERE / "evaluate.py.txt"));spec=importlib.util.spec_from_loader(loader.name,loader)
+E=importlib.util.module_from_spec(spec);loader.exec_module(E)
+
+
+def inputs():
+    pools={};references={"A":{},"B":{}}
+    for case in json.loads((HERE / "queries.json").read_bytes()):
+        cards=[{"id":"c"+str(i),"title":"Public fixture","url":"https://fixture.invalid/"+str(i),"snippet":"Visible evidence only."} for i in range(44)]
+        if case["kind"]=="navigation":cards[0]["url"]=case["target_url"]
+        pools[case["id"]]={"cards":cards,"engine_outcomes":[],"acquisition_wall_ms":1}
+        if case["kind"]=="navigation":pools[case["id"]]["target_url"]=case["target_url"]
+        for ref in references:
+            references[ref][case["id"]]={card["id"]:{"lead":2,"visible":1,"facets":[case["facets"][0]["id"]] if case["facets"] else [],"uncertain":False,"rationale":"Synthetic qualification only."} for card in cards}
+    return {"pools":pools},references
+
+class Fixture:
+    def __init__(self,fail_at=None,kind=None,elapsed=100):self.calls=[];self.fail_at=fail_at;self.kind=kind;self.elapsed=elapsed
+    def __call__(self,body,timeout_s):
+        self.calls.append(body);request=json.loads(body)
+        answers={qid:({"type":"score","score":6} if q["type"]=="score" else {"type":"noul","noul":.5}) for qid,q in request["questions"].items()}
+        response={"model":"jev-1.13.0","answers":answers,"usage":{"input_tokens":1,"output_tokens":1}}
+        if len(self.calls)==self.fail_at:
+            if self.kind=="unknown":return b'{}',self.elapsed
+            if self.kind=="overcap":response["usage"]["input_tokens"]=64001
+            if self.kind=="model":response["model"]="wrong-model"
+            if self.kind=="noul":next(iter(answers.values()))["noul"]="invalid"
+        return json.dumps(response).encode(),self.elapsed
+
+class EvaluationTests(unittest.TestCase):
+    def test_complete_21_operations_through_actual_pinned_policy(self):
+        acquisition,refs=inputs();transport=Fixture();snapshots=[]
+        result=E.evaluate(acquisition,refs,transport,transport,lambda x:snapshots.append(x["status"]))
+        self.assertEqual(result["status"],"complete")
+        self.assertEqual(len(result["operations"]),21)
+        self.assertEqual(len(transport.calls),74)
+        self.assertEqual(result["budget"]["attempts"],74)
+        self.assertTrue(all(row["status"]=="valid" for row in result["operations"]))
+        self.assertFalse(result["budget"]["unknown_usage"])
+        self.assertEqual(result["budget"]["parts"]["e"]["input_tokens"],16)
+        self.assertTrue(all(len(row["orders"]["e"])==44 for row in result["operations"]))
+        self.assertTrue(snapshots)
+
+    def test_failed_d_known_usage_full_w0_and_uninvoked_suffix(self):
+        acquisition,refs=inputs();transport=Fixture(2,"model")
+        result=E.evaluate(acquisition,refs,transport,transport)
+        self.assertEqual(result["status"],"failed");self.assertEqual(len(transport.calls),2)
+        self.assertEqual(result["operations"][0]["orders"]["e"],result["operations"][0]["orders"]["w0"])
+        self.assertEqual(sum(row["status"]=="not-invoked" for row in result["operations"]),20)
+        self.assertEqual(result["budget"]["parts"]["comparator"]["input_tokens"],2)
+        self.assertFalse(result["budget"]["unknown_usage"])
+
+    def test_failed_e_known_usage_retained(self):
+        acquisition,refs=inputs();transport=Fixture(4,"noul")
+        result=E.evaluate(acquisition,refs,transport,transport)
+        self.assertEqual(len(transport.calls),4);self.assertEqual(result["status"],"failed")
+        self.assertEqual(result["budget"]["parts"]["e"]["input_tokens"],1)
+        self.assertFalse(result["budget"]["unknown_usage"])
+        self.assertEqual(result["operations"][0]["orders"]["e"],result["operations"][0]["orders"]["w0"])
+
+    def test_unknown_usage_stops_and_known_overcap_is_not_zero(self):
+        for kind in ("unknown","overcap"):
+            acquisition,refs=inputs();transport=Fixture(1,kind)
+            result=E.evaluate(acquisition,refs,transport,transport)
+            self.assertEqual(len(transport.calls),1);self.assertEqual(result["status"],"failed")
+            self.assertEqual(result["budget"]["unknown_usage"],kind=="unknown")
+            if kind=="overcap":self.assertEqual(result["budget"]["parts"]["comparator"]["input_tokens"],64001)
+
+    def test_successful_remote_budget_stop_has_no_e_call(self):
+        acquisition,refs=inputs();transport=Fixture(elapsed=600)
+        result=E.evaluate(acquisition,refs,transport,transport)
+        research=[row for row in result["operations"] if row["case"]in {"q"+str(i) for i in range(1,9)}]
+        self.assertEqual(result["status"],"complete");self.assertEqual(len(transport.calls),58)
+        self.assertTrue(all(row["terminal_reason"]=="remote_budget_stop" for row in research))
+        self.assertTrue(all(row["remaining_remote_ms"]==800 for row in research))
+        self.assertEqual(result["budget"]["parts"]["e"]["attempts"],0)
+
+    def test_bad_references_rejected_before_calls(self):
+        acquisition,refs=inputs();refs["A"]["q1"]["c0"]["lead"]=True;transport=Fixture()
+        with self.assertRaises(ValueError):E.evaluate(acquisition,refs,transport,transport)
+        self.assertEqual(transport.calls,[])
+
+if __name__=="__main__":unittest.main()

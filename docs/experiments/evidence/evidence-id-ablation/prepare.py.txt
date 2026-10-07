@@ -1,0 +1,64 @@
+"""Prepare private isolated matched packets; no network/model calls."""
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import uuid
+
+
+def load_catalog(path):
+    loader = importlib.machinery.SourceFileLoader('catalog', str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def prepare(frozen, checks, catalog_module, output):
+    output.mkdir(mode=0o700, exist_ok=False)
+    sources = {}
+    for case in frozen['cases']:
+        for source in case['sources']:
+            sid = source['source_id']
+            if sid in sources and sources[sid] != source:
+                raise ValueError('conflicting source identity across cases')
+            sources[sid] = source
+    cases = {case['task_id']: case for case in frozen['cases']}
+    mapping, receipts = {}, []
+    for prior in frozen['answers']:
+        case = cases[prior['task_id']]
+        selected = [sources[sid] for sid in prior['assigned_source_ids']]
+        catalog = catalog_module.build(selected, 600)
+        contexts = {s['source_id']: s['context'] for s in selected}
+        for eid in catalog['passages']:
+            catalog_module.resolve(catalog, eid, contexts, set(contexts))
+        pair = str(uuid.uuid4())
+        for mode in ['quote', 'id']:
+            packet_id = str(uuid.uuid4())
+            passages = []
+            for eid, passage in catalog['passages'].items():
+                row = {'source_id': passage['source_id'], 'text': passage['text']}
+                if mode == 'id':
+                    row['evidence_id'] = eid
+                passages.append(row)
+            packet = {'packet_id': packet_id, 'purpose': case['purpose'], 'facets': case['facets'],
+                      'critical_facets': case['critical_facets'],
+                      'observable_checks': checks['refactoring_checks' if prior['task_id']=='q6' else 'flaky_test_checks'],
+                      'passages': passages}
+            payload = (json.dumps(packet, ensure_ascii=False, indent=2)+'\n').encode()
+            path = output / (packet_id+'.json')
+            with path.open('xb') as handle:
+                handle.write(payload)
+            path.chmod(0o400)
+            mapping[packet_id] = {'pair': pair, 'mode': mode, 'prior_packet_id': prior['packet_id'],
+                                  'task_id': prior['task_id']}
+            receipts.append({'packet_id': packet_id, 'sha256': hashlib.sha256(payload).hexdigest(),
+                             'bytes': len(payload), 'passages': len(passages)})
+        with (output / (pair+'-catalog.json')).open('x') as handle:
+            json.dump(catalog, handle, ensure_ascii=False)
+    with (output / 'private-mapping.json').open('x') as handle:
+        json.dump(mapping, handle, indent=2)
+    with (output / 'packet-receipts.json').open('x') as handle:
+        json.dump(receipts, handle, indent=2)
+    return receipts

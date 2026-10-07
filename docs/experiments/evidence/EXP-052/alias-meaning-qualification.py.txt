@@ -1,0 +1,81 @@
+"""Independent contract-meaning and expansion checks; no source judgments."""
+import copy
+import hashlib
+import json
+import runpy
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+EXPECTED = {
+    "D_LONG": {"lead": "useful_research_lead", "locator": "useful_locator_only",
+        "redundant": "useful_but_redundant_lead", "none": "no_visible_discovery_value", "uncertain": "uncertain"},
+    "V_LONG": {"explicit": "explicit_design_or_method_detail", "some": "some_method_detail",
+        "none": "no_design_detail_visible", "uncertain": "uncertain"},
+    "F_LONG": {"direct": "direct_visible_support", "partial": "partial_or_contextual_visible_support",
+        "lead": "reading_lead_only", "none": "no_visible_support", "uncertain": "uncertain"},
+    "RP_LONG": {"added": "distinct_lead_added", "lost": "distinct_lead_lost",
+        "both": "distinct_lead_added_and_lost", "same": "no_distinct_lead_change", "uncertain": "uncertain"},
+    "O_LONG": {"gain_no_loss": "support_gain_without_identified_loss",
+        "gain_with_loss": "support_gain_with_support_or_lead_loss", "lead_only": "lead_gain_only",
+        "same": "no_material_change", "loss_only": "loss_without_support_gain", "indeterminate": "indeterminate"},
+    "ALIASES": {"t": "card.title", "u": "card.url", "n:snippet": "card.snippet",
+        "pt": "metadata.fields.title.value", "date": "metadata.fields.publication_date.value",
+        "year": "metadata.fields.year.value", "journal": "metadata.fields.journal.value",
+        "types": "metadata.fields.publication_types.values", "authors": "metadata.fields.authors.values",
+        "abstract": "metadata.fields.abstract.value"},
+}
+
+
+def run():
+    module = runpy.run_path(str(BASE / "review-validator.py.txt"))
+    checks = []
+    for name, expected in EXPECTED.items():
+        checks.append({"check": f"exact-map-{name}", "passed": module[name] == expected})
+        for alias, meaning in expected.items():
+            checks.append({"check": f"meaning-{name}-{alias}", "passed": module[name].get(alias) == meaning})
+    # This synthetic record is only an expansion unit test, not a valid reference.
+    base = {"s": "exp052-review/1", "r": "SYNTHETIC", "reg": "0" * 64,
+        "man": "0" * 64, "p": "SYNTHETIC", "read": True, "marks": [], "facets": ["F1"],
+        "cards": [{"id": "C1", "d": "none", "dp": [], "v": "none", "vp": [], "f": ["none"], "fp": [[]]}],
+        "cases": [{"id": "T1", "rp": "same", "o": "same", "cp": [], "why": "Synthetic expansion only."}],
+        "a": [0, 0, 0, 0]}
+    for name, field, expanded_field, location in [
+        ("D_LONG", "d", "discovery_value", "card_assessments"),
+        ("V_LONG", "v", "design_visibility", "card_assessments"),
+        ("F_LONG", "f", "support", "facet_support"),
+        ("RP_LONG", "rp", "reading_change", "case_assessments"),
+        ("O_LONG", "o", "overall_relation", "case_assessments")]:
+        for alias, meaning in EXPECTED[name].items():
+            x = copy.deepcopy(base)
+            if location == "case_assessments":
+                x["cases"][0][field] = alias
+            else:
+                x["cards"][0][field] = [alias] if field == "f" else alias
+            expanded = module["expand_alias_record"](x)
+            got = (expanded["card_assessments"][0]["facet_support"][0][expanded_field]
+                   if location == "facet_support" else expanded[location][0][expanded_field])
+            checks.append({"check": f"expand-{name}-{alias}", "passed": got == meaning})
+    for alias, meaning in EXPECTED["ALIASES"].items():
+        x = copy.deepcopy(base); x["cases"][0]["cp"] = [["C1", alias]]
+        expanded = module["expand_alias_record"](x)
+        checks.append({"check": f"expand-case-pointer-{alias}", "passed":
+            expanded["case_assessments"][0]["evidence_pointers"] == [{"card_id": "C1", "field": meaning}]})
+        for field, allowed, output in [("dp", module["DP"], "discovery_evidence"),
+                                       ("vp", module["VP"], "design_evidence"),
+                                       ("fp", module["CONTENT"], "facet_support")]:
+            if alias not in allowed:
+                continue
+            x = copy.deepcopy(base); x["cards"][0][field] = [[alias]] if field == "fp" else [alias]
+            expanded = module["expand_alias_record"](x)["card_assessments"][0]
+            got = expanded[output][0]["evidence_fields"] if field == "fp" else expanded[output]
+            checks.append({"check": f"expand-{field}-{alias}", "passed": got == [meaning]})
+    return {"schema": "exp052-alias-meaning-qualification/1",
+        "status": "passed" if all(c["passed"] for c in checks) else "failed",
+        "validator_sha256": hashlib.sha256((BASE / "review-validator.py.txt").read_bytes()).hexdigest(),
+        "checks_passed": sum(c["passed"] for c in checks), "checks": checks,
+        "reference_invocations": 0, "provider_calls": 0, "search_calls": 0,
+        "meaning": "Independent exact contract maps and expansion dispatch checks only; synthetic values are not source judgments."}
+
+
+if __name__ == "__main__":
+    print(json.dumps(run(), indent=2))

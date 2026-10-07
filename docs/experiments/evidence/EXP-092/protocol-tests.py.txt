@@ -1,0 +1,69 @@
+import hashlib
+import json
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+PREVIOUS = HERE.parent / "EXP-091" / "protocol.json"
+CURRENT = HERE / "protocol.json"
+
+
+class ProtocolTests(unittest.TestCase):
+    def test_scientific_candidate_and_quality_gates_are_unchanged(self):
+        old = json.loads(PREVIOUS.read_text())
+        new = json.loads(CURRENT.read_text())
+        for field in ("candidate", "quality", "task_use", "consumer", "jev_invocation"):
+            self.assertEqual(new[field], old[field], field)
+
+    def test_card_phase_is_not_permitted_and_only_sixteen_are_carried(self):
+        protocol = json.loads(CURRENT.read_text())
+        phases = protocol["phase_plan"]["ordered_phases"]
+        self.assertNotIn("card-reference", phases)
+        self.assertFalse(protocol["phase_plan"]["card_reference_phase_permitted"])
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_assignments"], 16)
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_records"], 884)
+        self.assertFalse(protocol["acquisition"]["failed_source_submission_reused"])
+
+    def test_fresh_slots_and_historical_budget_are_explicit(self):
+        protocol = json.loads(CURRENT.read_text())
+        models = protocol["models"]
+        self.assertEqual(models["source_assessment_calls_expected"], 48)
+        self.assertEqual(models["answer_assessment_calls_expected"], 32)
+        self.assertEqual(models["historical_exp088_luna_submissions_counted"], 20)
+        self.assertEqual(models["maximum_logical_luna_submissions_per_stage"], 112)
+        self.assertIn("100 of 112", models["cumulative_development_luna_call_accounting"])
+        self.assertEqual(protocol["confirmation_scope"]["not_run"], True)
+        self.assertIn("entirely new tasks and pools", protocol["confirmation_scope"]["future_requirement"])
+
+    def test_predecessor_is_terminal_and_citation_alias_scope_is_exact(self):
+        protocol = json.loads(CURRENT.read_text())
+        predecessor = protocol["predecessor"]
+        self.assertEqual(predecessor["id"], "EXP-091")
+        self.assertEqual(predecessor["terminal_status"], "assessment_inconclusive")
+        self.assertFalse(predecessor["quality_credit"])
+        self.assertFalse(predecessor["response_reused"])
+        intervention = protocol["source_citation_aliases"]
+        self.assertIn("exact supplied", intervention["rule"])
+        self.assertIn("unchanged", intervention["rule"])
+        self.assertIn("evidence_ids", intervention["rule"])
+        self.assertIn("No alternate alias map", intervention["no_mapping"])
+        self.assertEqual(protocol["source_citation_aliases"]["prompt_sha256"],
+                         hashlib.sha256((HERE / "source-assessor-prompt.txt").read_bytes()).hexdigest())
+        self.assertEqual(protocol["external_source_pins"]["final_text_reader"]["sha256"],
+                         "46d49b482b8f9139f567ef1864371125ba8970d593e599b6788e5777fafeb651")
+        self.assertIn("Maximum 4096 UTF-8 bytes per page", protocol["input_view"]["pages"])
+        self.assertIn("starts at 1 and ends at page_count", protocol["input_view"]["pages"])
+        self.assertIn("exact supplied one-based page schedule", protocol["source_delivery"]["source_prompt"])
+        self.assertIn("all pages exactly once in order", protocol["input_view"]["pages"])
+
+    def test_receiver_keeps_exact_unmodified_response(self):
+        protocol = json.loads(CURRENT.read_text())
+        carrier = protocol["final_json_carrier"]
+        self.assertEqual(carrier["maximum_bytes"], 2_000_000)
+        self.assertTrue(carrier["original_parser_unchanged"])
+        self.assertTrue(carrier["raw_final_text_is_authoritative"])
+        self.assertEqual(carrier["missing_or_empty"], "terminal invalid output; no retry")
+
+
+if __name__ == "__main__":
+    unittest.main()

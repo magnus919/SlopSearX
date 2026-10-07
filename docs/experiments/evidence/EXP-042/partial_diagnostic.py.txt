@@ -1,0 +1,48 @@
+"""Reproduce the corrected partial diagnostic; no dispatch or new searches."""
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+
+root = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp042_partial_replay", str(root / "replay.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+m = importlib.util.module_from_spec(spec)
+loader.exec_module(m)
+manifest = m.load_json(root / "prepared-manifest.json")
+receipts, errors = m.read_receipts(root, manifest, False)
+assert len(receipts) == 35
+try:
+    m.read_history(root, manifest, manifest["references"])
+except ValueError as exc:
+    assert "terminal stop" in str(exc)
+else:
+    raise AssertionError("failed run must be terminal")
+data = m.sources(root)
+grouped, _ = m.qualify_groups_memory(root, data)
+specs = {s["id"]: s for s in m.expected_specs(root, data, grouped, m.validate_contracts(root, data[5], data[6]))}
+rankings = {}
+for pool in (*m.SOFTWARE, *m.NATURAL):
+    eid = pool + "-e"
+    er = receipts[eid]
+    rankings[pool] = {
+        "w0": m.ranking(specs[pool + "-w0"], receipts[pool + "-w0"]),
+        "d_star": m.stable_scores(er["scores"], specs[eid]["score_ids"]),
+        "e": m.ranking(specs[eid], er),
+    }
+    if pool in m.NATURAL:
+        for arm, suffix in (("d", "d"), ("repeat", "repeat"), ("rotated", "rotated20")):
+            rid = pool + "-" + suffix
+            rankings[pool][arm] = m.ranking(specs[rid], receipts[rid])
+projected, reference_hashes = m.validate_refs(root, data, grouped, True)
+assert set(projected) == set((*m.SOFTWARE, *m.NATURAL))
+# Pure shape correction: preserve every original reference row unchanged.
+references = {rev: {pool: rows[rev] for pool, rows in projected.items()} for rev in ("A", "B")}
+facets = {pool: [f["id"] for f in data[2][pool]] for pool in (*m.SOFTWARE, *m.NATURAL)}
+report = m.ANALYSIS.analyze(rankings, references, facets, m.H.ndcg_at_10, m.H.paired_bootstrap)
+assert set(report["primary"]) == {"A", "B"}
+assert all(len(v["paired_deltas"]) == 8 for v in report["primary"].values())
+saved = m.load_json(root / "partial-quality-diagnostic-corrected.json")
+assert saved["development_analysis"] == report
+assert saved["references"] == reference_hashes
+assert not report["development_screen_passed"]
+print("Corrected partial diagnostic reproduced exactly; study remains unsupported.")

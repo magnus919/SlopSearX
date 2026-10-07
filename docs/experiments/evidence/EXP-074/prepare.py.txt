@@ -1,0 +1,130 @@
+"""Pinned EXP-074 input/request adapter; it performs no HTTP or scoring."""
+from __future__ import annotations
+import hashlib, importlib.machinery, importlib.util, json, subprocess
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+REGISTRATION_REVISION='ca5276bdb8941e20f530f6a4df01fb68ea633556'
+PROTOCOL=json.loads((HERE/'protocol.json').read_bytes())
+REGISTRATION=json.loads((HERE/'registration-integrity.json').read_bytes())
+PINS=PROTOCOL['inputs']
+ARMS=('w0','purpose_component','candidate')
+EXP073_PREP='docs/experiments/evidence/EXP-073/prepare.py.txt'
+EXP073_FUSION='docs/experiments/evidence/EXP-073/fusion.py.txt'
+EXP072_PREP='docs/experiments/evidence/EXP-072/prepare.py.txt'
+
+
+def digest(raw): return hashlib.sha256(raw).hexdigest()
+def wire(value): return json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode('utf-8')
+
+def strict_json(raw):
+    def pairs(items):
+        out={}
+        for key,value in items:
+            if key in out: raise ValueError('duplicate-json-key')
+            out[key]=value
+        return out
+    def constant(_): raise ValueError('nonfinite-json')
+    return json.loads(raw,object_pairs_hook=pairs,parse_constant=constant)
+
+def committed(path,revision=REGISTRATION_REVISION):
+    if not isinstance(revision,str) or len(revision)!=40 or any(c not in '0123456789abcdef' for c in revision):
+        raise ValueError('input-revision')
+    if Path(path).is_absolute() or '..' in Path(path).parts: raise ValueError('unsafe-source-path')
+    return subprocess.run(['git','show',revision+':'+path],cwd=REPO,check=True,capture_output=True).stdout
+
+def _load(path,name):
+    raw=Path(path).read_bytes()
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module)
+    return module,raw
+
+def _pinned_dependency(path,name):
+    expected=committed(path)
+    file=REPO/path
+    if file.is_symlink() or not file.is_file() or file.read_bytes()!=expected: raise ValueError('dependency-pin:'+name)
+    return _load(file,name)[0],digest(expected)
+
+BASE,EXP073_PREP_SHA256=_pinned_dependency(EXP073_PREP,'exp074_pinned_exp073_prepare')
+FUSE,EXP073_FUSION_SHA256=_pinned_dependency(EXP073_FUSION,'exp074_pinned_exp073_fusion')
+# EXP-073 prepare itself pins the exact EXP-072 request builder and source contract.
+EXP072_PREP_SHA256=digest(committed(EXP072_PREP))
+
+
+def validate_inputs(input_bytes,input_revision):
+    if type(input_bytes)is not dict or set(input_bytes)!=set(PINS): raise ValueError('input-contract')
+    for path,want in PINS.items():
+        data=input_bytes[path]
+        if type(data)is not bytes or digest(data)!=want: raise ValueError('input-pin')
+        source=REPO/path
+        if source.is_symlink() or not source.is_file() or source.read_bytes()!=data or committed(path,input_revision)!=data:
+            raise ValueError('input-source-mismatch')
+    protocol_raw=(HERE/'protocol.json').read_bytes()
+    registration_raw=(HERE/'registration-integrity.json').read_bytes()
+    if committed('docs/experiments/evidence/EXP-074/protocol.json')!=protocol_raw: raise ValueError('protocol-source-mismatch')
+    if committed('docs/experiments/evidence/EXP-074/registration-integrity.json')!=registration_raw: raise ValueError('registration-source-mismatch')
+    metadata=strict_json(registration_raw)
+    if metadata!=REGISTRATION or metadata.get('schema')!='exp074-registration/1' or metadata.get('provider_calls')!=0 or metadata.get('search_calls')!=0:
+        raise ValueError('registration-contract')
+    for path,want in metadata['pins'].items():
+        if digest(committed(path))!=want or digest((REPO/path).read_bytes())!=want: raise ValueError('registration-source-pin')
+    return {'input_pins':dict(PINS),'input_revision':input_revision,
+            'protocol_sha256':digest(protocol_raw),'registration_sha256':digest(registration_raw)}
+
+
+def build_requests(case,cards,variant='base'):
+    built=BASE.bodies(case,cards,variant)
+    # The requested purpose order is exactly the pinned EXP-072 candidate component.
+    return {'w0':built['w0'],'purpose_component':built['purpose_component'],
+            'cards':built['cards'],'ids':built['ids'],'tail_ids':built['tail_ids'],
+            'w0_local_to_pool':built['w0_local_to_pool'],
+            'provenance_order_ids':built['provenance_order_ids']}
+
+validate_score_response=BASE.validate_score_response
+order_scores=BASE.order_scores
+
+def usage_from_raw(raw):
+    try:
+        data=strict_json(raw)
+        usage=data.get('usage') if type(data)is dict else None
+        if type(usage)is not dict or set(usage)!={'input_tokens','output_tokens'}:return None
+        if any(type(value)is not int or value<0 for value in usage.values()):return None
+        return dict(usage)
+    except (ValueError,TypeError,UnicodeDecodeError):return None
+
+
+def response_fixture(request,score=2,usage=None):
+    """Deterministic local HTTP response body; fixture scores confer no quality credit."""
+    parsed=BASE.BASE.validate_request(wire(request)) if type(request)is dict else BASE.BASE.validate_request(request)
+    return BASE.response_fixture(parsed,score=score,usage=usage or {'input_tokens':11,'output_tokens':3})
+
+
+def synthetic_case():
+    case={'id':'neutral','query':'synthetic neutral query','purpose':'synthetic neutral reading lead',
+          'facets':[{'id':'nf%d'%i,'description':'synthetic neutral facet %d'%i} for i in range(4)]}
+    cards=[{'id':'neutral-%02d'%i,'url':'https://neutral.example/%02d'%i,
+            'title':'Synthetic neutral source %02d'%i,'snippet':'Synthetic fixture card %02d; no real evidence.'%i} for i in range(80)]
+    return case,cards
+
+
+def source_data(input_bytes):
+    acquisition=strict_json(input_bytes['docs/experiments/evidence/EXP-060/fresh-acquisition.json'])
+    queries=strict_json(input_bytes['docs/experiments/evidence/EXP-060/queries.json'])
+    return acquisition,queries
+
+
+def prebuild(acquisition,queries):
+    byid={q['id']:q for q in queries}
+    if len(byid)!=len(queries) or set(acquisition.get('pools',{}))!=set(byid): raise ValueError('pool-inventory')
+    if len(PROTOCOL['schedule'])!=21: raise ValueError('schedule-count')
+    prepared=[]
+    for item in PROTOCOL['schedule']:
+        if type(item)is not dict or set(item)!={'case','variant','arms'} or item['case'] not in byid or item['arms']!=list(ARMS):
+            raise ValueError('schedule-entry')
+        built=build_requests(byid[item['case']],acquisition['pools'][item['case']]['cards'],item['variant'])
+        for name in ('w0','purpose_component'):
+            if len(wire(built[name]))>PROTOCOL['bounds']['request_bytes']: raise ValueError('request-bound')
+        prepared.append((dict(item),built))
+    return prepared

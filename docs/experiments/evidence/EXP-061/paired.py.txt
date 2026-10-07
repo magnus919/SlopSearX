@@ -1,0 +1,349 @@
+"""Offline paired coordinator for EXP-061; transports are explicit injections.
+
+No search, network, model, or CLI capability is acquired here. This preserves
+the native W0 response once and compares frozen D/F/E requests over two orders.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import math
+import time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+E = None
+C = None
+
+
+def load(name, path):
+    import importlib.machinery, importlib.util
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ImportError(str(path))
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def modules():
+    global E, C
+    if E is None:
+        E = load("exp061_paired_frozen_evaluator", HERE.parent / "EXP-060" / "evaluate.py.txt")
+        C = load("exp061_paired_canonical", HERE / "canonical.py.txt")
+    return E, C
+
+
+def wire(value):
+    return json.dumps(value, ensure_ascii=False).encode("utf-8")
+
+
+class Budget:
+    """Physical-call accounting across the whole paired operation sequence."""
+    def __init__(self, clock=time.monotonic):
+        self.clock, self.started = clock, clock()
+        self.parts = {name: {"input_tokens": 0, "output_tokens": 0, "attempts": 0}
+                      for name in ("comparator", "native_e", "canonical_e")}
+        self.attempts, self.unknown = 0, False
+
+    def before(self, part):
+        row = self.parts[part]
+        cap = 160000 if part == "comparator" else 100000
+        if (self.unknown or self.clock() - self.started >= 14400 or self.attempts >= 223
+                or row["input_tokens"] + 64000 > 3000000 or row["output_tokens"] >= cap
+                or sum(v["input_tokens"] for v in self.parts.values()) + 64000 > 9000000
+                or sum(v["output_tokens"] for v in self.parts.values()) >= 360000):
+            raise ValueError("exp061-global-resource-bound")
+        if part != "comparator" and row["attempts"] >= 85:
+            raise ValueError("exp061-arm-attempt-bound")
+        self.attempts += 1
+        row["attempts"] += 1
+
+    def reserve_paired_e_operation(self):
+        """Reserve four 64K E calls independently for both arms before W0."""
+        reservation = 4 * 64000
+        if (self.unknown or self.clock() - self.started >= 14400
+                or any(self.parts[name]["input_tokens"] + reservation > 3000000
+                       or self.parts[name]["output_tokens"] >= 100000
+                       or self.parts[name]["attempts"] + 4 > 85
+                       for name in ("native_e", "canonical_e"))
+                or self.input_tokens + 2 * reservation > 9000000
+                or self.output_tokens >= 360000):
+            raise ValueError("exp061-paired-e-operation-reservation")
+        return {"calls_reserved_per_arm": 4, "input_tokens_per_arm": reservation,
+                "input_tokens_both_arms": 2 * reservation}
+
+    def observe(self, part, usage):
+        if (type(usage) is not dict or set(usage) != {"input_tokens", "output_tokens"}
+                or any(type(v) is not int or v < 0 for v in usage.values())):
+            self.unknown = True
+            raise ValueError("exp061-unknown-usage")
+        row = self.parts[part]
+        for key, value in usage.items():
+            row[key] += value
+        if (usage["input_tokens"] > 64000 or row["input_tokens"] > 3000000
+                or row["output_tokens"] > (160000 if part == "comparator" else 100000)
+                or sum(v["input_tokens"] for v in self.parts.values()) > 9000000
+                or sum(v["output_tokens"] for v in self.parts.values()) > 360000
+                or self.clock() - self.started > 14400):
+            raise ValueError("exp061-observed-resource-bound")
+
+    @property
+    def input_tokens(self):
+        return sum(v["input_tokens"] for v in self.parts.values())
+
+    @property
+    def output_tokens(self):
+        return sum(v["output_tokens"] for v in self.parts.values())
+
+
+class ArmBudget:
+    """COORD adapter: arm-local output limit plus paired global accounting."""
+    def __init__(self, budget, arm):
+        self.budget, self.arm = budget, arm
+
+    @property
+    def unknown(self):
+        return self.budget.unknown
+
+    @unknown.setter
+    def unknown(self, value):
+        self.budget.unknown = value
+
+    def before_call(self):
+        self.budget.before(self.arm + "_e")
+
+    def observe(self, usage):
+        self.budget.observe(self.arm + "_e", usage)
+
+
+def _opcards(item):
+    return copy.deepcopy(item["requests"]["d"]["state"]["candidates"])
+
+
+def _validate_inventory(acquisition, references, cases):
+    pools = acquisition.get("pools")
+    if type(pools) is not dict or set(pools) != set(cases):
+        raise ValueError("exp061-pool-inventory")
+    if set(references) != {"A", "B"}:
+        raise ValueError("exp061-reference-inventory")
+    for name, ref in references.items():
+        if set(ref) != set(cases):
+            raise ValueError("exp061-reference-pool-inventory-" + name)
+        for qid, case in cases.items():
+            ids = {card["id"] for card in pools[qid]["cards"]}
+            if set(ref[qid]) != ids:
+                raise ValueError("exp061-reference-card-inventory-" + name + "-" + qid)
+            allowed = {facet["id"] for facet in case["facets"]}
+            for label in ref[qid].values():
+                if (type(label) is not dict or set(label) != {"lead", "visible", "facets", "uncertain", "rationale"}
+                        or any(type(label[k]) is not int or not 0 <= label[k] <= 3 for k in ("lead", "visible"))
+                        or type(label["facets"]) is not list or any(f not in allowed for f in label["facets"])
+                        or len(set(label["facets"])) != len(label["facets"])
+                        or type(label["uncertain"]) is not bool or type(label["rationale"]) is not str):
+                    raise ValueError("exp061-reference-label-shape")
+
+
+def _arm(item, case, cards, prepared, w0, comparator_transport, e_transport, budget, arm):
+    ev, _ = modules()
+    ids = list(prepared["whole_ids"])
+    row = {"arm": arm, "policy_cards": copy.deepcopy(cards), "status": "invoked",
+           "orders": {"w0": list(w0), "d": list(ids), "e": list(w0)}, "attempts": [], "actions": []}
+    try:
+        with ev.operation_deadline():
+            d_order, scores = ev.comparator("d", prepared["d"], prepared,
+                                            comparator_transport, budget, row["attempts"])
+            row["orders"]["d"] = d_order
+            if case["facets"]:
+                _, nouls = ev.comparator("f", prepared["f"], prepared,
+                                         comparator_transport, budget, row["attempts"])
+                d_f_ms = sum(a["remote_http_ms"] for a in row["attempts"])
+                output = ev.COORD.guarded_operation(
+                    ev.POLICY, ev.PARSER.parse_noul_response, cards, case["purpose"], case["facets"],
+                    scores, nouls, w0, d_f_ms, e_transport,
+                    budget=ArmBudget(budget, arm), timeout_s=60)
+                row.update(status=output["status"], actions=copy.deepcopy(output["actions"]),
+                           discarded_action_count=output.get("discarded_action_count", 0),
+                           observed_action_count=(len(output["actions"]) + output.get("discarded_action_count", 0)),
+                           discarded_action_records_available=(output.get("discarded_action_count", 0) == 0),
+                           termination_reason=output.get("termination_reason", output.get("reason")),
+                           remote_d_f_e_ms=output.get("remote_total_ms"),
+                           remaining_remote_ms=output.get("remaining_remote_ms"))
+                row["orders"]["e"] = list(output["order"])
+                row["attempts"].extend({**a, "arm": "e", "remote_http_ms": a.get("remote_ms")}
+                                       for a in output["attempts"])
+                if output["status"] != "valid":
+                    # Recover billable usage when COORD received a response but rejected
+                    # its answer before parsing usage. Unknown transport outcomes remain
+                    # unknown and stop every later physical call.
+                    last = output["attempts"][-1] if output["attempts"] else None
+                    if last and last.get("usage") is None and last.get("response_hex"):
+                        try:
+                            known = ev.usage(bytes.fromhex(last["response_hex"]))
+                        except (ValueError, TypeError):
+                            pass
+                        else:
+                            budget.unknown = False
+                            budget.observe(arm + "_e", known)
+                            row["attempts"][-1]["known_failed_usage"] = known
+                    raise ValueError("paired-arm-candidate-failure")
+            else:
+                # Navigation has no F or E calls: exact shared W0 is E by contract.
+                row.update(status="valid", termination_reason="navigation_bypass",
+                           actions=[], remote_d_f_e_ms=sum(a["remote_http_ms"] for a in row["attempts"]))
+                row["orders"]["e"] = list(w0)
+    except BaseException as error:
+        row.update(status="failed", failure_type=type(error).__name__, failure=str(error))
+        row["observed_orders"] = copy.deepcopy(row["orders"])
+        row["observed_actions"] = copy.deepcopy(row["actions"])
+        row["observed_action_count"] = row.get("observed_action_count", len(row["actions"]))
+        if row.get("discarded_action_count", 0):
+            row["discarded_action_records_available"] = False
+            row["action_evidence_limit"] = "frozen EXP-059 coordinator reports discarded action count but omits discarded action records"
+        row["orders"] = {"w0": list(w0), "d": list(w0), "e": list(w0)}
+        row["actions"] = []
+    return row
+
+
+def evaluate(acquisition, references, comparator_transport, e_transport, checkpoint=lambda value: None):
+    """Evaluate 21 paired operations using one native W0 and fresh D/F/E per arm.
+
+    Transports are function arguments; this module cannot discover credentials or
+    connect on its own. The returned arm references explicitly reuse EXP-060 labels.
+    """
+    ev, canonical = modules()
+    ev.P.verify_registration()
+    case_rows = json.loads((HERE.parent / "EXP-060" / "queries.json").read_bytes())
+    cases = {row["id"]: row for row in case_rows}
+    _validate_inventory(acquisition, references, cases)
+    pool_cards = {qid: pool["cards"] for qid, pool in acquisition["pools"].items()}
+    plan = ev.P.operations(pool_cards)
+    if len(plan) != 21:
+        raise ValueError("exp061-frozen-operation-count")
+    result = {"schema": "exp061-paired-artifacts/1", "status": "running",
+              "reference_source": "exp060_exposed", "historical_labels_reused": True,
+              "source_metadata": {"labels_fresh_for_exp061": False,
+                                  "reference_source": "exp060_exposed",
+                                  "native_card_provenance_preserved": True},
+              "pools": copy.deepcopy(acquisition["pools"]),
+              "references": copy.deepcopy(references), "operations": [],
+              "budget": None, "uninvoked": []}
+    budget = Budget()
+    for index, item in enumerate(plan):
+        native_cards = _opcards(item)
+        case = cases[item["case"]]
+        canon = canonical.prepare(case, native_cards)
+        native_prepared = item["requests"]
+        canonical_cards = canon["policy_cards"]
+        treatment = canon["treatmentprepared"]
+        row = {"id": item["id"], "case": item["case"], "mode": item["mode"],
+               "nativeopcards": native_cards, "policycards": canonical_cards,
+               "canonical_policy_cards": canonical_cards,
+               "w0_attempts": [], "arms": [], "arm_order": (["native", "canonical"] if index % 2 == 0 else ["canonical", "native"]),
+               "status": "invoked"}
+        result["operations"].append(row)
+        checkpoint(result)
+        try:
+            with ev.operation_deadline():
+                if case["facets"]:
+                    # Reject before the shared W0 call if either arm cannot own
+                    # the complete four-round admission reservation.
+                    row["e_operation_reservation"] = budget.reserve_paired_e_operation()
+                if native_prepared["w0"] is None:
+                    w0 = list(native_prepared["whole_ids"])
+                    w0_status = "identity-no-request"
+                else:
+                    # The only W0 request is the ordinary native-order request.
+                    w0, _ = ev.comparator("w0", native_prepared["w0"], native_prepared,
+                                          comparator_transport, budget, row["w0_attempts"])
+                    w0_status = "recorded-native-response"
+                row["shared_w0"] = {"order": list(w0), "status": w0_status,
+                                    "receipt_attempt_index": 0 if row["w0_attempts"] else None,
+                                    "request_sha256": (row["w0_attempts"][0]["request_sha256"]
+                                                       if row["w0_attempts"] else None)}
+                prepared_by_arm = {"native": native_prepared, "canonical": treatment}
+                cards_by_arm = {"native": native_cards, "canonical": canonical_cards}
+                for arm in row["arm_order"]:
+                    arm_row = _arm(item, case, cards_by_arm[arm], prepared_by_arm[arm], w0,
+                                   comparator_transport, e_transport, budget, arm)
+                    # Shared W0 is a referenced receipt; it is not duplicated as an arm call.
+                    arm_row["shared_w0_receipt"] = {"operation_id": item["id"],
+                                                    "attempt_index": row["shared_w0"]["receipt_attempt_index"],
+                                                    "order_sha256": hashlib.sha256(wire(w0)).hexdigest(),
+                                                    "physical_call_counted_once": True}
+                    arm_row["reference_source"] = "exp060_exposed"
+                    arm_row["historical_labels_reused"] = True
+                    row["arms"].append(arm_row)
+                    if arm_row["status"] != "valid":
+                        row["status"] = "failed"
+                        row["failure_arm"] = arm
+                        row["uninvoked_arm_order"] = row["arm_order"][len(row["arms"]):]
+                        raise ValueError("paired-arm-failed")
+                row["status"] = "valid"
+                # A-side and B-side metrics are generated by the downstream analysis adapter.
+        except BaseException as error:
+            if "shared_w0" not in row:
+                identity = list(native_prepared["whole_ids"])
+                row["shared_w0"] = {"order": identity, "status": "failed-w0-identity-fallback",
+                                    "receipt_attempt_index": None, "request_sha256": None}
+                reservation_failure = "e_operation_reservation" not in row and bool(case["facets"])
+                row["preflight_failure_type" if reservation_failure else "w0_failure_type"] = type(error).__name__
+                reason = "not-invoked-resource-reservation" if reservation_failure else "not-invoked-w0-failed"
+                row["arms"] = [{"arm": arm, "status": reason,
+                                "orders": {k: list(identity) for k in ("w0", "d", "e")},
+                                "actions": [], "shared_w0_receipt": None,
+                                "reference_source": "exp060_exposed",
+                                "historical_labels_reused": True}
+                               for arm in ("native", "canonical")]
+            if row["status"] != "failed":
+                row["status"] = "failed"
+                row["failure_type"] = type(error).__name__
+                row["failure"] = str(error)
+            result["status"] = "failed"
+            row["not_invoked_suffix"] = [x["id"] for x in plan[index + 1:]]
+            result["uninvoked"] = row["not_invoked_suffix"]
+            # Preserve what each arm observed before the pair-level atomic rollback.
+            # This is particularly important when the first arm completed and the
+            # second arm failed; returned orders become W0 but observed orders stay.
+            for arm_row in row["arms"]:
+                arm_row.setdefault("observed_orders", copy.deepcopy(arm_row.get("orders", {})))
+                arm_row.setdefault("observed_actions", copy.deepcopy(arm_row.get("actions", [])))
+                if arm_row.get("discarded_action_count", 0):
+                    arm_row["discarded_action_records_available"] = False
+                    arm_row["action_evidence_limit"] = "frozen EXP-059 coordinator reports discarded action count but omits discarded action records"
+                arm_row["observed_action_count"] = arm_row.get(
+                    "observed_action_count", len(arm_row.get("actions", [])))
+                arm_row["orders"] = {k: list(row["shared_w0"]["order"]) for k in ("w0", "d", "e")}
+                arm_row["actions"] = []
+            for remaining in plan[index + 1:]:
+                suffix_cards = _opcards(remaining)
+                suffix_case = cases[remaining["case"]]
+                suffix_canonical = canonical.prepare(suffix_case, suffix_cards)["policy_cards"]
+                suffix_identity = list(remaining["requests"]["whole_ids"])
+                result["operations"].append({
+                    "id": remaining["id"], "case": remaining["case"], "mode": remaining["mode"],
+                    "nativeopcards": suffix_cards, "policycards": suffix_canonical,
+                    "canonical_policy_cards": suffix_canonical,
+                    "status": "not-invoked", "arms": [
+                        {"arm": arm, "status": "not-invoked-suffix",
+                         "orders": {k: list(suffix_identity) for k in ("w0", "d", "e")},
+                         "actions": [], "shared_w0_receipt": None,
+                         "reference_source": "exp060_exposed", "historical_labels_reused": True}
+                        for arm in ("native", "canonical")]})
+            break
+        finally:
+            result["budget"] = {"parts": copy.deepcopy(budget.parts), "attempts": budget.attempts,
+                                 "unknown_usage": budget.unknown,
+                                 "aggregate_input_tokens": budget.input_tokens,
+                                 "aggregate_output_tokens": budget.output_tokens}
+            checkpoint(result)
+    if result["status"] == "running":
+        result["status"] = "complete"
+    result["budget"] = {"parts": copy.deepcopy(budget.parts), "attempts": budget.attempts,
+                        "unknown_usage": budget.unknown,
+                        "aggregate_input_tokens": budget.input_tokens,
+                        "aggregate_output_tokens": budget.output_tokens}
+    checkpoint(result)
+    return result

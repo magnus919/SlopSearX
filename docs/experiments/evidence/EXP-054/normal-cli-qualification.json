@@ -1,0 +1,534 @@
+{
+  "schema": "exp054-normal-cli-qualification/1",
+  "status": "passed",
+  "exact_commit": "e73e2e5dc93bfcdad9f82236074ff45ddbdbfc6a",
+  "checks": [
+    "P01-normal-cli-original-bytes",
+    "P02-normal-cli-original-bytes",
+    "P03-normal-cli-original-bytes",
+    "P04-normal-cli-original-bytes",
+    "P05-normal-cli-original-bytes",
+    "P06-normal-cli-original-bytes",
+    "forbidden-relation",
+    "boolean-zero-attestation",
+    "integer-read-attestation",
+    "wrong-method-identity",
+    "duplicate-card",
+    "reordered-facets",
+    "title-cannot-support",
+    "rationale-bound",
+    "missing-positive-pointer",
+    "duplicate-key",
+    "nonfinite",
+    "response-bound",
+    "reject-live-tamper-review-contract.md",
+    "reject-live-tamper-review-validator.py.txt",
+    "reject-live-tamper-input-inventory.json"
+  ],
+  "count": 21,
+  "records": [
+    {
+      "derived": [
+        {
+          "case_id": "T001",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "human_approval",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "audit_logging",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "policy_controls",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        },
+        {
+          "case_id": "T002",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "human_approval",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "audit_logging",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "policy_controls",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        }
+      ],
+      "errors": [],
+      "manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+      "review_sha256": "76ebf22317f09407a258875e62da6ecea7835ded64bdfd5e01db71acaf134257",
+      "valid": true
+    },
+    {
+      "derived": [
+        {
+          "case_id": "T003",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "support",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "contradiction",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "citation_alignment",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "evaluation",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        },
+        {
+          "case_id": "T004",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "support",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "contradiction",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "citation_alignment",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "evaluation",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        }
+      ],
+      "errors": [],
+      "manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+      "review_sha256": "be97f9fbd9327235fd6247a6385625f63bb13e156df5240b0ffd11677175c377",
+      "valid": true
+    },
+    {
+      "derived": [
+        {
+          "case_id": "T005",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "leakage",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "decontamination",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "live_evaluation",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "time_splits",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        },
+        {
+          "case_id": "T006",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "leakage",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "decontamination",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "live_evaluation",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "time_splits",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        }
+      ],
+      "errors": [],
+      "manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+      "review_sha256": "fe57345bfdda5a4a929c268f4aa5fcb890a4f89ebaad40719797c4dfa1ed5438",
+      "valid": true
+    },
+    {
+      "derived": [
+        {
+          "case_id": "T007",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "prevention",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "risk_factors",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "lifestyle",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "interventions",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        },
+        {
+          "case_id": "T008",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "prevention",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "risk_factors",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "lifestyle",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "interventions",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        }
+      ],
+      "errors": [],
+      "manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+      "review_sha256": "e3b2f83e1a8fef0a39ad3383a0f518fcb02f48c832d69f84f62e42c6dbeddb45",
+      "valid": true
+    },
+    {
+      "derived": [
+        {
+          "case_id": "T009",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "retrieval",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "agent_orchestration",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "evaluation",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "evidence_grounding",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        },
+        {
+          "case_id": "T010",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "retrieval",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "agent_orchestration",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "evaluation",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "evidence_grounding",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        }
+      ],
+      "errors": [],
+      "manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+      "review_sha256": "48803db26994d1b87cd2c0ada2743921a3331f1f80ebf60309898dba0e4654ba",
+      "valid": true
+    },
+    {
+      "derived": [
+        {
+          "case_id": "T011",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "software_tasks",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "measurement",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "reproducibility",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "limitations",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        },
+        {
+          "case_id": "T012",
+          "facets": [
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "software_tasks",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "measurement",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "reproducibility",
+              "transition": "unchanged"
+            },
+            {
+              "after": "not_supported",
+              "after_supporting_ids": [],
+              "before": "not_supported",
+              "before_supporting_ids": [],
+              "facet": "limitations",
+              "transition": "unchanged"
+            }
+          ],
+          "reading_change": "same",
+          "relation": "same"
+        }
+      ],
+      "errors": [],
+      "manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+      "review_sha256": "6c04e3f4532af6731b4dbb579fca029a1cd612340218884029629298ba254288",
+      "valid": true
+    }
+  ],
+  "synthetic_only": true,
+  "reference_invocations": 0,
+  "validator_sha256": "a913ba320675a02488f69e657cb75e84d0fbb57917cfbcf1e358cfc6728379c6"
+}

@@ -1,0 +1,2274 @@
+{
+  "schema": "exp045-prepared-plan/1",
+  "registration_revision": "859ca2f6a1ac31f068d2a9818486f1523dcde82b",
+  "baseline_revision": "4616b0a8bfabf7f2823c9eace062ec882b9428dd",
+  "source_pins_sha256": "4e7d00cd173502b56df9fd5f9677d0234a7c7701ad36aa233a4a1fc0c7a26e15",
+  "registration_integrity_sha256": "b23f9e27ce6fdeb27197d6cb0f47f24ef34cd69ab3c0d64d326fb40fd25c0d85",
+  "exp043_result_integrity_sha256": "0beb2d2c59e5e439ab9fce5a69547d91cae730d251a202a86e69b60c395a5dca",
+  "exp044_result_integrity_sha256": "f02f5330faea13e61ce36bb25d3a8a42dc882d0caaf2e3b8c7a12fd55a533e46",
+  "old_receipt_count": 65,
+  "operation_count": 21,
+  "max_case_attempts": 84,
+  "max_total_attempts": 85,
+  "operations": [
+    {
+      "id": "q1-d",
+      "pool_id": "q1",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c3",
+        "c4",
+        "c5",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33"
+      ],
+      "d_request_id": "q1-d",
+      "f_request_id": "q1-f",
+      "w0_request_id": "q1-w0",
+      "facets": [
+        {
+          "id": "benchmarks",
+          "description": "benchmarks and studies"
+        },
+        {
+          "id": "coordination",
+          "description": "coordination"
+        },
+        {
+          "id": "asynchronous_work",
+          "description": "asynchronous work"
+        },
+        {
+          "id": "conflict_resolution",
+          "description": "conflict resolution"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q1-d-choice-step1",
+        "q1-d-choice-step2",
+        "q1-d-choice-step3",
+        "q1-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q2-d",
+      "pool_id": "q2",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32"
+      ],
+      "d_request_id": "q2-d",
+      "f_request_id": "q2-f",
+      "w0_request_id": "q2-w0",
+      "facets": [
+        {
+          "id": "human_approval",
+          "description": "human approval"
+        },
+        {
+          "id": "audit_logging",
+          "description": "audit logging"
+        },
+        {
+          "id": "policy_controls",
+          "description": "policy controls"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q2-d-choice-step1",
+        "q2-d-choice-step2",
+        "q2-d-choice-step3",
+        "q2-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q3-d",
+      "pool_id": "q3",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29"
+      ],
+      "d_request_id": "q3-d",
+      "f_request_id": "q3-f",
+      "w0_request_id": "q3-w0",
+      "facets": [
+        {
+          "id": "replay",
+          "description": "replay"
+        },
+        {
+          "id": "recovery",
+          "description": "recovery"
+        },
+        {
+          "id": "idempotency",
+          "description": "idempotency"
+        },
+        {
+          "id": "external_side_effects",
+          "description": "external side effects"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q3-d-choice-step1",
+        "q3-d-choice-step2",
+        "q3-d-choice-step3",
+        "q3-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q4-d",
+      "pool_id": "q4",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34"
+      ],
+      "d_request_id": "q4-d",
+      "f_request_id": "q4-f",
+      "w0_request_id": "q4-w0",
+      "facets": [
+        {
+          "id": "leakage",
+          "description": "leakage"
+        },
+        {
+          "id": "decontamination",
+          "description": "decontamination"
+        },
+        {
+          "id": "live_evaluation",
+          "description": "live evaluation"
+        },
+        {
+          "id": "time_splits",
+          "description": "time splits"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q4-d-choice-step1",
+        "q4-d-choice-step2",
+        "q4-d-choice-step3",
+        "q4-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q5-d",
+      "pool_id": "q5",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29"
+      ],
+      "d_request_id": "q5-d",
+      "f_request_id": "q5-f",
+      "w0_request_id": "q5-w0",
+      "facets": [
+        {
+          "id": "verifier_specification",
+          "description": "official verifier/specification documents"
+        },
+        {
+          "id": "threat_model",
+          "description": "threat model"
+        },
+        {
+          "id": "builder_identity",
+          "description": "builder identity"
+        },
+        {
+          "id": "attestations",
+          "description": "attestations"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q5-d-choice-step1",
+        "q5-d-choice-step2",
+        "q5-d-choice-step3",
+        "q5-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q6-d",
+      "pool_id": "q6",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30"
+      ],
+      "d_request_id": "q6-d",
+      "f_request_id": "q6-f",
+      "w0_request_id": "q6-w0",
+      "facets": [
+        {
+          "id": "semantic_conventions",
+          "description": "official semantic-convention documentation"
+        },
+        {
+          "id": "tool_calls",
+          "description": "AI-agent tool calls"
+        },
+        {
+          "id": "spans",
+          "description": "spans"
+        },
+        {
+          "id": "attributes",
+          "description": "attributes"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q6-d-choice-step1",
+        "q6-d-choice-step2",
+        "q6-d-choice-step3",
+        "q6-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q7-d",
+      "pool_id": "q7",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33"
+      ],
+      "d_request_id": "q7-d",
+      "f_request_id": "q7-f",
+      "w0_request_id": "q7-w0",
+      "facets": [
+        {
+          "id": "support",
+          "description": "support"
+        },
+        {
+          "id": "contradiction",
+          "description": "contradiction"
+        },
+        {
+          "id": "citation_alignment",
+          "description": "citation alignment"
+        },
+        {
+          "id": "evaluation",
+          "description": "evaluation"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q7-d-choice-step1",
+        "q7-d-choice-step2",
+        "q7-d-choice-step3",
+        "q7-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q8-d",
+      "pool_id": "q8",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29"
+      ],
+      "d_request_id": "q8-d",
+      "f_request_id": "q8-f",
+      "w0_request_id": "q8-w0",
+      "facets": [
+        {
+          "id": "stopping",
+          "description": "stopping"
+        },
+        {
+          "id": "coverage",
+          "description": "coverage"
+        },
+        {
+          "id": "uncertainty",
+          "description": "uncertainty"
+        },
+        {
+          "id": "evidence_gaps",
+          "description": "evidence gaps"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q8-d-choice-step1",
+        "q8-d-choice-step2",
+        "q8-d-choice-step3",
+        "q8-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "q9-d",
+      "pool_id": "q9",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37"
+      ],
+      "d_request_id": "q9-d",
+      "f_request_id": "q9-f",
+      "w0_request_id": "q9-w0",
+      "facets": [
+        {
+          "id": "impacts",
+          "description": "climate-change impacts"
+        },
+        {
+          "id": "adaptation",
+          "description": "adaptation"
+        },
+        {
+          "id": "mitigation",
+          "description": "mitigation"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "q9-d-choice-step1",
+        "q9-d-choice-step2",
+        "q9-d-choice-step3",
+        "q9-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "cardiac-d",
+      "pool_id": "cardiac",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "d_request_id": "cardiac-d",
+      "f_request_id": "cardiac-f",
+      "w0_request_id": "cardiac-w0",
+      "facets": [
+        {
+          "id": "prevention",
+          "description": "prevention"
+        },
+        {
+          "id": "risk_factors",
+          "description": "risk factors"
+        },
+        {
+          "id": "lifestyle",
+          "description": "lifestyle"
+        },
+        {
+          "id": "interventions",
+          "description": "interventions"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "cardiac-d-choice-step1",
+        "cardiac-d-choice-step2",
+        "cardiac-d-choice-step3",
+        "cardiac-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "cardiac-d-repeat",
+      "pool_id": "cardiac",
+      "variant": "-repeat",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "d_request_id": "cardiac-d-repeat",
+      "f_request_id": "cardiac-f-repeat",
+      "w0_request_id": "cardiac-w0",
+      "facets": [
+        {
+          "id": "prevention",
+          "description": "prevention"
+        },
+        {
+          "id": "risk_factors",
+          "description": "risk factors"
+        },
+        {
+          "id": "lifestyle",
+          "description": "lifestyle"
+        },
+        {
+          "id": "interventions",
+          "description": "interventions"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "cardiac-d-repeat-choice-step1",
+        "cardiac-d-repeat-choice-step2",
+        "cardiac-d-repeat-choice-step3",
+        "cardiac-d-repeat-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "cardiac-d-rotated20",
+      "pool_id": "cardiac",
+      "variant": "-rotated20",
+      "candidate_ids": [
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19"
+      ],
+      "d_request_id": "cardiac-d-rotated20",
+      "f_request_id": "cardiac-f-rotated20",
+      "w0_request_id": "cardiac-w0",
+      "facets": [
+        {
+          "id": "prevention",
+          "description": "prevention"
+        },
+        {
+          "id": "risk_factors",
+          "description": "risk factors"
+        },
+        {
+          "id": "lifestyle",
+          "description": "lifestyle"
+        },
+        {
+          "id": "interventions",
+          "description": "interventions"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "cardiac-d-rotated20-choice-step1",
+        "cardiac-d-rotated20-choice-step2",
+        "cardiac-d-rotated20-choice-step3",
+        "cardiac-d-rotated20-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "research-d",
+      "pool_id": "research",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44"
+      ],
+      "d_request_id": "research-d",
+      "f_request_id": "research-f",
+      "w0_request_id": "research-w0",
+      "facets": [
+        {
+          "id": "retrieval",
+          "description": "retrieval"
+        },
+        {
+          "id": "agent_orchestration",
+          "description": "agent orchestration"
+        },
+        {
+          "id": "evaluation",
+          "description": "evaluation"
+        },
+        {
+          "id": "evidence_grounding",
+          "description": "evidence grounding"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "research-d-choice-step1",
+        "research-d-choice-step2",
+        "research-d-choice-step3",
+        "research-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "research-d-repeat",
+      "pool_id": "research",
+      "variant": "-repeat",
+      "candidate_ids": [
+        "c0",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44"
+      ],
+      "d_request_id": "research-d-repeat",
+      "f_request_id": "research-f-repeat",
+      "w0_request_id": "research-w0",
+      "facets": [
+        {
+          "id": "retrieval",
+          "description": "retrieval"
+        },
+        {
+          "id": "agent_orchestration",
+          "description": "agent orchestration"
+        },
+        {
+          "id": "evaluation",
+          "description": "evaluation"
+        },
+        {
+          "id": "evidence_grounding",
+          "description": "evidence grounding"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "research-d-repeat-choice-step1",
+        "research-d-repeat-choice-step2",
+        "research-d-repeat-choice-step3",
+        "research-d-repeat-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "research-d-rotated20",
+      "pool_id": "research",
+      "variant": "-rotated20",
+      "candidate_ids": [
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44",
+        "c0",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20"
+      ],
+      "d_request_id": "research-d-rotated20",
+      "f_request_id": "research-f-rotated20",
+      "w0_request_id": "research-w0",
+      "facets": [
+        {
+          "id": "retrieval",
+          "description": "retrieval"
+        },
+        {
+          "id": "agent_orchestration",
+          "description": "agent orchestration"
+        },
+        {
+          "id": "evaluation",
+          "description": "evaluation"
+        },
+        {
+          "id": "evidence_grounding",
+          "description": "evidence grounding"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "research-d-rotated20-choice-step1",
+        "research-d-rotated20-choice-step2",
+        "research-d-rotated20-choice-step3",
+        "research-d-rotated20-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "evaluation-d",
+      "pool_id": "evaluation",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "d_request_id": "evaluation-d",
+      "f_request_id": "evaluation-f",
+      "w0_request_id": "evaluation-w0",
+      "facets": [
+        {
+          "id": "software_tasks",
+          "description": "software tasks"
+        },
+        {
+          "id": "measurement",
+          "description": "measurement"
+        },
+        {
+          "id": "reproducibility",
+          "description": "reproducibility"
+        },
+        {
+          "id": "limitations",
+          "description": "limitations"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "evaluation-d-choice-step1",
+        "evaluation-d-choice-step2",
+        "evaluation-d-choice-step3",
+        "evaluation-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "evaluation-d-repeat",
+      "pool_id": "evaluation",
+      "variant": "-repeat",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43"
+      ],
+      "d_request_id": "evaluation-d-repeat",
+      "f_request_id": "evaluation-f-repeat",
+      "w0_request_id": "evaluation-w0",
+      "facets": [
+        {
+          "id": "software_tasks",
+          "description": "software tasks"
+        },
+        {
+          "id": "measurement",
+          "description": "measurement"
+        },
+        {
+          "id": "reproducibility",
+          "description": "reproducibility"
+        },
+        {
+          "id": "limitations",
+          "description": "limitations"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "evaluation-d-repeat-choice-step1",
+        "evaluation-d-repeat-choice-step2",
+        "evaluation-d-repeat-choice-step3",
+        "evaluation-d-repeat-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "evaluation-d-rotated20",
+      "pool_id": "evaluation",
+      "variant": "-rotated20",
+      "candidate_ids": [
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19"
+      ],
+      "d_request_id": "evaluation-d-rotated20",
+      "f_request_id": "evaluation-f-rotated20",
+      "w0_request_id": "evaluation-w0",
+      "facets": [
+        {
+          "id": "software_tasks",
+          "description": "software tasks"
+        },
+        {
+          "id": "measurement",
+          "description": "measurement"
+        },
+        {
+          "id": "reproducibility",
+          "description": "reproducibility"
+        },
+        {
+          "id": "limitations",
+          "description": "limitations"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "evaluation-d-rotated20-choice-step1",
+        "evaluation-d-rotated20-choice-step2",
+        "evaluation-d-rotated20-choice-step3",
+        "evaluation-d-rotated20-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "constructed80-d",
+      "pool_id": "constructed80",
+      "variant": "main",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44",
+        "c46",
+        "c47",
+        "c48",
+        "c49",
+        "c50",
+        "c51",
+        "c52",
+        "c53",
+        "c54",
+        "c55",
+        "c56",
+        "c57",
+        "c58",
+        "c59",
+        "c60",
+        "c61",
+        "c62",
+        "c63",
+        "c64",
+        "c65",
+        "c66",
+        "c67",
+        "c68",
+        "c69",
+        "c70",
+        "c71",
+        "c72",
+        "c73",
+        "c74",
+        "c75",
+        "c76",
+        "c77",
+        "c78",
+        "c79"
+      ],
+      "d_request_id": "constructed80-d",
+      "f_request_id": "constructed80-f",
+      "w0_request_id": "constructed80-w0",
+      "facets": [
+        {
+          "id": "software_tasks",
+          "description": "software tasks"
+        },
+        {
+          "id": "measurement",
+          "description": "measurement"
+        },
+        {
+          "id": "reproducibility",
+          "description": "reproducibility"
+        },
+        {
+          "id": "limitations",
+          "description": "limitations"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "constructed80-d-choice-step1",
+        "constructed80-d-choice-step2",
+        "constructed80-d-choice-step3",
+        "constructed80-d-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "constructed80-d-repeat",
+      "pool_id": "constructed80",
+      "variant": "-repeat",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44",
+        "c46",
+        "c47",
+        "c48",
+        "c49",
+        "c50",
+        "c51",
+        "c52",
+        "c53",
+        "c54",
+        "c55",
+        "c56",
+        "c57",
+        "c58",
+        "c59",
+        "c60",
+        "c61",
+        "c62",
+        "c63",
+        "c64",
+        "c65",
+        "c66",
+        "c67",
+        "c68",
+        "c69",
+        "c70",
+        "c71",
+        "c72",
+        "c73",
+        "c74",
+        "c75",
+        "c76",
+        "c77",
+        "c78",
+        "c79"
+      ],
+      "d_request_id": "constructed80-d-repeat",
+      "f_request_id": "constructed80-f-repeat",
+      "w0_request_id": "constructed80-w0",
+      "facets": [
+        {
+          "id": "software_tasks",
+          "description": "software tasks"
+        },
+        {
+          "id": "measurement",
+          "description": "measurement"
+        },
+        {
+          "id": "reproducibility",
+          "description": "reproducibility"
+        },
+        {
+          "id": "limitations",
+          "description": "limitations"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "constructed80-d-repeat-choice-step1",
+        "constructed80-d-repeat-choice-step2",
+        "constructed80-d-repeat-choice-step3",
+        "constructed80-d-repeat-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    },
+    {
+      "id": "constructed80-d-rotated20",
+      "pool_id": "constructed80",
+      "variant": "-rotated20",
+      "candidate_ids": [
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37",
+        "c38",
+        "c39",
+        "c40",
+        "c41",
+        "c42",
+        "c43",
+        "c44",
+        "c46",
+        "c47",
+        "c48",
+        "c49",
+        "c50",
+        "c51",
+        "c52",
+        "c53",
+        "c54",
+        "c55",
+        "c56",
+        "c57",
+        "c58",
+        "c59",
+        "c60",
+        "c61",
+        "c62",
+        "c63",
+        "c64",
+        "c65",
+        "c66",
+        "c67",
+        "c68",
+        "c69",
+        "c70",
+        "c71",
+        "c72",
+        "c73",
+        "c74",
+        "c75",
+        "c76",
+        "c77",
+        "c78",
+        "c79",
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19"
+      ],
+      "d_request_id": "constructed80-d-rotated20",
+      "f_request_id": "constructed80-f-rotated20",
+      "w0_request_id": "constructed80-w0",
+      "facets": [
+        {
+          "id": "software_tasks",
+          "description": "software tasks"
+        },
+        {
+          "id": "measurement",
+          "description": "measurement"
+        },
+        {
+          "id": "reproducibility",
+          "description": "reproducibility"
+        },
+        {
+          "id": "limitations",
+          "description": "limitations"
+        }
+      ],
+      "max_rounds": 4,
+      "step_request_ids": [
+        "constructed80-d-rotated20-choice-step1",
+        "constructed80-d-rotated20-choice-step2",
+        "constructed80-d-rotated20-choice-step3",
+        "constructed80-d-rotated20-choice-step4"
+      ],
+      "deterministic_state_builder": "EXP045/replay.py.txt:initial_state+build_batch"
+    }
+  ],
+  "navigation_controls": [
+    {
+      "d_request_id": "nav-q2-c1-d",
+      "w0_request_id": "nav-q2-c1-w0",
+      "target_id": "c1",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32"
+      ],
+      "facet_policy": "bypassed"
+    },
+    {
+      "d_request_id": "nav-q4-c0-d",
+      "w0_request_id": "nav-q4-c0-w0",
+      "target_id": "c0",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34"
+      ],
+      "facet_policy": "bypassed"
+    },
+    {
+      "d_request_id": "nav-q5-c6-d",
+      "w0_request_id": "nav-q5-c6-w0",
+      "target_id": "c6",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29"
+      ],
+      "facet_policy": "bypassed"
+    },
+    {
+      "d_request_id": "nav-q6-c6-d",
+      "w0_request_id": "nav-q6-c6-w0",
+      "target_id": "c6",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30"
+      ],
+      "facet_policy": "bypassed"
+    },
+    {
+      "d_request_id": "nav-q9-c8-d",
+      "w0_request_id": "nav-q9-c8-w0",
+      "target_id": "c8",
+      "candidate_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12",
+        "c13",
+        "c14",
+        "c15",
+        "c16",
+        "c17",
+        "c18",
+        "c19",
+        "c20",
+        "c21",
+        "c22",
+        "c23",
+        "c24",
+        "c25",
+        "c26",
+        "c27",
+        "c28",
+        "c29",
+        "c30",
+        "c31",
+        "c32",
+        "c33",
+        "c34",
+        "c35",
+        "c36",
+        "c37"
+      ],
+      "facet_policy": "bypassed"
+    }
+  ],
+  "neutral": {
+    "state_bytes": 11897,
+    "body_sha256": "91ac3c061ed99977dd964ae4d0794900eb8c5d081f0684fb8fad8f398b5216e1",
+    "body_bytes": 172160,
+    "question_count": 11,
+    "option_count": 721,
+    "candidate_ids": [
+      "c00",
+      "c01",
+      "c02",
+      "c03",
+      "c04",
+      "c05",
+      "c06",
+      "c07",
+      "c08",
+      "c09",
+      "c10",
+      "c11",
+      "c12",
+      "c13",
+      "c14",
+      "c15",
+      "c16",
+      "c17",
+      "c18",
+      "c19",
+      "c20",
+      "c21",
+      "c22",
+      "c23",
+      "c24",
+      "c25",
+      "c26",
+      "c27",
+      "c28",
+      "c29",
+      "c30",
+      "c31",
+      "c32",
+      "c33",
+      "c34",
+      "c35",
+      "c36",
+      "c37",
+      "c38",
+      "c39",
+      "c40",
+      "c41",
+      "c42",
+      "c43",
+      "c44",
+      "c45",
+      "c46",
+      "c47",
+      "c48",
+      "c49",
+      "c50",
+      "c51",
+      "c52",
+      "c53",
+      "c54",
+      "c55",
+      "c56",
+      "c57",
+      "c58",
+      "c59",
+      "c60",
+      "c61",
+      "c62",
+      "c63",
+      "c64",
+      "c65",
+      "c66",
+      "c67",
+      "c68",
+      "c69",
+      "c70",
+      "c71",
+      "c72",
+      "c73",
+      "c74",
+      "c75",
+      "c76",
+      "c77",
+      "c78",
+      "c79"
+    ]
+  },
+  "baseline_receipt_hashes": {
+    "cardiac-d": {
+      "receipt": "387a9c6465eae590aa2cf578a14f729aa23ceef2a1498030c030267cbcc9be79",
+      "response": "3ea4e1909f8819c91201afcf6f7d158c05b23a22da4943c9935be68fe2e9eea1"
+    },
+    "cardiac-d-repeat": {
+      "receipt": "54bb10380cc06ed017ee3281a67c0c3bea5ab02ebdfca2fbb1af4d97d667471b",
+      "response": "1d843d4ade96b1eb1b90a787fd0f7b41be5a31fd46472fc16a6fd9b39ac56114"
+    },
+    "cardiac-d-rotated20": {
+      "receipt": "c4e50a988a3a1e66eebfbd779085fc98275270a7849fadf0e134fdf997fdd136",
+      "response": "75b7304e69894da5f7069d6e55080f7a2cabcba97319e6692d3d031a74102759"
+    },
+    "cardiac-f": {
+      "receipt": "ebecaa2d92060a685c3e108893dda119acd53e4a93c6bca6755f903d267f3be1",
+      "response": "565c849491e833da027bc59949f727b9a2ac10b8aa9d4118fc99dc462f79e1e2"
+    },
+    "cardiac-f-repeat": {
+      "receipt": "dc112e5dec7f3e237b09a525ab333a7fcddaf8cc4c0ad397caac9887f736d19d",
+      "response": "f1eb8f6035b7a48796ad17ff2f4ae44d61a60c7d5d707a2f21a6342c5213f6bc"
+    },
+    "cardiac-f-rotated20": {
+      "receipt": "914429fec82c3f368666dd8cc09affe3583944e92fa1e81cbd8f82c2483021e2",
+      "response": "02ba57979e484fadc57c61a271476274377e18e9d83b41e128d4446ad6a9ca9f"
+    },
+    "cardiac-w0": {
+      "receipt": "9d77003bccfb047a74c2b24cb2df8fb2dae055c180027eae02bd5204a508a53d",
+      "response": "6e7868670df944116fb65cad80c08ed1a87a444edc55b3c42dfdd4caa5a5b190"
+    },
+    "constructed80-d": {
+      "receipt": "d30795330558955af03746f054b65b9c64a36c329cc5eccb3206e83c895d9661",
+      "response": "9c6c5c97a4263f3b18462463f599bc02d74df23e9333388f16f2a396656879d7"
+    },
+    "constructed80-d-repeat": {
+      "receipt": "f8edb309b91ff6b1bedcd9474b68ef07d23d7f9c66d273c87b7a360c8f4bc923",
+      "response": "011582049a32b7bed2adfa125893a657b7724db184d9328b53cb28e2541757ce"
+    },
+    "constructed80-d-rotated20": {
+      "receipt": "26f01fd3d014412956018ed75321b9421784f5dc51e1ff8e5e162997354e43f2",
+      "response": "8d7fef799c2dbbc6b94f90da88bb7f7749fa48bfba0420ba8bd039bdb2229cb5"
+    },
+    "constructed80-f": {
+      "receipt": "4a45dda0ad4fd8e07d52f7d8b12db878686ffe2b3005dc99919521fabc9b3075",
+      "response": "185fa68f09f9b42e85030e67f3559ece2cabcf7b8b17450870d0ac2b45c24403"
+    },
+    "constructed80-f-repeat": {
+      "receipt": "39de19e70fe55a6edf71ceec7ee68bc434725a9041b2b0f9dc7b657e5c867fdf",
+      "response": "f66adb36f14abebe8b688a7ddbb3124dc1d2eb2e35b10cf0adaff82131e7247b"
+    },
+    "constructed80-f-rotated20": {
+      "receipt": "717f1686c9f70a9a7056dac568523cb54fbdcefae9f828943d66c0e6c42e597b",
+      "response": "6a13c9a78aaeb5d51761e6aea39f9b7c7717c023eb9a9d76eeb11bfbace34b31"
+    },
+    "constructed80-w0": {
+      "receipt": "b1ab3c6004e2715ac1d4c38a7125a9043788f42b2061e2fcdb1001a46ba2c8ce",
+      "response": "88dd67b59d33097ba61e9fffbb1e1141b48842292f70cdecd1e93e3376c5f64f"
+    },
+    "evaluation-d": {
+      "receipt": "712c8cf48ae76db681f051d1c0b96c3b1d9adab3dba65a8a8158fc69169c7e27",
+      "response": "5f6a0ba58982a9c28858b049b8b9e5088373f36b59264f2da549aa04dbe3141d"
+    },
+    "evaluation-d-repeat": {
+      "receipt": "49612948f87111caccb9b900c37373965436edadf22213ddb32217923086f23c",
+      "response": "62c1586e42ea4ce149a8f93e90b389022fea76517d2d2f061578e3190d63b444"
+    },
+    "evaluation-d-rotated20": {
+      "receipt": "c7e70e2984d97ef428ac44a2c411b0dc3e0b6ce0359f7dba62d4489fac3fd38c",
+      "response": "e44ff8b7550de32d43c7338be6e8cc8e9da48af0b3497c436a18f62037e8116e"
+    },
+    "evaluation-f": {
+      "receipt": "2e38b21f03d3fff456422853b1c0308cea45b9cd11db73bae5ab41a2a46028ec",
+      "response": "6e43c33269b4c97f32f3617ebb5a124c8e51c40400eb09bfd3465084e8d7b7ba"
+    },
+    "evaluation-f-repeat": {
+      "receipt": "ecad7ae146c10d119c4aab8d39487def110f5ffa969cad4f32a4b7c79ef4e638",
+      "response": "1140d3ce4ad4129cb67febf3313d694c0a44d7266c98b13ec7dbe9a3a0234035"
+    },
+    "evaluation-f-rotated20": {
+      "receipt": "99502041456bd5f4cd62392739d77cc7e132c43e918fde4d4c95f2c64729802e",
+      "response": "d17f64ef9e18f79af7d1f99105264289cbe8459d38fc9b5b5214c05305eb20d2"
+    },
+    "evaluation-w0": {
+      "receipt": "a06e2692c4a6976dabd414eeaf120a7819e51c64c107a0f0dee7954bd63460d4",
+      "response": "32850cf19555a10a2e74659dbae794aafb2e6bc64f71c9478d40831377ee9c58"
+    },
+    "nav-q2-c1-d": {
+      "receipt": "f0917c380411e53b7dbad5b46f65d7b507b344db28698751861e086fe84f9b48",
+      "response": "955d24439b3bb88ea0aa7dabf4b6f45bb688ec7c7f8dea1cd90a801da4c33c28"
+    },
+    "nav-q2-c1-w0": {
+      "receipt": "053b872bc804b358397c8c0ff88a32f46dcd43195a9bd5f5cfa6f8b564ef41a7",
+      "response": "69e886475e59f12e09e41b5c055acada987a23a402a85152fbfc787696d9e947"
+    },
+    "nav-q4-c0-d": {
+      "receipt": "91ac62091f248ce2f533730a6c3ec562f8347c45f24560bff7f75bd5b9234599",
+      "response": "df78fa9ecaadd493cfdfa88043f933c4f53ab6223ea6e456cea6031f1ca6156b"
+    },
+    "nav-q4-c0-w0": {
+      "receipt": "0684487316972b7fde6597d8ec520b58e82bc48d82bd437aab72a3cb34c2db50",
+      "response": "d6b92c1b3bafceb4ba3737c9e5fe5501070b5df28e664307551e543dc27c4648"
+    },
+    "nav-q5-c6-d": {
+      "receipt": "14a662136fcae7a94e89322f061a9af11b2009cbe66f21c0d46757d1dffe57c0",
+      "response": "f94905a6fbea100f487406d722dd8e984a51c309b15e1c6433d46cc5e517e2ca"
+    },
+    "nav-q5-c6-w0": {
+      "receipt": "5bae7aef9836656227b1231c03c7f18352e10ba52e09210b7e6af62ffb8001f2",
+      "response": "e43188ae3bd5dc674585f321924b55ef5dd243568575514a61d90ef1710e6cf9"
+    },
+    "nav-q6-c6-d": {
+      "receipt": "13b780a371e8551263bafc38dd751b28b84d91156ab65c35b446ca1ee903145e",
+      "response": "179aa83a767b40f68abfa2e1124ec13a98a99b32e426e1c1623dd41d9a501a77"
+    },
+    "nav-q6-c6-w0": {
+      "receipt": "a76bc23bc714b6d0c3615a3581b45d7dee9988c6ee4460a87a97a9012edc21d9",
+      "response": "fcfb2f70464dc185efb30106f86ef94b2f6a5080ab1b78f972bae470e2794410"
+    },
+    "nav-q9-c8-d": {
+      "receipt": "a30ff7e58fed8fc0d04e740b9352ead958c7e62063f0cfcd36caf7a29b735c81",
+      "response": "982da24534c4bacbc0e159113e6c27100377758eb6edffa1490dfaecaca67105"
+    },
+    "nav-q9-c8-w0": {
+      "receipt": "edaa41e3082070f3bc925b39dc454ae92b2ab08a8f45c6ee989e5ec7104ec9c9",
+      "response": "9288047e7a2db93fd55f28cff6bd761f14e6e0f8032fc98ce5e7ec88dd70c0c0"
+    },
+    "q1-d": {
+      "receipt": "5fdcfd779120e8d0b9e0b742f1728ba35efdbf744f140e1e679dd48de42926a8",
+      "response": "7b0761f35e9d9fa756188cab2873af956efd85add22f985b06a5801e7d2b0597"
+    },
+    "q1-f": {
+      "receipt": "039f5f37b8eae64904a17173e01a42f486cf4b4b6ba1ba82f58be450c2d3f6eb",
+      "response": "314dcbb2c11e5a2239233489faffcd7dd1315172cb9779d26028de41812d915f"
+    },
+    "q1-w0": {
+      "receipt": "02031724a3a5c0a240d05e933de22c4d1db74c56c9361783016c746d5fffb0a6",
+      "response": "0cb3eecbe33783f89093826f1862fea4ecbb81789e6499fe0035a5905537626a"
+    },
+    "q2-d": {
+      "receipt": "58095739f611e6f702ef77e2cbac1eddaa67ab03857a6c106695f53f52273a06",
+      "response": "3c80f801d5997f1436b4ff5b74bdf2b7505ca7c20cad3d2469a0fd8346bc4d82"
+    },
+    "q2-f": {
+      "receipt": "685526b649c72760763f8a81f1b4d68b59a83a75f7b3427b46c269705382bd78",
+      "response": "f0188f83009eb855d9749efb757d0907a83b5f05997e02bb02711a547556ee33"
+    },
+    "q2-w0": {
+      "receipt": "f041e0504a7573ee7b90ff803258b56bae57f74bc3861ce40a065532cbc5bd71",
+      "response": "a10f550901cbe067900f82969011816681df3aa009124c1810ef3e63e38a3c00"
+    },
+    "q3-d": {
+      "receipt": "509d4878981e35f47a2eea6587c1bbe3a2fbdac550e4b70c65059d192f28d462",
+      "response": "77eb2dfe1b9e0fddec6e541a7a88e5eef1ef4b07bb254e6378c5725207f2d112"
+    },
+    "q3-f": {
+      "receipt": "195a482016f49f39310631c9181b97aaa8793dae6a67e8562dd235970b5f45d2",
+      "response": "a0662a7661e2e66956fc7424320e7f53ee4e466a92f52ee951058fc719c67091"
+    },
+    "q3-w0": {
+      "receipt": "f7686d27fd4f949b7e837ad09ea01174a92fc1900062492ab639b4c9851a03a3",
+      "response": "62d2991ce35398f3aa9b3757f80de28fe66f793403c4806f6c2ba6bb14682d9b"
+    },
+    "q4-d": {
+      "receipt": "1a42073a8d975c590f129f6c53eaa04006d3eb3ec54336e70cc2635186c1d98b",
+      "response": "e03a4addf09724d5375b688e47a1d98b33ba7541ba9c6d6c6d433480f0443e4c"
+    },
+    "q4-f": {
+      "receipt": "c6279947d0cd5edcb6893178f6a22626827f86719f9a6fc0a7decdcaa5f7dca1",
+      "response": "7eefc5687bf19235db99f1a8d0033c1e15f82e5dc489bb72993256cf1d9ab620"
+    },
+    "q4-w0": {
+      "receipt": "f537f4c06c5ea3b5fc37c868b5ea72fea5e2c6fb9eedea8f745111b1ace954de",
+      "response": "3a938970ec8cef81bf16a0287fe8e01e346c878997cd5738cf7801e41a35e536"
+    },
+    "q5-d": {
+      "receipt": "848c6f5a48b5bb2f503d0ee07516e1ff7a5a2e1cffcd2d1bff5b146c65269817",
+      "response": "060e08f71b990b01911cef0034cfb451c7a43b61994392f9014661ee92dea684"
+    },
+    "q5-f": {
+      "receipt": "e47c9e4f8b16603dc3c7df0d5a0a721d9b75dce8c4f76c24c7bfb9d81cd8eee7",
+      "response": "8575042c24514a24008b1092b868cb0f7f7517f57761350d34022f92e415def8"
+    },
+    "q5-w0": {
+      "receipt": "5b6da16f1ea24d988bced359b959d2497f71a5b6f395d61f534770025f0a5038",
+      "response": "34f3648d4bbd4740972f9f2c185979ebd7dc21b8d97e927980fded7fdf0844d2"
+    },
+    "q6-d": {
+      "receipt": "faf081f1d94943500745a8fca61241ea5f2c491046eac08d7b1454edebc61c12",
+      "response": "adf0481d13a1a5e4c1e0d48047d5891781d12b33d38f8e5bdbbd218479de6a29"
+    },
+    "q6-f": {
+      "receipt": "b9229f1c0654deaa69a3f070199db37d10eea0ceb5e0e8516995b39ab8088db2",
+      "response": "1b4932d9bb2c63bed84a7e1a1065d20b4ca7502c6a081a03508e66393c30d185"
+    },
+    "q6-w0": {
+      "receipt": "f35bd51419e7104e87d787cf31354c824a51e9446189e41192b43d63b2828631",
+      "response": "8205abe5e12693a70c8278b17e6dc06c5a472b79707e520f3f8cb83acae39d36"
+    },
+    "q7-d": {
+      "receipt": "229046439c92e1c8a0dba260c3af746816faba0d1c6d2f8b36e82507ae6ec59c",
+      "response": "a2613ce541442485f391cbcd0a927bb3fb1afeb881abc65fac0e8b4f710fdf42"
+    },
+    "q7-f": {
+      "receipt": "374c4edbb050429907513cd5bc266887a8c4115e2ec919ccfcdac11d7fda2ed1",
+      "response": "1cb4ca3c1e637f773dbd4a6904bba1a68463abbf3e90ca8598d3eb7c80f915e5"
+    },
+    "q7-w0": {
+      "receipt": "d374d05c9144ef305ea153b178c91adda57dd030c2990ffbc7473758fd0ee4ff",
+      "response": "adae2c0dfdac26de67122931f5845ca0b6f55e0eab09747782809df76b914d31"
+    },
+    "q8-d": {
+      "receipt": "3983cfd5b5396405134fa95ba198078822542264ecce14e0fa8dc1fc957b8d49",
+      "response": "c5240a61ef745dded1b61eaa1855fb5f5ff664e68bb9f81c5ea3a285e413b853"
+    },
+    "q8-f": {
+      "receipt": "858f39d74e2bad46c229c015fe35e0f2b7d756ac574a34deff013ccffb31a31b",
+      "response": "90740f54fc81d5a1b7ab9f9304b2522ebd08586233fc37be5bad972604747f6e"
+    },
+    "q8-w0": {
+      "receipt": "acf64c5ba9b85d464665ad35cefec0fccf059f8cdbe6b33828d73dac8cfe3651",
+      "response": "39a0da11a88fc1b75a05c12073359bbd949cf19d68f5de357877386a555988d0"
+    },
+    "q9-d": {
+      "receipt": "0ed7611569c8c4ac9ea6d42821f4e3d70a537157de67cff334d81d741fd50a7a",
+      "response": "baf9a01056c2a6bdea80497badcd4d48a813ff0d58c3dc8ee56a1d24e107661f"
+    },
+    "q9-f": {
+      "receipt": "205ffc6542e2617fc2c254bfe1d9d2798ee1b22b9cb9b512df36c0ac671295fb",
+      "response": "490bc6f82716b72da946022156ab02c6e3666a591d9a43b96b4681a7f0f8e32b"
+    },
+    "q9-w0": {
+      "receipt": "cddb26e44a309005a04d1689ee6ed02af060f009c17186e0fd03d5371dd7f307",
+      "response": "8393739cb3ac1b288a6a08d1a2b22b608524b6d470cc1387cf73915b6bea3846"
+    },
+    "research-d": {
+      "receipt": "7d38e652753914b789d0bcedce49936b88cfa1b423d25697b8e49abb06e629b8",
+      "response": "587127adc8b64678a66cd07befa4220b7644e4087e2570bdca0451e875c35555"
+    },
+    "research-d-repeat": {
+      "receipt": "d71d216c845861bb709189e221dcbfcc9310ce7343712b39dafa2960993353bf",
+      "response": "4957f65b02c7206a1d4aa6dbeca9b547c864710036ef1a134c86a36e6e2da6c2"
+    },
+    "research-d-rotated20": {
+      "receipt": "0416f14afe4468c219698699e6b27215622d23e53d191daa38b1e891629a32c9",
+      "response": "956f1c13fd485c4396245a6901f3018fd2fcd18b7a1ce9af4cdeaa17f7fb5e64"
+    },
+    "research-f": {
+      "receipt": "220fea5632189c52b177203b31673e3f0fce5f5a655201129eea7b228b6a0f67",
+      "response": "4e7240dfaae98a844d90ab061d25cb6ec4643fc1e3494b9ede7658cd231aa1c3"
+    },
+    "research-f-repeat": {
+      "receipt": "a98c7024bf0f9b08877c8d66c8a939371432a13fe89d1db3402753c73c7b3baa",
+      "response": "0e13f5ff4896ebe7447e0426ecedef44b67fa0672cf6bba9fbe37462bcf50c8f"
+    },
+    "research-f-rotated20": {
+      "receipt": "56c1f8098e026baf71b902023f6962cca12c19d5e418b521334dcaf80ae07c6b",
+      "response": "7bf0da15f604592cb0dc7e3af71349ea72aef993bdac124e010d6fe8a7076564"
+    },
+    "research-w0": {
+      "receipt": "f54b635574688f3f87d98c142f9bfb253f273878c3d8aa35477ba2147693e56f",
+      "response": "4a07836c31f3726491e8195b6475292bc3276a75a3ba9085d9ef1677e0ff1f25"
+    }
+  },
+  "baseline_attempts_sha256": "87326892db1df243f40c9aee716d42539db854be6a9d592d062133647fa80567",
+  "source_record_counts": {
+    "software": 9,
+    "natural": 3,
+    "all_groups": 13
+  },
+  "reference_hashes": {
+    "EXP039": {
+      "reference-a.json": "ff60cf87d657f9305de457889efb41c2e171676d54d894a053287a4470618202",
+      "reference-b.json": "07f4d5bb57adbd1066f0dcdd48a8fd4bd08a942a17ef1cb88a436ee25915cc76"
+    },
+    "EXP040": {
+      "reference-a.json": "034dbba3a2e580ddc2fefa454e219a923826eeb64941c86d76b0cb43e7f01ef7",
+      "reference-b.json": "87ed434b89a5fae1a5d90fd0c0bcbf00e932e44edf35fcb4e14d8a832b10bd66"
+    }
+  },
+  "template_hashes": {
+    "global": "3839dffbabd9b9ee66e4ba012bdcaa99484dd635bb2e4ea47bcd0c387cd757bf",
+    "replacement": "1f77fcffccf05828ede00ec6854b05f087cb6d67157ac878c3c4cb75b8edfe20",
+    "global_keep": "b31e108913ac384a464a224a3fb977e804f1c250aa378d693b16a641763b5eee",
+    "replacement_keep": "35114265a19b29e2f5801fe35f288f7e560019820ef1cb522b3495e2f21cf8df",
+    "global_option": "cf6c5a90f79e89b8793de0713ff9ddce45fe04bf6fbdc4e6825166acad46477c",
+    "replacement_option": "efbb30e4c79f063492258243422093ca8559e9cf1ac83fe11084462d27a4628d"
+  },
+  "provider_calls": 0,
+  "search_calls": 0,
+  "actual_case_rankings_computed": false
+}

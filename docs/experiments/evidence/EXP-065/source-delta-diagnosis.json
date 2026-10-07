@@ -1,0 +1,638 @@
+{
+  "schema": "exp065-source-delta/1",
+  "purpose": "diagnosis only; no reference changes or new quality credit",
+  "cases": [
+    {
+      "case": "q2",
+      "changes": [
+        {
+          "change": "left_top10",
+          "id": "c10",
+          "card": {
+            "id": "c10",
+            "snippet": "--- type: specs.openrewrite.org/v1beta/recipe name: org.openrewrite.java.migrate.UpgradePluginsForJava21 displayName: Upgrade plugins to Java 21 compatible versions description: | <strong>Updates plugins and dependencies to version compatible with Java 21.</strong> ...",
+            "title": "Upgrade plugins to Java 21 compatible versions | OpenRewrite Docs",
+            "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradepluginsforjava21"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "The specific Java 21 recipe updates plugins and dependencies to compatible versions.",
+            "B": "Java 21 plugin recipe updates plugins and dependencies for compatibility."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c4",
+          "card": {
+            "id": "c4",
+            "snippet": "Recipes are moving from Maven Central to the Code Genome Project. Configure access to keep releases resolving. ... In this tutorial, we&#x27;ll use OpenRewrite to perform an automated migration from Java 8 to Java 17. Upgrading an older codebase to Java 17 can be a daunting and time-consuming task.",
+            "title": "Migrate to Java 17 | OpenRewrite Docs",
+            "url": "https://docs.openrewrite.org/running-recipes/popular-recipe-guides/migrate-to-java-17"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "Tutorial directly migrates Java 8 to 17 with OpenRewrite, a close staging lead for the requested upgrade.",
+            "B": "OpenRewrite walkthrough explicitly automates Java 8 to 17; useful adjacent upgrade path."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c1",
+          "card": {
+            "id": "c1",
+            "snippet": "org.openrewrite.java.recipes.UpgradeTestsToJava21 \u00b7 Use Java 21 features in tests",
+            "title": "Migrate tests to Java 21 | OpenRewrite Docs",
+            "url": "https://docs.openrewrite.org/recipes/java/recipes/upgradeteststojava21"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "The OpenRewrite entry concerns migrating tests to Java 21, relevant to test-suite updates.",
+            "B": "Java 21 test migration recipe indicates using Java 21 features in tests."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c11",
+          "card": {
+            "id": "c11",
+            "snippet": "Specifically, for those applications that are built on Java 8, <strong>this recipe will update and add dependencies on J2EE libraries that are no longer directly bundled with the JDK</strong>. This recipe will also replace deprecated API with equivalents when ...",
+            "title": "Migrate to Java 11 | OpenRewrite Docs",
+            "url": "https://docs.openrewrite.org/recipes/java/migrate/java8tojava11"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "The Java 11 migration description highlights Java 8 compatibility changes for removed bundled libraries and deprecated APIs.",
+            "B": "Java 8-to-11 recipe covers removed J2EE libraries and deprecated API replacements."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c3",
+          "card": {
+            "id": "c3",
+            "snippet": "Migrate Bouncy Castle to jdk15to18 for Java &lt; 8 \u00b7 Migrate Bouncy Castle to jdk18on \u00b7 Migrate to IBM Semeru Runtimes \u00b7 Migrate to Java 11 \u00b7 Migrate to Java 17 \u00b7 Migrate to Java 21 \u00b7 Migrate to Java 25 \u00b7 Migrate to Java 6 \u00b7 Migrate to Java 7 \u00b7 Migrate to Java 8 \u00b7",
+            "title": "Modernize | OpenRewrite Docs",
+            "url": "https://docs.openrewrite.org/recipes/java/migrate"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The docs index clearly lists a Java 21 migration recipe among many targets.",
+            "B": "Catalog visibly includes Java 21 and other migration recipes."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c15",
+          "card": {
+            "id": "c15",
+            "snippet": "rewrite-migrate-java \u00b7 rewrite-netty \u00b7 rewrite-okhttp \u00b7 rewrite-openapi \u00b7 rewrite-prethink \u00b7 rewrite-quarkus \u00b7 rewrite-rewrite \u00b7 rewrite-spring \u00b7 rewrite-spring-to-quarkus \u00b7 rewrite-static-analysis \u00b7 rewrite-testing-frameworks \u00b7 rewrite-third-party \u00b7",
+            "title": "All Recipes by Module | OpenRewrite Docs",
+            "url": "https://docs.openrewrite.org/reference/all-recipes"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "A recipe-by-module catalog can lead to migration recipes, but no Java 21 detail is visible.",
+            "B": "Module catalog identifies migration modules, but provides little visible detail."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c8",
+          "card": {
+            "id": "c8",
+            "snippet": "Automatically select recipe examples from the unit test cases of a recipe \u00b7 Correctly spaced descriptions \u00b7 Extract documentation examples from tests \u00b7 Find OpenRewrite recipes \u00b7 Find missing @Option example values \u00b7 Generate InlineMethodCalls recipes for deprecated delegating methods \u00b7 Make declarative recipes singletons \u00b7 Migrate tests to Java 21 \u00b7",
+            "title": "Recipes | OpenRewrite Docs",
+            "url": "https://docs.openrewrite.org/recipes/java/recipes"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "Recipe tests and Java 21 test migration appear in this catalog snippet, with little detail.",
+            "B": "Recipe test cases are a potentially useful validation source, but the card is a broad recipe listing."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c20",
+          "card": {
+            "id": "c20",
+            "snippet": "With the rapid advancement of powerful large language models (LLMs) in recent years, a wide range of software engineering tasks can now be addressed using LLMs, significantly enhancing productivity and scalability. Numerous benchmark datasets have been developed to evaluate the coding capabilities of these models, while they primarily focus on code generation and issue-resolution tasks. In contrast, we introduce a new coding benchmark MigrationBench with a distinct focus: code migration. Migrati",
+            "title": "MigrationBench: Repository-Level Code Migration Benchmark from Java 8",
+            "url": "https://doi.org/10.1145/3770855.3817526"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "MigrationBench directly evaluates repository-level code migration from Java 8, but it is a benchmark lead.",
+            "B": "Repository-level benchmark directly evaluates code migration from Java 8."
+          }
+        }
+      ]
+    },
+    {
+      "case": "q3",
+      "changes": [
+        {
+          "change": "left_top10",
+          "id": "c19",
+          "card": {
+            "id": "c19",
+            "snippet": "Git does not provide it for AI-assisted work. Attackers can spoof author fields, SSH keys prove possession rather than identity, and nothing natively binds a commit to whether a human, a model, or an agent produced it. CTOs need provenance at both the artifact layer and the commit layer.",
+            "title": "Managing the Risk of AI-Generated Code: A CTO Playbook | Augment Code",
+            "url": "https://www.augmentcode.com/guides/managing-ai-generated-code-risk"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The playbook identifies missing artifact and commit provenance for AI-assisted work.",
+            "B": "Calls for provenance at artifact and commit layers and notes spoofable git attribution."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c16",
+          "card": {
+            "id": "c16",
+            "snippet": "Copilot has also developed a filtering tool that a developer can enable in Copilot to detect and suppress any such recommendations of open-source code, but its own research shows that the filtering tools do not catch all instances of repeated code and recommends additional checks to identify any potential IP breaches. ... When a public code is released under a permissive open-source license, such as LGPL, others may use the code without any license restrictions as long as there is proper attribution.",
+            "title": "Copyrights, Professional Perspective - IP Issues With AI Code Generators",
+            "url": "https://www.bloomberglaw.com/external/document/X4H9CFB4000000/copyrights-professional-perspective-ip-issues-with-ai-code-gener"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The card warns code filters miss repeated code and recommends additional IP checks.",
+            "B": "Explains filtering limits and the need for additional checks and attribution."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c8",
+          "card": {
+            "id": "c8",
+            "snippet": "In controlled (lab) settings [7, 5], the provenance of code is usually clear since researchers can generate the code directly. However, it is different in real-world codebases. AI-generated code and human-written code are often interleaved during development, and AI usage is not always explicitly recorded in the repository history. This makes it harder to attribute code changes reliably and to observe the long-term impact of AI-generated code after it is merged into production codebases.",
+            "title": "Debt Behind the AI Boom: A Large-Scale Empirical Study of AI-Generated Code in the Wild",
+            "url": "https://arxiv.org/html/2603.28592v2"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "Study directly notes interleaved AI/human code and missing repository provenance records.",
+            "B": "Study describes interleaved code and missing repository history attribution."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c1",
+          "card": {
+            "id": "c1",
+            "snippet": "A deep dive into IP risks from AI model training and output, the limitations of built-in guardrails, and strategies for extending license compliance workflows to AI-generated code. ... Introducing FOSSA Snippet Scanning \u2014 a modern snippet detection solution designed to help organizations combat AI-related IP legal risks without slowing innovation.",
+            "title": "AI Coding Guardrails | FOSSA",
+            "url": "https://fossa.com/solutions/ai-coding-guardrails/"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "FOSSA describes IP risks, guardrail limits, and snippet scanning for generated-code compliance.",
+            "B": "Provides AI-code license risk and snippet-scanning workflow leads."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c4",
+          "card": {
+            "id": "c4",
+            "snippet": "The same research found that developers often default to vague or absent attribution, partly because existing attribution norms were built for human collaboration and offer limited guidance in this new context, and partly because of fear of negative peer reactions to AI-generated code [1]. A separate study analyzing 33,580 pull requests found that AI coding agents leave detectable behavioral fingerprints even when submitted through human accounts [3] \u2014 which means the boundary between &quot;author&quot; and &quot;tool&quot; is blurrier than either pattern assumes.",
+            "title": "using tools like git ai for adding ai code generated metada...",
+            "url": "https://www.thinkscientist.com/ai-code-provenance-the-accountability-gap-nobody-has-closed/"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "Visible discussion says attribution is often absent and mentions detectable agent fingerprints as a separate signal.",
+            "B": "Discusses attribution metadata practices and difficulty distinguishing human/tool authorship."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c14",
+          "card": {
+            "id": "c14",
+            "snippet": "This review analyzed 31 high-quality studies published between 2020 and 2025 that address how to trace the origin of AI-generated code. The literature mainly follows two directions: active provenance through code watermarking, and passive provenance through authorship attribution.",
+            "title": "Can we trust the source? A systematic review of watermarking and attribution for AI-generated code - ScienceDirect",
+            "url": "https://www.sciencedirect.com/science/article/abs/pii/S0950584926001461"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The systematic review directly covers code-origin tracing through watermarking and authorship attribution.",
+            "B": "Systematic review covers active watermarking and passive authorship attribution."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c12",
+          "card": {
+            "id": "c12",
+            "snippet": "AI writes a growing share of the code in every repo, and almost no team can say which lines came from a model or who is accountable for them. That gap turns expensive the moment IP changes hands, a security review needs prioritizing, or an auditor asks. Most of the fix is attribution you can build from git metadata you already have.",
+            "title": "Who Wrote This Code? A Layered Approach to AI Attribution and Provenance",
+            "url": "https://mattgoodrich.com/posts/ai-code-attribution-and-provenance/"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The article directly proposes layered AI attribution and provenance using Git metadata.",
+            "B": "Proposes git-metadata-based attribution for AI-written code."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c6",
+          "card": {
+            "id": "c6",
+            "snippet": "If your agent uses retrieval to ... the &quot;agent fetched a recent answer and pasted it&quot; path. <strong>Require attribution comments on agent-authored code blocks &gt; 8 lines</strong>....",
+            "title": "Vendoring AI-Generated Code: SBOM and License Implications | Knowledge Base | Crash Override",
+            "url": "https://crashoverride.com/resources/knowledge-base/supply-chain-security/vendoring-ai-generated-code"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The guide recommends attribution comments on agent-authored code blocks and discusses vendoring/SBOM implications.",
+            "B": "Describes SBOM/license implications and a concrete attribution-comment mechanism."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c20",
+          "card": {
+            "id": "c20",
+            "snippet": "Abstract The race to train language models on vast, diverse and inconsistently documented datasets raises pressing legal and ethical concerns. To improve data transparency and understanding, we convene a multi-disciplinary effort between legal and machine learning experts to systematically audit and trace more than 1,800 text datasets. We develop tools and standards to trace the lineage of these datasets, including their source, creators, licences and subsequent use. Our landscape analysis highl",
+            "title": "A large-scale audit of dataset licensing and attribution in AI",
+            "url": "https://doi.org/10.1038/s42256-024-00878-8"
+          },
+          "lead_by_assessor": {
+            "A": 1,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "Dataset licensing audit relates to training data transparency, not provenance in incorporated code.",
+            "B": "Dataset licensing audit traces source, creators, licenses and reuse."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c13",
+          "card": {
+            "id": "c13",
+            "snippet": "Software composition analysis tools ... codebases, but <strong>agentic coding platforms can increase risk by introducing external code in ways that make its provenance, scope, and license obligations harder to track</strong>....",
+            "title": "Looking the Gi[f]t Horse in the Mouth: How Agentic Coding Platforms Increase the Risk of License Contamination \u00b7 Wake Forest Journal of Business and Intellectual Property Law",
+            "url": "https://jbipl.pubpub.org/pub/r9v2sntq/release/1"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The article directly says agentic platforms obscure external-code provenance, scope, and license obligations.",
+            "B": "Directly concerns agentic license contamination and hard-to-track provenance obligations."
+          }
+        }
+      ]
+    },
+    {
+      "case": "q7",
+      "changes": [
+        {
+          "change": "left_top10",
+          "id": "c15",
+          "card": {
+            "id": "c15",
+            "snippet": "Title: test: add tests for database migration rollbacks Labels: testing database Complexity: medium Description: <strong>Create tests for every migration that verify forward AND backward compatibility</strong>. Acceptance Criteria: Rollback tests for all...",
+            "title": "Database Migration Rollback Testing \u00b7 Issue #1315 \u00b7 SoroScan/soroscan",
+            "url": "https://github.com/SoroScan/soroscan/issues/1315"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The issue requests tests for each migration's forward and backward compatibility.",
+            "B": "Issue calls for testing forward and backward compatibility for every migration."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c18",
+          "card": {
+            "id": "c18",
+            "snippet": "With forward-only migrations applied automatically on boot, rolling the image back leaves the schema ahead of the code, and nothing documents whether that is safe. Decide the policy and write it down: down-migrations, or forward-only with an explicit rule that every migration must be backward-compatible with the previous application version.",
+            "title": "No migration reversibility policy and no documented deploy rollback \u00b7 Issue #197 \u00b7 ourdao/ourdao-backend",
+            "url": "https://github.com/ourdao/ourdao-backend/issues/197"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "It identifies the danger of forward-only migrations and demands a documented reversibility policy.",
+            "B": "Issue frames forward-only versus reversible migration policy and rollback compatibility."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c8",
+          "card": {
+            "id": "c8",
+            "snippet": "One way to address this is by using ... Change. This involves <strong>deploying backward-compatible database changes ahead of code updates, creating a buffer that preserves the existing schema during a rollback</strong>....",
+            "title": "Rollback Strategies for Database Migration Failures - Kanu AI",
+            "url": "https://www.getkanu.com/blog/rollback-strategies-database-migration-failures"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "It recommends backward-compatible database changes before code updates to preserve rollback safety.",
+            "B": "Explains backward-compatible schema changes before code updates to support rollback."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c1",
+          "card": {
+            "id": "c1",
+            "snippet": "<strong>Test schema compatibility, data semantics, code reverts, and forward fixes before a database-backed release reaches production</strong>.",
+            "title": "Can You Safely Roll Back a Database Change?",
+            "url": "https://oneuptime.com/blog/post/2026-08-06-database-compatible-rollbacks-forward-fixes/view"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The card explicitly recommends testing schema, data, code reverts, and forward fixes before release.",
+            "B": "Directly calls for testing compatibility, data semantics, code reverts and forward fixes."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c10",
+          "card": {
+            "id": "c10",
+            "snippet": "By employing design patterns such as semantic versioning, additive schema changes, and dual-write patterns, developers can mitigate risks and maintain data integrity. Effective planning, thorough testing, and leveraging tools like TiDB Lightning and Data Migration (DM) are essential strategies.",
+            "title": "Database Design Patterns for Ensuring Backward Compatibility",
+            "url": "https://www.pingcap.com/article/database-design-patterns-for-ensuring-backward-compatibility/"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "Additive schema and dual-write patterns are relevant planning and compatibility mechanisms.",
+            "B": "Mentions additive changes and dual-write patterns for compatibility and data integrity."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c5",
+          "card": {
+            "id": "c5",
+            "snippet": "For this reason, consider testing the performance at this step. A nice benefit of this approach is that <strong>you can always rollback the application code after it is deployed since the schema is still in a backward compatible state</strong>.",
+            "title": "Backward compatible database changes \u2014 PlanetScale",
+            "url": "https://planetscale.com/blog/backward-compatible-databases-changes"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "PlanetScale explains rollback of application code while schema remains backward compatible.",
+            "B": "Explains backward-compatible schema allows application rollback."
+          }
+        }
+      ]
+    },
+    {
+      "case": "q8",
+      "changes": [
+        {
+          "change": "left_top10",
+          "id": "c1",
+          "card": {
+            "id": "c1",
+            "snippet": "Over one week I pointed Claude Code at them with a reproduction harness instead of a &quot;please fix this&quot; prompt, and it fixed 58 of them for real, quarantined 5, and taught me a lot about what AI coding agents are actually good at. Spoiler: the bottleneck was never the fixing. It was the diagnosis.",
+            "title": "How I Killed 63 Flaky Tests in One Week With Claude Code: 5 Lessons - DEV Community",
+            "url": "https://dev.to/yureki_lab/how-i-killed-63-flaky-tests-in-one-week-with-claude-code-5-lessons-29m0"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The firsthand report emphasizes reproduction harnesses and diagnosis before agent repair.",
+            "B": "Firsthand report emphasizes reproduction harness and diagnosis before fixing/quarantining."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c3",
+          "card": {
+            "id": "c3",
+            "snippet": "Following context selection, FlakyGuard constructs a prompt for an autonomous LLM session. This prompt includes directives (modify only test code), error diagnostics (messages, stack traces, reproduction rates), and the selected context code.",
+            "title": "FlakyGuard: Test Repair & FL Robustness",
+            "url": "https://www.emergentmind.com/topics/flakyguard"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "FlakyGuard includes error diagnostics and reproduction rates in repair context.",
+            "B": "FlakyGuard uses diagnostics, stack traces and reproduction rates for test-only repair."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c6",
+          "card": {
+            "id": "c6",
+            "snippet": "- <strong>Agents can scan far more of the codebase and logs than a human can, and quickly \u2014 a better shot at finding a flaky test&#x27;s root cause. - Agents can babysit the validation of a fix for hours without intervention</strong>, which humans are terrible at.",
+            "title": "How We Used Agentic AI to Automate Fixes for Flaky Tests | Kong Inc.",
+            "url": "https://konghq.com/blog/engineering/how-we-used-agentic-ai-to-fix-kong-gateways-flakiest-tests"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The report describes root-cause investigation and prolonged validation of flaky-test fixes.",
+            "B": "Agent scans logs for root cause and babysits validation over time."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c26",
+          "card": {
+            "id": "c26",
+            "snippet": "We present Phoenix, a multi-agent LLM system that resolves GitHub issues from triage through pull-request creation, combining seven layered safety controls with a baseline-aware test evaluation strategy. Phoenix decomposes the work across six specialized agents. Planner, reproducer, coder, tester, failure analyst and Pull Request (PR) agent, all coordinated by a label-based GitHub webhook state machine. Every change is checked against a baseline test run before a pull request is opened. On a 24-",
+            "title": "Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs",
+            "url": "https://doi.org/10.48550/arxiv.2606.20243"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "Phoenix uses baseline-aware test evaluation in an agent issue-resolution system.",
+            "B": "Agent issue repair system uses baseline-aware test evaluation."
+          }
+        },
+        {
+          "change": "left_top10",
+          "id": "c20",
+          "card": {
+            "id": "c20",
+            "snippet": "When a repair agent runs a test and sees it pass, the result is treated as evidence about the reported defect. We measure how often that treatment is warranted. BSG-VA (buggy-state/candidate-state/gold-fix validation analysis) captures each validation command at its exact working-tree state, extracts a test-only patch, and replays the command on the original buggy code (B), the candidate state (S), and the developer gold fix (G). The captured outcome and the replay results assign every event an ",
+            "title": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?",
+            "url": "https://doi.org/10.48550/arxiv.2607.28871"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The study tests whether repair-agent validation commands actually exercise the reported bug across source states.",
+            "B": "Validation replay checks whether passing repair commands actually test the bug."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c21",
+          "card": {
+            "id": "c21",
+            "snippet": "Continuous Integration (CI) pipelines surface regressions early but also produce long, noisy logs. Diagnosing a failing GitHub Actions run and drafting a safe repair patch can be time-consuming, especially when dealing with dependency drift or configuration errors. We study a practical CI-repair pipeline decomposed into three measurable tasks: (1) coarse failure-type classification, (2) retrieval-based repair (log similarity reuse the closest historical fix diff), and (3) constrained patch gener",
+            "title": "LLM-Driven CI Failure Diagnosis and Automated Repair: From GitHub Actions Logs to Patch Recommendation",
+            "url": "https://doi.org/10.51903/jtie.v4i1.484"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The CI repair paper distinguishes failure-type classification from log-based diagnosis and patching.",
+            "B": "Pipeline decomposes CI diagnosis into failure classification and repair."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c5",
+          "card": {
+            "id": "c5",
+            "snippet": "Labeling a true regression as a ... as a regression wastes engineering cycles. <strong>Robust classification requires multi-signal validation across code, environment, and execution context</strong>....",
+            "title": "How to Automatically Detect Flaky Tests in CI Pipelines",
+            "url": "https://www.getpanto.ai/blog/detect-flaky-tests"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The card directly calls for multi-signal classification across code, environment, and execution context.",
+            "B": "Calls for multi-signal classification across code, environment and execution context."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c15",
+          "card": {
+            "id": "c15",
+            "snippet": "Set TZ=UTC explicitly in your CI environment configuration and use timezone-aware datetime objects throughout your codebase. Mobile apps often render dates, currencies, addresses, phone numbers, and language strings based on device locale. If your test expects exact visible text, it may pass on one device and fail on another. For mobile regression tests, either set device locale/timezone explicitly or assert the behavior instead of hardcoding locale-sensitive copy.",
+            "title": "How to Fix Flaky Tests: The Complete Diagnosis Guide for Engineers in 2026 - Quash",
+            "url": "https://quashbugs.com/blog/how-to-fix-flaky-tests-complete-diagnosis-guide"
+          },
+          "lead_by_assessor": {
+            "A": 2,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "It identifies timezone and locale as environmental sources of intermittent UI-test failures.",
+            "B": "Diagnosis guide connects locale/timezone environment to intermittent failures."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c9",
+          "card": {
+            "id": "c9",
+            "snippet": "I don\u2019t necessarily go through the tactics in a specific order but rather I use intuition and experience to decide which tactic to use next. The important thing is to <strong>treat the flaky test diagnosis as a distinct step which occurs after reproduction and before the application of the fix</strong>.",
+            "title": "How I fix flaky tests - Code with Jason",
+            "url": "https://www.codewithjason.com/how-i-fix-flaky-tests/"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 3
+          },
+          "rationale_by_assessor": {
+            "A": "The advice explicitly separates flaky-test diagnosis after reproduction and before fixing.",
+            "B": "Explicitly separates reproducing a flaky failure, diagnosis, and repair."
+          }
+        },
+        {
+          "change": "entered_top10",
+          "id": "c12",
+          "card": {
+            "id": "c12",
+            "snippet": "FlakyDoctor and DexFix on subject ID flaky tests. Columns PF \u00b7 and PU indicate the number of previously fixed and unfixed ID \u00b7 tests. After the automated validation, we manually checked all the",
+            "title": "A Generic Approach to Fix Test Flakiness in Real-World Projects Yang Chen",
+            "url": "https://arxiv.org/pdf/2404.09398"
+          },
+          "lead_by_assessor": {
+            "A": 3,
+            "B": 2
+          },
+          "rationale_by_assessor": {
+            "A": "The paper evaluates automated flake repair with a manual post-validation check.",
+            "B": "Study reports automated validation and manual checks of flaky-test repairs."
+          }
+        }
+      ]
+    }
+  ]
+}

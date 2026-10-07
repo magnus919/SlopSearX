@@ -1,0 +1,74 @@
+import json, pathlib, subprocess, time, math, random, hashlib
+from slopsearx.rerank import MODEL, LEVELS, INSTRUCTIONS
+from slopsearx.service import _rerank_text, _rerank_url
+from slopsearx.rerank import MAX_TITLE_BYTES, MAX_URL_BYTES, MAX_SNIPPET_BYTES
+
+import argparse, shlex
+parser=argparse.ArgumentParser();parser.add_argument('mode',choices=['freeze','run']);parser.add_argument('--input-root',required=True);parser.add_argument('--proxy-command',required=True);args=parser.parse_args()
+ROOT=pathlib.Path(args.input_root)
+OUT=ROOT/'card-local-rerank'; OUT.mkdir(exist_ok=True)
+GRADES={
+ 'full-evaluation':[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,2,1,3,3,3,2,2,2,3,0,0,0,0,0,0,0,0,0,0,3,3,3,3],
+ 'full-research':[3,3,3,3,3,3,2,3,3,3,2,2,2,2,2,3,3,2,2,3,2,2,2,2,1,1,0,2,1,1,2,2,2,1,1,1,1,0,0,0,2,2,2,2,2],
+}
+
+GRADES['constructed80']=GRADES['full-evaluation']+[0]*36
+
+def candidates(rows):
+ return [{ 'id':f'c{i}','title':_rerank_text(h.get('title',''),MAX_TITLE_BYTES),'url':_rerank_url(h['url']), 'snippet':_rerank_text(h.get('content',''),MAX_SNIPPET_BYTES)} for i,h in enumerate(rows)]
+
+def freeze():
+ for ident,grades in GRADES.items():
+  d=json.loads((ROOT/(ident+'.json')).read_text()); rows=d['response']['results']; assert len(grades)==len(rows)
+  obj={'id':ident,'query':d['query'],'candidates':candidates(rows),'grades':grades,'label_origin':'assistant card review before Jev calls; exploratory, no independent gold'}
+  p=OUT/(ident+'-frozen.json'); assert not p.exists(); p.write_text(json.dumps(obj,indent=2)); p.chmod(0o600)
+  print(ident,'frozen',hashlib.sha256(p.read_bytes()).hexdigest())
+
+def call(query, batch, receipt):
+ if receipt.exists(): return json.loads(receipt.read_text())
+ body={'model':MODEL,'state':{'query':query},'questions':{c['id']:{'type':'score','instructions':{'candidate':{k:v for k,v in c.items() if k!='id'},'question':INSTRUCTIONS.replace('candidate `{id}`','`candidate`').format(id=c['id'])},'criteria':LEVELS} for c in batch}}
+ encoded=json.dumps(body,ensure_ascii=False).encode(); assert len(encoded)<=128000
+ started=time.monotonic()
+ proc=subprocess.run(shlex.split(args.proxy_command),input=encoded,capture_output=True,timeout=45)
+ raw=json.loads(proc.stdout) if proc.returncode==0 else {'error':'proxy'}
+ valid=raw.get('model')==MODEL and set(raw.get('answers',{}))=={c['id'] for c in batch}
+ scores={}
+ for c in batch:
+  answer=raw.get('answers',{}).get(c['id'],{}); score=answer.get('score')
+  if answer.get('type')!='score' or type(score) not in (float,int) or not math.isfinite(score) or not 0<=score<=9: valid=False
+  else: scores[c['id']]=score
+ row={'status':'valid' if valid else 'unevaluated','scores':scores if valid else {},'usage':raw.get('usage',{}),'elapsed_ms':raw.get('_elapsed_ms'),'proxy_total_ms':1000*(time.monotonic()-started),'error':raw.get('error'),'http_status':raw.get('status'),'model':raw.get('model'),'candidate_count':len(batch),'request_bytes':len(encoded),'request_sha256':hashlib.sha256(encoded).hexdigest()}
+ receipt.write_text(json.dumps(row,indent=2));receipt.chmod(0o600)
+ print(receipt.name,row['status'],row['candidate_count'],row['elapsed_ms'],flush=True)
+ return row
+
+def ndcg(order,grades):
+ def dcg(seq): return sum((2**grades[i]-1)/math.log2(k+2) for k,i in enumerate(seq[:10]))
+ den=dcg(sorted(range(len(grades)),key=lambda i:-grades[i]));return dcg(order)/den if den else 0
+
+def run():
+ summary=[]
+ for ident in GRADES:
+  d=json.loads((OUT/(ident+'-frozen.json')).read_text()); cs=d['candidates'];n=len(cs); grades=d['grades']
+  plans={'first40':[cs[:40]],'whole':[cs],'batches40':[cs[:40],cs[40:]],'rotated_batches':[cs[20:]+cs[:20]],'whole_repeat':[cs]}
+  plans['rotated_batches']=[plans['rotated_batches'][0][:40],plans['rotated_batches'][0][40:]]
+  arms=list(plans);random.Random(504+n).shuffle(arms)
+  for arm in arms:
+   scores={}; receipts=[]
+   for j,batch in enumerate(plans[arm]):
+    r=call(d['query'],batch,OUT/f'{ident}-{arm}-{j}.json');receipts.append(r);scores.update(r['scores'])
+    total=sum(json.loads(p.read_text()).get('usage',{}).get('input_tokens',0) for p in OUT.glob('*-0.json'))
+    if total>500000: raise RuntimeError('token stopping rule')
+   valid=all(r['status']=='valid' for r in receipts)
+   if not valid: order=list(range(n))
+   else:
+    selected=list(range(40 if arm=='first40' else n));order=sorted(selected,key=lambda i:-scores[f'c{i}']);order += list(range(40,n)) if arm=='first40' else []
+   assert sorted(order)==list(range(n))
+   row={'query_id':ident,'arm':arm,'valid':valid,'order':order,'ndcg10':ndcg(order,grades),'useful_at10':sum(grades[i]>=2 for i in order[:10]),'useful_tail_at10':sum(i>=40 and grades[i]>=2 for i in order[:10]),'call_count':len(receipts),'provider_ms':sum(r.get('elapsed_ms') or 0 for r in receipts),'over_incumbent_1s':any((r.get('elapsed_ms') or 0)>1000 for r in receipts),'input_tokens':sum(r.get('usage',{}).get('input_tokens',0) for r in receipts)}
+   summary.append(row)
+  summary.append({'query_id':ident,'arm':'deterministic_returned_order','ndcg10':ndcg(list(range(n)),grades),'useful_at10':sum(g>=2 for g in grades[:10]),'useful_tail_at10':0,'call_count':0})
+ (OUT/'summary.json').write_text(json.dumps(summary,indent=2)); print(json.dumps(summary,indent=2))
+
+if __name__=='__main__':
+ import sys
+ freeze() if args.mode=='freeze' else run()

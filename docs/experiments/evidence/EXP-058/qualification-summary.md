@@ -1,0 +1,11 @@
+# EXP-058 offline qualification
+
+Eleven offline checks pass. Twelve real mechanics tests exercise admission at exactly 1000 ms remaining and stopping immediately below it, complete-input validation before zero-call stopping, four reachable swaps with no fifth call, explicit successful terminal reasons and a second-call failure discarding a real first swap. All inherited policy/parser/budget/HTTP/owned-process failure checks pass.
+
+The normal CLI accepts the synthetic 80-card/80-question neutral fixture and completes every one of twenty-one frozen operations. It makes twenty-one actual fixture calls including neutral; constructed80-d has an explicit valid zero-call budget stop. Both A/B q1–q8 inventories and all five navigation controls are present, and neutral answers correctly fail the quality screen. An additional full pipeline fixture forces a q1 budget stop and proves its D-only output enters both original analyses with E-D delta zero. No case or reference is omitted.
+
+The failure CLI retains raw HTTP error evidence, returns exact original q2 W0 and leaves exactly nineteen operations uninvoked without partial quality analysis. The setup-only inherited assertion requiring twenty-one case calls failed before qualification; its receipt is retained in qualification-setup-history.json. The corrected harness requires exact ordered request/response digest linkage for all actual attempts and explicit valid zero-call termination.
+
+qualification-result.json binds fourteen source files and eight artifacts, including setup history. The twenty-member committed qualification manifest must bind that result, final review, plan and exact sources before live invocation. Output directory arguments are sanitized; originals remain private. No new Jev or Brave calls occurred.
+
+This qualifies offline mechanics only. Run the registered fresh study once, serially, stop its first failure and retain every attempt. Include every successful budget-stop output in the unchanged quality gates. A development pass only permits untouched confirmation; the full shared-service, experimental X propagation, review/CI/actual implementation merge requirements remain open. No default/runtime/deployment/Hermes change follows.

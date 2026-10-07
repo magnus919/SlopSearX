@@ -1,0 +1,632 @@
+"""Offline raw verifier for EXP-076 W0 + shared-context dual-score evidence."""
+from __future__ import annotations
+
+import hashlib
+import importlib.metadata
+import importlib.machinery
+import importlib.util
+import json
+import math
+import os
+import platform
+import subprocess
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+P = load("exp076_verify_prepare", HERE / "prepare.py.txt")
+N = load("exp076_verify_runner", HERE / "normal-runner.py.txt")
+A = load("exp076_verify_analyzer", HERE / "analyze.py.txt")
+SOURCE_FILES = set(N.SOURCE_FILES)
+ARMS = tuple(P.ARMS)
+TOKEN_CAPS = {"input_tokens": 3_000_000, "output_tokens": 160_000}
+PER_CALL_CAPS = {"input_tokens": 64_000, "output_tokens": 32_000}
+PHASE_TOLERANCE_MS = 1e-6
+WALL_TOLERANCE_MS = 1.0
+
+
+class ReceiptError(ValueError):
+    pass
+
+
+def _need(ok, code):
+    if not ok:
+        raise ReceiptError("receipt-" + code)
+
+
+def _sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _read_json(path):
+    path = Path(path)
+    _need(path.is_file() and not path.is_symlink(), "file-type")
+    return P.strict_json(path.read_bytes())
+
+
+def _finite(value, maximum=1_000_000):
+    return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= maximum
+
+
+def _decode_hex(value, field):
+    if value is None:
+        return None
+    _need(type(value) is str and len(value) % 2 == 0, field + "-encoding")
+    try:
+        return bytes.fromhex(value)
+    except ValueError:
+        raise ReceiptError("receipt-" + field + "-encoding") from None
+
+
+def _commit(path, revision):
+    _need(type(revision) is str and len(revision) == 40 and all(ch in "0123456789abcdef" for ch in revision), "source-revision")
+    path = Path(path)
+    _need(not path.is_absolute() and ".." not in path.parts, "unsafe-source-path")
+    try:
+        return subprocess.run(["git", "show", revision + ":" + path.as_posix()], cwd=REPO,
+                              check=True, capture_output=True).stdout
+    except subprocess.CalledProcessError:
+        raise ReceiptError("committed-source-missing:" + path.as_posix()) from None
+
+
+def _committed_head(path):
+    path = Path(path)
+    _need(not path.is_absolute() and ".." not in path.parts, "unsafe-source-path")
+    try:
+        return subprocess.run(["git", "show", "HEAD:" + path.as_posix()], cwd=REPO,
+                              check=True, capture_output=True).stdout
+    except subprocess.CalledProcessError:
+        raise ReceiptError("committed-head-source-missing:" + path.as_posix()) from None
+
+
+def _verify_qualification(raw, run, protocol_raw, registration_raw, input_bytes, test_fixture):
+    q = P.strict_json(raw)
+    required = {"schema", "qualified", "qualified_source_revision", "files", "source_pins",
+                "dependencies", "environment", "protocol_sha256", "registration_sha256"}
+    _need(type(q) is dict and set(q) == required and q.get("schema") == "exp076-qualification-integrity/1"
+          and q.get("qualified") is True, "qualification-schema")
+    src = run.get("source_integrity")
+    _need(type(src) is dict and src.get("qualification_sha256") == _sha(raw)
+          and src.get("qualified_source_revision") == q.get("qualified_source_revision")
+          and type(src.get("lease_identity")) is str and bool(src.get("lease_identity")), "qualification-binding")
+    _need(src.get("environment") == q["environment"] and src.get("dependencies") == q["dependencies"],
+          "qualification-environment-binding")
+    _need(q.get("protocol_sha256") == _sha(protocol_raw)
+          and q.get("registration_sha256") == _sha(registration_raw), "qualification-protocol-registration")
+    _need(src.get("lease_identity") == N.study_identity(protocol_raw, registration_raw, input_bytes), "study-identity-binding")
+    environment = {"python_implementation": platform.python_implementation(), "python_version": platform.python_version()}
+    dependencies = {name: importlib.metadata.version(name) for name in N.DEPENDENCIES}
+    _need(q["environment"] == environment and q["dependencies"] == dependencies, "qualification-runtime")
+    files = q.get("files")
+    _need(type(files) is dict and set(files) == N.OWNED_FILES, "qualification-owned-closure")
+    for name, expected in files.items():
+        path = HERE / name
+        rel = Path("docs/experiments/evidence/EXP-076") / name
+        _need(path.is_file() and not path.is_symlink(), "qualified-file-local")
+        current = path.read_bytes()
+        _need(_sha(current) == expected and _commit(rel, q["qualified_source_revision"]) == current,
+              "qualified-file-source")
+    source_pins = q.get("source_pins")
+    _need(type(source_pins) is dict and set(source_pins) == SOURCE_FILES, "qualification-source-closure")
+    for name, expected in source_pins.items():
+        path = REPO / name
+        _need(path.is_file() and not path.is_symlink(), "qualified-source-local")
+        current = path.read_bytes()
+        _need(_sha(current) == expected and _commit(name, q["qualified_source_revision"]) == current,
+              "qualified-dependency-source")
+    if not test_fixture:
+        committed_q = _committed_head("docs/experiments/evidence/EXP-076/qualification-integrity.json")
+        _need(committed_q == raw, "qualification-not-committed")
+        _need((REPO / "docs/experiments/evidence/EXP-076/qualification-integrity.json").read_bytes() == raw,
+              "qualification-working-tree")
+    return q
+
+
+def _verify_source_binding(run, outdir, input_bytes, protocol_raw, registration_raw, test_fixture):
+    src = run.get("source_integrity")
+    _need(type(src) is dict and src.get("synthetic") is run.get("synthetic"), "source-synthetic-binding")
+    proof = P.validate_inputs(input_bytes, run.get("input_revision"))
+    _need(run.get("input_pins") == P.PINS and src.get("input_pins") == proof["input_pins"]
+          and src.get("input_revision") == proof["input_revision"]
+          and src.get("protocol_sha256") == proof["protocol_sha256"] == _sha(protocol_raw)
+          and src.get("registration_sha256") == proof["registration_sha256"] == _sha(registration_raw),
+          "source-integrity-pins")
+    qpath = REPO / "docs/experiments/evidence/EXP-076/qualification-integrity.json"
+    receipt_qpath = None
+    # Live/non-synthetic packets must carry the committed, byte-identical qualification manifest.
+    if run.get("synthetic") is True:
+        _need(src.get("qualification_sha256") is None and src.get("lease_identity") is None
+              and src.get("qualified_source_revision") is None and src.get("environment") is None
+              and src.get("dependencies") is None, "synthetic-source-qualification")
+        return None
+    outdir = Path(outdir)
+    receipt_qpath = outdir / "qualification-integrity.json"
+    _need(receipt_qpath.is_file() and not receipt_qpath.is_symlink(), "qualification-sidecar")
+    qraw = receipt_qpath.read_bytes()
+    _verify_qualification(qraw, run, protocol_raw, registration_raw, input_bytes, test_fixture)
+    return qraw
+
+
+def _usage(raw):
+    return P.usage_from_raw(raw) if raw is not None else None
+
+
+def _verify_call(call, opid, arm, expected_request, prior_usage, usage_unknown, attempts):
+    _need(type(call) is dict and call.get("schema") == "exp076-call/1"
+          and call.get("operation") == opid and call.get("arm") == arm, "call-identity")
+    sidecar_name = call.get("sidecar_path")
+    _need(type(sidecar_name) is str and Path(sidecar_name).name == sidecar_name
+          and sidecar_name.startswith("call-") and sidecar_name.endswith(".json"), "call-sidecar-path")
+    request = _decode_hex(call.get("request_hex"), "request")
+    expected = P.wire(expected_request)
+    _need(request == expected and call.get("request_sha256") == _sha(expected), "request-binding")
+    limits = P.PROTOCOL["bounds"]
+    parsed_request = P.strict_json(request)
+    is_control = arm == "w0"
+    _need(len(request) <= limits["legacy_control_request_bytes"] if is_control else len(request) <= limits["request_bytes"],
+          "request-byte-bound")
+    _need(len(P.wire(parsed_request["state"])) <= limits["state_bytes"], "request-state-bound")
+    _need(len(parsed_request["questions"]) <= limits["questions"], "request-question-bound")
+    transport = call.get("transport")
+    _need(type(transport) is dict and transport.get("kind") == "inprocess-async-httpx"
+          and transport.get("trust_env") is False and transport.get("follow_redirects") is False
+          and transport.get("retries") == 0 and transport.get("concurrency") == 1, "transport-policy")
+    _need(not ({"stdout", "stderr", "stdout_hex", "stderr_hex", "stdout_sha256", "stderr_sha256"} & set(transport)),
+          "subprocess-telemetry-claim")
+    _need(transport.get("request_sha256") == _sha(expected), "transport-request-hash")
+    raw = _decode_hex(call.get("raw_response_hex"), "response")
+    body_hash = _sha(raw) if raw is not None else None
+    _need(call.get("response_body_sha256") == body_hash and transport.get("response_sha256") == body_hash,
+          "response-hash")
+    _need(type(call.get("response_complete")) is bool and call.get("response_bytes") == (len(raw) if raw is not None else 0),
+          "response-length")
+    overflow_sentinel = (type(call.get("failure")) is dict
+                         and call["failure"].get("code") == "response-too-large"
+                         and call.get("response_complete") is False and raw is not None
+                         and len(raw) == N.T.MAX_RESPONSE_BYTES + 1)
+    _need(raw is None or len(raw) <= limits["response_bytes"] or overflow_sentinel, "response-byte-bound")
+    status = call.get("status")
+    dispatched = call.get("dispatched")
+    _need(type(dispatched) is bool, "dispatch-state")
+    timings = call.get("timings")
+    _need(type(timings) is dict, "timings-schema")
+    for name, value in timings.items():
+        if value is not None:
+            _need(_finite(value), "timing-value")
+    elapsed = call.get("elapsed_ms")
+    if elapsed is not None:
+        _need(_finite(elapsed), "call-elapsed")
+    exchange = timings.get("exchange_ms")
+    if exchange is not None:
+        _need(_finite(exchange), "exchange-time")
+        if exchange > 1000 + PHASE_TOLERANCE_MS:
+            _need(status == "failed" and call.get("failure", {}).get("code") in ("timeout", "whole-phase-deadline"),
+                  "exchange-deadline")
+    if elapsed is not None and elapsed > 1000 + PHASE_TOLERANCE_MS:
+        _need(status == "failed" and call.get("failure", {}).get("code") in ("timeout", "whole-phase-deadline"),
+              "call-deadline")
+    usage = _usage(raw)
+    _need(call.get("usage") == usage and call.get("usage_status") ==
+          ("known" if usage is not None else ("unknown" if dispatched else "not_dispatched")), "usage-binding")
+    if not dispatched:
+        _need(status == "failed" and raw is None and call.get("http_status") is None and usage is None
+              and type(transport.get("client_closed")) is bool, "predispatch-call")
+        return attempts, prior_usage, usage_unknown, raw, usage, False
+    _need(status in ("returned", "failed") and transport.get("client_closed") is True, "dispatched-call")
+    _need(not usage_unknown, "dispatch-after-unknown-usage")
+    _need(prior_usage["input_tokens"] + PER_CALL_CAPS["input_tokens"] <= TOKEN_CAPS["input_tokens"]
+          and prior_usage["output_tokens"] + PER_CALL_CAPS["output_tokens"] <= TOKEN_CAPS["output_tokens"],
+          "usage-admission")
+    attempts += 1
+    if usage is None:
+        usage_unknown = True
+    else:
+        prior_usage["input_tokens"] += usage["input_tokens"]
+        prior_usage["output_tokens"] += usage["output_tokens"]
+    if status == "returned":
+        _need(call.get("http_status") == 200 and raw is not None and call.get("response_complete") is True and usage is not None,
+              "returned-call-result")
+        _need(usage["input_tokens"] <= PER_CALL_CAPS["input_tokens"]
+              and usage["output_tokens"] <= PER_CALL_CAPS["output_tokens"]
+              and prior_usage["input_tokens"] <= TOKEN_CAPS["input_tokens"]
+              and prior_usage["output_tokens"] <= TOKEN_CAPS["output_tokens"], "returned-usage-cap")
+    else:
+        _need(call.get("failure") is not None, "failed-call-reason")
+        within_caps = (usage is None or
+                       (usage["input_tokens"] <= PER_CALL_CAPS["input_tokens"]
+                        and usage["output_tokens"] <= PER_CALL_CAPS["output_tokens"]
+                        and prior_usage["input_tokens"] <= TOKEN_CAPS["input_tokens"]
+                        and prior_usage["output_tokens"] <= TOKEN_CAPS["output_tokens"]))
+        _need(within_caps or call.get("failure", {}).get("code") == "usage-bound", "failed-usage-cap-reason")
+    return attempts, prior_usage, usage_unknown, raw, usage, True
+
+
+def _receipt_ref(outdir, ref, expected_name):
+    _need(type(ref) is dict and set(ref) == {"path", "sha256", "bytes"}
+          and ref.get("path") == expected_name, "receipt-reference")
+    path = Path(expected_name)
+    _need(not path.is_absolute() and ".." not in path.parts, "unsafe-receipt-path")
+    full = Path(outdir) / "receipts" / path
+    _need(full.is_file() and not full.is_symlink(), "receipt-missing")
+    raw = full.read_bytes()
+    _need(len(raw) == ref["bytes"] and _sha(raw) == ref["sha256"], "receipt-hash")
+    return P.strict_json(raw), raw
+
+
+def _call_receipt_link(outdir, receipt, call, required):
+    ref = receipt.get("call_receipt") if type(receipt) is dict else None
+    if call is None:
+        _need(not required and ref is None, "unexpected-call-receipt-link")
+        return
+    name = call.get("sidecar_path")
+    dispatched = call.get("dispatched")
+    _need(type(name) is str and type(dispatched) is bool, "call-receipt-source")
+    _need(type(ref) is dict and set(ref) == {"path", "sha256", "bytes", "dispatched"}, "call-receipt-link")
+    _need(ref == {"path": name, "sha256": _sha(P.wire(call)), "bytes": len(P.wire(call)),
+                 "dispatched": dispatched}, "call-receipt-binding")
+    path = outdir / "receipts" / name
+    _need(path.is_file() and not path.is_symlink(), "call-receipt-file")
+    raw = path.read_bytes()
+    _need(_sha(raw) == ref["sha256"] and len(raw) == ref["bytes"]
+          and P.strict_json(raw) == call, "call-receipt-sidecar-binding")
+
+
+def _compare_arm(actual, expected, label, status="valid"):
+    _need(type(actual) is dict and set(actual) == {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"},
+          label + "-arm-fields")
+    _need(actual.get("status") == status, label + "-arm-status")
+    if status != "valid":
+        return
+    for key in ("order_ids", "scores", "raw_answers", "rational_scores", "usage"):
+        _need(actual.get(key) == expected.get(key, {} if key in ("scores", "raw_answers", "rational_scores") else None),
+              label + "-arm-" + key)
+    _need(actual.get("elapsed_ms") is None or _finite(actual["elapsed_ms"]), label + "-arm-time")
+
+
+def _verify_receipts(outdir, op, opid, state, call_records):
+    receipts = outdir / "receipts"
+    baseline_ref = op.get("baseline_receipt")
+    candidate_ref = op.get("candidate_body_receipt")
+    final_ref = op.get("final_receipt")
+    expected_baseline_name = opid + "-baseline.json"
+    expected_candidate_name = opid + "-candidate-body.json"
+    expected_final_name = opid + "-final.json"
+    final, final_raw = _receipt_ref(outdir, final_ref, expected_final_name)
+    final_status = final.get("receipt_status")
+    _need(final.get("schema") == "exp076-receipt/1" and final.get("operation") == opid, "final-receipt-schema")
+    baseline_receipt = None
+    if state["baseline_valid"]:
+        baseline_receipt, _ = _receipt_ref(outdir, baseline_ref, expected_baseline_name)
+        baseline_call = call_records[0]
+        _need(baseline_receipt.get("receipt_status") == "baseline-valid"
+              and baseline_receipt.get("order_ids") == state["w0"]["order_ids"]
+              and baseline_receipt.get("usage") == baseline_call.get("usage")
+              and baseline_receipt.get("call_sha256") == _sha(P.wire(baseline_call)), "baseline-receipt-binding")
+        _call_receipt_link(outdir, baseline_receipt, baseline_call, required=True)
+    else:
+        _need(baseline_ref is None, "unexpected-baseline-receipt")
+    candidate_body = None
+    if state.get("candidate_body_expected"):
+        candidate_body, _ = _receipt_ref(outdir, candidate_ref, expected_candidate_name)
+        _need(candidate_body.get("schema") == "exp076-receipt/1" and candidate_body.get("operation") == opid
+              and candidate_body.get("receipt_status") == "candidate-valid"
+              and candidate_body.get("request_sha256") == state["joint_request_sha256"]
+              and candidate_body.get("order_ids") == state["candidate"]["order_ids"]
+              and candidate_body.get("rational_scores") == state["candidate"]["rational_scores"],
+              "candidate-body-binding")
+    else:
+        _need(candidate_ref is None, "unexpected-candidate-body")
+    if final_status == "complete":
+        _need(state["baseline_valid"] and state["candidate_valid"] and candidate_body is not None
+              and final.get("candidate_body_sha256") == _sha(P.wire(candidate_body))
+              and final.get("call_sha256") == _sha(P.wire(call_records[-1]))
+              and final.get("candidate_order_ids") == state["candidate"]["order_ids"]
+              and final.get("provenance_order_ids") == op["provenance_order_ids"], "final-complete-binding")
+        _call_receipt_link(outdir, final, call_records[-1], required=True)
+    elif final_status == "baseline-failed":
+        _need(final.get("order_ids") == op["provenance_order_ids"] and op.get("failure", {}).get("phase") == "baseline",
+              "final-baseline-failure")
+        _need((not state["baseline_valid"] and baseline_receipt is None)
+              or (state["baseline_valid"] and baseline_receipt is not None
+                  and op.get("failure", {}).get("code") == "baseline-deadline"),
+              "baseline-failure-terminal-state")
+        _call_receipt_link(outdir, final, call_records[-1] if call_records else None, required=bool(call_records))
+    elif final_status == "candidate-failed-fallback":
+        _need(state["baseline_valid"] and final.get("order_ids") == op["provenance_order_ids"]
+              and op["arms"]["candidate"]["order_ids"] == op["provenance_order_ids"], "final-native-fallback")
+        if candidate_body is not None:
+            _need(final.get("proposed_body_sha256") == _sha(P.wire(candidate_body)), "final-proposed-body-binding")
+        _call_receipt_link(outdir, final, call_records[-1] if call_records else None, required=bool(call_records))
+    else:
+        raise ReceiptError("receipt-final-status")
+    return final_status
+
+
+def _verify_one(outdir, op, opid, case, cards, variant, calls_by_number, cursor, attempts, totals, unknown,
+                neutral=False, test_fixture=False):
+    control = P.build_control(case, cards, variant)
+    candidate = P.build_candidate(case, cards, variant)
+    expected_provenance = list(control["provenance_order_ids"])
+    expected_variant = "neutral" if neutral else variant
+    _need(type(op) is dict and op.get("id") == opid and op.get("case") == case["id"]
+          and op.get("variant") == expected_variant and op.get("cards") == cards
+          and op.get("provenance_order_ids") == expected_provenance, "operation-source-membership")
+    arms = op.get("arms")
+    _need(type(arms) is dict and set(arms) == set(ARMS), "operation-arms")
+    op_calls = op.get("calls")
+    _need(type(op_calls) is list and len(op_calls) <= 2, "operation-calls")
+    failure = op.get("failure")
+    baseline_valid = False
+    candidate_valid = False
+    candidate_parsed = False
+    candidate_body_expected = False
+    parsed_w0 = None
+    parsed_joint = None
+    joint_request_hash = _sha(P.wire(candidate["joint"]))
+    call_records = []
+    if op.get("phase_endpoint_after_fsync") is True:
+        pass
+    else:
+        _need(failure is not None and failure.get("phase") == "uninvoked" and not op_calls
+              and op.get("final_receipt") is None and op.get("baseline_receipt") is None
+              and op.get("candidate_body_receipt") is None, "uninvoked-operation")
+        for arm in ARMS:
+            row = arms[arm]
+            _need(type(row) is dict and row.get("status") == "uninvoked" and row.get("order_ids") == []
+                  and row.get("scores") == {} and row.get("raw_answers") == {} and row.get("rational_scores") == {}
+                  and row.get("usage") is None and row.get("elapsed_ms") is None, "uninvoked-arm")
+        return cursor, attempts, totals, unknown, {"baseline_valid": False, "candidate_valid": False, "orders": {}}
+    _need(type(op.get("baseline_phase_ms")) in (int, float) and math.isfinite(op["baseline_phase_ms"])
+          and op["baseline_phase_ms"] >= 0, "baseline-phase")
+    _need(type(op.get("candidate_phase_ms")) in (int, float) or op.get("candidate_phase_ms") is None, "candidate-phase")
+    _need(type(op.get("paired_wall_ms")) in (int, float) and math.isfinite(op["paired_wall_ms"])
+          and op["paired_wall_ms"] >= 0, "paired-wall")
+    _need(op.get("phase_endpoint_after_fsync") is True, "phase-endpoint")
+    if len(op_calls) >= 1:
+        embedded = op_calls[0]
+        _need(cursor < len(calls_by_number), "call-sidecar-missing")
+        sidecar = calls_by_number[cursor]
+        expected_arm = "w0"
+        _need(embedded == sidecar, "call-embedded-sidecar-mismatch")
+        attempts, totals, unknown, raw, usage, dispatched = _verify_call(
+            sidecar, opid, expected_arm, control["w0"], totals, unknown, attempts)
+        _need(sidecar.get("operation") == opid and sidecar.get("arm") == expected_arm, "call-order")
+        _need(sidecar.get("request_sha256") == _sha(P.wire(control["w0"])), "w0-request-sha")
+        call_records.append(sidecar)
+        cursor += 1
+        if sidecar.get("status") == "returned":
+            try:
+                parsed_w0 = P.parse_control(raw, control)
+                baseline_valid = True
+            except (ValueError, TypeError, KeyError):
+                baseline_valid = False
+        if baseline_valid:
+            expected_w0 = {"order_ids": parsed_w0["order_ids"], "scores": parsed_w0["scores"],
+                           "raw_answers": parsed_w0["raw_answers"], "rational_scores": {}, "usage": parsed_w0["usage"]}
+            _compare_arm(arms["w0"], expected_w0, opid + "-w0")
+        elif arms["w0"].get("status") == "valid":
+            raise ReceiptError("w0-arm-without-valid-raw")
+        if sidecar.get("status") != "returned" or not baseline_valid:
+            _need(len(op_calls) == 1, "w0-failure-extra-call")
+    else:
+        raise ReceiptError("operation-missing-w0-call")
+    if baseline_valid and len(op_calls) == 2:
+        embedded = op_calls[1]
+        _need(cursor < len(calls_by_number), "joint-call-sidecar-missing")
+        sidecar = calls_by_number[cursor]
+        _need(embedded == sidecar, "joint-call-embedded-sidecar-mismatch")
+        attempts, totals, unknown, raw_joint, joint_usage, dispatched = _verify_call(
+            sidecar, opid, "candidate", candidate["joint"], totals, unknown, attempts)
+        _need(sidecar.get("request_sha256") == joint_request_hash, "joint-request-sha")
+        call_records.append(sidecar)
+        cursor += 1
+        if sidecar.get("status") == "returned":
+            try:
+                parsed_joint = P.parse_candidate(raw_joint, candidate)
+                candidate_parsed = True
+                candidate_body_expected = True
+                candidate_deadline_fallback = (op.get("failure") == {"code": "candidate-deadline", "phase": "candidate"}
+                                               and arms["candidate"].get("status") == "failed-fallback")
+                candidate_valid = not candidate_deadline_fallback
+            except (ValueError, TypeError, KeyError):
+                candidate_valid = False
+        if candidate_parsed:
+            for name in ("joint_query", "joint_purpose"):
+                _compare_arm(arms[name], parsed_joint[name], opid + "-" + name)
+            if candidate_valid:
+                _compare_arm(arms["candidate"], parsed_joint["candidate"], opid + "-candidate")
+            else:
+                _need(op.get("failure", {}).get("code") == "candidate-deadline"
+                      and arms["candidate"].get("order_ids") == expected_provenance
+                      and arms["candidate"].get("rational_scores") == {}, "candidate-deadline-fallback")
+        else:
+            _need(arms["candidate"].get("status") == "failed-fallback", "invalid-joint-not-fallback")
+            _need(arms["candidate"].get("order_ids") == expected_provenance
+                  and arms["candidate"].get("rational_scores") == {}, "invalid-joint-native-fallback")
+    if len(op_calls) == 2 and not baseline_valid:
+        raise ReceiptError("joint-call-after-invalid-w0")
+    if not baseline_valid:
+        for name in ("joint_query", "joint_purpose"):
+            _need(arms[name].get("status") == "uninvoked", "arm-after-w0-failure")
+        _need(arms["candidate"].get("status") == "failed-fallback"
+              and arms["candidate"].get("order_ids") == expected_provenance
+              and arms["candidate"].get("rational_scores") == {}, "w0-failure-native-fallback")
+    elif len(op_calls) == 1:
+        _need(all(arms[name].get("status") in ("uninvoked", "failed-fallback")
+                  for name in ("joint_query", "joint_purpose", "candidate")), "arm-after-joint-no-call")
+    if candidate_parsed:
+        candidate_phase = op.get("candidate_phase_ms")
+        _need(type(candidate_phase) in (int, float) and math.isfinite(candidate_phase) and candidate_phase >= 0,
+              "candidate-phase-value")
+        build_ms = call_records[-1].get("timings", {}).get("build_ms")
+        serialize_ms = call_records[-1].get("timings", {}).get("serialization_ms")
+        http_elapsed = call_records[-1].get("elapsed_ms")
+        _need(_finite(build_ms) and _finite(serialize_ms) and _finite(http_elapsed), "candidate-phase-components")
+        _need(candidate_phase + PHASE_TOLERANCE_MS >= build_ms + serialize_ms + http_elapsed,
+              "candidate-phase-lower-bound")
+        _need(candidate_phase <= 1000 + PHASE_TOLERANCE_MS or op.get("failure", {}).get("code") == "candidate-deadline",
+              "candidate-phase-deadline")
+    elif op.get("candidate_phase_ms") is not None:
+        candidate_phase = op["candidate_phase_ms"]
+        _need(_finite(candidate_phase), "failed-candidate-phase-value")
+        if candidate_phase > 1000 + PHASE_TOLERANCE_MS:
+            _need(op.get("failure", {}).get("phase") == "candidate"
+                  and op.get("failure", {}).get("code") in ("candidate-deadline", "whole-phase-deadline"),
+                  "failed-candidate-phase-deadline")
+        if call_records and len(call_records) > 1:
+            build_ms = call_records[-1].get("timings", {}).get("build_ms")
+            serialize_ms = call_records[-1].get("timings", {}).get("serialization_ms")
+            if build_ms is not None and serialize_ms is not None:
+                _need(candidate_phase + PHASE_TOLERANCE_MS >= build_ms + serialize_ms,
+                      "failed-candidate-build-lower-bound")
+    if call_records and call_records[0].get("elapsed_ms") is not None:
+        _need(op["baseline_phase_ms"] + PHASE_TOLERANCE_MS >= call_records[0]["elapsed_ms"], "baseline-phase-lower-bound")
+    if baseline_valid:
+        _need(op["baseline_phase_ms"] <= 1000 + PHASE_TOLERANCE_MS or op.get("failure") is not None,
+              "baseline-phase-deadline")
+    phase_lower_bound = op["baseline_phase_ms"] + (op["candidate_phase_ms"] or 0)
+    _need(op["paired_wall_ms"] + WALL_TOLERANCE_MS >= phase_lower_bound, "paired-wall-lower-bound")
+    if baseline_valid and candidate_valid and op.get("failure") is None:
+        _need(op["candidate_phase_ms"] <= 1000 + PHASE_TOLERANCE_MS
+              and op["baseline_phase_ms"] <= 1000 + PHASE_TOLERANCE_MS, "complete-phase-deadline")
+        expected_status = "complete"
+    else:
+        expected_status = "baseline-failed" if (not baseline_valid or (op.get("failure") or {}).get("phase") == "baseline") else "candidate-failed-fallback"
+        _need(op.get("failure") is not None, "terminal-operation-failure")
+        _need(arms["candidate"].get("order_ids") == expected_provenance, "terminal-native-fallback")
+    state = {"baseline_valid": baseline_valid, "candidate_valid": candidate_valid,
+             "candidate_body_expected": candidate_body_expected,
+             "joint_request_sha256": joint_request_hash,
+             "w0": parsed_w0 or {}, "candidate": parsed_joint["candidate"] if candidate_parsed else {}}
+    receipt_status = _verify_receipts(outdir, op, opid, state, call_records)
+    _need(receipt_status == expected_status, "operation-receipt-status")
+    return cursor, attempts, totals, unknown, {
+        "baseline_valid": baseline_valid,
+        "candidate_valid": candidate_valid,
+        "candidate_body_expected": candidate_body_expected,
+        "orders": {"w0": parsed_w0["order_ids"] if baseline_valid else expected_provenance,
+                   "candidate": parsed_joint["candidate"]["order_ids"] if candidate_valid else expected_provenance},
+    }
+
+
+def verify(outdir, *, test_fixture=False):
+    """Verify a runner packet. `test_fixture=True` skips only committed-manifest status for test Qs."""
+    outdir = Path(outdir)
+    _need(outdir.is_dir() and not outdir.is_symlink(), "output-directory")
+    run_path = outdir / "run.json"
+    run = _read_json(run_path)
+    _need(run.get("schema") == "exp076-run/1" and run.get("status") in ("complete", "incomplete"), "run-schema-status")
+    _need(type(run.get("synthetic")) is bool and run.get("quality_credit") is False
+          and run.get("adoption_eligible") is False, "run-credit")
+    _need(set(run) == {"schema", "status", "synthetic", "quality_credit", "adoption_eligible", "input_pins",
+                       "input_revision", "source_integrity", "neutral", "operations", "budget", "wall_seconds"},
+          "run-fields")
+    protocol_raw = (HERE / "protocol.json").read_bytes()
+    registration_raw = (HERE / "registration-integrity.json").read_bytes()
+    protocol = P.strict_json(protocol_raw)
+    registration = P.strict_json(registration_raw)
+    input_bytes = {path: (REPO / path).read_bytes() for path in P.PINS}
+    qualification_raw = _verify_source_binding(run, outdir, input_bytes, protocol_raw, registration_raw, test_fixture)
+    try:
+        acquisition, queries = P.source_data(input_bytes)
+    except (ValueError, KeyError, TypeError) as exc:
+        raise ReceiptError("pinned-input-parse:" + type(exc).__name__) from None
+    proof = P.validate_inputs(input_bytes, run.get("input_revision"))
+    _need(run.get("input_pins") == proof["input_pins"], "run-input-pins")
+    _need(protocol.get("schema") == "exp076-shared-canonical-pool/1"
+          and protocol.get("status") == "design_registered_harness_unqualified_no_provider_calls_no_quality_computation",
+          "protocol-registration-state")
+    _need(registration.get("schema") == "exp076-registration/1"
+          and registration.get("provider_calls") == 0 and registration.get("search_calls") == 0,
+          "registration-schema")
+
+    neutral_case, neutral_cards = P.synthetic_case()
+    items = N.P.prebuild(acquisition, queries)
+    operations = run.get("operations")
+    _need(type(operations) is list and len(operations) == 21 and len(items) == 21, "schedule-length")
+    for row, (spec, *_rest) in zip(operations, items):
+        _need(row.get("case") == spec["case"] and row.get("variant") == spec["variant"], "schedule-entry")
+    receipt_dir = outdir / "receipts"
+    _need(receipt_dir.is_dir() and not receipt_dir.is_symlink(), "receipt-directory")
+    call_paths = sorted(receipt_dir.glob("call-*.json"), key=lambda path: int(path.stem.split("-")[-1]))
+    _need(len(call_paths) <= P.PROTOCOL["bounds"]["calls"], "attempt-cap")
+    calls_by_number = []
+    for index, path in enumerate(call_paths):
+        _need(path.name == f"call-{index:02d}.json" and not path.is_symlink(), "call-sequence")
+        calls_by_number.append(_read_json(path))
+    expected_receipt_files = {path.name for path in call_paths}
+    cursor = 0
+    attempts = 0
+    totals = {"input_tokens": 0, "output_tokens": 0}
+    unknown = False
+    op_states = []
+    neutral_state = _verify_one(outdir, run.get("neutral"), "neutral", neutral_case, neutral_cards, "base",
+                                calls_by_number, cursor, attempts, totals, unknown, neutral=True,
+                                test_fixture=test_fixture)
+    cursor, attempts, totals, unknown, state = neutral_state
+    op_states.append(state)
+    expected_receipt_files.update({"neutral-final.json"})
+    if state["baseline_valid"]:
+        expected_receipt_files.add("neutral-baseline.json")
+    if state.get("candidate_body_expected"):
+        expected_receipt_files.add("neutral-candidate-body.json")
+    for row, prepared in zip(operations, items):
+        spec, case, cards, _control, _candidate, _control_raw, _joint_raw = prepared
+        opid = spec["case"] + "-" + spec["variant"]
+        before = cursor
+        cursor, attempts, totals, unknown, state = _verify_one(outdir, row, opid, case, cards, spec["variant"],
+                                                                calls_by_number, cursor, attempts, totals, unknown,
+                                                                test_fixture=test_fixture)
+        op_states.append(state)
+        if cursor > before:
+            expected_receipt_files.add(opid + "-final.json")
+            if state["baseline_valid"]:
+                expected_receipt_files.add(opid + "-baseline.json")
+            if state.get("candidate_body_expected"):
+                expected_receipt_files.add(opid + "-candidate-body.json")
+    _need(cursor == len(calls_by_number), "unreferenced-call-sidecar")
+    entries = list(receipt_dir.iterdir())
+    _need(all(path.is_file() and not path.is_symlink() for path in entries), "receipt-entry-type")
+    observed_receipts = {path.name for path in entries}
+    _need(observed_receipts == expected_receipt_files, "receipt-inventory")
+    budget = run.get("budget")
+    _need(type(budget) is dict and set(budget) == {"attempts", "input_tokens", "output_tokens", "unknown_usage"}
+          and budget.get("attempts") == attempts
+          and budget.get("input_tokens") == totals["input_tokens"]
+          and budget.get("output_tokens") == totals["output_tokens"]
+          and budget.get("unknown_usage") is unknown, "budget-binding")
+    _need(attempts <= P.PROTOCOL["bounds"]["calls"], "attempt-cap")
+    completed = (run["neutral"]["failure"] is None and all(row.get("failure") is None for row in operations)
+                 and len(operations) == 21 and attempts == 44 and not unknown)
+    if run.get("status") == "complete":
+        _need(completed, "complete-with-terminal-failure")
+    else:
+        _need(not completed, "incomplete-without-stop")
+    for op, state in zip([run["neutral"], *operations], op_states):
+        if op.get("failure") and op["failure"].get("phase") == "uninvoked":
+            _need(not op.get("calls") and not op.get("phase_endpoint_after_fsync"), "uninvoked-stop-state")
+        elif op.get("failure") is None:
+            _need(state["baseline_valid"] and state["candidate_valid"], "successful-operation-state")
+    _need(type(run.get("wall_seconds")) in (float, int) and math.isfinite(run["wall_seconds"])
+          and 0 <= run["wall_seconds"] <= P.PROTOCOL["bounds"]["wall_seconds"], "wall-budget")
+    paired_sum = sum(op["paired_wall_ms"] for op in [run["neutral"], *operations]
+                     if type(op.get("paired_wall_ms")) in (int, float) and math.isfinite(op["paired_wall_ms"]))
+    _need(run["wall_seconds"] * 1000 + WALL_TOLERANCE_MS >= paired_sum, "whole-wall-lower-bound")
+    orders = {}
+    for index, state in enumerate(op_states[1:]):
+        spec = protocol["schedule"][index]
+        orders[(spec["case"], spec["variant"])] = state["orders"]
+    return {"valid": True, "status": run["status"], "attempts": attempts,
+            "unknown_usage": unknown, "source_closure_verified": not run["synthetic"],
+            "qualification_sha256": _sha(qualification_raw) if qualification_raw is not None else None,
+            "orders": orders}

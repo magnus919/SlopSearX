@@ -45,7 +45,7 @@ async def test_lineage_reads_across_store_instances_without_extending_ttl(backen
     snapshot_id = await first.create(
         "query",
         "query-id",
-        [SearchResult(url="https://example.test", title="Example", engine="wikipedia")],
+        [SearchResult(url="https://example.test", title="Example", content="", engine="wikipedia")],
         ScopeDecision(selected_engines=["wikipedia"]),
         derived_from=[parent],
     )

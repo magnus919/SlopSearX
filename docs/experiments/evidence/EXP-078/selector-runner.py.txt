@@ -1,0 +1,455 @@
+"""EXP-078 selector phase: new admission, frozen EXP-076 selector semantics.
+
+This is a development-only phase runner. It reuses EXP-076 request building,
+strict parsing and exact fusion, while consuming only EXP-078 effective-pool
+inputs. It does not call EXP-077 eligibility, admission, or live runner code.
+Import is inert; offline fixtures require an explicit MockTransport.
+"""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import httpx
+import importlib.machinery
+import importlib.util
+import json
+import os
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+EXP077 = HERE.parent / "EXP-077"
+EXP076 = HERE.parent / "EXP-076"
+EXP075_TRANSPORT = HERE.parent / "EXP-075" / "http-transport.py.txt"
+MAX_CALLS = 44
+MAX_INPUT_TOTAL = 3_000_000
+MAX_OUTPUT_TOTAL = 160_000
+RESERVE_INPUT = 64_000
+RESERVE_OUTPUT = 32_000
+CALL_INPUT_MAX = 64_000
+CALL_OUTPUT_MAX = 32_000
+RESPONSE_MAX = 2_000_000
+PHASE_SECONDS = 1.0
+
+
+def load(name: str, path: Path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ValueError("source-loader")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+F = load("exp078_frozen_exp076_prepare", EXP076 / "prepare.py.txt")
+OLD_PREPARE = load("exp078_exp077_pure_prepare", EXP077 / "prepare.py.txt")
+T = load("exp078_exp075_http_transport", EXP075_TRANSPORT)
+
+
+def digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def wire(value) -> bytes:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def durable(path: Path, value) -> dict:
+    raw = value if type(value) is bytes else wire(value)
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    with tmp.open("xb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(tmp, path)
+    fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    return {"path": path.name, "sha256": digest(raw), "bytes": len(raw)}
+
+
+def stage_clock(raw: bytes) -> tuple[dict, float]:
+    clock = OLD_PREPARE.strict_json(raw)
+    canonical = OLD_PREPARE.clock_wire(clock)
+    if raw != canonical:
+        raise ValueError("078-stage-clock-canonical")
+    if (not isinstance(clock, dict) or clock.get("schema") != "exp078-stage-clock/1"
+            or clock.get("stage") != "development"):
+        raise ValueError("078-development-clock-required")
+    try:
+        started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+        deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+    except (AttributeError, KeyError, TypeError, ValueError) as exc:
+        raise ValueError("078-stage-clock-timestamps") from exc
+    if (started.tzinfo is None or deadline.tzinfo is None or started.utcoffset().total_seconds() != 0
+            or deadline.utcoffset().total_seconds() != 0 or (deadline-started).total_seconds() != 28_800):
+        raise ValueError("078-stage-clock-bound")
+    remaining = (deadline - datetime.now(timezone.utc)).total_seconds()
+    if remaining <= 0:
+        raise ValueError("078-stage-clock-expired")
+    return clock, remaining
+
+
+def validate_effective(acquisition: dict, cases: list[dict], clock: dict) -> None:
+    if (not isinstance(acquisition, dict) or acquisition.get("schema") != "exp078-effective-acquisition/1"
+            or acquisition.get("stage") != "development"):
+        raise ValueError("078-effective-acquisition-schema")
+    ids = [case["id"] for case in cases]
+    if set(acquisition.get("pools", {})) != set(ids) or set(acquisition.get("engine_outcomes", {})) != set(ids):
+        raise ValueError("078-complete-pool-membership")
+    receipt = acquisition.get("acquisition_receipt")
+    if (not isinstance(receipt, dict) or receipt.get("stage_clock") != clock
+            or receipt.get("stage_clock_digest") != digest(OLD_PREPARE.clock_wire(clock))):
+        raise ValueError("078-clock-binding")
+    for case in cases:
+        row = acquisition["pools"][case["id"]]
+        if not isinstance(row, dict) or not isinstance(row.get("cards"), list):
+            raise ValueError("078-pool-shape")
+        ids_seen = set()
+        for card in row["cards"]:
+            if (not isinstance(card, dict) or set(card) != {"id", "url", "title", "snippet"}
+                    or any(type(card[k]) is not str for k in card) or not card["id"] or not card["url"]
+                    or card["id"] in ids_seen):
+                raise ValueError("078-card-shape-or-identity")
+            ids_seen.add(card["id"])
+        outcomes = acquisition["engine_outcomes"][case["id"]]
+        if not isinstance(outcomes, dict) or not outcomes:
+            raise ValueError("078-engine-outcomes-missing")
+        # Approved Wikipedia failures remain visible; do not recast them as ok.
+        if case["kind"] == "research":
+            wiki = outcomes.get("wikipedia")
+            if not isinstance(wiki, dict) or wiki.get("status") not in {"ok", "blocked", "unavailable", "error", "timeout", "rate_limited"}:
+                raise ValueError("078-wikipedia-outcome-missing")
+
+
+def make_prepared(acquisition: dict, cases: list[dict]):
+    prepared = []
+    for item in OLD_PREPARE.schedule(cases):
+        case = next(row for row in cases if row["id"] == item["case"])
+        cards = acquisition["pools"][case["id"]]["cards"]
+        if not 2 <= len(cards) <= 80:
+            prepared.append((item, case, cards, None, None, None, None))
+            continue
+        # These are the frozen EXP-076 builders and exact request wire bounds.
+        control = F.build_control(case, cards, item["variant"])
+        candidate = F.build_candidate(case, cards, item["variant"])
+        control_raw, candidate_raw = F.enforce_bounds(control, candidate)
+        prepared.append((item, case, cards, control, candidate, control_raw, candidate_raw))
+    if len(prepared) != 21:
+        raise ValueError("078-operation-schedule")
+    return prepared
+
+
+def normalize_cases(cases: list[dict]) -> list[dict]:
+    """Project frozen EXP-078 cohort rows to the unchanged EXP-076 task shape."""
+    if not isinstance(cases, list):
+        raise ValueError("078-case-list")
+    if cases and all(isinstance(case, dict) and "facets" in case for case in cases):
+        return cases
+    if (not cases or any(not isinstance(case, dict) for case in cases)
+            or any(case.get("kind") == "research" and "critical_checks" not in case for case in cases)):
+        raise ValueError("078-case-projection-input")
+    return OLD_PREPARE.case_index({"cohorts": {"development": cases}}, "development")
+
+
+class CallError(RuntimeError):
+    def __init__(self, record: dict, code: str):
+        self.record = record
+        self.code = code
+        super().__init__(code)
+
+
+def _usage_admissible(budget: dict) -> bool:
+    return (budget["input_tokens"] + RESERVE_INPUT <= MAX_INPUT_TOTAL
+            and budget["output_tokens"] + RESERVE_OUTPUT <= MAX_OUTPUT_TOTAL)
+
+
+def fixture_transport_factory(mode="ok", stats=None):
+    stats = stats if stats is not None else {"calls": 0, "clients": 0, "closed": 0}
+    async def handler(request):
+        stats["calls"] += 1
+        body = F.strict_json(await request.aread())
+        if mode == "http-error":
+            return httpx.Response(503, content=b"offline fixture failure")
+        if mode == "unknown-usage":
+            payload = F.strict_json(F.response_fixture(body))
+            payload.pop("usage", None)
+            return httpx.Response(200, content=F.wire(payload))
+        if mode == "slow":
+            await asyncio.sleep(2)
+        return httpx.Response(200, content=F.response_fixture(body))
+    def factory(**kwargs):
+        stats["clients"] += 1
+        class CountedClient(httpx.AsyncClient):
+            async def aclose(self):
+                if not getattr(self, "_counted", False):
+                    self._counted = True
+                    stats["closed"] += 1
+                await super().aclose()
+        return CountedClient(transport=httpx.MockTransport(handler), **kwargs)
+    factory.stats = stats
+    return factory
+
+
+async def run_selector(acquisition: dict, cases: list[dict], clock_raw: bytes,
+                       stage_outdir: Path, outdir: Path,
+                       *, offline: bool, stage_permit=None, admission_module=None,
+                       transport_factory=None, source_integrity: dict | None = None) -> dict:
+    """Run all fixed operations; live mode accepts only common EXP-078 admission."""
+    if offline:
+        if stage_permit is not None:
+            raise ValueError("offline-admission-forbidden")
+        if transport_factory is None:
+            raise ValueError("offline-requires-explicit-mock-transport")
+        api_key, endpoint = "exp078-offline-fixture", "https://fixture.invalid/jev"
+        client_factory = transport_factory
+    else:
+        if stage_permit is None or admission_module is None or transport_factory is not None:
+            raise ValueError("078-common-admission-required")
+        # Do not accept, instantiate, or translate any EXP-077 live capability.
+        api_key = None
+        endpoint = F.PROTOCOL["wire"]["endpoint"]
+        client_factory = None
+    clock, remaining = stage_clock(clock_raw)
+    cases = normalize_cases(cases)
+    validate_effective(acquisition, cases, clock)
+    prepared = make_prepared(acquisition, cases)
+    if outdir.exists() or outdir.is_symlink() or not outdir.parent.is_dir():
+        raise ValueError("078-output-path")
+    stage_root = Path(stage_outdir).resolve()
+    phase_root = outdir.resolve()
+    if phase_root == stage_root or not phase_root.is_relative_to(stage_root):
+        raise ValueError("078-phase-output-must-be-inside-stage")
+    outdir.mkdir(mode=0o700)
+    receipt_dir = outdir / "receipts"
+    receipt_dir.mkdir(mode=0o700)
+    phase_permit = None
+    if not offline:
+        phase_permit = admission_module.acquire_phase(stage_permit, "selector", stage_root, clock_raw)
+        admission_module.require_phase(phase_permit, clock_raw, stage_root)
+        api_key = os.environ.get("TYPESAFE_API_KEY", "")
+        if not api_key:
+            raise ValueError("selector-credential-unavailable-after-admission")
+    run_start = time.perf_counter()
+    whole_deadline = run_start + remaining
+    budget = {"attempts": 0, "input_tokens": 0, "output_tokens": 0, "unknown_usage": False}
+    owner = T.AsyncHTTPTransport(client_factory=client_factory)
+    run = {"schema": "exp078-selector-run/1", "stage": "development", "status": "running",
+           "synthetic": offline, "quality_credit": False, "adoption_eligible": False,
+           "source_integrity": source_integrity, "stage_clock": clock, "stage_clock_sha256": digest(clock_raw),
+           "operations": [], "neutral": None, "budget": budget}
+
+    def checkpoint():
+        run["budget"] = dict(budget)
+        run["selector_runner_elapsed_seconds"] = time.perf_counter() - run_start
+        stage_started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+        run["shared_stage_elapsed_seconds"] = max(0.0, (datetime.now(timezone.utc) - stage_started).total_seconds())
+        durable(outdir / "selector-run.json", run)
+
+    async def one_call(raw: bytes, opid: str, arm: str, deadline: float):
+        if len(raw) > (F.PROTOCOL["bounds"]["legacy_control_request_bytes"] if arm == "w0"
+                       else F.PROTOCOL["bounds"]["request_bytes"]):
+            raise CallError({"status": "not_dispatched", "dispatched": False}, "request-byte-bound")
+        if budget["attempts"] >= MAX_CALLS or not _usage_admissible(budget):
+            raise CallError({"status": "not_dispatched", "dispatched": False}, "usage-admission")
+        rec = {"schema": "exp078-selector-call/1", "operation": opid, "arm": arm,
+               "status": "pending", "dispatched": False, "request_sha256": digest(raw),
+               "request_bytes": len(raw), "response_sha256": None, "response_bytes": None,
+               "http_status": None, "usage": None, "usage_status": "not_dispatched", "failure": None}
+        path = receipt_dir / f"call-{budget['attempts']:02d}.json"
+        durable(path, rec)
+        def dispatch():
+            if time.perf_counter() >= deadline or time.perf_counter() >= whole_deadline:
+                raise T.DispatchDenied()
+            if not offline:
+                admission_module.require_phase(phase_permit, clock_raw, stage_root)
+            rec.update(status="dispatched", dispatched=True, usage_status="unknown")
+            budget["attempts"] += 1
+            durable(path, rec)
+        try:
+            remaining_call = min(PHASE_SECONDS, deadline-time.perf_counter(), whole_deadline-time.perf_counter())
+            if remaining_call <= 0:
+                raise T.DispatchDenied()
+            response, status, complete, timings = await owner.exchange(
+                raw, api_key if api_key is not None else "", remaining_call, endpoint, on_dispatch=dispatch)
+            usage = F.usage_from_raw(response)
+            rec.update(status="returned", http_status=status, response_sha256=digest(response),
+                       response_bytes=len(response), response_complete=complete, usage=usage,
+                       usage_status="known" if usage is not None else "unknown", timings=timings)
+            if usage is None:
+                budget["unknown_usage"] = True
+                raise CallError(rec, "unknown-usage-terminal")
+            budget["input_tokens"] += usage["input_tokens"]
+            budget["output_tokens"] += usage["output_tokens"]
+            if (status != 200 or not complete or len(response) > RESPONSE_MAX
+                    or usage["input_tokens"] > CALL_INPUT_MAX or usage["output_tokens"] > CALL_OUTPUT_MAX
+                    or budget["input_tokens"] > MAX_INPUT_TOTAL or budget["output_tokens"] > MAX_OUTPUT_TOTAL):
+                raise CallError(rec, "response-or-usage-bound")
+            rec["status"] = "valid"
+            return response, rec
+        except T.TransportFailure as exc:
+            rec.update(status="failed", http_status=exc.http_status, response_complete=exc.response_complete,
+                       failure=exc.code, usage_status="unknown" if exc.dispatched else "not_dispatched")
+            if exc.raw is not None:
+                rec["response_sha256"] = digest(exc.raw)
+                rec["response_bytes"] = len(exc.raw)
+                usage = F.usage_from_raw(exc.raw)
+                rec["usage"] = usage
+                if usage is not None:
+                    rec["usage_status"] = "known"
+                    budget["input_tokens"] += usage["input_tokens"]
+                    budget["output_tokens"] += usage["output_tokens"]
+                elif exc.dispatched:
+                    budget["unknown_usage"] = True
+            elif exc.dispatched:
+                budget["unknown_usage"] = True
+            raise CallError(rec, exc.code) from None
+        except (ValueError, T.DispatchDenied) as exc:
+            raise CallError(rec, str(exc) if isinstance(exc, ValueError) else "whole-stage-deadline") from None
+        finally:
+            durable(path, rec)
+
+    async def operation(opid, item, case, cards):
+        # Fresh immutable structures and serialization happen before each timed phase.
+        control = F.build_control(case, cards, item["variant"])
+        candidate = F.build_candidate(case, cards, item["variant"])
+        control_raw, candidate_raw = F.enforce_bounds(control, candidate)
+        native = list(control["provenance_order_ids"])
+        record = {"id": opid, "case": case["id"], "variant": item["variant"],
+                  "native_order_ids": native, "baseline_order_ids": None,
+                  "candidate_order_ids": list(native), "status": "running", "failure": None,
+                  "calls": [], "candidate_components": None}
+        baseline_start = time.perf_counter()
+        try:
+            raw, receipt = await one_call(control_raw, opid, "w0", baseline_start+PHASE_SECONDS)
+            record["calls"].append(receipt)
+            baseline = F.parse_control(raw, control)
+            record["baseline_order_ids"] = baseline["order_ids"]
+            durable(receipt_dir / f"{opid}-baseline.json", {"schema": "exp078-selector-receipt/1",
+                "operation": opid, "phase": "baseline", "order_ids": baseline["order_ids"],
+                "call_sha256": digest(wire(receipt)), "stage_clock_sha256": digest(clock_raw)})
+            record["baseline_phase_ms"] = (time.perf_counter()-baseline_start)*1000
+            if record["baseline_phase_ms"] > 1000:
+                raise CallError(receipt, "baseline-deadline")
+        except (ValueError, CallError) as exc:
+            record.update(status="failed", failure={"phase": "baseline", "code": exc.code if isinstance(exc, CallError) else "baseline-parse"})
+            if isinstance(exc, CallError):
+                record["calls"].append(exc.record)
+            durable(receipt_dir / f"{opid}-final.json", {"schema": "exp078-selector-receipt/1",
+                "operation": opid, "phase": "baseline-failed", "failure": record["failure"],
+                "order_ids": native, "stage_clock_sha256": digest(clock_raw)})
+            record["phase_endpoint_after_fsync"] = True
+            return record, False
+        candidate_start = time.perf_counter()
+        try:
+            # Exact frozen EXP-076 candidate request build/parse/fusion.
+            candidate = F.build_candidate(case, cards, item["variant"])
+            candidate_raw = wire(candidate["joint"])
+            if len(candidate_raw) > F.PROTOCOL["bounds"]["request_bytes"]:
+                raise ValueError("candidate-request-bound")
+            raw, receipt = await one_call(candidate_raw, opid, "candidate", candidate_start+PHASE_SECONDS)
+            record["calls"].append(receipt)
+            parsed = F.parse_candidate(raw, candidate)
+            order = parsed["candidate"]["order_ids"]
+            if len(order) != len(native) or set(order) != set(native):
+                raise ValueError("candidate-membership")
+            record.update(status="complete", candidate_order_ids=order,
+                candidate_components={"query_order_ids": parsed["joint_query"]["order_ids"],
+                  "purpose_order_ids": parsed["joint_purpose"]["order_ids"],
+                  "rational_scores": parsed["candidate"]["rational_scores"]})
+            body_ref = durable(receipt_dir / f"{opid}-candidate-body.json", {"schema": "exp078-selector-body/1",
+                "request_sha256": digest(candidate_raw), "candidate_order_ids": order,
+                "native_order_ids": native, "stage_clock_sha256": digest(clock_raw)})
+            final_ref = durable(receipt_dir / f"{opid}-final.json", {"schema": "exp078-selector-receipt/1",
+                "operation": opid, "phase": "complete", "body_receipt_sha256": body_ref["sha256"],
+                "candidate_order_ids": order, "native_order_ids": native,
+                "stage_clock_sha256": digest(clock_raw)})
+            record["final_receipt"] = final_ref
+            record["candidate_phase_ms"] = (time.perf_counter()-candidate_start)*1000
+            record["phase_endpoint_after_fsync"] = True
+            if record["candidate_phase_ms"] > 1000:
+                raise ValueError("candidate-deadline")
+            return record, True
+        except (ValueError, CallError) as exc:
+            code = exc.code if isinstance(exc, CallError) else str(exc)
+            record.update(status="candidate_failed_fallback", candidate_order_ids=native,
+                          failure={"phase": "candidate", "code": code})
+            record.pop("candidate_components", None)
+            if isinstance(exc, CallError):
+                record["calls"].append(exc.record)
+            durable(receipt_dir / f"{opid}-final.json", {"schema": "exp078-selector-receipt/1",
+                "operation": opid, "phase": "candidate-failed-fallback", "failure": record["failure"],
+                "order_ids": native, "stage_clock_sha256": digest(clock_raw)})
+            record["candidate_phase_ms"] = (time.perf_counter()-candidate_start)*1000
+            record["phase_endpoint_after_fsync"] = True
+            return record, False
+
+    try:
+        research_good = sum(c["kind"] == "research" and
+            41 <= len(acquisition["pools"][c["id"]]["cards"]) <= 80 for c in cases)
+        missing_targets = [c["id"] for c in cases if c["kind"] == "navigation" and
+            not any(card["url"] == c["target_url"] for card in acquisition["pools"][c["id"]]["cards"])]
+        if research_good < 4 or missing_targets:
+            run.update(status="inconclusive-prefight", research_pools_41_to_80=research_good,
+                       missing_navigation_targets=missing_targets)
+            checkpoint()
+            return run
+        neutral_case, neutral_cards = F.synthetic_case()
+        neutral_item = {"case": "neutral", "variant": "base"}
+        neutral_control = F.build_control(neutral_case, neutral_cards)
+        neutral_raw, _ = F.enforce_bounds(neutral_control, F.build_candidate(neutral_case, neutral_cards))
+        neutral_record, neutral_ok = await operation("neutral", neutral_item, neutral_case, neutral_cards)
+        run["neutral"] = neutral_record
+        checkpoint()
+        stopped = not neutral_ok
+        for item, case, cards, _control, _candidate, _control_raw, _candidate_raw in prepared:
+            opid = f"{case['id']}-{item['variant']}"
+            if stopped:
+                run["operations"].append({"id": opid, "case": case["id"], "variant": item["variant"],
+                    "status": "uninvoked", "failure": {"code": "prior-terminal-stop"}})
+                continue
+            if _control is None:
+                if case["kind"] == "navigation" and len(cards) == 1 and cards[0]["url"] == case["target_url"]:
+                    run["operations"].append({"id": opid, "case": case["id"], "variant": item["variant"],
+                        "status": "native_target_top1_noop", "candidate_order_ids": [cards[0]["id"]],
+                        "native_order_ids": [cards[0]["id"]], "target_url": case["target_url"], "model_calls": 0})
+                    checkpoint()
+                    continue
+                run["operations"].append({"id": opid, "case": case["id"], "variant": item["variant"],
+                    "status": "not_rankable", "failure": {"code": "pool-outside-selector-bound"},
+                    "native_membership_count": len(cards), "native_order_ids": [c["id"] for c in cards]})
+                checkpoint()
+                continue
+            # Operation rebuilds both requests using exact frozen code.
+            item_record, ok = await operation(opid, item, case, cards)
+            run["operations"].append(item_record)
+            checkpoint()
+            if not ok:
+                stopped = True
+        if not offline and datetime.now(timezone.utc) >= datetime.fromisoformat(
+                clock["stage_deadline_utc"].replace("Z", "+00:00")):
+            stopped = True
+            run["deadline_expired_after_durable_receipt"] = True
+        valid = all(op.get("status") in {"complete", "native_target_top1_noop"}
+                    for op in run["operations"])
+        run["status"] = "complete" if not stopped and valid and len(run["operations"]) == 21 and budget["attempts"] <= MAX_CALLS else "incomplete"
+        checkpoint()
+        return run
+    except BaseException as exc:
+        run.update(status="incomplete", terminal_error_class=type(exc).__name__)
+        checkpoint()
+        raise
+    finally:
+        # The imported EXP-075 transport owns a fresh client per exchange and
+        # closes it inside exchange(); this wrapper has no shared client.
+        pass
+
+
+if __name__ == "__main__":
+    raise SystemExit("EXP-078 selector runner requires the registered stage driver; no CLI live path")

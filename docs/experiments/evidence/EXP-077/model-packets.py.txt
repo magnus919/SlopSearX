@@ -1,0 +1,549 @@
+"""Bounded deterministic EXP-077 model-facing packet preparation.
+
+No provider calls occur here. Inputs are already frozen cards, source states,
+captured contexts, and arm orders. Evidence IDs are identities only; the
+hydrator/validator remain separate and make no semantic completion judgment.
+"""
+import hashlib
+import importlib.machinery
+import json
+import pathlib
+
+
+HERE = pathlib.Path(__file__).resolve().parent
+MEASUREMENT = HERE.parent / 'research-usefulness-measurement'
+CATALOG_PATH = HERE.parent / 'source-use-next-stage' / 'evidence-catalog.py.txt'
+C = importlib.machinery.SourceFileLoader('exp077_evidence_catalog', str(CATALOG_PATH)).load_module()
+HYDRATOR_PATH = MEASUREMENT / 'hydrate.py.txt'
+VALIDATOR_PATH = MEASUREMENT / 'validate.py.txt'
+H = importlib.machinery.SourceFileLoader('exp077_evidence_hydrator', str(HYDRATOR_PATH)).load_module()
+V = importlib.machinery.SourceFileLoader('exp077_assessment_validator', str(VALIDATOR_PATH)).load_module()
+
+CARD_SCHEMA = {
+    'type': 'object', 'additionalProperties': False, 'required': ['records'],
+    'properties': {'records': {'type': 'array', 'items': {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['card_sha256', 'lead', 'visible', 'facets', 'uncertain', 'rationale', 'anchors', 'facet_anchors'],
+        'properties': {
+            'card_sha256': {'type': 'string', 'pattern': '^[0-9a-f]{64}$'},
+            'lead': {'type': 'integer', 'minimum': 0, 'maximum': 3},
+            'visible': {'type': 'integer', 'minimum': 0, 'maximum': 3},
+            'facets': {'type': 'array', 'items': {'type': 'string'}, 'uniqueItems': True},
+            'uncertain': {'type': 'array', 'items': {'type': 'string'}, 'uniqueItems': True},
+            'rationale': {'type': 'string'},
+            'anchors': {'type': 'array', 'items': {'$ref': '#/$defs/anchor'}, 'minItems': 1},
+            'facet_anchors': {'type': 'object', 'additionalProperties': {'type': 'array', 'items': {'$ref': '#/$defs/anchor'}}}
+        }}}},
+    '$defs': {'anchor': {'type': 'object', 'additionalProperties': False,
+                        'required': ['field', 'quote'], 'properties': {
+                            'field': {'enum': ['title', 'url', 'snippet']},
+                            'quote': {'type': 'string', 'minLength': 1, 'maxLength': 256}}}}
+}
+
+SOURCE_CHUNK_SCHEMA = {
+    'type': 'object', 'additionalProperties': False,
+    'required': ['task_id', 'assessor_id', 'chunk_id', 'source_assessments'],
+    'properties': {
+        'task_id': {'type': 'string'}, 'assessor_id': {'enum': ['R1', 'R2']}, 'chunk_id': {'type': 'string'},
+        'source_assessments': {'type': 'array', 'items': {
+            'type': 'object', 'additionalProperties': False,
+            'required': ['source_id', 'facets'], 'properties': {
+                'source_id': {'type': 'string'}, 'facets': {'type': 'array', 'items': {
+                    'type': 'object', 'additionalProperties': False,
+                    'required': ['facet_id', 'disposition', 'scope_match', 'entailment', 'applicability',
+                                 'not_assessable_reason', 'evidence_ids', 'reason', 'limitations'],
+                    'properties': {
+                        'facet_id': {'type': 'string'},
+                        'disposition': {'enum': ['not_acquired', 'acquired_unusable', 'evidence_available', 'not_assessable']},
+                        'scope_match': {'enum': ['match', 'mismatch', 'uncertain', 'not_assessable']},
+                        'entailment': {'enum': ['supports', 'contradicts', 'qualifies', 'does_not_entail', 'uncertain', 'not_assessable']},
+                        'applicability': {'enum': ['applicable', 'not_applicable', 'uncertain', 'not_assessable']},
+                        'not_assessable_reason': {'type': 'string'},
+                        'evidence_ids': {'type': 'array', 'items': {'type': 'string'}, 'uniqueItems': True},
+                        'reason': {'type': 'string'}, 'limitations': {'type': 'array', 'items': {'type': 'string'}}}}}}}}
+    }
+}
+
+ANSWERER_SCHEMA = {
+    'type': 'object', 'additionalProperties': False, 'required': ['facets'],
+    'properties': {'facets': {'type': 'array', 'items': {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['facet_id', 'conclusion', 'claims'],
+        'properties': {'facet_id': {'type': 'string'}, 'conclusion': {'type': 'string'},
+                           'claims': {'type': 'array', 'items': {
+                           'type': 'object', 'additionalProperties': False,
+                           'required': ['text', 'evidence_ids'],
+                           'properties': {'text': {'type': 'string'},
+                                          'evidence_ids': {'type': 'array', 'items': {'type': 'string'}, 'uniqueItems': True}}}}}}}}
+}
+
+def _assessment_schema(packet_kind):
+    """Reuse the validator's closed schema, replacing only reference envelopes with IDs."""
+    path = MEASUREMENT / 'schema.json'
+    schema = json.loads(path.read_text())
+    def rewrite(node):
+        if isinstance(node, dict):
+            if 'references' in node:
+                node['evidence_ids'] = {'type': 'array', 'items': {'type': 'string', 'minLength': 1}, 'uniqueItems': True}
+                del node['references']
+            if isinstance(node.get('required'), list) and 'references' in node['required']:
+                node['required'] = ['evidence_ids' if x == 'references' else x for x in node['required']]
+            for value in list(node.values()):
+                rewrite(value)
+        elif isinstance(node, list):
+            for value in node:
+                rewrite(value)
+    rewrite(schema)
+    schema['properties']['packet_kind'] = {'const': packet_kind}
+    schema.pop('allOf', None)
+    schema['properties']['tasks']['items'] = {
+        '$ref': '#/$defs/sourceTask' if packet_kind == 'source' else '#/$defs/answerTask'}
+    return schema
+
+
+SOURCE_PACKET_SCHEMA = _assessment_schema('source')
+ANSWER_ASSESSOR_SCHEMA = _assessment_schema('answer')
+OUTPUT_SCHEMAS = {'card-assessment.schema.json': CARD_SCHEMA,
+                  'source-chunk.schema.json': SOURCE_CHUNK_SCHEMA,
+                  'answerer.schema.json': ANSWERER_SCHEMA,
+                  'answer-assessment.schema.json': ANSWER_ASSESSOR_SCHEMA}
+
+
+class PacketError(ValueError):
+    pass
+
+
+def _canonical(value):
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+
+
+def _hash(value):
+    return hashlib.sha256(value).hexdigest()
+
+
+def _assignment_id(*parts):
+    return _hash('\0'.join(str(p) for p in parts).encode('utf-8'))
+
+
+def card_assignments(task_id, cards, facets, assessors=('A', 'B'), *, global_ids=None):
+    """Freeze same-card fingerprints and independent assessor assignments."""
+    if not isinstance(task_id, str) or not task_id or not isinstance(cards, list) or not cards:
+        raise PacketError('task and nonempty card list required')
+    if (len(cards) > 80 or not facets or len(set(facets)) != len(facets) or
+            any(not isinstance(f, str) or not f for f in facets) or
+            len(set(assessors)) != len(assessors) or any(a not in {'A', 'B'} for a in assessors)):
+        raise PacketError('card limit or assessor assignment invalid')
+    if global_ids is not None and (len(global_ids)!=len(cards) or len(set(global_ids))!=len(global_ids) or any(not isinstance(i,str) or not i for i in global_ids)):
+        raise PacketError('global card identity inventory invalid')
+    frozen = []
+    seen = set();identity_by_sha={}
+    for index,card in enumerate(cards):
+        if not isinstance(card, dict) or set(card) != {'title', 'url', 'snippet'} or any(
+                not isinstance(card[k], str) for k in ('title', 'url', 'snippet')):
+            raise PacketError('card must have exact title/url/snippet strings')
+        digest = _hash(_canonical(card if global_ids is None else {'global_id':global_ids[index],'card':card}))
+        if global_ids is not None:identity_by_sha[digest]=global_ids[index]
+        if digest in seen:
+            raise PacketError('duplicate frozen card')
+        seen.add(digest)
+        frozen.append({'card_sha256': digest, **card})
+    schema = copy_json(CARD_SCHEMA)
+    schema['properties']['records']['minItems'] = len(frozen)
+    schema['properties']['records']['maxItems'] = len(frozen)
+    schema['properties']['records']['items']['properties']['facets']['items'] = {'enum': list(facets)}
+    schema['properties']['records']['items']['properties']['uncertain']['items'] = {'enum': list(facets)}
+    schema['properties']['records']['items']['properties']['facet_anchors']['propertyNames'] = {'enum': list(facets)}
+    assignments = [{'assignment_id': _assignment_id('card', task_id, a), 'task_id': task_id,
+                    'assessor_id': a, 'cards': frozen, 'facets': list(facets),'global_id_by_sha':dict(identity_by_sha),
+                    'schema': schema} for a in assessors]
+    return assignments
+
+
+def verify_card_response(assignment, response):
+    """Check exact result membership and anchor spans; no semantic grade is recomputed."""
+    expected = assignment['cards']
+    if not isinstance(response, dict) or set(response) != {'records'} or not isinstance(response['records'], list):
+        raise PacketError('card response shape mismatch')
+    rows = response['records']
+    ids = [row.get('card_sha256') if isinstance(row, dict) else None for row in rows]
+    expected_ids = [card['card_sha256'] for card in expected]
+    if ids != expected_ids:
+        raise PacketError('card response coverage/order mismatch')
+    sources = {card['card_sha256']: card for card in expected}
+    for row in rows:
+        if set(row) != {'card_sha256', 'lead', 'visible', 'facets', 'uncertain', 'rationale', 'anchors', 'facet_anchors'}:
+            raise PacketError('card response row has missing or extra fields')
+        if (type(row.get('lead')) is not int or row['lead'] not in range(4) or
+                type(row.get('visible')) is not int or row['visible'] not in range(4)):
+            raise PacketError('card grades outside fixed scale')
+        if (not isinstance(row.get('facets'), list) or len(row['facets']) != len(set(row['facets'])) or
+                not set(row['facets']).issubset(set(assignment['facets'])) or
+                not isinstance(row.get('uncertain'), list) or len(row['uncertain']) != len(set(row['uncertain'])) or
+                not set(row['uncertain']).issubset(set(assignment['facets']))):
+            raise PacketError('card facet ID outside frozen task')
+        if not isinstance(row.get('rationale'), str) or not row['rationale'].strip() or not row.get('anchors'):
+            raise PacketError('card rationale and same-card anchor required')
+        for anchor in row['anchors']:
+            _check_card_anchor(anchor, sources[row['card_sha256']])
+        facet_anchors = row.get('facet_anchors')
+        if not isinstance(facet_anchors, dict) or set(facet_anchors) != set(row['facets']):
+            raise PacketError('facet anchors must match tagged facets exactly')
+        for anchors in facet_anchors.values():
+            if not isinstance(anchors, list) or not anchors:
+                raise PacketError('each tagged facet needs a visible anchor')
+            for anchor in anchors:
+                _check_card_anchor(anchor, sources[row['card_sha256']])
+    return {'records': len(rows), 'coverage': 'complete', 'semantic_grade': 'not_recomputed'}
+
+
+def card_model_input(assignment):
+    """Return only fixed cards/facets and the strict independent grading schema."""
+    return {'task_id': assignment['task_id'], 'cards': copy_json(assignment['cards']),
+            'facets': list(assignment['facets']), 'output_schema': copy_json(assignment['schema'])}
+
+
+def _check_card_anchor(anchor, card):
+    if not isinstance(anchor, dict) or set(anchor) != {'field', 'quote'} or anchor['field'] not in card:
+        raise PacketError('card anchor field malformed')
+    quote, text = anchor['quote'], card[anchor['field']]
+    if not isinstance(quote, str) or not quote or len(quote.encode('utf-8')) > 256 or quote not in text:
+        raise PacketError('card anchor is not exact bounded substring')
+
+
+def source_chunk_assignments(task_id, source_rows, facets, *, chunk_size=20, assessors=('R1', 'R2')):
+    """Create complete, nonoverlapping <=20-source chunks per named grader.
+
+    Every frozen source ID remains in the manifest. Context and catalog IDs
+    appear only for successful captures with a frozen string context.
+    """
+    if type(chunk_size) is not int or not 1 <= chunk_size <= 20:
+        raise PacketError('source chunk size must be 1..20')
+    if (len(source_rows) > 640 or not facets or len(set(facets)) != len(facets) or
+            any(not isinstance(f, str) or not f for f in facets) or not assessors or
+            len(set(assessors)) != len(assessors) or any(a not in {'R1', 'R2'} for a in assessors)):
+        raise PacketError('source inventory/facet/assessor bounds invalid')
+    ids = [r.get('source_id') for r in source_rows if isinstance(r, dict)]
+    if len(ids) != len(source_rows) or any(not isinstance(x, str) or not x for x in ids) or len(set(ids)) != len(ids):
+        raise PacketError('source inventory IDs invalid')
+    states = {'success', 'not_acquired', 'failed', 'refused', 'duplicate', 'unknown'}
+    for row in source_rows:
+        if row.get('state') not in states:
+            # Preserve future/engine-specific unknown state strings as opaque input.
+            if not isinstance(row.get('state'), str) or not row['state']:
+                raise PacketError('source state must be explicit')
+        if row['state'] == 'success' and not isinstance(row.get('context'), str):
+            raise PacketError('successful capture must retain exact context')
+    successful = [{'source_id': r['source_id'], 'context': r['context']} for r in source_rows if r['state'] == 'success']
+    catalog = C.build(successful) if successful else {'version': 1, 'sources': {}, 'passages': {}}
+    catalog_sha = _hash(_canonical(catalog))
+    chunks = []
+    for assessor in assessors:
+        if assessor not in {'R1', 'R2'}:
+            raise PacketError('unknown independent assessor identity')
+        for start in range(0, len(source_rows), chunk_size):
+            rows = source_rows[start:start + chunk_size]
+            chunk_index = start // chunk_size
+            supplied = []
+            assessable = []
+            for row in rows:
+                item = {'source_id': row['source_id'], 'state': row['state']}
+                if row['state'] == 'success':
+                    item['context'] = row['context']
+                    item['evidence_ids'] = [eid for eid, passage in catalog['passages'].items()
+                                            if passage['source_id'] == row['source_id']]
+                    assessable.append({'source_id': row['source_id'], 'context': row['context'],
+                                       'evidence_ids': item['evidence_ids']})
+                supplied.append(item)
+            chunks.append({'assignment_id': _assignment_id('source', task_id, assessor, chunk_index),
+                               'task_id': task_id, 'assessor_id': assessor,
+                               'chunk_index': chunk_index, 'chunk_count': (len(source_rows) + chunk_size - 1) // chunk_size,
+                               'source_ids': [r['source_id'] for r in rows], 'source_total': len(source_rows),
+                               'facets': list(facets), 'source_inventory': supplied,
+                               'sources': assessable,
+                               'model_call_required': bool(assessable),
+                               'pool_catalog_sha256': catalog_sha,
+                               'catalog_kind': 'source_pool', 'schema': _source_chunk_schema(
+                                   [r['source_id'] for r in assessable], facets)})
+    for chunk in chunks:
+        for field,value in [('task_id',chunk['task_id']),('assessor_id',chunk['assessor_id']),('chunk_id',chunk['assignment_id'])]:
+            chunk['schema']['properties'][field]={'const':value}
+    return {'inventory_source_ids': ids, 'inventory_complete': True, 'assessor_ids': list(assessors),
+            'pool_catalog': catalog, 'pool_catalog_sha256': catalog_sha, 'chunks': chunks}
+
+
+def verify_source_chunk_coverage(plan, outputs):
+    """Prove per-assessor chunk/source/facet coverage without joining graders."""
+    if not isinstance(plan, dict) or not isinstance(outputs, list):
+        raise PacketError('source chunk plan/output malformed')
+    expected = {chunk['assignment_id']: chunk for chunk in plan['chunks'] if chunk['model_call_required']}
+    observed = {}
+    for output in outputs:
+        if not isinstance(output, dict) or output.get('chunk_id') not in expected:
+            raise PacketError('unknown source chunk output')
+        aid = output['chunk_id']
+        if set(output) != {'task_id','assessor_id','chunk_id','source_assessments'}:
+            raise PacketError('source chunk output envelope has missing or extra fields')
+        if aid in observed:
+            raise PacketError('duplicate source chunk output')
+        observed[aid] = output
+    if set(observed) != set(expected):
+        raise PacketError('source chunk coverage incomplete')
+    per_assessor = {}
+    for assignment in plan['chunks']:
+        aid = assignment['assignment_id']
+        per_assessor.setdefault(assignment['assessor_id'], []).extend(assignment['source_ids'])
+        if not assignment['model_call_required']:
+            continue
+        output = observed[aid]
+        if output.get('task_id') != assignment['task_id'] or output.get('assessor_id') != assignment['assessor_id']:
+            raise PacketError('source output identity mismatch')
+        assessable = assignment['sources']
+        rows = output.get('source_assessments')
+        if not isinstance(rows, list) or [r.get('source_id') for r in rows if isinstance(r, dict)] != [r['source_id'] for r in assessable]:
+            raise PacketError('source chunk inventory coverage/order mismatch')
+        for row in rows:
+            if set(row) != {'source_id', 'facets'}:
+                raise PacketError('source assessment row has missing or extra fields')
+            facets = row.get('facets')
+            if not isinstance(facets, list) or [f.get('facet_id') for f in facets if isinstance(f, dict)] != assignment['facets']:
+                raise PacketError('source facet coverage/order mismatch')
+            allowed = set(next(s for s in assessable if s['source_id'] == row['source_id'])['evidence_ids'])
+            for facet in facets:
+                if set(facet) != {'facet_id', 'disposition', 'scope_match', 'entailment', 'applicability',
+                                  'not_assessable_reason', 'evidence_ids', 'reason', 'limitations'}:
+                    raise PacketError('source facet has missing or extra fields')
+                if facet['disposition'] not in {'not_acquired', 'acquired_unusable', 'evidence_available', 'not_assessable'}:
+                    raise PacketError('source disposition outside closed schema')
+                if facet['scope_match'] not in {'match', 'mismatch', 'uncertain', 'not_assessable'}:
+                    raise PacketError('source scope judgment outside closed schema')
+                if facet['entailment'] not in {'supports', 'contradicts', 'qualifies', 'does_not_entail', 'uncertain', 'not_assessable'}:
+                    raise PacketError('source entailment outside closed schema')
+                if facet['applicability'] not in {'applicable', 'not_applicable', 'uncertain', 'not_assessable'}:
+                    raise PacketError('source applicability outside closed schema')
+                if not isinstance(facet['limitations'], list) or any(not isinstance(x, str) for x in facet['limitations']):
+                    raise PacketError('source limitations malformed')
+                if not isinstance(facet['not_assessable_reason'], str) or not isinstance(facet['reason'], str):
+                    raise PacketError('source rationale fields malformed')
+                evidence_ids = facet.get('evidence_ids')
+                if not isinstance(evidence_ids, list) or len(evidence_ids) != len(set(evidence_ids)) or not set(evidence_ids).issubset(allowed):
+                    raise PacketError('source evidence ID outside frozen source catalog')
+                if facet['disposition'] == 'evidence_available' and not evidence_ids:
+                    raise PacketError('evidence_available requires an ID')
+                if facet['disposition'] == 'not_acquired' and evidence_ids:
+                    raise PacketError('not_acquired cannot cite an evidence ID')
+    for assessor, source_ids in per_assessor.items():
+        if source_ids != plan['inventory_source_ids']:
+            raise PacketError('assessor source inventory incomplete or reordered')
+    return {'assessors': {a: {'source_ids': rows, 'complete': True} for a, rows in per_assessor.items()},
+            'assessors_joined': False, 'semantic_grades': 'not_recomputed'}
+
+
+def source_model_input(task, chunk):
+    """Expose one <=20-source chunk; the full pool catalog stays controller-side."""
+    return {'task': {'task_id': task['id'], 'query': task['query'], 'purpose': task['purpose'],
+                     'critical_checks': copy_json(task['critical_checks'])},
+            'chunk_id': chunk['assignment_id'], 'chunk_index': chunk['chunk_index'],
+            'chunk_count': chunk['chunk_count'], 'source_total': chunk['source_total'],
+            'source_inventory': [{'source_id':r['source_id'],'state':r['state']} for r in chunk['source_inventory']],
+            'sources': [{'source_id':r['source_id'],'passages':[{'evidence_id':eid,'text':r['context'][i*600:(i+1)*600]} for i,eid in enumerate(r['evidence_ids'])]} for r in chunk['sources']],
+            'output_schema': copy_json(chunk['schema'])}
+
+
+def answer_projection(card_order, openings, *, arm_id, max_cards=10, max_successes=5, context_chars=8000):
+    """Project top-10 only; preserve each open outcome and cap context by Unicode chars."""
+    if (not isinstance(card_order, list) or len(card_order) > max_cards or len(set(card_order)) != len(card_order)
+            or any(not isinstance(x, str) or not x for x in card_order)):
+        raise PacketError('card order must be unique fixed top-10 IDs')
+    if not isinstance(openings, list) or [r.get('card_id') for r in openings if isinstance(r, dict)] != card_order:
+        raise PacketError('opening outcomes must cover top-10 in exact order')
+    if type(context_chars) is not int or context_chars < 1 or type(max_successes) is not int or not 0 <= max_successes <= 5:
+        raise PacketError('projection bounds invalid')
+    outcomes, delivered, used_sources = [], [], set()
+    for row in openings:
+        if not isinstance(row, dict) or not isinstance(row.get('state'), str) or not row['state']:
+            raise PacketError('every top-10 opening needs an explicit state')
+        outcome = {'card_id': row['card_id'], 'source_id': row.get('source_id'), 'state': row['state']}
+        if row['state'] == 'success':
+            sid, context = row.get('source_id'), row.get('context')
+            if not isinstance(sid, str) or not sid or not isinstance(context, str):
+                raise PacketError('successful opening needs source ID and exact context')
+            if sid in used_sources:
+                raise PacketError('duplicate source in fixed top-10 opening order')
+            used_sources.add(sid)
+            outcome['original_context_sha256'] = _hash(context.encode('utf-8'))
+            outcome['original_characters'] = len(context)
+            if len(delivered) < max_successes:
+                projected = context[:context_chars]
+                delivered.append({'source_id': sid, 'context': projected,
+                                  'context_sha256': _hash(projected.encode('utf-8')),
+                                  'characters': len(projected), 'truncated': len(projected) < len(context),
+                                  'original_characters': len(context)})
+                outcome['delivered'] = True
+                outcome['projected_characters'] = len(projected)
+            else:
+                outcome['delivered'] = False
+                outcome['not_delivered_reason'] = 'success_limit_reached_within_fixed_top10'
+        else:
+            # Refusal, timeout, duplicate, and unfamiliar future states remain observable verbatim.
+            outcome['delivered'] = False
+        outcomes.append(outcome)
+    contexts = {r['source_id']: r['context'] for r in delivered}
+    catalog = C.build([{'source_id': sid, 'context': text} for sid, text in contexts.items()]) if contexts else {
+        'version': 1, 'sources': {}, 'passages': {}}
+    catalog_sha = _hash(_canonical(catalog))
+    for source in delivered:
+        source['evidence_ids'] = [eid for eid, passage in catalog['passages'].items()
+                                  if passage['source_id'] == source['source_id']]
+    return {'arm_id': arm_id, 'card_order_top10': list(card_order), 'opening_outcomes': outcomes,
+            'delivered_sources': delivered, 'catalog': catalog, 'catalog_sha256': catalog_sha,
+            'catalog_kind': 'answer_arm', 'assigned_source_ids': list(contexts),
+            'limits': {'cards': max_cards, 'successful_sources': max_successes,
+                       'context_characters_per_source': context_chars}}
+
+
+def answerer_assignment(task, projection, critical_checks):
+    """Bind the fixed task/checks to one arm's bounded delivered contexts."""
+    if not isinstance(task, dict) or not isinstance(projection, dict) or not isinstance(critical_checks, list):
+        raise PacketError('task, arm projection and critical checks required')
+    schema = copy_json(ANSWERER_SCHEMA)
+    schema['properties']['facets']['items']['properties']['facet_id'] = {'enum': [r['id'] for r in critical_checks]}
+    # Evidence IDs are exposed to the answerer; full catalog and treatment arm
+    # remain in a private binding for mechanical hydration and audit only.
+    visible_sources = []
+    for source in projection['delivered_sources']:
+        visible_sources.append({'source_id': source['source_id'],
+                                'passages':[{'evidence_id':eid,'text':projection['catalog']['passages'][eid]['text']} for eid in source['evidence_ids']]})
+    visible_outcomes = [{'card_id': row['card_id'], 'state': row['state'],
+                         'delivered': row['delivered']} for row in projection['opening_outcomes']]
+    return {'model_input': {'task': {'task_id': task['id'], 'kind': task['kind'], 'query': task['query'],
+                                      'purpose': task['purpose'], 'critical_checks': copy_json(critical_checks)},
+                            'cards': list(projection['card_order_top10']),
+                            'opening_outcomes': visible_outcomes,
+                            'delivered_sources': visible_sources,
+                            'output_schema': schema},
+            'private_binding': {'arm_id': projection['arm_id'],
+                                'catalog': copy_json(projection['catalog']),
+                                'catalog_sha256': projection['catalog_sha256'],
+                                'assigned_source_ids': list(projection['assigned_source_ids'])}}
+
+
+def _source_chunk_schema(source_ids, facet_ids):
+    schema = copy_json(SOURCE_CHUNK_SCHEMA)
+    rows = schema['properties']['source_assessments']
+    rows['minItems'] = len(source_ids)
+    rows['maxItems'] = len(source_ids)
+    rows['items']['properties']['source_id'] = {'enum': list(source_ids)}
+    facets = rows['items']['properties']['facets']
+    facets['minItems'] = len(facet_ids)
+    facets['maxItems'] = len(facet_ids)
+    facets['items']['properties']['facet_id'] = {'enum': list(facet_ids)}
+    return schema
+
+
+def freeze_answer_claims(critical_checks, answer):
+    """Assign stable claim identities without altering claim text or judgments."""
+    expected = [row.get('id') for row in critical_checks]
+    if not isinstance(answer, dict) or set(answer) != {'facets'} or not isinstance(answer.get('facets'), list):
+        raise PacketError('answer facets malformed')
+    rows = answer['facets']
+    ids = [row.get('facet_id') if isinstance(row, dict) else None for row in rows]
+    if ids != expected:
+        raise PacketError('answer facet coverage/order mismatch')
+    frozen = {}
+    for facet in rows:
+        if set(facet) != {'facet_id', 'conclusion', 'claims'} or not isinstance(facet['conclusion'], str):
+            raise PacketError('answer facet shape mismatch')
+        claims = facet.get('claims')
+        if not isinstance(claims, list):
+            raise PacketError('answer claim array missing')
+        frozen[facet['facet_id']] = []
+        for i, claim in enumerate(claims, 1):
+            if not isinstance(claim, dict) or set(claim) != {'text', 'evidence_ids'}:
+                raise PacketError('answer claim shape mismatch')
+            if not isinstance(claim['text'], str) or not claim['text'].strip():
+                raise PacketError('answer claim text missing')
+            if not isinstance(claim['evidence_ids'], list) or any(not isinstance(e, str) for e in claim['evidence_ids']):
+                raise PacketError('answer claim evidence IDs malformed')
+            if len(claim['evidence_ids']) != len(set(claim['evidence_ids'])):
+                raise PacketError('duplicate answer evidence ID')
+            frozen[facet['facet_id']].append({'claim_id': f'{facet["facet_id"]}:C{i:03d}',
+                                               'text': claim['text'], 'evidence_ids': list(claim['evidence_ids'])})
+    return frozen
+
+
+def answer_assessor_template(packet_id, assessor_id, task_id, arm_id, facet_ids, claims,
+                             pool_source_ids, projection, answer_facets, own_source_assessment):
+    """Create one closed answer packet skeleton; evidence claims use IDs only."""
+    if assessor_id not in {'R1', 'R2'} or not isinstance(claims, dict) or set(claims) != set(facet_ids):
+        raise PacketError('answer assignment or frozen claim facets mismatch')
+    claim_map = {}
+    for facet in facet_ids:
+        rows = claims[facet]
+        if not isinstance(rows, list) or any(set(c) != {'claim_id', 'text'} for c in rows):
+            raise PacketError('frozen answer claim inventory malformed')
+        claim_map[facet] = [{'claim_id': c['claim_id'], 'text': c['text'], 'evidence_ids': []} for c in rows]
+    delivered_source_ids = projection.get('assigned_source_ids') if isinstance(projection, dict) else None
+    if (len(pool_source_ids) != len(set(pool_source_ids)) or not isinstance(delivered_source_ids, list) or
+            len(delivered_source_ids) != len(set(delivered_source_ids)) or
+            not set(delivered_source_ids).issubset(set(pool_source_ids)) or projection.get('arm_id') != arm_id):
+        raise PacketError('answer packet source membership invalid')
+    if [row.get('facet_id') for row in answer_facets] != list(facet_ids):
+        raise PacketError('answer facets do not match frozen task')
+    if (not isinstance(own_source_assessment, dict) or own_source_assessment.get('assessor_id') != assessor_id or
+            own_source_assessment.get('packet_kind') != 'source' or
+            task_id not in [row.get('task_id') for row in own_source_assessment.get('tasks', []) if isinstance(row, dict)]):
+        raise PacketError('same-assessor source assessment required for full-pool omission review')
+    source_tasks = [row for row in own_source_assessment['tasks'] if row.get('task_id') == task_id]
+    if len(source_tasks) != 1:
+        raise PacketError('source assessment task is missing or duplicated')
+    grader_view = {'packet_kind': 'source', 'assessor_id': assessor_id, 'tasks': copy_json(source_tasks)}
+    schema = copy_json(ANSWER_ASSESSOR_SCHEMA)
+    schema['properties']['packet_id'] = {'const': packet_id}
+    schema['properties']['assessor_id'] = {'const': assessor_id}
+    schema['properties']['tasks']['minItems'] = 1
+    schema['properties']['tasks']['maxItems'] = 1
+    schema['$defs']['answerTask']['properties']['task_id'] = {'const': task_id}
+    schema['$defs']['answerTask']['properties']['arms']['minItems'] = 1
+    schema['$defs']['answerTask']['properties']['arms']['maxItems'] = 1
+    schema['$defs']['answerArm']['properties']['arm_id'] = {'const': arm_id}
+    schema['$defs']['answerArm']['properties']['facet_assessments']['minItems'] = len(facet_ids)
+    schema['$defs']['answerArm']['properties']['facet_assessments']['maxItems'] = len(facet_ids)
+    schema['$defs']['answerFacet']['properties']['facet_id'] = {'enum': list(facet_ids)}
+    schema['$defs']['answerEvidenceDisposition']['properties']['source_id'] = {'enum': list(pool_source_ids)}
+    schema['$defs']['answerFacet']['properties']['evidence_dispositions']['minItems'] = len(pool_source_ids)
+    schema['$defs']['answerFacet']['properties']['evidence_dispositions']['maxItems'] = len(pool_source_ids)
+    return {'schema': 'research-usefulness-assessment/1', 'packet_id': packet_id,
+            'assessor_id': assessor_id, 'packet_kind': 'answer',
+            'task_id': task_id, 'arm_id': arm_id,
+            'catalog_kind': 'answer_arm', 'facet_claims': claim_map,
+            'pool_source_ids': list(pool_source_ids), 'delivered_source_ids': list(delivered_source_ids),
+            'opening_outcomes': copy_json(projection['opening_outcomes']),
+            'delivered_sources': copy_json(projection['delivered_sources']),
+            'catalog': copy_json(projection['catalog']), 'catalog_sha256': projection['catalog_sha256'],
+            'answer_facets': copy_json(answer_facets),
+            'own_source_assessment': grader_view,
+            'output_schema': schema}
+
+
+def hydrate_and_validate_packet(raw_model_bytes, *, catalog_kind, catalog, contexts,
+                                assigned_source_ids, expected_catalog_sha256, registry):
+    """Mechanically expand IDs, then run the existing structural/integrity validator.
+
+    This returns validator diagnostics only. It cannot report semantic truth,
+    assessor agreement, usefulness, or task completion.
+    """
+    if catalog_kind not in {'source_pool', 'answer_arm'}:
+        raise PacketError('explicit source_pool or answer_arm catalog required')
+    result = H.hydrate(raw_model_bytes, packet_kind=catalog_kind, catalog=catalog,
+                       contexts=contexts, assigned_source_ids=assigned_source_ids,
+                       expected_catalog_sha256=expected_catalog_sha256)
+    validation = V.validate(result['expanded_envelope'], registry)
+    return {'raw_model_sha256': result['raw_model_sha256'],
+            'expanded_envelope': result['expanded_envelope'],
+            'hydration': result['hydration'], 'validation': validation,
+            'semantic_completion': 'not_claimed'}
+
+
+def copy_json(value):
+    """JSON-value deep copy for detached frozen assignment payloads."""
+    return json.loads(json.dumps(value, ensure_ascii=False, allow_nan=False))

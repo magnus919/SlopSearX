@@ -1,0 +1,420 @@
+"""Pure, bounded identity projection for EXP-050. No transport or inference."""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import re
+from collections import defaultdict
+from typing import Any, Iterable
+from urllib.parse import urlparse
+
+MAX_RESPONSE_BYTES = 8_388_608
+MAX_DEPTH = 16
+MAX_RECORD_BYTES = 256_000
+MAX_LIST = 10_000
+PRIORITY = ("doi", "arxiv", "pmid", "pmcid", "s2")
+WIRE_PREFIX = {"doi": "DOI", "arxiv": "ARXIV", "pmid": "PMID", "pmcid": "PMCID", "s2": ""}
+INFO_FIELDS = ("publication_date", "year", "authors", "publication_types", "journal", "abstract")
+
+class ProjectionError(ValueError):
+    """Frozen-input, parsing, or provider-schema violation."""
+
+def _pairs(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise ProjectionError("duplicate JSON object key")
+        out[key] = value
+    return out
+
+def _constant(_value):
+    raise ProjectionError("non-finite JSON number")
+
+def _parse_int(value):
+    if len(value.lstrip("-")) > 128:
+        raise ProjectionError("integer literal too long")
+    return int(value)
+
+def _parse_float(value):
+    result = float(value)
+    if not math.isfinite(result):
+        raise ProjectionError("non-finite JSON number")
+    return result
+
+def read_bounded(chunks: Iterable[bytes], cap: int = MAX_RESPONSE_BYTES) -> bytes:
+    data = bytearray()
+    for chunk in chunks:
+        if not isinstance(chunk, (bytes, bytearray, memoryview)):
+            raise ProjectionError("response stream yielded non-bytes")
+        if len(data) + len(chunk) > cap:
+            raise ProjectionError("response byte limit exceeded")
+        data.extend(chunk)
+    return bytes(data)
+
+def _check_tree(value: Any, depth: int = 0) -> None:
+    if depth > MAX_DEPTH:
+        raise ProjectionError("JSON nesting depth exceeded")
+    if isinstance(value, str):
+        try:
+            value.encode("utf-8", "strict")
+        except UnicodeEncodeError as exc:
+            raise ProjectionError("invalid Unicode scalar") from exc
+    elif isinstance(value, list):
+        if len(value) > MAX_LIST:
+            raise ProjectionError("provider list limit exceeded")
+        for item in value:
+            _check_tree(item, depth + 1)
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise ProjectionError("object key is not text")
+            _check_tree(key, depth + 1)
+            _check_tree(item, depth + 1)
+    elif isinstance(value, float) and not math.isfinite(value):
+        raise ProjectionError("non-finite JSON number")
+
+def strict_parse(chunks: Iterable[bytes], expected_count: int, cap: int = MAX_RESPONSE_BYTES):
+    raw = read_bounded(chunks, cap)
+    try:
+        text = raw.decode("utf-8", "strict")
+        value = json.loads(text, object_pairs_hook=_pairs, parse_constant=_constant,
+                           parse_int=_parse_int, parse_float=_parse_float)
+    except ProjectionError:
+        raise
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        raise ProjectionError("invalid strict JSON") from exc
+    _check_tree(value)
+    if not isinstance(value, list) or len(value) != expected_count:
+        raise ProjectionError("response must be an exact-length list")
+    # Bound original top-level record bytes, not a reserialized approximation.
+    decoder=json.JSONDecoder(object_pairs_hook=_pairs, parse_constant=_constant,
+                             parse_int=_parse_int, parse_float=_parse_float)
+    pos=0
+    record_sizes=[]
+    while pos < len(text) and text[pos].isspace(): pos += 1
+    if pos >= len(text) or text[pos] != "[": raise ProjectionError("response root must be a list")
+    pos += 1
+    for item in value:
+        while pos < len(text) and (text[pos].isspace() or text[pos] == ","): pos += 1
+        start=pos
+        try: _, pos=decoder.raw_decode(text,pos)
+        except ValueError as exc: raise ProjectionError("invalid response item") from exc
+        if len(text[start:pos].encode("utf-8")) > MAX_RECORD_BYTES: raise ProjectionError("record byte limit exceeded")
+        if item is not None and not isinstance(item, dict): raise ProjectionError("response item must be object or null")
+        record_sizes.append(len(text[start:pos].encode("utf-8")))
+    return value, {"response_sha256": hashlib.sha256(raw).hexdigest(), "response_bytes": len(raw), "record_bytes":record_sizes}
+
+def _norm_numeric(value: Any, prefix: str = "") -> str | None:
+    if not isinstance(value, str):
+        return None
+    digits = value[len(prefix):] if prefix and value[:len(prefix)].casefold() == prefix.casefold() else value
+    if not digits.isdigit():
+        return None
+    out = digits.lstrip("0")
+    return out or None
+
+def _normalize_doi(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    value = re.sub(r"^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)", "", value.strip(), flags=re.I)
+    return value.casefold() if re.fullmatch(r"10\.\d{4,9}/[^\s<>]+", value, re.I) else None
+
+def _wire(query: str) -> str:
+    ns, sep, value = query.partition(":")
+    if not sep or not value or ns not in WIRE_PREFIX:
+        raise ProjectionError("invalid query identifier")
+    return f"{WIRE_PREFIX[ns]}:{value}" if WIRE_PREFIX[ns] else value
+
+def _requested(query: str | None):
+    if query is None: return None
+    ns,value=query.split(":",1)
+    scope="arXiv work-base; original URL version/content unverified" if ns=="arxiv" else "provider-reported identifier match; identity is not authority"
+    return {"query_id":query,"namespace":ns,"identifier":value,"scope":scope}
+
+def _s2_id(url: str) -> str | None:
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
+    if (parsed.hostname or "").casefold() not in {"semanticscholar.org", "www.semanticscholar.org"}:
+        return None
+    match = re.search(r"/paper/(?:.*/)?([0-9a-fA-F]{40})/?$", parsed.path)
+    return match.group(1).lower() if match else None
+
+def card_anchors(url: str) -> dict[str, str]:
+    # Use the pinned project URL recognizers; the S2 paper URL is planner-specific.
+    from slopsearx.publication_metadata import normalize_doi
+    from slopsearx.scholarly import _url_ids
+    raw = _url_ids(url)
+    out: dict[str, str] = {}
+    doi = normalize_doi(raw.get("doi")) if raw.get("doi") else None
+    if doi:
+        out["doi"] = doi
+    arxiv = raw.get("arxiv")
+    if arxiv:
+        m = re.fullmatch(r"(\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})(?:v[1-9]\d{0,5})?", arxiv, re.I)
+        if m:
+            out["arxiv"] = m.group(1).casefold()
+    if raw.get("pmid"):
+        n = _norm_numeric(raw["pmid"])
+        if n: out["pmid"] = n
+    if raw.get("pmcid"):
+        n = _norm_numeric(raw["pmcid"], "PMC")
+        if n: out["pmcid"] = n
+    s2 = _s2_id(url)
+    if s2: out["s2"] = s2
+    return out
+
+def validate_plan(plan: dict[str, Any], expected_pool_names=None, expected_card_count=None) -> dict[str, Any]:
+    if not isinstance(plan, dict) or plan.get("schema") != "exp049-offline-plan/1":
+        raise ProjectionError("unexpected plan schema")
+    pools = plan.get("pools")
+    if not isinstance(pools, list): raise ProjectionError("plan pools missing")
+    names = [p.get("pool") for p in pools if isinstance(p, dict)]
+    if len(names) != len(pools) or len(set(names)) != len(names): raise ProjectionError("pool names invalid")
+    if expected_pool_names is not None and set(names) != set(expected_pool_names): raise ProjectionError("registered pool set mismatch")
+    internal: set[str] = set()
+    rows = []
+    seen_ids = set()
+    for pool in pools:
+        if not isinstance(pool.get("purpose"), str) or not isinstance(pool.get("facets"), list): raise ProjectionError("pool purpose/facets invalid")
+        cards = pool.get("cards")
+        if not isinstance(cards, list): raise ProjectionError("pool cards missing")
+        local_ids = set()
+        for item in cards:
+            if not isinstance(item, dict) or not isinstance(item.get("card"), dict): raise ProjectionError("card wrapper invalid")
+            card = item["card"]
+            if set(card) != {"id", "title", "url", "snippet"} or any(not isinstance(card[k], str) for k in card): raise ProjectionError("original card shape invalid")
+            cid = card["id"]
+            if cid in local_ids: raise ProjectionError("duplicate card ID in pool")
+            local_ids.add(cid); seen_ids.add((pool["pool"], cid))
+            anchors = card_anchors(card["url"])
+            if item.get("anchors") != anchors: raise ProjectionError("URL anchors differ from frozen plan")
+            chosen = next((f"{ns}:{anchors[ns]}" for ns in PRIORITY if ns in anchors), None)
+            if item.get("selected_query") != chosen or item.get("status") != ("mapped" if chosen else "no_identifier"):
+                raise ProjectionError("selected query/status mismatch")
+            if chosen: internal.add(chosen)
+            rows.append((pool, item, chosen))
+    if expected_card_count is not None and len(rows) != expected_card_count: raise ProjectionError("card denominator mismatch")
+    if plan.get("card_count") != len(rows): raise ProjectionError("plan card count mismatch")
+    queries = plan.get("query_ids")
+    wires = plan.get("wire_ids", plan.get("wire_query_ids"))
+    if not isinstance(queries, list) or queries != sorted(set(queries)) or set(queries) != internal: raise ProjectionError("query inventory mismatch")
+    if not isinstance(wires, list) or wires != sorted(set(wires)) or wires != sorted(_wire(q) for q in queries): raise ProjectionError("wire query mapping mismatch")
+    if plan.get("unique_query_count") != len(queries): raise ProjectionError("unique query count mismatch")
+    if plan.get("mapped_card_count") != sum(1 for _, _, q in rows if q) or plan.get("no_identifier_count") != sum(1 for _, _, q in rows if not q): raise ProjectionError("mapping counts mismatch")
+    if plan.get("pool_count") != len(pools): raise ProjectionError("pool count mismatch")
+    body=json.dumps({"ids":wires},ensure_ascii=False,separators=(",",":")).encode("utf-8")
+    if plan.get("batch_body_bytes") != len(body) or plan.get("batch_body_sha256") != hashlib.sha256(body).hexdigest():
+        raise ProjectionError("frozen batch body hash/length mismatch")
+    membership=plan.get("query_card_membership")
+    if isinstance(membership,dict):
+        reconstructed={q:sorted((pool["pool"],item["card"]["id"]) for pool,item,selected in rows if selected==q) for q in queries}
+        normalized={q:sorted((entry.get("pool"),entry.get("card_id")) for entry in v) for q,v in membership.items() if isinstance(v,list) and all(isinstance(entry,dict) for entry in v)}
+        if normalized != reconstructed: raise ProjectionError("query/card membership mismatch")
+    return {"rows": rows, "query_ids": queries, "wire_to_query": {_wire(q): q for q in queries}, "pool_names": names,
+            "card_count": len(rows), "mapped_card_count": sum(1 for _, _, q in rows if q),
+            "no_identifier_count": sum(1 for _, _, q in rows if not q)}
+
+def _check_record(r: Any) -> dict[str, Any]:
+    if not isinstance(r, dict): raise ProjectionError("provider record must be object")
+    paper = r.get("paperId")
+    if not isinstance(paper, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", paper):
+        raise ProjectionError("paperId must be a forty-hex string")
+    ext = r.get("externalIds")
+    if ext is not None:
+        if not isinstance(ext, dict): raise ProjectionError("externalIds must be object or null")
+        recognized={"doi","arxiv","pubmed","pubmedcentral"}
+        for k, v in ext.items():
+            if k.casefold() in recognized and v is not None and not isinstance(v, str):
+                raise ProjectionError("recognized externalIds values must be text or null")
+    for key in ("title", "abstract", "publicationDate"):
+        if r.get(key) is not None and not isinstance(r[key], str): raise ProjectionError(f"{key} must be text or null")
+    if r.get("year") is not None and type(r["year"]) is not int: raise ProjectionError("year must be integer or null")
+    authors = r.get("authors")
+    if authors is not None:
+        if not isinstance(authors, list): raise ProjectionError("authors must be list or null")
+        for a in authors:
+            if not isinstance(a, dict) or (a.get("name") is not None and not isinstance(a["name"], str)):
+                raise ProjectionError("author.name must be text or null")
+    types = r.get("publicationTypes")
+    if types is not None and (not isinstance(types, list) or any(not isinstance(x, str) for x in types)):
+        raise ProjectionError("publicationTypes must be list of text or null")
+    journal = r.get("journal")
+    if journal is not None:
+        if not isinstance(journal, dict) or (journal.get("name") is not None and not isinstance(journal["name"], str)):
+            raise ProjectionError("journal must be object with text name or null")
+        for k in ("volume", "pages"):
+            if journal.get(k) is not None and type(journal[k]) not in (str, int, float): raise ProjectionError("journal scalar field invalid")
+            if isinstance(journal.get(k), float) and not math.isfinite(journal[k]): raise ProjectionError("journal scalar invalid")
+    return r
+
+def _ext_ids(record):
+    ext = record.get("externalIds") or {}
+    aliases = {"doi": "doi", "arxiv": "arxiv", "pubmed": "pmid", "pubmedcentral": "pmcid"}
+    out = {}
+    for key, val in ext.items():
+        ns = aliases.get(key.casefold())
+        if not ns or not isinstance(val, str): continue
+        if ns == "doi": canonical = _normalize_doi(val)
+        elif ns == "arxiv":
+            m = re.fullmatch(r"(\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})(?:v[1-9]\d{0,5})?", val.strip(), re.I)
+            canonical = m.group(1).casefold() if m else None
+        else: canonical = _norm_numeric(val, "PMC" if ns == "pmcid" else "")
+        if canonical:
+            if ns in out and out[ns] != canonical: raise ProjectionError("conflicting normalized external identifier aliases")
+            out[ns] = canonical
+    return out
+
+def _field(value, *, limit=None):
+    if value is None: return {"status": "unknown", "value": None, "clipped": False, "original_characters": None}
+    out = value[:limit] if limit is not None else value
+    return {"status": "reported", "value": out, "clipped": len(out) < len(value), "original_characters": len(value)}
+
+def _abstract(value):
+    if value is None: return {"status": "unknown", "value": None, "clipped": False, "original_characters": None, "original_sha256": None}
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    words=list(re.finditer(r"\S+",value))
+    prefix=value[:words[127].end()] if len(words)>128 else value
+    excerpt=prefix[:768]
+    return {"status": "reported", "value": excerpt, "clipped": len(excerpt) < len(value),
+            "original_characters": len(value), "original_sha256": digest}
+
+def _project_record(record, query, captured_at):
+    ns, value = query.split(":", 1)
+    ext = _ext_ids(record)
+    reported = {key: ext.get(key) for key in ("doi", "arxiv", "pmid", "pmcid")}
+    paper = record.get("paperId")
+    return {
+      "status": "matched", "reason": None, "reported_by": "Semantic Scholar Graph", "captured_at": captured_at,
+      "later_lookup_provenance": "new Semantic Scholar metadata lookup; not reconstructed original-engine capture provenance",
+      "original_engine_provenance": {"status":"unknown","value":None},
+      "requested_identifier": _requested(query),
+      "paper_id": {"status": "reported" if paper else "unknown", "value": paper.lower() if paper else None},
+      "reported_identifiers": {k: {"status": "reported" if v else "unknown", "value": v} for k,v in reported.items()},
+      "fields": {
+        "title": _field(record.get("title"), limit=512),
+        "publication_date": _field(record.get("publicationDate"), limit=512),
+        "year": {"status":"reported" if record.get("year") is not None else "unknown", "value":record.get("year")},
+        "journal": {"status":"unknown","value":None} if record.get("journal") is None else {"status":"reported","value":{
+            "name": _field(record["journal"].get("name"), limit=512),
+            "volume": _field(str(record["journal"]["volume"]), limit=512) if record["journal"].get("volume") is not None else {"status":"unknown","value":None,"clipped":False,"original_characters":None},
+            "pages": _field(str(record["journal"]["pages"]), limit=512) if record["journal"].get("pages") is not None else {"status":"unknown","value":None,"clipped":False,"original_characters":None}}},
+        "publication_types": {"status":"unknown","values":None,"original_count":None,"clipped":False,"clipped_items":0} if record.get("publicationTypes") is None else {
+            "status":"reported","values":[x[:80] for x in record["publicationTypes"][:16]],"original_count":len(record["publicationTypes"]),
+            "clipped":len(record["publicationTypes"])>16 or any(len(x)>80 for x in record["publicationTypes"][:16]),"clipped_items":max(0,len(record["publicationTypes"])-16)+sum(len(x)>80 for x in record["publicationTypes"][:16])},
+        "authors": {"status":"unknown","values":None,"original_count":None,"clipped":False,"clipped_items":0} if record.get("authors") is None else {
+            "status":"reported","values":[None if x.get("name") is None else x["name"][:160] for x in record["authors"][:32]],
+            "original_count":len(record["authors"]),"clipped":len(record["authors"])>32 or any(isinstance(x.get("name"),str) and len(x["name"])>160 for x in record["authors"][:32]),
+            "clipped_items":max(0,len(record["authors"])-32)+sum(isinstance(x.get("name"),str) and len(x["name"])>160 for x in record["authors"][:32])},
+        "abstract": _abstract(record.get("abstract"))}}
+
+def _canonical_requested_projection(r):
+    # All requested fields participate in duplicate consistency, including null/missing distinction.
+    return json.dumps({k:r.get(k, "__MISSING__") for k in ("paperId","externalIds","title","abstract","publicationDate","publicationTypes","authors","journal","year")}, sort_keys=True, separators=(",",":"), ensure_ascii=False)
+
+def project_parsed(plan, records: list[Any], captured_at: str, *, expected_pool_names=None, expected_card_count=None, private_receipt=None, raw_record_bytes=None):
+    validated = validate_plan(plan, expected_pool_names, expected_card_count)
+    if not isinstance(records, list) or len(records) != len(validated["query_ids"]):
+        raise ProjectionError("response must be an exact-length list")
+    if not isinstance(private_receipt,dict) or not re.fullmatch(r"[0-9a-f]{64}",str(private_receipt.get("response_sha256",""))) or type(private_receipt.get("response_bytes")) is not int:
+        raise ProjectionError("exact raw-response hash/length receipt required")
+    _check_tree(records)
+    raw_record_bytes=raw_record_bytes if raw_record_bytes is not None else private_receipt.get("record_bytes")
+    if not isinstance(raw_record_bytes,list) or len(raw_record_bytes)!=len(records) or any(type(n) is not int or n<0 for n in raw_record_bytes):
+        raise ProjectionError("raw record byte measurements must match response list")
+    for index,r in enumerate(records):
+        size=raw_record_bytes[index]
+        if size>MAX_RECORD_BYTES:
+            raise ProjectionError("record byte limit exceeded")
+    records = [None if r is None else _check_record(r) for r in records]
+    by_query: dict[str,list[dict[str,Any]]] = defaultdict(list)
+    unmatched = 0
+    wanted = set(validated["query_ids"])
+    for record in records:
+        if record is None: continue
+        matches = set()
+        paper = record.get("paperId")
+        if paper:
+            q = "s2:" + paper.lower()
+            if q in wanted: matches.add(q)
+        for ns, value in _ext_ids(record).items():
+            q = f"{ns}:{value}"
+            if q in wanted: matches.add(q)
+        if not matches: unmatched += 1
+        for q in matches: by_query[q].append(record)
+    query_result = {}
+    for q in validated["query_ids"]:
+        candidates = by_query.get(q, [])
+        if not candidates:
+            query_result[q] = (None, "unmatched_or_null")
+            continue
+        papers = {r.get("paperId", None).lower() if r.get("paperId") else None for r in candidates}
+        projections = {_canonical_requested_projection(r) for r in candidates}
+        if len(papers) > 1:
+            query_result[q] = (None, "conflicting_paper_ids")
+        elif len(projections) > 1:
+            query_result[q] = (None, "inconsistent_duplicate_projection")
+        else: query_result[q] = (candidates[0], None)
+    output_pools = []
+    for pool, item, query in validated["rows"]:
+        card = item["card"]
+        if query is None:
+            meta = {"status":"no_identifier","reason":"unsupported_url_identifier","reported_by":"Semantic Scholar Graph","captured_at":captured_at,"requested_identifier":None,
+                    "later_lookup_provenance":"new Semantic Scholar metadata lookup; not reconstructed original-engine capture provenance","original_engine_provenance":{"status":"unknown","value":None}}
+        else:
+            record, reason = query_result[query]
+            if reason: meta = {"status":"unknown","reason":reason,"reported_by":"Semantic Scholar Graph","captured_at":captured_at,"requested_identifier":_requested(query),
+                              "later_lookup_provenance":"new Semantic Scholar metadata lookup; not reconstructed original-engine capture provenance","original_engine_provenance":{"status":"unknown","value":None}}
+            else: meta = _project_record(record, query, captured_at)
+        # Copy original fields exactly; projection never overwrites source card values.
+        output_pools.append({"pool":pool["pool"],"card":{"id":card["id"],"title":card["title"],"url":card["url"],"snippet":card["snippet"]},"metadata":meta})
+    public = {"schema":"exp049-source-information-projection/1","source":"Semantic Scholar Graph","captured_at":captured_at,
+      "plan_counts":{"pools":len(validated["pool_names"]),"cards":validated["card_count"],"mapped":validated["mapped_card_count"],"no_identifier":validated["no_identifier_count"]},
+      "pool_names":validated["pool_names"],"pools":output_pools,
+      "response_summary":{"requested_queries":len(validated["query_ids"]),"response_items":len(records),"unmatched_records":unmatched,
+        "conflicted_queries":sum(1 for _,reason in query_result.values() if reason and reason.startswith(("conflicting","inconsistent"))),
+        "null_or_unmatched_queries":sum(1 for _,reason in query_result.values() if reason=="unmatched_or_null")}}
+    return public, private_receipt
+
+def project(plan, chunks: Iterable[bytes], captured_at: str, *, expected_pool_names=None, expected_card_count=None, byte_cap=MAX_RESPONSE_BYTES):
+    # This path computes a true hash over exactly the received bytes. Adapters
+    # starting from an already-parsed response must use project_parsed and pass
+    # the runner's raw-byte receipt instead of hashing a reserialization.
+    validated = validate_plan(plan, expected_pool_names, expected_card_count)
+    records, private_receipt = strict_parse(chunks, len(validated["query_ids"]), byte_cap)
+    return project_parsed(plan, records, captured_at, expected_pool_names=expected_pool_names,
+                          expected_card_count=expected_card_count, private_receipt=private_receipt)
+
+def information_screen(public: dict[str,Any], minimum_cards: int = 106, expected_cards: int = 423, required_pool_names=None):
+    pools = public.get("pools", [])
+    names = required_pool_names if required_pool_names is not None else public.get("pool_names", [])
+    counts = {name:{"total":0,"identity_matched_nonempty_new_information":0} for name in names}
+    eligible_ids = []
+    for row in pools:
+        name=row["pool"]
+        if name not in counts: continue
+        counts[name]["total"] += 1
+        m=row["metadata"]
+        if m.get("status") != "matched": continue
+        f=m.get("fields",{})
+        def nonempty_text(value): return isinstance(value,str) and bool(value.strip())
+        journal=f.get("journal",{}).get("value")
+        has = (nonempty_text(f.get("publication_date",{}).get("value")) or
+               f.get("year",{}).get("value") is not None or
+               (isinstance(f.get("authors",{}).get("values"),list) and any(nonempty_text(v) for v in f["authors"]["values"])) or
+               (isinstance(f.get("publication_types",{}).get("values"),list) and any(nonempty_text(v) for v in f["publication_types"]["values"])) or
+               (isinstance(journal,dict) and nonempty_text(journal.get("name",{}).get("value"))) or
+               nonempty_text(f.get("abstract",{}).get("value")))
+        if has:
+            counts[name]["identity_matched_nonempty_new_information"] += 1
+            eligible_ids.append(f"{name}/{row['card']['id']}")
+    observed=sum(x["identity_matched_nonempty_new_information"] for x in counts.values())
+    cardinality_ok=(len(pools)==expected_cards and all(v["total"]>0 for v in counts.values()))
+    per_pool_ok=all(v["identity_matched_nonempty_new_information"]>=1 for v in counts.values())
+    return {"schema":"exp049-information-screen/1","denominator":expected_cards,"observed_rows":len(pools),"qualifying_cards":observed,
+      "minimum_cards":minimum_cards,"per_pool":counts,"eligible_card_keys":eligible_ids,
+      "cardinality_ok":cardinality_ok,"card_threshold_pass":observed>=minimum_cards,"every_pool_threshold_pass":per_pool_ok,
+      "screen_pass":cardinality_ok and observed>=minimum_cards and per_pool_ok,
+      "interpretation":"metadata field coverage only; no claim about usefulness, source quality, study design, authority, ranking, or truth"}

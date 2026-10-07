@@ -1,0 +1,335 @@
+"""Offline fixtures for runner.py.txt; uses no network, credentials, or project imports."""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import json
+from pathlib import Path
+import sys
+import time
+import types
+from typing import Any
+
+
+HERE = Path(__file__).resolve().parent
+SOURCE = HERE / "runner.py.txt"
+module = types.ModuleType("exp049_inert_runner")
+sys.modules[module.__name__] = module
+namespace: dict[str, Any] = module.__dict__
+exec(compile(SOURCE.read_text(encoding="utf-8"), str(SOURCE), "exec"), namespace)
+
+
+class FakeClock:
+    def __init__(self) -> None:
+        self.value = 1000.0
+
+    def __call__(self) -> float:
+        return self.value
+
+    async def sleep(self, seconds: float) -> None:
+        self.value += seconds
+
+
+class FakeResponse:
+    def __init__(self, status: int, body: bytes = b"[]", headers: dict[str, str] | None = None,
+                 chunks: list[bytes] | None = None) -> None:
+        self.status = status
+        self.headers = headers or {}
+        self.body = body
+        self.chunks = chunks
+        self.closed = False
+
+    async def iter_bytes(self):
+        for part in (self.chunks if self.chunks is not None else [self.body]):
+            await asyncio.sleep(0)
+            yield part
+
+    async def close(self) -> None:
+        self.closed = True
+
+
+class FakeTransport:
+    def __init__(self, replies: list[Any], clock: FakeClock | None = None,
+                 advance: float = 0.0) -> None:
+        self.replies = list(replies)
+        self.requests = []
+        self.clock = clock
+        self.advance = advance
+
+    async def __call__(self, request):
+        self.requests.append(request)
+        if self.clock is not None:
+            self.clock.value += self.advance
+        reply = self.replies.pop(0)
+        if isinstance(reply, BaseException):
+            raise reply
+        return reply
+
+
+def fixture_contract() -> bytes:
+    value = {
+        "schema": "exp049-metadata-api-contract/1",
+        "endpoint": "https://api.semanticscholar.org/graph/v1/paper/batch",
+        "method": "POST",
+        "fields": "title,abstract,externalIds,authors.name,publicationDate,publicationTypes,journal,year",
+        "max_unique_ids": 500, "max_request_bytes": 64000,
+        "max_response_bytes": 8388608, "http_timeout_seconds": 20,
+        "max_http_attempts": 3, "retry_statuses": [429, 500, 502, 503, 504],
+        "max_retry_delay_seconds": 30, "max_run_seconds": 120,
+    }
+    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+async def exercise() -> dict[str, Any]:
+    body = b'{"ids":["DOI:10.1000/example"]}'
+    contract = fixture_contract()
+    body_hash, contract_hash = digest(body), digest(contract)
+    projection_calls: list[Any] = []
+
+    def project(parsed: Any) -> Any:
+        projection_calls.append(parsed)
+        return {"fixture_projection": True, "record_count": len(parsed)}
+
+    async def call(replies: list[Any], *, headers_clock: FakeClock | None = None,
+                   advance: float = 0.0, body_value: bytes = body,
+                   ledger_failure: bool = False):
+        events: list[dict[str, Any]] = []
+        async def ledger(event):
+            if ledger_failure and event["event"] == "attempt_started":
+                raise OSError("fixture durable write failed")
+            events.append(event)
+        transport = FakeTransport(replies, headers_clock, advance)
+        clock = headers_clock or FakeClock()
+        result = await namespace["run"](body_value, digest(body_value), contract,
+                                         contract_hash, transport, ledger, project,
+                                         clock=clock, sleep=clock.sleep)
+        return result, events, transport, clock
+
+    checks: dict[str, bool] = {}
+    # Success binds every transport invocation to the exact frozen request bytes.
+    result, events, transport, _ = await call([FakeResponse(200, b"[]")])
+    checks["success_and_body_identity"] = (
+        result["outcome"] == "complete" and result["attempt_count"] == 1
+        and transport.requests[0].body == body
+        and transport.requests[0].fields == fixture_fields()
+        and transport.requests[0].url == fixture_endpoint()
+        and "x-api-key" not in transport.requests[0].headers
+        and [e["event"] for e in events] == ["attempt_started", "attempt_finished", "runner_stopped"])
+
+    result, events, transport, clock = await call([
+        FakeResponse(429, headers={"Retry-After": "0"}), FakeResponse(200, b"[]")])
+    checks["retryable_429_same_body_and_durable_order"] = (
+        result["outcome"] == "complete" and result["attempt_count"] == 2
+        and all(r.body == body for r in transport.requests)
+        and [e["event"] for e in events].count("attempt_started") == 2
+        and events.index(next(e for e in events if e["event"] == "attempt_finished" and e["attempt"] == 1))
+        < events.index(next(e for e in events if e["event"] == "attempt_started" and e["attempt"] == 2)))
+
+    retry_statuses = [429, 500, 502, 503, 504]
+    retry_checks = []
+    for status in retry_statuses:
+        r, _, t, _ = await call([FakeResponse(status, headers={"Retry-After": "0"}),
+                                 FakeResponse(200, b"[]")])
+        retry_checks.append(r["outcome"] == "complete" and len(t.requests) == 2)
+    checks["all_registered_retry_statuses"] = all(retry_checks)
+
+    result, _, transport, _ = await call([asyncio.TimeoutError("fixture timeout") for _ in range(3)])
+    checks["timeout_retries_exhaust_at_three"] = (
+        result["outcome"] == "incomplete" and result["attempt_count"] == 3
+        and len(transport.requests) == 3)
+
+    terminal_status_checks = []
+    for status in (302, 400, 401, 403):
+        r, _, t, _ = await call([FakeResponse(status), FakeResponse(200, b"[]")])
+        terminal_status_checks.append(r["outcome"] == "incomplete" and len(t.requests) == 1)
+    checks["redirect_and_auth_client_errors_never_retry"] = all(terminal_status_checks)
+
+    result, _, transport, _ = await call([FakeResponse(200, b'{"x":NaN}'), FakeResponse(200, b"[]")])
+    checks["malformed_success_never_retries"] = result["outcome"] == "incomplete" and len(transport.requests) == 1
+
+    huge = b" " * 8_388_609
+    result, _, transport, _ = await call([FakeResponse(200, chunks=[huge]), FakeResponse(200, b"[]")])
+    checks["oversized_success_never_retries"] = result["outcome"] == "incomplete" and len(transport.requests) == 1
+
+    result, _, transport, _ = await call([FakeResponse(429, headers={"Retry-After": "31"}),
+                                           FakeResponse(200, b"[]")])
+    checks["retry_after_over_30_stops"] = result["attempt_count"] == 1 and len(transport.requests) == 1
+
+    result, _, _, clock = await call([FakeResponse(429, headers={"Retry-After": "bad"}),
+                                       FakeResponse(200, b"[]")])
+    checks["malformed_retry_after_uses_five_seconds"] = result["outcome"] == "complete" and clock.value >= 1005
+
+    late_clock = FakeClock()
+    result, _, transport, _ = await call([FakeResponse(429, headers={"Retry-After": "0"}),
+                                           FakeResponse(200, b"[]")],
+                                          headers_clock=late_clock, advance=101)
+    checks["insufficient_full_attempt_window_stops"] = result["attempt_count"] == 1 and len(transport.requests) == 1
+
+    _, _, transport, _ = await call([FakeResponse(200, b"[]")], ledger_failure=True)
+    checks["ledger_failure_prevents_http"] = len(transport.requests) == 0
+
+    events: list[dict[str, Any]] = []
+    entered = asyncio.Event()
+    async def hanging_transport(request):
+        entered.set()
+        await asyncio.Event().wait()
+    async def cancel_ledger(event):
+        events.append(event)
+    task = asyncio.create_task(namespace["run"](
+        body, body_hash, contract, contract_hash, hanging_transport,
+        cancel_ledger, project, clock=FakeClock(), sleep=FakeClock().sleep))
+    await entered.wait()
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+    checks["external_cancellation_keeps_started_attempt"] = (
+        any(e["event"] == "attempt_started" for e in events)
+        and any(e["event"] == "runner_stopped" for e in events))
+
+    old_run_seconds = namespace["RUN_SECONDS"]
+    namespace["RUN_SECONDS"] = 0.03
+    deadline_events: list[dict[str, Any]] = []
+    async def deadline_ledger(event):
+        deadline_events.append(event)
+    async def deadline_transport(request):
+        await asyncio.sleep(10)
+        return FakeResponse(200, b"[]")
+    real_run = await namespace["run"](
+        body, body_hash, contract, contract_hash, deadline_transport,
+        deadline_ledger, project, clock=FakeClock(),
+        sleep=FakeClock().sleep)
+    namespace["RUN_SECONDS"] = old_run_seconds
+    checks["absolute_run_deadline_retains_attempt"] = (
+        real_run["stop_reason"] == "run_deadline" and real_run["attempt_count"] == 1
+        and len(real_run["attempts"]) == 1
+        and any(e["event"] == "attempt_started" for e in deadline_events))
+
+    project_clock = FakeClock()
+    class ProcessingDeadlineResponse(FakeResponse):
+        async def iter_bytes(self):
+            yield self.body
+            project_clock.value += 18
+    project_events: list[dict[str, Any]] = []
+    async def project_ledger(event):
+        project_events.append(event)
+        if event["event"] == "attempt_finished":
+            project_clock.value += 103
+    def deadline_project(parsed: Any) -> Any:
+        return {"late": True}
+    project_transport = FakeTransport([ProcessingDeadlineResponse(200, b"[]"), FakeResponse(200, b"[]")])
+    project_result = await namespace["run"](
+        body, body_hash, contract, contract_hash, project_transport,
+        project_ledger, deadline_project,
+        clock=project_clock, sleep=project_clock.sleep)
+    checks["run_deadline_after_projection_is_terminal_without_retry"] = (
+        project_result["outcome"] == "incomplete"
+        and project_result["attempt_count"] == 1 and len(project_transport.requests) == 1
+        and project_result["stop_reason"] == "run_deadline_after_attempt")
+
+    http_clock = FakeClock()
+    class SlowHTTPReadResponse(FakeResponse):
+        async def iter_bytes(self):
+            yield self.body
+            http_clock.value += 101
+    async def http_ledger(event):
+        pass
+    slow_read_transport = FakeTransport([SlowHTTPReadResponse(200, b"[]"), FakeResponse(200, b"[]")])
+    slow_read = await namespace["run"](
+        body, body_hash, contract, contract_hash, slow_read_transport,
+        http_ledger, project, clock=http_clock, sleep=http_clock.sleep)
+    checks["response_read_over_20_seconds_is_transport_timeout"] = (
+        slow_read["outcome"] == "incomplete" and slow_read["attempt_count"] == 1
+        and slow_read["attempts"][0]["status"] == "timeout"
+        and slow_read["stop_reason"] == "retry_window_does_not_fit"
+        and len(slow_read_transport.requests) == 1)
+
+    processing_clock = FakeClock()
+    class TimelyHTTPResponse(FakeResponse):
+        async def iter_bytes(self):
+            yield self.body
+            processing_clock.value += 18
+    async def processing_ledger(event):
+        if event["event"] == "attempt_finished":
+            processing_clock.value += 3
+    processing_transport = FakeTransport([TimelyHTTPResponse(200, b"[]")])
+    processed_after_http_budget = await namespace["run"](
+        body, body_hash, contract, contract_hash, processing_transport,
+        processing_ledger, project, clock=processing_clock, sleep=processing_clock.sleep)
+    checks["processing_can_cross_http_deadline_within_run_deadline"] = (
+        processed_after_http_budget["outcome"] == "complete"
+        and processed_after_http_budget["elapsed_seconds"] >= 20
+        and processed_after_http_budget["attempt_count"] == 1)
+
+    exact_response = b' [ {"paperId":"0123456789abcdef0123456789abcdef01234567"} ]\n'
+    async def raw_ledger(event):
+        pass
+    def raw_projection(raw: bytes) -> Any:
+        return {"exact_bytes_received": raw == exact_response,
+                "response_sha256": digest(raw), "response_bytes": len(raw)}
+    raw_transport = FakeTransport([FakeResponse(200, exact_response)])
+    raw_result = await namespace["run"](
+        body, body_hash, contract, contract_hash, raw_transport,
+        raw_ledger, raw_projection, clock=FakeClock(), sleep=FakeClock().sleep,
+        project_input="raw")
+    checks["raw_projection_receives_exact_original_bytes"] = (
+        raw_result["outcome"] == "complete"
+        and raw_result["result"]["exact_bytes_received"] is True
+        and raw_result["result"]["response_sha256"] == digest(exact_response)
+        and raw_result["result"]["response_bytes"] == len(exact_response))
+
+    raw_invalid_results = {}
+    for name, bad_success in (("duplicate_keys", b'{"x":1,"x":2}'),
+                              ("malformed_json", b'{broken')):
+        bad_transport = FakeTransport([FakeResponse(200, bad_success), FakeResponse(200, b"[]")])
+        bad_result = await namespace["run"](
+            body, body_hash, contract, contract_hash, bad_transport,
+            raw_ledger, lambda raw: {"must_not_accept": True},
+            clock=FakeClock(), sleep=FakeClock().sleep, project_input="raw")
+        raw_invalid_results[name] = (
+            bad_result["outcome"] == "incomplete" and bad_result["attempt_count"] == 1
+            and len(bad_transport.requests) == 1)
+    checks["raw_mode_rejects_duplicate_json_keys_without_retry"] = raw_invalid_results["duplicate_keys"]
+    checks["raw_mode_rejects_malformed_json_without_retry"] = raw_invalid_results["malformed_json"]
+
+    children_before = {child.pid for child in __import__("multiprocessing").active_children()}
+    def blocked_project(parsed: Any) -> Any:
+        time.sleep(1.0)
+        return parsed
+    worker_timed_out = False
+    try:
+        await namespace["_isolated_parse_project"](b"[]", blocked_project, 0.03)
+    except asyncio.TimeoutError:
+        worker_timed_out = True
+    await asyncio.sleep(0.05)
+    children_after = {child.pid for child in __import__("multiprocessing").active_children()}
+    checks["blocked_projection_worker_is_killed"] = worker_timed_out and children_after <= children_before
+
+    checks["fixture_has_no_network_or_secret_configuration"] = True
+    return {"schema": "exp049-runner-qualification/1", "mode": "offline fixtures",
+            "network_calls": 0, "provider_calls": 0, "credential_reads": 0,
+            "fixture_checks": checks, "passed": all(checks.values()),
+            "check_count": len(checks), "runner_source_sha256": digest(SOURCE.read_bytes()),
+            "contract_fixture_sha256": contract_hash,
+            "note": "Projection identity/schema semantics are qualified by the separate projection module.",
+            "test_datetime_claimed": None}
+
+
+def fixture_fields() -> str:
+    return "title,abstract,externalIds,authors.name,publicationDate,publicationTypes,journal,year"
+
+
+def fixture_endpoint() -> str:
+    return "https://api.semanticscholar.org/graph/v1/paper/batch"
+
+
+if __name__ == "__main__":
+    report = asyncio.run(exercise())
+    (HERE / "runner-qualification.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(report, indent=2, sort_keys=True))

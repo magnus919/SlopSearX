@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "exp040-annotation-array/2",
+  "title": "EXP-040 named-pool individual annotation rows",
+  "type": "array",
+  "minItems": 133,
+  "maxItems": 133,
+  "items": {
+    "type": "object",
+    "required": [
+      "label",
+      "lead",
+      "visible",
+      "facets",
+      "uncertain",
+      "rationale"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "label": {
+        "type": "string",
+        "pattern": "^(cardiac|research|evaluation)-r[0-9]{2}$"
+      },
+      "lead": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 3
+      },
+      "visible": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 3
+      },
+      "facets": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "type": "string"
+        }
+      },
+      "uncertain": {
+        "type": "boolean"
+      },
+      "rationale": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

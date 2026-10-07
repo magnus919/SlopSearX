@@ -1,0 +1,99 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "records"
+  ],
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "card_sha256",
+          "lead",
+          "visible",
+          "facets",
+          "uncertain",
+          "rationale",
+          "anchors",
+          "facet_anchors"
+        ],
+        "properties": {
+          "card_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "lead": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "visible": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "facets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "uncertain": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "anchors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/anchor"
+            },
+            "minItems": 1
+          },
+          "facet_anchors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/anchor"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "quote"
+      ],
+      "properties": {
+        "field": {
+          "enum": [
+            "title",
+            "url",
+            "snippet"
+          ]
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    }
+  }
+}

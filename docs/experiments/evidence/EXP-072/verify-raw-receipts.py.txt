@@ -1,0 +1,40 @@
+from pathlib import Path
+import argparse,hashlib,json,importlib.machinery,importlib.util
+parser=argparse.ArgumentParser(description='Offline verification of all frozen EXP-072 requests and raw receipts; zero provider calls.')
+parser.add_argument('--repo',type=Path,default=Path('.'));parser.add_argument('--run-dir',type=Path,required=True);args=parser.parse_args()
+root=args.repo.resolve();here=root/'docs/experiments/evidence/EXP-072';out=args.run_dir.resolve()
+def load(name,p):
+ l=importlib.machinery.SourceFileLoader(name,str(p));s=importlib.util.spec_from_loader(name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+N=load('verify072',here/'normal-runner.py.txt');P=N.P;A=load('analyze072raw',here/'analyze.py.txt')
+inputs={relative:(root/relative).read_bytes() for relative in P.PROTOCOL['inputs']};acq=P.strict_json(inputs['docs/experiments/evidence/EXP-060/fresh-acquisition.json']);queries=P.strict_json(inputs['docs/experiments/evidence/EXP-060/queries.json']);refs=P.strict_json(inputs['docs/experiments/evidence/EXP-064/completed/metric-reference-view.json'])
+prepared,neutral=N.prebuild(acq,queries);scheduled=[('neutral','candidate',neutral,None)]
+for item,built in prepared:
+ for arm in item['arms']:scheduled.append((item['case']+'-'+item['variant'],arm,built[arm],built))
+run=P.strict_json((out/'run.json').read_bytes());assert run['status']=='complete' and not run['synthetic']
+receipts=sorted((out/'receipts').glob('call-*.json'));transport=sorted((out/'receipts/transport').glob('call-*.json'));assert len(receipts)==len(transport)==64
+usage={'input_tokens':0,'output_tokens':0};max_http=0;hashes=[]
+for index,((op,arm,request,built),file,tfile) in enumerate(zip(scheduled,receipts,transport)):
+ rec=P.strict_json(file.read_bytes());tr=P.strict_json(tfile.read_bytes());expected=P.wire(request);raw=bytes.fromhex(rec['raw_response'])
+ assert rec['status']=='valid' and rec['operation']==op and rec['arm']==arm
+ assert bytes.fromhex(rec['request'])==expected and rec['request_sha256']==P.digest(expected)
+ assert bytes.fromhex(tr['request'])==expected and bytes.fromhex(tr['stdout'])==raw and tr['stdout_complete']
+ timing=P.strict_json(bytes.fromhex(tr['stderr']));assert timing['request_sha256']==P.digest(expected) and timing['response_sha256']==P.digest(raw) and timing['remote_http_ms']==rec['elapsed_ms']
+ parsed=P.validate_score_response(raw,request,list(request['questions']),3 if arm=='candidate' else 9)
+ assert parsed['usage']==rec['usage'] and parsed['usage'] is not None
+ assert usage['input_tokens']+64000<=3000000 and usage['output_tokens']+64000<=160000
+ for k in usage:assert parsed['usage'][k]<=64000;usage[k]+=parsed['usage'][k]
+ if op=='neutral':assert parsed['scores']==run['neutral']['scores'] and parsed['raw_answers']==run['neutral']['raw_answers']
+ else:
+  row=next(v for v in run['operations'] if v['id']==op)['arms'][arm]
+  if arm=='w0':
+   mapping=built['w0_local_to_pool'];scores={mapping[k]:v for k,v in parsed['scores'].items()};answers={mapping[k]:v for k,v in parsed['raw_answers'].items()};order=[mapping[k] for k in P.order_scores(parsed['scores'],list(mapping),9)]+built['tail_ids']
+  else:scores=parsed['scores'];answers=parsed['raw_answers'];order=P.order_scores(scores,built['ids'],3 if arm=='candidate' else 9)
+  assert row['scores']==scores and row['raw_answers']==answers and row['order_ids']==order
+  assert row['usage']==parsed['usage'] and row['elapsed_ms']==rec['elapsed_ms']
+ assert rec['elapsed_ms']<=1000;max_http=max(max_http,rec['elapsed_ms'])
+ hashes.append({'call':index,'request_sha256':P.digest(expected),'response_sha256':P.digest(raw)})
+assert usage=={k:run['budget'][k] for k in usage} and run['budget']['attempts']==64 and not run['budget']['unknown_usage']
+analysis=A.analyze(run,acq,refs,queries,P.PROTOCOL,inputs,(here/'protocol.json').read_bytes(),(here/'registration-integrity.json').read_bytes());assert analysis==P.strict_json((out/'analysis.json').read_bytes()) and analysis['structural_failures']==[]
+phase=max([run['neutral']['candidate_phase_ms']]+[o['candidate_phase_ms'] for o in run['operations']]);assert phase<=1000
+record={'schema':'exp072-root-raw-receipt-verification/1','verified_requests':64,'operations':21,'raw_transport_binding':True,'actual_input_bytes_verified':True,'raw_answers_scores_orders_recomputed':True,'known_usage':usage,'max_owned_http_ms':max_http,'max_candidate_phase_ms':phase,'wall_seconds':run['wall_seconds'],'analysis_outcome':analysis['outcome'],'adoption_eligible':False,'search_calls':0,'calls':hashes}
+(out/'root-raw-verification.json').write_text(json.dumps(record,indent=2)+'\n');print({k:v for k,v in record.items() if k!='calls'})

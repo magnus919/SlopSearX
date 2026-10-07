@@ -1,0 +1,28 @@
+{
+  "schema": "exp073-offline-integration-verification/1",
+  "source_revision": "f019425862175e7553a2b7007d76bd29677b5b12",
+  "provider_calls": 0,
+  "search_calls": 0,
+  "synthetic_fixture_calls": 44,
+  "operations": 21,
+  "runner_status": "complete",
+  "analysis_outcome": "synthetic_fixture_only",
+  "structural_failures": [],
+  "quality_analysis_performed": false,
+  "adoption_eligible": false,
+  "raw_verification_passed": true,
+  "wrapper_telemetry_checked": 0,
+  "timing_limitation": "Wrapper timings are independently checked only when raw stderr telemetry is retained and parsed. In-process synthetic fixtures have locally measured elapsed values but no independent remote clock evidence.",
+  "tests": {
+    "runner": 17,
+    "analyzer": 17,
+    "verifier": 10,
+    "fusion": 3
+  },
+  "artifact_sha256": {
+    "run.json": "599819d97f6cd33f0a741d5aebe7fb0b58702b0708eac2e084da66c9ea9d8147",
+    "analysis.json": "e28a678f0be7924774e606786b7e8c2f3e48f242ef98b160e0457af5f1b76588",
+    "raw-verification.json": "e1f2b775a6e9c0b6b34ec8e783290229273a8841b4723dfd5893836d919eb3aa"
+  },
+  "interpretation": "Complete root offline execution with actual pinned inputs, independently verified raw requests/responses, rank formula and saved analysis. Synthetic timings do not prove provider latency or ranking quality. Earlier failed integration checks remain retained."
+}

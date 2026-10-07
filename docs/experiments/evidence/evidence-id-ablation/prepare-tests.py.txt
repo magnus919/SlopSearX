@@ -1,0 +1,32 @@
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+base=Path(__file__).parent
+loader=importlib.machinery.SourceFileLoader('prepare',str(base/'prepare.py.txt'))
+spec=importlib.util.spec_from_loader(loader.name,loader)
+p=importlib.util.module_from_spec(spec);loader.exec_module(p)
+
+
+class PrepareTests(unittest.TestCase):
+    def test_matching_isolation_and_receipts(self):
+        frozen={'cases':[{'task_id':'q6','purpose':'task','facets':[{'id':'f'}], 'critical_facets':['f'], 'sources':[{'source_id':'S1','context':'é **text**'*90},{'source_id':'S2','context':'excluded'}]}], 'answers':[{'task_id':'q6','packet_id':'old','assigned_source_ids':['S1'],'answer':'must never copy'}]}
+        checks={'refactoring_checks':['check'],'flaky_test_checks':[]}
+        module=p.load_catalog(base.parent/'source-use-next-stage/evidence-catalog.py.txt')
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'packets';receipts=p.prepare(frozen,checks,module,out)
+            self.assertEqual(len(receipts),2)
+            packets=[json.loads((out/(r['packet_id']+'.json')).read_text()) for r in receipts]
+            for packet in packets:
+                self.assertEqual({x['source_id'] for x in packet['passages']},{'S1'})
+                self.assertNotIn('must never copy',json.dumps(packet))
+                packet.pop('packet_id')
+                for passage in packet['passages']:passage.pop('evidence_id',None)
+            self.assertEqual(packets[0],packets[1])
+            with self.assertRaises(FileExistsError):p.prepare(frozen,checks,module,out)
+
+
+if __name__=='__main__':unittest.main()

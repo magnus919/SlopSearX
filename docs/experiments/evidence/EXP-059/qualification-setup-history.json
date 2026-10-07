@@ -1,0 +1,15 @@
+{
+  "schema": "exp059-qualification-setup-history/1",
+  "attempts": [
+    {
+      "stage": "prepare-operation-plan",
+      "exit_code": 1,
+      "error_type": "ModuleNotFoundError",
+      "error": "No module named slopsearx",
+      "cause": "Qualification helper invoked without repository PYTHONPATH before fixture execution.",
+      "provider_calls": 0,
+      "brave_attempts": 0,
+      "driver_sha256": "19855ba2fdba88f020f245c6f7a200d53377f7121e4b6a76244f9202a9e5f0c8"
+    }
+  ]
+}

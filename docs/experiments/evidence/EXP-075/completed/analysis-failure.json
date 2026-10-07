@@ -1,0 +1,29 @@
+{
+  "schema": "exp075-post-run-analysis-failure/1",
+  "recorded_at": "2026-10-05T16:20:27.680515+00:00",
+  "producer_status": "complete",
+  "producer_synthetic": false,
+  "physical_attempts": 44,
+  "budget": {
+    "attempts": 44,
+    "input_tokens": 992269,
+    "output_tokens": 35535,
+    "unknown_usage": false
+  },
+  "operations": 21,
+  "qualified_source_revision": "f31a06d39853bb113afbe68846a368d4b51ac34c",
+  "qualification_sha256": "f020ce69238a2b695d415b6e46fb7704eda605cebd94005135297e11449c2edc",
+  "failure": {
+    "type": "KeyError",
+    "stage": "original verifier finish -> analyzer reference_quality_gates",
+    "missing_order_key": [
+      "q1",
+      "base",
+      "w0"
+    ]
+  },
+  "original_full_verification_completed": false,
+  "quality_result_available": false,
+  "provider_rerun_authorized": false,
+  "interpretation": "All producer calls completed. Original analysis failed before producing metrics; preserve receipts and qualified source unchanged. Any corrected analysis must be separately bound and labeled post-run."
+}

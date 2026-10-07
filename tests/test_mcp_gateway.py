@@ -125,7 +125,7 @@ class TestGateway:
             names = [tool.name for tool in tools]
             assert "slopsearx_search" in names
             assert "slopsearx_get_service_status" in names
-            assert len(tools) == 35
+            assert len(tools) == 38
             search = next(tool for tool in tools if tool.name == "slopsearx_search")
             schema = getattr(search, "input_schema", None) or getattr(search, "inputSchema")
             props = schema.get("properties", {})
@@ -157,9 +157,11 @@ class TestGateway:
 
             # Prompts are proxied
             prompts = await client.list_prompts()
-            assert len(prompts) == 4
+            assert len(prompts) == 5
             prompt = await client.get_prompt("research_with_source_coverage", {"question": "test"})
             assert prompt.messages
+            planning_prompt = await client.get_prompt("plan_research_with_evidence", {"question": "test"})
+            assert "slopsearx_plan_research_followup" in planning_prompt.messages[0].content.text
             # Unknown intent returns a structured error envelope unchanged.
             error_result = await client.call_tool_mcp("slopsearx_search", {"query": "x", "intent": "bogus"})
             error_payload = json.loads(error_result.content[0].text)

@@ -1,0 +1,148 @@
+"""Offline EXP-083 capture dispatch regression using the pinned CLI bytes."""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import shutil
+import tempfile
+import unittest
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest.mock import patch
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp083_phase_bindings_test", str(HERE / "phase-bindings.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+M = importlib.util.module_from_spec(spec)
+loader.exec_module(M)
+
+
+def load_capture():
+    return M._load("exp083_capture_runner_test", HERE / "capture-runner.py.txt")
+
+
+class AdmissionFixture:
+    def __init__(self):
+        self.required = 0
+        self.claimed = []
+
+    def acquire_phase(self, permit, phase, stage_outdir, clock_bytes):
+        self.claimed.append((phase, Path(stage_outdir), clock_bytes))
+        return object()
+
+    def require_phase(self, phase_permit, clock_bytes, stage_outdir):
+        self.required += 1
+
+
+class FakeResponse:
+    def __init__(self, payload, url):
+        self.status_code = 200
+        self.headers = {}
+        self.url = url
+        self._content = json.dumps(payload).encode()
+        self._content_consumed = False
+
+    @property
+    def content(self):
+        return self._content
+
+    @property
+    def text(self):
+        return self._content.decode()
+
+    def iter_content(self, chunk_size):
+        for offset in range(0, len(self._content), chunk_size):
+            yield self._content[offset:offset + chunk_size]
+
+    def json(self):
+        return json.loads(self._content)
+
+    def close(self):
+        pass
+
+
+def source_bundle():
+    cases = [{"id": f"d{i}", "kind": "research"} for i in range(1, 9)]
+    acquisition = {"schema": "exp078-effective-acquisition/1", "pools": {},
+                   "source_id_by_card_id": {}, "native_results_by_card_id": {}}
+    for case in cases:
+        task_id = case["id"]
+        url = f"https://example.com/{task_id}"
+        native = {"url": url, "title": task_id}
+        source_id = "u" + hashlib.sha256(url.encode()).hexdigest()
+        card_id = "card-" + task_id
+        card = {"id": card_id, "url": url, "title": task_id, "snippet": "fixture"}
+        acquisition["pools"][task_id] = {"cards": [card]}
+        acquisition["source_id_by_card_id"][task_id] = {card_id: source_id}
+        acquisition["native_results_by_card_id"][task_id] = {card_id: native}
+    return acquisition, cases
+
+
+class CaptureDispatchTests(unittest.TestCase):
+    def test_pinned_cli_keyword_request_is_forwarded_once_without_network(self):
+        cli_path = Path(os.environ.get("GROKTOCRAWL_PINNED_CLI_PATH") or shutil.which("groktocrawl") or "")
+        if not cli_path.is_file():
+            self.skipTest("pinned GroktoCrawl CLI is unavailable in this offline test environment")
+        qual = json.loads((HERE.parent / "EXP-078" / "qualification-integrity.json").read_bytes())
+        cli_pin = qual["external_source_pins"]["groktocrawl_cli"]
+        self.assertEqual(hashlib.sha256(cli_path.read_bytes()).hexdigest(), cli_pin["sha256"])
+
+        capture = load_capture()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            capture.PINFILE = root / "candidate-source-pins.json"
+            policy = HERE.parent / "source-use-next-stage" / "capture-runner.py.txt"
+            capture.PINFILE.write_text(json.dumps({"pins": {
+                "docs/experiments/evidence/source-use-next-stage/capture-runner.py.txt":
+                    hashlib.sha256(policy.read_bytes()).hexdigest()}}, sort_keys=True))
+            stage = root / "stage"
+            outdir = stage / "capture"
+            stage.mkdir()
+            clock = {"stage_started_utc": datetime.now(timezone.utc).isoformat(),
+                     "stage_deadline_utc": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()}
+            acquisition, cases = source_bundle()
+            admission = AdmissionFixture()
+            calls = []
+
+            def fake_request(*args, **kwargs):
+                # The forwarding boundary receives one positional method/URL
+                # pair; the keyword copies from the CLI must already be gone.
+                self.assertEqual(len(args), 2)
+                self.assertIn(args[0], {"GET", "POST"})
+                self.assertNotIn("method", kwargs)
+                self.assertNotIn("url", kwargs)
+                calls.append((args, dict(kwargs)))
+                if args[1].endswith("/health"):
+                    body = {"status": "ok", "runtime": {"model": "free", "revision": "fixture-rev"}}
+                else:
+                    body = {"success": True, "data": {"markdown": "Captured useful fixture text."}}
+                return FakeResponse(body, args[1])
+
+            with patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid",
+                                         "GROKTOCRAWL_API_KEY": "offline-fixture-key",
+                                         "API_KEY": "offline-fixture-key"}), \
+                 patch("requests.request", side_effect=fake_request):
+                result = M.run_capture(
+                    acquisition=acquisition, cases=cases, cli_path=cli_path,
+                    source_integrity={"external_source_pins": {"groktocrawl_cli": cli_pin}},
+                    stage_outdir=stage, outdir=outdir, admission=admission,
+                    stage_permit=object(), clock=clock,
+                    clock_bytes=M.canonical(clock), clock_sha256=M.sha(M.canonical(clock)))
+
+            self.assertEqual(result["status"], "complete")
+            self.assertEqual(result["owned_http_capture_attempts"], 8)
+            self.assertEqual(result["owned_health_attempts"], 1)
+            self.assertEqual([call[0][0] for call in calls], ["GET"] + ["POST"] * 8)
+            self.assertEqual(len(calls), 9)
+            self.assertEqual(len({call[1]["json"]["url"] for call in calls[1:]}), 8)
+            self.assertEqual(len(admission.claimed), 1)
+            self.assertEqual(admission.claimed[0][0], "capture")
+            self.assertGreaterEqual(admission.required, 2)
+            self.assertEqual(result["runtime_identity"]["observed_revision"], "fixture-rev")
+
+
+if __name__ == "__main__":
+    unittest.main()

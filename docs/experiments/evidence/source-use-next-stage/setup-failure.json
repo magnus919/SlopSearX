@@ -1,0 +1,17 @@
+{
+  "schema": "source-use-setup-failure/1",
+  "status": "terminal_connection_failure",
+  "qualified_revision": "fa1c1cff2da6cb3a57bff454a3d01b012979592c",
+  "manifest_sha256": "78e581acd50e27bb2082ff85b96f7f4a031c12311e8d31e29525a33a9a430e5f",
+  "owned_health_attempts": 1,
+  "source_attempts": 0,
+  "source_captures": 0,
+  "model_or_search_calls": 0,
+  "runtime_identity": "unobserved; health connection did not succeed",
+  "diagnosis": {
+    "inherited_endpoint_differs_from_existing_hermes_config": true,
+    "dns_resolution_succeeded": true
+  },
+  "credit": "setup only; no source-use or selector qualification credit",
+  "next_action": "Freeze existing Hermes configuration discovery in isolated child; retain previous lease and output; use manifest-keyed exclusive lease for amended registration."
+}

@@ -1,0 +1,312 @@
+"""Offline EXP-076 analysis. Only a verified complete nonsynthetic run is gradeable."""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import random
+import statistics
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+PROTOCOL_PATH = HERE / "protocol.json"
+REGISTRATION_PATH = HERE / "registration-integrity.json"
+QUALITY_CASES = tuple(f"q{i}" for i in range(1, 9))
+STABILITY_CASES = ("q1", "q4", "q7", "q8")
+ASSESSORS = ("A", "B")
+INPUT_BINDINGS = {
+    "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "acquisition",
+    "docs/experiments/evidence/EXP-060/queries.json": "queries",
+    "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": "references",
+    "docs/experiments/evidence/EXP-064/completed/source-bound-references.json": "source_bound",
+}
+
+
+def _strict_json(raw: bytes):
+    if type(raw) is not bytes:
+        raise ValueError("json-bytes-required")
+
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise ValueError("duplicate-json-key")
+            out[key] = value
+        return out
+
+    def constant(_value):
+        raise ValueError("nonfinite-json")
+
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=pairs, parse_constant=constant)
+    if not _json_finite(value):
+        raise ValueError("nonfinite-json")
+    return value
+
+
+def _json_finite(value):
+    if value is None or type(value) in (str, bool, int):
+        return True
+    if type(value) is float:
+        return math.isfinite(value)
+    if type(value) is list:
+        return all(_json_finite(item) for item in value)
+    if type(value) is dict:
+        return all(type(key) is str and _json_finite(item) for key, item in value.items())
+    return False
+
+
+def _digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_key(cards):
+    return {card["id"]: tuple(card[key].encode("utf-8") for key in ("url", "title", "snippet", "id")) for card in cards}
+
+
+def ndcg10(order, rows):
+    def dcg(ids):
+        return sum((2 ** rows[cid]["lead"] - 1) / math.log2(rank + 2) for rank, cid in enumerate(ids[:10]))
+
+    ideal = sorted(rows, key=lambda cid: -rows[cid]["lead"])
+    denom = dcg(ideal)
+    return dcg(order) / denom if denom else 0.0
+
+
+def useful10(order, rows):
+    return sum(rows[cid]["lead"] >= 2 for cid in order[:10])
+
+
+def useful_facets(order, rows):
+    return {facet for cid in order[:10] if rows[cid]["lead"] >= 2 for facet in rows[cid]["facets"]}
+
+
+def _bootstrap95(values):
+    rng = random.Random(6501)
+    samples = sorted(statistics.mean(rng.choices(values, k=len(values))) for _ in range(10_000))
+    return [samples[249], samples[9749]]
+
+
+def _input_errors(input_bytes, acquisition, queries, references, source_bound, protocol, protocol_bytes, registration, registration_bytes):
+    errors = []
+    if type(input_bytes) is not dict or type(protocol) is not dict or type(protocol_bytes) is not bytes or type(registration_bytes) is not bytes:
+        return ["integrity-inputs-missing"]
+    pins = protocol.get("inputs")
+    if type(pins) is not dict or set(input_bytes) != set(pins):
+        return ["integrity-input-inventory"]
+    parsed = {}
+    for path, expected in pins.items():
+        raw = input_bytes.get(path)
+        if type(raw) is not bytes or _digest(raw) != expected:
+            errors.append("input-sha256:" + path)
+            continue
+        try:
+            parsed[path] = _strict_json(raw)
+        except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+            errors.append("input-json:" + path)
+    supplied = {"acquisition": acquisition, "queries": queries, "references": references, "source_bound": source_bound}
+    for path, name in INPUT_BINDINGS.items():
+        if path not in parsed or parsed[path] != supplied.get(name):
+            errors.append("input-object-mismatch:" + path)
+    try:
+        qids = {row.get("id") for row in queries} if type(queries) is list else set()
+        if len(qids) != 13 or qids != {f"q{i}" for i in range(1, 14)}:
+            errors.append("query-case-inventory")
+        pool_map = acquisition.get("pools") if type(acquisition) is dict else None
+        if type(pool_map) is not dict or set(pool_map) != qids:
+            errors.append("acquisition-pool-inventory")
+        for assessor in ASSESSORS:
+            if type(references.get(assessor)) is not dict or type(source_bound.get(assessor)) is not dict:
+                errors.append("assessor-reference-inventory:" + assessor)
+                continue
+            if set(references[assessor]) != qids or set(source_bound[assessor]) != qids:
+                errors.append("reference-case-inventory:" + assessor)
+                continue
+            for qid in qids:
+                cards = pool_map[qid].get("cards")
+                expected_ids = {card.get("id") for card in cards} if type(cards) is list else set()
+                view_rows = references[assessor][qid]
+                bound_rows = source_bound[assessor][qid]
+                if type(view_rows) is not dict or type(bound_rows) is not dict or set(view_rows) != expected_ids or set(bound_rows) != expected_ids:
+                    errors.append("reference-source-id-inventory:" + assessor + ":" + qid)
+                    continue
+                if any(type(view_rows[sid]) is not dict or type(bound_rows[sid]) is not dict
+                       or view_rows[sid].get("lead") != bound_rows[sid].get("lead")
+                       for sid in expected_ids):
+                    errors.append("reference-source-grade-binding:" + assessor + ":" + qid)
+    except (KeyError, TypeError, AttributeError):
+        errors.append("reference-input-schema")
+    try:
+        if _strict_json(protocol_bytes) != protocol:
+            errors.append("protocol-bytes-mismatch")
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        errors.append("protocol-json-invalid")
+    try:
+        reg_from_bytes = _strict_json(registration_bytes)
+        if reg_from_bytes != registration:
+            errors.append("registration-bytes-mismatch")
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        errors.append("registration-json-invalid")
+        reg_from_bytes = None
+    if type(reg_from_bytes) is dict:
+        if reg_from_bytes.get("schema") != "exp076-registration/1":
+            errors.append("registration-schema")
+        if reg_from_bytes.get("pins", {}).get("docs/experiments/evidence/EXP-076/protocol.json") != _digest(protocol_bytes):
+            errors.append("registration-protocol-pin")
+        if reg_from_bytes.get("inputs") != pins:
+            errors.append("registration-input-pins")
+    return errors
+
+
+def _order_map(verification):
+    orders = verification.get("orders") if type(verification) is dict else None
+    if type(orders) is not dict:
+        return None
+    return orders
+
+
+def _metric_case(qid, order_map, references, source_bound, assessor):
+    rows = references[assessor][qid]
+    identity_rows = source_bound[assessor][qid]
+    w0 = order_map[(qid, "base")]["w0"]
+    candidate = order_map[(qid, "base")]["candidate"]
+    w0m = {"ndcg10": ndcg10(w0, rows), "useful10": useful10(w0, rows), "facets": sorted(useful_facets(w0, rows))}
+    cm = {"ndcg10": ndcg10(candidate, rows), "useful10": useful10(candidate, rows), "facets": sorted(useful_facets(candidate, rows))}
+    lost_facets = sorted(set(w0m["facets"]) - set(cm["facets"]))
+    useful_w0_ids = {sid for sid in w0[:10] if identity_rows[sid]["lead"] >= 2}
+    displaced = sorted(useful_w0_ids - set(candidate[:10]))
+    delta = cm["ndcg10"] - w0m["ndcg10"]
+    return {
+        "case": qid,
+        "w0": w0m,
+        "candidate": cm,
+        "candidate_minus_w0_ndcg10": delta,
+        "lost_w0_facets": lost_facets,
+        "w0_useful_source_ids": sorted(useful_w0_ids),
+        "displaced_useful_source_ids": displaced,
+        "identity_displacement_count": len(displaced),
+        "per_case_passed": delta >= -0.03 - 1e-12 and cm["useful10"] >= w0m["useful10"] and not lost_facets and len(displaced) <= 1,
+    }
+
+
+def _stability(order_map):
+    result = []
+    for qid in STABILITY_CASES:
+        base = order_map[(qid, "base")]["candidate"][:10]
+        for variant in ("repeat", "rotate"):
+            other = order_map[(qid, variant)]["candidate"][:10]
+            overlap = len(set(base) & set(other)) / 10
+            result.append({"case": qid, "variant": variant, "top10_overlap": overlap, "passed": overlap >= 0.8})
+    return result
+
+
+def _navigation(order_map, acquisition, queries):
+    pool_map = acquisition.get("pools", {})
+    query_map = {item["id"]: item for item in queries}
+    rows = []
+    for qid in ("q9", "q10", "q11", "q12", "q13"):
+        candidate = order_map[(qid, "base")]["candidate"]
+        target = query_map[qid].get("target_url", pool_map[qid].get("target_url"))
+        ids = [card["id"] for card in pool_map[qid]["cards"] if card.get("url") == target] if target else []
+        target_id = ids[0] if ids else None
+        rank = candidate.index(target_id) + 1 if target_id in candidate else None
+        rows.append({"case": qid, "target_url": target, "target_present": bool(target_id), "target_id": target_id,
+                     "candidate_rank": rank, "candidate_target_top1": target_id is not None and rank == 1})
+    return rows
+
+
+def analyze(run, acquisition, references, source_bound, queries, protocol, input_bytes,
+            protocol_bytes, registration, registration_bytes, verification, *, test_fixture=False):
+    """Recompute all gates from raw-verified orders; test_fixture is forbidden for measurement reporting."""
+    errors = _input_errors(input_bytes, acquisition, queries, references, source_bound, protocol,
+                           protocol_bytes, registration, registration_bytes)
+    if type(run) is not dict or run.get("schema") != "exp076-run/1":
+        errors.append("run-schema")
+    if type(verification) is not dict or verification.get("valid") is not True:
+        errors.extend((verification or {}).get("errors", ["raw-verification-required"]) if type(verification) is dict else ["raw-verification-required"])
+    if errors:
+        return {"schema": "exp076-analysis/1", "status": "structural_rejection", "structural_errors": sorted(set(errors)),
+                "quality_analysis_performed": False, "adoption_eligible": False, "quality_credit": False}
+    if run.get("status") != "complete":
+        return {"schema": "exp076-analysis/1", "status": "incomplete", "structural_errors": [],
+                "quality_analysis_performed": False, "adoption_eligible": False, "quality_credit": False}
+    if run.get("synthetic") is True and not test_fixture:
+        return {"schema": "exp076-analysis/1", "status": "synthetic_fixture_only", "structural_errors": [],
+                "quality_analysis_performed": False, "adoption_eligible": False, "quality_credit": False}
+    order_map = _order_map(verification)
+    if order_map is None:
+        return {"schema": "exp076-analysis/1", "status": "structural_rejection", "structural_errors": ["verified-orders-missing"],
+                "quality_analysis_performed": False, "adoption_eligible": False, "quality_credit": False}
+    try:
+        assessors = {}
+        for assessor in ASSESSORS:
+            cases = [_metric_case(qid, order_map, references, source_bound, assessor) for qid in QUALITY_CASES]
+            deltas = [case["candidate_minus_w0_ndcg10"] for case in cases]
+            mean = statistics.mean(deltas)
+            ci = _bootstrap95(deltas)
+            assessors[assessor] = {
+                "cases": cases,
+                "mean_candidate_minus_w0": mean,
+                "bootstrap95": ci,
+                "quality_gate_passed": mean >= 0.05 - 1e-12 and ci[0] > 0 and all(row["per_case_passed"] for row in cases),
+                "useful_identity_gate_passed": all(row["identity_displacement_count"] <= 1 for row in cases),
+            }
+        stability = _stability(order_map)
+        navigation = _navigation(order_map, acquisition, queries)
+    except (KeyError, TypeError, ValueError, ZeroDivisionError) as exc:
+        return {"schema": "exp076-analysis/1", "status": "structural_rejection", "structural_errors": ["quality-input-schema:" + type(exc).__name__],
+                "quality_analysis_performed": False, "adoption_eligible": False, "quality_credit": False}
+    quality_pass = all(item["quality_gate_passed"] and item["useful_identity_gate_passed"] for item in assessors.values()) and all(item["passed"] for item in stability)
+    nav_pass = all(item["candidate_target_top1"] for item in navigation if item["target_present"])
+    recall = all(item["target_present"] for item in navigation)
+    all_pass = quality_pass and nav_pass and recall
+    outcome = "fixture_test_only" if test_fixture else ("development_pass" if all_pass else "development_rejected")
+    return {
+        "schema": "exp076-analysis/1", "status": "complete", "outcome": outcome,
+        "structural_errors": [], "quality_analysis_performed": True,
+        "test_fixture_only": bool(test_fixture), "assessors": assessors,
+        "stability": stability, "navigation": navigation,
+        "development_quality_passed": quality_pass, "navigation_gate_met": nav_pass,
+        "acquisition_recall_met": recall, "development_all_gates_passed": all_pass,
+        "adoption_eligible": False, "quality_credit": False,
+    }
+
+
+def analyze_directory(run_dir, *, test_fixture=False):
+    """CLI/API entrypoint. Requires the sibling raw verifier and exact pinned input bytes."""
+    import importlib.machinery
+    import importlib.util
+
+    verifier_path = HERE / "verify-raw-receipts.py.txt"
+    loader = importlib.machinery.SourceFileLoader("exp076_raw_verifier_for_analysis", str(verifier_path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    verifier = importlib.util.module_from_spec(spec)
+    loader.exec_module(verifier)
+    proof = verifier.verify(run_dir, test_fixture=test_fixture)
+    run_path = Path(run_dir) / "run.json"
+    run = _strict_json(run_path.read_bytes())
+    protocol_bytes = PROTOCOL_PATH.read_bytes()
+    registration_bytes = REGISTRATION_PATH.read_bytes()
+    protocol = _strict_json(protocol_bytes)
+    registration = _strict_json(registration_bytes)
+    input_bytes = {path: (REPO / path).read_bytes() for path in protocol["inputs"]}
+    parsed = {path: _strict_json(raw) for path, raw in input_bytes.items()}
+    result = analyze(run, parsed["docs/experiments/evidence/EXP-060/fresh-acquisition.json"],
+                     parsed["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"],
+                     parsed["docs/experiments/evidence/EXP-064/completed/source-bound-references.json"],
+                     parsed["docs/experiments/evidence/EXP-060/queries.json"], protocol, input_bytes,
+                     protocol_bytes, registration, registration_bytes, proof, test_fixture=test_fixture)
+    out = Path(run_dir) / ("analysis-test.json" if test_fixture else "analysis.json")
+    raw = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8") + b"\n"
+    temp = out.with_suffix(out.suffix + ".tmp")
+    temp.write_bytes(raw)
+    with temp.open("rb") as handle:
+        import os
+        os.fsync(handle.fileno())
+    temp.replace(out)
+    dirfd = __import__("os").open(out.parent, __import__("os").O_RDONLY)
+    try:
+        __import__("os").fsync(dirfd)
+    finally:
+        __import__("os").close(dirfd)
+    return result

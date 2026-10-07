@@ -1,0 +1,104 @@
+"""Bounded, deadline-enforced owned child transport; no endpoint defaults."""
+import os
+import json
+import math
+import hashlib
+import selectors
+import signal
+import subprocess
+import tempfile
+import time
+
+class ChildTransport:
+    """Exact stdin/stdout for accepted calls; over-bound output is terminal.
+
+    Overflow receipts explicitly retain only the observed bounded prefix, never
+    describe it as a complete response. The command is trusted local configuration.
+    Child process wall time is conservative, not provider-only timing.
+    """
+    def __init__(self, command, http_timing=False):
+        if not command or any(type(x) is not str for x in command):
+            raise ValueError('owned-command-contract')
+        self.command = list(command)
+        self.http_timing = http_timing
+        self.receipts = []
+
+    def __call__(self, body, timeout_s):
+        if type(body) is not bytes or len(body) > 384000 or not 0 < timeout_s <= 60:
+            raise ValueError('transport-input-contract')
+        started = time.monotonic()
+        receipt = {'status': 'invoked', 'request': body, 'stdout': None,
+                   'stderr': None, 'exit_code': None, 'timed_out': False,
+                   'stdout_complete': False, 'stderr_complete': False}
+        self.receipts.append(receipt)
+        buffers = {'stdout': bytearray(), 'stderr': bytearray()}
+        limits = {'stdout': 2000000, 'stderr': 64000}
+        process = None
+        with tempfile.TemporaryFile() as source, selectors.DefaultSelector() as selector:
+            source.write(body)
+            source.seek(0)
+            try:
+                process = subprocess.Popen(self.command, stdin=source, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE, start_new_session=True)
+                for name in buffers:
+                    stream = getattr(process, name)
+                    os.set_blocking(stream.fileno(), False)
+                    selector.register(stream, selectors.EVENT_READ, name)
+                while selector.get_map():
+                    remaining = timeout_s - (time.monotonic() - started)
+                    if remaining <= 0:
+                        receipt.update(status='timeout', timed_out=True)
+                        raise TimeoutError('owned-transport-deadline')
+                    for key, _ in selector.select(min(remaining, .05)):
+                        name = key.data
+                        chunk = os.read(key.fd, min(65536, limits[name] + 1 - len(buffers[name])))
+                        if not chunk:
+                            receipt[name + '_complete'] = True
+                            selector.unregister(key.fileobj)
+                            continue
+                        buffers[name].extend(chunk)
+                        if len(buffers[name]) > limits[name]:
+                            receipt['status'] = name + '-overflow'
+                            raise ValueError('owned-transport-output-bound')
+                remaining = timeout_s - (time.monotonic() - started)
+                if remaining <= 0:
+                    receipt.update(status='timeout', timed_out=True)
+                    raise TimeoutError('owned-transport-deadline')
+                try:
+                    process.wait(timeout=remaining)
+                except subprocess.TimeoutExpired:
+                    receipt.update(status='timeout', timed_out=True)
+                    raise TimeoutError('owned-transport-deadline') from None
+                if process.returncode:
+                    receipt['status'] = 'failed'
+                    raise ValueError('owned-transport-nonzero-exit')
+                receipt['status'] = 'returned'
+            except BaseException:
+                if receipt['status'] == 'invoked':
+                    receipt['status'] = 'cancelled-or-setup-failed'
+                if process is not None:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    process.wait()
+                raise
+            finally:
+                if process is not None:
+                    for name in buffers:
+                        getattr(process, name).close()
+                    receipt['exit_code'] = process.returncode
+                receipt.update(stdout=bytes(buffers['stdout']), stderr=bytes(buffers['stderr']),
+                    elapsed_ms=(time.monotonic() - started)*1000)
+        if self.http_timing:
+            receipt['status'] = 'timing-envelope-validation'
+            envelope = json.loads(receipt['stderr'])
+            if type(envelope) is not dict or set(envelope) != {'remote_http_ms', 'request_sha256', 'response_sha256'} or envelope['request_sha256'] != hashlib.sha256(body).hexdigest() or envelope['response_sha256'] != hashlib.sha256(receipt['stdout']).hexdigest():
+                raise ValueError('owned-http-timing-binding')
+            elapsed = envelope['remote_http_ms']
+            if type(elapsed) not in (int, float) or not math.isfinite(elapsed) or not 0 <= elapsed <= 1000:
+                raise ValueError('owned-http-timing-value')
+            receipt['status'] = 'returned'
+            receipt['remote_http_ms'] = elapsed
+            return receipt['stdout'], elapsed
+        return receipt['stdout'], receipt['elapsed_ms']

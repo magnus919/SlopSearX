@@ -1,0 +1,148 @@
+{
+  "schema": "exp055-normal-cli-qualification/1",
+  "status": "failed",
+  "commit": "18051981f4406b66e983681ce70ff0fc3773fc13",
+  "neutral_records": [
+    {
+      "pool": "P01",
+      "status": "passed",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "76ebf22317f09407a258875e62da6ecea7835ded64bdfd5e01db71acaf134257"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "76ebf22317f09407a258875e62da6ecea7835ded64bdfd5e01db71acaf134257",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P02",
+      "status": "passed",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "be97f9fbd9327235fd6247a6385625f63bb13e156df5240b0ffd11677175c377"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "be97f9fbd9327235fd6247a6385625f63bb13e156df5240b0ffd11677175c377",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P03",
+      "status": "passed",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "fe57345bfdda5a4a929c268f4aa5fcb890a4f89ebaad40719797c4dfa1ed5438"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "fe57345bfdda5a4a929c268f4aa5fcb890a4f89ebaad40719797c4dfa1ed5438",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P04",
+      "status": "passed",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "e3b2f83e1a8fef0a39ad3383a0f518fcb02f48c832d69f84f62e42c6dbeddb45"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "e3b2f83e1a8fef0a39ad3383a0f518fcb02f48c832d69f84f62e42c6dbeddb45",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P05",
+      "status": "passed",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "48803db26994d1b87cd2c0ada2743921a3331f1f80ebf60309898dba0e4654ba"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "48803db26994d1b87cd2c0ada2743921a3331f1f80ebf60309898dba0e4654ba",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pool": "P06",
+      "status": "passed",
+      "events": [
+        {
+          "event": "ready",
+          "max_drafts": 2
+        },
+        {
+          "event": "draft",
+          "attempt": 1,
+          "valid": true,
+          "errors": [],
+          "sha256": "6c04e3f4532af6731b4dbb579fca029a1cd612340218884029629298ba254288"
+        },
+        {
+          "event": "final",
+          "valid": true,
+          "sha256": "6c04e3f4532af6731b4dbb579fca029a1cd612340218884029629298ba254288",
+          "error": null
+        }
+      ]
+    }
+  ],
+  "current_method_tamper_rejected": false,
+  "reason": "Guard uses pinned committed registration but does not reject changed working registration bytes.",
+  "reference_invocations": 0
+}

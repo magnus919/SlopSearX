@@ -1,0 +1,7 @@
+# EXP-064: prospective source-bound development references
+
+Register two new, independently shuffled and ranking-blind assessments of the exposed public source cards before any subsequent selector measurement. This does not fix or rescore the sealed EXP-060/062 references or convert prior runs into fresh confirmation. No provider/search/Brave/deployment calls.
+
+Each assessor sees only caller purpose, facet definitions and source cards with opaque aliases/content fingerprints. They do not see acquired order, model ranks, D/F/E probabilities, selected sets, actions or previous references. The 0–3 lead and visible scales remain separate. Every row must cite exact same-card evidence, including each named facet; assess every card individually without blanket defaults. Statements in cards are visible author/source claims, not verified facts. Keep uncertainty and A/B disagreement rather than manufacturing expert gold.
+
+EXP-063 admission validates all 396 rows for each assessor. A separate independent ranking-blind reviewer must audit all source/rationale/facet associations and unsupported grade claims before sealing. Binding metadata is normalized into the unchanged metric schema with grades and tags unaltered. Any unresolved material association fault prevents qualification. The dataset remains exposed development evidence; product adoption still requires a selected candidate and truly untouched confirmation across the full original scope.

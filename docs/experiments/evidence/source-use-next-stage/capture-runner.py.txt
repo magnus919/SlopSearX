@@ -1,0 +1,479 @@
+"""Bounded source capture pilot. Offline fixture mode is the default.
+
+This file is intentionally inert when imported; live mode is gated by a
+qualification-integrity file and validates every frozen input before reading
+credentials or issuing HTTP requests.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.util
+import importlib.machinery
+import json
+import os
+import re
+import signal
+import sys
+import tempfile
+import time
+import uuid
+import types
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.parse import urlsplit
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+MANIFEST = HERE / "pilot-manifest.json"
+PROMPTS = ("answerer-prompt.txt", "answer-output-schema.json",
+           "source-assessor-prompt.txt", "answer-assessor-prompt.txt")
+RAW_DIR = "private-raw"
+LEASE = "source-use-capture.lease"
+MAX_WALL = 1800
+MAX_RESPONSE = 2_000_000
+HEALTH_TIMEOUT = 8
+SOURCE_TIMEOUT = 45
+
+
+class CaptureBudgetError(RuntimeError):
+    """A hard transport budget was reached; remaining sources must stop."""
+
+
+def sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def strict_json(raw: bytes):
+    def pairs(items):
+        out = {}
+        for k, v in items:
+            if k in out:
+                raise ValueError("duplicate-json-key")
+            out[k] = v
+        return out
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite-json")))
+
+
+def safe_file(path: Path) -> bytes:
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("input-file-type")
+    return path.read_bytes()
+
+
+def validate_manifest(manifest_path: Path = MANIFEST, *, live: bool = False,
+                      cli_path: Path | None = None, consumer_repo: Path | None = None):
+    """Validate full manifest, public inventory, all input and source pins."""
+    raw = safe_file(manifest_path)
+    m = strict_json(raw)
+    if m.get("schema") != "source-use-pilot-manifest/1" or m.get("selector_qualification") is not False:
+        raise ValueError("manifest-schema-or-authority")
+    if set(m.get("prompt_pins", {})) != set(PROMPTS):
+        raise ValueError("prompt-pin-membership")
+    for name in PROMPTS:
+        p = HERE / name
+        if sha(safe_file(p)) != m["prompt_pins"][name]:
+            raise ValueError("prompt-pin:" + name)
+    inputs = m.get("inputs")
+    if type(inputs) is not dict or not inputs:
+        raise ValueError("input-pin-membership")
+    for rel, digest in inputs.items():
+        p = REPO / rel
+        if not re.fullmatch(r"[0-9a-f]{64}", str(digest)) or sha(safe_file(p)) != digest:
+            raise ValueError("input-pin:" + rel)
+    inventory = m.get("source_url_inventory")
+    if type(inventory) is not list or len(inventory) != 28:
+        raise ValueError("url-inventory-count")
+    ids, urls = set(), set()
+    for item in inventory:
+        if type(item) is not dict or set(item) != {"neutral_source_id", "url", "title"}:
+            raise ValueError("url-inventory-entry")
+        sid, url = item["neutral_source_id"], item["url"]
+        parts = urlsplit(url)
+        if not re.fullmatch(r"S\d{3}", str(sid)) or sid in ids or url in urls:
+            raise ValueError("url-inventory-duplicate-or-id")
+        if parts.scheme != "https" or not parts.hostname or parts.username or parts.password:
+            raise ValueError("url-inventory-url")
+        ids.add(sid); urls.add(url)
+    if ids != {f"S{i:03d}" for i in range(1, 29)}:
+        raise ValueError("url-inventory-membership")
+    cases = m.get("cases")
+    if type(cases) is not list or {c.get("id") for c in cases} != {"q6", "q8"}:
+        raise ValueError("case-membership")
+    inv_urls = {x["url"] for x in inventory}
+    for case in cases:
+        if len(case.get("facets", [])) != 3 or set(case.get("critical_facets", [])) != {f["id"] for f in case["facets"]}:
+            raise ValueError("case-facets")
+        source_urls = [s.get("url") for s in case.get("sources", [])]
+        if not set(source_urls) <= inv_urls:
+            raise ValueError("case-source-membership")
+        for arm in ("w0", "candidate"):
+            order = case.get("presentation_orders", {}).get(arm)
+            if type(order) is not list or len(order) != 10 or len(set(order)) != 10 or not set(order) <= {s["id"] for s in case["sources"]}:
+                raise ValueError("presentation-order:" + case["id"] + ":" + arm)
+    pins = m.get("consumer_source_pins")
+    rev = m.get("consumer_revision")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(rev)):
+        raise ValueError("consumer-revision")
+    if type(pins) is not dict or not pins:
+        raise ValueError("consumer-pin-membership")
+    for rel, digest in pins.items():
+        if not isinstance(rel, str) or ".." in Path(rel).parts or not re.fullmatch(r"[0-9a-f]{64}", str(digest)):
+            raise ValueError("consumer-pin-path")
+        if live:
+            if consumer_repo is None:
+                raise ValueError("live-requires-consumer-repo")
+            p = consumer_repo / rel
+            if sha(safe_file(p)) != digest:
+                raise ValueError("consumer-source-pin:" + rel)
+    client_sha = m.get("cli_sha256")
+    if not re.fullmatch(r"[0-9a-f]{64}", str(client_sha)):
+        raise ValueError("cli-pin")
+    if live:
+        if cli_path is None or sha(safe_file(cli_path)) != client_sha:
+            raise ValueError("installed-cli-pin")
+    return m, {"manifest_sha256": sha(raw), "cli_sha256": client_sha,
+               "consumer_revision": rev, "consumer_source_sha256": {
+                   rel: digest for rel, digest in pins.items()}}
+
+
+def validate_outdir(path: Path):
+    if path.exists() or path.is_symlink():
+        raise ValueError("outdir-exists-or-symlink")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.mkdir(mode=0o700)
+    os.chmod(path, 0o700)
+
+
+def acquire_lease(temp_root: Path | None = None, manifest_digest: str | None = None):
+    name = LEASE + ("." + manifest_digest if manifest_digest else "")
+    p = (temp_root or Path(tempfile.gettempdir())) / name
+    fd = os.open(p, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(json.dumps({"pid": os.getpid(), "started": datetime.now(timezone.utc).isoformat()}))
+        f.flush(); os.fsync(f.fileno())
+    return p
+
+
+def video_url(url: str) -> bool:
+    host = (urlsplit(url).hostname or "").lower()
+    return any(s in host for s in ("youtube.com", "youtu.be", "vimeo.com", "peertube"))
+
+
+def barrier_flagged(result: dict) -> bool:
+    """Pinned consumer predicate: truthy warning or block_detected warn/fail."""
+    if not isinstance(result, dict):
+        return False
+    if result.get("warning"):
+        return True
+    data = result.get("data") or {}
+    quality = data.get("quality") or {} if isinstance(data, dict) else {}
+    checks = quality.get("checks") or {} if isinstance(quality, dict) else {}
+    return isinstance(checks, dict) and checks.get("block_detected") in ("warn", "fail")
+
+
+def markdown_challenge(markdown: str | None) -> bool:
+    """Extra challenge marker defense when the CLI has stripped its envelope."""
+    markers = ("javascript is disabled", "please enable javascript",
+        "enable javascript to continue", "javascript is required",
+        "please turn javascript on", "a required part of this site could",
+        "/_fs-ch-", "please verify you are", "verify you are a human",
+        "checking your browser", "attention required", "cloudflare-ray-id", "ddos-guard")
+    lowered = (markdown or "")[:4000].lower()
+    return any(token in lowered for token in markers)
+
+
+def choose_sources(case: dict, arm: str, records: dict[str, dict]):
+    """Take first 10; then prefer accepted non-video sources, video fallback."""
+    by_id = {x["id"]: x for x in case["sources"]}
+    first = [by_id[x] for x in case["presentation_orders"][arm]]
+    unique, seen = [], set()
+    for s in first:
+        key = s["url"].split("#", 1)[0]
+        if key not in seen:
+            seen.add(key); unique.append(s)
+    accepted = [s for s in unique if records.get(s["url"], {}).get("accepted")]
+    arranged = [s for s in accepted if not video_url(s["url"])] + [s for s in accepted if video_url(s["url"])]
+    return arranged[:5]
+
+
+def offline_fixture(manifest: dict, outdir: Path):
+    """Zero-network deterministic fixture; no fake source content is implied."""
+    validate_outdir(outdir)
+    result = {"schema": "source-use-capture/1", "status": "offline_fixture_only",
+              "synthetic": True, "network_calls": 0, "captures": [],
+              "limitations": ["No sources acquired; no source-use or model-quality evidence."]}
+    (outdir / "capture.json").write_text(json.dumps(result, indent=2) + "\n")
+    return result
+
+
+def _live(manifest: dict, outdir: Path, integrity: dict, cli_path: Path,
+          consumer_repo: Path, packet_ids: dict, source_order: dict):
+    """Serial capture using the hash-verified installed CLI Client.scrape."""
+    endpoint_names = ("GROKTOCRAWL_API_URL", "FIRECRAWL_API_URL")
+    inherited_endpoints = {name: os.environ.pop(name, None) for name in endpoint_names}
+    prior_retry = os.environ.get("GROKTOCRAWL_RETRY_MAX_ATTEMPTS")
+    os.environ["GROKTOCRAWL_RETRY_MAX_ATTEMPTS"] = "1"
+    try:
+        return _capture_live(manifest, outdir, integrity, cli_path,
+                             consumer_repo, packet_ids, source_order)
+    finally:
+        for name, value in inherited_endpoints.items():
+            if value is not None:
+                os.environ[name] = value
+            else:
+                os.environ.pop(name, None)
+        if prior_retry is None:
+            os.environ.pop("GROKTOCRAWL_RETRY_MAX_ATTEMPTS", None)
+        else:
+            os.environ["GROKTOCRAWL_RETRY_MAX_ATTEMPTS"] = prior_retry
+
+
+def _capture_live(manifest, outdir, integrity, cli_path,
+                  consumer_repo, packet_ids, source_order):
+    import requests
+    loader = importlib.machinery.SourceFileLoader("pinned_groktocrawl_cli", str(cli_path))
+    spec = importlib.util.spec_from_loader("pinned_groktocrawl_cli", loader)
+    cli = importlib.util.module_from_spec(spec)
+    loader.exec_module(cli)
+    client = cli.Client()  # Existing CLI configuration and server discovery.
+    original_request = requests.request
+    calls = 0
+    transports = []
+    active_timeout = HEALTH_TIMEOUT
+    started = time.monotonic()
+    rawdir = outdir / RAW_DIR
+    rawdir.mkdir(mode=0o700); os.chmod(rawdir, 0o700)
+    private_mapping = {packet_id: {"task_id": task_id, "arm": arm}
+        for task_id, arms in packet_ids.items() for arm, packet_id in arms.items()}
+
+    def owned_request(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls > 29:
+            raise CaptureBudgetError("http-call-budget")
+        kwargs.update(timeout=active_timeout, allow_redirects=False, stream=True)
+        call_started = time.monotonic()
+        previous = signal.getsignal(signal.SIGALRM)
+        old_timer = signal.getitimer(signal.ITIMER_REAL)
+        def alarm(_signum, _frame):
+            raise CaptureBudgetError("capture-hard-timeout")
+        signal.signal(signal.SIGALRM, alarm)
+        signal.setitimer(signal.ITIMER_REAL, active_timeout)
+        try:
+            response = original_request(*args, **kwargs)
+            chunks, size = [], 0
+            for chunk in response.iter_content(65536):
+                size += len(chunk)
+                if size > MAX_RESPONSE:
+                    capped = b"".join(chunks)[:MAX_RESPONSE]
+                    (rawdir / f"http-{calls:02d}.bin").write_bytes(capped)
+                    response.close()
+                    raise CaptureBudgetError("response-byte-budget")
+                chunks.append(chunk)
+            response._content = b"".join(chunks)
+            response._content_consumed = True
+            (rawdir / f"http-{calls:02d}.bin").write_bytes(response._content)
+            response.close()
+            transports.append({"call": calls, "method": kwargs.get("method", args[0] if args else ""),
+                "status_code": response.status_code, "response_bytes": size,
+                "response_sha256": sha(response._content),
+                "elapsed_seconds": time.monotonic() - call_started})
+            _durable(rawdir / "http-transport.json", transports)
+            return response
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, *old_timer)
+            signal.signal(signal.SIGALRM, previous)
+
+    requests.request = owned_request
+    try:
+        packets = outdir / "private-packets"
+        packets.mkdir(mode=0o700); os.chmod(packets, 0o700)
+        _durable(rawdir / "packet-mapping.json", private_mapping)
+        _durable(rawdir / "source-assessor-permutation.json", source_order)
+        inventory = manifest["source_url_inventory"]
+        rows = [{"source_id": x["neutral_source_id"], "url": x["url"],
+                 "status": "pending", "accepted": False} for x in inventory]
+        receipts = [{"kind": "health", "status": "pending"}, *rows]
+        _durable(outdir / "receipts.json", receipts)
+        # Health is unversioned; API root and credentials remain CLI-owned.
+        health_response = requests.request("GET", client.server + "/health")
+        if health_response.status_code != 200:
+            raise RuntimeError("health-http-status-rejected")
+        health = health_response.json()
+        runtime = health.get("runtime") or {}
+        if (health.get("status") != "ok" or runtime.get("model") != "free"
+                or not runtime.get("revision") or runtime.get("revision") == "unknown"):
+            raise RuntimeError("health-preflight-rejected")
+        identity = {"status": "ok", "model": str(runtime["model"]), "revision": str(runtime["revision"])}
+        receipts[0] = {"kind": "health", "status": "success"}
+        active_timeout = SOURCE_TIMEOUT
+        _durable(outdir / "receipts.json", receipts)
+        for i, src in enumerate(inventory):
+            receipt = rows[i]
+            if time.monotonic() - started > MAX_WALL:
+                for suffix in rows[i:]: suffix["status"] = "not_attempted_budget_suffix"
+                break
+            receipt["status"] = "in_flight"
+            _durable(outdir / "receipts.json", [{"kind": "health", "status": "success"}, *rows])
+            try:
+                result = client.scrape(src["url"], formats=["markdown"],
+                    only_main_content=True, timeout=30000)
+                content = result.get("data", result)
+                md = content.get("markdown") if isinstance(content, dict) else None
+                refused = bool(result.get("error") or result.get("refusal") or barrier_flagged(result)
+                    or (isinstance(content, dict) and content.get("refusal"))
+                    or markdown_challenge(md))
+                ok = bool(result.get("success") is True and isinstance(md, str) and md.strip() and not refused)
+                receipt.update(status="success" if ok else "failed_or_refused", accepted=ok,
+                    bytes=len(md.encode()) if isinstance(md, str) else 0,
+                    response_sha256=sha(md.encode()) if isinstance(md, str) else None,
+                    fetched_at=datetime.now(timezone.utc).isoformat())
+                if ok:
+                    (rawdir / f"{src['neutral_source_id']}.json").write_text(
+                        json.dumps({"url": src["url"], "markdown": md}, ensure_ascii=False))
+            except Exception as exc:
+                if isinstance(exc, CaptureBudgetError):
+                    receipt.update(status="budget_error", error_class=type(exc).__name__)
+                    for suffix in rows[i + 1:]: suffix["status"] = "not_attempted_budget_suffix"
+                    _durable(outdir / "receipts.json", [{"kind": "health", "status": "success"}, *rows])
+                    raise
+                receipt.update(status="error", error_class=type(exc).__name__, accepted=False)
+            _durable(outdir / "receipts.json", [{"kind": "health", "status": "success"}, *rows])
+
+        for rel, digest in manifest["consumer_source_pins"].items():
+            if sha(safe_file(consumer_repo / rel)) != digest:
+                raise RuntimeError("consumer-pin-changed-during-capture")
+        common_pkg = types.ModuleType("common")
+        common_pkg.__path__ = []
+        sys.modules["common"] = common_pkg
+        common_spec = importlib.util.spec_from_file_location("common.url", consumer_repo / "common/url.py")
+        common_mod = importlib.util.module_from_spec(common_spec)
+        sys.modules["common.url"] = common_mod
+        common_spec.loader.exec_module(common_mod)
+        common_pkg.url = common_mod
+        source_spec = importlib.util.spec_from_file_location(
+            "pinned_source_artifacts", consumer_repo / "agent-svc/agent/research/sources.py")
+        source_mod = importlib.util.module_from_spec(source_spec)
+        sys.modules[source_spec.name] = source_mod
+        source_spec.loader.exec_module(source_mod)
+        SourceArtifact = source_mod.SourceArtifact
+        by_url = {r["url"]: r for r in rows}
+        docs_by_url = {}
+        for r in rows:
+            if r.get("accepted"):
+                raw = json.loads((rawdir / f"{r['source_id']}.json").read_text())
+                doc = SourceArtifact(url=r["url"], markdown=raw["markdown"]).to_document()
+                docs_by_url[r["url"]] = doc
+                r["document_sha256"] = sha(doc.encode())
+
+        selected, source_packets, answer_packets = {}, [], []
+        permutations = {}
+        for case in manifest["cases"]:
+            selected[case["id"]] = {}
+            eligible_urls = set()
+            for arm in ("w0", "candidate"):
+                by_id = {x["id"]: x for x in case["sources"]}
+                eligible_urls.update(by_id[x]["url"] for x in case["presentation_orders"][arm])
+                chosen = choose_sources(case, arm, by_url)
+                selected[case["id"]][arm] = [x["neutral_source_id"] for x in chosen]
+                packet_id = packet_ids[case["id"]][arm]
+                answer_packets.append({"packet_id": packet_id, "task_id": case["id"],
+                    "purpose": case["purpose"], "facets": case["facets"],
+                    "sources": [{"source_id": x["neutral_source_id"],
+                                 "context": docs_by_url[x["url"]]} for x in chosen]})
+            union = [x for x in manifest["source_url_inventory"] if x["url"] in eligible_urls]
+            order = source_order[case["id"]]
+            source_by_id = {x["neutral_source_id"]: x for x in union}
+            source_packets.append({"id": case["id"], "task_id": case["id"],
+                "purpose": case["purpose"], "facets": case["facets"], "sources": [
+                    {"source_id": sid, "context": docs_by_url.get(source_by_id[sid]["url"], "")}
+                    for sid in order]})
+            permutations[case["id"]] = order
+        _durable(packets / "source-assessor-packets.json", {"cases": source_packets})
+        # Controller bundle is never assigned to an answerer. Each fresh agent
+        # receives only its individual opaque file, excluding paired treatments.
+        _durable(rawdir / "answerer-controller-bundle.json", {"cases": answer_packets})
+        for answer_packet in answer_packets:
+            _durable(packets / f"{answer_packet['packet_id']}.json", {"cases": [answer_packet]})
+        _durable(rawdir / "source-assessor-permutation.json", permutations)
+        result = {"schema": "source-use-capture/1", "status": "captured",
+            "synthetic": False, "runtime_identity": identity,
+            "capture_calls_including_health": calls,
+            "internal_service_countermeasure_calls": "unobserved", "captures": rows,
+            "selected_source_ids": selected, "integrity": integrity,
+            "private_packet_directory": "private-packets"}
+        _durable(outdir / "capture.json", result)
+        return result
+    finally:
+        requests.request = original_request
+
+def _durable(path: Path, obj):
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with open(tmp, "w") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2); f.write("\n"); f.flush(); os.fsync(f.fileno())
+    os.replace(tmp, path)
+    fd = os.open(path.parent, os.O_RDONLY); os.fsync(fd); os.close(fd)
+
+
+def validate_qualification(path: Path, manifest: dict):
+    qraw = safe_file(path); q = strict_json(qraw)
+    if q.get("schema") != "source-use-capture-qualification/1" or q.get("qualified") is not True:
+        raise ValueError("qualification-not-approved")
+    owned = {"capture-runner.py.txt": sha(safe_file(HERE / "capture-runner.py.txt")),
+             "capture-tests.py.txt": sha(safe_file(HERE / "capture-tests.py.txt"))}
+    if q.get("owned_files") != owned:
+        raise ValueError("qualification-owned-file-pins")
+    expected = {"pilot-manifest.json": sha(safe_file(MANIFEST)), **{n: sha(safe_file(HERE / n)) for n in PROMPTS}}
+    if q.get("input_files") != expected:
+        raise ValueError("qualification-input-pins")
+    return {"qualification_sha256": sha(qraw), "qualification_schema": q["schema"]}
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser()
+    p.add_argument("--mode", choices=("offline", "live"), default="offline")
+    p.add_argument("--outdir", type=Path, required=True)
+    p.add_argument("--qualification", type=Path)
+    p.add_argument("--cli-path", type=Path)
+    p.add_argument("--consumer-repo", type=Path)
+    a = p.parse_args(argv)
+    live = a.mode == "live"
+    manifest, identity = validate_manifest(live=live, cli_path=a.cli_path,
+                                             consumer_repo=a.consumer_repo)
+    if a.mode == "offline":
+        return offline_fixture(manifest, a.outdir)
+    if not a.qualification:
+        raise ValueError("live-requires-qualification")
+    qualification = validate_qualification(a.qualification, manifest)
+    # Check absence before importing the CLI (whose module-level defaults read
+    # the existing environment) or touching credentials/network/output.
+    if a.outdir.exists() or a.outdir.is_symlink():
+        raise ValueError("outdir-exists-or-symlink")
+    if not a.cli_path or not a.consumer_repo:
+        raise ValueError("live-requires-cli-and-consumer-repo")
+    # All static input and destination checks are complete before env access.
+    _ = os.environ.get("API_KEY"), os.environ.get("GROKTOCRAWL_API_KEY")
+    packet_ids = {c["id"]: {arm: str(uuid.uuid4()) for arm in ("w0", "candidate")}
+                  for c in manifest["cases"]}
+    source_order = {}
+    for case in manifest["cases"]:
+        by_id = {s["id"]: s for s in case["sources"]}
+        ids = {by_id[sid]["url"] for arm in ("w0", "candidate")
+               for sid in case["presentation_orders"][arm]}
+        pool = [s["neutral_source_id"] for s in manifest["source_url_inventory"] if s["url"] in ids]
+        import random
+        random.SystemRandom().shuffle(pool)
+        source_order[case["id"]] = pool
+    lease = acquire_lease(manifest_digest=identity["manifest_sha256"])
+    validate_outdir(a.outdir)
+    try:
+        return _live(manifest, a.outdir, {**identity, **qualification},
+                     a.cli_path, a.consumer_repo, packet_ids, source_order)
+    finally:
+        # Lease remains as durable one-shot evidence; never remove it.
+        pass
+
+
+if __name__ == "__main__":
+    main()

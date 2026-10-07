@@ -1,0 +1,100 @@
+"""Inert EXP-065 exact request builder and validation; never performs I/O."""
+import hashlib
+import json
+import math
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+if str(REPO) not in sys.path: sys.path.insert(0,str(REPO))
+PROTOCOL = json.loads((HERE / "protocol.json").read_bytes())
+CONTRACT = json.loads((REPO / "docs/experiments/evidence/EXP-039/source-selection-contract.json").read_bytes())
+MODEL = PROTOCOL["model"]
+CRITERIA = CONTRACT["criteria"]
+
+def wire(value):
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def canonical(cards):
+    if type(cards) is not list or len(cards) > 80:
+        raise ValueError("card-inventory")
+    seen=set(); result=[]
+    for card in cards:
+        if type(card) is not dict or not {"id", "url", "title", "snippet"}.issubset(card):
+            raise ValueError("card-shape")
+        card={k:card[k] for k in ("id","url","title","snippet")}
+        if any(type(card[k]) is not str for k in card) or not card["id"] or not card["url"]:
+            raise ValueError("card-field")
+        bounds={"id":80,"url":512,"title":256,"snippet":1200}
+        if any(len(card[k].encode("utf-8")) > bounds[k] for k in card):
+            raise ValueError("card-field-bound")
+        if card["id"] in seen: raise ValueError("duplicate-card-id")
+        seen.add(card["id"]); result.append(dict(card))
+    return sorted(result,key=lambda c: tuple(c[k].encode("utf-8") for k in ("url","title","snippet","id")))
+
+def bodies(case, cards, variant="base"):
+    native=list(cards)
+    if variant=="rotate" and native:
+        offset=20%len(native);native=native[offset:]+native[:offset]
+    pool=canonical(cards)
+    if not 2 <= len(pool) <= 80: raise ValueError("pool-size")
+    facets=case.get("facets")
+    if type(facets) is not list or len(facets)>4: raise ValueError("facets")
+    if any(type(f) is not dict or set(f)!={"id","description"} or not all(type(v)is str and v for v in f.values()) or len(f["id"].encode())>80 or len(f["description"].encode())>256 for f in facets): raise ValueError("facet-shape")
+    if len({f["id"] for f in facets})!=len(facets):raise ValueError("duplicate-facet-id")
+    purpose=case.get("purpose")
+    if type(purpose)is not str or not purpose or len(purpose.encode())>4096: raise ValueError("purpose")
+    query=case.get("query")
+    if type(query)is not str or not query or len(query.encode())>4096: raise ValueError("query-bound")
+    facet_context=[{"id":f["id"],"description":f["description"]} for f in facets]
+    shared={"model":MODEL,"state":{"query":purpose,"purpose":purpose,"requested_facets":facet_context,"candidates":pool},"questions":{}}
+    local={"model":MODEL,"state":{"query":purpose,"purpose":purpose,"requested_facets":facet_context},"questions":{}}
+    for card in pool:
+        shared["questions"][card["id"]]={"type":"score","instructions":CONTRACT["instructions"].format(id=card["id"]),"criteria":CRITERIA}
+        # The registered instruction is retained verbatim; only the candidate binding is local.
+        local_question=CONTRACT["instructions"].replace("candidate `{id}`","`candidate`").format(id=card["id"])
+        local["questions"][card["id"]]={"type":"score","instructions":{"candidate":card,"question":local_question},"criteria":CRITERIA}
+    from slopsearx.rerank import INSTRUCTIONS, LEVELS
+    native_ids=[c["id"] for c in native];prefix=native[:40]
+    local_to_pool={"c"+str(i):card["id"] for i,card in enumerate(prefix)}
+    w0={"model":MODEL,"state":{"query":case["query"],"candidates":[{**card,"id":"c"+str(i)} for i,card in enumerate(prefix)]},
+        "questions":{"c"+str(i):{"type":"score","instructions":INSTRUCTIONS.format(id="c"+str(i)),"criteria":list(LEVELS)} for i in range(len(prefix))}}
+    for label,body,cap in (("w0",w0,128000),("shared",shared,384000),("local",local,384000)):
+        if len(wire(body))>cap or len(wire(body["state"]))>128000: raise ValueError(label+"-request-bound")
+    if len(pool)>80: raise ValueError("question-count")
+    return {"w0":w0,"shared":shared,"local":local,"ids":[c["id"] for c in pool],"cards":pool,"w0_local_to_pool":local_to_pool,"tail_ids":native_ids[40:],"provenance_order_ids":native_ids}
+
+def validate_response(raw, request, expected_ids):
+    if type(raw)is not bytes or len(raw)>2_000_000: raise ValueError("response-bound")
+    def pairs(items):
+        out={}
+        for k,v in items:
+            if k in out: raise ValueError("duplicate-json-key")
+            out[k]=v
+        return out
+    def constant(_): raise ValueError("nonfinite-json")
+    data=json.loads(raw,object_pairs_hook=pairs,parse_constant=constant)
+    if type(data)is not dict or set(data) not in ({"model","answers"},{"model","answers","usage"}) or data.get("model")!=MODEL or type(data.get("answers"))is not dict: raise ValueError("response-envelope")
+    answers=data["answers"]
+    qids=list(request["questions"])
+    if set(answers)!=set(qids): raise ValueError("answer-membership")
+    if type(expected_ids)is not list or len(set(expected_ids))!=len(expected_ids): raise ValueError("expected-membership")
+    scores={}
+    for key,answer in answers.items():
+        if type(answer)is not dict or not {"type","score"}.issubset(answer) or answer.get("type")!="score" or type(answer.get("score")) not in (int,float): raise ValueError("score-type")
+        score=answer["score"]
+        if not math.isfinite(score) or not 0<=score<=9: raise ValueError("score-range")
+        scores[key]=float(score)
+    if set(scores)!=set(expected_ids): raise ValueError("score-membership")
+    usage=data.get("usage")
+    if type(usage)is not dict or set(usage)!={"input_tokens","output_tokens"} or any(type(v)is not int or v<0 for v in usage.values()):
+        return {"scores":scores,"usage":None}
+    return {"scores":scores,"usage":usage}
+
+def order(scores, ids):
+    if type(scores)is not dict or set(scores)!=set(ids): raise ValueError("score-membership")
+    return sorted(ids,key=lambda cid:(-scores[cid],ids.index(cid)))

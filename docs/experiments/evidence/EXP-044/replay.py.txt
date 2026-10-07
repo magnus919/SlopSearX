@@ -1,0 +1,272 @@
+"""Inert replay helper for EXP-044. It has no provider or search transport."""
+from __future__ import annotations
+import argparse, hashlib, importlib.machinery, importlib.util, json, math, pathlib, re, subprocess, sys, tempfile
+from typing import Any
+
+HERE=pathlib.Path(__file__).resolve().parent
+EXP043=HERE.parent/"EXP-043"
+EVIDENCE=HERE.parent
+REPO=EVIDENCE.parents[2]
+REG_REVISION="f8912aa380549da374a3d85c626f1dff3b7f5113"
+MODEL="jev-1.13.0"
+EXPECTED_RESULT_FILES=219
+EXPECTED_REQUESTS=65
+MIN_SCORE=5.0
+TOP_K=10
+SOURCE_NAMES={
+ "docs/experiments/evidence/EXP-043/result-integrity.json",
+ "docs/experiments/evidence/EXP-043/replay.py.txt",
+ "docs/experiments/evidence/EXP-043/source-pins.json",
+ "docs/experiments/evidence/EXP-042/analysis.py.txt",
+ "docs/experiments/evidence/EXP-043/qualification-input-hashes.json",
+ "docs/experiments/evidence/EXP-043/prepared-manifest.json",
+ "docs/experiments/evidence/EXP-043/analysis.json",
+ "docs/experiments/evidence/EXP-043/selector-trace.json",
+}
+
+def load_module(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path)); spec=importlib.util.spec_from_loader(name,loader); mod=importlib.util.module_from_spec(spec); loader.exec_module(mod); return mod
+
+BASE=load_module("exp043_replay_pinned_for_exp044",EXP043/"replay.py.txt")
+H=BASE.H
+sha=H.sha256
+strict_json,load_json,pretty,immutable=H.strict_json_loads,H.load_json,H.pretty_bytes,H.write_immutable
+SOFTWARE=tuple(BASE.SOFTWARE)
+EXTENDED=tuple(BASE.EXTENDED)
+NATURAL=tuple(BASE.NATURAL)
+PRIMARY=tuple(BASE.PRIMARY)
+
+
+def root_path(root=None): return pathlib.Path(root or HERE).resolve()
+
+def _hash(path): return sha(path.read_bytes())
+
+def verify_registered_inputs(root):
+    root=root_path(root)
+    pins=load_json(root/"source-pins.json")
+    reg_integrity=load_json(root/"registration-integrity.json")
+    registration=REPO/"docs/experiments/EXP-044-relative-facet-reservations.md"
+    if reg_integrity.get("schema")!="exp044-registration-integrity/1": raise ValueError("EXP-044 registration integrity schema mismatch")
+    files=reg_integrity.get("files")
+    if type(files)is not dict or set(files)!={"source-pins.json","registration-review.md"}: raise ValueError("EXP-044 registration file inventory mismatch")
+    for name,digest in files.items():
+        if _hash(root/name)!=digest: raise ValueError(f"EXP-044 registered file hash mismatch: {name}")
+    if _hash(registration)!=reg_integrity.get("registration_sha256"): raise ValueError("EXP-044 registration contract hash mismatch")
+    if pins.get("schema")!="exp044-source-pins/1" or pins.get("baseline_revision")!="53b008eea91e51a1589861cb69e5f4b9dcc8b3dc" or set(pins.get("sources",{}))!=SOURCE_NAMES:
+        raise ValueError("EXP-044 source-pin inventory/baseline mismatch")
+    for rel,digest in pins["sources"].items():
+        if _hash(REPO/rel)!=digest: raise ValueError(f"EXP-044 source pin changed: {rel}")
+    return pins
+
+def validate_published_result():
+    integrity_path=EXP043/"result-integrity.json"
+    expected=load_json(HERE/"source-pins.json")["sources"]["docs/experiments/evidence/EXP-043/result-integrity.json"]
+    if _hash(integrity_path)!=expected: raise ValueError("EXP-043 result-integrity manifest hash mismatch")
+    manifest=load_json(integrity_path)
+    entries=manifest.get("files") if type(manifest)is dict else None
+    if manifest.get("schema")!="exp043-result-integrity/1" or manifest.get("decision")!="unsupported_for_selection" or manifest.get("provider_attempts")!=65 or manifest.get("valid_provider_responses")!=65 or type(entries)is not dict or len(entries)!=EXPECTED_RESULT_FILES:
+        raise ValueError("EXP-043 published result manifest shape/count/status mismatch")
+    for rel,digest in entries.items():
+        path=EXP043/rel
+        if pathlib.Path(rel).is_absolute() or ".." in pathlib.Path(rel).parts or not path.is_file() or _hash(path)!=digest:
+            raise ValueError(f"EXP-043 published artifact mismatch: {rel}")
+    plan=load_json(EXP043/"prepared-manifest.json")
+    if plan.get("request_count")!=EXPECTED_REQUESTS or len(plan.get("requests",[]))!=EXPECTED_REQUESTS: raise ValueError("EXP-043 request plan is not 65 records")
+    check=BASE.verify(EXP043,True)
+    if not check.get("ok") or not check.get("ready_to_run") or check.get("prepared_requests")!=EXPECTED_REQUESTS:
+        raise ValueError(f"EXP-043 pinned runner verification failed: {check}")
+    receipts,errors=BASE.read_receipts(EXP043,plan,True)
+    ids={item["id"] for item in plan["requests"]}
+    if errors or set(receipts)!=ids or len(receipts)!=EXPECTED_REQUESTS: raise ValueError(f"EXP-043 receipt validation failed: {errors}")
+    begun,done,start=BASE.read_history(EXP043,plan,check["reference_hashes"])
+    if begun!=ids or done!=ids or not start: raise ValueError("EXP-043 history must contain one valid completed attempt for every request")
+    return {"integrity":manifest,"plan":plan,"check":check,"receipts":receipts,"start":start}
+
+def source_data():
+    return BASE.data_sources(EXP043)
+
+def groups_in_memory(data):
+    with tempfile.TemporaryDirectory(prefix="exp044-groups-") as td:
+        grouped,_=BASE.groups(pathlib.Path(td),data)
+        return grouped
+
+def specs_in_memory(data,grouped):
+    return BASE.expected_specs(EXP043,data,grouped)
+
+def prepared_plan(root):
+    pins=verify_registered_inputs(root)
+    verified=validate_published_result()
+    data=source_data(); grouped=groups_in_memory(data); specs=specs_in_memory(data,grouped)
+    if len(specs)!=EXPECTED_REQUESTS: raise ValueError("source helper did not reconstruct 65 request identities")
+    requests=[]
+    for spec in specs:
+        requests.append({"id":spec["id"],"kind":spec["kind"],"pool_id":spec["pool_id"],"role":spec["role"],"pair_id":spec.get("pair_id"),"repeat_of":spec.get("repeat_of"),"candidate_ids":list(spec["candidate_ids"]),"question_ids":list(spec["question_ids"])})
+    return {"schema":"exp044-prepared-plan/1","registration_revision":REG_REVISION,"baseline_revision":pins["baseline_revision"],"exp043_result_integrity_sha256":_hash(EXP043/"result-integrity.json"),"exp043_result_files":verified["integrity"]["files"],"request_inventory":requests,"pool_membership":{p:[c["id"] for c in grouped[p]] for p in (*SOFTWARE,*EXTENDED)},"counts":{"requests":len(requests),"result_files":len(verified["integrity"]["files"]),"W0":sum(x["kind"]=="W0" for x in requests),"D":sum(x["kind"]=="D" for x in requests),"F":sum(x["kind"]=="F" for x in requests),"D_F_pairs":sum(x["kind"]=="D" for x in requests if x.get("pair_id"))},"receipt_hashes":{rid:{"receipt":_hash(EXP043/"receipts"/(rid+".json")),"response":_hash(EXP043/"receipts"/(rid+".response.bin"))} for rid in sorted(verified["receipts"])},"attempts_sha256":_hash(EXP043/"attempts.jsonl")}
+
+def prepare(root):
+    root=root_path(root); plan=prepared_plan(root); raw=pretty(plan)
+    immutable(root/"prepared-plan.json",raw)
+    immutable(root/"prepared-plan.sha256",(sha(raw)+"  prepared-plan.json\n").encode())
+    print(json.dumps({"prepared_source_records":plan["counts"],"pool_sizes":{k:len(v) for k,v in plan["pool_membership"].items()},"e44_computed":False,"grades_read":False,"provider_calls":0},indent=2))
+    return plan
+
+def qualification_hash(root,required=False):
+    root=root_path(root); path=root/"qualification-input-hashes.json"; result_path=root/"qualification-result.json"
+    if not path.is_file() or not result_path.is_file():
+        if required: raise ValueError("EXP-044 qualification hash/result receipt missing; actual replay is gated")
+        return None
+    obj=load_json(path)
+    expected={"replay.py.txt","fixture_tests.py.txt","prepared-plan.json","source-pins.json","registration-integrity.json"}
+    if type(obj)is not dict or obj.get("schema")!="exp044-qualified-inputs/1" or obj.get("registration_revision")!=REG_REVISION or obj.get("source_pins_sha256")!=_hash(root/"source-pins.json") or type(obj.get("local_files"))is not dict or set(obj["local_files"])!=expected:
+        raise ValueError("EXP-044 qualification manifest shape mismatch")
+    for name,digest in obj["local_files"].items():
+        if not isinstance(digest,str) or not re.fullmatch(r"[0-9a-f]{64}",digest) or _hash(root/name)!=digest: raise ValueError(f"EXP-044 qualification hash mismatch: {name}")
+    result=load_json(result_path)
+    result_files={"replay.py.txt","fixture_tests.py.txt","prepared-plan.json","manual-selector-checks.py.txt"}
+    result_keys={"schema","status","qualification_input_hashes_sha256","files","fixture_tests_passed","manual_checks_passed","provider_calls","search_calls"}
+    if type(result)is not dict or set(result)!=result_keys or result.get("schema")!="exp044-qualification-result/1" or result.get("status")!="passed" or result.get("qualification_input_hashes_sha256")!=_hash(path) or type(result.get("files"))is not dict or set(result["files"])!=result_files:
+        raise ValueError("EXP-044 qualification result receipt shape/binding mismatch")
+    for name,digest in result["files"].items():
+        if not isinstance(digest,str) or not re.fullmatch(r"[0-9a-f]{64}",digest) or _hash(root/name)!=digest: raise ValueError(f"EXP-044 qualification result file hash mismatch: {name}")
+    if type(result.get("fixture_tests_passed"))is not int or result["fixture_tests_passed"]<10 or type(result.get("manual_checks_passed"))is not int or result["manual_checks_passed"]!=8 or result.get("provider_calls")!=0 or type(result.get("provider_calls"))is not int or result.get("search_calls")!=0 or type(result.get("search_calls"))is not int:
+        raise ValueError("EXP-044 qualification result counts/status invalid")
+    return _hash(result_path)
+
+def verify(root):
+    root=root_path(root); plan=prepared_plan(root); qhash=qualification_hash(root,False)
+    path=root/"prepared-plan.json"
+    if not path.is_file() or load_json(path)!=plan or (root/"prepared-plan.sha256").read_text()!=sha(pretty(plan))+"  prepared-plan.json\n": raise ValueError("prepared source/ID plan differs from frozen inputs")
+    return {"ok":True,"prepared_requests":len(plan["request_inventory"]),"validated_result_files":plan["counts"]["result_files"],"valid_receipts":EXPECTED_REQUESTS,"qualification_hash":qhash,"ready_for_actual_replay":qhash is not None,"e44_computed":False}
+
+def _valid_score(score): return not isinstance(score,bool) and isinstance(score,(int,float)) and math.isfinite(score) and 0<=score<=9
+
+def _valid_probability(p): return not isinstance(p,bool) and isinstance(p,(int,float)) and math.isfinite(p) and 0<=p<=1
+
+def selector(scores,nouls,facets,ids):
+    """Pure EXP-044 selector with the frozen four-argument interface."""
+    ids=list(ids); n=len(ids); k=min(TOP_K,n)
+    if len(ids)!=len(set(ids)): raise ValueError("duplicate candidate IDs")
+    if set(scores)!=set(ids) or any(not _valid_score(scores.get(cid)) for cid in ids): raise ValueError("selector requires a finite 0..9 Score for every candidate")
+    if type(facets)is not list or len(facets)>4: raise ValueError("facet count outside registered 0..4")
+    if not facets:
+        order=BASE.BASE.stable_scores(scores,ids)
+        return order,{"fallback":"no_facets_bypass","leaders":[],"inserted_ids":[],"displaced_ids":[],"full_membership_preserved":True,"outside_insertions":0}
+    if set(nouls)!=set(ids): raise ValueError("Noul candidate membership mismatch")
+    for cid in ids:
+        if type(nouls[cid]) is not dict or set(nouls[cid])!=set(range(len(facets))) or any(not _valid_probability(v) for v in nouls[cid].values()):
+            raise ValueError("selector requires a finite 0..1 Noul for each candidate/facet")
+    d_order=BASE.BASE.stable_scores(scores,ids)
+    positions={cid:i for i,cid in enumerate(ids)}
+    top_ids=d_order[:k]
+    leaders=[]
+    by_id={}
+    for j,facet in enumerate(facets):
+        if type(facet)is not dict or type(facet.get("id")) is not str: raise ValueError("malformed facet contract")
+        eligible=[cid for cid in ids if scores[cid]>=MIN_SCORE]
+        if not eligible: continue
+        leader=max(eligible,key=lambda cid:(nouls[cid][j],scores[cid],-positions[cid]))
+        max_id=max(top_ids,key=lambda cid:(nouls[cid][j],scores[cid],-positions[cid])) if top_ids else None
+        row={"facet_id":facet["id"],"leader_id":leader,"noul":float(nouls[leader][j]),"score":float(scores[leader]),"original_position":positions[leader]+1,"original_d_top10_noul_max":float(nouls[max_id][j]) if max_id is not None else None,"original_d_top10_noul_max_id":max_id}
+        leaders.append(row); by_id.setdefault(leader,[]).append(facet["id"])
+    leader_ids=set(by_id)
+    selected=set(leader_ids)
+    for cid in d_order:
+        if len(selected)>=k: break
+        selected.add(cid)
+    e_top=[cid for cid in d_order if cid in selected]
+    e_tail=[cid for cid in d_order if cid not in selected]
+    e=e_top+e_tail
+    inserted=[cid for cid in e_top if cid not in set(top_ids)]
+    displaced=[cid for cid in top_ids if cid not in set(e_top)]
+    for row in leaders: row["leader_facets"] = by_id[row["leader_id"]]
+    return e,{"fallback":None,"leaders":leaders,"inserted_ids":inserted,"displaced_ids":displaced,"d_top10":top_ids,"e_top10":e_top,"full_membership_preserved":len(e)==n and set(e)==set(ids),"outside_insertions":len(inserted)}
+
+def _pair_order(pool, variant, specs, receipts, w0):
+    suffix="" if variant=="main" else "-"+variant
+    d=specs[f"{pool}-d{suffix}"]; f=specs[f"{pool}-f{suffix}"]
+    dr=receipts.get(d["id"]); fr=receipts.get(f["id"])
+    def fallback(reason="full_w0_invalid_pair"):
+        return list(w0),{"fallback":reason,"leaders":[],"inserted_ids":[],"displaced_ids":[],"full_membership_preserved":len(w0)==len(set(w0))}
+    if not dr or not fr or dr.get("status")!="valid" or fr.get("status")!="valid": return fallback()
+    if d["candidate_ids"]!=f["candidate_ids"] or d["task"]!=f["task"] or d["facets"] or not f["facets"]: return fallback("full_w0_pair_contract")
+    if set(dr.get("scores",{}))!=set(d["candidate_ids"]) or set(fr.get("nouls",{}))!=set(f["candidate_ids"]): return fallback("full_w0_pair_membership")
+    try: return selector(dr["scores"],fr["nouls"],f["facets"],d["candidate_ids"])
+    except (TypeError,ValueError,KeyError,OverflowError): return fallback("full_w0_invalid_pair_answers")
+
+def analysis_references(data,grouped):
+    """Use the pinned EXP-043 adapter's already-transposed A/B -> pool -> rows shape."""
+    refs,hashes=BASE.validate_refs(EXP043,data,grouped,True)
+    expected=set(SOFTWARE)|set(NATURAL)
+    if type(refs)is not dict or set(refs)!={"A","B"}: raise ValueError("EXP-043 references are not A/B keyed")
+    for ref in ("A","B"):
+        if type(refs[ref])is not dict or set(refs[ref])!=expected: raise ValueError(f"EXP-043 reference pool inventory mismatch: {ref}")
+        for pool in expected:
+            if set(refs[ref][pool])!={c["id"] for c in grouped[pool]}: raise ValueError(f"EXP-043 representative reference membership mismatch: {ref}/{pool}")
+    return refs,hashes
+
+def analyze_rankings(ranks, refs, facets, callbacks=None):
+    callbacks=callbacks or (H.ndcg_at_10,H.paired_bootstrap)
+    if set(ranks)!=(set(SOFTWARE)|set(EXTENDED)): raise ValueError("analysis ranking pool inventory mismatch")
+    report=BASE.BASE.ANALYSIS.analyze(ranks,refs,facets,*callbacks)
+    return report
+
+def build_rankings(data, grouped, specs, receipts):
+    specmap={x["id"]:x for x in specs}
+    ranks={}; diagnostics={}; nav=[]
+    for pool in SOFTWARE:
+        w=BASE.score_order(specmap[f"{pool}-w0"],receipts[f"{pool}-w0"])
+        d=BASE.score_order(specmap[f"{pool}-d"],receipts[f"{pool}-d"])
+        e,trace=_pair_order(pool,"main",specmap,receipts,w)
+        old=BASE.BASE.selector(receipts[f"{pool}-d"]["scores"],receipts[f"{pool}-f"]["nouls"],specmap[f"{pool}-f"]["facets"],specmap[f"{pool}-d"]["candidate_ids"])[0]
+        ranks[pool]={"w0":w,"d_star":d,"e":e}; diagnostics[pool]={"e43_top10":old[:10],"e44":trace}
+    for pool in EXTENDED:
+        w=BASE.score_order(specmap[f"{pool}-w0"],receipts[f"{pool}-w0"])
+        d=BASE.score_order(specmap[f"{pool}-d"],receipts[f"{pool}-d"])
+        e,trace=_pair_order(pool,"main",specmap,receipts,w)
+        old=BASE.BASE.selector(receipts[f"{pool}-d"]["scores"],receipts[f"{pool}-f"]["nouls"],specmap[f"{pool}-f"]["facets"],specmap[f"{pool}-d"]["candidate_ids"])[0]
+        repeat,_=_pair_order(pool,"repeat",specmap,receipts,w)
+        rotated,_=_pair_order(pool,"rotated20",specmap,receipts,w)
+        ranks[pool]={"w0":w,"d_star":d,"e":e,"repeat":repeat,"rotated":rotated}
+        diagnostics[pool]={"e43_top10":old[:10],"e44":trace,"repeat_e44_top10":repeat[:10],"rotated_e44_top10":rotated[:10]}
+    for query,cid in BASE.NAV_IDS:
+        wid=f"nav-{query}-{cid}-w0"; did=f"nav-{query}-{cid}-d"
+        w=BASE.score_order(specmap[wid],receipts[wid]); d=BASE.score_order(specmap[did],receipts[did])
+        nav.append({"query_id":query,"target_id":cid,"w0_top3":w[:3],"d_top3":d[:3],"target_rank_w0":w.index(cid)+1,"target_rank_d":d.index(cid)+1,"facet_policy_bypassed":True,"passed":cid in w[:3] and cid in d[:3]})
+    facet_ids={p:[row["id"] for row in data[2][p]] for p in (*SOFTWARE,*NATURAL)}
+    return ranks,diagnostics,nav,facet_ids
+
+def compute_report(root):
+    root=root_path(root)
+    # Guard the real frozen-output ranking path, not only the CLI wrapper.
+    qualification_hash(root,True)
+    chain=validate_published_result()
+    data=source_data(); grouped=groups_in_memory(data); specs=specs_in_memory(data,grouped); receipts=chain["receipts"]
+    ranks,diagnostics,nav,facet_ids=build_rankings(data,grouped,specs,receipts)
+    refs,_=analysis_references(data,grouped)
+    analysis=analyze_rankings(ranks,refs,facet_ids)
+    return {"schema":"exp044-report/1","decision":"supports_optional_mode_for_untouched_confirmation_only" if analysis["development_screen_passed"] and all(x["passed"] for x in nav) else "unsupported_for_selection","development_analysis":analysis,"navigation":{"controls":nav,"passed":all(x["passed"] for x in nav),"facet_policy_bypassed":True},"selector_trace":diagnostics,"source_integrity":{"result_files":EXPECTED_RESULT_FILES,"validated_receipts":EXPECTED_REQUESTS,"attempts_sha256":_hash(EXP043/"attempts.jsonl")},"limitations":["EXP-043 outputs and references are exposed development data","Noul values are conditional on the full candidate set and are not calibrated truth","historical usage and HTTP timing are not new cost or end-to-end latency measurements","constructed80 has 79 grouped representatives and is operational-only"]}
+
+def replay(root):
+    root=root_path(root)
+    verify(root)
+    qhash=qualification_hash(root,True)
+    if qhash is None: raise ValueError("qualification required before any E44 ranking computation")
+    report=compute_report(root)
+    immutable(root/"analysis.json",pretty(report))
+    print(json.dumps({"decision":report["decision"],"quality_passed":report["development_analysis"]["development_screen_passed"],"navigation_passed":report["navigation"]["passed"],"provider_calls":0},indent=2))
+    return report
+
+def selftest(root):
+    proc=subprocess.run([sys.executable,str(root_path(root)/"fixture_tests.py.txt")],cwd=str(REPO),capture_output=True,text=True,timeout=240)
+    if proc.returncode: raise RuntimeError(proc.stdout+proc.stderr)
+    print(proc.stdout.rstrip()); print("EXP-044 offline fixtures passed; provider calls=0")
+
+def main():
+    p=argparse.ArgumentParser(); p.add_argument("--root",type=pathlib.Path,default=HERE)
+    g=p.add_mutually_exclusive_group(required=True); g.add_argument("--prepare",action="store_true"); g.add_argument("--verify",action="store_true"); g.add_argument("--selftest",action="store_true"); g.add_argument("--replay",action="store_true")
+    a=p.parse_args()
+    if a.prepare: prepare(a.root)
+    elif a.verify: print(json.dumps(verify(a.root),indent=2))
+    elif a.selftest: selftest(a.root)
+    else: replay(a.root)
+if __name__=="__main__": main()

@@ -1,0 +1,7 @@
+# Independent actual development audit
+
+GPT-6 Luna independently audited the completed one-shot run and exactly recomputed the original A/B analysis. Twenty-one operations and twenty-one owned receipts completed with known usage. Qualified source, input/reference integrity, full pool membership, timing, navigation and stability checks passed. Root independently verified all eighty-six original run-file hashes and scanned all sixty-three decoded request/stdout/stderr blocks against configured secret values and private operational markers without printing or persisting those secret values; no hits occurred.
+
+All eight primary outputs retained D. Accepted swaps occurred only in the research base/repeat/rotated operations. B-reference research coverage increased by .25, lifting macro coverage by .0227273; A had no E-D coverage increase. The primary E-W0 gains are inherited D gains, not demonstrated incremental swap uplift. Separate live runs do not isolate causality from provider variability. Maximum cumulative historical-D/F-plus-new-HTTP time was 1453.842266 ms; this is not fresh end-to-end production latency.
+
+The unchanged original development screen passed. This exposed-corpus result justifies separately registered untouched confirmation against current upstream W0 with D retained as a comparator. It does not establish production benefit or readiness. No searches, Brave calls, deployment or runtime changes occurred.

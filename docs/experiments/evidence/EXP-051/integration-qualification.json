@@ -1,0 +1,26 @@
+{
+  "schema": "exp051-integration-qualification/1",
+  "status": "passed",
+  "registration_commit": "200d1818be5da9c5e97d2ea405931c16a4312930",
+  "component_receipts": {
+    "qualification-receipt-v3.json": "d88127a31356e5d06ac62e3134f9d6ab60a654623ab4ecf1d745044a0bc2e3b1",
+    "root-combined-validator-probes.json": "71bacbbdb70324393285a21fc3c0ba4b113037789bf415f66511f972838dbc42",
+    "independent-packet-preflight.json": "69df371aa6c39a724f6162bd92ffae9a4dd40223e4644a1d090337402abb2da1",
+    "review-validator-qualification-04.json": "e63072dddfa870cfd073dfba14022d0b5936cddb83bc0886e5be4721f61718e6"
+  },
+  "builder_synthetic_checks": 9,
+  "builder_source_checks": 7,
+  "validator_synthetic_checks": 23,
+  "root_synthetic_checks": 12,
+  "actual_packet_neutral_validation": true,
+  "actual_packet_hashes_and_permissions": true,
+  "actual_packet_pool_count": 6,
+  "actual_packet_card_count": 232,
+  "actual_packet_case_count": 12,
+  "actual_packet_chunk_count": 23,
+  "delivery_manifest_sha256": "6b367674480b4245e2511733144a9e477571c92499a8bedb0e143a87d67a47ea",
+  "reviewer_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0,
+  "meaning": "Qualified delivery and validation plumbing only; synthetic record is not a reviewer judgment."
+}

@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Retrospective EXP-066 Noul-order diagnostic; never adoption or qualification evidence."""
+import argparse
+import hashlib
+import json
+import math
+import random
+import statistics
+from pathlib import Path
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def canonical_cards(cards):
+    return sorted(cards, key=lambda c: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")))
+
+
+def ndcg(order, rows):
+    def dcg(ids):
+        return sum((2 ** rows[c]["lead"] - 1) / math.log2(i + 2) for i, c in enumerate(ids[:10]))
+    ideal = dcg(sorted(rows, key=lambda c: -rows[c]["lead"]))
+    return dcg(order) / ideal if ideal else 0.0
+
+
+def useful(order, rows):
+    return sum(rows[c]["lead"] >= 2 for c in order[:10])
+
+
+def facets(order, rows):
+    return sorted({f for c in order[:10] if rows[c]["lead"] >= 2 for f in rows[c]["facets"]})
+
+
+def bootstrap95(values):
+    rng = random.Random(6501)
+    samples = sorted(statistics.mean(rng.choices(values, k=len(values))) for _ in range(10000))
+    return [samples[249], samples[9749]]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--repo", type=Path, default=Path("."))
+    ap.add_argument("--output", type=Path, required=True)
+    args = ap.parse_args()
+    root = args.repo
+    paths = {
+        "saved_run": root / "docs/experiments/evidence/EXP-066/completed/run.json",
+        "corpus": root / "docs/experiments/evidence/EXP-060/fresh-acquisition.json",
+        "metric_reference_view": root / "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json",
+        "queries": root / "docs/experiments/evidence/EXP-060/queries.json",
+    }
+    run, corpus, refs, queries = [json.loads(p.read_text()) for p in paths.values()]
+    receipts_dir = root / "docs/experiments/evidence/EXP-066/completed/receipts"
+    receipts = {}
+    receipt_hashes = {}
+    for path in sorted(receipts_dir.glob("call-*.json")):
+        rec = json.loads(path.read_text())
+        if rec.get("arm") == "binary" and rec.get("operation") != "neutral":
+            receipts[(rec["operation"], rec["arm"])] = rec
+            receipt_hashes[str(path.relative_to(root))] = sha(path)
+    ops = {(o["case"], o["variant"]): o for o in run["operations"]}
+
+    def candidate_order(case, variant):
+        op_name = f"{case}-{variant}"
+        rec = receipts[(op_name, "binary")]
+        response = json.loads(bytes.fromhex(rec["raw_response"]))
+        probs = {cid: float(answer["noul"]) for cid, answer in response["answers"].items()}
+        op_probs = ops[(case, variant)]["arms"]["binary"]["probabilities"]
+        if set(probs) != set(op_probs) or any(probs[k] != op_probs[k] for k in probs):
+            raise ValueError(f"saved response probabilities do not match run for {op_name}")
+        cards = corpus["pools"][case]["cards"]
+        assert set(probs) == {card["id"] for card in cards}
+        assert all(math.isfinite(p) and 0 <= p <= 1 for p in probs.values())
+        canonical = canonical_cards(cards)
+        rank = {card["id"]: i for i, card in enumerate(canonical)}
+        return sorted(probs, key=lambda cid: (-probs[cid], rank[cid]))
+
+    output = {
+        "schema": "exp066-retrospective-noul-order-diagnostic/1",
+        "dataset": "EXP-066 exposed development cohort; retrospective posthoc ordering only",
+        "adoption_eligible": False,
+        "qualification_credit": False,
+        "method": "Sort each saved per-card raw Noul probability descending across the complete canonical pool; ties use URL,title,snippet,id UTF-8 byte order. No probability threshold or new model call.",
+        "inputs": {name: {"path": str(path.relative_to(root)), "sha256": sha(path)} for name, path in paths.items()},
+        "receipt_sha256": receipt_hashes,
+        "bootstrap": {"draws": 10000, "seed": 6501, "interval_indices_zero_based": [249, 9749]},
+        "assessors": {},
+        "stability": [],
+        "navigation": [],
+    }
+    primary = [f"q{i}" for i in range(1, 9)]
+    orders = {}
+    for case, variant in ops:
+        if variant in ("base", "repeat", "rotate"):
+            orders[(case, variant)] = candidate_order(case, variant)
+    for assessor in ("A", "B"):
+        per_case = []
+        deltas = []
+        for case in primary:
+            rows = refs[assessor][case]
+            candidate = orders[(case, "base")]
+            incumbent = ops[(case, "base")]["arms"]["w0"]["order_ids"]
+            cand_facets, inc_facets = facets(candidate, rows), facets(incumbent, rows)
+            c_ndcg, w_ndcg = ndcg(candidate, rows), ndcg(incumbent, rows)
+            delta = c_ndcg - w_ndcg
+            deltas.append(delta)
+            per_case.append({
+                "case": case,
+                "candidate_order_ids": candidate,
+                "incumbent_w0_order_ids": incumbent,
+                "candidate_ndcg10": c_ndcg,
+                "incumbent_w0_ndcg10": w_ndcg,
+                "delta_ndcg10": delta,
+                "candidate_useful10": useful(candidate, rows),
+                "incumbent_w0_useful10": useful(incumbent, rows),
+                "candidate_facets10": cand_facets,
+                "incumbent_w0_facets10": inc_facets,
+                "lost_w0_facets": sorted(set(inc_facets) - set(cand_facets)),
+            })
+        output["assessors"][assessor] = {
+            "cases": per_case,
+            "mean_delta_ndcg10": statistics.mean(deltas),
+            "bootstrap95": bootstrap95(deltas),
+        }
+    for case in ("q1", "q4", "q7", "q8"):
+        base = set(orders[(case, "base")][:10])
+        for variant in ("repeat", "rotate"):
+            other = set(orders[(case, variant)][:10])
+            output["stability"].append({"case": case, "variant": variant, "overlap_count": len(base & other), "top10_overlap_fraction": len(base & other) / 10})
+    for query in queries:
+        if query.get("kind") != "navigation":
+            continue
+        case = query["id"]
+        target = query["target_url"].rstrip("/")
+        cards = corpus["pools"][case]["cards"]
+        target_ids = sorted(c["id"] for c in cards if c["url"].rstrip("/") == target)
+        order = candidate_order(case, "base")
+        output["navigation"].append({"case": case, "target_present": bool(target_ids), "target_ids": target_ids, "candidate_top1": order[0], "target_top1": bool(target_ids and order[0] in target_ids)})
+    args.output.write_text(json.dumps(output, indent=2, sort_keys=True) + "\n")
+    print(json.dumps({"output": str(args.output), "sha256": sha(args.output), "assessors": {a: {"mean_delta_ndcg10": x["mean_delta_ndcg10"], "bootstrap95": x["bootstrap95"]} for a, x in output["assessors"].items()}, "navigation": output["navigation"]}, indent=2))
+
+
+if __name__ == "__main__":
+    main()

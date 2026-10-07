@@ -1,0 +1,159 @@
+{
+  "schema": "exp057-offline-qualification/1",
+  "offline_checks_passed": true,
+  "independent_review_pending_final_binding": true,
+  "new_jev_calls": 0,
+  "brave_attempts": 0,
+  "checks": [
+    {
+      "program": "docs/experiments/evidence/EXP-057/policy-tests.py.txt",
+      "arguments": [],
+      "exit_code": 0,
+      "stdout_sha256": "419a34fc9f2f8af76ab52e7ee70fe11aeb7a9827029e4d2950c4dbae66bc0851",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 113,
+      "stderr_bytes": 0,
+      "stdout_text": "PASS: EXP-057 policy offline synthetic fixtures (no provider calls, searches, annotations, or candidate metrics)\n",
+      "stderr_text": ""
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/response-tests.py.txt",
+      "arguments": [],
+      "exit_code": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "698d16d7b93c4bd9707d3cfacda6fb1e0fea99ed0cda6e69bedc42772940540a",
+      "stdout_bytes": 0,
+      "stderr_bytes": 106,
+      "stdout_text": "",
+      "stderr_text": "........\n----------------------------------------------------------------------\nRan 8 tests in 0.001s\n\nOK\n"
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/orchestrator-tests.py.txt",
+      "arguments": [],
+      "exit_code": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "0c4133c5815fec5e2f1509c21ec487e5c18d91facdcb58f7cab7015d00401a3a",
+      "stdout_bytes": 0,
+      "stderr_bytes": 112,
+      "stdout_text": "",
+      "stderr_text": ".............\n----------------------------------------------------------------------\nRan 13 tests in 0.000s\n\nOK\n"
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/transport-tests.py.txt",
+      "arguments": [],
+      "exit_code": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "598cadc4e0240f287620695eb6bf51fc0ee337d0b84d6694b520b8d4f4a53532",
+      "stdout_bytes": 0,
+      "stderr_bytes": 104,
+      "stdout_text": "",
+      "stderr_text": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.170s\n\nOK\n"
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/http-wrapper-tests.py.txt",
+      "arguments": [],
+      "exit_code": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "32386b5fa600105100bd6ed5635e3388bb78ab1d9b5a865153e1dd3f0558671a",
+      "stdout_bytes": 0,
+      "stderr_bytes": 109,
+      "stdout_text": "",
+      "stderr_text": "..........\n----------------------------------------------------------------------\nRan 10 tests in 1.012s\n\nOK\n"
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/mechanics-tests.py.txt",
+      "arguments": [],
+      "exit_code": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "960da5fc1eb9cb5a2641bf51f826142d685bb57a0263278672f16391e5ced49c",
+      "stdout_bytes": 0,
+      "stderr_bytes": 107,
+      "stdout_text": "",
+      "stderr_text": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.036s\n\nOK\n"
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/pipeline-qualification.py.txt",
+      "arguments": [
+        "--owned-child"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "f7f976a3aa1ff37fd82c070d4427d26435db9c493e2ef55b367f19e97575d3e4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 3730687,
+      "stderr_bytes": 0,
+      "stderr_text": ""
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/pipeline-qualification.py.txt",
+      "arguments": [
+        "--owned-child",
+        "--fail-operation",
+        "q2-d"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "eef0a39d4c71dcdd0d0d263b0b0d9d51fd74c19d27a91f0885290e4ac4710438",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 481756,
+      "stderr_bytes": 0,
+      "stderr_text": ""
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/normal-runner.py.txt",
+      "arguments": [
+        "--mode",
+        "offline-neutral",
+        "--output-dir",
+        "NEW_PRIVATE_OUTPUT_DIRECTORY"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "51341f1089f5576a3a86bb55755a9e12015e7aa90a5440ab4d12bfbbe395a238",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 76,
+      "stderr_bytes": 0,
+      "stdout_text": "{\"status\": \"complete\", \"operations\": 21, \"attempts\": 22, \"synthetic\": true}\n",
+      "stderr_text": "",
+      "output_directory_sanitized": true
+    },
+    {
+      "program": "docs/experiments/evidence/EXP-057/normal-runner.py.txt",
+      "arguments": [
+        "--mode",
+        "offline-failure",
+        "--output-dir",
+        "NEW_PRIVATE_OUTPUT_DIRECTORY"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "748fb956464e79ec9232cc626dbd6ad7b64485d04609449ad272dc7de6966fa4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 76,
+      "stderr_bytes": 0,
+      "stdout_text": "{\"status\": \"incomplete\", \"operations\": 2, \"attempts\": 3, \"synthetic\": true}\n",
+      "stderr_text": "",
+      "output_directory_sanitized": true
+    }
+  ],
+  "source_hashes": {
+    "http-wrapper-tests.py.txt": "d97dd20797b3a31dffb6b4f3fc5fd05b5c754bdf97a4b0897947523a82ae0a78",
+    "http-wrapper.py.txt": "a337b2ef9c3163efddcfc8e7b951ca3067e6edcac1a3e8a6915012f245487d93",
+    "mechanics-tests.py.txt": "86c41b75d28e5e9559774d7d8965d20e047c14c19a175dde1575cc0c3cdb5c73",
+    "normal-runner.py.txt": "e4a04faaccf4bd8ee3419a14123e1dd3cedba731b17f011d60dabf7a0a40f932",
+    "orchestrator-tests.py.txt": "94fcd0fd409ef33b55c8a4a7eb766dd20c607d779ffa47f2f77d823ce13468a3",
+    "orchestrator.py.txt": "0f3a9264230f4a037bfce669fb79448a71f0cfcb531f80a4bbb1476e503cc39d",
+    "pipeline-qualification.py.txt": "2cdb6c2682c502083acb1be957c2f0dbf8aa81bb0c55187863744a9385c5bf73",
+    "policy-tests.py.txt": "4b6481758a38a8451f51fe5524c54d51e9fc7e0c93095b38b922ee99b5e92283",
+    "policy.py.txt": "dbc535df83409686c0a949f91502be2c91f628b76ba4573cf6ca837a857c2a4d",
+    "prepare-plan.py.txt": "562503bbd3c15a43d998184a56dadbccad3ed4de2b5235e50497df7705acdb01",
+    "replay.py.txt": "29e82ef195b604dafd7d9363cfc8ab09c158077d9c1fb5cc0c5965fbd1a856ee",
+    "response-tests.py.txt": "15693dcbfa6016dd62f8e49306c75fa1d354615754cd87aa07ae1c31fe3423dd",
+    "transport-tests.py.txt": "f0a02a08d9f122be0e5966d055170b7e0f197498f07b375626e78c9f15673870",
+    "transport.py.txt": "ef500dc8a13f4a28e92d7a6a667855c2be6bdaf699afb3e4d219ef05b9795519"
+  },
+  "artifact_hashes": {
+    "complete-operation-plan.json": "5e06508316b64b87f638af4eb8c4d16e09cadb22db8d592f57eb9dfc42fd4bf3",
+    "neutral-request.json": "ba835fffac0d9d3cc7e1d55f54926a6178274f445fde7671d61d524a760fdcbd",
+    "offline-neutral-pipeline.json": "f7f976a3aa1ff37fd82c070d4427d26435db9c493e2ef55b367f19e97575d3e4",
+    "offline-failed-pipeline.json": "eef0a39d4c71dcdd0d0d263b0b0d9d51fd74c19d27a91f0885290e4ac4710438",
+    "normal-neutral-run.json": "ff20d1061e719422bb4aeca0d0052022a473cca93ad54231504dad68a40e5b61",
+    "normal-failed-run.json": "b3706dcc4f629c7b4c04fc643568895d77cbcdfb31cbdbc76c68a9b509725c68"
+  }
+}

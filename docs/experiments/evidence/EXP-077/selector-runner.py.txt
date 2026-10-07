@@ -1,0 +1,580 @@
+"""One-shot EXP077 selector execution; offline by default and quality-neutral."""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import hashlib
+import importlib.metadata
+import importlib.machinery
+import importlib.util
+import json
+import os
+import platform
+import stat
+import subprocess
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+_SEAL = object()
+_ISSUED: dict[int, object] = {}
+
+
+def digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _load(name: str, path: Path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ValueError("source-loader")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+P = _load("exp077_prepare", HERE / "prepare.py.txt")
+_candidate_sources = P.strict_json((HERE / "candidate-source-pins.json").read_bytes())
+_source_pins = _candidate_sources.get("pins") if type(_candidate_sources) is dict else None
+if type(_source_pins) is not dict:
+    raise ValueError("candidate-source-pin-inventory")
+for _name, _expected in _source_pins.items():
+    _path = REPO / _name
+    if _path.is_symlink() or not _path.is_file() or digest(_path.read_bytes()) != _expected:
+        raise ValueError("candidate-source-pin")
+T = _load("exp077_http_transport", HERE.parent / "EXP-075" / "http-transport.py.txt")
+REQUIRED_FILES = P.DESIGN_FILES
+PINNED_FILES = REQUIRED_FILES | {"stage-development-manifest.json", "stage-confirmation-manifest.json"}
+
+
+def durable(path: Path, value) -> dict:
+    path = Path(path)
+    raw = value if type(value) is bytes else P.wire(value)
+    tmp = path.with_name(path.name + ".tmp")
+    with tmp.open("xb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(tmp, path)
+    fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    return {"path": path.name, "sha256": digest(raw), "bytes": len(raw)}
+
+
+def _committed(path: str, revision: str) -> bytes:
+    return subprocess.run(["git", "show", f"{revision}:{path}"], cwd=REPO, check=True,
+                          capture_output=True).stdout
+
+
+def _lease(identity: str, stage: str, root: Path | None = None) -> Path:
+    root = root or (Path.home() / ".local/state/exp077")
+    if root.is_symlink():
+        raise ValueError("lease-directory")
+    missing = []
+    probe = root
+    while not probe.exists():
+        missing.append(probe)
+        probe = probe.parent
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    for directory in missing:
+        for item in (directory, directory.parent):
+            fd = os.open(item, os.O_RDONLY)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+    if root.is_symlink() or not root.is_dir() or stat.S_IMODE(root.stat().st_mode) & 0o077:
+        raise ValueError("lease-directory")
+    path = root / f"{stage}-{identity}"
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        raise ValueError("stage-already-consumed") from None
+    with os.fdopen(fd, "w") as stream:
+        stream.write(identity + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+    fd = os.open(root, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    return path
+
+
+def _git_blob(path: str, revision: str) -> bytes:
+    if type(revision) is not str or len(revision) != 40 or any(c not in "0123456789abcdef" for c in revision):
+        raise ValueError("source-revision")
+    return subprocess.run(["git", "show", f"{revision}:{path}"], cwd=REPO, check=True,
+                          capture_output=True).stdout
+
+
+def _committed_head(path: str) -> tuple[bytes, str]:
+    revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, check=True,
+                              capture_output=True, text=True).stdout.strip()
+    return _git_blob(path, revision), revision
+
+
+class _LiveCapability:
+    __slots__ = ("seal", "stage", "identity", "endpoint", "key", "used")
+
+    def __init__(self, stage: str, identity: str, endpoint: str, key: str):
+        self.seal = _SEAL
+        self.stage = stage
+        self.identity = identity
+        self.endpoint = endpoint
+        self.key = key
+        self.used = False
+
+
+def admit_live(stage: str, output: Path, acquisition: dict, cohorts: dict, clock_path: Path, *, lease_root: Path | None = None) -> _LiveCapability:
+    """Validate committed registration/qualification and consume a stage lease.
+
+    Endpoint and credential are read only after every committed-source check
+    succeeds and the durable one-shot lease is written.
+    """
+    if stage not in ("development", "confirmation"):
+        raise ValueError("stage")
+    output = Path(output)
+    if output.exists() or output.is_symlink() or not output.parent.is_dir() or not os.access(output.parent, os.W_OK):
+        raise ValueError("output-path")
+    registration_path = HERE / "registration-integrity.json"
+    qualification_path = HERE / "qualification-integrity.json"
+    if not registration_path.is_file() or registration_path.is_symlink() or not qualification_path.is_file() or qualification_path.is_symlink():
+        raise ValueError("runner-not-qualified")
+    registration_raw = registration_path.read_bytes()
+    qualification_raw = qualification_path.read_bytes()
+    registration = P.strict_json(registration_raw)
+    qualification = P.strict_json(qualification_raw)
+    registration_fields = {"schema", "status", "registered_source_revision", "pins", "stage_manifest_sha256"}
+    if (type(registration) is not dict or set(registration) != registration_fields
+            or registration.get("schema") != "exp077-registration/1" or registration.get("status") != "registered"):
+        raise ValueError("registration-schema")
+    rev = registration.get("registered_source_revision")
+    if type(rev) is not str or len(rev) != 40 or any(c not in "0123456789abcdef" for c in rev):
+        raise ValueError("registration-revision")
+    committed_registration, _ = _committed_head("docs/experiments/evidence/EXP-077/registration-integrity.json")
+    if committed_registration != registration_raw:
+        raise ValueError("uncommitted-registration")
+    pins = registration.get("pins")
+    if type(pins) is not dict or set(pins) != PINNED_FILES:
+        raise ValueError("registration-pins")
+    stage_manifests = registration.get("stage_manifest_sha256")
+    if type(stage_manifests) is not dict or set(stage_manifests) != {"development", "confirmation"}:
+        raise ValueError("registration-stage-manifest")
+    for required_stage in ("development", "confirmation"):
+        manifest_path = HERE / f"stage-{required_stage}-manifest.json"
+        manifest_raw = manifest_path.read_bytes() if manifest_path.is_file() and not manifest_path.is_symlink() else b""
+        if (stage_manifests.get(required_stage) != P.stage_manifest_hash(required_stage)
+                or _git_blob(f"docs/experiments/evidence/EXP-077/stage-{required_stage}-manifest.json", rev) != manifest_raw):
+            raise ValueError("registration-stage-manifest")
+    for name, expected in pins.items():
+        path = HERE / name
+        if path.is_symlink() or not path.is_file() or digest(path.read_bytes()) != expected or _git_blob(f"docs/experiments/evidence/EXP-077/{name}", rev) != path.read_bytes():
+            raise ValueError("registration-pin")
+    qualification_fields = {"schema", "qualified", "qualified_source_revision", "files", "source_pins",
+                            "dependencies", "environment", "protocol_sha256", "registration_sha256",
+                            "stage_manifest_sha256"}
+    if (type(qualification) is not dict or not qualification_fields <= set(qualification) or not set(qualification) <= (qualification_fields | {'external_source_pins'})
+            or qualification.get("schema") != "exp077-qualification-integrity/1" or qualification.get("qualified") is not True):
+        raise ValueError("runner-not-qualified")
+    qrev = qualification.get("qualified_source_revision")
+    committed_qualification, _ = _committed_head("docs/experiments/evidence/EXP-077/qualification-integrity.json")
+    if (type(qrev) is not str or len(qrev) != 40 or any(c not in "0123456789abcdef" for c in qrev)
+            or committed_qualification != qualification_raw):
+        raise ValueError("uncommitted-qualification")
+    if _git_blob("docs/experiments/evidence/EXP-077/registration-integrity.json", qrev) != registration_raw:
+        raise ValueError("qualification-registration-commit")
+    qualified_files = qualification.get("files")
+    if type(qualified_files) is not dict or set(qualified_files) != PINNED_FILES:
+        raise ValueError("qualification-files")
+    if (qualification.get("registration_sha256") != digest(registration_raw)
+            or qualification.get("protocol_sha256") != digest((HERE / "protocol.json").read_bytes())
+            or qualification.get("stage_manifest_sha256") != stage_manifests):
+        raise ValueError("qualification-registration-binding")
+    dependencies = qualification.get("dependencies")
+    if type(dependencies) is not dict or not {"httpx", "httpcore", "anyio"} <= set(dependencies):
+        raise ValueError("qualification-dependencies")
+    for name, expected in dependencies.items():
+        if type(name) is not str or type(expected) is not str:
+            raise ValueError("qualification-dependency-runtime")
+        try:
+            installed = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            raise ValueError("qualification-dependency-runtime") from None
+        if installed != expected:
+            raise ValueError("qualification-dependency-runtime")
+    environment = qualification.get("environment")
+    if (type(environment) is not dict or set(environment) != {"python_implementation", "python_version"}
+            or environment != {"python_implementation": platform.python_implementation(),
+                              "python_version": platform.python_version()}):
+        raise ValueError("qualification-environment")
+    for name, expected in qualified_files.items():
+        path = HERE / name
+        if path.is_symlink() or not path.is_file() or digest(path.read_bytes()) != expected or _git_blob(f"docs/experiments/evidence/EXP-077/{name}", qrev) != path.read_bytes():
+            raise ValueError("qualification-pin")
+    source_pins = _candidate_sources.get("pins")
+    qualified_sources = qualification.get("source_pins")
+    if type(source_pins) is not dict or type(qualified_sources) is not dict or set(source_pins) != set(qualified_sources):
+        raise ValueError("qualification-source-files")
+    for name, expected in source_pins.items():
+        if qualified_sources.get(name) != expected or _git_blob(name, qrev) != (REPO / name).read_bytes():
+            raise ValueError("qualification-source-pin")
+    cases = P.case_index(cohorts, stage)
+    acquisition, cases = P.validate_acquisition(acquisition, cases, stage)
+    clock = acquisition["acquisition_receipt"]["stage_clock"]
+    if clock["source_revision"] != qrev:
+        raise ValueError("stage-source-revision")
+    clock_path = Path(clock_path)
+    clock_raw = clock_path.read_bytes() if clock_path.name == "stage-clock.json" and clock_path.is_file() and not clock_path.is_symlink() else b""
+    if clock_raw != P.clock_wire(clock) or digest(clock_raw) != acquisition["acquisition_receipt"]["stage_clock_digest"]:
+        raise ValueError("stage-clock-admission")
+    remaining = (datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00")) - datetime.now(timezone.utc)).total_seconds()
+    if remaining <= 0:
+        raise ValueError("stage-deadline-expired")
+    if sum(1 for case in cases if case["kind"] == "research"
+           and 41 <= len(acquisition["pools"][case["id"]]["cards"]) <= 80) < 4:
+        raise ValueError("insufficient-natural-pools")
+    if any(case["kind"] == "navigation" and not any(card["url"] == case["target_url"]
+           for card in acquisition["pools"][case["id"]]["cards"]) for case in cases):
+        raise ValueError("missing-navigation-target")
+    P.prebuild(acquisition, cases, stage)
+    identity = digest(registration_raw + qualification_raw + stage.encode("ascii"))
+    _lease(identity, stage, lease_root)
+    # Do not access environment credentials or the endpoint before admission.
+    endpoint = P.FROZEN.PROTOCOL["wire"]["endpoint"]
+    key = os.environ.get("JEV_API_KEY", "")
+    if not key:
+        raise ValueError("credential-required")
+    capability = _LiveCapability(stage, identity, endpoint, key)
+    _ISSUED[id(capability)] = capability
+    return capability
+
+
+def _fixture_client(mode="ok"):
+    stats = {"calls": 0, "clients": 0}
+
+    async def handler(request):
+        stats["calls"] += 1
+        body = P.strict_json(await request.aread())
+        if mode == "fail-candidate" and any(k.startswith("purpose:") for k in body["questions"]):
+            return httpx.Response(503, content=b"fixture-failure")
+        scores = {qid: (5 if qid.startswith(("w0:", "query:")) else 2) for qid in body["questions"]}
+        return httpx.Response(200, content=P.FROZEN.response_fixture(body, score_by_id=scores))
+
+    def factory(**kwargs):
+        stats["clients"] += 1
+        return httpx.AsyncClient(transport=httpx.MockTransport(handler), **kwargs)
+
+    factory.stats = stats
+    return factory
+
+
+class _CallError(Exception):
+    def __init__(self, record: dict, code: str):
+        self.record, self.code = record, code
+        super().__init__(code)
+
+
+def _usage_admissible(budget: dict) -> bool:
+    limits = P.PROTOCOL["bounds"]
+    reserve = P.STUDY_PROTOCOL["jev_invocation"]["reserve_before_each_call"]
+    return budget["input_tokens"] + reserve["input"] <= limits["reported_input_tokens"] and budget["output_tokens"] + reserve["output"] <= limits["reported_output_tokens"]
+
+
+async def run_stage(acquisition: dict, cohorts: dict, stage: str, outdir: Path, *, offline=True,
+                    client_factory=None, capability=None, lease_root=None, clock_path=None, manifest_root=None):
+    if offline:
+        if capability is not None:
+            raise ValueError("offline-admission-forbidden")
+        client_factory = client_factory or _fixture_client()
+        api_key = "fixture-only-non-secret"
+        endpoint = "https://fixture.invalid/jev"
+    else:
+        if (not isinstance(capability, _LiveCapability) or capability.seal is not _SEAL or capability.used
+                or _ISSUED.get(id(capability)) is not capability or capability.stage != stage):
+            raise ValueError("live-admission-required")
+        capability.used = True
+        _ISSUED.pop(id(capability), None)
+        api_key, endpoint = capability.key, capability.endpoint
+        client_factory = None
+    cases = P.case_index(cohorts, stage)
+    acquisition, cases = P.validate_acquisition(acquisition, cases, stage, manifest_root)
+    stage_receipt = acquisition["acquisition_receipt"]
+    clock = stage_receipt["stage_clock"]
+    if clock_path is None:
+        raise ValueError("stage-clock-file-required")
+    clock_path = Path(clock_path)
+    if clock_path.name != "stage-clock.json" or clock_path.is_symlink() or not clock_path.is_file():
+        raise ValueError("stage-clock-file")
+    clock_raw = clock_path.read_bytes()
+    if digest(clock_raw) != stage_receipt["stage_clock_digest"] or clock_raw != P.clock_wire(clock):
+        raise ValueError("stage-clock-digest-mismatch")
+    stage_started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+    stage_deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+    now_utc = datetime.now(timezone.utc)
+    remaining_seconds = (stage_deadline - now_utc).total_seconds()
+    outdir = Path(outdir)
+    if outdir.exists() or outdir.is_symlink() or not outdir.parent.is_dir() or not os.access(outdir.parent, os.W_OK):
+        raise ValueError("output-path")
+    outdir.mkdir(mode=0o700)
+    receipts = outdir / "receipts"
+    receipts.mkdir(mode=0o700)
+    adequate = sum(1 for case in cases if case["kind"] == "research"
+                   and 41 <= len(acquisition["pools"][case["id"]]["cards"]) <= 80)
+    prepared = P.prebuild(acquisition, cases, stage, manifest_root)
+    owner = T.AsyncHTTPTransport(client_factory=client_factory)
+    limits = P.PROTOCOL["bounds"]
+    budget = {"attempts": 0, "input_tokens": 0, "output_tokens": 0, "unknown_usage": False}
+    data = {"schema": "exp077-run/1", "stage": stage, "synthetic": bool(offline), "quality_credit": False,
+            "adoption_eligible": False, "status": "running", "operations": [], "neutral": None,
+            "budget": budget.copy(), "source_acquisition_sha256": digest(P.wire(acquisition)),
+            "stage_started_utc": clock["stage_started_utc"], "stage_deadline_utc": clock["stage_deadline_utc"],
+            "stage_manifest_sha256": stage_receipt["stage_manifest_sha256"], "stage_clock_digest": stage_receipt["stage_clock_digest"],
+            "adequate_natural_primary_pools": adequate, "required_natural_primary_pools": 4}
+
+    run_start = time.perf_counter()
+    run_deadline = run_start + max(0.0, remaining_seconds)
+
+    def checkpoint():
+        data["budget"] = budget.copy()
+        data["stage_elapsed_seconds"] = max(0.0, (datetime.now(timezone.utc) - stage_started).total_seconds())
+        durable(outdir / "run.json", data)
+
+    missing_targets = [case["id"] for case in cases if case["kind"] == "navigation"
+                       and not any(card["url"] == case["target_url"] for card in acquisition["pools"][case["id"]]["cards"])]
+
+    async def one_call(raw: bytes, opid: str, arm: str, deadline: float):
+        if budget["attempts"] >= limits["calls"] or not _usage_admissible(budget):
+            raise _CallError({"status": "not_dispatched", "dispatched": False, "operation": opid, "arm": arm}, "usage-admission")
+        name = f"call-{budget['attempts']:02d}.json"
+        path = receipts / name
+        rec = {"schema": "exp077-call/1", "operation": opid, "arm": arm, "status": "pending", "dispatched": False,
+               "request_sha256": digest(raw), "request_bytes": len(raw), "raw_response_hex": None, "usage": None,
+               "usage_status": "not_dispatched", "http_status": None, "elapsed_ms": None, "failure": None,
+               "stage_manifest_sha256": stage_receipt["stage_manifest_sha256"],
+               "stage_clock_digest": stage_receipt["stage_clock_digest"]}
+        durable(path, rec)
+
+        def dispatch():
+            if time.perf_counter() >= deadline or time.perf_counter() >= run_deadline:
+                raise T.DispatchDenied()
+            rec["dispatched"] = True
+            rec["usage_status"] = "unknown"
+            budget["attempts"] += 1
+            durable(path, rec)
+
+        try:
+            remaining = deadline - time.perf_counter()
+            if remaining <= 0:
+                raise T.DispatchDenied()
+            start = time.perf_counter_ns()
+            rawresp, status, complete, timings = await owner.exchange(raw, api_key, min(1.0, remaining), endpoint, on_dispatch=dispatch)
+            usage = P.usage_from_raw(rawresp)
+            rec.update(status="returned", raw_response_hex=rawresp.hex(), response_sha256=digest(rawresp),
+                       response_bytes=len(rawresp), response_complete=complete, http_status=status, usage=usage,
+                       usage_status="known" if usage is not None else "unknown", elapsed_ms=(time.perf_counter_ns()-start)/1e6,
+                       timings=timings)
+            if usage is None:
+                budget["unknown_usage"] = True
+                raise _CallError(rec, "unknown-usage")
+            budget["input_tokens"] += usage["input_tokens"]
+            budget["output_tokens"] += usage["output_tokens"]
+            if (status != 200 or not complete or usage["input_tokens"] > 64_000 or usage["output_tokens"] > 32_000
+                    or budget["input_tokens"] > limits["reported_input_tokens"] or budget["output_tokens"] > limits["reported_output_tokens"]):
+                raise _CallError(rec, "response-or-usage-bound")
+            rec["status"] = "valid"
+            return rawresp, rec
+        except T.TransportFailure as exc:
+            rec.update(status="failed", http_status=exc.http_status, response_complete=exc.response_complete,
+                       failure=exc.code, usage_status="unknown" if exc.dispatched else "not_dispatched")
+            if exc.raw is not None:
+                rec["raw_response_hex"] = exc.raw.hex()
+                rec["response_sha256"] = digest(exc.raw)
+                rec["response_bytes"] = len(exc.raw)
+                usage = P.usage_from_raw(exc.raw)
+                rec["usage"] = usage
+                if usage is not None:
+                    rec["usage_status"] = "known"
+                    budget["input_tokens"] += usage["input_tokens"]
+                    budget["output_tokens"] += usage["output_tokens"]
+                elif exc.dispatched:
+                    budget["unknown_usage"] = True
+            elif exc.dispatched:
+                budget["unknown_usage"] = True
+            raise _CallError(rec, exc.code) from None
+        except (ValueError, T.DispatchDenied) as exc:
+            raise _CallError(rec, str(exc) if isinstance(exc, ValueError) else "whole-phase-deadline") from None
+        finally:
+            durable(path, rec)
+
+    async def operation(opid, item, case, cards, control, candidate, control_raw, candidate_raw):
+        provenance = list(control["provenance_order_ids"])
+        result = {"id": opid, "case": case["id"], "variant": item["variant"], "provenance_order_ids": provenance,
+                  "status": "running",
+                  "native_order_ids": provenance, "baseline_order_ids": None, "candidate_order_ids": provenance,
+                  "baseline_phase_ms": None, "candidate_phase_ms": None, "phase_endpoint_after_fsync": False,
+                  "calls": [], "failure": None}
+        try:
+            start = time.perf_counter()
+            raw, rec = await one_call(control_raw, opid, "w0", start + 1.0)
+            result["calls"].append(rec)
+            baseline = P.FROZEN.parse_control(raw, control)
+            result["baseline_order_ids"] = baseline["order_ids"]
+            baseline_receipt = {"schema": "exp077-receipt/1", "operation": opid, "phase": "baseline",
+                       "order_ids": baseline["order_ids"], "call_sha256": digest(P.wire(rec)),
+                       "stage_manifest_sha256": stage_receipt["stage_manifest_sha256"],
+                       "stage_clock_digest": stage_receipt["stage_clock_digest"]}
+            durable(receipts / f"{opid}-baseline.json", baseline_receipt)
+            result["baseline_phase_ms"] = (time.perf_counter() - start) * 1000
+            if result["baseline_phase_ms"] > 1000:
+                raise _CallError(rec, "baseline-deadline")
+        except (ValueError, _CallError) as exc:
+            result["failure"] = {"phase": "baseline", "code": exc.code if isinstance(exc, _CallError) else "baseline-parse"}
+            result["status"] = "failed"
+            if isinstance(exc, _CallError) and exc.record not in result["calls"]:
+                result["calls"].append(exc.record)
+            result["candidate_order_ids"] = provenance
+            durable(receipts / f"{opid}-final.json", {"schema": "exp077-receipt/1", "operation": opid,
+                     "phase": "baseline-failed", "failure": result["failure"], "order_ids": provenance,
+                     "stage_manifest_sha256": stage_receipt["stage_manifest_sha256"],
+                     "stage_clock_digest": stage_receipt["stage_clock_digest"]})
+            result["baseline_phase_ms"] = (time.perf_counter() - start) * 1000
+            result["phase_endpoint_after_fsync"] = True
+            return result, False
+        start = time.perf_counter()
+        deadline = start + P.STUDY_PROTOCOL["candidate"]["phase_deadline_ms"] / 1000
+        try:
+            # Fresh construction and serialization belong inside the measured phase.
+            built = P.FROZEN.build_candidate(case, cards, item["variant"])
+            raw_candidate = P.wire(built["joint"])
+            if len(raw_candidate) > P.STUDY_PROTOCOL["candidate"]["request_bytes"]:
+                raise ValueError("candidate-request-bound")
+            raw, rec = await one_call(raw_candidate, opid, "candidate", deadline)
+            result["calls"].append(rec)
+            parsed = P.FROZEN.parse_candidate(raw, built)
+            order = parsed["candidate"]["order_ids"]
+            if len(order) != len(provenance) or set(order) != set(provenance):
+                raise ValueError("candidate-membership")
+            result["candidate_order_ids"] = order
+            result["status"] = "complete"
+            result["candidate_components"] = {"query_order_ids": parsed["joint_query"]["order_ids"],
+                                               "purpose_order_ids": parsed["joint_purpose"]["order_ids"],
+                                               "rational_scores": parsed["candidate"]["rational_scores"]}
+            body_receipt = durable(receipts / f"{opid}-candidate-body.json", {"request_sha256": digest(raw_candidate),
+                                      "candidate_order_ids": order, "provenance_order_ids": provenance,
+                                      "stage_manifest_sha256": stage_receipt["stage_manifest_sha256"],
+                                      "stage_clock_digest": stage_receipt["stage_clock_digest"]})
+            final = durable(receipts / f"{opid}-final.json", {"schema": "exp077-receipt/1", "operation": opid,
+                                     "phase": "complete", "body_receipt_sha256": body_receipt["sha256"],
+                                     "candidate_order_ids": order, "provenance_order_ids": provenance,
+                                     "stage_manifest_sha256": stage_receipt["stage_manifest_sha256"],
+                                     "stage_clock_digest": stage_receipt["stage_clock_digest"]})
+            result["final_receipt"] = final
+            result["candidate_phase_ms"] = (time.perf_counter() - start) * 1000
+            result["phase_endpoint_after_fsync"] = True
+            if result["candidate_phase_ms"] > 1000:
+                raise ValueError("candidate-deadline")
+            return result, True
+        except (ValueError, _CallError) as exc:
+            code = exc.code if isinstance(exc, _CallError) else str(exc)
+            result["failure"] = {"phase": "candidate", "code": code}
+            result["status"] = "candidate_failed_fallback"
+            if isinstance(exc, _CallError) and exc.record not in result["calls"]:
+                result["calls"].append(exc.record)
+            # Atomic fallback: never emit a partially reordered or shortened list.
+            result["candidate_order_ids"] = provenance
+            result.pop("candidate_components", None)
+            durable(receipts / f"{opid}-final.json", {"schema": "exp077-receipt/1", "operation": opid,
+                     "phase": "candidate-failed-fallback", "failure": result["failure"], "order_ids": provenance,
+                     "stage_manifest_sha256": stage_receipt["stage_manifest_sha256"],
+                     "stage_clock_digest": stage_receipt["stage_clock_digest"]})
+            result["candidate_phase_ms"] = (time.perf_counter() - start) * 1000
+            result["phase_endpoint_after_fsync"] = True
+            return result, False
+
+    # Capacity pair is a fixed synthetic 80-card request and carries no quality credit.
+    if remaining_seconds <= 0 or adequate < 4 or missing_targets:
+        data["status"] = ("inconclusive-stage-deadline-expired" if remaining_seconds <= 0 else
+                           "inconclusive-insufficient-natural-pools" if adequate < 4 else
+                           "inconclusive-missing-navigation-target")
+        data["missing_navigation_targets"] = missing_targets
+        for item, case, cards, control, candidate, control_raw, candidate_raw in prepared:
+            data["operations"].append({"id": f"{case['id']}-{item['variant']}", "case": case["id"],
+                                       "variant": item["variant"], "status": "not_invoked",
+                                       "failure": {"code": "four-natural-primary-pools-required"},
+                                       "native_membership_count": len(cards)})
+        checkpoint()
+        return data
+
+    neutral_case, neutral_cards = P.FROZEN.synthetic_case()
+    neutral_item = {"case": "neutral", "variant": "base"}
+    neutral_control = P.FROZEN.build_control(neutral_case, neutral_cards)
+    neutral_candidate = P.FROZEN.build_candidate(neutral_case, neutral_cards)
+    neutral_record = await operation("neutral", neutral_item, neutral_case, neutral_cards, neutral_control,
+                                     neutral_candidate, P.wire(neutral_control["w0"]), P.wire(neutral_candidate["joint"]))
+    data["neutral"] = neutral_record[0]
+    checkpoint()
+    stopped = not neutral_record[1]
+    for item, case, cards, control, candidate, control_raw, candidate_raw in prepared:
+        if stopped:
+            data["operations"].append({"id": f"{case['id']}-{item['variant']}", "case": case["id"],
+                                       "variant": item["variant"], "status": "uninvoked", "failure": {"code": "prior-terminal-stop"}})
+            continue
+        if control is None:
+            if case["kind"] == "navigation" and len(cards) == 1 and cards[0]["url"] == case["target_url"]:
+                data["operations"].append({"id": f"{case['id']}-{item['variant']}", "case": case["id"],
+                                           "variant": item["variant"], "status": "native_target_top1_noop",
+                                           "candidate_order_ids": [cards[0]["id"]], "native_order_ids": [cards[0]["id"]],
+                                           "target_url": case["target_url"], "jev_calls": 0})
+                checkpoint()
+                continue
+            data["operations"].append({"id": f"{case['id']}-{item['variant']}", "case": case["id"],
+                                       "variant": item["variant"], "status": "not_rankable", "failure": {"code": "pool-outside-selector-bound"},
+                                       "native_membership_count": len(cards), "native_order_ids": [c["id"] for c in cards]})
+            checkpoint()
+            continue
+        record, passed = await operation(f"{case['id']}-{item['variant']}", item, case, cards,
+                                         control, candidate, control_raw, candidate_raw)
+        data["operations"].append(record)
+        checkpoint()
+        if not passed:
+            stopped = True
+    data["budget"] = budget
+    valid_operations = all(op.get("status") in {"complete", "native_target_top1_noop"} for op in data["operations"])
+    data["status"] = "complete" if not stopped and valid_operations and len(data["operations"]) == 21 and budget["attempts"] <= 44 else "incomplete"
+    checkpoint()
+    return data
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--offline-fixture", action="store_true")
+    parser.add_argument("--stage", choices=("development", "confirmation"), required=True)
+    parser.add_argument("--acquisition", type=Path)
+    parser.add_argument("--stage-clock", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    args = parser.parse_args()
+    if args.acquisition is None:
+        raise SystemExit("--acquisition is required")
+    cohorts = P.strict_json((HERE / "cohorts.json").read_bytes())
+    acquisition = P.strict_json(args.acquisition.read_bytes())
+    if args.offline_fixture:
+        result = asyncio.run(run_stage(acquisition, cohorts, args.stage, args.out, offline=True, clock_path=args.stage_clock))
+    else:
+        capability = admit_live(args.stage, args.out, acquisition, cohorts, args.stage_clock)
+        result = asyncio.run(run_stage(acquisition, cohorts, args.stage, args.out, offline=False, capability=capability,
+                                       clock_path=args.stage_clock))
+    print(json.dumps({"status": result["status"], "attempts": result["budget"]["attempts"], "quality_credit": False}))
+
+
+if __name__ == "__main__":
+    main()

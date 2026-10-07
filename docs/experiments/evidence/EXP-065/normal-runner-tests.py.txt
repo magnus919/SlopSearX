@@ -1,0 +1,116 @@
+"""Offline contract tests for the inert EXP-065 runner."""
+from pathlib import Path
+import importlib.machinery,importlib.util,json,math,os,subprocess,sys,tempfile,unittest
+from unittest.mock import patch
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+    l=importlib.machinery.SourceFileLoader(name,str(path));s=importlib.util.spec_from_loader(name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+P=load("exp065_test_prepare",HERE/"prepare.py.txt")
+N=load("exp065_test_runner",HERE/"normal-runner.py.txt")
+def card(i):return {"id":"id"+str(i),"url":"https://example.test/"+str(i),"title":"Title "+str(i),"snippet":"Snippet "+str(i)}
+def case():return {"id":"q1","query":"native query","purpose":"Choose sources for a task","facets":[{"id":"f1","description":"facet one"},{"id":"f2","description":"facet two"}]}
+def response(request,score=5,usage=True):
+    out={"model":"jev-1.13.0","answers":{k:{"type":"score","score":score} for k in request["questions"]}}
+    if usage:out["usage"]={"input_tokens":10,"output_tokens":2}
+    return json.dumps(out,allow_nan=False).encode()
+class PrepareTests(unittest.TestCase):
+    def test_local_each_question_binds_only_one_card_no_sibling_state(self):
+        b=P.bodies(case(),[card(0),card(1),card(2)])
+        local=b["local"]
+        self.assertEqual(local["state"],{"query":case()["purpose"],"purpose":case()["purpose"],"requested_facets":case()["facets"]})
+        self.assertEqual(len(local["questions"]),3)
+        self.assertEqual(set(local["questions"]),set(b["shared"]["questions"]))
+        for cid,q in local["questions"].items():
+            self.assertEqual(q["instructions"]["candidate"],next(c for c in b["cards"] if c["id"]==cid))
+            self.assertEqual(q["instructions"]["question"],P.CONTRACT["instructions"].replace("candidate `{id}`","`candidate`").format(id=cid))
+            self.assertEqual(q["criteria"],P.CRITERIA)
+    def test_pool_bounds_complete_59_and_80_cards(self):
+        for n in (59,80):self.assertEqual(len(P.bodies(case(),[card(i) for i in range(n)])["ids"]),n)
+        with self.assertRaises(ValueError):P.bodies(case(),[card(i) for i in range(81)])
+    def test_w0_uses_original_query_first40_and_unscored_tail(self):
+        b=P.bodies(case(),[card(i) for i in range(59)])
+        self.assertEqual(b["w0"]["state"]["query"],"native query")
+        self.assertEqual(len(b["w0"]["questions"]),40)
+        self.assertEqual(b["tail_ids"],["id%d"%i for i in range(40,59)])
+    def test_canonical_order_independent_of_input_rotation(self):
+        cards=[card(i) for i in range(7)]
+        self.assertEqual(P.bodies(case(),cards)["shared"],P.bodies(case(),cards[3:]+cards[:3])["shared"])
+    def test_registered_rotate_changes_only_native_order_not_purpose_bodies(self):
+        cards=[card(i) for i in range(59)];base=P.bodies(case(),cards,"base");rot=P.bodies(case(),cards,"rotate")
+        self.assertEqual(rot["provenance_order_ids"],base["provenance_order_ids"][20:]+base["provenance_order_ids"][:20])
+        self.assertEqual(rot["shared"],base["shared"]);self.assertEqual(rot["local"],base["local"])
+    def test_reject_bad_membership_model_nonfinite_score_and_oversize(self):
+        b=P.bodies(case(),[card(0),card(1)])
+        with self.assertRaises(ValueError):P.validate_response(response(b["shared"]).replace(b"jev-1.13.0",b"wrong"),b["shared"],b["ids"])
+        raw=response(b["shared"]).replace(b'"id1"',b'"unknown"')
+        with self.assertRaises(ValueError):P.validate_response(raw,b["shared"],b["ids"])
+        with self.assertRaises(ValueError):P.validate_response(response(b["shared"],float("nan")),b["shared"],b["ids"])
+        with self.assertRaises(ValueError):P.validate_response(b" "*2_000_001,b["shared"],b["ids"])
+        bad=json.loads(response(b["shared"]));bad["answers"]["id0"]["score"]=10
+        with self.assertRaises(ValueError):P.validate_response(json.dumps(bad).encode(),b["shared"],b["ids"])
+    def test_real_provider_score_metadata_is_accepted(self):
+        b=P.bodies(case(),[card(0),card(1)])
+        data=json.loads(response(b["shared"]))
+        for answer in data["answers"].values():answer.update(confidence=.52,legend={"0":"none"},probabilities={"0":.1})
+        self.assertEqual(P.validate_response(json.dumps(data).encode(),b["shared"],b["ids"])["scores"],{"id0":5.0,"id1":5.0})
+    def test_unknown_usage_is_not_fabricated(self):
+        b=P.bodies(case(),[card(0),card(1)])
+        self.assertIsNone(P.validate_response(response(b["shared"],usage=False),b["shared"],b["ids"])["usage"])
+class RunnerTests(unittest.TestCase):
+    def test_wrapper_rejects_unbound_local_card_and_inexact_body(self):
+        W=load("exp065_test_wrapper",HERE/"http-wrapper.py.txt")
+        b=P.bodies(case(),[card(0),card(1)])
+        self.assertEqual(W.validate_request(P.wire(b["local"])),b["local"])
+        bad=json.loads(P.wire(b["local"]));bad["questions"]["id0"]["instructions"]["candidate"]=card(1)
+        with self.assertRaisesRegex(ValueError,"local-question-binding"):W.validate_request(P.wire(bad))
+    def test_live_gate_fails_closed_before_dns_key_lease_without_qualification(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            acq=b"{}";queries=b"[]"
+            with self.assertRaisesRegex(ValueError,"input-pin"):
+                N.live_gate(acq,queries,"800c240bfb882e51f7fb2732c0eb7e715af822cd")
+    def test_one_shot_lease_is_exclusive_and_fsynced(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lease=Path(tmp)/"lease.json";N.create_lease(lease,"identity")
+            self.assertEqual(lease.read_text(),"identity")
+            with self.assertRaises(FileExistsError):N.create_lease(lease,"identity")
+    def test_complete_21_operation_63_call_offline_synthetic_fixture(self):
+        # Exercise actual fixed dataset through one owned fixture child, then verify canonical contract.
+        acquisition=json.loads((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes())
+        queries=json.loads((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+        with tempfile.TemporaryDirectory() as tmp:
+            result=N.run(acquisition,queries,Path(tmp)/"run",True,{"synthetic_fixture":True})
+            self.assertEqual(json.loads((Path(tmp)/"run"/"source-integrity.json").read_text()),{"synthetic_fixture":True})
+            self.assertEqual(result["status"],"complete");self.assertEqual(len(result["operations"]),21)
+            self.assertEqual(result["budget"]["attempts"],63);self.assertTrue(result["synthetic"])
+            self.assertEqual(len(list((Path(tmp)/"run"/"receipts").glob("call-*.json"))),63)
+            self.assertTrue(all(row["arms"][arm]["status"]=="valid" for row in result["operations"] for arm in ("w0","shared","local")))
+    def test_owned_transport_timeout_fails_and_preserves_receipt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            child=N.T.ChildTransport([sys.executable,"-c","import time; time.sleep(2)"])
+            Path(tmp,"transport").mkdir();child.receipts=N.Receipts(Path(tmp)/"transport")
+            with self.assertRaises(TimeoutError):child(b"{}",timeout_s=.05)
+            self.assertTrue(child.receipts[0]["timed_out"])
+    def test_owned_transport_failstop_and_complete_fallback_metadata(self):
+        cards=[card(0),card(1)];b=P.bodies(case(),cards)
+        # Validation failure is terminal at the response boundary, preserving no partial permutation.
+        with self.assertRaises(ValueError):P.validate_response(b'{"model":"wrong"}',b["local"],b["ids"])
+        fallback={"status":"failed","order_ids":b["ids"],"fallback":"complete native acquisition order"}
+        self.assertEqual(fallback["order_ids"],b["ids"])
+    def test_bad_first_response_failstops_without_retry_and_keeps_raw(self):
+        acquisition=json.loads((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes())
+        queries=json.loads((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+        class BadOwned:
+            calls=0
+            def __init__(self,*args):pass
+            def __call__(self,body):
+                BadOwned.calls+=1
+                return b'{"model":"invalid","answers":{}}',2.0
+        with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",BadOwned):
+            result=N.run(acquisition,queries,Path(tmp)/"bad",True)
+            self.assertEqual(result["status"],"incomplete");self.assertEqual(BadOwned.calls,1)
+            arm=result["operations"][0]["arms"]["w0"]
+            self.assertEqual(arm["status"],"failed")
+            self.assertEqual(arm["order_ids"],[c["id"] for c in acquisition["pools"]["q1"]["cards"]])
+            receipt=json.loads((Path(tmp)/"bad/receipts/call-00.json").read_bytes())
+            self.assertEqual(bytes.fromhex(receipt["raw_response"]),b'{"model":"invalid","answers":{}}')
+if __name__=="__main__":unittest.main()

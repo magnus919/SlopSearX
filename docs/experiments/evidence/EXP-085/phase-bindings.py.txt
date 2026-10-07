@@ -1,0 +1,243 @@
+"""EXP-085 assessment and answer bindings to fresh EXP-085 admission.
+
+EXP-077 packet/answer code is consumed only as immutable wire behavior. Prior
+study admissions and terminal receipts grant no EXP-085 authority. Import is inert.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+from pathlib import Path
+import time
+import sys
+from datetime import datetime, timezone
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+EXP077 = HERE.parent / "EXP-077"
+REPO = HERE.parents[3]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+
+def _load(name: str, path: Path):
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("pinned-helper-unavailable")
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ValueError("pinned-helper-loader")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def shared_stage_elapsed(clock: dict) -> float:
+    started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+    if started.tzinfo is None or started.utcoffset().total_seconds() != 0:
+        raise ValueError("exp078-stage-clock-timezone")
+    return max(0.0, (datetime.now(timezone.utc) - started).total_seconds())
+
+
+def write_once(path: Path, value) -> dict:
+    raw = value if type(value) is bytes else canonical(value)
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    directory = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+    return {"path": path.name, "sha256": sha(raw), "bytes": len(raw)}
+
+
+def _phase(admission, stage_permit, name: str, stage_outdir: Path,
+           phase_outdir: Path, clock_bytes: bytes):
+    if not isinstance(clock_bytes, bytes) or not clock_bytes:
+        raise ValueError("exp078-clock-bytes-required")
+    stage_root = Path(stage_outdir).resolve()
+    phase_root = Path(phase_outdir).resolve()
+    if phase_root == stage_root or not phase_root.is_relative_to(stage_root):
+        raise ValueError("exp078-phase-output-must-be-inside-stage")
+    phase_permit = admission.acquire_phase(stage_permit, name, stage_root, clock_bytes)
+    admission.require_phase(phase_permit, clock_bytes, stage_root)
+    return phase_permit
+
+
+def validate_answer_coverage(assignments: list[dict], cases: list[dict]) -> None:
+    research_ids = [case.get("id") for case in cases if case.get("kind") == "research"]
+    if len(research_ids) != 8 or len(set(research_ids)) != 8:
+        raise ValueError("exp078-answer-research-cohort")
+    observed = []
+    for assignment in assignments:
+        if not isinstance(assignment, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        model_input = assignment.get("model_input")
+        binding = assignment.get("private_binding")
+        if not isinstance(model_input, dict) or not isinstance(binding, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        task = model_input.get("task")
+        if not isinstance(task, dict):
+            raise ValueError("exp078-answer-assignment-task")
+        observed.append((task.get("task_id"), binding.get("arm_id")))
+    expected = {(task_id, arm) for task_id in research_ids for arm in ("w0", "candidate")}
+    if len(observed) != 16 or set(observed) != expected:
+        raise ValueError("exp078-answer-assignment-coverage")
+
+
+
+
+def prepare_assessment_inputs(*, state, cases, outdir=None):
+    """Prepare frozen grader packets under an EXP-085 phase guard; no model calls."""
+    stage_root = Path(state.outdir).resolve()
+    output = Path(outdir) if outdir is not None else stage_root / "assessment-inputs"
+    output = output.resolve()
+    phase_permit = _phase(state.admission, state.permit, "assessment-preparation",
+                          stage_root, output, state.clock[1])
+    guard = lambda: state.admission.require_phase(phase_permit, state.clock[1], stage_root)
+    helper = _load("exp085_assessment_input_preparer", HERE / "prepare-assessments.py.txt")
+    return helper.prepare(output_root=output, acquisition=state.effective_acquisition,
+                          cases=cases, guard=guard,
+                          source_snapshot_root=state.bundle_root / "exp084")
+
+
+async def run_selector(*, state, cases, outdir, offline=False, transport_factory=None):
+    """Run the unchanged EXP-078 selector helper on EXP-085 inputs/admission."""
+    selector = _load("exp085_portable_selector_runner",
+                     HERE.parent / "EXP-078" / "selector-runner.py.txt")
+    return await selector.run_selector(state.effective_acquisition, cases, state.clock[1],
+        state.outdir, Path(outdir), offline=offline, stage_permit=None if offline else state.permit,
+        admission_module=None if offline else state.admission,
+        transport_factory=transport_factory, source_integrity=state.integrity)
+
+
+def claim_assessment_phase(*, admission, stage_permit, phase, stage_outdir, phase_outdir,
+                           clock_bytes):
+    """Claim one registered grader phase and return its reusable dispatch guard."""
+    if phase not in {"card-reference", "source-reference"}:
+        raise ValueError("exp085-assessment-phase-not-registered")
+    phase_permit = _phase(admission, stage_permit, phase, Path(stage_outdir),
+                          Path(phase_outdir), clock_bytes)
+    root = Path(stage_outdir).resolve()
+    def require():
+        admission.require_phase(phase_permit, clock_bytes, root)
+    return phase_permit, require
+
+class _GuardedHTTPTransport(httpx.BaseTransport):
+    """Sync HTTPX transport checking the EXP-078 permit before each send."""
+    def __init__(self, inner, admission, phase_permit, clock_bytes, stage_outdir, limit):
+        if not isinstance(inner, httpx.BaseTransport):
+            raise ValueError("exp078-answer-transport-type")
+        self.inner, self.admission = inner, admission
+        self.phase_permit, self.clock_bytes, self.stage_outdir = phase_permit, clock_bytes, Path(stage_outdir).resolve()
+        self.limit, self.calls = limit, 0
+
+    def handle_request(self, request):
+        self.admission.require_phase(self.phase_permit, self.clock_bytes, self.stage_outdir)
+        self.calls += 1
+        if self.calls > self.limit:
+            raise ValueError("exp078-answer-http-budget")
+        return self.inner.handle_request(request)
+
+    def close(self):
+        self.inner.close()
+
+
+def run_answers(*, assignments: list[dict], cases: list[dict], prompt: str, schema: dict,
+                stage_outdir: Path, outdir: Path, admission, stage_permit, clock: dict, clock_bytes: bytes,
+                clock_sha256: str, offline_transport=None, offline: bool = False) -> dict:
+    """Run two readiness plus sixteen answer requests under one phase permit."""
+    if outdir.exists() or outdir.is_symlink():
+        raise ValueError("exp078-answer-output-must-be-new")
+    if not isinstance(assignments, list) or len(assignments) != 16:
+        raise ValueError("exp078-answer-assignment-count")
+    validate_answer_coverage(assignments, cases)
+    if sha(clock_bytes) != clock_sha256 or json.loads(clock_bytes) != clock:
+        raise ValueError("exp078-answer-clock-binding")
+    outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    phase_permit = None
+    if offline:
+        if offline_transport is None:
+            raise ValueError("exp078-answer-offline-requires-mock-transport")
+    else:
+        if stage_permit is None or admission is None or offline_transport is not None:
+            raise ValueError("exp078-answer-live-requires-common-admission")
+        phase_permit = _phase(admission, stage_permit, "answer", stage_outdir, outdir, clock_bytes)
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    answer_runner = _load("exp078_answer_runner", EXP077 / "answer-runner.py.txt")
+    packet = {"schema": "exp077-answer-packet/1", "synthetic": False,
+              "stage_id": clock["stage_id"], "stage_clock_digest": clock_sha256,
+              "assignments": assignments}
+    validated_schema = answer_runner.validate_schema(canonical(schema))
+    answer_runner.validate_packet(canonical(packet), validated_schema)
+    if offline:
+        endpoint, api_key = "https://fixture.invalid/v1/chat/completions", "exp078-offline-fixture"
+        transport = offline_transport
+    else:
+        endpoint = os.environ.get("LLM_BASE_URL", "")
+        api_key = os.environ.get("LLM_API_KEY", "")
+        if not endpoint or not api_key:
+            raise ValueError("exp078-answer-configuration-unavailable-after-admission")
+        import httpx
+        transport = _GuardedHTTPTransport(httpx.HTTPTransport(retries=0, trust_env=False),
+            admission, phase_permit, clock_bytes, stage_outdir, 18)
+    helper_out = outdir / "portable-answer-wire"
+    helper_out.mkdir(mode=0o700)
+    started = time.monotonic()
+    try:
+        helper_result = answer_runner.run_answers(assignments, prompt, schema, endpoint, api_key,
+                                                   helper_out, clock, transport=transport)
+    except BaseException as exc:
+        receipt_path = helper_out / "call-receipts.json"
+        raw = receipt_path.read_bytes() if receipt_path.is_file() and not receipt_path.is_symlink() else b""
+        failed = {"schema": "exp078-answer-phase/1", "stage": "development",
+                  "status": "incomplete", "synthetic": offline,
+                  "quality_credit": False, "adoption_eligible": False,
+                  "stage_clock_sha256": clock_sha256,
+                  "terminal_error_class": type(exc).__name__,
+                  "helper_call_receipts_sha256": sha(raw) if raw else None,
+                  "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+                  "answer_phase_elapsed_seconds": time.monotonic() - started}
+        write_once(outdir / "answer-phase-terminal.json", failed)
+        raise
+    elapsed = time.monotonic() - started
+    answer_receipt = helper_out / "answer-run.json"
+    if answer_receipt.is_symlink() or not answer_receipt.is_file():
+        raise ValueError("exp078-answer-helper-receipt-missing")
+    helper_raw = answer_receipt.read_bytes()
+    if not offline:
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    status = "complete" if helper_result.get("status") == "complete" and elapsed <= 28_800 else "incomplete"
+    result = {"schema": "exp078-answer-phase/1", "stage": "development",
+              "status": status, "synthetic": offline,
+              "quality_credit": False, "adoption_eligible": False,
+              "stage_clock_sha256": clock_sha256,
+              "owned_api_calls": helper_result.get("owned_api_calls"),
+              "reported_usage": helper_result.get("reported_usage"),
+              "returned_models": helper_result.get("returned_models"),
+              "immutable_model_revision": helper_result.get("immutable_model_revision"),
+              "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+              "answer_phase_elapsed_seconds": elapsed,
+              "helper_wire_receipt_sha256": sha(helper_raw),
+              "helper_wire_receipt_path": "portable-answer-wire/answer-run.json"}
+    ref = write_once(outdir / "answer-phase.json", result)
+    result["receipt"] = ref
+    return result

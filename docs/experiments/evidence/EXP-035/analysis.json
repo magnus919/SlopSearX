@@ -1,0 +1,67 @@
+{
+  "real_query_count": 2,
+  "constructed_stress_cards": 80,
+  "calls": 21,
+  "valid_calls": 21,
+  "input_tokens": 304723,
+  "output_tokens": 11874,
+  "max_provider_ms": 630.2009399514645,
+  "drifts": {
+    "full-evaluation": {
+      "batches40": {
+        "max_score_drift": 0.15999999999999998,
+        "top10_overlap": 1.0
+      },
+      "rotated_batches": {
+        "max_score_drift": 0.1299999999999999,
+        "top10_overlap": 1.0
+      },
+      "whole_repeat": {
+        "max_score_drift": 0.16999999999999993,
+        "top10_overlap": 1.0
+      }
+    },
+    "full-research": {
+      "batches40": {
+        "max_score_drift": 0.41000000000000014,
+        "top10_overlap": 1.0
+      },
+      "rotated_batches": {
+        "max_score_drift": 0.41000000000000014,
+        "top10_overlap": 1.0
+      },
+      "whole_repeat": {
+        "max_score_drift": 0.4500000000000002,
+        "top10_overlap": 0.9
+      }
+    },
+    "constructed80": {
+      "batches40": {
+        "max_score_drift": 0.16999999999999993,
+        "top10_overlap": 0.9
+      },
+      "rotated_batches": {
+        "max_score_drift": 0.23000000000000043,
+        "top10_overlap": 0.9
+      },
+      "whole_repeat": {
+        "max_score_drift": 0.22000000000000064,
+        "top10_overlap": 0.9
+      }
+    }
+  },
+  "exposed_quality_guardrail": {
+    "full-evaluation": {
+      "incumbent": 1.0,
+      "candidate": 1.0,
+      "delta": 0.0
+    },
+    "full-research": {
+      "incumbent": 0.918402774836493,
+      "candidate": 0.8686882228144656,
+      "delta": -0.04971455202202746
+    }
+  },
+  "minimum_quality_delta_tolerance": -0.05,
+  "decision": "mechanism guardrails supported on exposed real pools and constructed80; quality adoption and defaults await fresh held-out evaluation"
+}

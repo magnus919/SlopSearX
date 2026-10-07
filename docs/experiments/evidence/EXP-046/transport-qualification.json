@@ -1,0 +1,68 @@
+{
+  "schema": "exp046-private-transport-qualification/1",
+  "status": "passed",
+  "source_sha256": "c8b9a16e6256cad22d06df8d9b123b370718cb0c9a4fe12d6e401ef649c31cd0",
+  "cases": [
+    {
+      "case": "valid",
+      "passed": true
+    },
+    {
+      "case": "duplicate",
+      "passed": true
+    },
+    {
+      "case": "nonfinite",
+      "passed": true
+    },
+    {
+      "case": "timing_collision",
+      "passed": true
+    },
+    {
+      "case": "overflow",
+      "passed": true
+    },
+    {
+      "case": "timeout",
+      "passed": true
+    },
+    {
+      "case": "http_redaction",
+      "passed": true
+    },
+    {
+      "case": "zero_deadline",
+      "passed": true
+    },
+    {
+      "case": "boolean_deadline",
+      "passed": true
+    },
+    {
+      "case": "large_deadline",
+      "passed": true
+    },
+    {
+      "case": "invalid_base64",
+      "passed": true
+    },
+    {
+      "case": "duplicate_envelope",
+      "passed": true
+    },
+    {
+      "case": "oversized_decoded",
+      "passed": true
+    },
+    {
+      "case": "non_object_body",
+      "passed": true
+    }
+  ],
+  "network_calls": 0,
+  "credential_files_read": 0,
+  "exact_request_bytes": true,
+  "deadline_ms": 375,
+  "timer_cancelled": true
+}

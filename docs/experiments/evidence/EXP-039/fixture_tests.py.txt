@@ -1,0 +1,201 @@
+"""Offline-only synthetic checks for the EXP-039 inert replay runner."""
+from __future__ import annotations
+
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import unittest
+
+HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE
+LOADER = importlib.machinery.SourceFileLoader("exp039_replay", str(HERE / "replay.py.txt"))
+SPEC = importlib.util.spec_from_loader(LOADER.name, LOADER)
+replay = importlib.util.module_from_spec(SPEC)
+LOADER.exec_module(replay)
+
+class Exp039ReplayFixtures(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.frozen, _, _ = replay.verify_exp038_source(ROOT)
+        cls.cards, cls.facets, cls.contexts = replay.verify_annotation_projection(ROOT, cls.frozen)
+        cls.baseline, cls.selection = replay.load_contracts(ROOT)
+
+    def test_all_inputs_are_pinned_and_complete_development_corpus(self):
+        hashes = replay.verify_registered_inputs(ROOT)
+        self.assertEqual(len(hashes), 11)
+        self.assertEqual(set(self.frozen["queries"]), set(replay.ALL_QUERIES))
+        self.assertEqual(sum(len(self.frozen["queries"][q]["candidates"]) for q in replay.ALL_QUERIES), 295)
+        self.assertEqual(max(len(self.frozen["queries"][q]["candidates"]) for q in replay.ALL_QUERIES), 38)
+
+    def test_arm_a_matches_saved_w0_body_exactly(self):
+        q1 = self.frozen["queries"]["q1"]
+        current = replay.make_body("A", q1["query"], q1["candidates"], self.baseline, self.selection)
+        saved_path = replay.sibling_evidence(ROOT, "EXP-038") / "prepared" / "q1-w0.json"
+        saved = replay.strict_json_loads(saved_path.read_bytes())
+        self.assertEqual(replay.canonical_bytes(current), replay.canonical_bytes(saved))
+
+    def test_four_arms_change_only_task_text_and_rubric(self):
+        q1 = self.frozen["queries"]["q1"]
+        bodies = {
+            arm: replay.make_body(
+                arm,
+                self.contexts["q1"]["purpose" if arm in ("B", "D") else "keyword"],
+                q1["candidates"], self.baseline, self.selection,
+            )
+            for arm in replay.ARMS
+        }
+        expected_ids = [c["id"] for c in q1["candidates"]]
+        for arm, body in bodies.items():
+            self.assertEqual(body["state"]["candidates"], q1["candidates"])
+            self.assertEqual(list(body["questions"]), expected_ids)
+            self.assertEqual(body["model"], replay.MODEL)
+        self.assertEqual(bodies["A"]["state"]["query"], bodies["C"]["state"]["query"])
+        self.assertEqual(bodies["B"]["state"]["query"], bodies["D"]["state"]["query"])
+        self.assertEqual(bodies["A"]["questions"]["c0"]["criteria"], bodies["B"]["questions"]["c0"]["criteria"])
+        self.assertEqual(bodies["C"]["questions"]["c0"]["criteria"], bodies["D"]["questions"]["c0"]["criteria"])
+        self.assertNotEqual(bodies["A"]["questions"]["c0"]["criteria"], bodies["C"]["questions"]["c0"]["criteria"])
+        for arm in ("C", "D"):
+            for cid, question in bodies[arm]["questions"].items():
+                self.assertIn(cid, question["instructions"])
+                self.assertIn("source to read", question["instructions"])
+                self.assertIn("query", question["instructions"])
+
+    def test_specs_are_reproducible_and_cover_registered_repeat_plan(self):
+        first = replay.expected_specs(self.frozen, self.contexts)
+        second = replay.expected_specs(self.frozen, self.contexts)
+        self.assertEqual([spec["id"] for spec in first], [spec["id"] for spec in second])
+        self.assertEqual(len(first), 40)
+        counts = {arm: sum(spec["arm"] == arm for spec in first) for arm in replay.ARMS}
+        self.assertEqual(counts, {"A": 11, "B": 9, "C": 9, "D": 11})
+        by_id = {spec["id"]: spec for spec in first}
+        for original, repeat in replay.REPEAT_ORIGINALS:
+            self.assertEqual(by_id[original]["task"], by_id[repeat]["task"])
+            self.assertEqual(by_id[original]["candidates"], by_id[repeat]["candidates"])
+            self.assertEqual(by_id[repeat]["repeat_of"], original)
+
+    def test_finite_fractional_weighted_scores_and_documented_metadata(self):
+        req = {"candidate_ids": ["c0"]}
+        answer = {
+            "model": replay.MODEL,
+            "answers": {
+                "c0": {
+                    "type": "score", "score": 2.695, "confidence": .7,
+                    "legend": {str(i): str(i) for i in range(10)},
+                    "probabilities": {str(i): .01 for i in range(10)},
+                }
+            },
+        }
+        scores, errors = replay.validate_response(answer, req)
+        self.assertEqual(scores, {"c0": 2.695})
+        self.assertEqual(errors, [])
+        # Rounded probability mass is deliberately not used to reject a valid score.
+
+    def test_invalid_ids_types_scores_and_probability_shapes_fail(self):
+        req = {"candidate_ids": ["c0"]}
+        bad_answers = [
+            {"c0": {"type": "score", "score": True}},
+            {"c0": {"type": "score", "score": float("nan")}},
+            {"c0": {"type": "score", "score": float("inf")}},
+            {"c0": {"type": "score", "score": -0.01}},
+            {"c0": {"type": "score", "score": 9.01}},
+            {"c0": {"type": "choice", "score": 3}},
+            {"c0": {"type": "score", "score": 3, "extra": "bad"}},
+            {"c0": {"type": "score", "score": 3, "probabilities": {"0": 1}}},
+            {"c0": {"type": "score", "score": 3}, "c1": {"type": "score", "score": 1}},
+        ]
+        for answers in bad_answers:
+            with self.subTest(answers=answers):
+                _, errors = replay.validate_response({"model": replay.MODEL, "answers": answers}, req)
+                self.assertTrue(errors)
+
+    def test_unknown_usage_is_terminal_and_never_retried_with_local_transport(self):
+        # self_test invokes run() only with a Python child process that reads stdin
+        # and returns a synthetic response; it never uses network or a provider.
+        replay.offline_unknown_usage_run(ROOT)
+
+    def test_bounded_transport_kills_descendant_holding_stdout(self):
+        replay.descendant_cleanup_fixture()
+
+    def test_history_rejects_uncertain_or_terminal_attempts(self):
+        with replay.TemporaryRoot() as temp:
+            manifest = {"requests": [{"id": "q1-a", "request_sha256": "h"}]}
+            (temp / "attempts.jsonl").write_bytes(
+                replay.canonical_bytes({"event": "attempt_started", "request_id": "q1-a", "request_sha256": "h", "reference_hashes": {"a": "x"}}) + b"\n"
+            )
+            with self.assertRaises(ValueError):
+                replay.history_state(temp, manifest, {"a": "x"})
+        with replay.TemporaryRoot() as temp:
+            manifest = {"requests": [{"id": "q1-a", "request_sha256": "h"}]}
+            (temp / "attempts.jsonl").write_bytes(
+                replay.canonical_bytes({"event": "runner_stopped", "request_id": "q1-a"}) + b"\n"
+            )
+            with self.assertRaises(ValueError):
+                replay.history_state(temp, manifest, None)
+
+    def test_strict_parser_rejects_duplicates_nan_and_unknown_envelope(self):
+        for raw in (b'{"k":1,"k":2}', b'{"score":NaN}', b'{"score":1e999}'):
+            with self.subTest(raw=raw):
+                with self.assertRaises(ValueError):
+                    replay.strict_json_loads(raw)
+        valid = {"model": replay.MODEL, "answers": {}, "usage": {"input_tokens": 1, "output_tokens": 2}, "_elapsed_ms": 10.0}
+        self.assertEqual(replay.parse_transport_result(replay.canonical_bytes(valid)), valid)
+        with self.assertRaises(ValueError):
+            replay.parse_transport_result(replay.canonical_bytes(dict(valid, extra=True)))
+
+    def test_four_hour_window_is_durable_and_preflight_is_estimated(self):
+        start = replay.dt.datetime(2026, 10, 4, 0, 0, tzinfo=replay.dt.timezone.utc)
+        now = replay.dt.datetime(2026, 10, 4, 5, 0, tzinfo=replay.dt.timezone.utc)
+        self.assertEqual(replay.run_window_remaining(start.isoformat(), now), -3600.0)
+        with self.assertRaises(ValueError):
+            replay.parse_run_start_time(None)
+        input_reserve, output_reserve = replay.preflight_reserve(b"x" * 300, 40, 0)
+        self.assertEqual(input_reserve, 10100)
+        self.assertEqual(output_reserve, 2500)
+        self.assertGreater(replay.preflight_reserve(b"x" * 300, 1, 99_000)[1], 0)
+
+    def test_bootstrap_is_reproducible_and_uses_query_units(self):
+        deltas = {"q1": .04, "q2": -.02, "q3": .01, "q4": .03, "q5": -.01, "q6": .02, "q7": .0, "q8": .05}
+        left = replay.paired_bootstrap(deltas, draws=1000)
+        right = replay.paired_bootstrap(deltas, draws=1000)
+        self.assertEqual(left, right)
+        self.assertEqual(left["query_units"], 8)
+        self.assertEqual(left["seed"], 91939)
+
+    def test_annotation_diagnostics_publish_disagreements_uncertainty_and_rank_shifts(self):
+        aliases = {
+            f"q1-r{i:02d}": {"query_id": "q1", "candidate_id": f"c{i}"}
+            for i in range(3)
+        }
+        def row(lead, visible, facets, uncertain=False):
+            return {"lead": lead, "visible": visible, "facets": facets,
+                    "uncertain": uncertain, "rationale": "fixture"}
+        refs = {
+            "A": {
+                "q1-r00": row(3, 2, ["coordination"], True),
+                "q1-r01": row(1, 0, [], False),
+                "q1-r02": row(2, 2, ["conflict_resolution"], False),
+            },
+            "B": {
+                "q1-r00": row(2, 2, ["coordination", "conflict_resolution"], False),
+                "q1-r01": row(1, 1, [], True),
+                "q1-r02": row(2, 2, ["conflict_resolution"], False),
+            },
+        }
+        ranks = {qid: {"A": ["c0", "c1", "c2"], "D": ["c2", "c0", "c1"]}
+                 for qid in replay.ALL_QUERIES}
+        result = replay.annotation_diagnostics(refs, aliases, ranks)
+        self.assertEqual(result["reviewer_disagreements"]["count"], 2)
+        self.assertEqual(result["reviewer_disagreements"]["by_query"]["q1"], 2)
+        self.assertEqual(result["reviewer_disagreements"]["cards"][0]["different_axes"], ["lead", "facets"])
+        self.assertEqual(result["reviewer_uncertainty_counts"]["A"]["total"], 1)
+        self.assertEqual(result["reviewer_uncertainty_counts"]["B"]["by_query"]["q1"], 1)
+        self.assertEqual(len(result["published_references_by_alias"]["A"]), 3)
+        changes = {row["candidate_id"]: row for row in result["paired_A_D_rank_changes_by_query"]["q1"]}
+        self.assertEqual(changes["c0"]["rank_shift_D_minus_A"], 1)
+        self.assertEqual(changes["c2"]["rank_shift_D_minus_A"], -2)
+        self.assertEqual(changes["c0"]["fixed_reference_labels"]["A"], {"lead": 3, "visible": 2})
+        self.assertIn("distinct lead and visible axes", result["definition"])
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

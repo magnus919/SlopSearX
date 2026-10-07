@@ -1,0 +1,59 @@
+from pathlib import Path
+import importlib.machinery,importlib.util,json,os,subprocess,sys,tempfile,unittest
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    l=importlib.machinery.SourceFileLoader(name,str(path));s=importlib.util.spec_from_loader(name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+
+FIX=load("exp061_cli_fixture",HERE.parent / "EXP-060" / "evaluate-tests.py.txt")
+
+class Tests(unittest.TestCase):
+    def inputs(self,root):
+        a,r=FIX.inputs();ap=root / "acquisition.json";rp=root / "references.json"
+        ap.write_text(json.dumps(a));rp.write_text(json.dumps(r));return ap,rp
+
+    def test_actual_offline_cli_records_shared_baseline_once(self):
+        with tempfile.TemporaryDirectory()as tmp:
+            root=Path(tmp);a,r=self.inputs(root);out=root / "output"
+            command=[sys.executable,str(HERE / "normal-runner.py.txt"),"--acquisition",str(a),"--references",str(r),"--outdir",str(out)]
+            p=subprocess.run(command,capture_output=True,timeout=90)
+            self.assertEqual(p.returncode,0,p.stderr.decode())
+            result=json.loads((out / "run.json").read_bytes())
+            self.assertEqual(result["status"],"complete");self.assertTrue(result["synthetic"])
+            self.assertEqual(len(result["operations"]),21)
+            self.assertEqual(sum(len(op["w0_attempts"]) for op in result["operations"]),21)
+            self.assertEqual(result["budget"]["attempts"],127)
+            receipts=[json.loads(path.read_bytes()) for path in (out / "receipts").glob("*.json")]
+            self.assertEqual(len(receipts),127)
+            adapter=load("exp061_cli_analysis",HERE / "analysis-adapter.py.txt")
+            views=adapter.arm_views(result)
+            for view in views.values():
+                analysis=adapter.analyze_arm(view)
+                self.assertTrue(analysis["quality_analysis_performed"])
+                self.assertTrue(analysis["gates"]["complete_membership"])
+                self.assertFalse(analysis["adoption_eligible"])
+            self.assertTrue(all(row["stdout_complete"] and row["status"]=="returned" for row in receipts))
+            again=subprocess.run(command,capture_output=True,timeout=10)
+            self.assertEqual(again.returncode,2)
+            self.assertNotIn(tmp.encode(),again.stderr)
+
+    def test_schedule_drift_is_rejected_before_transport(self):
+        runner=load("exp061_schedule_guard",HERE / "normal-runner.py.txt")
+        acquisition,_=FIX.inputs()
+        plan=runner.OLD.E.P.operations({qid:row["cards"] for qid,row in acquisition["pools"].items()})
+        path=HERE / "protocol.json"
+        if not path.exists():path=HERE / "protocol-draft.json"
+        protocol=json.loads(path.read_bytes())
+        runner.verify_schedule(plan,protocol)
+        protocol["ordered_case_plan"].reverse()
+        with self.assertRaisesRegex(ValueError,"registered-schedule-mismatch"):runner.verify_schedule(plan,protocol)
+
+    def test_unqualified_live_cli_stops_before_output_or_dispatch(self):
+        with tempfile.TemporaryDirectory()as tmp:
+            root=Path(tmp);a,r=self.inputs(root);out=root / "never-created"
+            command=[sys.executable,str(HERE / "normal-runner.py.txt"),"--mode","live","--input-revision","536d38c3a270bcefd2b56690ed37139e031affa1","--acquisition",str(a),"--references",str(r),"--outdir",str(out)]
+            p=subprocess.run(command,capture_output=True,timeout=10,env={**os.environ,"TYPESAFE_API_KEY":"offline-never-sent"})
+            self.assertEqual(p.returncode,2);self.assertFalse(out.exists())
+            self.assertNotIn(b"offline-never-sent",p.stderr);self.assertNotIn(tmp.encode(),p.stderr)
+
+if __name__=="__main__":unittest.main()

@@ -1,0 +1,27 @@
+## Axis A: reading-lead priority (primary)
+
+How high a priority is this visible result to select as a source to read for the stated purpose?
+
+- **0 — No lead:** No plausible reason to read for this task; unrelated or plainly wrong requested target.
+- **1 — Low-priority lead:** Incidental/broad topic overlap or generic background with little task-specific reading value.
+- **2 — Useful partial lead:** Plausibly useful for at least one material facet or as relevant background, but partial, indirect, or secondary.
+- **3 — High-priority lead:** Strong direct source to read for a central question/facet or requested source type, supported by visible card details.
+
+Bibliographic-only or sparse cards may receive 2 or 3 if the visible title, URL, and/or snippet make a direct reading lead clear. A citation by itself is not automatically high priority. Judge the selection value shown by the card, not the unseen document's contents.
+
+## Axis B: substantive information visible on card (diagnostic)
+
+How much task-relevant substantive information is visible in this card itself?
+
+- **0 — None:** No relevant information visible.
+- **1 — Topic/source signal:** Topic, title, citation, or resource signal only; no substantive task-relevant detail.
+- **2 — Partial detail:** Some relevant substantive details are visible, but central facets remain largely unanswered.
+- **3 — Direct detail:** Substantial, specific information addressing at least one central task facet is visible.
+
+Axis B does not judge whether visible claims are true, reliable, or sufficient to answer the task. A card can have high Axis A and low Axis B when it is a good lead whose snippet contains little detail.
+
+## Facets and rationales for this prospective cohort
+
+Tag only listed facet IDs visibly indicated by the title, URL or snippet; retain uncertainty when indication is weak. Do not invent facet IDs or infer page contents. Add a short rationale for both axes, grounded in exact same-card quoted anchors. Materially contradictory sources can be useful reading leads; do not penalize them merely for disagreeing with a premise. Bibliographic-only cards may be high-priority leads when the visible title/source makes direct relevance clear, while visible-detail grades remain low. Do not infer truth or authority from metadata.
+
+Each output record has exactly card_sha256, lead, visible, facets, uncertain, rationale, anchors, facet_anchors. Copy the supplied fingerprint; anchor fields are title/url/snippet, quote is an exact nonempty substring at most 256 UTF8 bytes. Every row has an anchor, and every tagged facet has its own list of same-card anchors. Fingerprints/quotes bind source association; independent semantic review is still required. No external browsing or model calls, no prior references, scores, rankings or another assessor's output. Assess each record individually; no blanket defaults or rank/engine-based grades.

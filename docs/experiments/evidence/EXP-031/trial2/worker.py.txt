@@ -1,0 +1,44 @@
+import asyncio,importlib.util,inspect,json,os,sys
+from pathlib import Path
+for key in list(os.environ):
+ if key.startswith('MCP_'):del os.environ[key]
+os.environ['MCP_GRANT_TARGETED']='1'
+from slopsearx.mcp import tools as t,harness as h
+s=importlib.util.spec_from_file_location('transport','tests/test_mcp_harness.py');helpers=importlib.util.module_from_spec(s);s.loader.exec_module(helpers)
+out=Path(sys.argv[1]);tool=sys.argv[2];consumes=sys.argv[3]=='1';rep=int(sys.argv[4]);out.mkdir(parents=True,exist_ok=True)
+base=t._filter_warnings;source=inspect.getsource(base);assert source.count('not consumed by any adapter')==2
+ns=dict(t.__dict__);exec(source.replace('not consumed by any adapter','not enforced by selected adapters'),ns);candidate=ns['_filter_warnings']
+orig=h.build_fake_engines;observations=[]
+stores=[]
+store_init=h.InMemoryStore.__init__
+def init_store(self):
+ store_init(self);stores.append(self)
+h.InMemoryStore.__init__=init_store
+def build(specs):
+ engines=orig(specs)
+ for engine in engines.values():
+  engine.supported_filters={'language':True,'time_range':True} if consumes else {}
+  engine.enforced_filters={}
+  original=engine.search
+  async def search(query,params=None,_engine=engine,_original=original):
+   if consumes:
+    _engine._content='accepted language='+str((params or {}).get('language'))+' time_range='+str((params or {}).get('time_range'))+' '
+   observations.append({'engine':_engine.name,'consumes':consumes,'params':params})
+   return await _original(query,params)
+  engine.search=search
+ return engines
+h.build_fake_engines=build
+async def main():
+ app=h.make_fixture_http_app([h.FakeEngineSpec('wikipedia',count=1),h.FakeEngineSpec('duckduckgo',count=1)])
+ try:
+  async with helpers._serve(app) as url:
+   async with helpers._session(url) as (session,_):
+    await session.initialize()
+    for arm in (['baseline','candidate'] if rep==1 else ['candidate','baseline']):
+     for store in stores:store._data.clear()
+     t._filter_warnings=base if arm=='baseline' else candidate
+     r=await session.call_tool(tool,{'query':'fixture','engines':['wikipedia','duckduckgo'],'language':'en','time_range':'month','freshness':'prefer_fresh'})
+     data=helpers._payload(r);(out/f'{arm}.json').write_text(json.dumps(data,indent=2,sort_keys=True)+'\n');assert not r.isError and 'error' not in data,data
+ finally:t._filter_warnings=base
+ (out/'dispatch.json').write_text(json.dumps(observations,indent=2)+'\n')
+asyncio.run(main())

@@ -1,0 +1,315 @@
+"""Offline EXP-088 phase binding tests; no HTTP clients are created."""
+from __future__ import annotations
+import importlib.machinery
+import importlib.util
+import json
+import asyncio
+import sys
+import tempfile
+import unittest
+import hashlib
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp088_phase_binding_tests", str(HERE / "phase-bindings.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+BINDINGS = importlib.util.module_from_spec(spec)
+sys.modules[loader.name] = BINDINGS
+loader.exec_module(BINDINGS)
+EXP077 = HERE.parent / "EXP-077"
+PACKETS = importlib.machinery.SourceFileLoader(
+    "exp088_actual_frozen_packets", str(EXP077 / "model-packets.py.txt")).load_module()
+ANSWER_RUNNER = importlib.machinery.SourceFileLoader(
+    "exp088_actual_frozen_answer_runner", str(EXP077 / "answer-runner.py.txt")).load_module()
+SOURCE_ADAPTER = importlib.machinery.SourceFileLoader(
+    "exp088_actual_source_closer", str(EXP077 / "source-assessment-adapter.py.txt")).load_module()
+
+
+class FakeAdmission:
+    def __init__(self): self.claimed = []; self.required = []
+    def acquire_phase(self, stage, phase, root, clock):
+        self.claimed.append((phase, Path(root), clock)); return object()
+    def require_phase(self, permit, clock, root): self.required.append((Path(root), clock))
+
+
+class FakePreparer:
+    def __init__(self): self.kwargs = None
+    def prepare(self, **kwargs): self.kwargs = kwargs; kwargs["guard"](); return {"ready": True}
+
+
+class PhaseBindingTests(unittest.TestCase):
+    def test_preparation_claim_is_stage_bound_and_uses_frontend_output_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stage"; root.mkdir()
+            admission = FakeAdmission(); prep = FakePreparer()
+            state = SimpleNamespace(outdir=root, bundle_root=Path(tmp)/"bundle", admission=admission,
+                                    permit=object(), clock=({}, b"clock", "a"*64), effective_acquisition={"pools":{}})
+            with patch.object(BINDINGS, "_load", return_value=prep):
+                result = BINDINGS.prepare_assessment_inputs(state=state, cases=[])
+            self.assertEqual(result, {"ready": True})
+            self.assertEqual(admission.claimed[0][0], "assessment-preparation")
+            self.assertEqual(prep.kwargs["output_root"], (root / "assessment-inputs").resolve())
+            self.assertEqual(prep.kwargs["source_snapshot_root"], state.bundle_root / "exp084")
+            self.assertEqual(len(admission.required), 2)
+
+    def test_selector_wrapper_forwards_fresh_exp088_clock_and_admission_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stage"; root.mkdir()
+            out = root / "selector"
+            admission = FakeAdmission()
+            state = SimpleNamespace(effective_acquisition={"schema":"fixture"}, outdir=root,
+                clock=({}, b"clock", "a"*64), permit="opaque-new-permit", admission=admission,
+                integrity={"study_id":"EXP-088"})
+            calls = {}
+            class Selector:
+                async def run_selector(self, *args, **kwargs):
+                    calls["args"], calls["kwargs"] = args, kwargs
+                    return {"status":"fixture_only"}
+            with patch.object(BINDINGS, "_load", return_value=Selector()):
+                result = asyncio.run(BINDINGS.run_selector(state=state, cases=[{"id":"d1"}],
+                    outdir=out, offline=True, transport_factory="fixture-transport"))
+            self.assertEqual(result["status"], "fixture_only")
+            self.assertEqual(calls["args"][0], state.effective_acquisition)
+            self.assertEqual(calls["args"][2], b"clock")
+            self.assertIsNone(calls["kwargs"]["stage_permit"])
+            self.assertIsNone(calls["kwargs"]["admission_module"])
+            self.assertEqual(calls["kwargs"]["transport_factory"], "fixture-transport")
+            self.assertEqual(calls["kwargs"]["source_integrity"], state.integrity)
+
+    def test_reference_phases_are_explicit_and_reusable_only_inside_stage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stage"; root.mkdir(); child = root / "card-reference"; child.mkdir()
+            admission = FakeAdmission()
+            permit, require = BINDINGS.claim_assessment_phase(admission=admission, stage_permit=object(),
+                phase="card-reference", stage_outdir=root, phase_outdir=child, clock_bytes=b"clock")
+            require()
+            self.assertIsNotNone(permit)
+            self.assertEqual(admission.claimed[0][0], "card-reference")
+            self.assertEqual(len(admission.required), 2)
+            with self.assertRaisesRegex(ValueError, "not-registered"):
+                BINDINGS.claim_assessment_phase(admission=admission, stage_permit=object(),
+                    phase="capture", stage_outdir=root, phase_outdir=child, clock_bytes=b"clock")
+
+    def test_actual_frozen_runner_readiness_plaintext_and_vendor_receipts(self):
+        """Exercise the pinned runner's real readiness request through the alias transport."""
+        cohorts = json.loads((HERE / "cohorts.json").read_text(encoding="utf-8"))
+        cases = [row for row in cohorts["cohorts"]["development"] if row["kind"] == "research"]
+        assignments = []
+        original_ids = {}
+        for case in cases:
+            source_id = "u" + hashlib.sha256(case["id"].encode("utf-8")).hexdigest()
+            projection_by_arm = {}
+            for arm in ("w0", "candidate"):
+                projection_by_arm[arm] = PACKETS.answer_projection([f"{case['id']}-card"], [{
+                    "card_id": f"{case['id']}-card", "state": "success", "source_id": source_id,
+                    "context": f"Captured passage for {case['id']}: exact Ω evidence."}], arm_id=arm)
+            original_ids[case["id"]] = (source_id,
+                projection_by_arm["w0"]["delivered_sources"][0]["evidence_ids"][0])
+            for arm in ("w0", "candidate"):
+                projection = projection_by_arm[arm]
+                assignments.append(PACKETS.answerer_assignment(case, projection,
+                                                                case["critical_checks"]))
+        original_assignment_bytes = BINDINGS.canonical(assignments)
+
+        seen = []
+        def fixture_response(request):
+            seen.append(request)
+            sent = json.loads(request.content)
+            user = sent["messages"][1]["content"]
+            if user == "This is a synthetic endpoint readiness check, not study evidence.":
+                content = '{"ready":true}'
+            else:
+                task = json.loads(user)
+                self.assertTrue(task["delivered_sources"])
+                source = task["delivered_sources"][0]
+                self.assertEqual(set(source), {"source_id", "passages"})
+                self.assertEqual(source["source_id"], original_ids[task["task_id"]][0])
+                alias = source["passages"][0]["evidence_id"]
+                self.assertLess(len(alias), 64)
+                content = json.dumps({"facets": [
+                    {"facet_id": row["id"], "conclusion": "Evidence addresses this check.",
+                     "claims": ([{"text": "The delivered passage states the registered fact.",
+                                  "evidence_ids": [alias]}] if index == 0 else [])}
+                    for index, row in enumerate(task["critical_checks"])]}, separators=(",", ":"))
+            return httpx.Response(200, json={"model": "fixture-free", "usage": {"prompt_tokens": 1,
+                "completion_tokens": 1}, "choices": [{"message": {"content": content}}]})
+
+        stage_clock = {"stage_id": "0fcb33d3-b082-4f38-93bd-47f9e55a60b9",
+            "stage_started_utc": datetime.now(timezone.utc).isoformat(),
+            "stage_deadline_utc": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "stage_clock_digest": "c" * 64}
+        schema_path = EXP077 / "answerer.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        prompt = BINDINGS.labelled_prompt("answerer")
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "answer-output"
+            result = BINDINGS.run_answers(assignments=assignments, cases=cases, prompt=prompt,
+                schema=schema, stage_outdir=Path(temp), outdir=output, admission=None,
+                stage_permit=None, clock=stage_clock, clock_bytes=BINDINGS.canonical(stage_clock),
+                clock_sha256=hashlib.sha256(BINDINGS.canonical(stage_clock)).hexdigest(),
+                source_id_universe_by_task={task_id: [row[0]]
+                                            for task_id, row in original_ids.items()},
+                offline=True, offline_transport=httpx.MockTransport(fixture_response))
+            self.assertEqual(result["owned_api_calls"], 18)
+            self.assertEqual(result["status"], "complete")
+            self.assertEqual(len(seen), 18)
+            self.assertEqual(BINDINGS.canonical(assignments), original_assignment_bytes)
+            first_two = [json.loads(request.content)["messages"][1]["content"] for request in seen[:2]]
+            self.assertEqual(first_two, [
+                "This is a synthetic endpoint readiness check, not study evidence."] * 2)
+            vendor = result["vendor_response_receipts"]
+            self.assertEqual([row["decode_status"] for row in vendor[:2]],
+                             ["not_applicable", "not_applicable"])
+            for index, row in enumerate(vendor):
+                raw_path = output / "vendor-responses" / row["raw_body_path"]
+                portable_path = output / "vendor-responses" / row["portable_body_path"]
+                self.assertEqual(hashlib.sha256(raw_path.read_bytes()).hexdigest(),
+                                 row["raw_body_file_sha256"])
+                self.assertEqual(hashlib.sha256(portable_path.read_bytes()).hexdigest(),
+                                 row["portable_response_sha256"])
+                if index >= 2:
+                    task_id = assignments[index - 2]["model_input"]["task"]["task_id"]
+                    original_eid = original_ids[task_id][1]
+                    raw_text = raw_path.read_text(encoding="utf-8")
+                    portable_text = portable_path.read_text(encoding="utf-8")
+                    self.assertNotIn(original_eid, raw_text)
+                    self.assertIn(original_eid, portable_text)
+                    saved_answer = json.loads((output / "portable-answer-wire" /
+                        f"{task_id}-{assignments[index - 2]['private_binding']['arm_id']}.json").read_text())
+                    self.assertEqual(saved_answer["facets"][0]["claims"][0]["evidence_ids"],
+                                     [original_eid])
+
+    def test_decoded_vendor_response_has_independent_two_megabyte_cap(self):
+        case = next(row for row in json.loads((HERE / "cohorts.json").read_text())[
+                    "cohorts"]["development"] if row["kind"] == "research")
+        source_id = "u" + "a" * 64
+        projection = PACKETS.answer_projection(["card-1"], [{"card_id": "card-1",
+            "state": "success", "source_id": source_id, "context": "Evidence Ω " * 80}],
+            arm_id="w0")
+        assignment = PACKETS.answerer_assignment(case, projection, case["critical_checks"])
+        labels = BINDINGS._reference_labels()
+        bundle = labels.encode_answerer_input(case["id"], assignment["model_input"],
+            assignment["private_binding"]["catalog"], [source_id])
+        alias = bundle["label_binding"]["labels"][0]["label"]
+        facet_id = case["critical_checks"][0]["id"]
+
+        def response_bytes(length):
+            content = json.dumps({"facets": [{"facet_id": facet_id,
+                "conclusion": "x" * length,
+                "claims": [{"text": "claim", "evidence_ids": [alias]}]}]},
+                ensure_ascii=False, separators=(",", ":"))
+            return json.dumps({"model": "fixture-free", "usage": {}, "choices": [
+                {"message": {"content": content}}]}, ensure_ascii=False,
+                separators=(",", ":")).encode("utf-8")
+
+        low, high, length = 0, 2_000_000, 0
+        while low <= high:
+            middle = (low + high) // 2
+            if len(response_bytes(middle)) <= 1_999_999:
+                length, low = middle, middle + 1
+            else:
+                high = middle - 1
+        raw_body = response_bytes(length)
+        raw_envelope = json.loads(raw_body)
+        decoded = labels.decode_answerer_response(bundle,
+            json.loads(raw_envelope["choices"][0]["message"]["content"]))
+        raw_envelope["choices"][0]["message"]["content"] = json.dumps(
+            decoded, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        expanded = json.dumps(raw_envelope, ensure_ascii=False, sort_keys=True,
+                               separators=(",", ":")).encode("utf-8")
+        self.assertLessEqual(len(raw_body), 2_000_000)
+        self.assertGreater(len(expanded), 2_000_000)
+
+        model_input = BINDINGS._LabelledAnswerTransport._answer_wire_input(assignment)
+        request_body = json.dumps({"model": "free", "messages": [
+            {"role": "system", "content": "fixture"},
+            {"role": "user", "content": json.dumps(model_input, ensure_ascii=False,
+                sort_keys=True)}]}, separators=(",", ":")).encode("utf-8")
+        def respond(_request):
+            return httpx.Response(200, content=raw_body,
+                                  headers={"content-type": "application/json"})
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "vendor"
+            transport = BINDINGS._LabelledAnswerTransport(httpx.MockTransport(respond),
+                assignments=[assignment], bundles={(case["id"], "w0"): bundle},
+                outdir=output, api_key="offline-secret-sentinel")
+            request = httpx.Request("POST", "https://fixture.invalid/v1/chat/completions",
+                                    content=request_body)
+            with self.assertRaisesRegex(ValueError, "portable-response-byte-cap"):
+                transport.handle_request(request)
+            receipt = json.loads((output / "response-01.json").read_text())
+            self.assertEqual(receipt["decode_status"], "portable_response_byte_cap")
+            self.assertEqual(receipt["decoded_response_bytes"], len(expanded))
+            raw_path = output / receipt["raw_body_path"]
+            self.assertLessEqual(len(raw_path.read_bytes()), 2_000_000)
+            self.assertFalse((output / "portable-response-01.body").exists())
+
+    def test_actual_compound_source_and_answer_assessor_packet_roundtrip(self):
+        """Use EXP-077 constructors and closer; labels do not alter the packet semantics."""
+        task = {"id": "d1", "kind": "research", "query": "query Ω", "purpose": "purpose Ω",
+                "critical_checks": [{"id": "d1_f1", "check": "Check the supplied evidence."}]}
+        source_id = "u" + "b" * 64
+        context = "Captured text Ω with original ordering."
+        plan = PACKETS.source_chunk_assignments("d1", [{"source_id": source_id,
+            "state": "success", "context": context}], ["d1_f1"], assessors=("R1",))
+        chunk = plan["chunks"][0]
+        source_input = PACKETS.source_model_input(task, chunk)
+        source_bundle = BINDINGS._reference_labels().encode_source_input(
+            "d1", source_input, plan["pool_catalog"], [source_id])
+        passage_aliases = [row["label"] for row in source_bundle["label_binding"]["labels"]]
+        # A structural test fixture response, not a semantic grade.
+        source_response = {"task_id": "d1", "assessor_id": "R1", "chunk_id": chunk["assignment_id"],
+            "source_assessments": [{"source_id": source_id, "facets": [{"facet_id": "d1_f1",
+                "disposition": "evidence_available", "scope_match": "match", "entailment": "supports",
+                "applicability": "applicable", "not_assessable_reason": "", "evidence_ids": passage_aliases,
+                "reason": "fixture only", "limitations": []}]}]}
+        restored_source = BINDINGS.decode_source_reference_response(source_bundle, source_response)
+        closed = SOURCE_ADAPTER.close_source_chunk_assessments(plan, [restored_source], task)
+        own_source = closed["assessors"]["R1"]["own_source_assessment"]
+
+        projection = PACKETS.answer_projection(["card-1"], [{"card_id": "card-1", "state": "success",
+            "source_id": source_id, "context": context}], arm_id="w0")
+        answer_assignment = PACKETS.answerer_assignment(task, projection, task["critical_checks"])
+        answer_ids = projection["delivered_sources"][0]["evidence_ids"]
+        answer = {"facets": [{"facet_id": "d1_f1", "conclusion": "Fixture-only conclusion.",
+            "claims": [{"text": "Preserved claim text Ω.", "evidence_ids": answer_ids}]}]}
+        frozen_claims = PACKETS.freeze_answer_claims(task["critical_checks"], answer)
+        claim_inventory = {facet: [{"claim_id": row["claim_id"], "text": row["text"]}
+                                   for row in rows]
+                           for facet, rows in frozen_claims.items()}
+        template = PACKETS.answer_assessor_template("fixture-packet", "R1", "d1", "w0",
+            ["d1_f1"], claim_inventory, [source_id], projection, answer["facets"], own_source)
+        with tempfile.TemporaryDirectory() as temp:
+            encoded = BINDINGS.encode_answer_assessor_packet(task_id="d1", packet_input=template,
+                source_catalog=plan["pool_catalog"], answer_catalog=projection["catalog"],
+                source_ids=[source_id], outdir=Path(temp) / "bindings")
+            bundle = encoded["label_binding_bundle"]
+            aliases = {row["original_id"]: row["label"] for row in bundle["label_binding"]["labels"]}
+            # One source/passage has the same identity even when it appears in both catalogs.
+            shared = set(plan["pool_catalog"]["passages"]) & set(projection["catalog"]["passages"])
+            for eid in shared:
+                matching = [row for row in bundle["label_binding"]["labels"]
+                            if row["original_id"] == eid]
+                self.assertEqual(len(matching), 1)
+                self.assertEqual(matching[0]["label"], aliases[eid])
+            original_eid = answer_ids[0]
+            alias = aliases[original_eid]
+            output = {"schema": "research-usefulness-assessment/1", "packet_id": "fixture-packet",
+                "assessor_id": "R1", "packet_kind": "answer", "tasks": [{"task_id": "d1",
+                "arms": [{"arm_id": "w0", "facet_assessments": [{"facet_id": "d1_f1",
+                    "claims": [{"claim_id": "d1_f1:C001", "text": "Preserved claim text Ω.",
+                                "evidence_ids": [alias]}],
+                    "evidence_dispositions": [{"source_id": source_id, "evidence_ids": [alias]}]}]}]}]}
+            decoded = BINDINGS.decode_answer_assessor_response(bundle, output)
+            facet = decoded["tasks"][0]["arms"][0]["facet_assessments"][0]
+            self.assertEqual(facet["claims"][0]["evidence_ids"], [original_eid])
+            self.assertEqual(facet["claims"][0]["text"], "Preserved claim text Ω.")
+            self.assertEqual(facet["evidence_dispositions"][0]["evidence_ids"], [original_eid])
+
+
+if __name__ == "__main__": unittest.main()

@@ -1,0 +1,468 @@
+FFFFFFFF......FFFF.F                                                     [100%]
+=================================== FAILURES ===================================
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://arxiv.org/html/2501.09136-https://arxiv.org/abs/2501.09136-2501.09136] _
+
+html_url = 'https://arxiv.org/html/2501.09136'
+other_url = 'https://arxiv.org/abs/2501.09136', identifier = '2501.09136'
+ranker = <slopsearx.merger.PresenceRanker object at 0x107a59610>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://arxiv.org/html/2501.09136', title='Identical title', content='Offline public fixture', engi..._fields': [], 'normalized_fields': [], 'inferred_fields': []}}}], 'selection': 'stable_source_order', 'warnings': []})])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://www.arxiv.org/html/2501.09136v2-https://export.arxiv.org/abs/2501.09136v2-2501.09136v2] _
+
+html_url = 'https://www.arxiv.org/html/2501.09136v2'
+other_url = 'https://export.arxiv.org/abs/2501.09136v2'
+identifier = '2501.09136v2'
+ranker = <slopsearx.merger.PresenceRanker object at 0x107a59610>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://www.arxiv.org/html/2501.09136v2', title='Identical title', content='Offline public fixture'...er_fields': [], 'normalized_fields': [], 'inferred_fields': []}}}], 'selection': 'explicit_revision', 'warnings': []})])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://export.arxiv.org/html/hep-th/9901001v3-https://arxiv.org/abs/hep-th/9901001v3-hep-th/9901001v3] _
+
+html_url = 'https://export.arxiv.org/html/hep-th/9901001v3'
+other_url = 'https://arxiv.org/abs/hep-th/9901001v3'
+identifier = 'hep-th/9901001v3'
+ranker = <slopsearx.merger.PresenceRanker object at 0x107a59610>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://export.arxiv.org/html/hep-th/9901001v3', title='Identical title', content='Offline public f...er_fields': [], 'normalized_fields': [], 'inferred_fields': []}}}], 'selection': 'explicit_revision', 'warnings': []})])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://arxiv.org/html/2501.09136v2-https://arxiv.org/pdf/2501.09136v2.pdf-2501.09136v2] _
+
+html_url = 'https://arxiv.org/html/2501.09136v2'
+other_url = 'https://arxiv.org/pdf/2501.09136v2.pdf'
+identifier = '2501.09136v2'
+ranker = <slopsearx.merger.PresenceRanker object at 0x107a59610>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://arxiv.org/html/2501.09136v2', title='Identical title', content='Offline public fixture', en...er_fields': [], 'normalized_fields': [], 'inferred_fields': []}}}], 'selection': 'explicit_revision', 'warnings': []})])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://arxiv.org/html/2501.09136-https://arxiv.org/abs/2501.09136-2501.09136] _
+
+html_url = 'https://arxiv.org/html/2501.09136'
+other_url = 'https://arxiv.org/abs/2501.09136', identifier = '2501.09136'
+ranker = <slopsearx.merger.ReciprocalRankFusionRanker object at 0x107a58e00>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://arxiv.org/abs/2501.09136', title='Identical title', content='Offline public fixture', engin...rovenance': {'engine': 'web', 'adapter_fields': [], 'normalized_fields': [], 'inferred_fields': []}}, work_group=None)])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://www.arxiv.org/html/2501.09136v2-https://export.arxiv.org/abs/2501.09136v2-2501.09136v2] _
+
+html_url = 'https://www.arxiv.org/html/2501.09136v2'
+other_url = 'https://export.arxiv.org/abs/2501.09136v2'
+identifier = '2501.09136v2'
+ranker = <slopsearx.merger.ReciprocalRankFusionRanker object at 0x107a58e00>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://export.arxiv.org/abs/2501.09136v2', title='Identical title', content='Offline public fixtur...rovenance': {'engine': 'web', 'adapter_fields': [], 'normalized_fields': [], 'inferred_fields': []}}, work_group=None)])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://export.arxiv.org/html/hep-th/9901001v3-https://arxiv.org/abs/hep-th/9901001v3-hep-th/9901001v3] _
+
+html_url = 'https://export.arxiv.org/html/hep-th/9901001v3'
+other_url = 'https://arxiv.org/abs/hep-th/9901001v3'
+identifier = 'hep-th/9901001v3'
+ranker = <slopsearx.merger.ReciprocalRankFusionRanker object at 0x107a58e00>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://arxiv.org/abs/hep-th/9901001v3', title='Identical title', content='Offline public fixture',...rovenance': {'engine': 'web', 'adapter_fields': [], 'normalized_fields': [], 'inferred_fields': []}}, work_group=None)])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://arxiv.org/html/2501.09136v2-https://arxiv.org/pdf/2501.09136v2.pdf-2501.09136v2] _
+
+html_url = 'https://arxiv.org/html/2501.09136v2'
+other_url = 'https://arxiv.org/pdf/2501.09136v2.pdf'
+identifier = '2501.09136v2'
+ranker = <slopsearx.merger.ReciprocalRankFusionRanker object at 0x107a58e00>
+
+    @pytest.mark.parametrize(
+        "html_url,other_url,identifier",
+        [
+            (
+                "https://arxiv.org/html/2501.09136",
+                "https://arxiv.org/abs/2501.09136",
+                "2501.09136",
+            ),
+            (
+                "https://www.arxiv.org/html/2501.09136v2",
+                "https://export.arxiv.org/abs/2501.09136v2",
+                "2501.09136v2",
+            ),
+            (
+                "https://export.arxiv.org/html/hep-th/9901001v3",
+                "https://arxiv.org/abs/hep-th/9901001v3",
+                "hep-th/9901001v3",
+            ),
+            (
+                "https://arxiv.org/html/2501.09136v2",
+                "https://arxiv.org/pdf/2501.09136v2.pdf",
+                "2501.09136v2",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_html_and_abstract_or_pdf_group_preserving_members(html_url, other_url, identifier, ranker):
+        html = publication(html_url, engine="web")
+        other = publication(other_url, engine="arxiv")
+        feeds = {"web": [html], "arxiv": [other]}
+        original = deepcopy(feeds)
+
+        grouped = group_publications(feeds, query="")
+        result = ranker.rank(grouped, "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://arxiv.org/html/2501.09136v2', title='Identical title', content='Offline public fixture', en...er_fields': [], 'normalized_fields': [], 'inferred_fields': []}}}], 'selection': 'explicit_revision', 'warnings': []})])
+
+tests/test_scholarly_arxiv_html_identity.py:58: AssertionError
+_ test_saved_2501_09136_abstract_html_pair_is_one_work_with_complete_provenance[ranker0] _
+
+ranker = <slopsearx.merger.PresenceRanker object at 0x107a5a450>
+
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_saved_2501_09136_abstract_html_pair_is_one_work_with_complete_provenance(ranker):
+        abstract = publication("https://arxiv.org/abs/2501.09136", engine="arxiv")
+        html = publication("https://arxiv.org/html/2501.09136", engine="web")
+        result = ranker.rank(group_publications({"arxiv": [abstract], "web": [html]}), "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://arxiv.org/abs/2501.09136', title='Identical title', content='Offline public fixture', engin...rovenance': {'engine': 'web', 'adapter_fields': [], 'normalized_fields': [], 'inferred_fields': []}}, work_group=None)])
+
+tests/test_scholarly_arxiv_html_identity.py:87: AssertionError
+_ test_saved_2501_09136_abstract_html_pair_is_one_work_with_complete_provenance[ranker1] _
+
+ranker = <slopsearx.merger.ReciprocalRankFusionRanker object at 0x107a59040>
+
+    @pytest.mark.parametrize("ranker", [PresenceRanker(), ReciprocalRankFusionRanker()])
+    def test_saved_2501_09136_abstract_html_pair_is_one_work_with_complete_provenance(ranker):
+        abstract = publication("https://arxiv.org/abs/2501.09136", engine="arxiv")
+        html = publication("https://arxiv.org/html/2501.09136", engine="web")
+        result = ranker.rank(group_publications({"arxiv": [abstract], "web": [html]}), "")
+
+>       assert len(result) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([SearchResult(url='https://arxiv.org/abs/2501.09136', title='Identical title', content='Offline public fixture', engin...rovenance': {'engine': 'web', 'adapter_fields': [], 'normalized_fields': [], 'inferred_fields': []}}, work_group=None)])
+
+tests/test_scholarly_arxiv_html_identity.py:87: AssertionError
+____ test_html_payload_identifier_conflict_does_not_merge_distinct_versions ____
+
+    def test_html_payload_identifier_conflict_does_not_merge_distinct_versions():
+        conflict = publication(
+            "https://arxiv.org/html/2501.09136v2", arxiv_id="2501.09136v3"
+        )
+        matching = publication(
+            "https://arxiv.org/abs/2501.09136v3", arxiv_id="2501.09136v3"
+        )
+
+        results = PresenceRanker().rank(group_publications({"a": [conflict, matching]}), "")
+
+>       assert len(results) == 2
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([SearchResult(url='https://arxiv.org/html/2501.09136v2', title='Identical title', content='Offline public fixture', en...: ['arxiv_id'], 'normalized_fields': [], 'inferred_fields': []}}}], 'selection': 'explicit_revision', 'warnings': []})])
+
+tests/test_scholarly_arxiv_html_identity.py:102: AssertionError
+____ test_html_versions_group_and_explicit_older_version_request_is_honored ____
+
+    def test_html_versions_group_and_explicit_older_version_request_is_honored():
+        rows = [
+            publication("https://arxiv.org/html/2501.09136v1"),
+            publication("https://arxiv.org/html/2501.09136v3"),
+            publication("https://arxiv.org/abs/2501.09136v2"),
+            publication("https://arxiv.org/html/2501.09137v2"),
+        ]
+
+        results = PresenceRanker().rank(group_publications({"arxiv": rows}), "")
+        old = PresenceRanker().rank(group_publications({"arxiv": rows}, "Read arxiv 2501.09136v1"), "")
+
+>       assert len(results) == 2
+E       AssertionError: assert 4 == 2
+E        +  where 4 = len([SearchResult(url='https://arxiv.org/html/2501.09136v1', title='Identical title', content='Offline public fixture', en...venance': {'engine': 'arxiv', 'adapter_fields': [], 'normalized_fields': [], 'inferred_fields': []}}, work_group=None)])
+
+tests/test_scholarly_arxiv_html_identity.py:117: AssertionError
+______ test_arxiv_identity_policy_version_changes_for_cache_invalidation _______
+
+    def test_arxiv_identity_policy_version_changes_for_cache_invalidation():
+>       assert POLICY_VERSION == "scholarly-work-v3"
+E       AssertionError: assert 'scholarly-work-v2' == 'scholarly-work-v3'
+E
+E         - scholarly-work-v3
+E         ?                 ^
+E         + scholarly-work-v2
+E         ?                 ^
+
+tests/test_scholarly_arxiv_html_identity.py:141: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://arxiv.org/html/2501.09136-https://arxiv.org/abs/2501.09136-2501.09136]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://www.arxiv.org/html/2501.09136v2-https://export.arxiv.org/abs/2501.09136v2-2501.09136v2]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://export.arxiv.org/html/hep-th/9901001v3-https://arxiv.org/abs/hep-th/9901001v3-hep-th/9901001v3]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker0-https://arxiv.org/html/2501.09136v2-https://arxiv.org/pdf/2501.09136v2.pdf-2501.09136v2]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://arxiv.org/html/2501.09136-https://arxiv.org/abs/2501.09136-2501.09136]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://www.arxiv.org/html/2501.09136v2-https://export.arxiv.org/abs/2501.09136v2-2501.09136v2]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://export.arxiv.org/html/hep-th/9901001v3-https://arxiv.org/abs/hep-th/9901001v3-hep-th/9901001v3]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_and_abstract_or_pdf_group_preserving_members[ranker1-https://arxiv.org/html/2501.09136v2-https://arxiv.org/pdf/2501.09136v2.pdf-2501.09136v2]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_saved_2501_09136_abstract_html_pair_is_one_work_with_complete_provenance[ranker0]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_saved_2501_09136_abstract_html_pair_is_one_work_with_complete_provenance[ranker1]
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_payload_identifier_conflict_does_not_merge_distinct_versions
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_html_versions_group_and_explicit_older_version_request_is_honored
+FAILED tests/test_scholarly_arxiv_html_identity.py::test_arxiv_identity_policy_version_changes_for_cache_invalidation
+13 failed, 7 passed in 0.15s

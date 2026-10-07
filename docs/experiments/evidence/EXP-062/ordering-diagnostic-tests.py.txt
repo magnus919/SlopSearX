@@ -1,0 +1,18 @@
+from pathlib import Path
+import importlib.machinery,importlib.util,json,unittest
+P=Path(__file__).with_name('ordering-diagnostic.py.txt');l=importlib.machinery.SourceFileLoader('exp062_descriptive_test',str(P));s=importlib.util.spec_from_loader(l.name,l);D=importlib.util.module_from_spec(s);l.exec_module(D)
+
+def arm(values,order,request='fixed'):
+    raw=json.dumps({'answers':{k:{'score':v} for k,v in values.items()}}).encode().hex()
+    return {'attempts':[{'arm':'d','status':'valid','response_hex':raw,'request_sha256':request}],'orders':{'d':order,'e':order},'actions':[]}
+
+class Tests(unittest.TestCase):
+    def test_scores_match_by_identity_instead_of_answer_order(self):
+        a=arm({'a':6,'b':5},['a','b']);b=arm({'b':5,'a':6.25},['a','b'])
+        r=D.compare(a,b);self.assertTrue(r['identical_D_request_bytes']);self.assertEqual(r['maximum_absolute_D_score_delta'],.25);self.assertEqual(r['mean_absolute_D_score_delta'],.125);self.assertEqual(r['D_pair_inversions'],0)
+    def test_membership_or_nonfinite_scores_cannot_be_compared(self):
+        a=arm({'a':6,'b':5},['a','b'])
+        for b in [arm({'a':6,'c':5},['a','c']),arm({'a':float('nan'),'b':5},['a','b'])]:
+            with self.assertRaises(ValueError):D.compare(a,b)
+
+if __name__=='__main__':unittest.main()

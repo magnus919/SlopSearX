@@ -1,0 +1,145 @@
+import importlib.util
+import importlib.machinery
+import pathlib
+import sys
+import unittest
+
+MODULE = pathlib.Path(__file__).with_name("citation-codec.py.txt")
+loader = importlib.machinery.SourceFileLoader("citation_codec", str(MODULE))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+codec = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = codec
+loader.exec_module(codec)
+
+
+def fixture(task="d1", count=3):
+    slots = [f"slot-{i}" for i in range(6)]
+    docs = []
+    for si, slot in enumerate(slots):
+        rows = []
+        for n in range(count):
+            group = f"source-{n}"
+            original = f"evidence-{n}"
+            alias = f"L-{task.upper()}-{group}-{original}"
+            rows.append({"domain": "source", "group_id": group,
+                         "original_id": original, "label": alias})
+        docs.append({"label_binding": {"schema": "exp088-reference-label-binding/1",
+                                        "domain": "source_pool", "task_id": task,
+                                        "labels": rows},
+                     "model_input": {"chunk_id": slot}})
+    return docs, slots
+
+
+class CitationCodecTests(unittest.TestCase):
+    def table(self, task="d1", count=3):
+        docs, slots = fixture(task, count)
+        return codec.build_task_table(task, docs, slots)
+
+    def test_six_slots_deduplicate_and_codebook_is_stable(self):
+        docs, slots = fixture()
+        one = codec.build_task_table("d1", docs, slots)
+        shuffled = codec.build_task_table("d1", list(reversed(docs)), slots)
+        self.assertEqual(one.entries, shuffled.entries)
+        self.assertEqual(one.count, 3)
+        self.assertEqual(one.binding_sha256, shuffled.binding_sha256)
+        for code, group, original, alias in one.entries:
+            self.assertEqual(one.code_for(group, alias), code)
+            self.assertEqual(one.original_for(code, group), original)
+        self.assertNotIn("entries", codec.manifest(one))
+
+    def test_missing_duplicate_or_cross_task_job_slot_rejected(self):
+        docs, slots = fixture()
+        with self.assertRaises(codec.CitationCodeError):
+            codec.build_task_table("d1", docs[:-1], slots)
+        changed = list(docs)
+        changed[-1] = {**changed[-1], "model_input": {"chunk_id": slots[0]}}
+        with self.assertRaises(codec.CitationCodeError):
+            codec.build_task_table("d1", changed, slots)
+        with self.assertRaises(codec.CitationCodeError):
+            codec.build_task_table("d2", docs, slots)
+
+    def test_conflicting_binding_and_ordinal_overflow_rejected(self):
+        docs, slots = fixture()
+        docs[0]["label_binding"]["labels"][0]["label"] += "x"
+        with self.assertRaises(codec.CitationCodeError):
+            codec.build_task_table("d1", docs, slots)
+        docs, slots = fixture(count=codec.MAX_ENTRIES + 1)
+        with self.assertRaises(codec.CitationCodeError):
+            codec.build_task_table("d1", docs, slots)
+
+    def test_source_input_roundtrip_and_nonreference_text_unchanged(self):
+        table = self.table()
+        packet = {"task": {"query": "Keep L-D1-source-0-evidence-0 literally in prose"},
+                  "sources": [{"source_id": "source-0", "title": "Title L-D1-source-0-evidence-0",
+                               "passages": [{"evidence_id": "L-D1-source-0-evidence-0",
+                                             "text": "unaltered source passage"},
+                                            {"evidence_id": "L-D1-source-0-evidence-0",
+                                             "text": "repeat stays repeated"}]}]}
+        raw = codec.canonical_bytes(packet)
+        encoded = codec.rewrite_grouped_rows(packet, ("sources",), "source_id",
+                                            (("passages", "*", "evidence_id"),), table)
+        self.assertEqual(encoded["sources"][0]["passages"][0]["evidence_id"], "D1E0001")
+        self.assertEqual(encoded["sources"][0]["passages"][1]["evidence_id"], "D1E0001")
+        self.assertEqual(encoded["sources"][0]["passages"][0]["text"], "unaltered source passage")
+        self.assertEqual(encoded["task"], packet["task"])
+        self.assertEqual(encoded["sources"][0]["title"], packet["sources"][0]["title"])
+        decoded = codec.rewrite_grouped_rows(encoded, ("sources",), "source_id",
+                                             (("passages", "*", "evidence_id"),), table,
+                                             decode=True, restore_alias=True)
+        self.assertEqual(codec.canonical_bytes(decoded), raw)
+
+    def test_answerer_and_assessor_subsets_reuse_same_task_table(self):
+        table = self.table()
+        # Role-specific views can expose subsets without renumbering the task table.
+        for role in ("answerer", "answer_assessor"):
+            packet = {"delivered_sources": [{"source_id": "source-2", "evidence_ids": [
+                "L-D1-source-2-evidence-2"]}]}
+            wire = codec.rewrite_grouped_rows(packet, ("delivered_sources",), "source_id",
+                                              (("evidence_ids",),), table)
+            self.assertEqual(wire["delivered_sources"][0]["evidence_ids"], ["D1E0003"])
+            restored = codec.rewrite_grouped_rows(wire, ("delivered_sources",), "source_id",
+                                                  (("evidence_ids",),), table, decode=True,
+                                                  restore_alias=True)
+            self.assertEqual(restored, packet)
+            self.assertIn(role, ("answerer", "answer_assessor"))
+
+    def test_response_decode_restores_original_evidence_identity(self):
+        table = self.table()
+        encoded = {"source_id": "source-1", "evidence_ids": ["D1E0002"]}
+        decoded = codec.rewrite_fields(encoded, (("evidence_ids",),),
+                                       lambda code: table.original_for(code, "source-1"))
+        self.assertEqual(decoded["evidence_ids"], ["evidence-1"])
+
+    def test_unknown_truncated_cross_task_and_cross_source_references_rejected(self):
+        table = self.table()
+        for code, group in (("D1E0000", "source-0"), ("D1E000", "source-0"),
+                            ("D2E0001", "source-0"), ("D1E0001", "source-1")):
+            with self.assertRaises(codec.CitationCodeError):
+                table.original_for(code, group)
+        with self.assertRaises(codec.CitationCodeError):
+            table.code_for("source-1", "L-D1-source-0-evidence-0")
+
+    def test_only_declared_fields_change(self):
+        table = self.table()
+        obj = {"evidence_ids": ["L-D1-source-0-evidence-0"],
+               "rationale": "L-D1-source-0-evidence-0", "nested": {"title": "same"}}
+        changed = codec.rewrite_fields(obj, (("evidence_ids",),),
+                                       lambda alias: table.code_for("source-0", alias))
+        self.assertEqual(changed["evidence_ids"], ["D1E0001"])
+        self.assertEqual(changed["rationale"], obj["rationale"])
+        self.assertEqual(changed["nested"], obj["nested"])
+
+    def test_catalog_key_rewrite_preserves_canonical_key_order(self):
+        table = self.table()
+        aliases = sorted(row[3] for row in table.entries if row[1] == "source-0")
+        catalog = {"catalog": {alias: {"text": f"passage-{i}"}
+                               for i, alias in enumerate(aliases)}}
+        encoded = codec.rewrite_catalog_keys(catalog, ("catalog",), "source-0", table)
+        self.assertEqual(list(encoded["catalog"]), [table.code_for("source-0", a) for a in aliases])
+        restored = codec.rewrite_catalog_keys(encoded, ("catalog",), "source-0", table,
+                                              decode=True, restore_alias=True)
+        self.assertEqual(codec.canonical_bytes(restored), codec.canonical_bytes(catalog))
+
+
+if __name__ == "__main__":
+    unittest.main()

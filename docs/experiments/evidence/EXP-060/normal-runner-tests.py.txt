@@ -1,0 +1,95 @@
+"""Actual owned CLI fixtures and pending-byte/source-binding checks."""
+from pathlib import Path
+import importlib.machinery,importlib.util
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+HERE=Path(__file__).resolve().parent
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+N=load("exp060_normal_tests",HERE / "normal-runner.py.txt")
+FIX=load("exp060_normal_fixture",HERE / "evaluate-tests.py.txt")
+
+class NormalRunnerTests(unittest.TestCase):
+    def test_actual_cli_complete_21_and_retained_complete_receipts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);acquisition,refs=FIX.inputs()
+            acq=root / "acquisition.json";ref=root / "references.json";out=root / "output"
+            acq.write_text(json.dumps(acquisition));ref.write_text(json.dumps(refs))
+            command=[sys.executable,str(HERE / "normal-runner.py.txt"),"--mode","offline","--acquisition",str(acq),"--references",str(ref),"--outdir",str(out)]
+            result=subprocess.run(command,capture_output=True,timeout=60)
+            self.assertEqual(result.returncode,0,result.stderr.decode())
+            summary=json.loads(result.stdout);self.assertEqual(summary["operations"],21);self.assertTrue(summary["synthetic"])
+            packet=json.loads((out / "run.json").read_bytes());self.assertEqual(packet["status"],"complete")
+            receipts=[json.loads(path.read_bytes()) for path in (out / "receipts").glob("*.json")]
+            self.assertEqual(len(receipts),packet["budget"]["attempts"])
+            self.assertTrue(all(receipt["stdout_complete"] and receipt["status"]=="returned" for receipt in receipts))
+            analysis_path=root / "analysis.json"
+            analyzed=subprocess.run([sys.executable,str(HERE / "analyze.py.txt"),str(out / "run.json"),"--output",str(analysis_path)],capture_output=True,timeout=30)
+            self.assertEqual(analyzed.returncode,0,analyzed.stderr.decode())
+            analysis=json.loads(analysis_path.read_bytes())
+            self.assertTrue(analysis["gates"]["complete_membership"])
+            self.assertFalse(analysis["adoption_eligible"])
+            self.assertEqual(analysis["outcome"],"rejected")
+            replay=subprocess.run(command,capture_output=True,timeout=10)
+            self.assertEqual(replay.returncode,2);self.assertNotIn(tmp.encode(),replay.stderr)
+
+    def test_pending_receipt_persisted_before_owned_child_can_dispatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);prepared=N.E.P.bodies(json.loads((HERE / "queries.json").read_bytes())[0],FIX.inputs()[0]["pools"]["q1"]["cards"])
+            body=N.E.P.wire(prepared["d"]);allowed={N.hashlib.sha256(body).hexdigest()}
+            transport=N.OwnedTransport(root,"comparator",True,allowed)
+            real=N.T.subprocess.Popen
+            seen=[]
+            def checked(*args,**kwargs):
+                files=list(root.glob("*.json"));self.assertEqual(len(files),1)
+                receipt=json.loads(files[0].read_bytes());self.assertEqual(receipt["status"],"invoked")
+                self.assertEqual(bytes.fromhex(receipt["request"]),body);seen.append(True)
+                return real(*args,**kwargs)
+            with patch.object(N.T.subprocess,"Popen",side_effect=checked):transport(body,timeout_s=5)
+            self.assertEqual(seen,[True])
+            before=len(transport.child.receipts)
+            with self.assertRaisesRegex(ValueError,"unregistered-case-request"):transport(b'{}',timeout_s=5)
+            self.assertEqual(len(transport.child.receipts),before)
+
+    def test_actual_cli_rejects_unsealed_live_inputs_without_output_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);acquisition,refs=FIX.inputs()
+            acq=root / "acquisition.json";ref=root / "references.json";out=root / "never-created"
+            acq.write_text(json.dumps(acquisition));ref.write_text(json.dumps(refs))
+            command=[sys.executable,str(HERE / "normal-runner.py.txt"),"--mode","live","--input-revision","8e7634bf4d2140c74262719fd0e8c0945810cb27","--acquisition",str(acq),"--references",str(ref),"--outdir",str(out)]
+            result=subprocess.run(command,capture_output=True,timeout=10,env={**os.environ,"TYPESAFE_API_KEY":"offline-fixture-never-sent"})
+            self.assertEqual(result.returncode,2)
+            self.assertFalse(out.exists())
+            self.assertNotIn(b"offline-fixture-never-sent",result.stderr)
+            self.assertNotIn(tmp.encode(),result.stderr)
+
+    def test_live_input_gate_rejects_uncommitted_inputs_before_any_child(self):
+        acquisition,refs=FIX.inputs()
+        with self.assertRaises((ValueError,subprocess.CalledProcessError)):
+            N.live_gate(json.dumps(acquisition).encode(),json.dumps(refs).encode(),"8e7634bf4d2140c74262719fd0e8c0945810cb27")
+
+    def test_live_gate_rejects_empty_qualified_manifest_before_lease(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            manifest={"schema":"exp060-qualification-integrity/1","qualified":True,"registration_revision":"8e7634bf4d2140c74262719fd0e8c0945810cb27","files":{}}
+            raw=json.dumps(manifest).encode()
+            (root / "qualification-integrity.json").write_bytes(raw)
+            def blob(relative,revision):
+                if relative.endswith("fresh-acquisition.json"):return b"acquisition"
+                if relative.endswith("fresh-references.json"):return b"references"
+                return raw
+            with patch.object(N,"HERE",root),patch.object(N.E.P,"verify_registration"),patch.object(N,"committed",side_effect=blob),patch.object(N.tempfile,"gettempdir",return_value=tmp):
+                with self.assertRaisesRegex(ValueError,"incomplete-qualification"):
+                    N.live_gate(b"acquisition",b"references","8e7634bf4d2140c74262719fd0e8c0945810cb27")
+            self.assertEqual(list(root.glob("exp060-model-attempt-*")),[])
+
+if __name__=="__main__":unittest.main()

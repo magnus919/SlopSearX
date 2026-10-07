@@ -1,0 +1,171 @@
+"""Offline registration and execution-contract tests for EXP-067."""
+from pathlib import Path
+import hashlib,importlib.machinery,importlib.util,json,math,os,shutil,tempfile,unittest
+from unittest.mock import patch
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path));spec=importlib.util.spec_from_loader(name,loader);mod=importlib.util.module_from_spec(spec);loader.exec_module(mod);return mod
+P=load("exp067_test_prepare",HERE/"prepare.py.txt")
+N=load("exp067_test_runner",HERE/"normal-runner.py.txt")
+A=load("exp067_test_analysis",HERE/"analyze.py.txt")
+def card(i):return {"id":"x%02d"%i,"url":"https://example.test/%02d"%i,"title":"Example source %02d"%i,"snippet":"A bounded public metadata excerpt %02d."%i}
+def case():return {"id":"q1","query":"ordinary query","purpose":"Find strong public reading leads for this task.","facets":[{"id":"f1","description":"implementation"},{"id":"f2","description":"validation"}]}
+def response(request,*,usage=True,score=2,metadata=True):
+    answers={}
+    for qid,q in request["questions"].items():
+        answers[qid]={"type":"score","score":score,**({"confidence":.8,"ignored":"metadata"} if metadata else {})}
+    data={"model":P.MODEL,"answers":answers}
+    if usage:data["usage"]={"input_tokens":11,"output_tokens":3}
+    return json.dumps(data,allow_nan=False,separators=(",",":")).encode()
+
+class PrepareTests(unittest.TestCase):
+    def test_relative_request_uses_full_canonical_pool_and_trusted_global_id_questions(self):
+        cards=[card(i) for i in range(80)];built=P.bodies(case(),cards);req=built["relative"]
+        self.assertEqual(list(req["questions"]),built["ids"]);self.assertEqual(len(req["state"]["candidates"]),80)
+        self.assertEqual(req["state"]["purpose"],case()["purpose"]);self.assertEqual(req["state"]["requested_facets"],case()["facets"])
+        for cid,q in req["questions"].items():
+            self.assertEqual(q,{"type":"score","instructions":P.PROTOCOL["instructions"].format(id=cid),"criteria":list(P.PROTOCOL["criteria"])})
+        self.assertEqual(len(P.PROTOCOL["criteria"]),5)
+
+    def test_relative_body_is_rotation_invariant_and_w0_preserves_native_full_tail(self):
+        cards=[card(i) for i in range(59)];base=P.bodies(case(),cards);rot=P.bodies(case(),cards,"rotate")
+        self.assertEqual(base["relative"],rot["relative"])
+        self.assertEqual(rot["provenance_order_ids"],base["provenance_order_ids"][20:]+base["provenance_order_ids"][:20])
+        self.assertEqual(base["w0"]["state"]["query"],case()["query"]);self.assertEqual(len(base["w0"]["questions"]),40)
+        self.assertEqual(base["tail_ids"],["x%02d"%i for i in range(40,59)])
+
+    def test_relative_score_order_descending_with_canonical_ties_only(self):
+        ids=["z","a","m"];scores={"z":4,"a":4,"m":1}
+        self.assertEqual(P.relative_order(scores,ids),["z","a","m"])
+        built=P.bodies(case(),[card(0),card(1),card(2)])
+        self.assertEqual(P.relative_order({cid:2 for cid in built["ids"]},built["ids"]),built["ids"])
+        with self.assertRaises(ValueError):P.relative_order(scores,["z","z","m"])
+
+    def test_response_schema_bounds_metadata_and_usage(self):
+        built=P.bodies(case(),[card(0),card(1)]);body=built["relative"]
+        self.assertEqual(P.validate_relative_response(response(body),body,built["ids"])["usage"],{"input_tokens":11,"output_tokens":3})
+        w0=built["w0"];w0_ids=list(w0["questions"])
+        self.assertEqual(P.validate_score_response(response(w0,score=9),w0,w0_ids)["scores"][w0_ids[0]],9.0)
+        with self.assertRaises(ValueError):P.validate_score_response(response(w0,score=9.1),w0,w0_ids)
+        for score in (-.1,4.1,True):
+            raw=response(body,score=score)
+            with self.subTest(score=score),self.assertRaises(ValueError):P.validate_relative_response(raw,body,built["ids"])
+        with self.assertRaises(ValueError):P.validate_relative_response(response(body,score=4.1).replace(b'"score":4.1',b'"score":NaN'),body,built["ids"])
+        duplicate=b'{"model":"jev-1.13.0","model":"jev-1.13.0","answers":{}}'
+        with self.assertRaisesRegex(ValueError,"duplicate-json-key"):P.validate_relative_response(duplicate,body,built["ids"])
+        with self.assertRaises(ValueError):P.validate_relative_response(b" "*2_000_001,body,built["ids"])
+        self.assertEqual(P.usage_from_raw(response(body,score=8)),{"input_tokens":11,"output_tokens":3})
+        self.assertIsNone(P.validate_relative_response(response(body,usage=False),body,built["ids"])["usage"])
+
+    def test_request_validator_rejects_misbinding_criteria_omission_and_bad_w0_fields(self):
+        built=P.bodies(case(),[card(0),card(1)]);request=json.loads(P.wire(built["relative"]))
+        cid=next(iter(request["questions"]));request["questions"][cid]["instructions"]="compare wrong card"
+        with self.assertRaises(ValueError):P.validate_request(P.wire(request))
+        request=json.loads(P.wire(built["relative"]));request["questions"][cid]["criteria"][0]="changed criterion"
+        with self.assertRaises(ValueError):P.validate_request(P.wire(request))
+        request=json.loads(P.wire(built["relative"]));request["questions"].pop(cid)
+        with self.assertRaises(ValueError):P.validate_request(P.wire(request))
+        request=json.loads(P.wire(built["relative"]));request["state"]["candidates"][0]["id"]="wrong-global-id"
+        with self.assertRaises(ValueError):P.validate_request(P.wire(request))
+        for field,value in (("url",""),("url","u"*513),("title","t"*257),("snippet","s"*1201),("id","i"*81)):
+            request=json.loads(P.wire(built["w0"]));request["state"]["candidates"][0][field]=value
+            with self.subTest(field=field),self.assertRaises(ValueError):P.validate_request(P.wire(request))
+        with self.assertRaises(ValueError):P.bodies(case(),[card(i) for i in range(81)])
+
+class RunnerTests(unittest.TestCase):
+    def test_http_adapter_accepts_exact_w0_and_relative_bodies_without_network(self):
+        wrapper=load("exp067_test_wrapper",HERE/"http-wrapper.py.txt");built=P.bodies(case(),[card(i) for i in range(3)])
+        self.assertEqual(wrapper.PREP.validate_request(P.wire(built["w0"])),built["w0"])
+        self.assertEqual(wrapper.PREP.validate_request(P.wire(built["relative"])),built["relative"])
+        self.assertIsNone(wrapper.HTTP.NoRedirect().redirect_request(None,None,302,"redirect",{},"https://elsewhere.test/"))
+
+    def test_reused_http_exchange_keeps_hard_one_second_deadline(self):
+        wrapper=load("exp067_test_wrapper_timeout",HERE/"http-wrapper.py.txt");body=P.wire(P.bodies(case(),[card(0),card(1)])["relative"])
+        class SlowOpener:
+            def open(self,request,timeout):
+                import time;time.sleep(2)
+        with self.assertRaises(TimeoutError):wrapper.HTTP.exchange(body,"offline-secret",SlowOpener())
+
+    def test_live_gate_fails_closed_without_qualification_before_dns_key_or_lease(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bad={"docs/experiments/evidence/EXP-060/fresh-acquisition.json":b"{}"}
+            with patch.object(N,"committed",side_effect=lambda rel,rev: (_ for _ in ()).throw(ValueError("input-pin"))),patch.object(N.socket,"getaddrinfo",side_effect=AssertionError("DNS called")):
+                with self.assertRaises(ValueError):N.live_gate(bad,"a"*40)
+
+    def test_malformed_late_case_stops_before_live_gate_and_output_creation(self):
+        acquisition=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes())
+        queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+        references=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-064/completed/metric-reference-view.json").read_bytes())
+        acquisition["pools"]["q13"]["cards"][0]["title"]="x"*257
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);acq=root/"acq.json";qry=root/"queries.json";refs=root/"refs.json";out=root/"out"
+            acq.write_text(json.dumps(acquisition));qry.write_text(json.dumps(queries));refs.write_text(json.dumps(references))
+            argv=["normal-runner.py.txt","--mode","live","--acquisition",str(acq),"--queries",str(qry),"--references",str(refs),"--outdir",str(out)]
+            with patch("sys.argv",argv),patch.object(N,"live_gate",side_effect=AssertionError("live gate reached")) as gate:
+                self.assertEqual(N.main(),2)
+                gate.assert_not_called()
+            self.assertFalse(out.exists())
+
+    def test_mocked_positive_live_gate_checks_all_pins_and_creates_exclusive_lease(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);here=root/"EXP-067";here.mkdir();lease_dir=root/"leases";lease_dir.mkdir()
+            for name in N.OWNED_FILES:shutil.copy2(HERE/name,here/name)
+            shutil.copy2(HERE/"protocol.json",here/"protocol.json");shutil.copy2(HERE/"registration-integrity.json",here/"registration-integrity.json")
+            protocol=P.PROTOCOL;inputs={k:(N.REPO/k).read_bytes() for k in protocol["inputs"]}
+            qualification={"schema":"exp067-qualification-integrity/1","qualified":True,
+                           "files":{name:hashlib.sha256((here/name).read_bytes()).hexdigest() for name in N.OWNED_FILES},
+                           "source_pins":{name:hashlib.sha256((N.REPO/name).read_bytes()).hexdigest() for name in N.SOURCE_FILES},
+                           "protocol_sha256":hashlib.sha256((HERE/"protocol.json").read_bytes()).hexdigest(),
+                           "registration_sha256":hashlib.sha256((HERE/"registration-integrity.json").read_bytes()).hexdigest()}
+            qraw=json.dumps(qualification,separators=(",",":")).encode();(here/"qualification-integrity.json").write_bytes(qraw)
+            regraw=(HERE/"registration-integrity.json").read_bytes();protocolraw=(HERE/"protocol.json").read_bytes()
+            with patch.object(N,"HERE",here),patch.object(N,"REPO",N.REPO),patch.object(N,"committed",side_effect=lambda rel,rev: regraw if rel.endswith("registration-integrity.json") else protocolraw if rel.endswith("protocol.json") else qraw if rel.endswith("qualification-integrity.json") else inputs[rel]),patch.object(N.socket,"getaddrinfo",return_value=[] ) as dns,patch.dict(os.environ,{"TYPESAFE_API_KEY":"test-only"}),patch("tempfile.gettempdir",return_value=str(lease_dir)):
+                passed={k:inputs[k] for k in ("docs/experiments/evidence/EXP-060/fresh-acquisition.json","docs/experiments/evidence/EXP-060/queries.json","docs/experiments/evidence/EXP-064/completed/metric-reference-view.json")}
+                integrity=N.live_gate(passed,"a"*40)
+                self.assertEqual(integrity["qualification_sha256"],hashlib.sha256(qraw).hexdigest());dns.assert_called_once()
+                self.assertEqual(len(list(lease_dir.iterdir())),1)
+                with self.assertRaises(FileExistsError):N.create_lease(next(lease_dir.iterdir()),integrity["identity"])
+
+    def test_complete_21_operation_43_call_fixture_reaches_exact_analysis_schema(self):
+        acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes())
+        queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+        refs=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-064/completed/metric-reference-view.json").read_bytes())
+        with tempfile.TemporaryDirectory() as tmp:
+            result=N.run(acq,queries,Path(tmp)/"run",True,{"offline_fixture":True})
+            analysis=A.analyze(result,acq,refs,queries,P.PROTOCOL)
+            self.assertEqual(result["status"],"complete");self.assertEqual(len(result["operations"]),21)
+            self.assertEqual(result["budget"]["attempts"],43);self.assertFalse(result["budget"]["unknown_usage"])
+            self.assertEqual(result["neutral"]["questions"],80);self.assertEqual(result["neutral"]["status"],"valid")
+            self.assertFalse(analysis["structural_failures"],analysis["structural_failures"])
+            self.assertEqual(analysis["outcome"],"synthetic_fixture_only")
+            for op in result["operations"]:
+                self.assertEqual(set(op["arms"]),{"w0","relative"})
+                self.assertEqual(set(op["arms"]["relative"]["scores"]),set(op["provenance_order_ids"]))
+                canonical_ids=[c["id"] for c in P.canonical(acq["pools"][op["case"]]["cards"])]
+                self.assertEqual(op["arms"]["relative"]["order_ids"],P.relative_order(op["arms"]["relative"]["scores"],canonical_ids))
+            self.assertEqual(len(list((Path(tmp)/"run"/"receipts").glob("call-*.json"))),43)
+
+    def test_invalid_relative_score_with_known_usage_fails_once_and_falls_back_to_fresh_w0(self):
+        acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+        class FakeOwned:
+            calls=0
+            def __init__(self,*_):self.last_raw=None
+            def __call__(self,body):
+                FakeOwned.calls+=1;request=P.strict_json(body)
+                if FakeOwned.calls==1:self.last_raw=response(request,score=2);return self.last_raw,1.0
+                if FakeOwned.calls==2:self.last_raw=response(request,score=5);return self.last_raw,1.0
+                if FakeOwned.calls==3:self.last_raw=response(request,score=5);return self.last_raw,1.0
+                raise AssertionError("retry or later dispatch")
+        with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",FakeOwned):
+            result=N.run(acq,queries,Path(tmp)/"failed",True)
+            self.assertEqual(result["status"],"incomplete");self.assertEqual(FakeOwned.calls,3)
+            first=result["operations"][0];self.assertEqual(first["arms"]["w0"]["status"],"valid")
+            self.assertEqual(first["arms"]["relative"]["status"],"failed")
+            self.assertEqual(first["arms"]["relative"]["order_ids"],first["arms"]["w0"]["order_ids"])
+            self.assertEqual(first["arms"]["relative"]["usage"],{"input_tokens":11,"output_tokens":3})
+            self.assertEqual(result["budget"]["input_tokens"],33);self.assertFalse(result["budget"]["unknown_usage"])
+            receipt=json.loads((Path(tmp)/"failed"/"receipts"/"call-02.json").read_bytes())
+            self.assertEqual(receipt["usage"],{"input_tokens":11,"output_tokens":3});self.assertIsNotNone(receipt["raw_response"])
+            self.assertEqual(result["operations"][1]["arms"]["w0"]["status"],"uninvoked")
+
+if __name__=="__main__":unittest.main()

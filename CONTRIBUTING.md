@@ -15,6 +15,9 @@ Thanks for your interest. This project is in early development — the spec is s
 ## Measured improvement experiments
 
 For hypothesis-driven improvements, follow the [experiment loop](docs/experiments/README.md).
+Use the [material improvement design](docs/experiments/DESIGN.md) to select
+consequential problems and match evidence to the intended benefit. SLOs are
+optional operator guidance; the runner does not operate production or send alerts.
 Register the metric and decision rule before testing, retain every outcome, and
 submit implementation PRs only when the evidence supports a useful improvement
 and all compatibility guardrails pass. Negative and inconclusive experiments
@@ -22,7 +25,11 @@ remain in the documentation ledger even when their candidate code is discarded.
 Documentation-only experiment PRs are automatically merged without code review,
 CI, or pre-commit; follow the scope verification and signed `[skip ci]` commit
 procedure in the experiment guide. Implementation or mixed PRs retain the normal
-checks and review requirements.
+checks and review requirements. For experiment-loop implementation PRs authored
+under magnus919, the maintainer authorizes merging after all applicable CI passes
+and a positive Droid review, or a recorded substantive runner review if Droid
+is unavailable or not working. See the experiment guide for the exact gate.
+No production deployment is authorized by this standing rule.
 
 ## Development Setup
 
@@ -41,6 +48,20 @@ pip install -e ".[dev]"
 - Type check: `mypy slopsearx/ engines/`
 - Verify conventional commit format on all commits
 - If this is an agent-authored PR, mention `@droid` in a PR comment to request automated review
+
+## Release automation
+
+Release Please uses `release-please-config.json` and
+`.release-please-manifest.json` to track the root Python package. Tags retain the
+existing `v<version>` format. The manifest starts from the published `v0.5.0`
+release; subsequent release PRs update it automatically.
+
+Release discovery scans up to 1,000 releases, and changelog collection scans up
+to 1,000 commits. Explicit manifest tracking avoids the inline action configuration's 250-commit discovery limit, which can
+miss the previous release during busy development and reset the proposed version
+to `0.1.0`. If a release falls outside the configured window, increase the search
+depths before merging the release PR. Check its version and changelog against the
+latest published release; do not fix a discovery failure by pinning `release-as`.
 
 ## Portal impact review
 

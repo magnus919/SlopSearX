@@ -198,12 +198,22 @@ class PubMedAdapter(EngineAdapter):
                         content_parts.append(author_str)
                     content = " — ".join(content_parts)
 
+                    article_ids = article.get("articleids", [])
+                    typed_ids = (
+                        {item.get("idtype"): item.get("value") for item in article_ids if isinstance(item, dict)}
+                        if isinstance(article_ids, list)
+                        else {}
+                    )
+                    publication_types = article.get("pubtype", [])
                     payload = build_payload(
                         DOMAIN_SCIENCE,
                         "publication",
                         {
                             "publication_id": pmid or None,
                             "pmid": pmid or None,
+                            "doi": typed_ids.get("doi"),
+                            "pmcid": typed_ids.get("pmc"),
+                            "publication_types": publication_types if isinstance(publication_types, list) else None,
                             "journal": source or None,
                             "authors": author_names or None,
                         },

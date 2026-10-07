@@ -1,0 +1,203 @@
+"""Offline EXP-050 planner. Inert source text; never performs network I/O."""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+
+REQUEST_NAMES = (
+    "q1-d-choice-step1.json", "q2-d-choice-step1.json", "q3-d-choice-step1.json",
+    "q4-d-choice-step1.json", "q5-d-choice-step1.json", "q6-d-choice-step1.json",
+    "q7-d-choice-step1.json", "q8-d-choice-step1.json", "q9-d-choice-step1.json",
+    "cardiac-d-choice-step1.json", "research-d-choice-step1.json",
+    "evaluation-d-choice-step1.json",
+)
+PRIORITY = ("doi", "arxiv", "pmid", "pmcid", "s2")
+S2_HOSTS = {"semanticscholar.org", "www.semanticscholar.org"}
+S2_HEX = re.compile(r"[0-9a-fA-F]{40}\Z")
+ARXIV_VERSION = re.compile(r"(?P<base>\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})(?:v(?P<version>[1-9]\d{0,5}))?", re.I)
+
+
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _json_bytes(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _root_from_file() -> Path:
+    return Path(__file__).resolve().parents[4]
+
+
+def _load_pinned_helpers(root: Path):
+    sys.path.insert(0, str(root))
+    from slopsearx.publication_metadata import normalize_doi
+    from slopsearx.scholarly import _url_ids
+    return normalize_doi, _url_ids
+
+
+def _s2_id(url: str) -> str | None:
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
+    if (parsed.hostname or "").casefold() not in S2_HOSTS:
+        return None
+    pieces = parsed.path.strip("/").split("/")
+    if len(pieces) >= 2 and pieces[0].casefold() == "paper" and S2_HEX.fullmatch(pieces[-1]):
+        return pieces[-1].casefold()
+    return None
+
+
+def _numeric(value: str, *, prefix: str = "") -> str | None:
+    digits = value[len(prefix):] if prefix and value[:len(prefix)].casefold() == prefix.casefold() else value
+    if not digits.isdigit():
+        return None
+    stripped = digits.lstrip("0")
+    return stripped or None
+
+
+def card_anchors(url: str, normalize_doi, url_ids) -> dict[str, str]:
+    """Recognize identifiers from URL only; return normalized query anchors."""
+    raw = url_ids(url)
+    anchors: dict[str, str] = {}
+    doi = normalize_doi(raw.get("doi")) if raw.get("doi") else None
+    if doi:
+        anchors["doi"] = doi
+    arxiv = raw.get("arxiv")
+    if arxiv:
+        match = ARXIV_VERSION.fullmatch(arxiv)
+        if match:
+            anchors["arxiv"] = match["base"].casefold()
+    pmid = raw.get("pmid")
+    if pmid:
+        value = _numeric(pmid)
+        if value:
+            anchors["pmid"] = value
+    pmcid = raw.get("pmcid")
+    if pmcid:
+        value = _numeric(pmcid, prefix="PMC")
+        if value:
+            anchors["pmcid"] = value
+    s2 = _s2_id(url)
+    if s2:
+        anchors["s2"] = s2
+    return anchors
+
+
+def serialize_batch(ordered_queries: list[str], *, max_ids: int = 500, max_bytes: int = 64000) -> bytes:
+    wire_ids = sorted({to_wire_id(q) for q in ordered_queries})
+    if len(wire_ids) != len(ordered_queries):
+        raise ValueError("query identifiers collide after API namespace encoding")
+    body = _json_bytes({"ids": wire_ids})
+    if len(wire_ids) > max_ids or len(body) > max_bytes:
+        raise ValueError("whole registered identifier inventory exceeds frozen batch bounds")
+    return body
+
+
+def to_wire_id(query: str) -> str:
+    namespace, separator, value = query.partition(":")
+    if not separator or not value:
+        raise ValueError("query identifier must contain namespace and value")
+    prefix = {"doi": "DOI", "arxiv": "ARXIV", "pmid": "PMID", "pmcid": "PMCID", "s2": ""}.get(namespace)
+    if prefix is None:
+        raise ValueError("unsupported query namespace")
+    return f"{prefix}:{value}" if prefix else value
+
+
+def verify_source_pins(root: Path) -> dict[str, str]:
+    pins_path = root / "docs/experiments/evidence/EXP-050/source-pins.json"
+    pins = json.loads(pins_path.read_text(encoding="utf-8"))
+    observed: dict[str, str] = {}
+    for relative, expected in pins["files"].items():
+        actual = sha256((root / relative).read_bytes())
+        if actual != expected:
+            raise ValueError(f"source pin mismatch: {relative}")
+        observed[relative] = actual
+    return observed
+
+
+def build_plan(root: Path | None = None) -> tuple[dict[str, Any], bytes]:
+    root = (root or _root_from_file()).resolve()
+    observed_pins = verify_source_pins(root)
+    normalize_doi, url_ids = _load_pinned_helpers(root)
+    pin_data = json.loads((root / "docs/experiments/evidence/EXP-050/source-pins.json").read_text())
+    request_paths = [p for p in pin_data["files"] if p.startswith("docs/experiments/evidence/EXP-046/requests/") and Path(p).name in REQUEST_NAMES]
+    if len(request_paths) != len(REQUEST_NAMES) or {Path(p).name for p in request_paths} != set(REQUEST_NAMES):
+        raise ValueError("registered twelve-request inventory does not match pinned source list")
+    by_name = {Path(p).name: p for p in request_paths}
+    pools = []
+    card_total = 0
+    query_cards: dict[str, list[dict[str, str]]] = {}
+    all_queries: set[str] = set()
+    for name in REQUEST_NAMES:
+        relative = by_name[name]
+        request = json.loads((root / relative).read_text(encoding="utf-8"))
+        state = request.get("state")
+        if not isinstance(state, dict) or not isinstance(state.get("candidates"), list):
+            raise ValueError(f"invalid frozen candidate state: {name}")
+        purpose, facets = state.get("purpose"), state.get("facets")
+        if not isinstance(purpose, str) or not isinstance(facets, list) or not all(
+            isinstance(x, dict) and isinstance(x.get("description"), str) for x in facets
+        ):
+            raise ValueError(f"missing purpose/facets: {name}")
+        cards = []
+        for source in state["candidates"]:
+            if not isinstance(source, dict) or not all(isinstance(source.get(k), str) for k in ("id", "title", "url", "snippet")):
+                raise ValueError(f"invalid original card in {name}")
+            # Copy only the four saved card fields. Never read model scores/orders.
+            card = {key: source[key] for key in ("id", "title", "url", "snippet")}
+            anchors = card_anchors(card["url"], normalize_doi, url_ids)
+            selected_namespace = next((key for key in PRIORITY if key in anchors), None)
+            selected = f"{selected_namespace}:{anchors[selected_namespace]}" if selected_namespace else None
+            row = {"card": card, "anchors": anchors, "selected_query": selected, "status": "mapped" if selected else "no_identifier"}
+            cards.append(row)
+            if selected:
+                all_queries.add(selected)
+                query_cards.setdefault(selected, []).append({"pool": Path(name).stem, "card_id": card["id"]})
+        card_total += len(cards)
+        pools.append({"request_file": relative, "request_sha256": observed_pins[relative], "pool": Path(name).stem, "purpose": purpose, "facets": facets, "cards": cards})
+    ordered_queries = sorted(all_queries)
+    ordered_wire_ids = sorted({to_wire_id(query) for query in ordered_queries})
+    contract = json.loads((root / "docs/experiments/evidence/EXP-050/metadata-api-contract.json").read_text())
+    body = serialize_batch(ordered_queries, max_ids=contract["max_unique_ids"], max_bytes=contract["max_request_bytes"])
+    plan = {
+        "schema": "exp049-offline-plan/1",
+        "baseline": pin_data["baseline"],
+        "source_pins": observed_pins,
+        "pool_count": len(pools),
+        "card_count": card_total,
+        "mapped_card_count": sum(row["status"] == "mapped" for pool in pools for row in pool["cards"]),
+        "no_identifier_count": sum(row["status"] == "no_identifier" for pool in pools for row in pool["cards"]),
+        "unique_query_count": len(ordered_queries),
+        "query_ids": ordered_queries,
+        "wire_ids": ordered_wire_ids,
+        "query_card_membership": {key: query_cards[key] for key in ordered_queries},
+        "pools": pools,
+        "batch_body_sha256": sha256(body),
+        "batch_body_bytes": len(body),
+        "planner_source_sha256": sha256(Path(__file__).read_bytes()),
+    }
+    if card_total != 423 or len(pools) != 12:
+        raise ValueError(f"frozen inventory count mismatch: {card_total} cards / {len(pools)} pools")
+    return plan, body
+
+
+def main() -> None:
+    root = _root_from_file()
+    plan, body = build_plan(root)
+    out = root / "docs/experiments/evidence/EXP-050"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "plan.json").write_bytes(_json_bytes(plan) + b"\n")
+    (out / "batch-body.json").write_bytes(body)
+    print(json.dumps({"card_count": plan["card_count"], "pool_count": plan["pool_count"], "unique_query_count": plan["unique_query_count"], "no_identifier_count": plan["no_identifier_count"], "batch_body_bytes": plan["batch_body_bytes"], "batch_body_sha256": plan["batch_body_sha256"]}, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

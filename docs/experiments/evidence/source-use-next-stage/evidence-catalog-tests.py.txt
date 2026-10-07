@@ -1,0 +1,50 @@
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+import unittest
+
+loader = importlib.machinery.SourceFileLoader('catalog', str(Path(__file__).with_name('evidence-catalog.py.txt')))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+c = importlib.util.module_from_spec(spec)
+loader.exec_module(c)
+
+
+class CatalogTests(unittest.TestCase):
+    def setUp(self):
+        self.sources = [{'source_id': 'S1', 'context': 'é🦑\n**a** z'}, {'source_id': 'S2', 'context': ''}]
+        self.catalog = c.build(self.sources, 3)
+        self.contexts = {s['source_id']: s['context'] for s in self.sources}
+
+    def test_lossless_unicode_and_markdown(self):
+        texts = [c.resolve(self.catalog, eid, self.contexts, {'S1'}) for eid in self.catalog['passages']]
+        self.assertEqual(''.join(texts), self.contexts['S1'])
+        self.assertEqual(c.build(self.sources, 3), self.catalog)
+        self.assertFalse(any(p['source_id'] == 'S2' for p in self.catalog['passages'].values()))
+
+    def test_reject_cross_arm(self):
+        with self.assertRaises(ValueError):
+            c.resolve(self.catalog, next(iter(self.catalog['passages'])), self.contexts, {'S2'})
+
+    def test_changed_context(self):
+        with self.assertRaises(ValueError):
+            c.resolve(self.catalog, next(iter(self.catalog['passages'])), {'S1': 'changed'}, {'S1'})
+
+    def test_tamper(self):
+        eid = next(iter(self.catalog['passages']))
+        for field, value in [('text', 'fake'), ('end', 999), ('passage_sha256', 'bad')]:
+            cat = c.build(self.sources, 3)
+            cat['passages'][eid][field] = value
+            with self.assertRaises(ValueError):
+                c.resolve(cat, eid, self.contexts, {'S1'})
+
+    def test_unknown(self):
+        with self.assertRaises(ValueError):
+            c.resolve(self.catalog, 'fake', self.contexts, {'S1'})
+
+    def test_duplicate(self):
+        with self.assertRaises(ValueError):
+            c.build(self.sources + self.sources)
+
+
+if __name__ == '__main__':
+    unittest.main()

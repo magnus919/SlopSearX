@@ -1,0 +1,231 @@
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import sys
+import tempfile
+import types
+import unittest
+from pathlib import Path
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+C = load("exp094_controller_test", HERE / "controller.py.txt")
+P = load("exp094_phase_bindings_controller_test", HERE / "phase-bindings.py.txt")
+INPUT_TESTS = load("exp094_bridge_fixture_for_controller_test", HERE / "input-bridge-tests.py.txt")
+BRIDGE = INPUT_TESTS.B
+PREP_TESTS = load("exp094_source_prep_fixture_for_controller_test", HERE / "prepare-source-assessments-tests.py.txt")
+PREP = PREP_TESTS.P
+VIEW = PREP_TESTS.VIEW
+PACKET_VIEWER = PREP_TESTS.PACKET_VIEWER
+ADMISSION = load("exp094_admission_controller_test", HERE / "admission.py.txt")
+CARRIER = load("exp094_carrier_identity_controller_test", HERE / "final-json-carrier.py.txt")
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def valid_proof():
+    records = []
+    for task_number in range(1, 9):
+        task = f"d{task_number}"
+        for assessor in ("A", "B"):
+            index = len(records)
+            row = {"logical_submission": f"development-{task}-card-{assessor}",
+                   "task_id": task, "assessor_id": assessor,
+                   "helper_id": f"helper-{task}-{assessor}",
+                   "record_count": 56 if task_number in (1, 2) else 55,
+                   "input_path": f"card-inputs/{index}.json", "input_sha256": "b" * 64,
+                   "assignment_path": f"private/card-assignments/{index}.json", "assignment_sha256": "c" * 64,
+                   "label_binding_path": f"private/label-bindings/{index}.json", "label_binding_sha256": "d" * 64,
+                   "raw_response_path": f"responses/{index}.raw.json", "raw_response_sha256": "e" * 64,
+                   "decoded_response_path": f"responses/{index}.decoded.json", "decoded_response_sha256": "f" * 64,
+                   "verified_response_path": f"responses/{index}.verified.json", "verified_response_sha256": "1" * 64,
+                   "dispatch_receipt_path": f"receipts/dispatch-{index}.json", "dispatch_receipt_sha256": "2" * 64,
+                   "validation_receipt_path": f"receipts/validation-{index}.json", "validation_receipt_sha256": "3" * 64}
+            records.append(row)
+    return {"schema": "exp094-carried-card-reference-proof/1", "source_study_id": "EXP-088",
+            "exp084_grader_outputs_used": False, "card_assessments_carried_unchanged": True,
+            "card_job_count": 16, "record_count": 884,
+            "assessment_manifest_path": "exp088-card-reference/provenance/assessment-manifest.json",
+            "assessment_manifest_sha256": "a" * 64, "records": records}
+
+
+class OpaqueCardProofTests(unittest.TestCase):
+    def test_preserves_complete_bridge_guard_schema_without_grade_payloads(self):
+        supplied = valid_proof()
+        result = C._opaque_card_proof(supplied)
+        for field in ("schema", "source_study_id", "exp084_grader_outputs_used",
+                      "card_assessments_carried_unchanged", "card_job_count", "record_count",
+                      "assessment_manifest_path", "assessment_manifest_sha256", "records"):
+            self.assertEqual(result[field], supplied[field])
+        self.assertNotIn("verified_response", result)
+        self.assertNotIn("grades", result)
+        self.assertEqual((result["card_job_count"], result["record_count"]), (16, 884))
+
+    def test_rejects_changed_lineage_coverage_hashes_and_inventory(self):
+        for field, bad in (("schema", "wrong"), ("source_study_id", "EXP-084"),
+                           ("exp084_grader_outputs_used", True),
+                           ("card_assessments_carried_unchanged", False),
+                           ("card_job_count", 15), ("record_count", 883)):
+            with self.subTest(field=field):
+                proof = valid_proof(); proof[field] = bad
+                with self.assertRaises(ValueError): C._opaque_card_proof(proof)
+        proof = valid_proof(); proof["records"][0]["input_sha256"] = "not-a-hash"
+        with self.assertRaisesRegex(ValueError, "carried-card-record-hash"):
+            C._opaque_card_proof(proof)
+        proof = valid_proof(); proof["records"].pop()
+        with self.assertRaisesRegex(ValueError, "carried-card-checkpoint-invalid"):
+            C._opaque_card_proof(proof)
+
+
+class _SterileAdmission:
+    """Nonlive clock/permit fixture: every method is local and records use."""
+    canonical_json = staticmethod(ADMISSION.canonical_json)
+    strict_json = staticmethod(ADMISSION.strict_json)
+    _write_once = staticmethod(ADMISSION._write_once)
+    def __init__(self): self.phases = []
+    def create_stage_clock(self, output, revision):
+        clock = {"schema": "exp078-stage-clock/1", "stage": "development",
+                 "stage_id": "sterile-controller-fixture", "fixture": True}
+        raw = self.canonical_json(clock)
+        return clock, raw, digest(raw)
+    def admit_live(self, *args): return object()
+    def consume_capability(self, _capability): return object()
+    def acquire_phase(self, _permit, phase, _stage, _clock):
+        self.phases.append(phase); return object()
+    def require_phase(self, _phase, _clock, _stage): return None
+
+
+def _fake_frozen_prepare(output_root, acquisition, cases, guard, source_snapshot_root):
+    output_root.mkdir(parents=True)
+    jobs = []
+    files = []
+    for task_number in range(1, 9):
+        task = f"d{task_number}"
+        for assessor in ("R1", "R2"):
+            for chunk in range(3):
+                logical = f"development-{task}-source-{assessor}-{chunk + 1}"
+                raw, labels, _source_id, _evidence_id, _alias = PREP_TESTS.fixture_packet(task, logical, logical)
+                input_name, label_name = logical + ".json", logical + ".labels.json"
+                (output_root / input_name).write_bytes(raw)
+                (output_root / label_name).write_bytes(labels)
+                jobs.append({"logical_submission": logical, "role": "source", "model_call_required": True,
+                    "task_id": task, "assessor_id": assessor, "chunk_index": chunk,
+                    "helper_id": f"helper-{chunk}", "input_path": input_name,
+                    "input_bytes": len(raw), "input_sha256": digest(raw),
+                    "label_binding_path": label_name, "label_binding_sha256": digest(labels)})
+        plan_path = f"private/source-plans/{task}.json"
+        plan_raw = json.dumps({"task_id": task, "chunks": [], "inventory_source_ids": [],
+                               "assessor_ids": []}, sort_keys=True).encode()
+        (output_root / plan_path).parent.mkdir(parents=True, exist_ok=True)
+        (output_root / plan_path).write_bytes(plan_raw)
+        files.append({"path": plan_path, "sha256": digest(plan_raw)})
+    (output_root / "manifest.json").write_text(json.dumps({"jobs": jobs, "files": files}), encoding="utf-8")
+    return {"manifest_sha256": "4" * 64}
+
+
+class ControllerToPhaseIntegrationTests(unittest.TestCase):
+    def test_controller_state_proof_reaches_real_phase_guard_offline(self):
+        """Exercise begin -> actual bridge -> State -> actual phase preparer, with no live admission."""
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle_root, pins_path = INPUT_TESTS.fixture(tmp)
+            previous_prepare = BRIDGE.prepare_reused_inputs
+            BRIDGE.prepare_reused_inputs = lambda root, *, stage_clock, stage_clock_digest: previous_prepare(
+                root, stage_clock=stage_clock, stage_clock_digest=stage_clock_digest,
+                pins_path=pins_path, base_pins_path=BRIDGE.EXP088_PINS_PATH)
+            admission = _SterileAdmission()
+            integrity = {"qualified_source_revision": "a" * 40}
+            original_load = C.load
+            def load_bridge(name, filename):
+                return BRIDGE if filename == "input-bridge.py.txt" else original_load(name, filename)
+            try:
+                with (mock.patch.object(C, "preflight", return_value=(admission, integrity, b"{}", {})),
+                      mock.patch.object(C, "_read_bound_capture_configuration", return_value=("fixture", "unused")),
+                      mock.patch.object(C, "_configure_capture"),
+                      mock.patch.object(C, "load", side_effect=load_bridge)):
+                    state = C.begin(Path(tmp) / "stage", bundle_root)
+                self.assertEqual(state.carried_card_references["schema"],
+                                 "exp094-carried-card-reference-proof/1")
+                self.assertEqual((state.carried_card_references["card_job_count"],
+                                  state.carried_card_references["record_count"]), (16, 884))
+
+                original_load_module = importlib.machinery.SourceFileLoader.load_module
+                def fixture_load_module(loader):
+                    name = Path(loader.path).name
+                    if name == "prepare-assessments.py.txt":
+                        return types.SimpleNamespace(prepare=_fake_frozen_prepare)
+                    if name == "input-view-verifier.py.txt": return VIEW
+                    if name == "packet-viewer.py.txt": return PACKET_VIEWER
+                    return original_load_module(loader)
+                cohorts = json.loads((HERE / "cohorts.json").read_bytes())
+                cases90 = cohorts["cohorts"]["development"]
+                research90 = [case for case in cases90 if case.get("kind") == "research"]
+                self.assertEqual(len(cases90), 13)
+                self.assertEqual(len(research90), 8)
+                with mock.patch.object(importlib.machinery.SourceFileLoader,
+                                       "load_module", fixture_load_module):
+                    # Exact coordinator call; all admission/phase methods above
+                    # are sterile fixtures and no model/network function exists.
+                    result = P.prepare_assessment_inputs(state=state, cases=research90)
+                self.assertEqual(result["active_source_slot_count"], 48)
+                slot_manifest = json.loads((state.outdir / "assessment-inputs" /
+                                            "source-slot-manifest.json").read_bytes())
+                self.assertEqual(slot_manifest["carried_card_proof"], state.carried_card_references)
+                self.assertEqual(admission.phases, ["assessment-preparation"])
+                self.assertEqual(result["model_calls_performed"], 0)
+                self.assertEqual(slot_manifest["citation_alias_integrity"]["validated_source_slot_count"], 48)
+                self.assertEqual(slot_manifest["citation_alias_integrity"]["validated_passage_reference_count"], 48)
+
+                source_views = {row["logical_submission"]: row["input_view_plan"]
+                                for row in slot_manifest["active_source_slots"]}
+                source_jobs = [{key: value for key, value in row.items() if key != "input_view_plan"}
+                               for row in slot_manifest["active_source_slots"]]
+                identity_fields = {"logical_submission", "role", "task_id", "assessor_id",
+                                   "chunk_index", "helper_id"}
+                source_identities = [{key: job[key] for key in identity_fields} for job in source_jobs]
+                answer_plan = json.loads((HERE.parent / "EXP-077" / "assignment-plan.json").read_bytes())[
+                    "stages"]["development"]["answer"]
+                answer_identities = [{"logical_submission": job["submission_id"],
+                    "role": "answer-assessor", "task_id": job["task_id"],
+                    "assessor_id": job["assessor_id"], "anonymous_arm": job["anonymous_arm"],
+                    "packet_id": digest(ADMISSION.canonical_json(
+                        [state.clock[0]["stage_id"], job["submission_id"]]))}
+                    for job in answer_plan]
+                registry = CARRIER.SlotRegistry(source_identities, answer_identities)
+                registry.bind_source_inputs(source_jobs)
+                first = source_jobs[0]
+                # This is the coordinator's dispatch identity check and pinned
+                # local input read, without claiming a dispatch or model call.
+                self.assertEqual(registry.binding(first["logical_submission"]), first)
+                ref = next(row for row in slot_manifest["source_input_refs"]
+                           if row["logical_submission"] == first["logical_submission"])
+                input_path = Path(ref["input_path"])
+                label_path = state.outdir / "assessment-inputs" / ref["label_binding_path"]
+                self.assertEqual(digest(input_path.read_bytes()), first["input_sha256"])
+                self.assertEqual(digest(label_path.read_bytes()), first["label_binding_sha256"])
+                prompt = P.source_viewer_prompt(source_views[first["logical_submission"]])
+                self.assertIn("every `passages[*].evidence_id` value is a fixed-width citation code", prompt)
+                self.assertIn("copy that exact string, unchanged", prompt)
+                self.assertIn("page_count=1", prompt)
+                self.assertIn("input_sha256=" + first["input_sha256"], prompt)
+            finally:
+                BRIDGE.prepare_reused_inputs = previous_prepare
+
+
+if __name__ == "__main__":
+    unittest.main()

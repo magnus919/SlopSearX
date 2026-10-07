@@ -1,0 +1,385 @@
+"""Offline, synthetic-only EXP-045 runner fixtures (zero provider/search calls)."""
+from __future__ import annotations
+
+import importlib.machinery
+import importlib.util
+import base64
+import contextlib
+import io
+import json
+from decimal import Decimal
+import math
+import pathlib
+import shutil
+import tempfile
+import unittest
+import sys
+from unittest import mock
+
+HERE = pathlib.Path(__file__).resolve().parent
+spec = importlib.util.spec_from_loader("exp045_fixture_runner", importlib.machinery.SourceFileLoader("exp045_fixture_runner", str(HERE / "replay.py.txt")))
+R = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(R)
+
+
+def synthetic_spec(n=20):
+    ids = [f"c{i:02d}" for i in range(n)]
+    candidates = [{"id": cid, "title": f"Synthetic {cid}", "url": f"https://example.invalid/{cid}", "snippet": "neutral fixture"} for cid in ids]
+    body = R.wire({"model": R.MODEL, "state": {"candidates": candidates}, "questions": {}})
+    return {"kind": "D", "role": "D", "candidate_ids": ids, "body": body, "task": "Synthetic source-selection purpose for fixture validation.", "facets": []}, {cid: float(max(0, 9 - i // 3)) for i, cid in enumerate(ids)}
+
+
+def response_for(batch, picks=None, probs_factory=None):
+    picks = picks or {}
+    answers = {}
+    for qid, q in batch["questions"].items():
+        options = list(q["criteria"])
+        if probs_factory:
+            probs = probs_factory(qid, options)
+        else:
+            chosen = picks.get(qid, "KEEP")
+            probs = {o: (1.0 if o == chosen else 0.0) for o in options}
+        chosen_id = picks.get(qid, max(probs, key=probs.get))
+        answers[qid] = {"type": "choice", "choice": chosen_id, "probabilities": probs, "confidence": 1.0}
+    return {"model": R.MODEL, "answers": answers, "usage": {"input_tokens": 100, "output_tokens": 40}, "_elapsed_ms": 10.0}
+
+
+def residual_response(batch, total):
+    def split(_qid, options):
+        values = {option: 0.0 for option in options}
+        values[options[0]] = total / 2
+        values[options[1]] = total / 2
+        return values
+    return response_for(batch, probs_factory=split)
+
+
+def current_state(n=20, facet_count=2):
+    spec, scores = synthetic_spec(n)
+    facets = [{"id": f"f{i}", "description": f"Fixture facet {i}"} for i in range(facet_count)]
+    return R.initial_state(spec, {"scores": scores}, facets), spec, scores, facets
+
+
+class TestChoiceBatch(unittest.TestCase):
+    def test_neutral_has_11_questions_and_721_options(self):
+        neutral = R.make_neutral_fixture()
+        body = R.strict_json(neutral["body"])
+        self.assertEqual(len(body["questions"]), 11)
+        self.assertEqual(sum(len(q["criteria"]) for q in body["questions"].values()), 721)
+        self.assertEqual(neutral["question_count"], 11)
+        self.assertEqual(neutral["option_count"], 721)
+        self.assertLessEqual(neutral["body_bytes"], R.MAX_BODY)
+        self.assertLessEqual(neutral["state_bytes"], R.MAX_STATE)
+
+    def test_exact_instruction_templates_and_option_order(self):
+        state, _, _, _ = current_state()
+        batch = R.build_batch(state)
+        self.assertEqual(batch["questions"]["victim"]["instructions"], R.GLOBAL_INSTRUCTIONS)
+        self.assertEqual(list(batch["questions"]["victim"]["criteria"])[0], "KEEP")
+        victim = state["removable_ids"][0]
+        branch = batch["questions"][f"replacement_for_{victim}"]
+        self.assertEqual(list(branch["criteria"])[0], "KEEP")
+        self.assertIn(victim, branch["instructions"])
+        self.assertEqual(batch["state"]["facets"], state["facets"])
+
+    def test_complete_response_parses_and_resolves_keep_ties(self):
+        state, *_ = current_state()
+        batch = R.build_batch(state)
+        parsed = response_for(batch, probs_factory=lambda qid, options: {o: 0.5 if o in ("KEEP", options[-1]) else 0.0 for o in options})
+        chosen, _ = R.validate_choice_response(parsed, batch)
+        self.assertTrue(all(value == "KEEP" for value in chosen.values()))
+
+    def test_missing_extra_and_nonfinite_distribution_rejected(self):
+        state, *_ = current_state()
+        batch = R.build_batch(state)
+        valid = response_for(batch)
+        bad = dict(valid); bad["answers"] = dict(valid["answers"]); bad["answers"].pop(next(iter(batch["questions"])))
+        with self.assertRaises(ValueError): R.validate_choice_response(bad, batch)
+        bad = response_for(batch); bad["answers"]["victim"]["probabilities"]["extra"] = 0
+        with self.assertRaises(ValueError): R.validate_choice_response(bad, batch)
+        bad = response_for(batch); bad["answers"]["victim"]["probabilities"]["KEEP"] = math.nan
+        with self.assertRaises(ValueError): R.validate_choice_response(bad, batch)
+
+    def test_probability_sum_confidence_and_reported_choice_validated(self):
+        state, *_ = current_state()
+        batch = R.build_batch(state)
+        bad = response_for(batch); bad["answers"]["victim"]["probabilities"]["KEEP"] = 0.5
+        with self.assertRaises(ValueError): R.validate_choice_response(bad, batch)
+        bad = response_for(batch); bad["answers"]["victim"]["confidence"] = True
+        with self.assertRaises(ValueError): R.validate_choice_response(bad, batch)
+        bad = response_for(batch); bad["answers"]["victim"]["choice"] = list(batch["questions"]["victim"]["criteria"])[-1]
+        with self.assertRaises(ValueError): R.validate_choice_response(bad, batch)
+
+    def test_decimal_probability_sum_boundaries_at_two_options(self):
+        batch = {"questions": {"q": {"criteria": {"KEEP": "keep", "other": "other"}}}}
+        for total in (0.99, 1.01):
+            parsed = residual_response(batch, total)
+            before = json.loads(json.dumps(parsed))
+            chosen, distributions = R.validate_choice_response(parsed, batch)
+            self.assertEqual(chosen, {"q": "KEEP"})
+            self.assertEqual(parsed, before)
+            self.assertEqual(distributions["q"]["KEEP"], total / 2)
+            self.assertEqual(Decimal(R.probability_sums(parsed, batch)["q"]), Decimal(str(total)))
+        for total in (0.989, 1.011, 0.0):
+            with self.assertRaises(ValueError):
+                R.validate_choice_response(residual_response(batch, total), batch)
+
+    def test_decimal_probability_sum_boundaries_at_71_options(self):
+        batch = {"questions": {"branch": {"criteria": {"KEEP": "keep", **{f"o{i:02d}": "option" for i in range(70)}}}}}
+        self.assertEqual(len(batch["questions"]["branch"]["criteria"]), 71)
+        for total in (0.99, 1.01):
+            parsed = residual_response(batch, total)
+            chosen, _ = R.validate_choice_response(parsed, batch)
+            self.assertEqual(chosen, {"branch": "KEEP"})
+            self.assertEqual(Decimal(R.probability_sums(parsed, batch)["branch"]), Decimal(str(total)))
+        for total in (0.989, 1.011, 0.0):
+            with self.assertRaises(ValueError):
+                R.validate_choice_response(residual_response(batch, total), batch)
+
+    def test_full_721_entry_action_invariance_and_independent_branch_validation(self):
+        state = R.make_neutral_fixture()["state"]
+        batch = R.build_batch(state)
+        onehot = response_for(batch)
+        residual = residual_response(batch, 0.99)
+        original = json.loads(json.dumps(residual["answers"]))
+        choices1, dist1 = R.validate_choice_response(onehot, batch)
+        choices2, dist2 = R.validate_choice_response(residual, batch)
+        self.assertEqual(choices1, choices2)
+        self.assertEqual(choices1, {qid: "KEEP" for qid in batch["questions"]})
+        self.assertEqual(residual["answers"], original)
+        self.assertTrue(all(Decimal(value) == Decimal("0.99") for value in R.probability_sums(residual, batch).values()))
+        state1, action1, stop1 = R.apply_global_action(state, choices1)
+        state2, action2, stop2 = R.apply_global_action(state, choices2)
+        self.assertEqual((state1, action1, stop1), (state2, action2, stop2))
+        self.assertEqual(dist2["victim"]["KEEP"], 0.495)
+        broken = json.loads(json.dumps(residual))
+        branch = next(qid for qid in batch["questions"] if qid.startswith("replacement_for_"))
+        options = list(batch["questions"][branch]["criteria"])
+        broken["answers"][branch]["probabilities"] = {key: 0.0 for key in options}
+        broken["answers"][branch]["probabilities"][options[0]] = 0.4945
+        broken["answers"][branch]["probabilities"][options[1]] = 0.4945
+        with self.assertRaises(ValueError):
+            R.validate_choice_response(broken, batch)
+
+    def test_rejected_residual_preserves_exact_raw_bytes_answers_and_sum_diagnostics(self):
+        neutral = R.make_neutral_fixture()
+        state = neutral["state"]
+        batch = R.build_batch(state)
+        parsed = residual_response(batch, 0.989)
+        raw = R.wire(parsed)
+        with tempfile.TemporaryDirectory(prefix="exp046-raw-residual-") as td:
+            with mock.patch.object(R.H, "bounded_process", return_value=(raw, 0, 1.0, False, False)):
+                with self.assertRaises(R.AttemptStop):
+                    R._run_one(pathlib.Path(td), ["synthetic-only"], "synthetic-op", state, 0.0, [0, 0])
+            response_path = pathlib.Path(td) / "receipts/synthetic-op-choice-step1.response.bin"
+            receipt = R.load_json(pathlib.Path(td) / "receipts/synthetic-op-choice-step1.json")
+            self.assertEqual(response_path.read_bytes(), raw)
+            self.assertEqual(receipt["answers"], parsed["answers"])
+            self.assertTrue(all(Decimal(value) == Decimal("0.989") for value in receipt["probability_sums"].values()))
+
+    def test_global_keep_ignores_all_valid_conditional_answers(self):
+        state, *_ = current_state()
+        batch = R.build_batch(state)
+        choices = {qid: (list(q["criteria"])[-1] if qid != "victim" else "KEEP") for qid, q in batch["questions"].items()}
+        new, action, stop = R.apply_global_action(state, choices)
+        self.assertEqual(stop, "global_keep")
+        self.assertEqual(new["selected_ids"], state["selected_ids"])
+        self.assertEqual(action["choice"], "KEEP")
+
+    def test_only_selected_victims_conditional_answer_is_consumed(self):
+        state, *_ = current_state()
+        batch = R.build_batch(state)
+        victim = state["removable_ids"][0]
+        choices = {qid: list(q["criteria"])[-1] for qid, q in batch["questions"].items()}
+        choices["victim"] = f"remove_{victim}"
+        target = state["eligible_ids"][0]
+        choices[f"replacement_for_{victim}"] = f"replace_{target}"
+        new, action, stop = R.apply_global_action(state, choices)
+        self.assertEqual(stop, "accepted_replacement")
+        self.assertEqual(action, {"victim": victim, "replacement": target})
+        self.assertIn(target, new["protected_ids"])
+        self.assertIn(victim, new["evicted_ids"])
+        self.assertNotIn(victim, new["eligible_ids"])
+        self.assertNotIn(target, new["removable_ids"])
+
+    def test_named_branch_keep_stops_without_changing_set(self):
+        state, *_ = current_state()
+        victim = state["removable_ids"][0]
+        choices = {"victim": f"remove_{victim}", f"replacement_for_{victim}": "KEEP"}
+        new, _, stop = R.apply_global_action(state, choices)
+        self.assertEqual(stop, "branch_keep")
+        self.assertEqual(new["selected_ids"], state["selected_ids"])
+
+    def test_one_to_four_replacements_protect_and_never_bounce(self):
+        state, spec, scores, facets = current_state(32)
+        receipts = []
+        for _ in range(4):
+            batch = R.build_batch(state)
+            self.assertIsNotNone(batch)
+            victim = state["removable_ids"][0]
+            candidate = state["eligible_ids"][0]
+            choices = {qid: "KEEP" for qid in batch["questions"]}
+            choices["victim"] = f"remove_{victim}"
+            choices[f"replacement_for_{victim}"] = f"replace_{candidate}"
+            new, _, stop = R.apply_global_action(state, choices)
+            self.assertEqual(stop, "accepted_replacement")
+            self.assertNotIn(victim, new["eligible_ids"])
+            self.assertNotIn(candidate, new["removable_ids"])
+            state = new
+        self.assertEqual(len(state["evicted_ids"]), 4)
+        self.assertEqual(len(state["protected_ids"]), 4)
+        self.assertEqual(state["step"], 5)
+        self.assertEqual(R.build_batch(state), None)
+
+    def test_score_floor_and_deterministic_no_action(self):
+        state, *_ = current_state(11, 1)
+        state["scores"][state["eligible_ids"][0]] = 4.999
+        self.assertNotIn(state["eligible_ids"][0], R.state_for_round(state)["eligible_ids"])
+        self.assertIsNone(R.build_batch(state))
+
+    def test_invalid_choice_falls_back_to_full_w0(self):
+        spec, scores = synthetic_spec(20)
+        facets = [{"id": "f0", "description": "facet"}]
+        d = {"scores": scores}
+        dorder = R._stable_score_order(spec, d)
+        w0 = list(reversed(dorder))
+        batch = R.build_batch(R.initial_state(spec, d, facets))
+        malformed = {"parsed": response_for(batch)}
+        malformed["parsed"]["answers"]["victim"]["probabilities"]["KEEP"] = 0.2
+        order, trace, fallback = R.relative_selection(spec, d, [malformed], w0, facets)
+        self.assertTrue(fallback)
+        self.assertEqual(order, w0)
+        self.assertTrue(trace["fallback"])
+
+    def test_state_and_request_caps_reject_before_transport(self):
+        batch = R.build_batch(R.make_neutral_fixture()["state"])
+        # The fixture's real max-question request is valid; synthetic giant state is rejected locally.
+        self.assertLessEqual(len(R.checked_body(batch)), R.MAX_BODY)
+        huge = dict(batch); huge["state"] = dict(batch["state"]); huge["state"]["purpose"] = "x" * (R.MAX_STATE + 1)
+        with self.assertRaisesRegex(ValueError, "state_bytes"):
+            R.checked_body(huge)
+
+    def test_w0_first40_scores_preserve_inherited_unscored_tail(self):
+        verified = R.validate_baseline()
+        spec = verified["specmap"]["cardiac-w0"]
+        receipt = verified["baseline"]["receipts"]["cardiac-w0"]
+        order = R._w0_order(spec, receipt)
+        self.assertEqual(len(order), len(spec["candidate_ids"]))
+        self.assertEqual(len(set(order)), len(order))
+        self.assertEqual(set(order), set(spec["candidate_ids"]))
+        scored = list(receipt["scores"])
+        self.assertEqual(order[40:], [cid for cid in spec["candidate_ids"] if cid not in set(scored)])
+
+    def test_jsonl_append_roundtrips_as_one_event_per_line(self):
+        with tempfile.TemporaryDirectory(prefix="exp045-jsonl-") as td:
+            path = pathlib.Path(td) / "attempts.jsonl"
+            R._append(path, {"event": "run_started", "at_utc": "2026-10-04T00:00:00+00:00"})
+            R._append(path, {"event": "attempt_started", "attempt": 1, "at_utc": "2026-10-04T00:00:01+00:00"})
+            lines = path.read_bytes().splitlines()
+            self.assertEqual(len(lines), 2)
+            self.assertEqual([R.strict_json(line)["event"] for line in lines], ["run_started", "attempt_started"])
+
+    def test_offline_published_gate_allows_neutral_phase_without_neutral_receipt(self):
+        with tempfile.TemporaryDirectory(prefix="exp045-offline-gate-") as td:
+            root = pathlib.Path(td)
+            names = {"replay.py.txt", "fixture_tests.py.txt", "manual-choice-checks.py.txt", "publication-gates-checks.py.txt", "transport-fixtures.py.txt", "transport-qualification.json", "prepared-plan.json", "neutral-body.json", "neutral-inventory.json", "source-pins.json", "registration-integrity.json"}
+            for name in names:
+                src = HERE / name
+                if name == "prepared-plan.json":
+                    (root / name).write_bytes(R.pretty(R.make_prepared_plan(HERE)))
+                elif name == "neutral-body.json":
+                    (root / name).write_bytes(R.make_neutral_fixture()["body"])
+                elif name == "neutral-inventory.json":
+                    neutral = R.make_neutral_fixture()
+                    (root / name).write_bytes(R.pretty({k: v for k, v in neutral.items() if k not in {"body", "state"}}))
+                elif src.is_file():
+                    shutil.copyfile(src, root / name)
+                else:
+                    (root / name).write_bytes(b"synthetic qualification fixture\n")
+            files = {name: R.sha((root / name).read_bytes()) for name in names}
+            qual = {"schema": "exp046-offline-qualification/1", "status": "passed", "files": files, "fixture_tests_passed": 13, "manual_checks_passed": 8, "synthetic_operations": 21, "primary_deltas": {"A": 8, "B": 8}, "pool_inventory": 13, "neutral_quality_failed": True, "provider_calls": 0, "search_calls": 0}
+            (root / "offline-qualification.json").write_bytes(R.pretty(qual))
+            with mock.patch.object(R, "_verify_publication_revision", return_value="a" * 64):
+                gate = R.publication_gates(root, True, offline_revision="a" * 40, require_neutral=False)
+            self.assertTrue(gate["offline"])
+            self.assertFalse(gate["neutral"])
+
+    def test_real_cli_neutral_path_loads_pathlib_transport_and_uses_local_fake(self):
+        with tempfile.TemporaryDirectory(prefix="exp046-cli-neutral-") as td:
+            root = pathlib.Path(td)
+            names = {"replay.py.txt", "fixture_tests.py.txt", "manual-choice-checks.py.txt", "publication-gates-checks.py.txt", "transport-fixtures.py.txt", "transport-qualification.json", "prepared-plan.json", "neutral-body.json", "neutral-inventory.json", "source-pins.json", "registration-integrity.json", "registration-review.md"}
+            neutral = R.make_neutral_fixture()
+            for name in names:
+                src = HERE / name
+                if name == "prepared-plan.json":
+                    (root / name).write_bytes(R.pretty(R.make_prepared_plan(HERE)))
+                elif name == "neutral-body.json":
+                    (root / name).write_bytes(neutral["body"])
+                elif name == "neutral-inventory.json":
+                    (root / name).write_bytes(R.pretty({k: v for k, v in neutral.items() if k not in {"body", "state"}}))
+                elif src.is_file():
+                    shutil.copyfile(src, root / name)
+                else:
+                    (root / name).write_bytes(b"synthetic cli qualification placeholder\n")
+            files = {name: R.sha((root / name).read_bytes()) for name in names if name not in {"registration-review.md"}}
+            qual = {"schema": "exp046-offline-qualification/1", "status": "passed", "files": files, "fixture_tests_passed": 16, "manual_checks_passed": 1, "synthetic_operations": 21, "primary_deltas": {"A": 8, "B": 8}, "pool_inventory": 13, "neutral_quality_failed": True, "provider_calls": 0, "search_calls": 0}
+            (root / "offline-qualification.json").write_bytes(R.pretty(qual))
+            fake_transport = root / "synthetic_transport.py"
+            fake_transport.write_text(
+                "import base64,json,sys\n"
+                "env=json.loads(sys.stdin.buffer.read())\n"
+                "body=json.loads(base64.b64decode(env['body_base64']))\n"
+                "answers={}\n"
+                "for qid,q in body['questions'].items():\n"
+                " opts=list(q['criteria'])\n"
+                " probs={o:(1.0 if o=='KEEP' else 0.0) for o in opts}\n"
+                " answers[qid]={'type':'choice','choice':'KEEP','probabilities':probs,'confidence':1.0}\n"
+                "out={'model':'jev-1.13.0','answers':answers,'usage':{'input_tokens':100,'output_tokens':40},'_elapsed_ms':10.0}\n"
+                "sys.stdout.write(json.dumps(out))\n",
+                encoding="utf-8",
+            )
+            argv_file = root / "transport-argv.json"
+            argv_file.write_bytes(R.pretty([sys.executable, str(fake_transport)]))
+            argv_loader = R.H.read_transport_argv
+            with mock.patch.object(R, "_verify_publication_revision", return_value="a" * 64), \
+                 mock.patch.object(R.H, "read_transport_argv", wraps=argv_loader) as loader, \
+                 mock.patch.object(sys, "argv", ["replay.py.txt", "--root", str(root), "--offline-publication-revision", "a" * 40, "--neutral", str(argv_file)]), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                R.main()
+            self.assertTrue(root.joinpath("neutral-receipt.json").is_file())
+            self.assertEqual(loader.call_count, 1)
+            self.assertIsInstance(loader.call_args.args[0], pathlib.Path)
+            self.assertEqual(R.load_json(root / "neutral-receipt.json")["status"], "accepted")
+
+    def test_fake_21_operation_pipeline_reaches_both_reference_analysis_and_fails_neutral_gate(self):
+        verified = R.validate_baseline()
+        refs = verified["refs"]
+        fake_ops = []
+        for op in R.operation_inventory(verified):
+            dspec = verified["specmap"][op["d_request_id"]]
+            drec = verified["baseline"]["receipts"][op["d_request_id"]]
+            state = R.initial_state(dspec, drec, op["facets"])
+            batch = R.build_batch(state)
+            parsed = response_for(batch)  # A complete neutral answer that keeps the current set.
+            chosen, _ = R.validate_choice_response(parsed, batch)
+            next_state, action, stop = R.apply_global_action(state, chosen)
+            self.assertEqual(stop, "global_keep")
+            order, _, fallback = R.relative_selection(dspec, drec, [{"parsed": parsed}], R._w0_order(verified["specmap"][op["w0_request_id"]], verified["baseline"]["receipts"][op["w0_request_id"]]), op["facets"])
+            self.assertFalse(fallback)
+            fake_ops.append({"operation_id": op["id"], "status": "completed", "order": order, "steps": 1})
+        fake_results = {"schema": "exp045-operation-results/1", "status": "complete", "operations": fake_ops}
+        synthetic, facet_ids, navigation = R.build_rankings_from_results(verified, fake_results)
+        report = R.analyze_rankings(synthetic, refs, facet_ids)
+        self.assertIn("development_screen_passed", report)
+        self.assertFalse(report["development_screen_passed"])
+        primary = report["primary"]
+        expected_q = {f"q{i}" for i in range(1, 9)}
+        for ref in ("A", "B"):
+            self.assertEqual(set(primary[ref]["paired_deltas"]), expected_q)
+        self.assertEqual(set(synthetic), set(R.SOFTWARE) | set(R.EXTENDED))
+        self.assertEqual(len(synthetic), 13)
+        self.assertEqual(len(R.operation_inventory(verified)), 21)
+        self.assertEqual(len(navigation), 5)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

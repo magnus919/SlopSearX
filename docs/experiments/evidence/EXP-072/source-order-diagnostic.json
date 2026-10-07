@@ -1,0 +1,1307 @@
+{
+  "schema": "exp072-posthoc-source-order-diagnosis/1",
+  "status": "diagnostic only; no candidate qualification",
+  "adoption_eligible": false,
+  "provider_calls": 0,
+  "search_calls": 0,
+  "input_sha256": {
+    "run": "8e3513b1758e9cd1528ee672c3474423cacc05aa3ae0b57c2fdae4d7f9ac78ba",
+    "analysis": "568744ecb0fa8eaf2fabf5fc4a37730a54dec63ebe52befc7668a6b90739f86d",
+    "acquisition": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "references": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9"
+  },
+  "cases": [
+    {
+      "case": "q1",
+      "candidate_minus_w0": {
+        "A": 0.16613081007641173,
+        "B": 0.06186803416175923
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c10",
+        "c9"
+      ],
+      "promoted_into_top10": [
+        "c23",
+        "c25"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c11",
+          "title": "GitHub - Tinder/bazel-diff: Performs Bazel Target Diffing between two revisions in Git, allowing for Test Target Selection and Selective Building \u00b7 GitHub",
+          "url": "https://github.com/Tinder/bazel-diff",
+          "w0_rank": 1,
+          "candidate_rank": 5,
+          "candidate_score": 2.47,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c5",
+          "title": "5 Tips for Managing Bazel Dependencies (Without Losing Friends) | Blog | Endor Labs",
+          "url": "https://www.endorlabs.com/learn/5-tips-for-managing-bazel-dependencies-without-losing-friends",
+          "w0_rank": 2,
+          "candidate_rank": 9,
+          "candidate_score": 2.08,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c0",
+          "title": "Monorepo Testing with Affected Package Detection: Run Only What Changed | QASkills.sh",
+          "url": "https://qaskills.sh/blog/monorepo-testing-affected-package-detection",
+          "w0_rank": 3,
+          "candidate_rank": 1,
+          "candidate_score": 2.98,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c19",
+          "title": "Monorepo Shared Green - Aspect Blog",
+          "url": "https://blog.aspect.build/monorepo-shared-green",
+          "w0_rank": 4,
+          "candidate_rank": 7,
+          "candidate_score": 2.23,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c15",
+          "title": "Optimizing CI pipelines for monorepos - Graphite",
+          "url": "https://graphite.com/guides/optimizing-ci-pipelines-monorepos",
+          "w0_rank": 5,
+          "candidate_rank": 10,
+          "candidate_score": 1.96,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c1",
+          "title": "Run Only Affected Monorepo Builds Without Missing Shared-Library Changes",
+          "url": "https://oneuptime.com/blog/post/2026-07-28-monorepo-only-affected-builds/view",
+          "w0_rank": 6,
+          "candidate_rank": 3,
+          "candidate_score": 2.54,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c14",
+          "title": "Evaluate Bazel for dependency graph, affected tests, and architecture enforcement \u00b7 Issue #952 \u00b7 Midtown-Technology-Group/bifrost",
+          "url": "https://github.com/Midtown-Technology-Group/bifrost/issues/952",
+          "w0_rank": 7,
+          "candidate_rank": 4,
+          "candidate_score": 2.49,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c10",
+          "title": "Top 5 Monorepo Tools for 2026 - Aviator Blog",
+          "url": "https://www.aviator.co/blog/monorepo-tools/",
+          "w0_rank": 8,
+          "candidate_rank": 12,
+          "candidate_score": 1.88,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c9",
+          "title": "Overcoming monorepo challenges with Bazel",
+          "url": "https://virtuslab.com/blog/backend/overcoming-monorepo-challenges/",
+          "w0_rank": 9,
+          "candidate_rank": 19,
+          "candidate_score": 1.52,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c18",
+          "title": "11 Monorepo Build Tools You Should Know | ITNEXT",
+          "url": "https://itnext.io/11-monorepo-build-tools-you-should-know-35b83738b95f",
+          "w0_rank": 10,
+          "candidate_rank": 8,
+          "candidate_score": 2.09,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c23",
+          "title": "Repository Intelligence Graph: Deterministic Architectural Map for LLM Code Assistants",
+          "url": "https://doi.org/10.48550/arxiv.2601.10112",
+          "w0_rank": 14,
+          "candidate_rank": 2,
+          "candidate_score": 2.74,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c25",
+          "title": "Practical Pipeline-Aware Regression Test Optimization for Continuous Integration",
+          "url": "https://doi.org/10.48550/arxiv.2501.11550",
+          "w0_rank": 17,
+          "candidate_rank": 6,
+          "candidate_score": 2.27,
+          "reference_A": 3,
+          "reference_B": 2
+        }
+      ]
+    },
+    {
+      "case": "q2",
+      "candidate_minus_w0": {
+        "A": -0.08110062311499833,
+        "B": 0.14179363916235554
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c1",
+        "c4",
+        "c10",
+        "c11",
+        "c6"
+      ],
+      "promoted_into_top10": [
+        "c3",
+        "c8",
+        "c20",
+        "c7",
+        "c15"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c0",
+          "title": "Migrate to Java 21 | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradetojava21",
+          "w0_rank": 1,
+          "candidate_rank": 1,
+          "candidate_score": 2.88,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c5",
+          "title": "Simplify Java and Spring Boot Migration with OpenRewrite (2026 Refresh) - DEV Community",
+          "url": "https://dev.to/verhasi/simplify-java-and-spring-boot-migration-with-openrewrite-2026-refresh-6eb",
+          "w0_rank": 2,
+          "candidate_rank": 5,
+          "candidate_score": 2.37,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c9",
+          "title": "Modernizing Legacy Microservices: Upgrading from Java 8 & Spring Boot 2 to Java 21 & Spring Boot 3.3.5 Using OpenRewrite | by Vishal Kumar Singh | Medium",
+          "url": "https://medium.com/@vishal.kr.singh/modernizing-legacy-microservices-upgrading-from-java-8-spring-boot-2-to-java-21-spring-boot-3-3-c38a2abe728d",
+          "w0_rank": 3,
+          "candidate_rank": 3,
+          "candidate_score": 2.74,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c1",
+          "title": "Migrate tests to Java 21 | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/recipes/upgradeteststojava21",
+          "w0_rank": 4,
+          "candidate_rank": 14,
+          "candidate_score": 1.62,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c4",
+          "title": "Migrate to Java 17 | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/running-recipes/popular-recipe-guides/migrate-to-java-17",
+          "w0_rank": 5,
+          "candidate_rank": 11,
+          "candidate_score": 1.99,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c10",
+          "title": "Upgrade plugins to Java 21 compatible versions | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradepluginsforjava21",
+          "w0_rank": 6,
+          "candidate_rank": 12,
+          "candidate_score": 1.98,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c2",
+          "title": "GitHub - openrewrite/rewrite-migrate-java: OpenRewrite recipes for migrating to newer versions of Java. \u00b7 GitHub",
+          "url": "https://github.com/openrewrite/rewrite-migrate-java",
+          "w0_rank": 7,
+          "candidate_rank": 2,
+          "candidate_score": 2.74,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c16",
+          "title": "Upgrade build to Java 21 | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradebuildtojava21",
+          "w0_rank": 8,
+          "candidate_rank": 10,
+          "candidate_score": 2.21,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c11",
+          "title": "Migrate to Java 11 | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/migrate/java8tojava11",
+          "w0_rank": 9,
+          "candidate_rank": 13,
+          "candidate_score": 1.95,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c6",
+          "title": "Migrate to Java 8 | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradetojava8",
+          "w0_rank": 10,
+          "candidate_rank": 21,
+          "candidate_score": 0.79,
+          "reference_A": 1,
+          "reference_B": 1
+        },
+        {
+          "id": "c3",
+          "title": "Modernize | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/migrate",
+          "w0_rank": 12,
+          "candidate_rank": 4,
+          "candidate_score": 2.51,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c8",
+          "title": "Recipes | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/recipes",
+          "w0_rank": 13,
+          "candidate_rank": 6,
+          "candidate_score": 2.31,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c20",
+          "title": "MigrationBench: Repository-Level Code Migration Benchmark from Java 8",
+          "url": "https://doi.org/10.1145/3770855.3817526",
+          "w0_rank": 14,
+          "candidate_rank": 7,
+          "candidate_score": 2.31,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c7",
+          "title": "Upgrade Java version | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/recipes/java/migrate/upgradejavaversion",
+          "w0_rank": 11,
+          "candidate_rank": 8,
+          "candidate_score": 2.29,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c15",
+          "title": "All Recipes by Module | OpenRewrite Docs",
+          "url": "https://docs.openrewrite.org/reference/all-recipes",
+          "w0_rank": 16,
+          "candidate_rank": 9,
+          "candidate_score": 2.25,
+          "reference_A": 2,
+          "reference_B": 2
+        }
+      ]
+    },
+    {
+      "case": "q3",
+      "candidate_minus_w0": {
+        "A": 0.06315465443012003,
+        "B": -0.0015952933268840175
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c7",
+        "c19",
+        "c16",
+        "c8",
+        "c1"
+      ],
+      "promoted_into_top10": [
+        "c12",
+        "c14",
+        "c6",
+        "c4",
+        "c17"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c2",
+          "title": "On Automated and Explainable Provenance of AI-Generated Code",
+          "url": "https://arxiv.org/html/2608.02329v1",
+          "w0_rank": 1,
+          "candidate_rank": 8,
+          "candidate_score": 1.78,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c7",
+          "title": "AgenTag: Attribution of AI Coding Agents from Behavioral Fingerprints",
+          "url": "https://arxiv.org/html/2608.00966v1",
+          "w0_rank": 2,
+          "candidate_rank": 20,
+          "candidate_score": 1.47,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c10",
+          "title": "Codacy Just Teased its New GPL License Scanner for AI Code",
+          "url": "https://blog.codacy.com/codacy-just-teased-its-new-gpl-license-scanner-for-ai-code",
+          "w0_rank": 3,
+          "candidate_rank": 6,
+          "candidate_score": 1.82,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c19",
+          "title": "Managing the Risk of AI-Generated Code: A CTO Playbook | Augment Code",
+          "url": "https://www.augmentcode.com/guides/managing-ai-generated-code-risk",
+          "w0_rank": 4,
+          "candidate_rank": 19,
+          "candidate_score": 1.5,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c16",
+          "title": "Copyrights, Professional Perspective - IP Issues With AI Code Generators",
+          "url": "https://www.bloomberglaw.com/external/document/X4H9CFB4000000/copyrights-professional-perspective-ip-issues-with-ai-code-gener",
+          "w0_rank": 5,
+          "candidate_rank": 18,
+          "candidate_score": 1.51,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c8",
+          "title": "Debt Behind the AI Boom: A Large-Scale Empirical Study of AI-Generated Code in the Wild",
+          "url": "https://arxiv.org/html/2603.28592v2",
+          "w0_rank": 6,
+          "candidate_rank": 16,
+          "candidate_score": 1.58,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c3",
+          "title": "Detecting AI Coding Agents in Open Source: A Validated Multi-Method Census of 180 Million Repositories",
+          "url": "https://arxiv.org/html/2606.24429v1",
+          "w0_rank": 7,
+          "candidate_rank": 5,
+          "candidate_score": 1.89,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c13",
+          "title": "Looking the Gi[f]t Horse in the Mouth: How Agentic Coding Platforms Increase the Risk of License Contamination \u00b7 Wake Forest Journal of Business and Intellectual Property Law",
+          "url": "https://jbipl.pubpub.org/pub/r9v2sntq/release/1",
+          "w0_rank": 8,
+          "candidate_rank": 7,
+          "candidate_score": 1.8,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c1",
+          "title": "AI Coding Guardrails | FOSSA",
+          "url": "https://fossa.com/solutions/ai-coding-guardrails/",
+          "w0_rank": 9,
+          "candidate_rank": 14,
+          "candidate_score": 1.6,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c5",
+          "title": "Provenance and Attribution | Tabnine Docs",
+          "url": "https://docs.tabnine.com/main/welcome/readme/protection/provenance-and-attribution",
+          "w0_rank": 10,
+          "candidate_rank": 1,
+          "candidate_score": 2.4,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c12",
+          "title": "Who Wrote This Code? A Layered Approach to AI Attribution and Provenance",
+          "url": "https://mattgoodrich.com/posts/ai-code-attribution-and-provenance/",
+          "w0_rank": 12,
+          "candidate_rank": 2,
+          "candidate_score": 2.1,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c14",
+          "title": "Can we trust the source? A systematic review of watermarking and attribution for AI-generated code - ScienceDirect",
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S0950584926001461",
+          "w0_rank": 14,
+          "candidate_rank": 3,
+          "candidate_score": 2.07,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c6",
+          "title": "Vendoring AI-Generated Code: SBOM and License Implications | Knowledge Base | Crash Override",
+          "url": "https://crashoverride.com/resources/knowledge-base/supply-chain-security/vendoring-ai-generated-code",
+          "w0_rank": 19,
+          "candidate_rank": 4,
+          "candidate_score": 1.97,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c4",
+          "title": "using tools like git ai for adding ai code generated metada...",
+          "url": "https://www.thinkscientist.com/ai-code-provenance-the-accountability-gap-nobody-has-closed/",
+          "w0_rank": 11,
+          "candidate_rank": 9,
+          "candidate_score": 1.76,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c17",
+          "title": "10 Best AI Code Provenance Tools 2026: Avoid IP & Legal Risks \u2014 CodeBrewTools Blog | CodeBrewTools",
+          "url": "https://codebrewtools.com/blogs/ai-code-provenance-compliance-tools-2026",
+          "w0_rank": 21,
+          "candidate_rank": 10,
+          "candidate_score": 1.73,
+          "reference_A": 2,
+          "reference_B": 2
+        }
+      ]
+    },
+    {
+      "case": "q4",
+      "candidate_minus_w0": {
+        "A": 0.16763302927140666,
+        "B": 0.12576672359890295
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c14",
+        "c4",
+        "c8",
+        "c12",
+        "c11"
+      ],
+      "promoted_into_top10": [
+        "c16",
+        "c20",
+        "c40",
+        "c21",
+        "c22"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c14",
+          "title": "Does your code match your spec? - Kiro",
+          "url": "https://kiro.dev/blog/property-based-testing/",
+          "w0_rank": 1,
+          "candidate_rank": 20,
+          "candidate_score": 2.27,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c10",
+          "title": "Property-based testing #3: Shrinking Take One - Get Code",
+          "url": "https://getcode.substack.com/p/property-based-testing-3-shrinking",
+          "w0_rank": 2,
+          "candidate_rank": 8,
+          "candidate_score": 2.54,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c3",
+          "title": "Validating AI models and agents with property-based testing | InfoWorld",
+          "url": "https://www.infoworld.com/article/4227859/validating-ai-models-and-agents-with-property-based-testing.html",
+          "w0_rank": 3,
+          "candidate_rank": 1,
+          "candidate_score": 2.93,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c4",
+          "title": "Property-based Testing #5: Shrinking Choices, Shrinking Values",
+          "url": "https://getcode.substack.com/p/property-based-testing-5-shrinking",
+          "w0_rank": 4,
+          "candidate_rank": 11,
+          "candidate_score": 2.5,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c8",
+          "title": "Test quality and test oracles | SpecStory",
+          "url": "https://specstory.com/learning/test-quality",
+          "w0_rank": 5,
+          "candidate_rank": 14,
+          "candidate_score": 2.4,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c12",
+          "title": "Property-Based Testing: The Defense Against Weak Oracles",
+          "url": "https://www.blog-des-telecoms.com/en/blog/property-based-testing-defense-weak-oracles/",
+          "w0_rank": 6,
+          "candidate_rank": 16,
+          "candidate_score": 2.36,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c19",
+          "title": "Shrinking",
+          "url": "https://propertesting.com/book_shrinking.html",
+          "w0_rank": 7,
+          "candidate_rank": 7,
+          "candidate_score": 2.57,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c5",
+          "title": "Shrinking | Kotest",
+          "url": "https://kotest.io/docs/proptest/property-test-shrinking.html",
+          "w0_rank": 8,
+          "candidate_rank": 10,
+          "candidate_score": 2.52,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c9",
+          "title": "Shrinking | ZIO",
+          "url": "https://zio.dev/reference/test/property-testing/shrinking/",
+          "w0_rank": 9,
+          "candidate_rank": 9,
+          "candidate_score": 2.54,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c11",
+          "title": "Your own property based testing framework \u2014 Part 3: Shrinkers | by Nicolas Dubien | Medium",
+          "url": "https://medium.com/@nicolasdubien/your-own-property-based-testing-framework-part-3-shrinkers-564fa7a180eb",
+          "w0_rank": 10,
+          "candidate_rank": 13,
+          "candidate_score": 2.45,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c16",
+          "title": "Use Property-Based Testing to Bridge LLM Code Generation and Validation",
+          "url": "https://arxiv.org/html/2506.18315v1",
+          "w0_rank": 13,
+          "candidate_rank": 2,
+          "candidate_score": 2.8,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c20",
+          "title": "PBT-Bench: Benchmarking AI Agents on Property-Based Testing",
+          "url": "https://doi.org/10.48550/arxiv.2605.15229",
+          "w0_rank": 16,
+          "candidate_rank": 3,
+          "candidate_score": 2.64,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c40",
+          "title": "Agentic Property-Based Testing: Finding Bugs Across the Python Ecosystem",
+          "url": "https://www.semanticscholar.org/paper/e46ee1e13f118c63cbddbaeb59fdd7d5dba86988",
+          "w0_rank": 41,
+          "candidate_rank": 4,
+          "candidate_score": 2.6,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c21",
+          "title": "Agentic Proof and Property-Based Testing via Property-Templates in Data-Intensive Computing",
+          "url": "https://doi.org/10.48550/arxiv.2607.09072",
+          "w0_rank": 20,
+          "candidate_rank": 5,
+          "candidate_score": 2.59,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c22",
+          "title": "Beyond Superficial Tests: Adversarial Refinement for Reliable Property-Based Testing",
+          "url": "https://doi.org/10.18653/v1/2026.findings-acl.683",
+          "w0_rank": 17,
+          "candidate_rank": 6,
+          "candidate_score": 2.58,
+          "reference_A": 3,
+          "reference_B": 3
+        }
+      ]
+    },
+    {
+      "case": "q5",
+      "candidate_minus_w0": {
+        "A": -0.021036868875271897,
+        "B": 0.06909026549225294
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c24",
+        "c6",
+        "c17",
+        "c8"
+      ],
+      "promoted_into_top10": [
+        "c15",
+        "c7",
+        "c12",
+        "c5"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c1",
+          "title": "ClarEval: A Benchmark for Evaluating Clarification Skills of Code Agents under Ambiguous Instructions",
+          "url": "https://arxiv.org/html/2603.00187v1",
+          "w0_rank": 1,
+          "candidate_rank": 10,
+          "candidate_score": 2.61,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c2",
+          "title": "Ambig-SWE: Interactive Agents to Overcome Underspecificity in Software Engineering",
+          "url": "https://arxiv.org/html/2502.13069v3",
+          "w0_rank": 2,
+          "candidate_rank": 2,
+          "candidate_score": 2.92,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c14",
+          "title": "ClarifyCodeBench: Evaluating LLMs on Clarifying Ambiguous Requirements for Code Generation",
+          "url": "https://arxiv.org/html/2607.00711",
+          "w0_rank": 3,
+          "candidate_rank": 3,
+          "candidate_score": 2.8,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c24",
+          "title": "MARSAD: Multi-Agent Requirements System for Anomaly Detection in Software Engineering",
+          "url": "https://doi.org/10.70917/ijcisim-2026-5581",
+          "w0_rank": 4,
+          "candidate_rank": 11,
+          "candidate_score": 2.55,
+          "reference_A": 1,
+          "reference_B": 2
+        },
+        {
+          "id": "c0",
+          "title": "Clarity Is Not Assumed: Understanding LLM-Based Code Generation under Ambiguous Requirements",
+          "url": "https://arxiv.org/html/2604.21505v2",
+          "w0_rank": 5,
+          "candidate_rank": 8,
+          "candidate_score": 2.64,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c29",
+          "title": "Turning Intent into Specifications: A Benchmark and an Interactive User-Assistant Agent",
+          "url": "https://doi.org/10.48550/arxiv.2606.20585",
+          "w0_rank": 6,
+          "candidate_rank": 7,
+          "candidate_score": 2.66,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c16",
+          "title": "Curiosity by Design: An LLM-based Coding Assistant Asking Clarification Questions",
+          "url": "https://arxiv.org/html/2507.21285v1",
+          "w0_rank": 7,
+          "candidate_rank": 1,
+          "candidate_score": 2.93,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c6",
+          "title": "A Semiautomated Approach for Detecting Ambiguities in Software Requirements Using SpanBERT and Named Entity Recognition - Talha - 2025 - Journal of Software: Evolution and Process - Wiley Online Library",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1002/smr.70041",
+          "w0_rank": 8,
+          "candidate_rank": 13,
+          "candidate_score": 2.5,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c17",
+          "title": "MARV: A Multi-Agent Approach for Validation of Software Requirements Specifications",
+          "url": "https://openalex.org/W7132872213",
+          "w0_rank": 9,
+          "candidate_rank": 21,
+          "candidate_score": 2.24,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c8",
+          "title": "(PDF) An Analysis of Ambiguity Detection Techniques for Software Requirements Specification (SRS)",
+          "url": "https://www.researchgate.net/publication/326730868_An_Analysis_of_Ambiguity_Detection_Techniques_for_Software_Requirements_Specification_SRS",
+          "w0_rank": 10,
+          "candidate_rank": 15,
+          "candidate_score": 2.4,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c15",
+          "title": "(PDF) Requirements Ambiguity Detection and Explanation with LLMS: An Industrial Study",
+          "url": "https://www.researchgate.net/publication/397126862_Requirements_Ambiguity_Detection_and_Explanation_with_LLMS_An_Industrial_Study",
+          "w0_rank": 17,
+          "candidate_rank": 4,
+          "candidate_score": 2.73,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c7",
+          "title": "Clarifying Agent in Dialogue Systems",
+          "url": "https://www.emergentmind.com/topics/clarifying-agent",
+          "w0_rank": 14,
+          "candidate_rank": 5,
+          "candidate_score": 2.68,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c12",
+          "title": "Ambiguous software requirement specification detection | Proceedings of the 5th International Workshop on Requirements Engineering and Testing",
+          "url": "https://dl.acm.org/doi/10.1145/3195538.3195545",
+          "w0_rank": 13,
+          "candidate_rank": 6,
+          "candidate_score": 2.67,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c5",
+          "title": "Requirements Ambiguity Detection and Explanation with LLMs: An Industrial Study",
+          "url": "https://www.ipr.mdu.se/pdf_publications/7221.pdf",
+          "w0_rank": 19,
+          "candidate_rank": 9,
+          "candidate_score": 2.63,
+          "reference_A": 2,
+          "reference_B": 3
+        }
+      ]
+    },
+    {
+      "case": "q6",
+      "candidate_minus_w0": {
+        "A": -0.034982786614327854,
+        "B": 0.0028767696453230185
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c1",
+        "c18",
+        "c11"
+      ],
+      "promoted_into_top10": [
+        "c17",
+        "c12",
+        "c14"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c7",
+          "title": "GitHub - blackwell-systems/agent-lsp: MCP server that orchestrates language servers into agent-native workflows. 65 tools, 30 CI-verified languages. \u00b7 GitHub",
+          "url": "https://github.com/blackwell-systems/agent-lsp",
+          "w0_rank": 1,
+          "candidate_rank": 1,
+          "candidate_score": 2.78,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c1",
+          "title": "LSP: The Secret Weapon for AI Coding Tools | Amir Teymoori",
+          "url": "https://amirteymoori.com/lsp-language-server-protocol-ai-coding-tools/",
+          "w0_rank": 2,
+          "candidate_rank": 12,
+          "candidate_score": 2.19,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c5",
+          "title": "Supercharge Your AI Agent: A Deep Dive into Mizchi's TypeScript Refactoring MCP Server",
+          "url": "https://skywork.ai/skypage/en/ai-agent-typescript-refactoring/1980821689958838272",
+          "w0_rank": 3,
+          "candidate_rank": 5,
+          "candidate_score": 2.55,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c16",
+          "title": "RefactorPlatform: An Open-Source Harness for Controlled Evaluation of Repository-Scale Refactoring Agents",
+          "url": "https://arxiv.org/html/2609.04898v1",
+          "w0_rank": 4,
+          "candidate_rank": 6,
+          "candidate_score": 2.46,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c6",
+          "title": "Refactoring made right: how program analysis makes AI agents safe and reliable - Kiro",
+          "url": "https://kiro.dev/blog/refactoring-made-right/",
+          "w0_rank": 5,
+          "candidate_rank": 4,
+          "candidate_score": 2.56,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c3",
+          "title": "How AI Coding Models Handle Context Switching and Multi-File Refactoring",
+          "url": "https://www.gocodeo.com/post/how-ai-coding-models-handle-context-switching-and-multi-file-refactoring",
+          "w0_rank": 6,
+          "candidate_rank": 7,
+          "candidate_score": 2.38,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c2",
+          "title": "How Coding Agents Edit Files: Diffs, Snapshots, and Fast Apply | Kondasamy Jayaraman (Samy)",
+          "url": "https://kondasamy.com/blog/2026/how-ai-coding-agents-edit-code/",
+          "w0_rank": 7,
+          "candidate_rank": 8,
+          "candidate_score": 2.29,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c18",
+          "title": "What Is OpenCode? The Open-Source AI Coding Agent Explained | DataCamp",
+          "url": "https://www.datacamp.com/blog/what-is-opencode",
+          "w0_rank": 8,
+          "candidate_rank": 16,
+          "candidate_score": 2.1,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c4",
+          "title": "Reinforcement Learning from Compiler and Language Server Feedback Yifan Zhang",
+          "url": "https://arxiv.org/pdf/2510.22907",
+          "w0_rank": 9,
+          "candidate_rank": 2,
+          "candidate_score": 2.74,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c11",
+          "title": "Evaluating Multi-Agent AI Systems for Automated Bug ...",
+          "url": "https://www.ijraset.com/best-journal/evaluating-multiagent-ai-systems-for-automated-bug-detection-and-code-refactoring",
+          "w0_rank": 10,
+          "candidate_rank": 19,
+          "candidate_score": 2.04,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c17",
+          "title": "RefAgent: A Multi-agent LLM-based Framework for Automatic Software Refactoring",
+          "url": "https://arxiv.org/html/2511.03153v1",
+          "w0_rank": 11,
+          "candidate_rank": 3,
+          "candidate_score": 2.61,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c12",
+          "title": "[SF-A21-T04] Implement diagnostics and codefix pipeline \u00b7 Issue #292 \u00b7 wieslawsoltes/SharpForge",
+          "url": "https://github.com/wieslawsoltes/SharpForge/issues/292",
+          "w0_rank": 21,
+          "candidate_rank": 9,
+          "candidate_score": 2.25,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c14",
+          "title": "[IDE Phase 4] Build the multi-file project compiler and source diagnostics \u00b7 Issue #16 \u00b7 ptw1255/agentic-workflow-factory",
+          "url": "https://github.com/ptw1255/agentic-workflow-factory/issues/16",
+          "w0_rank": 13,
+          "candidate_rank": 10,
+          "candidate_score": 2.23,
+          "reference_A": 2,
+          "reference_B": 2
+        }
+      ]
+    },
+    {
+      "case": "q7",
+      "candidate_minus_w0": {
+        "A": -0.03635473611368667,
+        "B": 0.0
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c14",
+        "c18"
+      ],
+      "promoted_into_top10": [
+        "c1",
+        "c5"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c0",
+          "title": "Database Migration Tools: Rollback, Review and Evidence",
+          "url": "https://stribog.com/blog/database-migration-tool-selection-schema-versioning-rollback",
+          "w0_rank": 1,
+          "candidate_rank": 4,
+          "candidate_score": 2.62,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c12",
+          "title": "Testing Migration Rollbacks: Down Scripts, Data Loss, and Locks | QASkills.sh",
+          "url": "https://qaskills.sh/blog/migration-rollback-testing-schema-changes",
+          "w0_rank": 2,
+          "candidate_rank": 3,
+          "candidate_score": 2.71,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c6",
+          "title": "Backward-Compatible Database Migrations: The Expand-Contract Pattern for Zero-Downtime Releases",
+          "url": "https://tech-champion.com/database/backward-compatible-database-migrations-the-expand-contract-pattern-for-zero-downtime-releases/",
+          "w0_rank": 3,
+          "candidate_rank": 1,
+          "candidate_score": 2.86,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c16",
+          "title": "Prove rollback works across a schema migration boundary, not just across code versions \u00b7 Issue #548 \u00b7 Stellar-Unified-Price-Oracle/-Stellar-Unified-Price-Oracle-Aggregator-API-Backend",
+          "url": "https://github.com/Stellar-Unified-Price-Oracle/-Stellar-Unified-Price-Oracle-Aggregator-API-Backend/issues/548",
+          "w0_rank": 4,
+          "candidate_rank": 7,
+          "candidate_score": 2.55,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c2",
+          "title": "Database Testing Migration Rollback Safety for Real Deployments | QASkills.sh",
+          "url": "https://qaskills.sh/blog/database-testing-migration-rollback-safety",
+          "w0_rank": 5,
+          "candidate_rank": 2,
+          "candidate_score": 2.76,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c3",
+          "title": "The three levels of a database rollback strategy | pgroll",
+          "url": "https://pgroll.com/blog/levels-of-a-database-rollback-strategy",
+          "w0_rank": 6,
+          "candidate_rank": 5,
+          "candidate_score": 2.61,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c14",
+          "title": "[DATABASE][RELEASE] Enforce backward-compatible schema/app deployment order \u00b7 Issue #1716 \u00b7 Fremont-Derby/fremontderby",
+          "url": "https://github.com/Fremont-Derby/fremontderby/issues/1716",
+          "w0_rank": 7,
+          "candidate_rank": 11,
+          "candidate_score": 2.38,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c15",
+          "title": "Database Migration Rollback Testing \u00b7 Issue #1315 \u00b7 SoroScan/soroscan",
+          "url": "https://github.com/SoroScan/soroscan/issues/1315",
+          "w0_rank": 8,
+          "candidate_rank": 8,
+          "candidate_score": 2.48,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c18",
+          "title": "No migration reversibility policy and no documented deploy rollback \u00b7 Issue #197 \u00b7 ourdao/ourdao-backend",
+          "url": "https://github.com/ourdao/ourdao-backend/issues/197",
+          "w0_rank": 9,
+          "candidate_rank": 13,
+          "candidate_score": 2.32,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c8",
+          "title": "Rollback Strategies for Database Migration Failures - Kanu AI",
+          "url": "https://www.getkanu.com/blog/rollback-strategies-database-migration-failures",
+          "w0_rank": 10,
+          "candidate_rank": 9,
+          "candidate_score": 2.45,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c1",
+          "title": "Can You Safely Roll Back a Database Change?",
+          "url": "https://oneuptime.com/blog/post/2026-08-06-database-compatible-rollbacks-forward-fixes/view",
+          "w0_rank": 17,
+          "candidate_rank": 6,
+          "candidate_score": 2.56,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c5",
+          "title": "Backward compatible database changes \u2014 PlanetScale",
+          "url": "https://planetscale.com/blog/backward-compatible-databases-changes",
+          "w0_rank": 11,
+          "candidate_rank": 10,
+          "candidate_score": 2.43,
+          "reference_A": 2,
+          "reference_B": 3
+        }
+      ]
+    },
+    {
+      "case": "q8",
+      "candidate_minus_w0": {
+        "A": -0.04704626808071899,
+        "B": 0.0325005368777177
+      },
+      "both_useful_count_retained": true,
+      "both_facet_coverage_retained": true,
+      "demoted_out_of_top10": [
+        "c1",
+        "c4",
+        "c3",
+        "c20",
+        "c26"
+      ],
+      "promoted_into_top10": [
+        "c5",
+        "c12",
+        "c15",
+        "c9",
+        "c19"
+      ],
+      "changed_card_orders": [
+        {
+          "id": "c8",
+          "title": "GitHub - anusha-saxena/repair-ai-agent: a developer tool that automatically detects flaky tests in a Python test suite, gathers structured evidence about why they're flaky through controlled perturbation experiments, classifies the likely root cause, and u",
+          "url": "https://github.com/anusha-saxena/repair-ai-agent",
+          "w0_rank": 1,
+          "candidate_rank": 2,
+          "candidate_score": 2.84,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c1",
+          "title": "How I Killed 63 Flaky Tests in One Week With Claude Code: 5 Lessons - DEV Community",
+          "url": "https://dev.to/yureki_lab/how-i-killed-63-flaky-tests-in-one-week-with-claude-code-5-lessons-29m0",
+          "w0_rank": 2,
+          "candidate_rank": 13,
+          "candidate_score": 2.48,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c4",
+          "title": "Flaky Test Triage Agent | AI Agent Kit",
+          "url": "https://www.agent-kits.com/kit/flaky-test-triager",
+          "w0_rank": 3,
+          "candidate_rank": 17,
+          "candidate_score": 2.33,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c0",
+          "title": "Hunting Flaky Tests With an AI Agent | Deska",
+          "url": "https://deska.dev/blog/agent-fixes-flaky-tests",
+          "w0_rank": 4,
+          "candidate_rank": 7,
+          "candidate_score": 2.65,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c18",
+          "title": "A Dataset of Reproducible Flaky-Test Failures \u00b7 Pith Review",
+          "url": "https://pith.science/paper/2605.21677",
+          "w0_rank": 5,
+          "candidate_rank": 1,
+          "candidate_score": 2.92,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c3",
+          "title": "FlakyGuard: Test Repair & FL Robustness",
+          "url": "https://www.emergentmind.com/topics/flakyguard",
+          "w0_rank": 6,
+          "candidate_rank": 12,
+          "candidate_score": 2.5,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c6",
+          "title": "How We Used Agentic AI to Automate Fixes for Flaky Tests | Kong Inc.",
+          "url": "https://konghq.com/blog/engineering/how-we-used-agentic-ai-to-fix-kong-gateways-flakiest-tests",
+          "w0_rank": 7,
+          "candidate_rank": 9,
+          "candidate_score": 2.61,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c10",
+          "title": "How to Fix Flaky Tests: Reproduce, Diagnose & Prevent in CI/CD | by QuarkAndCode | Medium",
+          "url": "https://medium.com/@QuarkAndCode/how-to-fix-flaky-tests-reproduce-diagnose-prevent-in-ci-cd-60f45226851f",
+          "w0_rank": 8,
+          "candidate_rank": 4,
+          "candidate_score": 2.78,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c20",
+          "title": "Validation Evidence in LLM Repair Agents: How Much of What Passes Actually Tests the Bug?",
+          "url": "https://doi.org/10.48550/arxiv.2607.28871",
+          "w0_rank": 9,
+          "candidate_rank": 18,
+          "candidate_score": 2.2,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c26",
+          "title": "Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs",
+          "url": "https://doi.org/10.48550/arxiv.2606.20243",
+          "w0_rank": 10,
+          "candidate_rank": 22,
+          "candidate_score": 1.92,
+          "reference_A": 2,
+          "reference_B": 2
+        },
+        {
+          "id": "c5",
+          "title": "How to Automatically Detect Flaky Tests in CI Pipelines",
+          "url": "https://www.getpanto.ai/blog/detect-flaky-tests",
+          "w0_rank": 18,
+          "candidate_rank": 3,
+          "candidate_score": 2.83,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c12",
+          "title": "A Generic Approach to Fix Test Flakiness in Real-World Projects Yang Chen",
+          "url": "https://arxiv.org/pdf/2404.09398",
+          "w0_rank": 12,
+          "candidate_rank": 5,
+          "candidate_score": 2.74,
+          "reference_A": 3,
+          "reference_B": 2
+        },
+        {
+          "id": "c15",
+          "title": "How to Fix Flaky Tests: The Complete Diagnosis Guide for Engineers in 2026 - Quash",
+          "url": "https://quashbugs.com/blog/how-to-fix-flaky-tests-complete-diagnosis-guide",
+          "w0_rank": 21,
+          "candidate_rank": 6,
+          "candidate_score": 2.74,
+          "reference_A": 2,
+          "reference_B": 3
+        },
+        {
+          "id": "c9",
+          "title": "How I fix flaky tests - Code with Jason",
+          "url": "https://www.codewithjason.com/how-i-fix-flaky-tests/",
+          "w0_rank": 15,
+          "candidate_rank": 8,
+          "candidate_score": 2.63,
+          "reference_A": 3,
+          "reference_B": 3
+        },
+        {
+          "id": "c19",
+          "title": "Flaky Tests: Why They Happen and How to Fix Them for Good | Autonoma",
+          "url": "https://getautonoma.com/blog/flaky-tests",
+          "w0_rank": 19,
+          "candidate_rank": 10,
+          "candidate_score": 2.57,
+          "reference_A": 2,
+          "reference_B": 3
+        }
+      ]
+    }
+  ]
+}

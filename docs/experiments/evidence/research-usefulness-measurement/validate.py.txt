@@ -1,0 +1,360 @@
+"""Closed, offline integrity checks for independent usefulness assessor packets.
+
+This module does not score answers or infer entailment, truth, applicability,
+scope fit, or task completion. It checks packet shape and evidence identity only.
+Offsets are Python Unicode character offsets into the exact context delivered to
+the arm. Source packets may cite the frozen pool; answer packets may cite only
+that arm's delivered contexts. Expanded quote/hash/offset records are integrity
+envelopes added by a deterministic hydrator after selecting a frozen evidence
+ID; a model need not reproduce them. This prototype does not implement that
+hydrator, and structural validity does not establish exhaustive extraction.
+No assessor packets are joined.
+"""
+import hashlib
+import json
+
+
+SCHEMA = 'research-usefulness-assessment/1'
+SOURCE_DISPOSITIONS = {'not_acquired', 'acquired_unusable', 'evidence_available', 'not_assessable'}
+USE_DISPOSITIONS = {'not_acquired', 'acquired_unusable', 'available_not_delivered',
+                    'delivered_unused', 'used_with_support', 'used_invalidly', 'not_assessable'}
+SEMANTIC = {'match', 'mismatch', 'uncertain', 'not_assessable'}
+ENTAILMENT = {'supports', 'contradicts', 'qualifies', 'does_not_entail', 'uncertain', 'not_assessable'}
+APPLICABILITY = {'applicable', 'not_applicable', 'uncertain', 'not_assessable'}
+ANSWER_STATUS = {'complete', 'partial', 'unsupported', 'not_assessable'}
+
+
+class PacketError(ValueError):
+    """The packet is structurally invalid or its references are misbound."""
+
+
+def sha256(text):
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+
+def evidence_id(source_id, context_sha256, start, end):
+    return sha256(f'{source_id}\0{context_sha256}\0{start}\0{end}')
+
+
+def _keys(obj, required, optional=(), where='object'):
+    if not isinstance(obj, dict):
+        raise PacketError(f'{where}: expected object')
+    missing = set(required) - obj.keys()
+    extra = obj.keys() - set(required) - set(optional)
+    if missing or extra:
+        raise PacketError(f'{where}: missing={sorted(missing)} extra={sorted(extra)}')
+
+
+def _text(value, where, allow_empty=False):
+    if not isinstance(value, str) or (not allow_empty and not value.strip()):
+        raise PacketError(f'{where}: expected ' + ('string' if allow_empty else 'non-empty string'))
+
+
+def _unique_strings(values, where):
+    if not isinstance(values, list) or any(not isinstance(x, str) or not x for x in values):
+        raise PacketError(f'{where}: expected string array')
+    if len(set(values)) != len(values):
+        raise PacketError(f'{where}: duplicate identity')
+
+
+def _enum(value, allowed, where):
+    if not isinstance(value, str) or value not in allowed:
+        raise PacketError(f'{where}: unknown judgment')
+
+
+def _exact_ids(rows, expected, key, where):
+    if not isinstance(rows, list):
+        raise PacketError(f'{where}: expected array')
+    ids = [r.get(key) if isinstance(r, dict) else None for r in rows]
+    if any(not isinstance(x, str) for x in ids) or len(ids) != len(set(ids)):
+        raise PacketError(f'{where}: missing or duplicate identity')
+    if set(ids) != set(expected):
+        raise PacketError(f'{where}: identity set mismatch')
+    return {r[key]: r for r in rows}
+
+
+def _registry_task(registry, task_id):
+    tasks = registry.get('tasks') if isinstance(registry, dict) else None
+    if not isinstance(tasks, list):
+        raise PacketError('registry: expected tasks array')
+    found = [t for t in tasks if isinstance(t, dict) and t.get('task_id') == task_id]
+    if len(found) != 1:
+        raise PacketError('registry: unknown or duplicate task')
+    task = found[0]
+    for field in ('arms', 'critical_facets', 'pool_sources', 'delivered_sources'):
+        if field not in task:
+            raise PacketError(f'registry task missing {field}')
+    if not isinstance(task['arms'], list) or not isinstance(task['critical_facets'], list):
+        raise PacketError('registry: malformed arms/facets')
+    _unique_strings(task['arms'], 'registry arms')
+    _unique_strings(task['critical_facets'], 'registry critical facets')
+    return task
+
+
+def _context(task, source_id, arm_id, packet_kind):
+    source = task['pool_sources'].get(source_id)
+    if not isinstance(source, dict) or not isinstance(source.get('context'), str):
+        raise PacketError('unknown source or unavailable frozen context')
+    context = source['context']
+    actual_sha = sha256(context)
+    if source.get('context_sha256') != actual_sha:
+        raise PacketError('registry source context hash mismatch')
+    scope = source.get('scope')
+    if not isinstance(scope, dict):
+        raise PacketError('registry source scope must be explicit metadata (unknown values allowed)')
+    if packet_kind == 'answer':
+        delivered = task['delivered_sources'].get(arm_id)
+        if not isinstance(delivered, list) or source_id not in delivered:
+            raise PacketError('evidence not delivered to this arm')
+    return context, actual_sha
+
+
+def _reference(ref, task, arm_id, packet_kind, where):
+    _keys(ref, ('source_id', 'context_sha256', 'start', 'end', 'evidence_id', 'quote'), where=where)
+    sid = ref['source_id']
+    _text(sid, where + '.source_id')
+    context, ctx_sha = _context(task, sid, arm_id, packet_kind)
+    if ref['context_sha256'] != ctx_sha:
+        raise PacketError(where + ': wrong context hash')
+    start, end = ref['start'], ref['end']
+    if type(start) is not int or type(end) is not int or not 0 <= start < end <= len(context):
+        raise PacketError(where + ': invalid Unicode character offsets')
+    quote = ref['quote']
+    if not isinstance(quote, str) or not quote or context[start:end] != quote:
+        raise PacketError(where + ': quote does not equal bound context span')
+    expected_id = evidence_id(sid, ctx_sha, start, end)
+    if ref['evidence_id'] != expected_id:
+        raise PacketError(where + ': evidence ID mismatch')
+
+
+def _judgment(value, allowed, where, reason=None):
+    _enum(value, allowed, where)
+    if value == 'not_assessable':
+        _text(reason, where + '.reason')
+    elif reason is not None:
+        _text(reason, where + '.reason', allow_empty=True)
+
+
+def _string_array(obj, key, where):
+    if key not in obj:
+        raise PacketError(f'{where}: required array {key} is missing (missing is not empty)')
+    values = obj[key]
+    if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
+        raise PacketError(f'{where}.{key}: expected string array')
+    return values
+
+
+def _validate_source_task(row, task):
+    _keys(row, ('task_id', 'arms'), where='source task')
+    arm_rows = _exact_ids(row['arms'], task['arms'], 'arm_id', 'source arms')
+    pool_ids = list(task['pool_sources'])
+    for arm_id, arm in arm_rows.items():
+        _keys(arm, ('arm_id', 'facet_assessments'), where='source arm')
+        facets = _exact_ids(arm['facet_assessments'], task['critical_facets'], 'facet_id', 'source facets')
+        for facet_id, facet in facets.items():
+            _keys(facet, ('facet_id', 'evidence_dispositions', 'limitations'), where='source facet')
+            _string_array(facet, 'limitations', f'source facet {facet_id}')
+            dispositions = _exact_ids(facet['evidence_dispositions'], pool_ids, 'source_id', 'source evidence')
+            for sid, item in dispositions.items():
+                _keys(item, ('source_id', 'disposition', 'scope_match', 'entailment', 'applicability',
+                             'not_assessable_reason', 'references', 'reason'), where='source evidence disposition')
+                disposition = item['disposition']
+                _enum(disposition, SOURCE_DISPOSITIONS, 'source disposition')
+                reason = item['not_assessable_reason']
+                if disposition == 'not_assessable':
+                    _text(reason, 'source not_assessable_reason')
+                elif reason != '':
+                    _text(reason, 'source not_assessable_reason', allow_empty=True)
+                for k, allowed in (('scope_match', SEMANTIC), ('entailment', ENTAILMENT), ('applicability', APPLICABILITY)):
+                    _judgment(item[k], allowed, f'source {k}', item['reason'] if item[k] == 'not_assessable' else None)
+                refs = item['references']
+                if not isinstance(refs, list):
+                    raise PacketError('source references must be array')
+                if disposition in {'evidence_available'} and not refs:
+                    raise PacketError('evidence_available requires at least one bound reference')
+                if disposition == 'not_acquired' and refs:
+                    raise PacketError('not_acquired source cannot claim a passage reference')
+                for ref in refs:
+                    if ref.get('source_id') != sid:
+                        raise PacketError('source evidence anchor ID does not match disposition source')
+                    _reference(ref, task, arm_id, 'source', 'source reference')
+
+
+def _validate_answer_task(row, task):
+    _keys(row, ('task_id', 'arms'), where='answer task')
+    expected_claims = task.get('answer_claims')
+    if not isinstance(expected_claims, dict):
+        raise PacketError('registry answer_claims missing')
+    arm_rows = _exact_ids(row['arms'], task['arms'], 'arm_id', 'answer arms')
+    for arm_id, arm in arm_rows.items():
+        _keys(arm, ('arm_id', 'facet_assessments', 'limitations'), where='answer arm')
+        _string_array(arm, 'limitations', f'answer arm {arm_id}')
+        facets = _exact_ids(arm['facet_assessments'], task['critical_facets'], 'facet_id', 'answer facets')
+        for facet_id, facet in facets.items():
+            _keys(facet, ('facet_id', 'status', 'not_assessable_reason', 'conclusion', 'claims',
+                          'unsupported_claim_indices', 'unsupported_material_claims',
+                          'missed_qualifications', 'evidence_found_but_unused', 'evidence_dispositions', 'scope_match',
+                          'entailment', 'applicability', 'reason'), where='answer facet')
+            _enum(facet['status'], ANSWER_STATUS, 'answer status')
+            if facet['status'] == 'not_assessable':
+                _text(facet['not_assessable_reason'], 'answer not_assessable_reason')
+            elif facet['not_assessable_reason'] != '':
+                _text(facet['not_assessable_reason'], 'answer not_assessable_reason', allow_empty=True)
+            _text(facet['conclusion'], 'answer conclusion', allow_empty=True)
+            for key in ('unsupported_material_claims', 'missed_qualifications', 'evidence_found_but_unused'):
+                _string_array(facet, key, f'answer facet {facet_id}')
+            dispositions = _exact_ids(facet['evidence_dispositions'], list(task['pool_sources']),
+                                      'source_id', 'answer evidence dispositions')
+            for sid, item in dispositions.items():
+                _keys(item, ('source_id', 'disposition', 'not_assessable_reason', 'references', 'reason'),
+                      where='answer evidence disposition')
+                _enum(item['disposition'], USE_DISPOSITIONS, 'per-evidence/facet disposition')
+                if item['disposition'] == 'not_assessable':
+                    _text(item['not_assessable_reason'], 'evidence not_assessable_reason')
+                elif item['not_assessable_reason'] != '':
+                    _text(item['not_assessable_reason'], 'evidence not_assessable_reason', allow_empty=True)
+                refs = item['references']
+                if not isinstance(refs, list):
+                    raise PacketError('answer evidence references must be array')
+                if item['disposition'] in {'not_acquired', 'acquired_unusable', 'available_not_delivered'} and refs:
+                    raise PacketError('undelivered/unusable item cannot assert delivered evidence')
+                if item['disposition'] in {'delivered_unused', 'used_with_support', 'used_invalidly'} and not refs:
+                    raise PacketError('delivered/used item requires an assessor evidence anchor')
+                for ref in refs:
+                    if ref.get('source_id') != sid:
+                        raise PacketError('evidence anchor source ID does not match disposition source')
+                    _reference(ref, task, arm_id, 'answer', 'answer evidence reference')
+            for key, allowed in (('scope_match', SEMANTIC), ('entailment', ENTAILMENT), ('applicability', APPLICABILITY)):
+                _judgment(facet[key], allowed, f'answer {key}', facet['reason'] if facet[key] == 'not_assessable' else None)
+            claims = facet['claims']
+            if not isinstance(claims, list):
+                raise PacketError('claims must be array')
+            by_facet = expected_claims.get(arm_id)
+            if not isinstance(by_facet, dict) or facet_id not in by_facet or not isinstance(by_facet[facet_id], list):
+                raise PacketError('registry expected claim IDs missing')
+            expected_rows = by_facet[facet_id]
+            expected_by_id = {}
+            for frozen in expected_rows:
+                if (not isinstance(frozen, dict) or set(frozen) != {'claim_id', 'text'} or
+                    not isinstance(frozen.get('claim_id'), str) or not frozen['claim_id'] or
+                    not isinstance(frozen.get('text'), str) or not frozen['text'] or
+                    frozen['claim_id'] in expected_by_id):
+                    raise PacketError('registry frozen claims malformed')
+                expected_by_id[frozen['claim_id']] = frozen['text']
+            claim_ids = []
+            for i, claim in enumerate(claims):
+                _keys(claim, ('claim_id', 'text', 'references'), where='claim')
+                _text(claim['claim_id'], 'claim_id')
+                _text(claim['text'], 'claim text')
+                claim_ids.append(claim['claim_id'])
+                if not isinstance(claim['references'], list):
+                    raise PacketError('claim references must be array')
+                for ref in claim['references']:
+                    _reference(ref, task, arm_id, 'answer', f'claim {i} reference')
+            if len(claim_ids) != len(set(claim_ids)):
+                raise PacketError('duplicate claim ID')
+            if claim_ids != list(expected_by_id):
+                raise PacketError('missing or unknown frozen claim ID')
+            for claim in claims:
+                if claim['text'] != expected_by_id[claim['claim_id']]:
+                    raise PacketError('claim text differs from frozen answer')
+            indices = facet['unsupported_claim_indices']
+            if not isinstance(indices, list) or any(type(i) is not int or i < 0 or i >= len(claims) for i in indices):
+                raise PacketError('unsupported_claim_indices must be an explicit in-range integer array')
+            if len(indices) != len(set(indices)):
+                raise PacketError('duplicate unsupported claim index')
+
+
+def validate(packet, registry):
+    """Return structural validity and conservative assessability, without scoring.
+
+    ``registry`` is a frozen object with tasks containing ``task_id``, ordered
+    ``arms``, ordered ``critical_facets``, ``pool_sources`` (ID -> context,
+    context_sha256, scope metadata), and ``delivered_sources`` (arm -> IDs).
+    """
+    _keys(packet, ('schema', 'packet_id', 'assessor_id', 'packet_kind', 'tasks'), where='packet')
+    if (packet['schema'] != SCHEMA or not isinstance(packet['packet_kind'], str) or
+        packet['packet_kind'] not in {'source', 'answer'}):
+        raise PacketError('unsupported packet schema or kind')
+    _text(packet['packet_id'], 'packet_id')
+    _text(packet['assessor_id'], 'assessor_id')
+    registry_tasks = registry.get('tasks') if isinstance(registry, dict) else None
+    if not isinstance(registry_tasks, list):
+        raise PacketError('registry tasks missing')
+    expected = [t.get('task_id') for t in registry_tasks if isinstance(t, dict)]
+    if (len(expected) != len(registry_tasks) or
+        any(not isinstance(task_id, str) or not task_id for task_id in expected) or
+        len(set(expected)) != len(expected)):
+        raise PacketError('registry task IDs invalid')
+    assignments = registry.get('assignments')
+    if not isinstance(assignments, list):
+        raise PacketError('registry assignments missing')
+    matching = [a for a in assignments if isinstance(a, dict) and
+                a.get('packet_id') == packet['packet_id'] and
+                a.get('assessor_id') == packet['assessor_id'] and
+                a.get('packet_kind') == packet['packet_kind']]
+    if len(matching) != 1:
+        raise PacketError('packet identity/assessor/kind does not match unique frozen assignment')
+    task_rows = _exact_ids(packet['tasks'], expected, 'task_id', 'tasks')
+    not_assessable = 0
+    for task_id, row in task_rows.items():
+        task = _registry_task(registry, task_id)
+        if packet['packet_kind'] == 'source':
+            _validate_source_task(row, task)
+        else:
+            _validate_answer_task(row, task)
+        for arm in row['arms']:
+            for facet in arm['facet_assessments']:
+                if (facet.get('status') == 'not_assessable' or
+                    any(facet.get(k) == 'not_assessable' for k in ('scope_match', 'entailment', 'applicability'))):
+                    not_assessable += 1
+                for item in facet.get('evidence_dispositions', []):
+                    if any(item.get(k) == 'not_assessable' for k in ('scope_match', 'entailment', 'applicability')):
+                        not_assessable += 1
+                for item in facet.get('evidence_dispositions', []):
+                    if item.get('disposition') == 'not_assessable':
+                        not_assessable += 1
+    # Structurally valid judgments may still be incomplete or not assessable.
+    incomplete_count = 0
+    if packet['packet_kind'] == 'answer':
+        incomplete_count = sum(
+            1 for row in task_rows.values() for arm in row['arms'] for facet in arm['facet_assessments']
+            if (facet.get('status') in {'partial', 'unsupported'} or
+                facet.get('scope_match') in {'mismatch', 'uncertain'} or
+                facet.get('applicability') in {'not_applicable', 'uncertain'} or
+                facet.get('entailment') in {'contradicts', 'does_not_entail', 'uncertain'} or
+                bool(facet.get('unsupported_claim_indices')) or
+                bool(facet.get('unsupported_material_claims')) or
+                bool(facet.get('missed_qualifications')))
+        )
+    state = 'not_assessable' if not_assessable else ('assessable_incomplete' if incomplete_count else 'assessable')
+    return {'schema': 'research-usefulness-validation/1', 'structurally_valid': True,
+            'assessment_state': state,
+            'not_assessable_judgment_count': not_assessable,
+            'assessable_incomplete_facet_count': incomplete_count,
+            'packet_kind': packet['packet_kind'], 'task_count': len(expected),
+            'task_completion': 'not_computed'}
+
+
+def _reject_duplicate_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise PacketError(f'duplicate JSON object key: {key}')
+        result[key] = value
+    return result
+
+
+def _reject_constant(value):
+    raise PacketError(f'non-finite JSON constant: {value}')
+
+
+def validate_json(text, registry):
+    """Strict JSON entry point: duplicate keys and NaN/Infinity are rejected."""
+    try:
+        packet = json.loads(text, object_pairs_hook=_reject_duplicate_pairs, parse_constant=_reject_constant)
+    except PacketError:
+        raise
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise PacketError('invalid JSON') from exc
+    return validate(packet, registry)

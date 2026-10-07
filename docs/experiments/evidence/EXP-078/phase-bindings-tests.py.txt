@@ -1,0 +1,317 @@
+"""Focused offline tests for EXP-078 capture/answer transport bindings."""
+import importlib.machinery
+import importlib.util
+import asyncio
+import json
+import pathlib
+import tempfile
+import unittest
+from datetime import datetime, timedelta, timezone
+
+import httpx
+
+HERE = pathlib.Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp078_phase_bindings_tested", str(HERE / "phase-bindings.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+M = importlib.util.module_from_spec(spec)
+loader.exec_module(M)
+P = M._load("exp078_phase_bindings_prepare_test", HERE / "prepare.py.txt")
+COHORTS = json.loads((HERE / "cohorts.json").read_bytes())
+SELECTOR = M._load("exp078_phase_bindings_selector_test", HERE / "selector-runner.py.txt")
+ADMISSION_FIXTURES = M._load("exp078_phase_bindings_admission_fixture", HERE / "admission-tests.py.txt")
+
+
+class Admission:
+    def __init__(self, deny=False):
+        self.deny = deny
+        self.required = 0
+
+    def require_phase(self, permit, clock_bytes, outdir):
+        self.required += 1
+        if self.deny:
+            raise ValueError("phase-denied")
+
+
+class CountTransport(httpx.BaseTransport):
+    def __init__(self):
+        self.calls = 0
+        self.closed = False
+
+    def handle_request(self, request):
+        self.calls += 1
+        return httpx.Response(200, request=request, content=b"ok")
+
+    def close(self):
+        self.closed = True
+
+
+class PhaseBindingTests(unittest.TestCase):
+    def test_guard_checks_before_each_physical_request(self):
+        admission, inner = Admission(), CountTransport()
+        guard = M._GuardedHTTPTransport(inner, admission, object(), b"clock", pathlib.Path("/unused"), 2)
+        with httpx.Client(transport=guard) as client:
+            self.assertEqual(client.get("https://fixture.invalid/one").status_code, 200)
+            self.assertEqual(client.get("https://fixture.invalid/two").status_code, 200)
+        self.assertEqual((admission.required, inner.calls), (2, 2))
+        self.assertTrue(inner.closed)
+
+    def test_denial_prevents_transport_dispatch(self):
+        admission, inner = Admission(deny=True), CountTransport()
+        guard = M._GuardedHTTPTransport(inner, admission, object(), b"clock", pathlib.Path("/unused"), 2)
+        with httpx.Client(transport=guard) as client:
+            with self.assertRaisesRegex(ValueError, "phase-denied"):
+                client.get("https://fixture.invalid/one")
+        self.assertEqual((admission.required, inner.calls), (1, 0))
+
+    def test_request_cap_stops_before_extra_http(self):
+        admission, inner = Admission(), CountTransport()
+        guard = M._GuardedHTTPTransport(inner, admission, object(), b"clock", pathlib.Path("/unused"), 1)
+        with httpx.Client(transport=guard) as client:
+            client.get("https://fixture.invalid/one")
+            with self.assertRaisesRegex(ValueError, "http-budget"):
+                client.get("https://fixture.invalid/two")
+        self.assertEqual((admission.required, inner.calls), (2, 1))
+
+    def test_inventory_deduplicates_urls_and_rejects_private_targets(self):
+        rows = M.validate_inventory({"schema": "exp078-capture-inventory/1", "synthetic": False,
+            "sources": [{"source_id": "s1", "url": "https://example.com/a", "title": "A"},
+                        {"source_id": "s2", "url": "https://example.com/a", "title": "A copy"},
+                        {"source_id": "s3", "url": "http://127.0.0.1/secret", "title": "local"}]})
+        self.assertEqual([row["_capture_initial_state"] for row in rows],
+                         ["pending", "duplicate_url_not_attempted", "unsupported_url_not_attempted"])
+
+    def test_capture_inventory_covers_every_effective_research_card(self):
+        cases, pools = [], {}
+        for index in range(8):
+            task_id = f"d{index+1}"
+            cases.append({"id": task_id, "kind": "research"})
+            cards = [{"id": f"{task_id}-c{j}", "url": f"https://example.com/{task_id}/{j}",
+                      "title": str(j), "snippet": "evidence"} for j in range(12)]
+            natives = [{"url": card["url"], "title": card["title"], "content": card["snippet"]}
+                       for card in cards]
+            pools[task_id] = {"cards": cards}
+            if index == 0:
+                first_source = "u" + M.sha(natives[0]["url"].encode())
+                natives[1]["url"] = natives[0]["url"] + "#part"
+                cards[1]["url"] = natives[1]["url"]
+                # Fragment variants are separate global cards but one source identity.
+                natives[1]["url"] = natives[0]["url"] + "#part"
+            if index == 0:
+                source_map = {card["id"]: "u" + M.sha(native["url"].split("#", 1)[0].encode())
+                              for card, native in zip(cards, natives)}
+                native_map = {card["id"]: native for card, native in zip(cards, natives)}
+            else:
+                source_map.update({card["id"]: "u" + M.sha(native["url"].split("#", 1)[0].encode())
+                                   for card, native in zip(cards, natives)})
+                native_map.update({card["id"]: native for card, native in zip(cards, natives)})
+        acquisition = {"schema": "exp078-effective-acquisition/1", "pools": pools,
+                       "source_id_by_card_id": {"d1": source_map, **{
+                           f"d{i+1}": {f"d{i+1}-c{j}": "u" + M.sha(f"https://example.com/d{i+1}/{j}".encode())
+                                       for j in range(12)} for i in range(1, 8)}},
+                       "native_results_by_card_id": {"d1": native_map, **{
+                           f"d{i+1}": {f"d{i+1}-c{j}": {"url": f"https://example.com/d{i+1}/{j}",
+                               "title": str(j), "content": "evidence"} for j in range(12)} for i in range(1, 8)}}}
+        inventory, binding = M.capture_inventory(acquisition, cases)
+        self.assertEqual(len(inventory["sources"]), 95)
+        self.assertEqual(len(binding["card_sources"]), 96)
+        # Even cards outside either arm's top ten are captured before selection.
+        self.assertIn("d1:d1-c11", binding["card_sources"])
+        self.assertIn("d1:d1-c10", binding["card_sources"])
+
+    def test_answer_assignments_cover_exact_research_cases_and_both_arms(self):
+        cases = [{"id": f"d{i}", "kind": "research"} for i in range(1, 9)]
+        assignments = [{"model_input": {"task": {"task_id": case["id"]}},
+                        "private_binding": {"arm_id": arm}}
+                       for case in cases for arm in ("w0", "candidate")]
+        M.validate_answer_coverage(assignments, cases)
+        with self.assertRaisesRegex(ValueError, "assignment-coverage"):
+            M.validate_answer_coverage(assignments[:-1], cases)
+
+    def test_real_admission_permit_binds_stage_root_not_child_output(self):
+        fixture = ADMISSION_FIXTURES.AdmissionTests()
+        fixture.setUp()
+        try:
+            stage_root = pathlib.Path(fixture.temp.name) / "stage-root"
+            clock, clock_bytes, _clock_sha = fixture._new_clock(stage_root)
+            capability = fixture.admission.admit_live(stage_root, fixture.source_integrity,
+                                                       fixture.qualification_raw, None)
+            permit = fixture.admission.consume_capability(capability)
+            child = stage_root / "capture"
+            child.mkdir(mode=0o700)
+            # A child cannot be substituted as the stage root and this rejection
+            # happens before it can consume the capture phase lease.
+            with self.assertRaisesRegex(fixture.admission.AdmissionError, "stage-permit-required"):
+                M._phase(fixture.admission, permit, "capture", child, child / "nested", clock_bytes)
+            phase = M._phase(fixture.admission, permit, "capture", stage_root, child, clock_bytes)
+            fixture.admission.require_phase(phase, clock_bytes, stage_root)
+            with self.assertRaisesRegex(fixture.admission.AdmissionError, "phase-permit-required"):
+                fixture.admission.require_phase(phase, clock_bytes, child)
+            inner = CountTransport()
+            guarded = M._GuardedHTTPTransport(inner, fixture.admission, phase, clock_bytes, stage_root, 2)
+            with httpx.Client(transport=guarded) as client:
+                self.assertEqual(client.get("https://fixture.invalid/one").status_code, 200)
+                self.assertEqual(client.get("https://fixture.invalid/two").status_code, 200)
+            self.assertEqual(inner.calls, 2)
+            denied_inner = CountTransport()
+            wrong_root = M._GuardedHTTPTransport(denied_inner, fixture.admission, phase,
+                                                  clock_bytes, child, 1)
+            with httpx.Client(transport=wrong_root) as client:
+                with self.assertRaisesRegex(fixture.admission.AdmissionError, "phase-permit-required"):
+                    client.get("https://fixture.invalid/denied")
+            self.assertEqual(denied_inner.calls, 0)
+            with self.assertRaisesRegex(fixture.admission.AdmissionError, "stage-already-admitted"):
+                M._phase(fixture.admission, permit, "capture", stage_root, child, clock_bytes)
+            self.assertEqual(clock["stage"], "development")
+        finally:
+            fixture.tearDown()
+
+    def test_real_prepare_stage_output_projects_full_capture_inventory_offline(self):
+        reused = {"schema": "exp078-reused-inputs/1", "synthetic": False, "pools": {},
+                  "historical_d12": {"receipt_sha256": "d" * 64, "target_present": False,
+                                     "effective": False}}
+        cases = COHORTS["cohorts"]["development"]
+        for index, case in enumerate(cases, 1):
+            if case["id"] == "d12":
+                continue
+            engines = (("arxiv", "openalex", "github", "wikipedia") if case["kind"] == "research"
+                       else ("github",))
+            reused["pools"][case["id"]] = {
+                "task_id": case["id"], "kind": case["kind"],
+                "results": [{"url": f"https://example.test/{case['id']}/a",
+                             "title": f"Title {case['id']}", "content": "frozen fixture"}],
+                "engine_outcomes": [{"engine": name, "status": "blocked" if name == "wikipedia" else "ok"}
+                                    for name in engines],
+                "receipt_path": f"query-{index:02d}-{case['id']}.json",
+                "receipt_sha256": f"{index:064x}", "reused": True,
+                "wikipedia_unavailable": case["kind"] == "research"}
+            if case["id"] == "d1":
+                reused["pools"][case["id"]]["results"].append({
+                    "url": f"https://example.test/{case['id']}/a#part",
+                    "title": f"Title {case['id']}", "content": "fragment occurrence"})
+                reused["pools"][case["id"]]["results"].append({
+                    "url": None, "title": "No URL", "content": "must remain in pool"})
+        correction = {"schema": "exp078-corrective-query-receipt/1", "task_id": "d12",
+            "query": "cosign", "target_url": "https://github.com/sigstore/cosign", "engine": "github",
+            "effective_pool_source": "corrective_github_query",
+            "results": [{"url": "https://github.com/sigstore/cosign", "title": "cosign", "content": "fixture"}],
+            "engine_outcomes": [{"engine": "github", "status": "ok"}], "partial": False,
+            "all_unresponsive": False, "cached": False, "physical_http_calls": 1,
+            "status": "complete", "target_acquired": True, "receipt_sha256": "e" * 64}
+        started = datetime.now(timezone.utc)
+        clock = {"schema": "exp078-stage-clock/1", "stage_id": "fixture-stage",
+            "stage": "development", "stage_started_utc": started.isoformat(),
+            "stage_deadline_utc": (started + timedelta(seconds=28800)).isoformat(),
+            "stage_manifest_sha256": "a" * 64, "protocol_sha256": "b" * 64,
+            "cohorts_sha256": "c" * 64, "source_revision": "1" * 40,
+            "ordered_task_ids": [case["id"] for case in cases]}
+        clock_bytes = P._canonical(clock)
+        acquisition = P.prepare_stage(reused, correction, cohorts_path=HERE / "cohorts.json",
+                                      stage_clock=clock, stage_clock_bytes=clock_bytes)
+        inventory, binding = M.capture_inventory(acquisition, cases)
+        self.assertEqual(acquisition["schema"], "exp078-effective-acquisition/1")
+        self.assertEqual(len([case for case in cases if case["kind"] == "research"]), 8)
+        self.assertEqual(len(inventory["sources"]), 9)
+        expected_card_count = sum(len(acquisition["pools"][case["id"]]["cards"])
+                                  for case in cases if case["kind"] == "research")
+        self.assertEqual(len(binding["card_sources"]), expected_card_count)
+        self.assertEqual(acquisition["engine_outcomes"]["d1"]["wikipedia"]["status"], "blocked")
+        for case in cases:
+            if case["kind"] == "research":
+                card = acquisition["pools"][case["id"]]["cards"][0]
+                self.assertEqual(binding["card_sources"][f"{case['id']}:{card['id']}"],
+                         acquisition["source_id_by_card_id"][case["id"]][card["id"]])
+        d1_cards = acquisition["pools"]["d1"]["cards"]
+        self.assertEqual(binding["card_sources"][f"d1:{d1_cards[0]['id']}"] ,
+                         binding["card_sources"][f"d1:{d1_cards[1]['id']}"])
+        capture_rows = M.validate_inventory(inventory)
+        self.assertEqual(next(row["_capture_initial_state"] for row in capture_rows
+                              if row["url"] is None), "unsupported_url_not_attempted")
+
+    def test_prepare_stage_output_reaches_unchanged_selector_builder_offline(self):
+        reused = {"schema": "exp078-reused-inputs/1", "synthetic": False, "pools": {},
+                  "historical_d12": {"receipt_sha256": "d" * 64, "target_present": False,
+                                     "effective": False}}
+        cases = COHORTS["cohorts"]["development"]
+        for index, case in enumerate(cases, 1):
+            if case["id"] == "d12":
+                continue
+            engines = (("arxiv", "openalex", "github", "wikipedia") if case["kind"] == "research"
+                       else ("github",))
+            count = 41 if case["kind"] == "research" else 1
+            results = [{"url": f"https://example.test/{case['id']}/{j}",
+                        "title": f"Title {case['id']} {j}", "content": "frozen fixture text"}
+                       for j in range(count)]
+            if case["kind"] == "navigation":
+                results[0]["url"] = case["target_url"]
+            reused["pools"][case["id"]] = {
+                "task_id": case["id"], "kind": case["kind"], "results": results,
+                "engine_outcomes": [{"engine": name, "status": "blocked" if name == "wikipedia" else "ok"}
+                                    for name in engines],
+                "receipt_path": f"query-{index:02d}-{case['id']}.json",
+                "receipt_sha256": f"{index:064x}", "reused": True,
+                "wikipedia_unavailable": case["kind"] == "research"}
+        correction = {"schema": "exp078-corrective-query-receipt/1", "task_id": "d12",
+            "query": "cosign", "target_url": "https://github.com/sigstore/cosign", "engine": "github",
+            "effective_pool_source": "corrective_github_query",
+            "results": [{"url": "https://github.com/sigstore/cosign", "title": "cosign", "content": "fixture"}],
+            "engine_outcomes": [{"engine": "github", "status": "ok"}], "partial": False,
+            "all_unresponsive": False, "cached": False, "physical_http_calls": 1,
+            "status": "complete", "target_acquired": True, "receipt_sha256": "e" * 64}
+        started = datetime.now(timezone.utc)
+        clock = {"schema": "exp078-stage-clock/1", "stage_id": "fixture-stage",
+            "stage": "development", "stage_started_utc": started.isoformat(),
+            "stage_deadline_utc": (started + timedelta(seconds=28800)).isoformat(),
+            "stage_manifest_sha256": "a" * 64, "protocol_sha256": "b" * 64,
+            "cohorts_sha256": "c" * 64, "source_revision": "1" * 40,
+            "ordered_task_ids": [case["id"] for case in cases]}
+        acquisition = P.prepare_stage(reused, correction, cohorts_path=HERE / "cohorts.json",
+                                      stage_clock=clock, stage_clock_bytes=P._canonical(clock))
+        normalized = SELECTOR.normalize_cases(cases)
+        prepared = SELECTOR.make_prepared(acquisition, normalized)
+        self.assertEqual(len(prepared), 21)
+        rankable = [row for row in prepared if row[3] is not None]
+        self.assertEqual(len(rankable), 16)
+        for item, case, cards, control, candidate, control_raw, candidate_raw in rankable:
+            self.assertEqual(len(cards), 41)
+            self.assertEqual(len(candidate["joint"]["questions"]), 82)
+            self.assertEqual(set(candidate["ids"]), {card["id"] for card in cards})
+            self.assertEqual(len(control["w0"]["state"]["candidates"]), 40)
+        inventory, binding = M.capture_inventory(acquisition, cases)
+        self.assertEqual(len(inventory["sources"]), 328)
+        self.assertEqual(len(binding["card_sources"]), 328)
+        # Exercise the entire fixed selector schedule, including request/response
+        # transport, strict parsing, fusion, and durable terminal receipts. Every
+        # exchange is backed by an explicit in-process MockTransport fixture.
+        with tempfile.TemporaryDirectory() as tmp:
+            stage_root = pathlib.Path(tmp) / "stage"
+            stage_root.mkdir()
+            output = stage_root / "selector"
+            stats = {"calls": 0, "clients": 0, "closed": 0}
+            transport_factory = SELECTOR.fixture_transport_factory(stats=stats)
+            run = asyncio.run(SELECTOR.run_selector(
+                acquisition, cases, P._canonical(clock), stage_root, output,
+                offline=True, transport_factory=transport_factory))
+            self.assertEqual(run["status"], "complete")
+            self.assertTrue(run["synthetic"])
+            self.assertFalse(run["quality_credit"])
+            self.assertFalse(run["adoption_eligible"])
+            self.assertEqual(len(run["operations"]), 21)
+            self.assertEqual(len(run["operations"]) + 1, 22)  # 21 fixed slots plus neutral.
+            self.assertTrue(all(op["status"] in {"complete", "native_target_top1_noop"}
+                                for op in run["operations"]))
+            self.assertEqual(sum(op["status"] == "complete" for op in run["operations"]), 16)
+            self.assertEqual(sum(op["status"] == "native_target_top1_noop"
+                                 for op in run["operations"]), 5)
+            self.assertEqual(stats["calls"], 34)  # neutral pair + 16 operation pairs.
+            self.assertEqual(stats["clients"], stats["calls"])
+            self.assertEqual(stats["closed"], stats["clients"])
+            self.assertEqual(run["budget"]["attempts"], stats["calls"])
+            self.assertTrue(run["neutral"]["phase_endpoint_after_fsync"])
+            self.assertTrue(all(op["phase_endpoint_after_fsync"] for op in run["operations"]
+                                if op["status"] == "complete"))
+            self.assertTrue((output / "selector-run.json").is_file())
+            self.assertEqual(len(list((output / "receipts").glob("*-candidate-body.json"))), 17)
+
+
+if __name__ == "__main__":
+    unittest.main()

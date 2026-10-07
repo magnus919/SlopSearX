@@ -1,0 +1,350 @@
+"""Private, input-only preparation for the EXP-087 reference-ID reassessment.
+
+No network/model calls or grading occur here. The opaque zero-argument guard is
+checked before every write; all projections and validations finish first.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import json
+import os
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+OLD_CAPTURE = Path("capture") / "portable-capture-wire"
+MAX_SUBMISSION_BYTES = 384_000
+FROZEN_PINS = {
+    "assignment-plan.json": "487c655ab2c8d69c3b2acc9f0be46844df601abf0efe6ab31e79d7861907a9cd",
+    "model-packets.py.txt": "92bc5ba825b76c2967a477da1d4481ee8ae9b696cd1eaf0956f552611c9912c7",
+    "source-assessment-adapter.py.txt": "89d6e5285c3f9cff36e71a7f33ed733acdc8171c17bf5069d0862b5e326fb862",
+    "source-assessor-prompt.txt": "ffdb89b3ffbe82ec6e449970c4875999df6b3d5ad237892549ea3deab7c7d5dd",
+}
+
+
+class PrepareError(ValueError):
+    pass
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                      allow_nan=False).encode("utf-8")
+
+
+def _json(raw: bytes):
+    return json.loads(raw.decode("utf-8"))
+
+
+def _load(name: str, path: Path):
+    if path.is_symlink() or not path.is_file():
+        raise PrepareError(f"missing-or-unsafe-helper:{path.name}")
+    return importlib.machinery.SourceFileLoader(name, str(path)).load_module()
+
+
+def _read(path: Path) -> bytes:
+    if path.is_symlink() or not path.is_file():
+        raise PrepareError(f"missing-or-unsafe-input:{path.name}")
+    return path.read_bytes()
+
+
+def _write_once(path: Path, raw: bytes, guard) -> None:
+    guard()
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "wb", closefd=True) as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except BaseException:
+        try:
+            path.unlink()
+        except OSError:
+            pass
+        raise
+
+
+def _json_bytes(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2,
+                       allow_nan=False) + "\n").encode("utf-8")
+
+
+def _same_immutable(left: dict, right: dict) -> bool:
+    ignored = {"acquisition_receipt", "recovery_provenance", "stage"}
+    return {k: v for k, v in left.items() if k not in ignored} == {
+        k: v for k, v in right.items() if k not in ignored}
+
+
+def _capture_inventory(snapshot: Path, acquisition: dict, cases: list, bridge, M):
+    """Validate terminal capture proofs before opening any raw page."""
+    caproot = snapshot / "capture"
+    phase_raw = _read(caproot / "capture-phase.json")
+    phase = _json(phase_raw)
+    if phase.get("schema") != "exp078-capture-phase/1" or phase.get("status") != "complete":
+        raise PrepareError("capture-phase-not-terminal")
+    old_envelope_raw = _read(snapshot / "effective-input-envelope.json")
+    old_envelope = _json(old_envelope_raw)
+    if not _same_immutable(acquisition, old_envelope):
+        raise PrepareError("reused-effective-acquisition-mismatch")
+    clock_raw = _read(snapshot / "stage-clock.json")
+    binding_raw = _read(caproot / "card-source-binding.json")
+    if (_sha(clock_raw) != phase.get("stage_clock_sha256")
+            or _sha(binding_raw) != phase.get("card_source_binding_sha256")
+            or _sha(_read(snapshot / "capture" / "portable-capture-wire" / "capture.json"))
+               != phase.get("helper_wire_receipt_sha256")):
+        raise PrepareError("capture-phase-proof-binding")
+
+    wire = snapshot / OLD_CAPTURE
+    capture_raw = _read(wire / "capture.json")
+    capture = _json(capture_raw)
+    receipts_raw = _read(wire / "receipts.json")
+    receipts = _json(receipts_raw)
+    if (capture.get("schema") != "exp077-source-capture/1" or capture.get("status") != "complete"
+            or capture.get("synthetic") is not False or not isinstance(capture.get("captures"), list)
+            or capture.get("inventory_count") != len(capture["captures"])
+            or capture.get("captures") != receipts):
+        raise PrepareError("portable-capture-incomplete-or-receipts-mismatch")
+    binding = _json(binding_raw)
+    if binding.get("schema") != "exp078-card-source-binding/1" or type(binding.get("card_sources")) is not dict:
+        raise PrepareError("card-source-binding-schema")
+    cap_by_id = {}
+    for row in receipts:
+        sid = row.get("source_id")
+        if not isinstance(sid, str) or not sid or sid in cap_by_id:
+            raise PrepareError("capture-source-id-membership")
+        cap_by_id[sid] = row
+    expected_sources = set()
+    expected_bindings = {}
+    for task in cases:
+        tid = task["id"]
+        pool = acquisition["pools"][tid]
+        source_map = acquisition["source_id_by_card_id"][tid]
+        native_map = acquisition["native_results_by_card_id"][tid]
+        for i, card in enumerate(pool["cards"]):
+            cid = card["id"]
+            native = native_map[cid]
+            projected = bridge.project_card(tid, i, native)
+            if projected != card:
+                raise PrepareError("frozen-card-projection-mismatch")
+            sid = bridge._source_id(native, tid, i)
+            if source_map.get(cid) != sid:
+                raise PrepareError("native-source-id-mismatch")
+            bound = binding["card_sources"].get(f"{tid}:{cid}")
+            if bound != sid:
+                raise PrepareError("card-source-binding-mismatch")
+            expected_bindings[f"{tid}:{cid}"] = sid
+            expected_sources.add(sid)
+    if binding["card_sources"] != expected_bindings:
+        raise PrepareError("card-source-binding-coverage")
+    if expected_sources != set(cap_by_id):
+        raise PrepareError("capture-source-inventory-coverage")
+
+    # Verify all receipt/raw bindings before returning contexts. No raw file was
+    # opened until both terminal stamps and aggregate membership had passed.
+    source_rows = {}
+    for sid, row in cap_by_id.items():
+        status = row.get("status")
+        if status == "captured":
+            rel = row.get("raw_path")
+            if (not isinstance(rel, str) or not rel.startswith("private-raw/source-")
+                    or Path(rel).name != rel.split("/")[-1] or ".." in Path(rel).parts):
+                raise PrepareError("raw-path-invalid")
+            raw = _read(wire / rel)
+            doc = _json(raw)
+            if doc.get("source_id") != sid or not isinstance(doc.get("url"), str) or not isinstance(doc.get("markdown"), str):
+                raise PrepareError("raw-capture-identity")
+            context = doc["markdown"][:8000]
+            digest = _sha(context.encode("utf-8"))
+            if (digest != row.get("assessment_context_sha256")
+                    or len(context) != row.get("assessment_context_characters")
+                    or len(doc["markdown"].encode("utf-8")) != row.get("captured_bytes")
+                    or _sha(doc["markdown"].encode("utf-8")) != row.get("captured_sha256")
+                    or bool(len(doc["markdown"]) > 8000) != row.get("assessment_context_truncated")
+                    or row.get("url_sha256") != _sha(doc["url"].split("#", 1)[0].encode("utf-8"))
+                    or bridge._source_id({"url": doc["url"]}, "", 0) != sid):
+                raise PrepareError("raw-context-receipt-hash")
+            source_rows[sid] = {"source_id": sid, "state": "success", "context": context}
+        elif status in {"error", "failed", "refused", "not_acquired", "failed_or_refused"}:
+            if row.get("raw_path") not in (None, ""):
+                raise PrepareError("unavailable-source-has-raw-path")
+            if status == "failed_or_refused":
+                classification = row.get("consumer_classification")
+                if not isinstance(classification, dict):
+                    raise PrepareError("ambiguous-capture-classification")
+                if classification.get("refusal") is True:
+                    state = "refused"
+                elif classification.get("barrier_flagged") is True:
+                    state = "failed"
+                else:
+                    raise PrepareError("ambiguous-capture-classification")
+            else:
+                state = "failed" if status == "error" else status
+            source_rows[sid] = {"source_id": sid, "state": state}
+        else:
+            raise PrepareError("unrecognized-capture-state")
+    return source_rows, {"phase_sha256": _sha(phase_raw), "capture_sha256": _sha(capture_raw),
+                        "receipts_sha256": _sha(receipts_raw), "binding_sha256": _sha(binding_raw),
+                        "old_effective_envelope_sha256": _sha(old_envelope_raw),
+                        "stage_clock_sha256": _sha(clock_raw), "source_count": len(source_rows)}
+
+
+def prepare(output_root, acquisition, cases, guard, source_snapshot_root):
+    """Create private card and source model inputs after complete-capture proof.
+
+    ``output_root`` must be a fresh child directory under the admitted stage;
+    its parent may already contain the stage clock and other admitted records.
+    ``guard`` is the caller's opaque, zero-argument admission callback, checked
+    before each filesystem write. This routine creates no admission authority.
+    """
+    out, snapshot = Path(output_root), Path(source_snapshot_root)
+    if (out.resolve() == snapshot.resolve() or out.is_symlink()
+            or (out.exists() and (not out.is_dir() or any(out.iterdir())))):
+        raise PrepareError("output-root-not-empty-or-source-root")
+    if type(acquisition) is not dict or type(cases) is not list or len(cases) != 8:
+        raise PrepareError("development-input-shape")
+    # Fail closed on incomplete capture before any read of raw pages.
+    phase = _json(_read(snapshot / "capture" / "capture-phase.json"))
+    if phase.get("schema") != "exp078-capture-phase/1" or phase.get("status") != "complete":
+        raise PrepareError("capture-phase-not-terminal")
+
+    packets_path = REPO / "docs/experiments/evidence/EXP-077/model-packets.py.txt"
+    bridge_path = REPO / "docs/experiments/evidence/EXP-078/prepare.py.txt"
+    M = _load("exp087_private_model_packets", packets_path)
+    bridge = _load("exp087_private_effective_projector", bridge_path)
+    adapter = _load("exp087_card_reference_id_adapter", HERE / "card-reference-id-adapter.py.txt")
+    source_adapter_path = REPO / "docs/experiments/evidence/EXP-077/source-assessment-adapter.py.txt"
+    prompt_card = _read(HERE / "card-assessor-prompt.txt")
+    prompt_source = _read(REPO / "docs/experiments/evidence/EXP-077/source-assessor-prompt.txt")
+    plan_raw = _read(REPO / "docs/experiments/evidence/EXP-077/assignment-plan.json")
+    plan = _json(plan_raw)
+    if (plan.get("schema") != "exp077-assignment-plan/1"
+            or _sha(plan_raw) != FROZEN_PINS["assignment-plan.json"]
+            or _sha(_read(packets_path)) != FROZEN_PINS["model-packets.py.txt"]
+            or _sha(_read(source_adapter_path)) != FROZEN_PINS["source-assessment-adapter.py.txt"]
+            or _sha(prompt_source) != FROZEN_PINS["source-assessor-prompt.txt"]):
+        raise PrepareError("assignment-plan-schema")
+    source_rows, capture_pins = _capture_inventory(snapshot, acquisition, cases, bridge, M)
+    task_ids = [case.get("id") for case in cases]
+    if task_ids != [f"d{i}" for i in range(1, 9)]:
+        raise PrepareError("development-task-order")
+    card_jobs = plan["stages"]["development"]["card"]
+    source_jobs = plan["stages"]["development"]["source"]
+    card_lookup = {(r["task_id"], r["assessor_id"]): r for r in card_jobs}
+    source_lookup = {(r["task_id"], r["assessor_id"], r["chunk_index"]): r for r in source_jobs}
+    if len(card_jobs) != 16 or len(source_jobs) != 64:
+        raise PrepareError("frozen-job-plan-count")
+    outputs = []
+    jobs = []
+    for case in cases:
+        tid = case["id"]
+        pool = acquisition["pools"][tid]
+        cards = [{k: c[k] for k in ("title", "url", "snippet")} for c in pool["cards"]]
+        global_ids = [c["id"] for c in pool["cards"]]
+        facets = [check["id"] for check in case["critical_checks"]]
+        for assessor in ("A", "B"):
+            built = adapter.build_assignment(tid, cards, facets, assessor_id=assessor,
+                                             global_ids=global_ids)
+            logical = card_lookup[(tid, assessor)]
+            payload = {"prompt": prompt_card.decode("utf-8"),
+                       "task": {"task_id": tid, "query": case["query"], "purpose": case["purpose"],
+                                "critical_checks": case["critical_checks"]},
+                       "card_model_input": built["model_input"]}
+            raw = _json_bytes(payload)
+            if len(raw) > MAX_SUBMISSION_BYTES:
+                raise PrepareError("card-submission-byte-cap")
+            outputs.append((f"card-inputs/{logical['submission_id']}.json", raw))
+            private = _json_bytes(built)
+            outputs.append((f"private/card-assignments/{logical['submission_id']}.json", private))
+            jobs.append({"logical_submission": logical["submission_id"], "helper_id": built["assignment"]["assignment_id"],
+                         "task_id": tid, "assessor_id": assessor, "role": "card",
+                         "input_path": f"card-inputs/{logical['submission_id']}.json",
+                         "input_sha256": _sha(raw), "input_bytes": len(raw),
+                         "private_plan_path": f"private/card-assignments/{logical['submission_id']}.json",
+                         "private_plan_sha256": _sha(private)})
+        ids = []
+        seen = set()
+        for cid in global_ids:
+            sid = acquisition["source_id_by_card_id"][tid][cid]
+            if sid not in seen:
+                ids.append(sid)
+                seen.add(sid)
+        rows = [source_rows[sid] for sid in ids]
+        source_plan = M.source_chunk_assignments(tid, rows, facets, chunk_size=20,
+                                                 assessors=("R1", "R2"))
+        for assessor in ("R1", "R2"):
+            for chunk in source_plan["chunks"]:
+                if chunk["assessor_id"] != assessor:
+                    continue
+                key = (tid, assessor, chunk["chunk_index"])
+                logical = source_lookup.get(key)
+                if logical is None:
+                    raise PrepareError("unplanned-source-chunk")
+                if not chunk["model_call_required"]:
+                    jobs.append({"logical_submission": logical["submission_id"], "helper_id": chunk["assignment_id"],
+                                 "task_id": tid, "assessor_id": assessor, "role": "source",
+                                 "chunk_index": chunk["chunk_index"], "model_call_required": False,
+                                 "no_call_reason": "chunk has no successful captured contexts"})
+                    continue
+                model_input = M.source_model_input(case, chunk)
+                payload = {"prompt": prompt_source.decode("utf-8"), "source_model_input": model_input}
+                raw = _json_bytes(payload)
+                if len(raw) > MAX_SUBMISSION_BYTES:
+                    raise PrepareError("source-submission-byte-cap")
+                outputs.append((f"source-inputs/{logical['submission_id']}.json", raw))
+                jobs.append({"logical_submission": logical["submission_id"], "helper_id": chunk["assignment_id"],
+                             "task_id": tid, "assessor_id": assessor, "role": "source",
+                             "chunk_index": chunk["chunk_index"], "model_call_required": True,
+                             "input_path": f"source-inputs/{logical['submission_id']}.json",
+                             "input_sha256": _sha(raw), "input_bytes": len(raw)})
+        represented = {(tid, row.get("assessor_id"), row.get("chunk_index"))
+                       for row in jobs if row.get("task_id") == tid and row.get("role") == "source"}
+        for logical in source_jobs:
+            key = (tid, logical["assessor_id"], logical["chunk_index"])
+            if logical["task_id"] == tid and key not in represented:
+                jobs.append({"logical_submission": logical["submission_id"], "helper_id": None,
+                             "task_id": tid, "assessor_id": logical["assessor_id"], "role": "source",
+                             "chunk_index": logical["chunk_index"], "model_call_required": False,
+                             "conditional_state": "absent_trailing_chunk"})
+        private_plan = _json_bytes(source_plan)
+        outputs.append((f"private/source-plans/{tid}.json", private_plan))
+        jobs.append({"role": "source_plan", "task_id": tid,
+                     "private_plan_path": f"private/source-plans/{tid}.json",
+                     "private_plan_sha256": _sha(private_plan)})
+    if sum(1 for row in jobs if row.get("role") == "card") != 16:
+        raise PrepareError("card-job-coverage")
+    source_calls = [row for row in jobs if row.get("role") == "source" and row.get("model_call_required")]
+    if len(source_calls) > 64 or 16 + len(source_calls) + 32 > 112:
+        raise PrepareError("logical-job-cap")
+    # Validate all unique output paths and prepare a hash-linked manifest before
+    # creating even the output directory.
+    paths = [path for path, _ in outputs]
+    if len(paths) != len(set(paths)):
+        raise PrepareError("duplicate-output-path")
+    manifest = {"schema": "exp087-private-assessment-inputs/1", "study_id": "EXP-087",
+                "scope": "private input preparation only; no grading or qualification claim",
+                "source_snapshot_root": "exp084/", "capture_pins": capture_pins,
+                "helper_pins": {"model_packets_sha256": _sha(_read(packets_path)),
+                                "source_assessment_adapter_sha256": _sha(_read(source_adapter_path)),
+                                "source_projector_sha256": _sha(_read(bridge_path)),
+                                "card_reference_adapter_sha256": _sha(_read(HERE / "card-reference-id-adapter.py.txt")),
+                                "card_prompt_sha256": _sha(prompt_card), "source_prompt_sha256": _sha(prompt_source),
+                                "assignment_plan_sha256": _sha(plan_raw)},
+                "job_count_diagnostic": len(jobs), "card_jobs": 16,
+                "active_source_jobs": len(source_calls), "future_answer_capacity": 32,
+                "serialized_submission_bytes_total_diagnostic": sum(
+                    row.get("input_bytes", 0) for row in jobs), "jobs": jobs,
+                "files": [{"path": path, "sha256": _sha(raw), "bytes": len(raw)}
+                          for path, raw in outputs]}
+    manifest_raw = _json_bytes(manifest)
+    # Writes are intentionally last, each independently gated and exclusive.
+    for rel, raw in outputs:
+        _write_once(out / rel, raw, guard)
+    _write_once(out / "manifest.json", manifest_raw, guard)
+    return {"manifest_path": str(out / "manifest.json"), "manifest_sha256": _sha(manifest_raw),
+            "file_count": len(outputs) + 1, "card_jobs": 16,
+            "active_source_jobs": len(source_calls), "source_plan_count": 8}

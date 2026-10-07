@@ -1,0 +1,20 @@
+{
+  "schema": "exp062-network-invocation/1",
+  "status": "registered",
+  "evidence_mode": "exposed diagnostic; not fresh confirmation",
+  "mechanism": "identical registered EXP-061 native/canonical ordering comparison",
+  "parent_protocol_sha256": "07e546abfc1a73196cbf675dcfbff4f2048f75653663fbc234f9fd2decf48cee",
+  "prior_setup_revision": "e318363f6149a517f71b7bae9b724b6ac054495a",
+  "inputs": {
+    "fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "fresh-references.json": "c9a6121b4267035aaefc051dce4a470fc9b9190ee3ae4105545a7cd2830c9c0e"
+  },
+  "network_precondition": "public api.typesafe.ai resolution succeeds in the actual owned executor before credential loading or model lease",
+  "maximum_calls": 223,
+  "search_calls": 0,
+  "brave_calls": 0,
+  "retries": 0,
+  "earlier_unknown_usage": "EXP-061 retained separately as one unknown-usage dispatch; never interpreted as known zero or a valid ranking case",
+  "failure": "unchanged paired fail-stop; no retry or re-invocation of this registration",
+  "analysis": "unchanged EXP-061 separate A/B and arm gates; exposed; adoption ineligible"
+}

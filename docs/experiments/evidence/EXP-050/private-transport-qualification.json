@@ -1,0 +1,50 @@
+{
+  "schema": "metadata-private-transport-qualification-summary/1",
+  "source_sha256": "5c17961883e9c75e31553d7c83ec9db2c4d5b7c3c62cd204ab238b5795e0b538",
+  "frozen_body_sha256": "0c328f18ef4e5cfbad7319f28db64be2bf8b6c2f28f04ebd88cca9dbfbce0513",
+  "checks_passed": 21,
+  "receipts": [
+    {
+      "schema": "metadata-private-transport-offline-qualification/1",
+      "result": "passed",
+      "checks": [
+        "success-body-projection",
+        "exact-public-body-fields",
+        "no-credential-in-envelope",
+        "reject-method-before-process",
+        "reject-url-before-process",
+        "reject-fields-before-process",
+        "reject-body-before-process",
+        "reject-headers-before-process",
+        "classified-timeout",
+        "classified-terminal",
+        "redirect-status-not-followed-by-wrapper"
+      ],
+      "checks_passed": 11,
+      "network_calls": 0,
+      "credential_reads": 0,
+      "source_sha256": "5c17961883e9c75e31553d7c83ec9db2c4d5b7c3c62cd204ab238b5795e0b538"
+    },
+    {
+      "schema": "metadata-private-remote-offline-qualification/1",
+      "result": "passed",
+      "checks": [
+        "success-safe-envelope",
+        "fixed-host-fields-body-private-header",
+        "missing-credential-terminal-no-http",
+        "ambiguous-credential-terminal-no-http",
+        "fields-mismatch-before-credential-request",
+        "redirect-refused-single-open",
+        "bounded-retry-after-projection",
+        "error-body-not-returned",
+        "socket-timeout-classified",
+        "streamed-body-cap-terminal"
+      ],
+      "checks_passed": 10,
+      "network_calls": 0,
+      "credential_reads": 0,
+      "source_sha256": "5c17961883e9c75e31553d7c83ec9db2c4d5b7c3c62cd204ab238b5795e0b538"
+    }
+  ],
+  "limitation": "Synthetic checks; no live credential read, network request, or metadata retrieval. Private source remains outside the repository."
+}

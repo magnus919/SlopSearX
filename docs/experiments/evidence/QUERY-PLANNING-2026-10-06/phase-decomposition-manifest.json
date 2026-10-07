@@ -1,0 +1,438 @@
+{
+  "harness_sha256": "8b9c26ad9dd0762282093b359a13face0f002782a2e9c110dda52e5b49332c57",
+  "operations": [
+    [
+      "q01:decomposition:2",
+      "q01",
+      "decomposition",
+      2,
+      "dense passage retrieval open domain question answering",
+      "q01:first"
+    ],
+    [
+      "q01:baseline:3",
+      "q01",
+      "baseline",
+      3,
+      "Compare learned dense passage retrieval and retrieval-augmented generation for open-domain question answering. criticism",
+      "q01:first"
+    ],
+    [
+      "q01:baseline:2",
+      "q01",
+      "baseline",
+      2,
+      "Compare learned dense passage retrieval and retrieval-augmented generation for open-domain question answering. limitations",
+      "q01:first"
+    ],
+    [
+      "q01:decomposition:3",
+      "q01",
+      "decomposition",
+      3,
+      "retrieval augmented generation knowledge intensive NLP",
+      "q01:first"
+    ],
+    [
+      "q02:baseline:3",
+      "q02",
+      "baseline",
+      3,
+      "Compare expanding a query with a generated pseudo-document against embedding a hypothetical document for zero-shot retrieval. criticism",
+      "q02:first"
+    ],
+    [
+      "q02:baseline:2",
+      "q02",
+      "baseline",
+      2,
+      "Compare expanding a query with a generated pseudo-document against embedding a hypothetical document for zero-shot retrieval. limitations",
+      "q02:first"
+    ],
+    [
+      "q02:decomposition:3",
+      "q02",
+      "decomposition",
+      3,
+      "hypothetical document embeddings zero shot dense retrieval",
+      "q02:first"
+    ],
+    [
+      "q02:decomposition:2",
+      "q02",
+      "decomposition",
+      2,
+      "query expansion generated pseudo documents",
+      "q02:first"
+    ],
+    [
+      "q03:decomposition:3",
+      "q03",
+      "decomposition",
+      3,
+      "pairwise ranking prompting language models",
+      "q03:first"
+    ],
+    [
+      "q03:baseline:2",
+      "q03",
+      "baseline",
+      2,
+      "Compare listwise permutation prompting and pairwise prompting for reranking search results with language models. limitations",
+      "q03:first"
+    ],
+    [
+      "q03:decomposition:2",
+      "q03",
+      "decomposition",
+      2,
+      "listwise permutation language model reranking",
+      "q03:first"
+    ],
+    [
+      "q03:baseline:3",
+      "q03",
+      "baseline",
+      3,
+      "Compare listwise permutation prompting and pairwise prompting for reranking search results with language models. criticism",
+      "q03:first"
+    ],
+    [
+      "q04:baseline:3",
+      "q04",
+      "baseline",
+      3,
+      "Compare modular question decomposition and interleaving retrieval with reasoning for multi-hop question answering. criticism",
+      "q04:first"
+    ],
+    [
+      "q04:decomposition:2",
+      "q04",
+      "decomposition",
+      2,
+      "modular decomposed prompting multi hop question answering",
+      "q04:first"
+    ],
+    [
+      "q04:decomposition:3",
+      "q04",
+      "decomposition",
+      3,
+      "interleaving retrieval reasoning multi step questions",
+      "q04:first"
+    ],
+    [
+      "q04:baseline:2",
+      "q04",
+      "baseline",
+      2,
+      "Compare modular question decomposition and interleaving retrieval with reasoning for multi-hop question answering. limitations",
+      "q04:first"
+    ],
+    [
+      "q05:decomposition:2",
+      "q05",
+      "decomposition",
+      2,
+      "reasoning acting language models",
+      "q05:first"
+    ],
+    [
+      "q05:baseline:3",
+      "q05",
+      "baseline",
+      3,
+      "Compare interleaved reasoning and acting with self-supervised learning of language-model tool use. criticism",
+      "q05:first"
+    ],
+    [
+      "q05:decomposition:3",
+      "q05",
+      "decomposition",
+      3,
+      "self supervised language model tool use",
+      "q05:first"
+    ],
+    [
+      "q05:baseline:2",
+      "q05",
+      "baseline",
+      2,
+      "Compare interleaved reasoning and acting with self-supervised learning of language-model tool use. limitations",
+      "q05:first"
+    ],
+    [
+      "q06:baseline:2",
+      "q06",
+      "baseline",
+      2,
+      "Compare retrieval self-reflection with corrective retrieval when retrieved evidence is unreliable. limitations",
+      "q06:first"
+    ],
+    [
+      "q06:baseline:3",
+      "q06",
+      "baseline",
+      3,
+      "Compare retrieval self-reflection with corrective retrieval when retrieved evidence is unreliable. criticism",
+      "q06:first"
+    ],
+    [
+      "q06:decomposition:2",
+      "q06",
+      "decomposition",
+      2,
+      "self reflection retrieval augmented generation",
+      "q06:first"
+    ],
+    [
+      "q06:decomposition:3",
+      "q06",
+      "decomposition",
+      3,
+      "corrective retrieval augmented generation",
+      "q06:first"
+    ],
+    [
+      "q07:baseline:3",
+      "q07",
+      "baseline",
+      3,
+      "Compare low-rank language-model adaptation with quantized low-rank finetuning under memory constraints. criticism",
+      "q07:first"
+    ],
+    [
+      "q07:decomposition:3",
+      "q07",
+      "decomposition",
+      3,
+      "quantized low rank finetuning language models",
+      "q07:first"
+    ],
+    [
+      "q07:baseline:2",
+      "q07",
+      "baseline",
+      2,
+      "Compare low-rank language-model adaptation with quantized low-rank finetuning under memory constraints. limitations",
+      "q07:first"
+    ],
+    [
+      "q07:decomposition:2",
+      "q07",
+      "decomposition",
+      2,
+      "low rank adaptation language models",
+      "q07:first"
+    ],
+    [
+      "q08:decomposition:2",
+      "q08",
+      "decomposition",
+      2,
+      "attention only transformer architecture",
+      "q08:first"
+    ],
+    [
+      "q08:baseline:3",
+      "q08",
+      "baseline",
+      3,
+      "Compare the original attention-only Transformer architecture with bidirectional encoder pretraining for language understanding. criticism",
+      "q08:first"
+    ],
+    [
+      "q08:decomposition:3",
+      "q08",
+      "decomposition",
+      3,
+      "bidirectional encoder pretraining language understanding",
+      "q08:first"
+    ],
+    [
+      "q08:baseline:2",
+      "q08",
+      "baseline",
+      2,
+      "Compare the original attention-only Transformer architecture with bidirectional encoder pretraining for language understanding. limitations",
+      "q08:first"
+    ],
+    [
+      "q09:decomposition:3",
+      "q09",
+      "decomposition",
+      3,
+      "sparse lexical expansion first stage ranking",
+      "q09:first"
+    ],
+    [
+      "q09:decomposition:2",
+      "q09",
+      "decomposition",
+      2,
+      "contextualized late interaction passage retrieval",
+      "q09:first"
+    ],
+    [
+      "q09:baseline:2",
+      "q09",
+      "baseline",
+      2,
+      "Compare contextualized late-interaction retrieval with learned sparse lexical expansion for first-stage ranking. limitations",
+      "q09:first"
+    ],
+    [
+      "q09:baseline:3",
+      "q09",
+      "baseline",
+      3,
+      "Compare contextualized late-interaction retrieval with learned sparse lexical expansion for first-stage ranking. criticism",
+      "q09:first"
+    ],
+    [
+      "q10:baseline:2",
+      "q10",
+      "baseline",
+      2,
+      "Compare Siamese sentence embeddings with unsupervised contrastive dense information retrieval. limitations",
+      "q10:first"
+    ],
+    [
+      "q10:decomposition:3",
+      "q10",
+      "decomposition",
+      3,
+      "unsupervised dense retrieval contrastive learning",
+      "q10:first"
+    ],
+    [
+      "q10:decomposition:2",
+      "q10",
+      "decomposition",
+      2,
+      "Siamese sentence embeddings",
+      "q10:first"
+    ],
+    [
+      "q10:baseline:3",
+      "q10",
+      "baseline",
+      3,
+      "Compare Siamese sentence embeddings with unsupervised contrastive dense information retrieval. criticism",
+      "q10:first"
+    ],
+    [
+      "q11:baseline:3",
+      "q11",
+      "baseline",
+      3,
+      "Compare heterogeneous zero-shot information-retrieval evaluation with a massive text-embedding benchmark. criticism",
+      "q11:first"
+    ],
+    [
+      "q11:decomposition:2",
+      "q11",
+      "decomposition",
+      2,
+      "heterogeneous zero shot information retrieval benchmark",
+      "q11:first"
+    ],
+    [
+      "q11:decomposition:3",
+      "q11",
+      "decomposition",
+      3,
+      "massive text embedding benchmark",
+      "q11:first"
+    ],
+    [
+      "q11:baseline:2",
+      "q11",
+      "baseline",
+      2,
+      "Compare heterogeneous zero-shot information-retrieval evaluation with a massive text-embedding benchmark. limitations",
+      "q11:first"
+    ],
+    [
+      "q12:baseline:3",
+      "q12",
+      "baseline",
+      3,
+      "Compare language-model resource selectors with classical web resource selection for federated search. criticism",
+      "q12:first"
+    ],
+    [
+      "q12:decomposition:2",
+      "q12",
+      "decomposition",
+      2,
+      "language model resource selection federated search",
+      "q12:first"
+    ],
+    [
+      "q12:baseline:2",
+      "q12",
+      "baseline",
+      2,
+      "Compare language-model resource selectors with classical web resource selection for federated search. limitations",
+      "q12:first"
+    ],
+    [
+      "q12:decomposition:3",
+      "q12",
+      "decomposition",
+      3,
+      "web resource selection federated search",
+      "q12:first"
+    ],
+    [
+      "c01:baseline:2",
+      "c01",
+      "baseline",
+      2,
+      "Query2doc: Query Expansion with Large Language Models limitations",
+      "c01:first"
+    ],
+    [
+      "c01:baseline:3",
+      "c01",
+      "baseline",
+      3,
+      "Query2doc: Query Expansion with Large Language Models criticism",
+      "c01:first"
+    ],
+    [
+      "c02:baseline:3",
+      "c02",
+      "baseline",
+      3,
+      "LoRA: Low-Rank Adaptation of Large Language Models criticism",
+      "c02:first"
+    ],
+    [
+      "c02:baseline:2",
+      "c02",
+      "baseline",
+      2,
+      "LoRA: Low-Rank Adaptation of Large Language Models limitations",
+      "c02:first"
+    ],
+    [
+      "c03:baseline:2",
+      "c03",
+      "baseline",
+      2,
+      "MTEB: Massive Text Embedding Benchmark limitations",
+      "c03:first"
+    ],
+    [
+      "c03:baseline:3",
+      "c03",
+      "baseline",
+      3,
+      "MTEB: Massive Text Embedding Benchmark criticism",
+      "c03:first"
+    ]
+  ],
+  "phase": "decomposition"
+}

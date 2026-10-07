@@ -1,0 +1,678 @@
+"""Offline EXP-075 analyzer. Exposed development is never production adoption."""
+import hashlib
+import json
+import math
+import random
+import statistics
+from fractions import Fraction
+
+ARMS = ("w0", "joint_query", "joint_purpose", "candidate")
+TOKEN_CAPS = {"input_tokens": 3_000_000, "output_tokens": 160_000}
+PER_CALL_CAPS = {"input_tokens": 64_000, "output_tokens": 32_000}
+PHASE_TOLERANCE_MS = 1e-6
+WALL_TOLERANCE_MS = 1.0
+INPUT_BINDINGS = {
+    "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "acquisition",
+    "docs/experiments/evidence/EXP-060/queries.json": "queries",
+    "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": "references",
+}
+
+
+def finite_number(value, low, high):
+    if type(value) not in (int, float):
+        return False
+    try:
+        return math.isfinite(value) and low <= value <= high
+    except (OverflowError, TypeError, ValueError):
+        return False
+
+
+def canonical_ids(cards):
+    return [c["id"] for c in sorted(
+        cards, key=lambda c: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")))]
+
+
+def ndcg(order, rows):
+    def dcg(ids):
+        return sum((2 ** rows[c]["lead"] - 1) / math.log2(i + 2) for i, c in enumerate(ids[:10]))
+    ideal = dcg(sorted(rows, key=lambda c: -rows[c]["lead"]))
+    return dcg(order) / ideal if ideal else 0.0
+
+
+def useful(order, rows):
+    return sum(rows[c]["lead"] >= 2 for c in order[:10])
+
+
+def covered(order, rows):
+    return {f for c in order[:10] if rows[c]["lead"] >= 2 for f in rows[c]["facets"]}
+
+
+def bootstrap95(values):
+    rng = random.Random(6501)
+    samples = sorted(statistics.mean(rng.choices(values, k=len(values))) for _ in range(10_000))
+    return [samples[249], samples[9749]]
+
+
+def reference_quality_gates(orders, references, primary_cases):
+    """Apply the registered A/B mean, bootstrap, case-loss, useful-count, and facet gates."""
+    assessors = {}
+    for assessor in ("A", "B"):
+        rows_by_case = references[assessor]
+        records = []
+        for case in primary_cases:
+            rows = rows_by_case[case]
+            metrics = {arm: {"ndcg10": ndcg(orders[(case, "base", arm)], rows),
+                             "useful10": useful(orders[(case, "base", arm)], rows),
+                             "covered_facets": sorted(covered(orders[(case, "base", arm)], rows))}
+                       for arm in ("w0", "candidate")}
+            delta = metrics["candidate"]["ndcg10"] - metrics["w0"]["ndcg10"]
+            lost = sorted(set(metrics["w0"]["covered_facets"]) - set(metrics["candidate"]["covered_facets"]))
+            records.append({"case": case, "metrics": metrics, "candidate_minus_w0": delta,
+                            "lost_w0_facets": lost,
+                            "per_case_passed": delta >= -.03 - 1e-12 and not lost
+                                and metrics["candidate"]["useful10"] >= metrics["w0"]["useful10"]})
+        deltas = [row["candidate_minus_w0"] for row in records]
+        mean, ci = statistics.mean(deltas), bootstrap95(deltas)
+        assessors[assessor] = {"cases": records, "mean_candidate_minus_w0": mean, "bootstrap95": ci,
+            "quality_gate_passed": mean >= .05 - 1e-12 and ci[0] > 0 and all(row["per_case_passed"] for row in records)}
+    return assessors
+
+
+def _json_finite(value):
+    if value is None or type(value) in (str, bool, int):
+        return True
+    if type(value) is float:
+        return math.isfinite(value)
+    if type(value) is list:
+        return all(_json_finite(x) for x in value)
+    if type(value) is dict:
+        return all(type(k) is str and _json_finite(v) for k, v in value.items())
+    return False
+
+
+class _DuplicateKey(ValueError):
+    pass
+
+
+def _strict_json(raw):
+    if type(raw) is not bytes:
+        raise ValueError("raw input must be bytes")
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise _DuplicateKey("duplicate JSON key")
+            result[key] = value
+        return result
+    def bad_constant(_):
+        raise ValueError("nonfinite JSON constant")
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=pairs, parse_constant=bad_constant)
+    if not _json_finite(value):
+        raise ValueError("nonfinite JSON value")
+    return value
+
+
+def _integrity_errors(acquisition, references, queries, protocol, input_bytes, protocol_bytes, registration_bytes):
+    errors = []
+    if type(input_bytes) is not dict or type(protocol_bytes) is not bytes or type(registration_bytes) is not bytes:
+        return ["input-integrity-missing"]
+    pins = protocol.get("inputs") if type(protocol) is dict else None
+    if type(pins) is not dict or set(input_bytes) != set(pins):
+        return ["pinned-input-inventory"]
+    parsed = {}
+    for path, expected in pins.items():
+        raw = input_bytes.get(path)
+        if type(raw) is not bytes or hashlib.sha256(raw).hexdigest() != expected:
+            errors.append("input-hash-" + path)
+            continue
+        try:
+            parsed[path] = _strict_json(raw)
+        except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
+            errors.append("input-json-" + path)
+    supplied = {"acquisition": acquisition, "references": references, "queries": queries}
+    for path, name in INPUT_BINDINGS.items():
+        if path not in parsed or parsed[path] != supplied[name]:
+            errors.append("analyzed-object-mismatch-" + path)
+    try:
+        protocol_from_bytes = _strict_json(protocol_bytes)
+    except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        protocol_from_bytes = None
+        errors.append("protocol-bytes-invalid")
+    if protocol_from_bytes != protocol:
+        errors.append("protocol-object-mismatch")
+    try:
+        registration = _strict_json(registration_bytes)
+    except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        registration = None
+        errors.append("registration-bytes-invalid")
+    if type(registration) is not dict or registration.get("schema") != "exp075-registration/1":
+        errors.append("registration-schema")
+    else:
+        registered = registration.get("pins")
+        protocol_path = "docs/experiments/evidence/EXP-075/protocol.json"
+        if (type(registered) is not dict
+                or registered.get(protocol_path) != hashlib.sha256(protocol_bytes).hexdigest()):
+            errors.append("registration-protocol-binding")
+        if registration.get("provider_calls") != 0 or registration.get("search_calls") != 0:
+            errors.append("registration-call-inventory")
+    return errors
+
+
+def _answer_map(row, ids, errors, label, low, high):
+    answers, scores = row.get("raw_answers"), row.get("scores")
+    if row.get("rational_scores") != {}:
+        errors.append(label + "-component-rational-scores")
+    if type(answers) is not dict or set(answers) != set(ids):
+        errors.append(label + "-raw-answer-inventory")
+        return
+    for cid in ids:
+        answer = answers[cid]
+        if type(answer) is not dict or answer.get("type") != "score" or "score" not in answer:
+            errors.append(label + "-raw-answer-schema")
+            continue
+        if not _json_finite(answer):
+            errors.append(label + "-raw-answer-nonfinite")
+        value = answer.get("score")
+        if not finite_number(value, low, high):
+            errors.append(label + "-raw-score-range")
+        elif type(scores) is not dict or cid not in scores or type(scores[cid]) is not type(value) or scores[cid] != value:
+            errors.append(label + "-raw-score-mismatch")
+
+
+def _score_order(row, ids, low, high, tie_ids, errors, label):
+    scores = row.get("scores")
+    if type(scores) is not dict or set(scores) != set(ids):
+        errors.append(label + "-scores-inventory")
+        _answer_map(row, ids, errors, label, low, high)
+        return None
+    if any(not finite_number(v, low, high) for v in scores.values()):
+        errors.append(label + "-scores-range")
+        return None
+    _answer_map(row, ids, errors, label, low, high)
+    return sorted(ids, key=lambda cid: (-scores[cid], tie_ids.index(cid)))
+
+
+def _expected_fusion(cards, incumbent, purpose):
+    ids = [c["id"] for c in cards]
+    if len(ids) != len(set(ids)):
+        raise ValueError("duplicate eligible id")
+    for order in (incumbent, purpose):
+        if len(order) != len(ids) or len(set(order)) != len(order) or set(order) != set(ids):
+            raise ValueError("invalid rank permutation")
+    w = {sid: i + 1 for i, sid in enumerate(incumbent)}
+    p = {sid: i + 1 for i, sid in enumerate(purpose)}
+    scores = {sid: Fraction(1, 60 + w[sid]) + Fraction(1, 60 + p[sid]) for sid in ids}
+    keys = {c["id"]: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")) for c in cards}
+    order = sorted(ids, key=lambda sid: (-scores[sid], keys[sid]))
+    return order, {sid: [v.numerator, v.denominator] for sid, v in scores.items()}
+
+
+def _same_rationals(actual, expected):
+    if type(actual) is not dict or set(actual) != set(expected):
+        return False
+    for cid, pair in actual.items():
+        if type(pair) is not list or len(pair) != 2 or any(type(part) is not int for part in pair):
+            return False
+        if pair != expected[cid]:
+            return False
+    return True
+
+
+def _phase_lower_bound(rows):
+    elapsed = [row.get("elapsed_ms") if type(row) is dict else None for row in rows]
+    if not all(finite_number(value, 0, 1000) for value in elapsed):
+        return None
+    return sum(elapsed)
+
+
+def _neutral(neutral, errors):
+    if type(neutral) is not dict:
+        errors.append("neutral-schema")
+        return
+    required = {"status", "synthetic_input", "quality_credit", "id", "case", "variant",
+                "provenance_order_ids", "cards", "arms", "baseline_phase_ms", "candidate_phase_ms",
+                "paired_wall_ms", "candidate_build_ms", "candidate_serialization_ms", "candidate_parse_ms",
+                "phase_endpoint_after_fsync", "calls", "baseline_receipt", "candidate_body_receipt", "final_receipt"}
+    allowed = required | {"failure", "baseline_parse_ms"}
+    if not required.issubset(neutral) or not set(neutral).issubset(allowed):
+        errors.append("neutral-fields")
+    if (neutral.get("status") not in ("fixture_only", "failed") or neutral.get("synthetic_input") is not True
+            or neutral.get("quality_credit") is not False):
+        errors.append("neutral-acceptance")
+    if (neutral.get("id") != "neutral-neutral" or neutral.get("case") != "neutral"
+            or neutral.get("variant") != "neutral"):
+        errors.append("neutral-identity")
+    if neutral.get("phase_endpoint_after_fsync") is not True:
+        errors.append("neutral-phase-endpoint")
+    neutral_calls = neutral.get("calls")
+    if (type(neutral_calls) is not list or len(neutral_calls) not in (1, 2)
+            or type(neutral.get("baseline_receipt")) is not dict
+            or (type(neutral_calls) is list and len(neutral_calls) == 2
+                and type(neutral.get("final_receipt")) is not dict)
+            or (type(neutral_calls) is list and len(neutral_calls) == 1
+                and neutral.get("final_receipt") is not None)):
+        errors.append("neutral-durable-receipts")
+    cards = neutral.get("cards")
+    if type(cards) is not list or len(cards) != 80:
+        errors.append("neutral-card-inventory")
+        cards = []
+    ids = [c.get("id") for c in cards if type(c) is dict]
+    if len(ids) != 80 or len(set(ids)) != 80 or set(ids) != {f"neutral-{i}" for i in range(80)}:
+        errors.append("neutral-id-inventory")
+    if any(type(c) is not dict or any(type(c.get(k)) is not str for k in ("id", "url", "title", "snippet"))
+           for c in cards):
+        errors.append("neutral-card-schema")
+        return
+    native = ids
+    if neutral.get("provenance_order_ids") != native:
+        errors.append("neutral-provenance")
+    canonical = canonical_ids(cards)
+    arms = neutral.get("arms")
+    if type(arms) is not dict or set(arms) != set(ARMS):
+        errors.append("neutral-arms")
+        return
+    for name in ("w0", "joint_query", "joint_purpose"):
+        row = arms[name]
+        if type(row) is not dict or row.get("status") != "valid":
+            if neutral.get("status") == "fixture_only":
+                errors.append("neutral-" + name + "-schema")
+            continue
+        if set(row) != {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"}:
+            errors.append("neutral-" + name + "-fields")
+        query_arm = name in ("w0", "joint_query")
+        score_ids = native[:40] if query_arm else native
+        tie_order = native[:40] if query_arm else canonical
+        order = _score_order(row, score_ids, 0, 9 if query_arm else 3, tie_order,
+                             errors, "neutral-" + name)
+        expected_order = order + native[40:] if name in ("w0", "joint_query") and order is not None else order
+        if type(row.get("order_ids")) is not list or (expected_order is not None and row["order_ids"] != expected_order):
+            errors.append("neutral-" + name + "-order")
+        if not finite_number(row.get("elapsed_ms"), 0, 1000):
+            errors.append("neutral-" + name + "-deadline")
+    candidate = arms["candidate"]
+    if type(candidate) is not dict or candidate.get("status") not in ("valid", "failed-fallback", "candidate-body-durable"):
+        errors.append("neutral-candidate-schema")
+    elif candidate.get("status") == "valid" and not finite_number(candidate.get("elapsed_ms"), 0, 1000):
+        errors.append("neutral-candidate-deadline")
+    if type(candidate) is dict and set(candidate) != {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"}:
+        errors.append("neutral-candidate-fields")
+    if type(candidate) is dict:
+        qrow, prow = arms.get("joint_query"), arms.get("joint_purpose")
+        try:
+            if type(qrow) is not dict or type(prow) is not dict:
+                raise ValueError("missing component arm")
+            expected_order, expected_rationals = _expected_fusion(
+                cards, qrow.get("order_ids"), prow.get("order_ids"))
+            if candidate.get("order_ids") != expected_order:
+                errors.append("neutral-candidate-order")
+            if not _same_rationals(candidate.get("rational_scores"), expected_rationals):
+                errors.append("neutral-candidate-rational-scores")
+        except (ValueError, TypeError):
+            errors.append("neutral-fusion-input")
+        if candidate.get("scores") != {} or candidate.get("raw_answers") != {}:
+            errors.append("neutral-candidate-model-output")
+    if type(arms.get("w0")) is dict:
+        _usage(arms["w0"], errors, "neutral-w0")
+    joint_usage = _usage(arms.get("joint_query"), errors, "neutral-joint-query")
+    purpose_usage = _usage(arms.get("joint_purpose"), errors, "neutral-joint-purpose")
+    candidate_usage = _usage(candidate, errors, "neutral-candidate")
+    if joint_usage is not None and purpose_usage is not None and candidate_usage is not None:
+        if joint_usage != purpose_usage or joint_usage != candidate_usage:
+            errors.append("neutral-joint-usage-binding")
+    if neutral.get("status") == "fixture_only":
+        if (not finite_number(neutral.get("baseline_phase_ms"), 0, 1000)
+                or not finite_number(neutral.get("candidate_phase_ms"), 0, 1000)
+                or not finite_number(neutral.get("paired_wall_ms"), 0, 2000)):
+            errors.append("neutral-phase-deadline")
+        for key in ("candidate_build_ms", "candidate_serialization_ms", "candidate_parse_ms"):
+            if not finite_number(neutral.get(key), 0, 1000):
+                errors.append("neutral-" + key)
+        phase_floor = sum(neutral[k] for k in ("candidate_build_ms", "candidate_serialization_ms", "candidate_parse_ms"))
+        if neutral.get("candidate_phase_ms", 0) + PHASE_TOLERANCE_MS < phase_floor:
+            errors.append("neutral-candidate-phase-lower-bound")
+    phase = neutral.get("candidate_phase_ms")
+    if not finite_number(phase, 0, 1000) and neutral.get("status") == "fixture_only":
+        errors.append("neutral-combined-phase")
+
+
+def _usage(row, errors, label):
+    usage = row.get("usage") if type(row) is dict else None
+    if type(usage) is not dict or set(usage) != set(TOKEN_CAPS) or any(
+            type(usage.get(k)) is not int or not 0 <= usage[k] <= PER_CALL_CAPS[k] for k in TOKEN_CAPS):
+        errors.append(label + "-usage")
+        return None
+    return usage
+
+
+def analyze(run, acquisition, references, queries, protocol,
+            input_bytes=None, protocol_bytes=None, registration_bytes=None,
+            qualification_bytes=None):
+    errors = []
+    if type(run) is not dict or type(protocol) is not dict:
+        run = run if type(run) is dict else {}
+        protocol = protocol if type(protocol) is dict else {}
+        errors.append("run-or-protocol-schema")
+    if type(acquisition) is not dict or type(references) is not dict or type(queries) is not list:
+        return {"schema": "exp075-analysis/1", "adoption_eligible": False,
+                "quality_analysis_performed": False, "structural_failures": ["input-object-schema"],
+                "synthetic": run.get("synthetic"), "outcome": "incomplete"}
+
+    schedule = protocol.get("schedule", [])
+    operations = run.get("operations", [])
+    if type(schedule) is not list or len(schedule) != 21:
+        errors.append("registered-schedule-schema")
+        schedule = []
+    if type(operations) is not list or len(operations) != len(schedule):
+        errors.append("operation-inventory")
+        operations = operations if type(operations) is list else []
+    expected_pairs = [(x.get("case"), x.get("variant")) for x in schedule if type(x) is dict]
+    actual_pairs = [(x.get("case"), x.get("variant")) for x in operations if type(x) is dict]
+    if actual_pairs != expected_pairs or len(actual_pairs) != len(operations):
+        errors.append("registered-schedule")
+    if any(x.get("arms") != list(ARMS) for x in schedule if type(x) is dict):
+        errors.append("registered-arm-schedule")
+    if run.get("schema") != "exp075-run/1":
+        errors.append("run-schema")
+    run_fields = {"schema", "status", "operations", "synthetic", "quality_credit", "adoption_eligible",
+                  "input_pins", "input_revision", "source_integrity", "neutral", "budget", "wall_seconds"}
+    if set(run) != run_fields:
+        errors.append("run-fields")
+    if run.get("quality_credit") is not False or run.get("adoption_eligible") is not False:
+        errors.append("run-adoption-policy")
+    if protocol.get("schema") != "exp075-single-transaction-dual-score-fusion/1":
+        errors.append("protocol-schema")
+    if protocol.get("primary_cases") != [f"q{i}" for i in range(1, 9)]:
+        errors.append("primary-case-inventory")
+    errors.extend(_integrity_errors(acquisition, references, queries, protocol,
+                                    input_bytes, protocol_bytes, registration_bytes))
+    if run.get("input_pins") != protocol.get("inputs"):
+        errors.append("input-pins")
+    source = run.get("source_integrity")
+    if (type(source) is not dict
+            or source.get("input_pins") != protocol.get("inputs")
+            or source.get("input_revision") != run.get("input_revision")
+            or type(protocol_bytes) is not bytes
+            or source.get("protocol_sha256") != hashlib.sha256(protocol_bytes).hexdigest()
+            or type(registration_bytes) is not bytes
+            or source.get("registration_sha256") != hashlib.sha256(registration_bytes).hexdigest()):
+        errors.append("source-integrity-binding")
+    if run.get("synthetic") is False:
+        qualification_sha = hashlib.sha256(qualification_bytes).hexdigest() if type(qualification_bytes) is bytes else None
+        try:
+            qualification = _strict_json(qualification_bytes)
+        except (UnicodeDecodeError, ValueError, json.JSONDecodeError, TypeError):
+            qualification = None
+        fields = {"schema", "qualified", "qualified_source_revision", "files", "source_pins", "dependencies",
+                  "environment", "protocol_sha256", "registration_sha256"}
+        if (type(source) is not dict or source.get("qualification_sha256") != qualification_sha
+                or type(source.get("qualified_source_revision")) is not str
+                or type(source.get("lease_identity")) is not str or not source.get("lease_identity")
+                or type(qualification) is not dict or set(qualification) != fields
+                or qualification.get("schema") != "exp075-qualification-integrity/1"
+                or qualification.get("qualified") is not True
+                or qualification.get("qualified_source_revision") != source.get("qualified_source_revision")
+                or qualification.get("protocol_sha256") != source.get("protocol_sha256")
+                or qualification.get("registration_sha256") != source.get("registration_sha256")
+                or qualification.get("environment") != source.get("environment")
+                or qualification.get("dependencies") != source.get("dependencies")):
+            errors.append("qualification-source-binding")
+    revision = run.get("input_revision")
+    if type(revision) is not str or len(revision) != 40 or any(c not in "0123456789abcdef" for c in revision):
+        errors.append("input-revision")
+    if type(run.get("synthetic")) is not bool:
+        errors.append("execution-identity")
+    if not finite_number(run.get("wall_seconds"), 0, 7200):
+        errors.append("wall-deadline")
+
+    queries_by_id = {q.get("id"): q for q in queries if type(q) is dict}
+    if len(queries_by_id) != 13 or set(queries_by_id) != {f"q{i}" for i in range(1, 14)}:
+        errors.append("query-inventory")
+    if ({q for q, item in queries_by_id.items() if item.get("kind") == "research"} != {f"q{i}" for i in range(1, 9)}
+            or {q for q, item in queries_by_id.items() if item.get("kind") == "navigation"} != {f"q{i}" for i in range(9, 14)}):
+        errors.append("query-kind-inventory")
+    for query in queries:
+        if (type(query) is not dict or query.get("kind") not in ("research", "navigation")
+                or type(query.get("query")) is not str or not query.get("query")
+                or type(query.get("purpose")) is not str or not query.get("purpose")
+                or type(query.get("facets")) is not list or len(query.get("facets", [])) > 4
+                or (query.get("kind") == "navigation" and type(query.get("target_url")) is not str)):
+            errors.append("query-schema")
+            break
+        if any(type(f) is not dict or set(f) != {"id", "description"}
+               or any(type(f.get(k)) is not str or not f[k] for k in ("id", "description"))
+               for f in query["facets"]):
+            errors.append("query-facet-schema")
+            break
+
+    pools = acquisition.get("pools", {})
+    if type(pools) is not dict or set(pools) != set(queries_by_id):
+        errors.append("pool-inventory")
+    for case, pool in pools.items() if type(pools) is dict else []:
+        cards = pool.get("cards") if type(pool) is dict else None
+        if type(cards) is not list or len(cards) > protocol.get("bounds", {}).get("cards", 0):
+            errors.append(str(case) + "-pool-limit")
+
+    neutral = run.get("neutral")
+    _neutral(neutral, errors)
+    terminal = type(neutral) is dict and neutral.get("status") != "fixture_only"
+    orders = {}
+    call_usages = []
+    if type(neutral) is dict and neutral.get("status") == "fixture_only" and type(neutral.get("arms")) is dict:
+        for name in ("w0", "joint_query"):
+            row = neutral["arms"].get(name)
+            usage = row.get("usage") if type(row) is dict else None
+            if type(usage) is dict and set(usage) == set(TOKEN_CAPS):
+                call_usages.append(usage)
+    pool_rows = pools if type(pools) is dict else {}
+    for item, op in zip(schedule, operations):
+        if type(item) is not dict or type(op) is not dict:
+            errors.append("operation-schema")
+            continue
+        case, variant = item.get("case"), item.get("variant")
+        opid = str(case) + "-" + str(variant)
+        if op.get("id") != opid or op.get("case") != case or op.get("variant") != variant:
+            errors.append(opid + "-identity")
+        if type(case) is not str or case not in pool_rows:
+            errors.append(opid + "-unknown-case")
+            continue
+        source_cards = pool_rows[case].get("cards", [])
+        native = [card.get("id") for card in source_cards if type(card) is dict]
+        if len(native) != len(source_cards) or not native or len(native) != len(set(native)):
+            errors.append(opid + "-source-membership")
+            continue
+        offset = 20 % len(native) if variant == "rotate" else 0
+        provenance = native[offset:] + native[:offset]
+        if op.get("cards") != source_cards or op.get("provenance_order_ids") != provenance:
+            errors.append(opid + "-card-provenance-binding")
+        arms = op.get("arms")
+        calls = op.get("calls")
+        if type(arms) is not dict or set(arms) != set(ARMS) or type(calls) is not list:
+            errors.append(opid + "-operation-schema")
+            terminal = True
+            continue
+        uninvoked = not calls and all(type(arms.get(name)) is dict and arms[name].get("status") == "uninvoked" for name in ARMS)
+        if uninvoked:
+            if not terminal:
+                errors.append(opid + "-uninvoked-before-stop")
+            continue
+        if terminal:
+            errors.append(opid + "-dispatched-after-stop")
+            continue
+        valid = len(calls) == 2 and all(type(arms.get(name)) is dict and arms[name].get("status") == "valid" for name in ARMS)
+        if valid:
+            if [call.get("arm") for call in calls if type(call) is dict] != ["w0", "joint"]:
+                errors.append(opid + "-physical-call-order")
+            if op.get("phase_endpoint_after_fsync") is not True:
+                errors.append(opid + "-durable-phase-endpoint")
+            for name in ("baseline_receipt", "candidate_body_receipt", "final_receipt"):
+                if type(op.get(name)) is not dict:
+                    errors.append(opid + "-" + name)
+            for field in ("baseline_phase_ms", "candidate_phase_ms"):
+                if not finite_number(op.get(field), 0, 1000):
+                    errors.append(opid + "-" + field)
+            if not finite_number(op.get("paired_wall_ms"), 0, 2100):
+                errors.append(opid + "-paired-wall")
+            for field in ("baseline_parse_ms", "candidate_build_ms", "candidate_serialization_ms", "candidate_parse_ms"):
+                if not finite_number(op.get(field), 0, 1000):
+                    errors.append(opid + "-" + field)
+            canonical = canonical_ids(source_cards)
+            prefix = provenance[:40]
+            component_orders = {}
+            for name, ids, high, ties, tail in (
+                    ("w0", prefix, 9, prefix, provenance[40:]),
+                    ("joint_query", prefix, 9, prefix, provenance[40:]),
+                    ("joint_purpose", native, 3, canonical, [])):
+                row = arms[name]
+                expected_fields = {"status", "order_ids", "scores", "raw_answers", "rational_scores", "usage", "elapsed_ms"}
+                if set(row) != expected_fields or row.get("status") != "valid":
+                    errors.append(opid + "-" + name + "-fields")
+                score_order = _score_order(row, ids, 0, high, ties, errors, opid + "-" + name)
+                expected_order = score_order + tail if score_order is not None else None
+                actual_order = row.get("order_ids")
+                if (type(actual_order) is not list or len(actual_order) != len(native)
+                        or len(set(actual_order)) != len(actual_order) or set(actual_order) != set(native)):
+                    errors.append(opid + "-" + name + "-membership")
+                elif expected_order is not None and actual_order != expected_order:
+                    errors.append(opid + "-" + name + "-order")
+                if not finite_number(row.get("elapsed_ms"), 0, 1000):
+                    errors.append(opid + "-" + name + "-elapsed")
+                component_orders[name] = actual_order
+                usage = _usage(row, errors, opid + "-" + name)
+                if usage is not None and name in ("w0", "joint_query"):
+                    call_usages.append(usage)
+            candidate = arms["candidate"]
+            try:
+                expected_order, expected_scores = _expected_fusion(source_cards, component_orders["joint_query"], component_orders["joint_purpose"])
+                if candidate.get("order_ids") != expected_order or not _same_rationals(candidate.get("rational_scores"), expected_scores):
+                    errors.append(opid + "-fusion-tamper")
+                orders[(case, variant, "candidate")] = expected_order
+            except (KeyError, TypeError, ValueError):
+                errors.append(opid + "-fusion-input")
+            if candidate.get("scores") != {} or candidate.get("raw_answers") != {} or candidate.get("status") != "valid":
+                errors.append(opid + "-candidate-schema")
+            if not finite_number(candidate.get("elapsed_ms"), 0, 1000):
+                errors.append(opid + "-candidate-local-deadline")
+            if candidate.get("usage") != arms["joint_query"].get("usage") or arms["joint_purpose"].get("usage") != arms["joint_query"].get("usage"):
+                errors.append(opid + "-joint-usage-binding")
+            if set(candidate.get("order_ids", [])) != set(native):
+                errors.append(opid + "-candidate-membership")
+            joint_call = calls[1] if len(calls) > 1 and type(calls[1]) is dict else {}
+            floor = sum(op.get(field, 0) for field in ("candidate_build_ms", "candidate_serialization_ms", "candidate_parse_ms"))
+            floor += joint_call.get("elapsed_ms", 0) if finite_number(joint_call.get("elapsed_ms"), 0, 1000) else 0
+            body_receipt = op.get("candidate_body_receipt")
+            if type(body_receipt) is not dict or not finite_number(body_receipt.get("fsync_ms"), 0, 1000):
+                errors.append(opid + "-candidate-body-receipt")
+            else:
+                floor += body_receipt["fsync_ms"]
+            if op.get("candidate_phase_ms", 0) + PHASE_TOLERANCE_MS < floor:
+                errors.append(opid + "-candidate-phase-lower-bound")
+            baseline_call = calls[0] if type(calls[0]) is dict else {}
+            bfloor = baseline_call.get("elapsed_ms", 0) + op.get("baseline_parse_ms", 0)
+            baseline_receipt = op.get("baseline_receipt")
+            if type(baseline_receipt) is dict:
+                bfloor += baseline_receipt.get("fsync_ms", 0)
+            if op.get("baseline_phase_ms", 0) + PHASE_TOLERANCE_MS < bfloor:
+                errors.append(opid + "-baseline-phase-lower-bound")
+            if op.get("paired_wall_ms", 0) + WALL_TOLERANCE_MS < op.get("baseline_phase_ms", 0) + op.get("candidate_phase_ms", 0):
+                errors.append(opid + "-paired-wall-lower-bound")
+        else:
+            candidate = arms.get("candidate")
+            if type(candidate) is dict and candidate.get("status") == "failed_fallback":
+                if candidate.get("order_ids") != provenance or candidate.get("rational_scores") not in ({}, None):
+                    errors.append(opid + "-native-incumbent-fallback")
+            terminal = True
+
+    status = run.get("status")
+    if status not in ("complete", "incomplete"):
+        errors.append("run-status")
+    if status == "complete":
+        if terminal or len(call_usages) != 44 or len(operations) != 21:
+            errors.append("complete-operation-inventory")
+    else:
+        errors.append("incomplete-run")
+    budget = run.get("budget") if type(run.get("budget")) is dict else {}
+    if set(budget) != {"attempts", "input_tokens", "output_tokens", "unknown_usage"}:
+        errors.append("budget-fields")
+    else:
+        if status == "complete" and (budget.get("attempts") != 44 or budget.get("unknown_usage") is not False):
+            errors.append("complete-budget")
+        for key, cap in TOKEN_CAPS.items():
+            if type(budget.get(key)) is not int or not 0 <= budget[key] <= cap:
+                errors.append("budget-" + key)
+        totals = {key: sum(usage[key] for usage in call_usages) for key in TOKEN_CAPS}
+        if status == "complete" and any(totals[key] != budget.get(key) for key in TOKEN_CAPS):
+            errors.append("usage-sum")
+    if status == "complete" and type(neutral) is dict and neutral.get("status") != "fixture_only":
+        errors.append("neutral-capacity-failure")
+    if status == "complete" and finite_number(run.get("wall_seconds"), 0, 7200):
+        phases = [neutral.get("baseline_phase_ms"), neutral.get("candidate_phase_ms")]
+        phases += [phase for op in operations if type(op) is dict for phase in (op.get("baseline_phase_ms"), op.get("candidate_phase_ms"))]
+        if len(phases) != 44 or any(not finite_number(x, 0, 1000) for x in phases):
+            errors.append("serial-phase-inventory")
+        elif run["wall_seconds"] * 1000 + WALL_TOLERANCE_MS < sum(phases):
+            errors.append("wall-phase-sum")
+
+    if errors:
+        return {"schema": "exp075-analysis/1", "dataset": "exposed pools; development evidence only",
+                "adoption_eligible": False, "quality_analysis_performed": False,
+                "structural_failures": sorted(set(errors)), "synthetic": run.get("synthetic"),
+                "assessors": {}, "outcome": "incomplete"}
+    if run.get("synthetic") is True:
+        return {"schema": "exp075-analysis/1", "dataset": "synthetic offline fixture; no quality or adoption credit",
+                "adoption_eligible": False, "quality_analysis_performed": False, "structural_failures": [],
+                "synthetic": True, "total_wall_seconds": run["wall_seconds"], "outcome": "synthetic_fixture_only"}
+
+    stability = []
+    for q in ("q1", "q4", "q7", "q8"):
+        base = set(orders[(q, "base", "candidate")][:10])
+        for variant in ("repeat", "rotate"):
+            overlap = len(base & set(orders[(q, variant, "candidate")][:10])) / 10
+            stability.append({"case": q, "variant": variant, "overlap": overlap, "passed": overlap >= .8})
+    navigation = []
+    for query in queries:
+        if query.get("kind") != "navigation":
+            continue
+        case = query["id"]
+        target = query["target_url"].rstrip("/")
+        targets = {card["id"] for card in pools[case]["cards"] if card["url"].rstrip("/") == target}
+        order = orders[(case, "base", "candidate")]
+        navigation.append({"case": case, "target_present": bool(targets), "target_ids": sorted(targets),
+                           "candidate_target_top1": bool(targets and order and order[0] in targets)})
+    missing_navigation = [row["case"] for row in navigation if not row["target_present"]]
+    result = {"schema": "exp075-analysis/1", "dataset": "exposed pools and exposed references; not untouched confirmation",
+              "adoption_eligible": False, "quality_analysis_performed": True, "structural_failures": [],
+              "synthetic": False, "stability": stability, "navigation": navigation,
+              "missing_navigation_targets": missing_navigation,
+              "missing_q10_q11_targets": [q for q in ("q10", "q11") if q in missing_navigation],
+              "acquisition_recall_met": not missing_navigation,
+              "natural_long_pools": sum(len(pool["cards"]) > 40 for pool in pools.values()),
+              "tail_evidence": "One natural long pool cannot establish general tail benefit.",
+              "total_wall_seconds": run["wall_seconds"],
+              "operation_timing": [{"case": op["case"], "variant": op["variant"],
+                  "baseline_phase_ms": op["baseline_phase_ms"], "candidate_build_ms": op["candidate_build_ms"],
+                  "candidate_serialization_ms": op["candidate_serialization_ms"], "candidate_parse_ms": op["candidate_parse_ms"],
+                  "candidate_phase_ms": op["candidate_phase_ms"], "paired_wall_ms": op["paired_wall_ms"]}
+                  for op in operations], "assessors": {}}
+    for assessor in ("A", "B"):
+        by_case = references.get(assessor)
+        if type(by_case) is not dict:
+            return {**result, "quality_analysis_performed": False, "outcome": "incomplete",
+                    "structural_failures": [assessor + "-reference-assessor"]}
+        for case in protocol["primary_cases"]:
+            reference_rows = by_case.get(case)
+            pool_ids = {card["id"] for card in pools[case]["cards"]}
+            if type(reference_rows) is not dict or set(reference_rows) != pool_ids:
+                return {**result, "quality_analysis_performed": False, "outcome": "incomplete",
+                        "structural_failures": [assessor + "-" + case + "-reference-inventory"]}
+            for row in reference_rows.values():
+                if (type(row) is not dict or type(row.get("lead")) is not int or not 0 <= row["lead"] <= 3
+                        or type(row.get("facets")) is not list or any(type(f) is not str for f in row.get("facets", []))):
+                    return {**result, "quality_analysis_performed": False, "outcome": "incomplete",
+                            "structural_failures": [assessor + "-" + case + "-reference-row"]}
+    result["assessors"] = reference_quality_gates(orders, references, protocol["primary_cases"])
+    result["development_quality_passed"] = all(row["quality_gate_passed"] for row in result["assessors"].values()) and all(row["passed"] for row in stability)
+    result["navigation_gate_met"] = all(row["candidate_target_top1"] for row in navigation if row["target_present"])
+    result["development_all_gates_passed"] = result["development_quality_passed"] and result["navigation_gate_met"] and result["acquisition_recall_met"]
+    result["outcome"] = "development_pass" if result["development_all_gates_passed"] else (
+        "development_quality_pass_navigation_unmet" if result["development_quality_passed"] else "development_rejected")
+    return result

@@ -1,0 +1,30 @@
+"""Inert descriptive ordering analysis; does not change any adoption gate."""
+import json,math
+
+def d_scores(arm):
+    attempts=[a for a in arm['attempts'] if a['arm']=='d']
+    if len(attempts)!=1 or attempts[0]['status']!='valid':raise ValueError('D-attempt')
+    response=json.loads(bytes.fromhex(attempts[0]['response_hex']))
+    values={key:row['score'] for key,row in response['answers'].items()}
+    if set(values)!=set(arm['orders']['d']) or any(type(v)not in (int,float) or not math.isfinite(v) or not 0<=v<=9 for v in values.values()):raise ValueError('D-score-membership')
+    return values,attempts[0]['request_sha256']
+
+def compare(left,right):
+    a,ah=d_scores(left);b,bh=d_scores(right)
+    if set(a)!=set(b):raise ValueError('cross-operation-membership')
+    deltas=[abs(a[key]-b[key]) for key in a]
+    positions={key:i for i,key in enumerate(right['orders']['d'])};order=left['orders']['d']
+    inversions=sum(positions[order[i]]>positions[order[j]] for i in range(len(order)) for j in range(i+1,len(order)))
+    return {'identical_D_request_bytes':ah==bh,'changed_D_scores':sum(x!=0 for x in deltas),'maximum_absolute_D_score_delta':max(deltas,default=0),'mean_absolute_D_score_delta':sum(deltas)/len(deltas),'D_pair_inversions':inversions,'D_pair_count':len(order)*(len(order)-1)//2,'D_top10_overlap':len(set(left['orders']['d'][:10])&set(right['orders']['d'][:10]))/min(10,len(order)),'E_top10_overlap':len(set(left['orders']['e'][:10])&set(right['orders']['e'][:10]))/min(10,len(order)),'left_action_count':len(left['actions']),'right_action_count':len(right['actions'])}
+
+def diagnose(run):
+    if run.get('status')!='complete' or run.get('execution_registration')!='EXP-062':raise ValueError('incomplete-or-wrong-invocation')
+    operations={op['id']:op for op in run['operations']}
+    if len(operations)!=len(run['operations']) or any(op['status']!='valid' for op in operations.values()):raise ValueError('invalid-operation-set')
+    report={}
+    for name in ('native','canonical'):
+        report[name]={}
+        for qid in ('q1','q4','q7','q8'):
+            rows={mode:next(a for a in operations[qid+'-'+mode]['arms'] if a['arm']==name) for mode in ('base','repeat','rotate20')}
+            report[name][qid]={mode:compare(rows['base'],rows[mode]) for mode in ('repeat','rotate20')}
+    return {'schema':'exp062-ordering-diagnostic/1','evidence_mode':'exposed descriptive mechanism evidence','adoption_eligible':False,'comparisons':report}

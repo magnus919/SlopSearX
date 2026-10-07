@@ -1,0 +1,5 @@
+# Analysis validity boundary
+
+`summary.json` is the frozen harness's unmodified output. Its expansion arithmetic treats missing later receipts as absent cards and therefore returns a zero delta and zero-width bootstrap interval. Those are diagnostic partial-corpus arithmetic, not a valid expansion quality estimate. Acquisition was incomplete and failed the availability gate; the original harness correctly labels the outcome inconclusive. `decision-summary.json` is the reporting record and explicitly nulls this arm's non-identifiable quality estimates. No acceptance gate, target, candidate, acquisition or completed comparison was changed. The raw output remains preserved.
+
+For completed decomposition and adaptive arms, the registered primary reading-lead measure is identifiable within the exposed challenge corpus. Query-bootstrap intervals cannot correct the shared author/model knowledge, chosen topic distribution, incomplete control recovery or live temporal confounds. No production adoption follows.

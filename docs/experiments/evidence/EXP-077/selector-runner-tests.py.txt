@@ -1,0 +1,207 @@
+"""Focused offline contracts for the EXP077 selector runner."""
+from __future__ import annotations
+
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+from datetime import datetime, timedelta, timezone
+import tempfile
+import pathlib
+import unittest
+
+
+HERE = __import__("pathlib").Path(__file__).resolve().parent
+
+
+def _load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+R = _load("exp077_runner_tests_target", HERE / "selector-runner.py.txt")
+P = R.P
+COHORTS = json.loads((HERE / "cohorts.json").read_bytes())
+
+
+def _acquisition(root, stage="development", research_count=80, navigation_count=20):
+    root = pathlib.Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    cases = P.case_index(COHORTS, stage)
+    protocol_raw = (HERE / "protocol.json").read_bytes()
+    cohort_raw = (HERE / "cohorts.json").read_bytes()
+    source_pins = json.loads((HERE / "candidate-source-pins.json").read_bytes())["pins"]
+    for name in P.DESIGN_FILES:
+        source = HERE / name
+        fixture_bytes = source.read_bytes() if source.is_file() else f"offline fixture for {name}\n".encode()
+        (root / name).write_bytes(fixture_bytes)
+    file_pins = {name: P.digest((root / name).read_bytes()) for name in P.DESIGN_FILES}
+    (root / "protocol.json").write_bytes(protocol_raw)
+    (root / "cohorts.json").write_bytes(cohort_raw)
+    (root / "candidate-source-pins.json").write_bytes((HERE / "candidate-source-pins.json").read_bytes())
+    static = {"schema": "exp077-stage-design/1", "stage": stage,
+              "protocol_sha256": P.digest(protocol_raw), "cohorts_sha256": P.digest(cohort_raw),
+              "ordered_task_ids": [case["id"] for case in cases], "files": file_pins,
+              "candidate_source_pins": source_pins}
+    static_path = root / f"stage-{stage}-manifest.json"
+    static_path.write_bytes(P.wire(static))
+    static_digest = P.digest(static_path.read_bytes())
+    pools, outcomes = {}, {}
+    for case in cases:
+        count = research_count if case["kind"] == "research" else navigation_count
+        cards = [{"id": f"{case['id']}-{i}", "url": f"https://fixture.invalid/{case['id']}/{i}",
+                  "title": f"Fixture {i}", "snippet": "synthetic fixture card"} for i in range(count)]
+        if case["kind"] == "navigation":
+            cards[0]["url"] = case["target_url"]
+        pools[case["id"]] = {"cards": cards, "natural_count": count, "merged_count": count}
+        engines = ("arxiv", "openalex", "github", "wikipedia") if case["kind"] == "research" else ("github",)
+        outcomes[case["id"]] = {engine: {"status": "ok", "result_count": count // 4} for engine in engines}
+    started = datetime.now(timezone.utc)
+    clock = {"schema": "exp077-stage-clock/1", "stage_id": f"fixture-{stage}-001", "stage": stage,
+             "stage_started_utc": started.isoformat(), "stage_deadline_utc": (started + timedelta(seconds=28_800)).isoformat(),
+             "stage_manifest_sha256": static_digest, "protocol_sha256": P.digest(protocol_raw),
+             "cohorts_sha256": P.digest(cohort_raw), "source_revision": "2ab3c50cc223d61f5aa17e67bd23bca28611d883",
+             "ordered_task_ids": [case["id"] for case in cases]}
+    clock_path = root / "stage-clock.json"
+    clock_raw = P.clock_wire(clock)
+    clock_path.write_bytes(clock_raw)
+    return {"schema": P.SCHEMA, "stage": stage, "pools": pools, "engine_outcomes": outcomes,
+            "acquisition_receipt": {"stage_manifest_sha256": static_digest, "stage_clock": clock,
+                                    "stage_clock_digest": P.digest(clock_raw)}}, clock_path
+
+
+class Exp077Tests(unittest.TestCase):
+ def test_committed_design_file_closure_and_head_helper(self):
+    self.assertEqual(P.DESIGN_FILES, R.REQUIRED_FILES)
+    committed, revision = R._committed_head("docs/experiments/evidence/EXP-076/protocol.json")
+    self.assertEqual(committed, (HERE.parent / "EXP-076" / "protocol.json").read_bytes())
+    self.assertEqual(len(revision), 40)
+
+ def test_candidate_wire_and_fusion_are_delegated_unchanged(self):
+    case = {"id": "fixture", "query": "retrieval query", "purpose": "caller purpose",
+            "facets": [{"id": "f1", "description": "critical evidence"}]}
+    cards = [{"id": str(i), "url": f"https://fixture.invalid/{i}", "title": str(i), "snippet": "snippet"}
+             for i in range(41)]
+    built = P.FROZEN.build_candidate(case, cards)
+    self.assertEqual(set(built["joint"]["questions"]), set(built["query_ids"] + built["purpose_ids"]))
+    raw = P.FROZEN.response_fixture(built["joint"])
+    parsed = P.FROZEN.parse_candidate(raw, built)
+    self.assertEqual(set(parsed["candidate"]["order_ids"]), {card["id"] for card in cards})
+    self.assertEqual(parsed["candidate"]["order_ids"], P.FROZEN.parse_candidate(raw, built)["candidate"]["order_ids"])
+
+
+ def test_successful_offline_stage_uses_44_calls_and_no_quality_credit(self):
+    factory = R._fixture_client()
+    with tempfile.TemporaryDirectory() as temp:
+     tmp_path = pathlib.Path(temp)
+     acquisition, clock_path = _acquisition(tmp_path)
+     result = asyncio.run(R.run_stage(acquisition, COHORTS, "development", tmp_path / "stage",
+                                     offline=True, client_factory=factory, clock_path=clock_path, manifest_root=tmp_path))
+     self.assertEqual(result["status"], "complete")
+     self.assertEqual(result["budget"], {"attempts": 44, "input_tokens": 748, "output_tokens": 264, "unknown_usage": False})
+     self.assertEqual(factory.stats, {"calls": 44, "clients": 44})
+     self.assertEqual(len(result["operations"]), 21)
+     self.assertFalse(result["quality_credit"])
+     self.assertFalse(result["adoption_eligible"])
+     self.assertTrue(all(op["phase_endpoint_after_fsync"] for op in result["operations"]))
+     self.assertTrue(all(op["candidate_phase_ms"] <= 1000 for op in result["operations"] if op["candidate_phase_ms"] is not None))
+
+
+ def test_candidate_transport_failure_falls_back_atomically_and_stops(self):
+    factory = R._fixture_client("fail-candidate")
+    with tempfile.TemporaryDirectory() as temp:
+     root = pathlib.Path(temp)
+     acquisition, clock_path = _acquisition(root)
+     result = asyncio.run(R.run_stage(acquisition, COHORTS, "development", root / "stage",
+                                     offline=True, client_factory=factory, clock_path=clock_path, manifest_root=root))
+    failed = result["neutral"]
+    self.assertEqual(failed["candidate_order_ids"], failed["native_order_ids"])
+    self.assertEqual(failed["failure"]["phase"], "candidate")
+    self.assertEqual(result["budget"]["attempts"], 2)
+    self.assertEqual(factory.stats["calls"], 2)
+    self.assertTrue(all(op["status"] == "uninvoked" for op in result["operations"]))
+
+
+ def test_insufficient_natural_large_pools_are_inconclusive_without_calls(self):
+    factory = R._fixture_client()
+    with tempfile.TemporaryDirectory() as temp:
+     root = pathlib.Path(temp)
+     acquisition, clock_path = _acquisition(root, research_count=40)
+     result = asyncio.run(R.run_stage(acquisition, COHORTS, "development", root / "stage",
+                                     offline=True, client_factory=factory, clock_path=clock_path, manifest_root=root))
+    self.assertEqual(result["status"], "inconclusive-insufficient-natural-pools")
+    self.assertEqual(result["adequate_natural_primary_pools"], 0)
+    self.assertEqual(result["budget"]["attempts"], 0)
+    self.assertEqual(factory.stats["calls"], 0)
+    self.assertEqual(len(result["operations"]), 21)
+
+
+ def test_overflow_membership_is_retained_without_truncation(self):
+    with tempfile.TemporaryDirectory() as temp:
+     root = pathlib.Path(temp)
+     acquisition, clock_path = _acquisition(root)
+     case_id = "d8"
+     cards = acquisition["pools"][case_id]["cards"]
+     cards.append({"id": f"{case_id}-80", "url": f"https://fixture.invalid/{case_id}/80",
+                   "title": "Overflow", "snippet": "must remain present"})
+     acquisition["pools"][case_id]["natural_count"] = len(cards)
+     acquisition["pools"][case_id]["merged_count"] = len(cards)
+     result = asyncio.run(R.run_stage(acquisition, COHORTS, "development", root / "stage", offline=True,
+                                      clock_path=clock_path, manifest_root=root))
+    overflow = next(op for op in result["operations"] if op["id"] == "d8-base")
+    self.assertEqual(overflow["status"], "not_rankable")
+    self.assertEqual(overflow["native_membership_count"], 81)
+    self.assertEqual(len(overflow["native_order_ids"]), 81)
+
+
+ def test_live_admission_fails_before_credentials_when_qualification_absent(self):
+    with tempfile.TemporaryDirectory() as temp:
+     tmp_path = pathlib.Path(temp)
+     with self.assertRaisesRegex(ValueError, "runner-not-qualified"):
+      R.admit_live("development", tmp_path / "out", {}, {}, tmp_path / "stage-clock.json",
+                    lease_root=tmp_path / "leases")
+     self.assertFalse((tmp_path / "leases").exists())
+
+ def test_exact_singleton_navigation_target_is_native_noop(self):
+    factory = R._fixture_client()
+    with tempfile.TemporaryDirectory() as temp:
+     root = pathlib.Path(temp)
+     acquisition, clock_path = _acquisition(root)
+     for case in P.case_index(COHORTS, "development"):
+      if case["kind"] == "navigation":
+       acquisition["pools"][case["id"]] = {"cards": [{"id": case["id"] + "-target", "url": case["target_url"],
+          "title": "Exact target", "snippet": "fixture"}], "natural_count": 1, "merged_count": 1}
+     result = asyncio.run(R.run_stage(acquisition, COHORTS, "development", root / "stage",
+                                      offline=True, client_factory=factory, clock_path=clock_path, manifest_root=root))
+    nav = [op for op in result["operations"] if op["case"].startswith("d9") or op["case"].startswith("d10")
+           or op["case"].startswith("d11") or op["case"].startswith("d12") or op["case"].startswith("d13")]
+    self.assertEqual(len(nav), 5)
+    self.assertTrue(all(op["status"] == "native_target_top1_noop" and op["jev_calls"] == 0 for op in nav))
+    self.assertEqual(result["status"], "complete")
+    self.assertEqual(result["budget"]["attempts"], 34)
+
+ def test_expired_original_stage_deadline_prevents_dispatch(self):
+    factory = R._fixture_client()
+    with tempfile.TemporaryDirectory() as temp:
+     root = pathlib.Path(temp)
+     acquisition, clock_path = _acquisition(root)
+     deadline = datetime.now(timezone.utc) - timedelta(seconds=1)
+     started = deadline - timedelta(seconds=28_800)
+     clock = acquisition["acquisition_receipt"]["stage_clock"]
+     clock["stage_started_utc"] = started.isoformat()
+     clock["stage_deadline_utc"] = deadline.isoformat()
+     clock_raw = P.clock_wire(clock)
+     clock_path.write_bytes(clock_raw)
+     acquisition["acquisition_receipt"]["stage_clock_digest"] = P.digest(clock_raw)
+     result = asyncio.run(R.run_stage(acquisition, COHORTS, "development", root / "stage",
+                                      offline=True, client_factory=factory, clock_path=clock_path, manifest_root=root))
+    self.assertEqual(result["status"], "inconclusive-stage-deadline-expired")
+    self.assertEqual(result["budget"]["attempts"], 0)
+    self.assertEqual(factory.stats["calls"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

@@ -1,0 +1,33 @@
+"""Synthetic delta qualification only; never grades actual references."""
+import argparse, hashlib, importlib.machinery, importlib.util, json, tempfile
+from pathlib import Path
+ap=argparse.ArgumentParser(); ap.add_argument('--delivery',required=True);ap.add_argument('--neutral',required=True);a=ap.parse_args()
+root=Path(__file__).resolve().parents[4];path=Path(__file__).with_name('review-validator.py.txt')
+loader=importlib.machinery.SourceFileLoader('exp054_delta',str(path));spec=importlib.util.spec_from_loader(loader.name,loader);v=importlib.util.module_from_spec(spec);loader.exec_module(v)
+checks=[]
+with tempfile.TemporaryDirectory(prefix='exp054-neutral-') as td:
+ for i in range(1,7):
+  pool=f'P{i:02d}'; x=json.loads((Path(a.neutral)/(pool+'.json')).read_text()); x['s']='exp054-review/1'
+  for c in x['cases']:del c['o']
+  p=Path(td)/'record.json'
+  def run(z):
+   p.write_text(json.dumps(z,separators=(',',':')));return v.validate_review_fixture(a.delivery,p,pool+'-R1',pool,v.DELIVERY_SHA,root)
+  r=run(x);raw=p.read_bytes();assert r['valid'] and all(d['relation']=='same' for d in r['derived']);assert r['review_sha256']==hashlib.sha256(raw).hexdigest();assert all('overall_relation' not in c for c in r['expanded']['case_assessments']);checks.append(pool+'-neutral-byte-hash')
+  x['cases'][0]['o']='same';r=run(x);assert r['errors']==['review-case-shape'];del x['cases'][0]['o'];checks.append(pool+'-reject-reviewer-relation')
+  delivery=v.load_delivery(Path(a.delivery),root);before=set(delivery['pools'][pool]['source']['pool']['selected_ids']);after=set(delivery['pools'][pool]['source']['cases'][0]['after_selected_ids']); retained=next(iter(before&after)); row=next(c for c in x['cards'] if c['id']==retained);row['d']='uncertain'
+  r=run(x);assert r['errors']==['review-retained-reading-uncertainty'];checks.append(pool+'-retained-uncertainty')
+  for c in x['cases']:c['rp']='uncertain'
+  r=run(x);assert r['valid'] and all(d['relation']=='indeterminate' for d in r['derived']);checks.append(pool+'-uncertainty-derived')
+  # Required live trust is unavailable before registration and must fail closed.
+  try:v.live_validate(a.delivery,p,pool+'-R1',pool,root)
+  except v.Invalid as e:assert e.code=='trusted-record-unavailable'
+  else:raise AssertionError('missing trust accepted')
+  checks.append(pool+'-missing-live-trust-closed')
+ for trans,rp,expected in [(['uncertain','gain'],'both','indeterminate'),(['gain','loss'],'same','gain_with_loss'),(['gain'],'lost','gain_with_loss'),(['gain'],'both','gain_with_loss'),(['gain'],'same','gain_no_loss'),(['loss'],'added','loss_only'),(['unchanged'],'lost','loss_only'),(['unchanged'],'added','lead_only'),(['unchanged'],'same','same'),(['gain'],'uncertain','indeterminate')]:
+  assert v._relation(trans,rp)==expected;checks.append('precedence-'+expected+'-'+rp)
+ assess={'retained':{'f':['direct']},'added':{'f':['direct']},'outside':{'f':['partial']},'unknown':{'f':['uncertain']},'lead':{'f':['lead']}}
+ assert v._selected_status(['retained'],0,assess)[0]==v._selected_status(['retained','added'],0,assess)[0]=='supported';checks.append('retained-support-masking')
+ assert v._selected_status(['lead'],0,assess)[0]=='not_supported';checks.append('selected-only-support')
+ assert v._selected_status(['unknown','lead'],0,assess)[0]=='uncertain';checks.append('selected-uncertainty')
+ assert v._selected_status(['unknown','retained'],0,assess)[0]=='supported';checks.append('explicit-support-precedence')
+print(json.dumps(dict(schema='exp054-draft-delta-tests/1',status='passed',checks=checks,count=len(checks),validator_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),synthetic_only=True,normal_committed_trust_cli_qualified=False,references_invoked=0),indent=2))

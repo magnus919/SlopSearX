@@ -1,0 +1,49 @@
+import copy,importlib.machinery,importlib.util,json,pathlib,unittest
+ROOT=pathlib.Path(__file__).resolve().parent
+l=importlib.machinery.SourceFileLoader('analysis066',str(ROOT/'analyze.py.txt'));s=importlib.util.spec_from_loader(l.name,l);A=importlib.util.module_from_spec(s);l.exec_module(A)
+def fixture():
+    protocol=json.loads((ROOT/'protocol.json').read_text());acq={'pools':{}};refs={'A':{},'B':{}};queries=[];ops=[]
+    for i in range(1,14):
+        q=f'q{i}';cards=[{'id':f'c{j}','title':f'title{j}','url':f'https://example.org/{j}','snippet':'fixture'} for j in range(12)];acq['pools'][q]={'cards':cards};queries.append({'id':q,'kind':'navigation' if i>=9 else 'research','target_url':'https://example.org/8'})
+        for who in refs:refs[who][q]={c['id']:{'lead':3 if j>=8 else 0,'facets':['f1'],'visible':1,'uncertain':False,'rationale':'fixture'} for j,c in enumerate(cards)}
+    for plan in protocol['schedule']:
+        q=plan['case'];base=[c['id'] for c in acq['pools'][q]['cards']];native=base[8:]+base[:8] if plan['variant']=='rotate' else base
+        probs={c:(.9 if int(c[1:])>=8 else .1) for c in base};binary=base[8:]+base[:8]
+        arms={'w0':{'status':'valid','order_ids':base,'scores':{c:9-j/100 for j,c in enumerate(base)},'elapsed_ms':100,'usage':{'input_tokens':1,'output_tokens':1}},'binary':{'status':'valid','order_ids':binary,'probabilities':probs,'elapsed_ms':100,'usage':{'input_tokens':1,'output_tokens':1}}}
+        ops.append({'case':q,'variant':plan['variant'],'id':q+'-'+plan['variant'],'provenance_order_ids':native,'arms':arms})
+    run={'wall_seconds':1,'status':'complete','synthetic':False,'neutral':{'status':'valid','questions':80,'synthetic_input':True,'elapsed_ms':100,'usage':{'input_tokens':1,'output_tokens':1}},'budget':{'attempts':43,'input_tokens':43,'output_tokens':43,'unknown_usage':False},'operations':ops}
+    return run,acq,refs,queries,protocol
+class Tests(unittest.TestCase):
+    def test_complete_quality_never_authorizes_adoption(self):
+        r=A.analyze(*fixture());self.assertTrue(r['development_all_gates_passed']);self.assertFalse(r['adoption_eligible'])
+    def test_synthetic_cannot_be_quality(self):
+        x=fixture();x[0]['synthetic']=True;r=A.analyze(*x);self.assertFalse(r['development_quality_passed']);self.assertFalse(r['quality_analysis_performed'])
+    def test_other_assessor_veto(self):
+        x=fixture()
+        for rows in x[2]['B'].values():
+            for cid,row in rows.items():row['lead']=3 if int(cid[1:])<4 else 0
+        self.assertFalse(A.analyze(*x)['development_quality_passed'])
+    def test_probability_sort_is_not_registered_policy(self):
+        x=fixture();row=x[0]['operations'][0]['arms']['binary'];row['order_ids'][:4]=reversed(row['order_ids'][:4]);self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_abstention_stays_in_incumbent_slot(self):
+        x=fixture();row=x[0]['operations'][0]['arms']['binary'];row['probabilities']['c2']=.5;inc=x[0]['operations'][0]['arms']['w0']['order_ids'];fill=iter([c for c in inc if row['probabilities'][c]>.5]+[c for c in inc if row['probabilities'][c]<.5]);row['order_ids']=[c if row['probabilities'][c]==.5 else next(fill) for c in inc];self.assertFalse(A.analyze(*x)['structural_failures']);row['order_ids'][2],row['order_ids'][3]=row['order_ids'][3],row['order_ids'][2];self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_bad_fields_neutral_budget_deadline(self):
+        for kind in ('neutral','usage','deadline','nan','bool','missing','schedule','callcap','sum','wall'):
+            x=fixture();row=x[0]['operations'][0]['arms']['binary']
+            if kind=='neutral':x[0]['neutral']['status']='failed'
+            elif kind=='usage':x[0]['budget']['unknown_usage']=True
+            elif kind=='deadline':row['elapsed_ms']=1001
+            elif kind=='nan':row['probabilities']['c0']=float('nan')
+            elif kind=='bool':row['probabilities']['c0']=True
+            elif kind=='missing':del row['probabilities']['c0']
+            elif kind=='callcap':row['usage']['input_tokens']=64001
+            elif kind=='sum':x[0]['budget']['input_tokens']=44
+            elif kind=='wall':x[0]['wall_seconds']=7201
+            else:x[0]['operations'].pop()
+            self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_missing_or_duplicate_navigation_inputs_cannot_pass(self):
+        x=fixture();x=list(x);x[3]=[q for q in x[3] if q['kind']!='navigation'];self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+        x=fixture();x[3].append(copy.deepcopy(x[3][-1]));self.assertEqual(A.analyze(*x)['outcome'],'incomplete')
+    def test_absent_navigation_is_unmet_recall(self):
+        x=fixture();x[3][9]['target_url']='https://example.org/missing';r=A.analyze(*x);self.assertTrue(r['navigation_gate_met']);self.assertFalse(r['acquisition_recall_met']);self.assertFalse(r['development_all_gates_passed'])
+if __name__=='__main__':unittest.main()

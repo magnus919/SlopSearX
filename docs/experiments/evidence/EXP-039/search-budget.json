@@ -1,0 +1,10 @@
+{
+  "schema": "jev-refinement-brave-budget/1",
+  "scope": "whole ranking refinement effort, including later confirmation",
+  "authorized_attempts": 10,
+  "used_attempts": 0,
+  "remaining_attempts": 10,
+  "attempts": [],
+  "counting_policy": "An attempt is counted durably before dispatch; failed, empty and retried calls count. No silent retry or replacement. Development uses existing frozen public cards only.",
+  "reservation": "Fresh confirmation after the selected ranking contract and analysis gates are frozen."
+}

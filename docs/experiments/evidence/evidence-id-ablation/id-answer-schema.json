@@ -1,0 +1,80 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "answer",
+    "facets",
+    "limitations"
+  ],
+  "properties": {
+    "answer": {
+      "type": "string"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "facets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "facet_id",
+          "status",
+          "conclusion",
+          "claims"
+        ],
+        "properties": {
+          "facet_id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "supported",
+              "partial",
+              "unsupported"
+            ]
+          },
+          "conclusion": {
+            "type": "string"
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "claim",
+                "source_id",
+                "role",
+                "evidence_id"
+              ],
+              "properties": {
+                "claim": {
+                  "type": "string"
+                },
+                "source_id": {
+                  "type": "string"
+                },
+                "role": {
+                  "enum": [
+                    "support",
+                    "contradict",
+                    "qualify"
+                  ]
+                },
+                "evidence_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,116 @@
+"""Offline synthetic qualification of planner.py.txt; no network capability."""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import re
+import sys
+from pathlib import Path
+
+
+def load_planner(path: Path):
+    loader = importlib.machinery.SourceFileLoader("exp049_planner", str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[loader.name] = module
+    loader.exec_module(module)
+    return module
+
+
+def check(condition: bool, name: str, results: list[str]) -> None:
+    if not condition:
+        raise AssertionError(name)
+    results.append(name)
+
+
+def main() -> None:
+    here = Path(__file__).resolve().parent
+    root = here.parents[3]
+    planner_path = here / "planner.py.txt"
+    planner = load_planner(planner_path)
+    plan, body = planner.build_plan(root)
+    results: list[str] = []
+
+    observed = planner.verify_source_pins(root)
+    check(len(observed) == 17, "all-17-pinned-source-files-verified", results)
+    check(plan["pool_count"] == 12 and plan["card_count"] == 423, "twelve-pool-423-card-inventory", results)
+    check(sum(len(pool["cards"]) for pool in plan["pools"]) == 423, "all-pool-rows-retained", results)
+    check(plan["mapped_card_count"] + plan["no_identifier_count"] == 423, "mapped-plus-no-identifier-complete", results)
+    check(plan["unique_query_count"] == len(plan["query_ids"]) == len(set(plan["query_ids"])), "query-deduplication", results)
+    check(plan["query_ids"] == sorted(plan["query_ids"]), "lexicographic-query-order", results)
+    check(json.loads(body) == {"ids": plan["wire_ids"]}, "exact-batch-body-projection", results)
+    check(plan["wire_ids"] == sorted(plan["wire_ids"]) and len(plan["wire_ids"]) == plan["unique_query_count"], "wire-id-order-and-namespace-preserving-dedup", results)
+    check(all(planner.to_wire_id(q) in plan["wire_ids"] for q in plan["query_ids"]), "all-internal-queries-map-to-wire-ids", results)
+    check(planner.to_wire_id("doi:10.1234/x") == "DOI:10.1234/x" and planner.to_wire_id("arxiv:2609.12345") == "ARXIV:2609.12345" and planner.to_wire_id("pmid:123") == "PMID:123" and planner.to_wire_id("pmcid:123") == "PMCID:123" and planner.to_wire_id("s2:abcdef") == "abcdef", "documented-api-prefixes-and-bare-s2-id", results)
+    check(hashlib.sha256(body).hexdigest() == plan["batch_body_sha256"] and len(body) == plan["batch_body_bytes"], "batch-body-hash-and-byte-count", results)
+
+    # Independently reconstruct each allowed row from its pinned request, comparing
+    # exact four card fields and original purpose/facet content. Scores/order/etc. are ignored.
+    for pool in plan["pools"]:
+        request = json.loads((root / pool["request_file"]).read_text(encoding="utf-8"))
+        state = request["state"]
+        check(pool["purpose"] == state["purpose"] and pool["facets"] == state["facets"], f"purpose-facets-{pool['pool']}", results)
+        expected = [{key: card[key] for key in ("id", "title", "url", "snippet")} for card in state["candidates"]]
+        actual = [row["card"] for row in pool["cards"]]
+        check(actual == expected, f"exact-card-content-and-order-{pool['pool']}", results)
+        check(all(set(card) == {"id", "title", "url", "snippet"} for card in actual), f"only-original-card-fields-{pool['pool']}", results)
+
+    normalize_doi, url_ids = planner._load_pinned_helpers(root)
+    anchors = planner.card_anchors
+    check(anchors("https://doi.org/10.1234/AbC.1", normalize_doi, url_ids) == {"doi": "10.1234/abc.1"}, "doi-normalization", results)
+    a1 = anchors("https://arxiv.org/abs/2609.12345v2", normalize_doi, url_ids)
+    a2 = anchors("https://arxiv.org/pdf/2609.12345v7.pdf", normalize_doi, url_ids)
+    check(a1 == a2 == {"arxiv": "2609.12345"}, "arxiv-base-version-scope", results)
+    check(anchors("https://pubmed.ncbi.nlm.nih.gov/000123/", normalize_doi, url_ids) == {"pmid": "123"}, "pmid-leading-zero-normalization", results)
+    check(anchors("https://pmc.ncbi.nlm.nih.gov/articles/PMC000123/", normalize_doi, url_ids) == {"pmcid": "123"}, "pmcid-prefix-and-zero-normalization", results)
+    check(anchors("https://www.semanticscholar.org/paper/Example/ABCDEF0123456789ABCDEF0123456789ABCDEF01", normalize_doi, url_ids) == {"s2": "abcdef0123456789abcdef0123456789abcdef01"}, "s2-exact-hex-final-segment", results)
+    check(anchors("https://www.semanticscholar.org.evil.test/paper/ABCDEF0123456789ABCDEF0123456789ABCDEF01", normalize_doi, url_ids) == {}, "s2-host-boundary", results)
+    check(anchors("https://www.semanticscholar.org/paper/Example/not-a-paper-id", normalize_doi, url_ids) == {}, "s2-malformed-id", results)
+    check(anchors("https://example.org/10.1234/abc", normalize_doi, url_ids) == {}, "unsupported-host-no-title-or-path-guess", results)
+    check(anchors("https://pubmed.ncbi.nlm.nih.gov/000/", normalize_doi, url_ids) == {}, "zero-only-pmid-invalid", results)
+
+    repeated = sorted({"arxiv:2609.12345", "arxiv:2609.12345"})
+    check(planner.serialize_batch(repeated) == b'{"ids":["ARXIV:2609.12345"]}', "duplicate-anchors-collapse-to-one-query", results)
+    check(planner.serialize_batch(["pmid:123", "pmcid:123"]) == b'{"ids":["PMCID:123","PMID:123"]}', "same-numeric-value-retains-distinct-namespace", results)
+    try:
+        planner.serialize_batch([f"doi:10.1/{i:04d}" for i in range(501)])
+    except ValueError:
+        results.append("unique-id-overflow-rejected")
+    else:
+        raise AssertionError("unique-id-overflow-not-rejected")
+    try:
+        planner.serialize_batch(["doi:" + "x" * 64001])
+    except ValueError:
+        results.append("request-byte-overflow-rejected")
+    else:
+        raise AssertionError("request-byte-overflow-not-rejected")
+    check(planner.serialize_batch(["doi:10.1/b", "doi:10.1/a"]) == b'{"ids":["DOI:10.1/a","DOI:10.1/b"]}', "wire-ids-sorted-independently-of-internal-order", results)
+
+    qualification = {
+        "schema": "exp049-planner-qualification/1",
+        "result": "passed",
+        "network_calls": 0,
+        "provider_calls": 0,
+        "credential_reads": 0,
+        "search_calls": 0,
+        "checks_passed": len(results),
+        "checks": results,
+        "planner_sha256": planner.sha256(planner_path.read_bytes()),
+        "planner_qualification_sha256": planner.sha256(Path(__file__).read_bytes()),
+        "plan_sha256": planner.sha256((here / "plan.json").read_bytes()),
+        "batch_body_file_sha256": planner.sha256((here / "batch-body.json").read_bytes()),
+        "source_pin_count": len(observed),
+        "plan_card_count": plan["card_count"],
+        "plan_pool_count": plan["pool_count"],
+        "unique_query_count": plan["unique_query_count"],
+        "no_identifier_count": plan["no_identifier_count"],
+        "batch_body_bytes": len(body),
+    }
+    (here / "planner-qualification.json").write_text(json.dumps(qualification, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({key: qualification[key] for key in ("result", "checks_passed", "source_pin_count", "plan_card_count", "unique_query_count", "no_identifier_count", "batch_body_bytes")}, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

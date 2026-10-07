@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "slopsearx"
-version = "0.5.0"
+version = "0.6.0"
 description = "Cloud-native, stateless, AI-agent-first meta search engine"
 license = "MIT"
 readme = "README.md"
@@ -117,6 +117,7 @@ layers = [
     "slopsearx.research_store",
     "slopsearx.saved_store",
     "slopsearx.research_models",
+    "slopsearx.research_planning",
     "slopsearx.retrieval_receipts",
     "slopsearx.saved_models",
     "slopsearx.snapshot",

@@ -1,0 +1,22 @@
+{
+  "schema": "exp056-preparation-setup-history/1",
+  "phase": "unqualified offline implementation",
+  "original_draft_runner_sha256": "45d58a4018153730ba085ae57071c001a15a266774b75511a36b41c4f9e2c65d",
+  "attempts": [
+    {
+      "sequence": 1,
+      "status": "failed",
+      "error": "missing Python import/dependency environment",
+      "exit_code": 1
+    },
+    {
+      "sequence": 2,
+      "status": "failed",
+      "error": "original spec role is D/F; variant must use unique pair_id mapping",
+      "exit_code": 1
+    }
+  ],
+  "new_jev_calls": 0,
+  "new_search_calls": 0,
+  "meaning": "Offline setup/debug observations; neither attempted a provider operation or measured candidate quality."
+}

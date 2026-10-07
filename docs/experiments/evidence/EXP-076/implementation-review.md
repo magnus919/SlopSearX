@@ -1,0 +1,165 @@
+# EXP-076 implementation review
+
+Status: in progress; no source qualification or live admission.
+The registration-pinned design and historical evidence remain unchanged.
+
+The unchanged EXP-075 HTTP transport was reviewed by GPT-6 Luna against the
+new contract. Its fresh-client, no-proxy/redirect/retry behavior, streamed 2 MB
+response cap, exact-key echo suppression and cleanup are reusable with an exact
+source pin. New orchestration tests still must cover the 160-question shape,
+response overflow, streamed cancellation/unknown usage, split-marker echo,
+proxy/redirect sentinels and the full construction-through-fsync deadline.
+
+Root's first read of the unfinished request/parser source identified an
+undefined `p` in `parse_candidate()`'s successful return (`p['usage']`). The
+validated local variable is `usage`. The finding was sent to the owning agent;
+successful full candidate parsing must have an offline regression that reaches
+the actual return path. This draft observation is not a test failure or a
+qualification result. Final review must bind the corrected committed source.
+
+Root then ran a credential-free synthetic build/parse smoke against the draft.
+Imports and pinned dependencies loaded, but `build_candidate()` raised
+`KeyError: 'purpose_question_prefix'`: it looked for the prefix in EXP-076's
+protocol rather than the exact pinned EXP-075 source designated by the sealed
+wire contract and capacity preview. Correct the implementation source lookup,
+not the immutable registration. The smoke dispatched no request and never
+reached parsing. Complete build/parse and preview-byte regression coverage is
+required before source qualification.
+
+## Subsequent draft smoke
+
+After both source fixes, root passed 52 natural build/parse checks (thirteen
+pools under four permutations), with candidate bodies equal to the sealed
+calculator's projection. A 160-answer synthetic response also parsed fully.
+These are local structural fixtures, not ranking evidence or final source
+qualification.
+
+The synthetic smoke exposed a further mismatch: the new builder's fixture
+produced a 267,151-byte request rather than the sealed preview fixture's
+270,847 bytes. The maximum shape has 160 questions in both cases, but its exact
+inventory/context differs. The owning agent must use the registered preview's
+exact synthetic cards and context before neutral admission. Do not revise the
+immutable preview or treat a shorter substitute as its capacity test.
+
+## Initial runner inspection
+
+The unfinished runner is explicitly offline-only. Root identified five further
+requirements before a usable checkpoint or qualification:
+
+1. Measure baseline duration after its receipt fsync and candidate duration
+   after final receipt fsync; the draft measured both earlier.
+2. Persist call-record timing changes before binding sidecar hashes so embedded
+   calls and durable sidecars remain identical.
+3. Avoid appending one physical call twice when a completed baseline later
+   fails its whole-phase deadline.
+4. A candidate deadline failure must produce native incumbent fallback and a
+   failed receipt, never retain valid candidate output with a complete receipt.
+5. Remove the unregistered two-second paired-wall stopping rule. The sealed
+   design gates each complete durable phase separately and records paired wall
+   time as an observation.
+
+These findings were sent to the source owner. Final regression and exact-source
+review must establish their disposition before live admission.
+
+## Initial evaluator unit checks
+
+Root independently ran all four drafted metric tests: both reference case
+assembly, synthetic quality suppression, identity displacement and pinned-input
+tamper rejection passed. This bypasses the not-yet-built raw verifier and is
+unit evidence only. Root also checked that source-bound and metric-view lead
+grades agree for every frozen ID. The identity regression needs strengthening
+to hold useful count and facets constant while displacing more than one useful
+source, without a silent early return. The complete receipt/source-closure
+integration regression remains mandatory.
+
+## Stable runner checkpoint
+
+Root integrated the first committed runner checkpoint as
+`9e8a3e0d8628af04e2c7856127cc3c790808ff3d` and independently passed all nine
+offline MockTransport tests. They include the exact registered neutral body,
+complete 44-call schedule, parser/fusion ties, construction timeout without
+dispatch, overflow/native fallback, cancellation/unknown usage, split-marker
+echo suppression, transport failure behavior and direct live-run denial.
+The earlier run overlapping an edit to the tie assertion is superseded for
+test verification by this stable checkpoint; it was never qualification.
+
+The checkpoint is explicitly live-disabled. Source-closure/lease admission,
+independent raw verifier and complete evaluator integration are not yet
+qualified. A substantive source review of the stable runner is underway.
+
+Root reproduced a usage-status inconsistency on that stable checkpoint with
+an offline HTTP 503 response containing valid usage (17 input, 6 output).
+The receipt retained that usage and the aggregate counted it with
+`unknown_usage=false`, but the outer failure handler overwrote the call's
+`usage_status` to `unknown`. Known usage must remain known on unsuccessful HTTP
+or usage-bound responses; unknown applies only to a dispatched call lacking
+valid usage. The owner was asked to fix this and add both regressions. No real
+provider request occurred.
+
+The independent GPT-6 Luna source review confirmed that usage finding and
+identified a second material gap: failed final receipts lacked a binding to
+the physical call's durable sidecar. The owner must include call identity and
+digest for dispatched failure paths, with explicit absence for pre-dispatch
+failures. The independent verifier must reject a changed failed-call sidecar
+when the run manifest and final receipt remain unchanged. These are findings
+from the completed bounded review pass; fixes and regressions are pending.
+
+## Failure receipt and admission corrections
+
+Root integrated the two follow-up runner commits and independently passed all
+twelve offline tests at `f6db4a6`. Known usage on failed HTTP responses remains
+known and counted once; final failure receipts bind the durable call sidecar.
+The added regressions also cover a baseline failure before candidate dispatch
+and a candidate deadline reached during final receipt fsync. These resolve the
+runner findings from the bounded substantive review.
+
+The admission tests use temporary fixture leases and DNS/key sentinels; they
+do not touch the real study lease, credentials or provider. Actual committed
+source qualification and independent verifier integration remain pending.
+
+Root inspected the unfinished verifier and found a circular manifest check:
+it expected the qualification manifest at the qualified code revision, before
+that manifest could have been generated. The manifest must be checked against
+its committed current tree while source closure remains bound to the qualified
+code revision. This draft finding was sent to the owner; the integrated unmocked
+check is required before admission.
+
+## Independent verifier review
+
+The bounded Luna review identified three material terminal-path defects in the
+combined runner/verifier draft. These were sent to the owners before admission:
+
+- A deadline expiry in the transport dispatch callback raises DispatchDenied
+  after client creation. The runner must persist the non-dispatched failure
+  and stop normally; the verifier must preserve truthful client cleanup.
+- A build-overrun path appended a synthetic call without a persisted sidecar.
+  It must use a durable pre-dispatch record or an explicit no-call representation
+  shared by runner and verifier.
+- Overflow transport evidence retains one sentinel byte beyond the response
+  cap. The verifier must accept only that bounded incomplete overflow evidence,
+  while denying successful response or quality credit.
+
+Full runner-to-verifier regressions for all three paths are required. Earlier
+runner-only tests did not establish that these packets could be independently
+verified. This is the completed substantive verifier review pass; disposition
+and exact integrated tests remain pending.
+
+## Integrated analyzer checkpoint
+
+Root integrated the analyzer/verifier checkpoint at `0c56b96` and independently
+passed all four analysis unit tests. The committed verifier integration suite
+then failed on the complete nonsynthetic-shaped local packet with
+`receipt-receipt-inventory`. The error was reproduced on both the draft and
+root's committed integration; the committed result is authoritative. The owner
+is resolving expected versus retained receipt membership without relaxing exact
+inventory checks. This checkpoint is unqualified and made no provider calls.
+
+## Final disposition
+
+The corrected receipt inventory and transport-edge regressions pass on the
+integrated qualified source revision `d39910541fa85ac07efd73a885f66803ceecabaa`.
+Root independently passed 13 runner, four analysis and ten verifier tests.
+All material findings from the bounded reviews are addressed. The committed
+source admission smoke uses unmocked source/manifest checks, a temporary lease
+and dummy DNS/key callbacks; it issues no dispatch capability and rejects
+duplicate admission before callbacks. See qualification.md for scope and limits.

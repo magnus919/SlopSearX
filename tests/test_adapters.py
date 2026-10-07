@@ -784,7 +784,7 @@ class TestSemanticScholarAdapter:
         async with MockHTTP(lambda r: httpx.Response(200, json=sample_response)):
             result = await adapter.search("deep learning")
         assert result.status == EngineStatus.OK
-        assert result.results[0].payload["data"] == {}
+        assert result.results[0].payload["data"] == {"authors": ["Alice Smith", "Bob Jones"]}
 
     async def test_search_sends_api_key_when_configured(self):
         test_key = "***********"

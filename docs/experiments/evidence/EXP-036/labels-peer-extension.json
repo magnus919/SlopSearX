@@ -1,0 +1,958 @@
+{
+  "schema_version": "exp035-card-labels-extension/1",
+  "label_provenance": "independent assistant-proposed reviewer (Luna); labels assigned before model outputs",
+  "independent_gold": false,
+  "blinded_to_scores_and_pool_order": true,
+  "evidence_basis": "captured card title, snippet, and URL only; no page opens or additional searches",
+  "extension_queries": {
+    "q9": {
+      "query": "climate change impacts mitigation adaptation research",
+      "facets": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ]
+    },
+    "q10": {
+      "query": "cardiac health cardiovascular disease prevention research",
+      "facets": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ]
+    }
+  },
+  "pool_counts": {
+    "q9": 38,
+    "q10": 44
+  },
+  "labels": [
+    {
+      "query_id": "q10",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the AHA card links sedentary behavior to risk and reports prevention-related activity findings."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c1",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention: the AHA summary covers research advances for preventing and managing heart-related conditions."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c10",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: NHLBI studies identify causes and prevention of coronary and vascular disease."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c11",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title indicates a primary-prevention review, but the snippet is only a browser challenge. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c12",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: WHO identifies CVD risk factors and prevention-relevant behaviors."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c13",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the NIH search-result page is cardiovascular-prevention-related but shows no specific evidence."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c14",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the AHA card describes CKM risk assessment and prevention/management research."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c15",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention, risk_evidence: the research roundup includes cardiovascular outcomes and prevention-relevant findings."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c16",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention: the medical page identifies lifestyle steps used to prevent coronary disease."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c17",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the review reports statin-trial risk reduction and related CVD risk factors/guidelines."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c18",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention: the center studies cardiometabolic health and cardiovascular prevention interventions."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c19",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the review describes CVD risk assessment and digital/ML prevention opportunities."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c2",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention: the review discusses CVD prevention approaches and implementation barriers."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c20",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title concerns secondary-prevention components, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c21",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title concerns connected health technology for CVD prevention, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c22",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the card concerns magnesium and general disease prevention, without cardiovascular evidence. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c23",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention, risk_evidence: the review discusses lycopene, CVD mechanisms, and dietary prevention."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c24",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the review states risk-reduction programs work and adherence mediates outcomes."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c25",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title concerns vitamin D and CVD prevention, but no abstract or result is shown. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c26",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, risk_evidence: the review analyzes the evolution and outcomes of digital cardiovascular-health research."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c27",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title concerns primary/secondary CVD prevention, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c28",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention, risk_evidence: the review describes flavanols and dietary prevention evidence for CVD."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c29",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title concerns dietary prevention, but no abstract or result is shown. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention: the AHA card identifies 2025 findings relevant to preventing and managing CVD."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c30",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the roadmap concerns secondary ASCVD prevention and recurrent-event/mortality reduction."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c31",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the review compares CVD prevalence and discusses prevention and screening disparities."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c32",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, risk_evidence: the card reports preliminary associations with stroke and arrhythmias."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c33",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the study examines barriers to CVD prevention, diagnosis, and treatment in a higher-risk population."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c34",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns menopause-related CVD risk and early prevention, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c35",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns healthy lifestyles and CVD prevention, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c36",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title links high blood pressure and CVD, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c37",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns physical activity and CVD, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c38",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns exercise screening, but the card gives no CVD-specific result."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c39",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns estrogen and CVD, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c4",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention, risk_evidence: the research area explicitly covers prevention, risk prediction, and public-health disparities."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c40",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns inflammatory markers and CVD practice, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c41",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns stress and CVD, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c42",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns exercise and cardiovascular outcomes, but the card contains citation metadata only."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c43",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns women’s primary-prevention recommendations, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c5",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention: the Mayo page lists prevention trials and a lifestyle intervention, but the snippet is mostly a trial listing."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c6",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the study evaluates effects of recommended prevention activities on CVD burden."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c7",
+      "grade": 3,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for cardiovascular_health, prevention, risk_evidence: the PubMed abstract says lifestyle and pharmacologic approaches prevent CVD in high-risk people."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c8",
+      "grade": 1,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title names preventive strategies, but the snippet is a bibliography rather than results."
+    },
+    {
+      "query_id": "q10",
+      "candidate_id": "c9",
+      "grade": 2,
+      "facet_ids": [
+        "cardiovascular_health",
+        "prevention",
+        "risk_evidence"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for cardiovascular_health, prevention, risk_evidence: the university page describes studies of CVD genetics, risk factors, prevention, and treatment."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c0",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_adaptation, climate_mitigation: the review card identifies agricultural impacts and corresponding adaptation/mitigation measures."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c1",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_adaptation, climate_mitigation: the paper covers vulnerability, ecosystem services, and mitigation/adaptation strategies."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c10",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_adaptation, climate_mitigation: the review says health measures such as warnings reduce climate-related morbidity and mortality."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c11",
+      "grade": 2,
+      "facet_ids": [
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for climate_mitigation, climate_adaptation: the excerpt distinguishes mitigation from adaptation in responding to climate change."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c12",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_mitigation, climate_adaptation: the review covers global impacts and socioeconomic/environmental mitigation and adaptation strategies."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c13",
+      "grade": 1,
+      "facet_ids": [
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title is climate adaptation/mitigation-focused, but the visible snippet does not establish those facets."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c14",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_mitigation, climate_adaptation: the card defines both response strategies and says both are needed to address climate impacts."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c15",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_mitigation, climate_adaptation: the review covers ecosystem impacts, mitigation measures, and mitigation/adaptation synergy."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c16",
+      "grade": 2,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for climate_impacts, climate_adaptation, climate_mitigation: the review excerpt discusses future impacts and recommends mitigation research and monitoring."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c17",
+      "grade": 2,
+      "facet_ids": [
+        "climate_adaptation",
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for climate_adaptation, climate_impacts: the UN framework guides adaptation progress against climate risks, impacts, and vulnerabilities."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c18",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title covers plant-health impacts and responses, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c19",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title covers plant-health impacts and responses, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c2",
+      "grade": 3,
+      "facet_ids": [
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_mitigation, climate_adaptation: the card gives concrete mitigation and community/ecosystem adaptation strategies."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c20",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title names integrated socioeconomic scenario research, but the snippet only links a paper."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c21",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title links climate/health research to adaptation policy, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c22",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_adaptation, climate_mitigation: the workshop scope includes climate impacts and mitigation/adaptation strategies."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c23",
+      "grade": 2,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for climate_impacts, climate_adaptation: the paper describes climate effects on livestock and adaptation research, with mitigation only in the title."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c24",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_adaptation, climate_mitigation: the report covers agricultural impacts, adaptation, and mitigation policy."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c25",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title concerns farmer adaptation and mitigation for sorghum impacts, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c26",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation"
+      ],
+      "label_status": "uncertain",
+      "rationale": "Tentative topical grade only: the title concerns adaptation to climate impacts on water demand, but no snippet is available. Empty/blocked card text prevents a confident relevance judgment; do not infer linked-page contents."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c27",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns global food-security impacts, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c28",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns climate-linked vector disease, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c29",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The visible card concerns the card concerns air-pollution interventions and does not connect them to climate impacts or responses, outside the query facets."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c3",
+      "grade": 3,
+      "facet_ids": [
+        "climate_mitigation",
+        "climate_adaptation",
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_mitigation, climate_adaptation, climate_impacts: the WRI card gives land-use practices that lower emissions and improve climate resilience."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c30",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns health effects of climate change, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c31",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns gendered vulnerability and women’s health, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c32",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title names climate effects on children’s respiratory health, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c33",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title describes a comprehensive review across the three requested topics, but the card has only citation metadata."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c34",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title concerns oyster-aquaculture impacts and adaptation, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c35",
+      "grade": 1,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Only contextual evidence: the title links climate policy to Indigenous health co-impacts, but only citation metadata is shown."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c36",
+      "grade": 2,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for climate_impacts, climate_adaptation, climate_mitigation: the repository description covers climate findings and response strategies, but gives no specific evidence."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c37",
+      "grade": 0,
+      "facet_ids": [],
+      "label_status": "labeled",
+      "rationale": "The visible card concerns the result is an author profile listing climate interests, not climate-impact/adaptation/mitigation evidence, outside the query facets."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c4",
+      "grade": 3,
+      "facet_ids": [
+        "climate_mitigation",
+        "climate_adaptation",
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_mitigation, climate_adaptation, climate_impacts: the toolkit says both reducing future climate change and reducing vulnerability are needed."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c5",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_mitigation",
+        "climate_adaptation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_mitigation, climate_adaptation: the review explains persistent impacts and why mitigation and adaptation both matter."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c6",
+      "grade": 2,
+      "facet_ids": [
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for climate_adaptation, climate_mitigation: the cross-cultural test examines whether adaptation focus changes mitigation behavior."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c7",
+      "grade": 3,
+      "facet_ids": [
+        "climate_impacts",
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_impacts, climate_adaptation, climate_mitigation: the review explicitly covers climate impacts, vulnerability, adaptation, and mitigation."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c8",
+      "grade": 3,
+      "facet_ids": [
+        "climate_adaptation",
+        "climate_impacts"
+      ],
+      "label_status": "labeled",
+      "rationale": "Direct card-local evidence for climate_adaptation, climate_impacts: NASA gives concrete local adaptation examples for flooding, heat, and water impacts."
+    },
+    {
+      "query_id": "q9",
+      "candidate_id": "c9",
+      "grade": 2,
+      "facet_ids": [
+        "climate_adaptation",
+        "climate_mitigation"
+      ],
+      "label_status": "labeled",
+      "rationale": "Useful partial evidence for climate_adaptation, climate_mitigation: the card discusses how adaptation projects may affect mitigation."
+    }
+  ],
+  "uncertainty_note": "Title-only PubMed records, empty snippets, and browser-block snippets are retained with tentative grade 1 (or a clearly unrelated title grade 0) and label_status=uncertain; no linked-page evidence is inferred."
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "exp045-offline-qualification/1",
+  "status": "passed",
+  "files": {
+    "replay.py.txt": "f478245419361c0ad248b372c4b3bf4e3656a1c39d425db3ea35026a636d3a6c",
+    "fixture_tests.py.txt": "163d4a097579cac0cd64b2ed116df8c1c091e4306b3640e7810464af08d9eb80",
+    "manual-choice-checks.py.txt": "2c20fe9f044352dd0618e819fe3deb24d95aa445cac40837994f48c2e7ceb2aa",
+    "publication-gates-checks.py.txt": "e079a0830f1319ca5d34cf54a7cf38e930846204b8133329dfa38f25dbfd6c64",
+    "transport-fixtures.py.txt": "c717f967f3976a261a8958b1cbbb4fa8c7350f8eb3db215d32dcef40911a8691",
+    "transport-qualification.json": "ff602c12225734b687e78da7cc37c1de2e08f31557c5f006f016186bc92e2e1f",
+    "prepared-plan.json": "96d7192a00e983951101ab0ff2025381730afe95738375a77db072faa97a4235",
+    "neutral-body.json": "91ac3c061ed99977dd964ae4d0794900eb8c5d081f0684fb8fad8f398b5216e1",
+    "neutral-inventory.json": "f697d58dd84cebf11e5a7b6370cecb433fd29b87a3fed691cb9127aca5eb286a",
+    "source-pins.json": "4e7d00cd173502b56df9fd5f9677d0234a7c7701ad36aa233a4a1fc0c7a26e15",
+    "registration-integrity.json": "b23f9e27ce6fdeb27197d6cb0f47f24ef34cd69ab3c0d64d326fb40fd25c0d85"
+  },
+  "fixture_tests_passed": 16,
+  "manual_checks_passed": 1,
+  "synthetic_operations": 21,
+  "primary_deltas": {
+    "A": 8,
+    "B": 8
+  },
+  "pool_inventory": 13,
+  "neutral_quality_failed": true,
+  "provider_calls": 0,
+  "search_calls": 0
+}

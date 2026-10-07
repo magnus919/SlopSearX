@@ -1,0 +1,401 @@
+{
+  "model": "jev-1.13.0",
+  "inputs": {
+    "docs/experiments/evidence/EXP-060/fresh-acquisition.json": "69f72e2895031d4804733f7cdb38197a2d2c43d7cddaa8589abc9a43397d1882",
+    "docs/experiments/evidence/EXP-060/queries.json": "010a418d7e37e9df198d6cb313b4612d82e76ba8bef4cc2a9502f2074bf85836",
+    "docs/experiments/evidence/EXP-039/source-selection-contract.json": "0cdf759b83ab96bad92666bbeabbb5d232aa81876712a314f931645082291c1b",
+    "docs/experiments/evidence/EXP-064/completed/metric-reference-view.json": "99625962fd078543d3dbf7630fc445dcfaff7fe55ab9289ef7c6f8a6ffb4afd9",
+    "docs/experiments/evidence/EXP-064/completed/source-bound-references.json": "1b2be2e0556f3f1fd39237456917b0daa0a9795d1297822a4c43b8ea211f8f05",
+    "docs/experiments/evidence/EXP-064/completed/semantic-correction-audit-final.json": "9622c053eba6f6979aef36b75e46fed038dcfd6f2837b6c08d474903a0ff42b1",
+    "docs/experiments/evidence/EXP-072/protocol.json": "8b39478ae79cc6b74b07428554559d7d8a9d5deb1e9e827a6f6dd57c4dcf675d",
+    "docs/experiments/evidence/EXP-076/capacity-preview.json": "74a65dedc6372e54a0de476907125c9e4443b437c10799ae2ba25fb4a4e49169"
+  },
+  "primary_cases": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8"
+  ],
+  "rotation": "Run the fixed base/repeat/rotate variants; rotation left by20 modulo pool length preserves the exact frozen global IDs and card bytes. W0 preserves ordinary production first40 behavior and the native tail. The candidate canonicalizer ignores provenance order and sorts all cards by the existing canonical UTF-8 tuple (url,title,snippet,global_id). Record original provenance_order_ids.",
+  "dataset": "EXP-060 exposed public pools and frozen EXP-064 independent references; development only, never untouched confirmation; q10/q11 targets absent and unmet.",
+  "schema": "exp076-shared-canonical-pool/1",
+  "status": "design_registered_harness_unqualified_no_provider_calls_no_quality_computation",
+  "schedule": [
+    {
+      "case": "q1",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q1",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q1",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q2",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q3",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q4",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q5",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q6",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q7",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "repeat",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q8",
+      "variant": "rotate",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q9",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q10",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q11",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q12",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    },
+    {
+      "case": "q13",
+      "variant": "base",
+      "arms": [
+        "w0",
+        "joint_query",
+        "joint_purpose",
+        "candidate"
+      ]
+    }
+  ],
+  "gates": {
+    "quality": "For each independent A-v2 and B-v3 reference separately, mean candidate-W0 nDCG@10 on q1-q8 >= +0.05 and query-bootstrap 95% lower bound >0 (10000 draws, seed 6501); every primary-case delta >= -0.03.",
+    "retention": "Useful lead >=2 top-10 count no lower than W0; every W0 useful facet retained for every primary case.",
+    "useful_identity": "Additional prospective EXP-039 guard (not claimed as an unchanged EXP-075 gate): under each reference and each primary case, at most one W0 top-10 source with grade >=2 may be absent from candidate top ten.",
+    "stability": "Candidate repeat and rotate top-10 overlap each >=0.8 for q1/q4/q7/q8.",
+    "navigation": "Every official target present in q9-q13 ranks top-1. Absent q10/q11 targets reported as unmet acquisition recall; no recovery or adoption credit.",
+    "membership": "Exact complete permutation; no missing, duplicate, unknown, nonfinite, malformed or out-of-range answer. Invalid candidate falls back to full pre-Jev native order.",
+    "invariance": "Canonical complete-pool request bytes and ID mapping invariant for base/repeat/rotate and shuffled question insertion; fixed ID-keyed synthetic response maps to same family orders and fused permutation, including explicit ties.",
+    "latency": "Candidate phase from before canonical state construction/namespacing/serialization through sole HTTP, parsing both families, exact fusion and durable final receipt fsync <=1000ms. Independent W0 phase <=1000ms. Record paired wall separately.",
+    "usage": "Retain frozen EXP-075 total budgets of 3000000 reported input and 160000 output tokens, existing per-call limits and raw usage bindings; unknown usage terminates. Caps do not establish affordability/context fit.",
+    "schedule": "Neutral fixture plus all 21 registered operations complete; maximum 44 serial calls, zero retries/searches. Any failure stops and leaves later work uninvoked; incomplete runs receive no quality grade.",
+    "tail_evidence": "Exposed frozen pools are development only; natural >40-card stratum does not establish general tail benefit or untouched confirmation."
+  },
+  "bounds": {
+    "cards": 80,
+    "facets": 4,
+    "questions": 160,
+    "request_bytes": 384000,
+    "state_bytes": 128000,
+    "response_bytes": 2000000,
+    "calls": 44,
+    "reported_input_tokens": 3000000,
+    "reported_output_tokens": 160000,
+    "per_call_input_tokens": 64000,
+    "per_call_output_tokens": 32000,
+    "wall_seconds": 7200,
+    "concurrency": 1,
+    "retries": 0,
+    "legacy_control_request_bytes": 128000
+  },
+  "wire": {
+    "endpoint": "https://api.typesafe.ai/v1/systemone",
+    "model": "jev-1.13.0",
+    "baseline": "Byte-identical ordinary W0 first-40 query-only evaluation control, fetched independently for comparison. Not a candidate dependency or production fallback.",
+    "candidate_state": "As in bound capacity preview: state={query: original query, candidates: complete canonical card list with unchanged global IDs, caller_context:{purpose: original purpose, requested_facets: original ordered facets}}.",
+    "query_questions": "One ordinary W0 query-relevance Score question per global_id, namespaced query:<global_id>; query-family score range0..9. Questions are keyed by frozen global identity, never local ordinal. Candidate includes the full pool, not only W0 first40.",
+    "purpose_questions": "Match the bound capacity-preview projection exactly: one question per global ID with instructions={candidate: dict(original_card), question: EXP-075 purpose_question_prefix + pinned EXP-072 purpose instructions}; copy the four EXP-072 criteria exactly. The candidate card is both present in shared state and supplied in the per-question instruction object as the preview does.",
+    "question_map": "Exactly 2*pool_size questions; all query:<global_id> keys in canonical card order followed by all purpose:<global_id> keys in canonical card order. At 80 cards the request carries160 questions.",
+    "component_orders": "For each score family, sort descending numeric Score; ties use canonical UTF-8 tuple (url,title,snippet,global_id). Both outputs are complete permutations over exactly the frozen pool IDs.",
+    "fusion": "For each global ID compute exact Fraction(1,60+query_rank)+Fraction(1,60+purpose_rank); sort descending exact rational sum then canonical UTF-8 tuple (url,title,snippet,global_id).",
+    "invariance": "Canonicalizer sorts input card permutations and question insertion permutations before building bytes. Base/repeat/rotate and reverse/deterministic-shuffle projections are identical for the same exact frozen cards/IDs. Fixed ID-keyed response and answer-map insertion permutations yield identical component and fused orders.",
+    "candidate_failure": "Retain complete pre-Jev native/provenance order; the independent W0 evaluation control is not the failure fallback.",
+    "question_instructions": "Query questions use existing ordinary W0 INSTRUCTIONS formatted with the global ID and its ten frozen LEVELS. Purpose questions use the exact EXP-075 prefix and EXP-072 instructions/criteria described above. No post-result changes.",
+    "projection_binding": "docs/experiments/evidence/EXP-076/capacity-preview.json SHA-256 74a65dedc6372e54a0de476907125c9e4443b437c10799ae2ba25fb4a4e49169; calculator SHA-256 1ad093b97d79c032df0cdb33eecffec60a3df5da63c30919ede56c08546ca43a. Candidate builder/request wire must equal this frozen projection for the exact pinned inputs."
+  },
+  "policy": {
+    "usage_admission": "Before every physical call, reserve 64000 input and 32000 output tokens against remaining aggregate budgets. Reject before dispatch if either reservation cannot fit. Count actual known usage once per physical call, including the independent control; unknown usage stops all remaining calls and is never treated as zero. Reject per-call usage above the registered bounds.",
+    "transport": "Fresh async httpx client per call; one event loop; serial control then candidate; trust_env false; no redirects, retries or pooled reuse.",
+    "response": "Exact complete namespaced query:<global_id> and purpose:<global_id> answer maps, reject extra/missing/duplicate keys, matching model, Score types, finite numeric values, query range0..9 and purpose range0..3; require known nonnegative integer usage. Preserve untrusted response bytes and usage status. Confidence or legend fields do not alter ranking.",
+    "failure": "Any baseline failure stops without inventing valid baseline. Any candidate admission/transport/parser/phase failure retains the complete pre-Jev ordinary incumbent (native acquisition/provenance order in this corpus), not an unavailable fresh query-only model result; the separately measured W0 comparator remains available only as evaluation evidence. No partial joint-query rescue. Unknown usage is retained and terminates remaining calls. No timeout retry or run replay.",
+    "capacity": "Synthetic80 structure uses two Score questions per card (160 total); the exact candidate wire matches the hash-bound capacity-preview projection. Offline fixture validates structure only. In a later exact registered run, live neutral can test acceptance of the synthetic request; it cannot prove every natural80 pool fits or ranking quality. The 384000-byte request/128000-byte state limits retain a bounded resource budget; over-envelope is terminal and runtime must retain full native incumbent, never widen or trim.",
+    "provider_context": "The referenced provider model document reports 64k combined input and 32k state-plus-longest-question. No local verified tokenizer or token-fit claim. Enforce request/state/response byte envelopes; provider context rejection is terminal, not authorization to trim, drop, split or retry.",
+    "quality": "Analyze only complete44-attempt schedule with successful capacity and all21operations. Preserve both-reference quality, noninferiority, useful/facet retention, stability and navigation gates. Missing q10/q11 targets remain unmet acquisition recall; no adoption. Prefix cannot be graded.",
+    "untouched": "These tasks and pools are exposed; any supported development requires genuinely untouched NEW tasks AND pools plus the full production acceptance checklist before implementation.",
+    "admission": "Before implementing the comparison harness, seal and commit the immutable design protocol and registration-integrity pins for the canonical projection, score contracts, limits, gates and frozen inputs. Build the inert comparison harness against that committed registration. Before any provider access, review and qualify the exact committed harness, analyzer, dependencies and source closure against those registration pins; bind published endpoint/model limits and runtime. Obtain the durable exclusive study-identity lease before DNS or lazy key access. Existing destination-specific authorization remains necessary and already applies to the frozen public cases; registration alone grants no new external-data scope. Preserve the lease after failure; a source or qualification change cannot reset study identity. Production selector implementation remains gated on development quality and untouched confirmation.",
+    "searches": "Zero new search dispatches in this comparison. Brave remains8/10 used; remaining two not consumed.",
+    "caller_context_source": "The frozen evaluator supplies explicit original case.purpose and ordered case.facets, never inference from query/category/subquery. Current SearchRequest and research dispatch do not receive these fields. This study tests the proposed explicit-purpose contract only; production acceptance requires adding normalized fields and propagating original caller context through HTTP/MCP/portal/X direct/research/sync/SSE/worker/replay, including cache/singleflight/artifact identity. No claim of a reachable currently shipped purpose path.",
+    "capability_and_byte_bounds": "Explicit candidate capability has a newly declared384000-byte request envelope (128000-byte shared state); the independent legacy control retains production128000-byte request bound. This explicit capability/interface and larger request budget are part of the new candidate mechanism, not proof of deployable fit in current JevReranker or permission to widen ordinary query-only limits. Full acceptance must implement/test bounded opt-in capability, provider identity, resource/cancellation behavior and unchanged legacy limits before any rollout.",
+    "timed_request_construction": "Candidate timing starts before canonical sorting, shared-state construction, namespacing, and serialization, then includes the sole request exchange, parsing both score families, exact Fraction fusion and final durable receipt fsync. Retain component build/serialization/exchange/parse timing and whole paired wall separately; candidate phase maximum is 1000ms."
+  },
+  "primary_sources": [
+    {
+      "url": "https://docs.typesafe.ai/api",
+      "checked": "2026-10-05",
+      "supports": "Structured per-question instructions and ordered2..10 Score criteria; association IDs are not inference."
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/score",
+      "checked": "2026-10-05",
+      "supports": "Vendor describes multiple independent Score questions per request and combination in code; no acceptance evidence for this proposed160-question shape or ranking-quality evidence."
+    },
+    {
+      "url": "https://docs.typesafe.ai/models",
+      "checked": "2026-10-05",
+      "supports": "The cited Jev1.13.0 reference reports 64k combined input and 32k state-plus-longest-question; this does not establish acceptance or fit for the proposed160-question shape."
+    }
+  ],
+  "motivation": {
+    "EXP-074": "Terminal14-attempt combined deadline failure after capacity and five research operations; no quality analysis. Not retried or reinterpreted.",
+    "new_mechanism": "EXP-075 already tested one-transaction dual query/purpose Score fusion with a first-40 query population and full-pool purpose population. EXP-076 changes candidate coverage and shared context to canonical full pool for both populations; it is a new estimand, not a retry or regrade.",
+    "prior_work": "EXP-065 and EXP-072 purpose variants missed gates; EXP-075 full development comparison missed mean and stability gates. EXP-076 changes both populations to shared canonical complete-pool coverage.",
+    "EXP-061": "Canonicalized D/F/E state, then stopped before candidate dispatch; it did not test dual query/purpose Score families. Untested, not rejected."
+  },
+  "baseline_revision": "c9f2b48437c65c4ebc17f2c7ee18011ae440c119",
+  "hypothesis": "One shared canonical complete eligible-pool context for both query and purpose Score families removes order-dependent candidate projection as a confound; equal-weight exact Fraction RRF k=60 is evaluated against unchanged independent W0.",
+  "mechanism": {
+    "candidate_pool": "All eligible cards, up to 80, ordered by existing canonical UTF-8 tuple (url,title,snippet,global_id); same complete state visible to query and purpose questions.",
+    "questions": "Exactly two namespaced questions per card (2N); at 80 cards the map contains 160 questions.",
+    "w0": "Fresh independent ordinary first-40 query-only W0 evaluation control; comparator only, not a candidate dependency or failure fallback.",
+    "candidate_failure_fallback": "Complete pre-Jev native/provenance order.",
+    "scores": "Separate score populations and full rankings from one shared-context response; ties use canonical UTF-8 tuple (url,title,snippet,global_id).",
+    "fusion": "For each global ID, exact Fraction(1,60+query_rank)+Fraction(1,60+purpose_rank); sort descending rational value then canonical UTF-8 tuple (url,title,snippet,global_id).",
+    "invariance": "Input card order base/reverse/rotate/deterministic-shuffle and question insertion order are canonicalized before serialization. Canonical request bytes, IDs, response mapping, and fused order are invariant for same exact frozen cards/IDs and fixed ID-keyed scores; response-map insertion order does not affect output.",
+    "identity_scope": "Frozen acquired global IDs only; no claim of invariance under fresh acquisition ID reassignment or changed card content."
+  },
+  "capacity": {
+    "offline_projection": "Reproducible runner preview: 13 natural pools (largest59 cards), 18-118 questions, 36179-251111 request bytes, 4173-34140 state bytes; synthetic80 is 160 questions, 270847 request bytes and 10462 state bytes.",
+    "question_cap": 160,
+    "candidate_request_bytes_max": 384000,
+    "candidate_state_bytes_max": 128000,
+    "w0_request_bytes_max": 128000,
+    "qualification": "Offline serialization proves exact bytes only. An authorized neutral synthetic 80-card provider transaction may test provider acceptance of that synthetic shape, but cannot establish natural 80-card capacity, token-context fit generally, or ranking quality. Any over-bound or provider rejection is terminal, with no trim, split, or retry.",
+    "projection_artifact": "docs/experiments/evidence/EXP-076/capacity-preview.json",
+    "projection_sha256": "74a65dedc6372e54a0de476907125c9e4443b437c10799ae2ba25fb4a4e49169",
+    "projection_calculator_sha256": "1ad093b97d79c032df0cdb33eecffec60a3df5da63c30919ede56c08546ca43a",
+    "projection_commit": "1b74e74251fdf07c1436ccd0fbfee92a89de3c7a",
+    "rationale": "Retain the bounded candidate resource envelopes; all13 observed pinned natural-pool projections fit, but larger natural pools through80 cards remain unknown. An over-envelope request fails this study and must retain full native incumbent fallback in any future runtime path; never widen caps or trim the pool."
+  },
+  "neutral": {
+    "fixture": "Synthetic 80-card inventory with four frozen facets, same two-call W0/candidate path and 160 question identities.",
+    "quality_credit": false,
+    "purpose": "Exercise maximum body/answer/fusion/receipt structure. A later live neutral call, if separately registered and admitted, can test provider acceptance of this exact synthetic shape only; it yields no ranking quality or natural-pool/context guarantee."
+  },
+  "budget": {
+    "max_physical_attempts": 44,
+    "neutral_attempts": 2,
+    "registered_operations": 21,
+    "attempts_per_operation": 2,
+    "serial": true,
+    "retries": 0,
+    "searches": 0,
+    "total_reported_input_tokens": 3000000,
+    "total_reported_output_tokens": 160000,
+    "unknown_usage": "terminal_stop"
+  },
+  "analysis": {
+    "complete_schedule_only": true,
+    "quality_assessors": [
+      "EXP-064 A-v2",
+      "EXP-064 B-v3"
+    ],
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 6501,
+    "quality_cases": [
+      "q1",
+      "q2",
+      "q3",
+      "q4",
+      "q5",
+      "q6",
+      "q7",
+      "q8"
+    ],
+    "synthetic_quality_credit": false,
+    "incomplete_run_quality_grade": false
+  },
+  "follow_on_acceptance": {
+    "untouched_tasks_and_pools_required": true,
+    "q10_q11_acquisition_recall_unmet": true,
+    "normalization_and_purpose_facet_semantics_open": true,
+    "production_grouped_publication_candidate_identity_open": true,
+    "grok_to_crawl_x_surface_integration_required": [
+      "direct",
+      "research",
+      "sync",
+      "SSE",
+      "worker",
+      "replay",
+      "cache/state identity"
+    ],
+    "checklist": "docs/experiments/complete-pool-production-acceptance.md"
+  }
+}

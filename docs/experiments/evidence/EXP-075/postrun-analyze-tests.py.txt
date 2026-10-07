@@ -1,0 +1,129 @@
+"""Offline regressions for the separate EXP-075 post-run evaluator.
+
+The non-synthetic flag below is test metadata only: every response is generated
+by local MockTransport fixtures, and the fake qualification is never used to
+admit a provider call or to claim study quality.
+"""
+import asyncio
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import importlib.metadata
+import json
+import platform
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(loader.name,loader)
+    module=importlib.util.module_from_spec(spec);loader.exec_module(module);return module
+
+N=load("exp075_postrun_test_runner",HERE/"normal-runner.py.txt")
+P=N.P
+POST=load("exp075_postrun_test_module",HERE/"postrun-analyze.py.txt")
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+class PostrunAnalyzerTests(unittest.TestCase):
+    def test_exact_patch_is_source_bound_and_one_occurrence_only(self):
+        original=(HERE/"analyze.py.txt").read_bytes()
+        module,patched=POST.corrected_module(original,sha(original))
+        self.assertNotEqual(sha(patched),sha(original))
+        self.assertEqual(original.count(POST.OLD_LINE),1)
+        with self.assertRaisesRegex(ValueError,"qualified-analyzer-hash"):
+            POST.corrected_module(original,b"0"*64)
+        with self.assertRaisesRegex(ValueError,"patch-count"):
+            changed=original.replace(POST.OLD_LINE,b"")
+            POST.corrected_module(changed,sha(changed))
+
+    def test_complete_offline_packet_exercises_nonsynthetic_metric_path(self):
+        # Run only local MockTransport fixtures; deliberately do not invoke
+        # the live qualification validator or raw provider transport.
+        inputs={name:(N.REPO/name).read_bytes() for name in P.PINS}
+        acquisition,queries=P.source_data(inputs)
+        references=P.strict_json(inputs["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+        protocol_raw=(HERE/"protocol.json").read_bytes()
+        registration_raw=(HERE/"registration-integrity.json").read_bytes()
+        protocol=P.strict_json(protocol_raw)
+        original=(HERE/"analyze.py.txt").read_bytes()
+        corrected,_=POST.corrected_module(original,sha(original))
+        with tempfile.TemporaryDirectory() as temporary:
+            out=Path(temporary)/"fixture-run"
+            packet=asyncio.run(N.run(acquisition,queries,out,offline=True,
+                                     client_factory=N.fixture_client_factory()))
+            self.assertEqual(packet["status"],"complete")
+            self.assertTrue(packet["synthetic"])
+            # Explicit, in-memory fixture metadata traverses the nonsynthetic
+            # analyzer path so a synthetic-only shortcut cannot hide the bug.
+            packet["synthetic"]=False
+            environment={"python_implementation":platform.python_implementation(),
+                         "python_version":platform.python_version()}
+            dependencies={name:importlib.metadata.version(name) for name in ("httpx","httpcore","anyio")}
+            source=packet["source_integrity"]
+            qualified_revision=subprocess.run(["git","rev-parse","HEAD"],cwd=N.REPO,check=True,
+                                               capture_output=True,text=True).stdout.strip()
+            qualified_files={name:sha(N.committed("docs/experiments/evidence/EXP-075/"+name,qualified_revision))
+                             for name in N.OWNED_FILES}
+            qualified_pins={name:sha(N.committed(name,qualified_revision)) for name in N.SOURCE_FILES}
+            fake_qualification={"schema":"exp075-qualification-integrity/1","qualified":True,
+                "qualified_source_revision":qualified_revision,"files":qualified_files,
+                "source_pins":qualified_pins,"dependencies":dependencies,"environment":environment,
+                "protocol_sha256":source["protocol_sha256"],"registration_sha256":source["registration_sha256"]}
+            qualification_raw=P.wire(fake_qualification)
+            source.update(qualification_sha256=sha(qualification_raw),
+                          qualified_source_revision=qualified_revision,
+                          lease_identity=N.study_identity(protocol_raw,registration_raw,inputs),
+                          environment=environment,dependencies=dependencies)
+            with self.assertRaises(KeyError):
+                POST.load("exp075_original_analyzer_bug_regression",HERE/"analyze.py.txt").analyze(
+                    packet,acquisition,references,queries,protocol,inputs,protocol_raw,registration_raw,qualification_raw)
+            (out/"run.json").write_bytes(P.wire(packet))
+            (out/"qualification-integrity.json").write_bytes(qualification_raw)
+            original_run=(out/"run.json").read_bytes()
+            original_packet_files=sorted(path.name for path in out.iterdir())
+            artifact_dir=Path(temporary)/"postrun-artifacts"
+
+            # The fixture manifest pins the exact committed closure. Only its
+            # committed-manifest lookup is mocked because test metadata is not
+            # itself admitted or committed as a qualification.
+            with patch.object(POST.V.N,"committed_head",return_value=qualification_raw):
+                report=POST.analyze_preserved_run(out,artifact_dir)
+            self.assertTrue(report["raw_receipts_verified_with_postrun_evaluator"])
+            self.assertEqual(report["raw_verification"]["physical_attempts"],44)
+            self.assertTrue(report["quality_analysis_performed"])
+            self.assertFalse(report["adoption_eligible"])
+            self.assertEqual(report["evaluator"]["qualified_source_sha256"],sha(original))
+            self.assertEqual(report["evaluator"]["qualified_source_revision"],qualified_revision)
+            self.assertTrue(report["evaluator"]["postrun_evaluator"]["committed_byte_binding"])
+            self.assertEqual(report["evaluator"]["postrun_evaluator"]["file_sha256"],
+                             sha((HERE/"postrun-analyze.py.txt").read_bytes()))
+            self.assertEqual((out/"run.json").read_bytes(),original_run)
+            self.assertEqual(sorted(path.name for path in out.iterdir()),original_packet_files)
+            analysis_raw=(artifact_dir/"analysis-postrun.json").read_bytes()
+            analysis=P.strict_json(analysis_raw)
+            self.assertTrue(analysis["quality_analysis_performed"])
+            self.assertFalse(analysis["adoption_eligible"])
+            self.assertEqual(set(analysis["assessors"]),{"A","B"})
+            self.assertEqual(len(analysis["assessors"]["A"]["cases"]),8)
+            self.assertEqual(len(analysis["assessors"]["B"]["cases"]),8)
+            saved_report=P.strict_json((artifact_dir/"verification-postrun.json").read_bytes())
+            self.assertEqual(saved_report["analysis_sha256"],sha(analysis_raw))
+
+            tampered=copy.deepcopy(fake_qualification)
+            first_pin=next(iter(tampered["source_pins"]))
+            tampered["source_pins"][first_pin]="0"*64
+            tampered_raw=P.wire(tampered)
+            tampered_run=copy.deepcopy(packet)
+            tampered_run["source_integrity"]["qualification_sha256"]=sha(tampered_raw)
+            with patch.object(POST.V.N,"committed_head",return_value=tampered_raw):
+                with self.assertRaisesRegex(ValueError,"qualified-dependency-source"):
+                    POST.V.verify_qualification(tampered_raw,tampered_run,protocol_raw,registration_raw,inputs)
+
+if __name__=="__main__":
+    unittest.main()

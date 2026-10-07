@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError
@@ -29,6 +30,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Res
 import engines  # noqa: F401 — triggers @register_engine to populate registry
 from slopsearx import metrics as m
 from slopsearx.adapter import EngineAdapter
+from slopsearx.advisories import search_advisories
 from slopsearx.audit import QueryAuditLogger
 from slopsearx.cache import SearchCache
 from slopsearx.capabilities import CapabilityCatalog, MCPPolicy, build_engine_health, load_mcp_policy
@@ -48,6 +50,7 @@ from slopsearx.logging import setup_logging
 from slopsearx.mcp.entity_projection import entity_groups
 from slopsearx.middleware import RequestIDMiddleware
 from slopsearx.ratelimit import RateLimiter, RateLimitStrategy, ValkeySlidingWindow
+from slopsearx.rerank import RerankProvider
 from slopsearx.router import QueryRouter
 from slopsearx.routing import RoutingBudget, load_routing_budget
 
@@ -90,6 +93,7 @@ _cache: SearchCache | None = None
 _rate_limiter: RateLimiter | None = None
 _router: QueryRouter | None = None
 _jev_router: JevSpecialistRouter | None = None
+_rerank_provider: RerankProvider | None = None
 _suggestion_service: SuggestionService | None = None
 _stats_tracker: EngineStatsTracker | None = None
 _audit_logger: QueryAuditLogger | None = None
@@ -113,7 +117,7 @@ async def _startup() -> None:
     global _active_engines, _cache, _rate_limiter  # noqa: PLW0603
     global _engine_semaphore, _client_rate_window  # noqa: PLW0603
     global _empty_scrape_diagnostics_enabled  # noqa: PLW0603
-    global _router, _jev_router, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
+    global _router, _jev_router, _rerank_provider, _suggestion_service, _stats_tracker, _audit_logger  # noqa: PLW0603
     global _portal_policy, _workflow_portal_runtime  # noqa: PLW0603
     global _routing_budget_cache  # noqa: PLW0603
 
@@ -127,6 +131,7 @@ async def _startup() -> None:
     _rate_limiter = ctx.rate_limiter
     _router = ctx.router
     _jev_router = ctx.jev_router
+    _rerank_provider = ctx.rerank_provider
     _suggestion_service = ctx.suggestion_service
     _stats_tracker = ctx.stats_tracker
     _audit_logger = ctx.audit_logger
@@ -247,6 +252,7 @@ def _current_context() -> AppContext:
         rate_limiter=_rate_limiter,
         router=_router,
         jev_router=_jev_router,
+        rerank_provider=_rerank_provider,
         suggestion_service=_suggestion_service,
         stats_tracker=_stats_tracker,
         audit_logger=_audit_logger,
@@ -782,7 +788,7 @@ async def search_validation_error(request: Request, exc: RequestValidationError)
     )
 
 
-async def _search_endpoint(request: Request) -> Any:
+async def _search_endpoint_impl(request: Request) -> Any:
     """Execute a search across all enabled engines.
 
     Accepts all standard SearXNG query parameters. Returns HTML by default;
@@ -935,6 +941,14 @@ async def _search_endpoint(request: Request) -> Any:
             output_format, 429, error="rate_limited", message="Too many requests. Please slow down."
         )
 
+    advisories = search_advisories(
+        search_request,
+        response.scope,
+        _current_context(),
+        result_count=len(response.results),
+        sensitive_engines=_portal_policy_snapshot().sensitive_engines,
+    )
+
     if response.cached_error:
         # Negative cache hit — 503 without dispatching.
         return _format_error_response(
@@ -942,7 +956,7 @@ async def _search_endpoint(request: Request) -> Any:
             503,
             error="service_unavailable",
             message="Temporarily unavailable (cached error)",
-            extra={"meta": {"cached": True, "query_id": response.query_id}},
+            extra={"meta": {"cached": True, "query_id": response.query_id, "advisories": advisories}},
         )
 
     if response.all_unresponsive and not response.engine_outcomes:
@@ -958,6 +972,7 @@ async def _search_endpoint(request: Request) -> Any:
                 "cached": False,
                 "query_id": response.query_id,
                 "engine_status": {},
+                "advisories": advisories,
             },
             portal_state=_portal_state(
                 query=q,
@@ -973,6 +988,8 @@ async def _search_endpoint(request: Request) -> Any:
 
     unresponsive = unresponsive_from_outcomes(response.engine_outcomes)
     meta = build_response_meta(response)
+    if advisories:
+        meta["advisories"] = advisories
 
     status_code = 503 if response.all_unresponsive else 200
 
@@ -1000,6 +1017,35 @@ async def _search_endpoint(request: Request) -> Any:
             response=response,
         ),
     )
+
+
+async def _search_endpoint(request: Request) -> Any:
+    """Observe every search result, including early validation and failures.
+
+    This is an application boundary, not network availability or relevance.
+    Keep authorization/input rejections separate from capacity failures.
+    """
+    started = time.monotonic()
+    outcome = "failure"
+    landing = False
+    try:
+        response = await _search_endpoint_impl(request)
+        status = response.status_code
+        landing = (
+            request.url.path == "/"
+            and request.method == "GET"
+            and not request.query_params.get("q", "").strip()
+            and status == 200
+        )
+        if 200 <= status < 400:
+            outcome = "success"
+        elif 400 <= status < 500 and status != 429:
+            outcome = "rejected"
+        return response
+    finally:
+        if not landing:
+            m.http_search_completed.inc({"outcome": outcome})
+            m.http_search_duration.observe({"outcome": outcome}, time.monotonic() - started)
 
 
 @app.api_route("/", methods=["GET", "POST"])

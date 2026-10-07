@@ -1,0 +1,35 @@
+"""Validate frozen output identity. No entailment or task-completion judgment."""
+import json
+import jsonschema
+
+
+def validate(answer, packet, catalog, mode, schema):
+    payload=json.dumps(answer,ensure_ascii=False).encode()
+    if len(payload)>60000:
+        raise ValueError('output byte bound')
+    jsonschema.validate(answer,schema)
+    if len(answer['answer'].split())>800:
+        raise ValueError('answer word bound')
+    facets={f['id'] for f in packet['facets']}
+    supplied=[f['facet_id'] for f in answer['facets']]
+    if len(supplied)!=len(set(supplied)) or set(supplied)!=facets:
+        raise ValueError('facet membership')
+    claims=[claim for facet in answer['facets'] for claim in facet['claims']]
+    if len(claims)>40:
+        raise ValueError('claim bound')
+    delivered={p['source_id'] for p in packet['passages']}
+    exposed_ids={p['evidence_id'] for p in packet['passages'] if 'evidence_id' in p}
+    links=[]
+    for i,claim in enumerate(claims):
+        sid=claim['source_id'];valid=False
+        if mode=='id':
+            eid=claim['evidence_id'];passage=catalog['passages'].get(eid)
+            valid=bool(eid in exposed_ids and passage and sid in delivered and passage['source_id']==sid
+                       and any(p.get('evidence_id')==eid and p['source_id']==sid and p['text']==passage['text'] for p in packet['passages']))
+        elif mode=='quote':
+            quote=claim['quote']
+            valid=bool(quote and any(p['source_id']==sid and p['text']==quote for p in packet['passages']))
+        else:
+            raise ValueError('unknown mode')
+        links.append({'claim_index':i,'source_id':sid,'valid':valid})
+    return {'claims':len(claims),'valid_links':sum(x['valid'] for x in links),'invalid_links':sum(not x['valid'] for x in links),'links':links,'entailment_verified':False}

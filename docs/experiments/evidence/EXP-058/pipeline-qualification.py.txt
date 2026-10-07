@@ -1,0 +1,150 @@
+"""Full frozen-operation offline replay with synthetic neutral responses.
+
+This is controller/analysis qualification only. It cannot prove candidate quality.
+"""
+import importlib.machinery
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+
+def load(name, filename):
+    loader = importlib.machinery.SourceFileLoader(name, str(HERE / filename))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def qualify(owned_child=False, fail_operation=None, budget_stop_operation=None):
+    replay = load('prepare56', 'replay.py.txt')
+    policy = load('policy56', 'policy.py.txt')
+    coordinator = load('coordinate56', 'orchestrator.py.txt')
+    baseline, chain, data, grouped, specs, reg = replay.load_verified_baseline()
+    inventory = replay.prepare_inventory()
+    specmap = {x['id']: x for x in specs}
+    receipts = chain['receipts']
+    original_requests, original_raw = [], []
+    current = [None]
+    failure_transport = None
+    budget = coordinator.StudyBudget()
+    def transport(body, **kwargs):
+        request = json.loads(body)
+        original_requests.append(body)
+        raw = json.dumps({'model': 'jev-1.13.0', 'answers': {
+            qid: {'type': 'noul', 'noul': .5} for qid in request['questions']},
+            'usage': {'input_tokens': 1, 'output_tokens': 1}}).encode()
+        original_raw.append(raw)
+        return raw, 1
+    if owned_child:
+        wrapper = str(HERE / 'http-wrapper.py.txt')
+        owned = load('transport56', 'transport.py.txt').ChildTransport([
+            sys.executable, wrapper, '--offline-fixture', 'neutral'], http_timing=True)
+        failure_transport = load('transport56failed', 'transport.py.txt').ChildTransport([
+            sys.executable, wrapper, '--offline-fixture', 'http-error'])
+        def transport(body, timeout_s):
+            if current[0] == fail_operation:
+                return failure_transport(body, timeout_s)
+            raw, elapsed = owned(body, timeout_s)
+            original_requests.append(body)
+            original_raw.append(raw)
+            return raw, elapsed
+    def execute(item):
+        current[0] = item['id']
+        d = specmap[item['d_request_id']]
+        f = specmap[item['f_request_id']]
+        source_cards = {x['id']: x for x in grouped[item['pool']]}
+        cards = [source_cards[cid] for cid in d['candidate_ids']]
+        w = specmap[item['pool'] + '-w0']
+        w0 = baseline.BASE.score_order(w, receipts[w['id']])
+        result = coordinator.guarded_operation(policy, replay.parse_noul_response, cards, d['task'],
+            f['facets'], receipts[d['id']]['scores'], receipts[f['id']]['nouls'],
+            w0, 1001 if item['id']==budget_stop_operation else receipts[d['id']]['remote_http_ms'] + receipts[f['id']]['remote_http_ms'], transport, budget=budget)
+        return result
+    packet = coordinator.study(inventory['operations'], execute)
+    if fail_operation is not None:
+        if not owned_child or packet['status'] != 'incomplete':
+            raise ValueError('failed-fixture-must-stop-study')
+        failed = packet['results'][-1]
+        if failed['operation_id'] != fail_operation or failed['result']['status'] != 'failed':
+            raise ValueError('unexpected-failed-operation')
+        item = next(x for x in inventory['operations'] if x['id'] == fail_operation)
+        w = specmap[item['pool'] + '-w0']
+        w0 = baseline.BASE.score_order(w, receipts[w['id']])
+        if failed['result']['order'] != w0 or failed['result']['actions']:
+            raise ValueError('failed-operation-must-discard-entire-ranking')
+        stopped_index = next(i for i, x in enumerate(inventory['operations']) if x['id'] == fail_operation)
+        if packet['uninvoked_ids'] != [x['id'] for x in inventory['operations'][stopped_index + 1:]] or len(packet['results']) != stopped_index + 1:
+            raise ValueError('failed-fixture-exact-stop-inventory')
+        owner = failure_transport.receipts
+        if len(owner) != 1 or owner[0]['exit_code'] != 2 or not owner[0]['stdout_complete']:
+            raise ValueError('failed-child-original-receipt')
+        safe_receipt = {key: value.hex() if type(value) is bytes else value for key, value in owner[0].items()}
+        return {'schema': 'exp058-offline-failed-pipeline/1', 'synthetic': True,
+            'candidate_quality_established': False, 'quality_analysis_performed': False,
+            'registration_sha256': reg, 'operations': packet,
+            'failed_owned_child_receipt': safe_receipt,
+            'new_jev_calls': 0, 'search_calls': 0, 'brave_attempts': 0}
+    if packet['status'] != 'complete'  or len(packet['results']) != 21:
+        raise ValueError('synthetic-frozen-operation-pipeline-incomplete')
+    by_id = {row['operation_id']: row['result'] for row in packet['results']}
+    ranks, _, nav, facets = baseline.build_rankings(data, grouped, specs, receipts)
+    for pool in (*baseline.SOFTWARE, *baseline.EXTENDED):
+        ranks[pool]['e'] = by_id[pool + '-d']['order']
+        if pool in baseline.EXTENDED:
+            ranks[pool]['repeat'] = by_id[pool + '-d-repeat']['order']
+            ranks[pool]['rotated'] = by_id[pool + '-d-rotated20']['order']
+    for row in nav:
+        w = specmap[f"nav-{row['query_id']}-{row['target_id']}-w0"]
+        w0 = baseline.BASE.score_order(w, receipts[w['id']])
+        control = coordinator.navigation_control(w0, w['candidate_ids'], row['target_id'])
+        if control['order'] != w0 or control['attempts'] or not control['passed']:
+            raise ValueError('navigation-exact-w0-bypass')
+        row['normal_controller_control'] = control
+    refs, ref_hashes = baseline.analysis_references(data, grouped)
+    analysis = baseline.analyze_rankings(ranks, refs, facets)
+    for ref in ('A', 'B'):
+        if set(analysis['primary'][ref]['paired_deltas']) != {f'q{i}' for i in range(1, 9)}:
+            raise ValueError('missing-primary-reference-deltas')
+        if set(analysis['diagnostics']['per_reference_pool_metrics'][ref]) != set(baseline.SOFTWARE) | set(baseline.NATURAL):
+            raise ValueError('missing-reference-pool-metrics')
+    all_attempts=[attempt for row in packet['results'] for attempt in row['result']['attempts']]
+    if not all_attempts or len(original_requests)!=len(all_attempts) or len(original_raw)!=len(all_attempts):
+        raise ValueError('empty-or-incomplete-synthetic-receipt-inventory')
+    if [replay.digest(raw) for raw in original_requests]!=[a['request_sha256'] for a in all_attempts]:
+        raise ValueError('synthetic-original-request-linkage')
+    if [replay.digest(raw) for raw in original_raw]!=[a['response_sha256'] for a in all_attempts]:
+        raise ValueError('synthetic-original-response-linkage')
+    for row in packet['results']:
+        result=row['result']
+        if not result['attempts'] and result['termination_reason'] not in ('remote_budget_stop','no_proposals'):
+            raise ValueError('zero-call-operation-must-declare-successful-termination')
+    if budget_stop_operation is not None:
+        forced=by_id[budget_stop_operation]
+        if forced['termination_reason']!='remote_budget_stop' or forced['attempts'] or forced['status']!='valid':
+            raise ValueError('forced-budget-stop-not-valid-zero-call')
+        pool=next(x['pool'] for x in inventory['operations'] if x['id']==budget_stop_operation)
+        for ref in ('A','B'):
+            metric=analysis['diagnostics']['per_reference_pool_metrics'][ref][pool]
+            if metric['comparisons']['d_star']['ndcg_delta_e_minus_comparator']!=0:
+                raise ValueError('budget-stopped-ranking-must-enter-both-original-analyses')
+    # Neutral .5 responses abstain, so this path must not credit facet improvement.
+    if analysis['development_screen_passed']:
+        raise ValueError('neutral-controller-fixture-must-not-qualify-quality')
+    return {'schema': 'exp058-offline-pipeline/1', 'synthetic': True, 'owned_child_transport': owned_child,
+        'candidate_quality_established': False, 'registration_sha256': reg, 'forced_budget_stop_operation': budget_stop_operation,
+        'operations': packet, 'navigation': nav, 'analysis': analysis,
+        'reference_hashes': ref_hashes,
+        'request_sha256': [replay.digest(x) for x in original_requests],
+        'response_sha256': [replay.digest(x) for x in original_raw],
+        'new_jev_calls': 0, 'search_calls': 0, 'brave_attempts': 0}
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--owned-child', action='store_true')
+    parser.add_argument('--fail-operation', choices=['q2-d'])
+    parser.add_argument('--budget-stop-operation', choices=['q1-d'])
+    args = parser.parse_args()
+    print(json.dumps(qualify(args.owned_child, args.fail_operation, args.budget_stop_operation), ensure_ascii=False, indent=2, sort_keys=True))

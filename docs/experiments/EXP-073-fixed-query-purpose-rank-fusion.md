@@ -1,0 +1,13 @@
+# EXP-073: fixed query/purpose rank fusion
+
+Prospective registration; no candidate ordering, quality calculation or provider calls. This tests a new composite system, not a repair or qualification of rejected EXP-072.
+
+The item-level diagnosis found useful operational leads demoted by purpose-only ranking, including cards both references considered highly useful. It did not establish a better semantic rubric. This experiment retains the query-only incumbent signal rather than giving purpose ordering sole authority. Both orders are obtained afresh on the same eligible grouped pool. The purpose component is the unchanged EXP-072 request. The candidate is the descending sum of reciprocal ranks with fixed k=60 and equal weights, using exact rational arithmetic and canonical ties. Every supplied ID appears once; neither component may omit a tail candidate.
+
+This differs from EXP-005/006's probability/provider-rank arithmetic and their failed narrow navigation comparisons. It also differs from EXP-066's binary partitions and purpose-only EXP-072. No weights, constants, questions, reference labels or case rules will be adjusted after outcomes. The [original RRF paper](https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf) supplies a generic rank-combination mechanism; its benchmark evidence does not qualify this system or guarantee a gain.
+
+The sole qualifying contrast is composite versus fresh W0 under BOTH frozen references: unchanged quality, per-case, retention, facets, stability, navigation and membership gates. Record the purpose component descriptively. The whole combined phase—including both serial requests, parsing, fusion and final durable receipt—must finish within one second. Every owned HTTP also retains its one-second bound. This stronger combined accounting cannot be relaxed if it fails. Twenty-one operations and one synthetic80 operation require at most44 calls, serially, zero retries/searches; original byte/token/wall bounds remain.
+
+Existing exposed tasks/pools cannot earn final-confirmation credit, and the sole natural pool above40 cannot establish general tail benefit. A development pass only permits separately registered new-task/new-pool confirmation, then the full cross-service implementation/compatibility/review/CI checklist. No default, deployment or Hermes changes. Exact runner/input pins, neutral checks and independent qualification must be committed before dispatch.
+
+One independent Luna design review found the mechanism distinct and required explicit rank universe, ties, fresh requests, unchanged quality gates and full timing/fallback accounting; the [protocol](evidence/EXP-073/protocol.json) records these constraints. No selector qualifies.

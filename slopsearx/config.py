@@ -64,6 +64,7 @@ class EngineEntry:
     weight: float = 1.0
     api_key: Optional[str] = None
     api_secret: Optional[str] = None
+    user_agent: Optional[str] = None  # adapters that honor it send this User-Agent
     categories: Optional[list[str]] = None  # full override
     # scrape-specific fields
     proxy_pool: Optional[str] = None

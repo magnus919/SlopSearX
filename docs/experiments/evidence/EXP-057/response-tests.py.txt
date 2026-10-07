@@ -1,0 +1,62 @@
+"""Synthetic strict-response tests; no transport or source judgments."""
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+
+P = Path(__file__).with_name("replay.py.txt")
+L = importlib.machinery.SourceFileLoader("exp057_response_fixture", str(P))
+S = importlib.util.spec_from_loader(L.name, L)
+M = importlib.util.module_from_spec(S)
+L.exec_module(M)
+
+def response(value=0.5):
+    return {"model": M.MODEL, "answers": {"q": {"type": "noul", "noul": value}}, "usage": {"input_tokens": 10, "output_tokens": 1}}
+
+def wire(obj):
+    return json.dumps(obj).encode()
+
+class ResponseTests(unittest.TestCase):
+    def rejects(self, raw, ids=("q",)):
+        with self.assertRaises(ValueError):
+            M.parse_noul_response(raw, ids)
+    def test_original_values_and_digest(self):
+        for value in [0, 0.4999, 0.5, 0.5001, 1]:
+            raw = wire(response(value)); out = M.parse_noul_response(raw, ["q"])
+            self.assertEqual(out["values"], {"q": value})
+            self.assertEqual(out["raw_sha256"], M.digest(raw))
+    def test_noul_invalid_values(self):
+        for value in [True, False, "0.5", None, -0.01, 1.01, float("nan"), float("inf")]:
+            self.rejects(wire(response(value)))
+    def test_duplicate_keys_and_float_overflow(self):
+        raw = wire(response()).replace(b'"noul": 0.5', b'"noul": 0.5, "noul": 1')
+        self.rejects(raw)
+        self.rejects(wire(response()).replace(b'"noul": 0.5', b'"noul": 1e999'))
+    def test_exact_answer_and_expected_inventory(self):
+        for ids in [[], ["q", "q"], ["other"], [None], [{}]]:
+            self.rejects(wire(response()), ids)
+        r = response(); r["answers"]["extra"] = {"type": "noul", "noul": 1}; self.rejects(wire(r))
+    def test_model_and_types(self):
+        for field, value in [("model", "jev-latest"), ("answers", []), ("usage", None)]:
+            r = response(); r[field] = value; self.rejects(wire(r))
+        r = response(); r["answers"]["q"]["type"] = "score"; self.rejects(wire(r))
+        r = response(); r["answers"]["q"]["confidence"] = 1; self.rejects(wire(r))
+    def test_exact_known_usage(self):
+        for value in [True, "10", -1, 0.5, None, 64001]:
+            r = response(); r["usage"]["input_tokens"] = value; self.rejects(wire(r))
+        r = response(); r["usage"]["total_tokens"] = 11; self.rejects(wire(r))
+        r = response(); r["usage"]["input_tokens"] = 64000; M.parse_noul_response(wire(r), ["q"])
+    def test_owned_envelope(self):
+        r = response(); r["_elapsed_ms"] = 100; self.assertEqual(M.parse_noul_response(wire(r), ["q"])["owned_wrapper_elapsed_ms"], 100)
+        for value in [True, "10", -1, float("inf"), None]:
+            r = response(); r["_elapsed_ms"] = value; self.rejects(wire(r))
+        r = response(); r["debug"] = "unregistered"; self.rejects(wire(r))
+    def test_byte_and_question_caps(self):
+        self.rejects(b' ' * (M.MAX_RAW + 1))
+        self.rejects(wire(response()), [str(i) for i in range(81)])
+        r = response(); r["answers"] = {str(i): {"type": "noul", "noul": 0.5} for i in range(80)}
+        self.assertEqual(len(M.parse_noul_response(wire(r), list(r["answers"]))["values"]), 80)
+
+if __name__ == "__main__":
+    unittest.main()

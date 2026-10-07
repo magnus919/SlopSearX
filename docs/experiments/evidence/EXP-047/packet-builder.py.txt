@@ -1,0 +1,134 @@
+"""Deterministic offline EXP-047 packet builder; no network or inference."""
+import hashlib
+import itertools
+import json
+import pathlib
+
+HERE = pathlib.Path(__file__).resolve().parent
+EVIDENCE = HERE.parent
+PRIOR = EVIDENCE / "EXP-046"
+SEED = "EXP047:91940"
+REPO = HERE.parents[3]
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def load(path):
+    def pairs(items):
+        obj = {}
+        for key, value in items:
+            if key in obj:
+                raise ValueError("duplicate JSON key")
+            obj[key] = value
+        return obj
+    return json.loads(path.read_bytes(), object_pairs_hook=pairs,
+                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
+
+
+def wire(value):
+    return (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()
+
+
+def validate_history():
+    seen, checked = set(), []
+    def visit(manifest, scope):
+        if manifest in seen:
+            return
+        seen.add(manifest)
+        data = load(manifest)
+        for name, digest in {**data.get("sources", {}), **data.get("files", {})}.items():
+            path = REPO / name if name.startswith(("docs/", "slopsearx/", "tests/")) else scope / name
+            assert sha(path.read_bytes()) == digest, name
+            checked.append(path)
+            if "qualification-v1" not in path.parts and (path.name.endswith("integrity.json") or path.name in {"source-pins.json", "offline-qualification.json"}):
+                visit(path, EVIDENCE if path == HERE / "source-pins.json" or path == PRIOR / "source-pins.json" else path.parent)
+    visit(HERE / "source-pins.json", EVIDENCE)
+    return len(checked), len(set(checked))
+
+
+def build():
+    registration = load(HERE / "registration-integrity.json")
+    assert registration["document_sha256"] == sha((REPO / "docs/experiments/EXP-047-visible-card-answerability.md").read_bytes())
+    assert registration["source_pins_sha256"] == sha((HERE / "source-pins.json").read_bytes())
+    assert registration["review_sha256"] == sha((HERE / "registration-review.md").read_bytes())
+    history_comparisons, history_unique = validate_history()
+    pins = load(HERE / "source-pins.json")
+    assert pins["baseline_revision"] == "c0b64d16cb9382ec07390ca8a1a26482e496518b"
+    for name, digest in pins["files"].items():
+        assert sha((EVIDENCE / name).read_bytes()) == digest, name
+    integrity = load(PRIOR / "result-integrity.json")
+    for name, digest in integrity["files"].items():
+        assert sha((PRIOR / name).read_bytes()) == digest, name
+    plan = load(PRIOR / "prepared-plan.json")
+    main = {op["pool_id"]: op for op in plan["operations"] if op["variant"] == "main"}
+    software = sorted([f"q{i}" for i in range(1, 10)],
+                      key=lambda pool: (sha(f"{SEED}:pool:{pool}".encode()), pool))[:3]
+    chosen_pools = software + ["cardiac", "research", "evaluation"]
+    packet = {"schema": "exp047-blinded-packet/1", "pools": [], "cases": []}
+    mapping = {"schema": "exp047-unblinding-map/1", "seed": SEED,
+               "pools": {}, "cases": {}}
+    shortfalls = []
+    for pool_index, pool in enumerate(chosen_pools, 1):
+        op = main[pool]
+        request_name = f"requests/{op['id']}-choice-step1.json"
+        request = load(PRIOR / request_name)
+        state = request["state"]
+        assert state["step"] == 1 and not state["protected_ids"] and not state["evicted_ids"]
+        ids = [card["id"] for card in state["candidates"]]
+        assert ids == op["candidate_ids"] and len(ids) == len(set(ids))
+        assert state["facets"] == op["facets"]
+        by_id = {card["id"]: card for card in state["candidates"]}
+        selected = set(state["selected_ids"])
+        assert set(state["removable_ids"]) == selected
+        assert set(state["eligible_ids"]) == {cid for cid in ids if cid not in selected and state["scores"][cid] >= 5}
+        aliases = {cid: f"s{index:03d}" for index, cid in enumerate(ids, 1)}
+        ref = f"P{pool_index:02d}"
+        cards = [{**by_id[cid], "id": aliases[cid]} for cid in ids]
+        before = sorted(aliases[cid] for cid in selected)
+        packet["pools"].append({"pool_ref": ref, "purpose": state["purpose"],
+                                "facets": state["facets"], "candidates": cards,
+                                "selected_ids": before})
+        mapping["pools"][ref] = {"pool_id": pool, "aliases": aliases,
+                                 "request_sha256": sha((PRIOR / request_name).read_bytes())}
+        pairs = sorted(itertools.product(state["removable_ids"], state["eligible_ids"]),
+                       key=lambda pair: (sha(f"{SEED}:pair:{pool}:{pair[0]}:{pair[1]}".encode()), *pair))[:2]
+        if len(pairs) < 2:
+            shortfalls.append({"pool_ref": ref, "available_pairs": len(pairs)})
+        for victim, candidate in pairs:
+            case_id = f"T{len(packet['cases']) + 1:03d}"
+            after = sorted((set(before) - {aliases[victim]}) | {aliases[candidate]})
+            assert len(after) == len(before) and aliases[victim] not in after
+            packet["cases"].append({"case_id": case_id, "pool_ref": ref,
+                                     "removed_id": aliases[victim], "added_id": aliases[candidate],
+                                     "after_selected_ids": after})
+            mapping["cases"][case_id] = {"pool_id": pool, "victim_id": victim,
+                                         "candidate_id": candidate,
+                                         "pair_hash": sha(f"{SEED}:pair:{pool}:{victim}:{candidate}".encode())}
+    raw = wire(packet)
+    contract = (HERE / "review-contract.md").read_bytes()
+    assert len(raw) <= 200_000 and len(raw.decode().split()) <= 30_000
+    assert len(contract) <= 16_000
+    complete = len(packet["cases"]) >= 6 and all(any(c["pool_ref"] == p["pool_ref"] for c in packet["cases"]) for p in packet["pools"])
+    preflight = {"schema": "exp047-packet-preflight/1", "complete_minimum_sample": complete,
+                 "pools": len(packet["pools"]), "cases": len(packet["cases"]),
+                 "shortfalls": shortfalls, "packet_bytes": len(raw),
+                 "packet_words": len(raw.decode().split()), "contract_bytes": len(contract),
+                 "packet_sha256": sha(raw), "contract_sha256": sha(contract),
+                 "historical_file_comparisons": history_comparisons,
+                 "historical_unique_files": history_unique,
+                 "provider_calls": 0, "search_calls": 0, "reviewer_invocations": 0,
+                 "exact_model_token_fit_verified": False}
+    return raw, wire(mapping), wire(preflight)
+
+
+if __name__ == "__main__":
+    raw, mapping, preflight = build()
+    for name, data in [("review-packet.json", raw), ("unblinding-map.json", mapping),
+                       ("packet-preflight.json", preflight)]:
+        path = HERE / name
+        if path.exists() and path.read_bytes() != data:
+            raise ValueError("refusing to replace a different frozen packet")
+        path.write_bytes(data)
+    print(preflight.decode())

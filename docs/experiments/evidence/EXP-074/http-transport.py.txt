@@ -1,0 +1,102 @@
+"""One-call EXP-074 in-process HTTPX transport. No retry or response repair."""
+from __future__ import annotations
+import asyncio, importlib.machinery, importlib.util, time
+from pathlib import Path
+import httpx
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+LEGACY_PATH=REPO/'docs/experiments/evidence/EXP-059/http-wrapper.py.txt'
+_loader=importlib.machinery.SourceFileLoader('exp074_legacy_endpoint_pin',str(LEGACY_PATH))
+_spec=importlib.util.spec_from_loader(_loader.name,_loader)
+_legacy=importlib.util.module_from_spec(_spec);_loader.exec_module(_legacy)
+ENDPOINT=_legacy.ENDPOINT
+MAX_RESPONSE_BYTES=2_000_000
+
+class TransportFailure(Exception):
+    """Sanitized transport failure with bounded raw bytes and direct timings."""
+    def __init__(self,code,raw=None,http_status=None,response_complete=False,timings=None,dispatched=False):
+        super().__init__(code);self.code=code;self.raw=None if raw is None else bytes(raw)
+        self.http_status=http_status;self.response_complete=bool(response_complete)
+        self.timings=dict(timings or {});self.dispatched=bool(dispatched)
+
+class DispatchDenied(Exception):
+    """The request was not dispatched because the phase deadline elapsed."""
+
+class AsyncHTTPTransport:
+    def __init__(self,client_factory=None,endpoint=ENDPOINT):
+        self.client_factory=client_factory or httpx.AsyncClient;self.endpoint=endpoint;self.last_attempt=None
+
+    async def exchange(self,body,api_key,timeout_s,on_dispatch=None):
+        if type(body)is not bytes:raise TypeError('request-bytes')
+        if type(api_key)is not str or not api_key:raise ValueError('credential-required')
+        if not isinstance(timeout_s,(int,float)) or isinstance(timeout_s,bool) or not 0<timeout_s<=1:
+            raise ValueError('timeout-bound')
+        started=time.perf_counter_ns();raw=bytearray();status=None;complete=False;dispatched=False
+        client_setup_ms=0.0;stream_ms=0.0;client_close_ms=0.0;client=None;marker=api_key.encode('utf-8')
+        self.last_attempt={'raw':None,'http_status':None,'response_complete':False,'timings':{},
+                           'failure':None,'dispatched':False,'client_closed':False}
+        def attempt(failure=None,available=None):
+            closed=bool(client is not None and client.is_closed)
+            retained=bytes(raw) if (bool(raw) or complete) else None
+            if available is False:retained=None
+            timings={'client_setup_ms':client_setup_ms,'stream_ms':stream_ms,'client_close_ms':client_close_ms,
+                     'exchange_ms':(time.perf_counter_ns()-started)/1e6}
+            self.last_attempt={'raw':retained,'http_status':status,'response_complete':complete,
+                               'timings':timings,'failure':failure,'dispatched':dispatched,'client_closed':closed}
+            return timings,retained
+        try:
+            async with asyncio.timeout(float(timeout_s)):
+                client_start=time.perf_counter_ns()
+                client=self.client_factory(timeout=httpx.Timeout(float(timeout_s)),follow_redirects=False,trust_env=False)
+                client_setup_ms=(time.perf_counter_ns()-client_start)/1e6
+                try:
+                    if on_dispatch is not None:on_dispatch()
+                    dispatched=True
+                    async with client.stream('POST',self.endpoint,content=body,
+                            headers={'Authorization':'Bearer '+api_key,'Content-Type':'application/json'}) as response:
+                        status=response.status_code;stream_start=time.perf_counter_ns()
+                        async for chunk in response.aiter_bytes():
+                            take=MAX_RESPONSE_BYTES+1-len(raw);raw.extend(chunk[:take])
+                            if marker in raw:
+                                raw.clear();stream_ms=(time.perf_counter_ns()-stream_start)/1e6
+                                timings,retained=attempt('credential-echo-suppressed',False)
+                                raise TransportFailure('credential-echo-suppressed',retained,status,False,timings,True)
+                            stream_ms=(time.perf_counter_ns()-stream_start)/1e6
+                            attempt()
+                            if len(raw)>MAX_RESPONSE_BYTES:
+                                timings,retained=attempt('response-too-large')
+                                raise TransportFailure('response-too-large',retained,status,False,timings,True)
+                        complete=True;stream_ms=(time.perf_counter_ns()-stream_start)/1e6
+                finally:
+                    close_start=time.perf_counter_ns()
+                    await client.aclose()
+                    client_close_ms=(time.perf_counter_ns()-close_start)/1e6
+                if status!=200:
+                    timings,retained=attempt('http-status')
+                    raise TransportFailure('http-status',retained,status,True,timings,True)
+        except TransportFailure as error:
+            timings,_=attempt(error.code,False if error.code=='credential-echo-suppressed' else None)
+            error.timings=timings
+            error.raw=self.last_attempt['raw']
+            error.http_status=status;error.response_complete=complete;error.dispatched=dispatched
+            raise
+        except DispatchDenied:
+            attempt('whole-phase-deadline',False)
+            raise
+        except (httpx.TimeoutException,asyncio.TimeoutError):
+            timings,retained=attempt('timeout')
+            raise TransportFailure('timeout',retained,status,False,timings,dispatched) from None
+        except asyncio.CancelledError:
+            attempt('cancelled')
+            raise
+        except Exception as error:
+            task=asyncio.current_task()
+            if task is not None and task.cancelling():
+                attempt('cancelled')
+                raise asyncio.CancelledError() from None
+            timings,retained=attempt('transport-error')
+            raise TransportFailure('transport-error',retained,status,complete,timings,dispatched) from None
+        timings,retained=attempt()
+        # Empty but complete body is distinct from an unavailable response body.
+        return retained if retained is not None else b'',status,True,timings

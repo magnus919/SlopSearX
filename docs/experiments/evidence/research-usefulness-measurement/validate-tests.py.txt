@@ -1,0 +1,198 @@
+"""Synthetic integrity fixtures only; no model, search, credential, or lease use."""
+import copy
+import pathlib
+import unittest
+
+_source = pathlib.Path(__file__).with_name('validate.py.txt').read_text()
+V = {}
+exec(compile(_source, 'validate.py.txt', 'exec'), V)
+
+
+def reference(source_id, context, start=0, end=None):
+    if end is None:
+        end = len(context)
+    digest = V['sha256'](context)
+    return {'source_id': source_id, 'context_sha256': digest, 'start': start, 'end': end,
+            'evidence_id': V['evidence_id'](source_id, digest, start, end), 'quote': context[start:end]}
+
+
+def fixtures():
+    contexts = {'S-A': 'Rénovation 🚀 must target v2 only.', 'S-B': 'The legacy v1 behavior is different.'}
+    pool = {sid: {'context': text, 'context_sha256': V['sha256'](text),
+                  'scope': {'product': 'Widget', 'version': '2' if sid == 'S-A' else '1'}}
+            for sid, text in contexts.items()}
+    registry = {'assignments': [
+                    {'packet_id': 'synthetic-source-1', 'assessor_id': 'reviewer-a', 'packet_kind': 'source'},
+                    {'packet_id': 'synthetic-answer-1', 'assessor_id': 'reviewer-b', 'packet_kind': 'answer'}],
+                'tasks': [{'task_id': 'T-1', 'arms': ['control', 'candidate'],
+                           'critical_facets': ['target-version'], 'pool_sources': pool,
+                           'delivered_sources': {'control': ['S-A'], 'candidate': ['S-A']},
+                           'answer_claims': {'control': {'target-version': [{'claim_id': 'C-1', 'text': 'The rule is for v2.'}]},
+                                             'candidate': {'target-version': [{'claim_id': 'C-1', 'text': 'The rule is for v2.'}]}}}]}
+    ref_a = reference('S-A', contexts['S-A'], 0, len('Rénovation 🚀'))
+    ref_b = reference('S-B', contexts['S-B'], 0, len('The legacy'))
+    source_arms = []
+    answer_arms = []
+    for arm in registry['tasks'][0]['arms']:
+        source_arms.append({'arm_id': arm, 'facet_assessments': [{
+            'facet_id': 'target-version', 'limitations': [], 'evidence_dispositions': [
+                {'source_id': sid, 'disposition': 'evidence_available', 'scope_match': 'match',
+                 'entailment': 'supports', 'applicability': 'applicable', 'not_assessable_reason': '',
+                 'references': [ref_a if sid == 'S-A' else ref_b], 'reason': ''}
+                for sid in ('S-A', 'S-B')]}]})
+        answer_arms.append({'arm_id': arm, 'limitations': [], 'facet_assessments': [{
+            'facet_id': 'target-version', 'status': 'complete', 'not_assessable_reason': '',
+            'conclusion': 'Use the v2 behavior.', 'claims': [
+                {'claim_id': 'C-1', 'text': 'The rule is for v2.', 'references': [ref_a]}],
+            'unsupported_claim_indices': [], 'unsupported_material_claims': [],
+            'missed_qualifications': [], 'evidence_found_but_unused': [],
+            'evidence_dispositions': [
+                {'source_id': 'S-A', 'disposition': 'used_with_support', 'not_assessable_reason': '',
+                 'references': [ref_a], 'reason': ''},
+                {'source_id': 'S-B', 'disposition': 'available_not_delivered', 'not_assessable_reason': '',
+                 'references': [], 'reason': 'not in this arm context'}],
+            'scope_match': 'match', 'entailment': 'supports', 'applicability': 'applicable', 'reason': ''}]})
+    return registry, contexts, {'schema': V['SCHEMA'], 'packet_id': 'synthetic-source-1', 'assessor_id': 'reviewer-a',
+                                'packet_kind': 'source', 'tasks': [{'task_id': 'T-1', 'arms': source_arms}]}, \
+           {'schema': V['SCHEMA'], 'packet_id': 'synthetic-answer-1', 'assessor_id': 'reviewer-b',
+            'packet_kind': 'answer', 'tasks': [{'task_id': 'T-1', 'arms': answer_arms}]}
+
+
+class ValidatorTests(unittest.TestCase):
+    def setUp(self):
+        self.registry, self.contexts, self.source, self.answer = fixtures()
+
+    def test_synthetic_source_and_answer_packets_validate_separately(self):
+        self.assertEqual(V['validate'](self.source, self.registry)['assessment_state'], 'assessable')
+        result = V['validate'](self.answer, self.registry)
+        self.assertEqual(result['assessment_state'], 'assessable')
+        self.assertFalse(result.get('consensus'))
+
+    def test_historical_missing_unsupported_indices_is_invalid_not_empty(self):
+        # Mirrors the historical 21/24 omitted-field gap; never repair by assuming [].
+        bad = copy.deepcopy(self.answer)
+        for arm in bad['tasks'][0]['arms']:
+            del arm['facet_assessments'][0]['unsupported_claim_indices']
+        with self.assertRaisesRegex(V['PacketError'], 'unsupported_claim_indices'):
+            V['validate'](bad, self.registry)
+
+    def test_quote_source_misattribution_and_mutated_evidence_id_reject(self):
+        bad = copy.deepcopy(self.answer)
+        ref = bad['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['references'][0]
+        ref['source_id'] = 'S-B'
+        with self.assertRaises(V['PacketError']):
+            V['validate'](bad, self.registry)
+        bad = copy.deepcopy(self.answer)
+        bad['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['references'][0]['evidence_id'] = '0' * 64
+        with self.assertRaisesRegex(V['PacketError'], 'evidence ID mismatch'):
+            V['validate'](bad, self.registry)
+
+    def test_pool_anchor_cannot_be_misattributed_to_another_source(self):
+        bad = copy.deepcopy(self.source)
+        item = bad['tasks'][0]['arms'][0]['facet_assessments'][0]['evidence_dispositions'][0]
+        item['references'] = [reference('S-B', self.contexts['S-B'], 0, 10)]
+        with self.assertRaisesRegex(V['PacketError'], 'anchor ID does not match'):
+            V['validate'](bad, self.registry)
+
+    def test_acquired_unusable_may_cite_valid_negative_evidence(self):
+        packet = copy.deepcopy(self.source)
+        item = packet['tasks'][0]['arms'][0]['facet_assessments'][0]['evidence_dispositions'][0]
+        item.update(disposition='acquired_unusable', scope_match='mismatch', entailment='does_not_entail',
+                    applicability='not_applicable', references=[reference('S-A', self.contexts['S-A'])])
+        self.assertTrue(V['validate'](packet, self.registry)['structurally_valid'])
+
+    def test_nested_unknown_source_judgment_is_not_assessable_not_assessable_state(self):
+        packet = copy.deepcopy(self.source)
+        item = packet['tasks'][0]['arms'][0]['facet_assessments'][0]['evidence_dispositions'][0]
+        item['scope_match'] = 'not_assessable'
+        item['reason'] = 'The frozen task target is ambiguous.'
+        self.assertEqual(V['validate'](packet, self.registry)['assessment_state'], 'not_assessable')
+
+    def test_packet_identity_must_match_frozen_independent_assignment(self):
+        packet = copy.deepcopy(self.answer)
+        packet['assessor_id'] = 'same-as-other-reviewer'
+        with self.assertRaisesRegex(V['PacketError'], 'unique frozen assignment'):
+            V['validate'](packet, self.registry)
+
+    def test_unhashable_judgment_is_a_controlled_packet_error(self):
+        packet = copy.deepcopy(self.answer)
+        packet['tasks'][0]['arms'][0]['facet_assessments'][0]['scope_match'] = []
+        with self.assertRaises(V['PacketError']):
+            V['validate'](packet, self.registry)
+
+    def test_unicode_character_offsets_are_not_utf8_byte_offsets(self):
+        result = V['validate'](self.answer, self.registry)
+        self.assertTrue(result['structurally_valid'])
+        bad = copy.deepcopy(self.answer)
+        ref = bad['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['references'][0]
+        ref['end'] = len(ref['quote'].encode('utf-8'))
+        ref['evidence_id'] = V['evidence_id'](ref['source_id'], ref['context_sha256'], ref['start'], ref['end'])
+        with self.assertRaises(V['PacketError']):
+            V['validate'](bad, self.registry)
+
+    def test_evidence_from_undelivered_arm_is_rejected(self):
+        bad = copy.deepcopy(self.answer)
+        ref = reference('S-B', self.contexts['S-B'], 0, 10)
+        bad['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['references'] = [ref]
+        with self.assertRaisesRegex(V['PacketError'], 'not delivered'):
+            V['validate'](bad, self.registry)
+
+    def test_target_version_mismatch_is_valid_assessor_outcome_but_incomplete(self):
+        bad = copy.deepcopy(self.answer)
+        facet = bad['tasks'][0]['arms'][1]['facet_assessments'][0]
+        facet['status'] = 'partial'
+        facet['scope_match'] = 'mismatch'
+        facet['conclusion'] = 'The v1 evidence does not apply to v2.'
+        out = V['validate'](bad, self.registry)
+        self.assertTrue(out['structurally_valid'])
+        self.assertEqual(out['assessment_state'], 'assessable_incomplete')
+
+    def test_not_assessable_requires_reason_and_remains_distinct(self):
+        packet = copy.deepcopy(self.answer)
+        facet = packet['tasks'][0]['arms'][0]['facet_assessments'][0]
+        facet['status'] = 'not_assessable'
+        facet['not_assessable_reason'] = 'The target version is absent from supplied records.'
+        out = V['validate'](packet, self.registry)
+        self.assertEqual(out['assessment_state'], 'not_assessable')
+        facet['not_assessable_reason'] = ''
+        with self.assertRaises(V['PacketError']):
+            V['validate'](packet, self.registry)
+
+    def test_duplicate_json_keys_nonfinite_and_boolean_offsets_reject(self):
+        with self.assertRaisesRegex(V['PacketError'], 'duplicate JSON'):
+            V['validate_json']('{"schema":"a","schema":"b"}', self.registry)
+        with self.assertRaisesRegex(V['PacketError'], 'non-finite'):
+            V['validate_json']('{"value":NaN}', self.registry)
+        bad = copy.deepcopy(self.answer)
+        ref = bad['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['references'][0]
+        ref['start'] = True
+        with self.assertRaises(V['PacketError']):
+            V['validate'](bad, self.registry)
+
+    def test_unknown_extra_duplicate_rows_and_boolean_indices_reject(self):
+        bad = copy.deepcopy(self.answer)
+        bad['unexpected'] = True
+        with self.assertRaises(V['PacketError']):
+            V['validate'](bad, self.registry)
+        bad = copy.deepcopy(self.answer)
+        bad['tasks'][0]['arms'].append(copy.deepcopy(bad['tasks'][0]['arms'][0]))
+        with self.assertRaises(V['PacketError']):
+            V['validate'](bad, self.registry)
+        bad = copy.deepcopy(self.answer)
+        bad['tasks'][0]['arms'][0]['facet_assessments'][0]['unsupported_claim_indices'] = [True]
+        with self.assertRaises(V['PacketError']):
+            V['validate'](bad, self.registry)
+
+    def test_unknown_or_mutated_frozen_claim_identity_rejects(self):
+        bad = copy.deepcopy(self.answer)
+        bad['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['claim_id'] = 'C-unknown'
+        with self.assertRaisesRegex(V['PacketError'], 'unknown frozen claim'):
+            V['validate'](bad, self.registry)
+        bad = copy.deepcopy(self.answer)
+        bad['tasks'][0]['arms'][0]['facet_assessments'][0]['claims'][0]['text'] = 'A different assertion.'
+        with self.assertRaisesRegex(V['PacketError'], 'differs from frozen answer'):
+            V['validate'](bad, self.registry)
+
+
+if __name__ == '__main__':
+    unittest.main()

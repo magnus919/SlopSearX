@@ -1,0 +1,68 @@
+"""Offline request parity against actual current ordinary Jev provider."""
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+from unittest.mock import patch
+import httpx
+from slopsearx.rerank import JevReranker, RerankCandidate, MODEL
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp060_prepare_tests_module", str(HERE / "prepare.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+P = importlib.util.module_from_spec(spec)
+loader.exec_module(P)
+
+def cards(count=44):
+    return [{"id": "c"+str(i), "title": "Public fixture "+str(i), "url": "https://fixture.invalid/"+str(i), "snippet": "Visible fixture source."} for i in range(count)]
+
+def case(n=0):
+    return json.loads((HERE / "queries.json").read_bytes())[n]
+
+class PreparationTests(unittest.TestCase):
+    def test_actual_current_w0_exact_body_and_rotated_identity_mapping(self):
+        async def exercise():
+            captured = []
+            def handler(request):
+                captured.append(request.content)
+                body = json.loads(request.content)
+                return httpx.Response(200, json={"model": MODEL, "answers": {cid:{"type":"score", "score":6} for cid in body["questions"]}, "usage":{"input_tokens":20,"output_tokens":10}})
+            original = httpx.AsyncClient
+            def factory(**kwargs):
+                return original(**kwargs, transport=httpx.MockTransport(handler))
+            rotated = cards()[20:] + cards()[:20]
+            prepared = P.bodies(case(), rotated)
+            projected = [RerankCandidate(**row) for row in prepared["w0"]["state"]["candidates"]]
+            with patch("slopsearx.rerank.httpx.AsyncClient", side_effect=factory):
+                decision = await JevReranker("offline-fixture").rerank(case()["query"], tuple(projected))
+            self.assertIsNotNone(decision)
+            self.assertEqual(captured, [P.wire(prepared["w0"])])
+            self.assertEqual(prepared["w0_local_to_pool"]["c0"], "c20")
+            self.assertEqual(prepared["tail_ids"], [row["id"] for row in rotated[40:]])
+        asyncio.run(exercise())
+
+    def test_full_df_pool_facets_and_bound_rejection(self):
+        prepared = P.bodies(case(), cards(80))
+        self.assertEqual(len(prepared["d"]["questions"]),80)
+        self.assertEqual(len(prepared["f"]["questions"]),240)
+        self.assertEqual(len(prepared["f"]["state"]["candidates"]),80)
+        self.assertEqual(prepared["d"]["state"]["query"],case()["purpose"])
+        with self.assertRaises(ValueError): P.bodies(case(), cards(81))
+        bad = cards();bad[1]["id"] = bad[0]["id"]
+        with self.assertRaises(ValueError): P.bodies(case(),bad)
+
+    def test_five_navigation_d_only_and_four_stability_triples(self):
+        pools = {row["id"]:cards() for row in json.loads((HERE / "queries.json").read_bytes())}
+        operations = P.operations(pools)
+        self.assertEqual(len(operations),21)
+        self.assertEqual(sum(row["mode"]=="repeat" for row in operations),4)
+        self.assertEqual(sum(row["mode"]=="rotate20" for row in operations),4)
+        navigation = [row for row in operations if not row["requests"]["f"]]
+        self.assertEqual(len(navigation),5)
+        self.assertTrue(all(row["requests"]["d"] for row in navigation))
+        pools.pop("q1")
+        with self.assertRaises(ValueError): P.operations(pools)
+
+if __name__ == "__main__": unittest.main()

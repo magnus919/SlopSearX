@@ -1,0 +1,15 @@
+# EXP-056 offline implementation milestone
+
+This is an incomplete qualification milestone, not a candidate outcome or production recommendation. The frozen registration remains unchanged.
+
+The pure policy uses the complete original F probability inventory to nominate outsiders and builds exact pair-specific addition and loss questions. It considers every removable victim, deduplicates identical pair loss questions, applies one deterministic admitted swap per round, protects insertions and excludes evictions, and returns a full stable permutation. Default JSON serialization now matches byte-cap accounting. Empty title and URL values retain the original admission behavior.
+
+The retained `offline-neutral-pipeline.json` is a synthetic controller exercise with no provider or search calls. All 21 original operations ran through a real owned child process, preserving request bytes and unchanged raw response bytes. Both original reference mappings reached analysis with all eight primary deltas present. Every injected probability was 0.5, so all swaps abstained; the analysis correctly rejected this neutral fixture as a quality candidate. Any numerical values in that packet belong to the unchanged original rankings and synthetic integration path, not a measured EXP-056 provider improvement.
+
+Validation: policy fixtures passed (53 assertion sites, 28 rejection checks); eight response-parser tests, eight coordinator tests and three owned-child lifecycle tests passed. The child lifecycle tests verify unchanged stdin/stdout, terminal nonzero exits and termination after a hard timeout. Coordinator tests verify discarded intermediate swaps, full W0 fallback, cancellation receipts, resource accounting and first-failure study stop.
+
+A Luna review identified discarded raw receipts, missing study accounting, incomplete deadline ownership and cancellation escaping fallback. The prototype now retains exact bytes, accounts known study usage, stops on unknown usage/failure, passes a deadline to the owned child transport and preserves full fallback on cancellation. This is not a claim that arbitrary injected transports enforce deadlines. Owned-child duration is a conservative process measurement; a real provider HTTP timing contract remains to be qualified and frozen.
+
+Remaining before any Jev attempt: qualify the actual HTTP wrapper and normal CLI path using fake provider responses; retain a full failed-call/full-fallback pipeline packet; cover all remaining cancellation, no-facet/navigation, multi-round and operational deadline fixtures; enforce/qualify bounded output capture and per-round study-budget reservation; freeze the exact question mappings and full request/cost inventory; independently review that complete qualification. The owned-child prototype currently captures output in memory; it is not a qualified bounded HTTP reader. The prototype must not be used for live calls yet.
+
+Brave attempts: 0/10. New Jev calls: 0. Runtime implementation, fresh confirmation and production adoption remain open.

@@ -1,0 +1,191 @@
+{
+  "schema": "jev-fresh-confirmation-query-plan/1",
+  "status": "reserved_for_separate_confirmation_registration_before_search",
+  "purpose": "Prospective confirmation set for the frozen Jev production contract. Query plan only; no searches, browsing, page fetches, result labels, or model scores have been created.",
+  "search_budget": {
+    "provider": "Brave Search",
+    "maximum_attempts": 10,
+    "attempts_per_query": 1,
+    "count_failed_empty_blocked_or_repeated_attempts": true,
+    "search_attempts_used": 0,
+    "reuse_or_retry": "No retries or replacement searches. Every dispatch consumes one of the ten attempts."
+  },
+  "freeze_rule": "Root reviews this exact file before any search. Freeze its SHA-256 and do not edit query text, targets, strata, rubric, seed, or gates after the first search. Search receipts, reviewer labels, and Jev responses are separate append-only evidence artifacts.",
+  "freshness_rule": "Fresh query strings and result pools, not verified provider-training decontamination. E1 replaces exposed RAG family with adult vocabulary learning. Navigation targets verified before any Brave search. No confirmation calls until separate registration and candidate frozen.",
+  "review_protocol": {
+    "reviewers": 2,
+    "independent": true,
+    "blinded_to": [
+      "Jev outputs",
+      "W0 rankings",
+      "other reviewer labels",
+      "frozen pool order"
+    ],
+    "card_evidence": "Use only each frozen result title, URL, and snippet. Do not open or fetch linked pages. Mark missing or blocked card evidence uncertain rather than infer the page contents.",
+    "presentation": "Preserve original candidate IDs in the private annotation key. For each query, deterministically shuffle cards with Python random.Random(91938), then display cards in that shuffled order without exposing original rank or Jev output.",
+    "label_freeze": "Both reference sets, uncertainty flags, rationales, and hashes must be frozen before any Jev scoring call. Keep disagreement; do not manufacture consensus or call assistant labels human gold."
+  },
+  "rubrics": {
+    "evidence_seeking": {
+      "grade_scale": {
+        "0": "No relevant evidence visible, or unrelated result.",
+        "1": "Contextual topic match only; no useful information for the question is visible.",
+        "2": "Useful partial evidence for at least one requested facet; substantial facets remain unanswered.",
+        "3": "Direct card-visible evidence addresses the central question or a required facet."
+      },
+      "facets": "Predefine facets from the query before labels; tag only facets supported by visible card text."
+    },
+    "source_listing": {
+      "grade_scale": {
+        "0": "Unrelated; no relevant source collection or directory is signaled.",
+        "1": "Mentions a relevant organization or data/source type but no usable listing is visible.",
+        "2": "A partial relevant catalog, directory, or documented source list is signaled.",
+        "3": "Directly signals an official or well-described directory/list that substantially satisfies the requested source inventory."
+      },
+      "uncertainty": "A result title that only names a repository is not evidence that its contents meet the requested inclusion criteria. Mark uncertain if the card does not show the listing or criteria."
+    },
+    "exact_navigation": {
+      "grade_scale": {
+        "0": "Unrelated destination.",
+        "1": "Related organization or topic, but wrong document, route, or version.",
+        "2": "Official same-document alternate URL explicitly included in the frozen allowlist.",
+        "3": "Exact frozen target URL and requested document/title/version are visible in the card."
+      },
+      "rule": "Use the frozen exact target URL or allowlist only. Topic similarity or organization authority alone does not satisfy exact navigation."
+    }
+  },
+  "queries": [
+    {
+      "id": "E1",
+      "intent": "evidence_seeking",
+      "query": "What controlled studies compare spaced repetition with massed practice for adult second-language vocabulary retention, and what retention intervals and measures do they report?",
+      "required_facets": [
+        "spaced_repetition",
+        "massed_practice_comparator",
+        "adult_second_language_vocabulary",
+        "retention_intervals_and_measures"
+      ],
+      "target": null
+    },
+    {
+      "id": "E2",
+      "intent": "evidence_seeking",
+      "query": "What comparative studies measure passkeys versus password plus multifactor authentication for phishing resistance and account recovery outcomes?",
+      "required_facets": [
+        "passkeys",
+        "password_plus_mfa_comparator",
+        "phishing_resistance",
+        "account_recovery"
+      ],
+      "target": null
+    },
+    {
+      "id": "E3",
+      "intent": "evidence_seeking",
+      "query": "What field studies estimate how transit-oriented development affects household transportation emissions and housing affordability?",
+      "required_facets": [
+        "transit_oriented_development",
+        "transport_emissions",
+        "housing_affordability",
+        "field_study_or_estimate"
+      ],
+      "target": null
+    },
+    {
+      "id": "E4",
+      "intent": "evidence_seeking",
+      "query": "Which studies evaluate peer-review methods for detecting statistical errors in submitted research papers, and how is detection measured?",
+      "required_facets": [
+        "peer_review_method",
+        "statistical_errors",
+        "detection_outcome",
+        "measurement"
+      ],
+      "target": null
+    },
+    {
+      "id": "E5",
+      "intent": "evidence_seeking",
+      "query": "What empirical studies compare digital and paper public-service appointment systems on completion rates and accessibility for older adults?",
+      "required_facets": [
+        "digital_and_paper_comparison",
+        "public_service_appointments",
+        "completion_rates",
+        "older_adult_accessibility"
+      ],
+      "target": null
+    },
+    {
+      "id": "E6",
+      "intent": "evidence_seeking",
+      "query": "What field evaluations measure whether community repair cafes or tool libraries change household repair costs, product lifetimes, or waste?",
+      "required_facets": [
+        "repair_cafes_or_tool_libraries",
+        "household_costs_or_product_lifetime_or_waste",
+        "field_evaluation"
+      ],
+      "target": null
+    },
+    {
+      "id": "L1",
+      "intent": "source_listing",
+      "query": "List public directories of official GTFS-Realtime transit feeds and the documentation each directory provides for feed access and licensing.",
+      "required_facets": [
+        "public_feed_directory",
+        "official_transit_feeds",
+        "access_documentation",
+        "licensing"
+      ],
+      "target": null
+    },
+    {
+      "id": "L2",
+      "intent": "source_listing",
+      "query": "List public repositories or catalogs of digitized United States patent drawings, including each source's search interface and collection documentation.",
+      "required_facets": [
+        "public_repository_or_catalog",
+        "us_patent_drawings",
+        "search_interface",
+        "collection_documentation"
+      ],
+      "target": null
+    },
+    {
+      "id": "N1",
+      "intent": "exact_navigation",
+      "query": "Open the official W3C page titled “Web Authentication: An API for accessing Public Key Credentials - Level 3” at https://www.w3.org/TR/webauthn-3/.",
+      "required_facets": [
+        "exact_document",
+        "official_destination"
+      ],
+      "target": {
+        "exact_url": "https://www.w3.org/TR/webauthn-3/",
+        "allowed_urls": [
+          "https://www.w3.org/TR/webauthn-3/"
+        ],
+        "url_basis": "Root opened exact official document URL before registration; title and destination confirmed. No result pool inspected.",
+        "verification_status": "official_page_verified_2026-10-04_before_freeze"
+      }
+    },
+    {
+      "id": "N2",
+      "intent": "exact_navigation",
+      "query": "Open the official IETF HTTP Semantics specification, RFC 9110, at https://www.rfc-editor.org/rfc/rfc9110.html.",
+      "required_facets": [
+        "exact_document",
+        "requested_rfc_identifier",
+        "official_destination"
+      ],
+      "target": {
+        "exact_url": "https://www.rfc-editor.org/rfc/rfc9110.html",
+        "allowed_urls": [
+          "https://www.rfc-editor.org/rfc/rfc9110.html"
+        ],
+        "url_basis": "Root opened exact official document URL before registration; title and destination confirmed. No result pool inspected.",
+        "verification_status": "official_page_verified_2026-10-04_before_freeze"
+      }
+    }
+  ],
+  "query_count": 10,
+  "unique_query_strings_required": true
+}

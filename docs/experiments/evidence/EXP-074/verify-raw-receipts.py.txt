@@ -1,0 +1,453 @@
+"""Offline-independent verifier for EXP-074 in-process HTTP receipts.
+
+The verifier recomputes pinned requests, raw response bindings, component orders,
+exact RRF scores, aggregate usage, durable receipt hashes, and stop/fallback
+behavior. In-process records provide local interval evidence; this module makes
+no subprocess stdout/stderr or remote-clock claims.
+"""
+from __future__ import annotations
+import hashlib, importlib.machinery, importlib.util, json, math
+import importlib.metadata, platform
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+P = load("exp074_verify_prepare", HERE / "prepare.py.txt")
+N = load("exp074_verify_runner", HERE / "normal-runner.py.txt")
+A = load("exp074_verify_analyzer", HERE / "analyze.py.txt")
+
+
+def _need(ok, code):
+    if not ok:
+        raise ValueError("receipt-" + code)
+
+
+def _sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _read(path):
+    return P.strict_json(Path(path).read_bytes())
+
+
+def _finite_ms(value, maximum=1_000_000):
+    return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= maximum
+
+
+def _raw_usage(raw):
+    if not raw:
+        return None
+    try:
+        return P.usage_from_raw(raw)
+    except (ValueError, TypeError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+
+def _verify_qualification(raw, run, protocol_raw, registration_raw):
+    q = P.strict_json(raw)
+    required = {"schema", "qualified", "qualified_source_revision", "files", "source_pins",
+                "dependencies", "environment", "protocol_sha256", "registration_sha256"}
+    _need(type(q) is dict and set(q) == required and q.get("schema") == "exp074-qualification-integrity/1"
+          and q.get("qualified") is True, "qualification-schema")
+    source = run["source_integrity"]
+    _need(source.get("qualification_sha256") == _sha(raw)
+          and source.get("qualified_source_revision") == q.get("qualified_source_revision")
+          and source.get("lease_identity"), "qualification-binding")
+    _need(source.get("environment") == q["environment"]
+          and source.get("dependencies") == q["dependencies"], "qualification-environment-binding")
+    _need(q.get("protocol_sha256") == _sha(protocol_raw)
+          and q.get("registration_sha256") == _sha(registration_raw), "qualification-protocol-registration")
+    environment = {"python_implementation": platform.python_implementation(), "python_version": platform.python_version()}
+    dependencies = {name: importlib.metadata.version(name) for name in ("httpx", "httpcore", "anyio")}
+    _need(q["environment"] == environment and q["dependencies"] == dependencies, "qualification-runtime")
+    committed_raw = N.committed_head("docs/experiments/evidence/EXP-074/qualification-integrity.json")
+    _need(committed_raw == raw, "qualification-not-committed")
+    _need(set(q["files"]) == N.OWNED_FILES and set(q["source_pins"]) == N.SOURCE_FILES,
+          "qualification-closure-inventory")
+    for name, expected in q["files"].items():
+        path = HERE / name
+        repo_path = "docs/experiments/evidence/EXP-074/" + name
+        _need(path.is_file() and not path.is_symlink() and _sha(path.read_bytes()) == expected
+              and N.committed(repo_path, q["qualified_source_revision"]) == path.read_bytes(), "qualified-file-source")
+    for name, expected in q["source_pins"].items():
+        path = REPO / name
+        _need(path.is_file() and not path.is_symlink() and _sha(path.read_bytes()) == expected
+              and N.committed(name, q["qualified_source_revision"]) == path.read_bytes(), "qualified-dependency-source")
+    return raw
+
+
+def _exact_fusion(cards, incumbent, purpose):
+    ids = [c["id"] for c in cards]
+    _need(len(ids) == len(set(ids)) and len(incumbent) == len(ids)
+          and set(incumbent) == set(ids) and len(purpose) == len(ids)
+          and set(purpose) == set(ids), "fusion-membership")
+    ranks0 = {sid: i + 1 for i, sid in enumerate(incumbent)}
+    ranks1 = {sid: i + 1 for i, sid in enumerate(purpose)}
+    from fractions import Fraction
+    scores = {sid: Fraction(1, 60 + ranks0[sid]) + Fraction(1, 60 + ranks1[sid]) for sid in ids}
+    tie = {c["id"]: tuple(c[k].encode("utf-8") for k in ("url", "title", "snippet", "id")) for c in cards}
+    order = sorted(ids, key=lambda sid: (-scores[sid], tie[sid]))
+    return {"order_ids": order,
+            "rational_scores": {sid: [score.numerator, score.denominator] for sid, score in scores.items()}}
+
+
+def _inputs():
+    inputs = {path: (REPO / path).read_bytes() for path in P.PINS}
+    acquisition, queries = P.source_data(inputs)
+    references = P.strict_json(inputs["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"])
+    protocol_raw = (HERE / "protocol.json").read_bytes()
+    registration_raw = (HERE / "registration-integrity.json").read_bytes()
+    return inputs, acquisition, queries, references, protocol_raw, registration_raw
+
+
+def _verify_call(rec, opid, arm, built, expected_request, attempts, totals, unknown):
+    _need(type(rec) is dict and rec.get("operation") == opid and rec.get("arm") == arm, "call-identity")
+    request = P.wire(expected_request)
+    _need(rec.get("request_hex") == request.hex() and rec.get("request_sha256") == _sha(request), "request-binding")
+    transport = rec.get("transport")
+    _need(type(transport) is dict, "transport-record")
+    _need(not ({"stdout", "stderr", "stdout_hex", "stderr_hex", "stdout_sha256", "stderr_sha256"} & set(transport)),
+          "subprocess-telemetry-claim")
+    _need(transport.get("kind") == "inprocess-async-httpx" and transport.get("trust_env") is False
+          and transport.get("follow_redirects") is False and transport.get("retries") == 0
+          and transport.get("concurrency") == 1
+          and transport.get("response_limit_bytes") == P.PROTOCOL["bounds"]["response_bytes"], "transport-policy")
+    raw_hex = rec.get("raw_response_hex")
+    has_raw = raw_hex is not None
+    if raw_hex is None:
+        raw = b""
+    else:
+        _need(type(raw_hex) is str, "response-encoding")
+        try:
+            raw = bytes.fromhex(raw_hex)
+        except ValueError:
+            raise ValueError("receipt-response-encoding") from None
+    _need(rec.get("response_bytes") == len(raw), "response-length")
+    _need(len(raw) <= P.PROTOCOL["bounds"]["response_bytes"], "response-size")
+    response_hash = _sha(raw) if has_raw else None
+    _need(rec.get("response_body_sha256") == response_hash
+          and transport.get("response_sha256") == response_hash, "response-hash")
+    _need(type(rec.get("response_complete")) is bool, "response-completeness")
+    _need(transport.get("request_sha256") == rec.get("request_sha256"), "transport-request-hash")
+    timings = rec.get("timings")
+    _need(type(timings) is dict and "pending_receipt_fsync_ms" in timings, "timing-fields")
+    timing_names = {"client_setup_ms", "exchange_ms", "stream_ms", "validation_ms",
+                    "pending_receipt_fsync_ms", "dispatch_receipt_fsync_ms", "response_receipt_fsync_ms"}
+    for name in timing_names & set(timings):
+        if timings[name] is not None:
+            _need(_finite_ms(timings[name]), "timing-value")
+    elapsed = rec.get("elapsed_ms")
+    if elapsed is not None:
+        _need(_finite_ms(elapsed), "call-elapsed")
+        exchange = timings.get("exchange_ms")
+        if _finite_ms(exchange):
+            _need(elapsed + 1e-6 >= exchange, "call-time-lower-bound")
+            if exchange > 1000:
+                _need(rec.get("status") == "failed" and (rec.get("failure") or {}).get("code") == "timeout",
+                      "exchange-deadline")
+        if elapsed > 1000:
+            _need(rec.get("status") == "failed" and (rec.get("failure") or {}).get("code") == "timeout",
+                  "http-deadline")
+    usage = rec.get("usage")
+    parsed_usage = _raw_usage(raw)
+    dispatched = rec.get("dispatched")
+    _need(type(dispatched) is bool, "dispatch-state")
+    if not dispatched:
+        _need(rec.get("status") == "failed" and not raw and rec.get("http_status") is None
+              and rec.get("usage") is None and rec.get("usage_status") == "not_dispatched"
+              and transport.get("client_closed") is False, "predispatch-record")
+        _need(rec.get("response_body_sha256") is None and transport.get("response_sha256") is None,
+              "predispatch-response-empty")
+        return attempts, totals, unknown, raw, parsed_usage
+    _need(rec.get("status") in ("validated", "failed"), "call-status")
+    _need(transport.get("client_closed") is True, "client-close")
+    _need({"client_setup_ms", "exchange_ms", "stream_ms", "validation_ms",
+           "response_receipt_fsync_ms"}.issubset(timings),
+          "dispatched-timing-fields")
+    _need(usage == parsed_usage and rec.get("usage_status") == ("known" if parsed_usage is not None else "unknown"),
+          "usage-binding")
+    _need(not unknown and totals["input_tokens"] + 64_000 <= 3_000_000
+          and totals["output_tokens"] + 64_000 <= 160_000, "usage-admission")
+    attempts += 1
+    _need(attempts <= P.PROTOCOL["bounds"]["calls"], "call-cap")
+    if parsed_usage is None:
+        unknown = True
+    else:
+        _need(not unknown, "unknown-usage-admission")
+        _need(parsed_usage["input_tokens"] <= 64_000 and parsed_usage["output_tokens"] <= 64_000, "per-call-usage")
+        totals["input_tokens"] += parsed_usage["input_tokens"]
+        totals["output_tokens"] += parsed_usage["output_tokens"]
+        _need(totals["input_tokens"] <= 3_000_000 and totals["output_tokens"] <= 160_000, "usage-cap")
+    return attempts, totals, unknown, raw, parsed_usage
+
+
+def verify(outdir, require_analysis=True):
+    outdir = Path(outdir)
+    run = _read(outdir / "run.json")
+    receipts = outdir / "receipts"
+    inputs, acquisition, queries, references, protocol_raw, registration_raw = _inputs()
+    protocol = P.strict_json(protocol_raw)
+    _need(run.get("schema") == "exp074-run/1", "schema")
+    _need(run.get("status") in ("complete", "incomplete"), "run-status")
+    _need(type(run.get("synthetic")) is bool, "execution-identity")
+    _need(run.get("input_pins") == P.PINS, "input-pins")
+    proof = P.validate_inputs(inputs, run.get("input_revision"))
+    _need(run.get("source_integrity", {}).get("input_pins") == proof["input_pins"]
+          and run.get("source_integrity", {}).get("input_revision") == proof["input_revision"]
+          and run.get("source_integrity", {}).get("protocol_sha256") == proof["protocol_sha256"]
+          and run.get("source_integrity", {}).get("registration_sha256") == proof["registration_sha256"], "source-integrity")
+    qualification_bytes = None
+    qpath = outdir / "qualification-integrity.json"
+    if run["synthetic"]:
+        _need(not qpath.exists(), "synthetic-qualification-sidecar")
+    else:
+        _need(qpath.is_file() and not qpath.is_symlink(), "qualification-sidecar")
+        qualification_bytes = _verify_qualification(qpath.read_bytes(), run, protocol_raw, registration_raw)
+
+    neutral_case, neutral_cards = P.synthetic_case()
+    neutral_built = P.build_requests(neutral_case, neutral_cards)
+    schedule = [("neutral", neutral_case, neutral_cards, neutral_built, run.get("neutral"))]
+    real_built = P.prebuild(acquisition, queries)
+    _need(len(real_built) == 21 and type(run.get("operations")) is list
+          and len(run["operations"]) == 21, "operation-schedule-size")
+    for item, built, op in zip(protocol["schedule"], real_built, run["operations"]):
+        spec, prepared = built
+        _need(spec == item and op.get("case") == item["case"] and op.get("variant") == item["variant"],
+              "operation-schedule")
+        schedule.append((item["case"] + "-" + item["variant"],
+                         next(q for q in queries if q["id"] == item["case"]),
+                         prepared["cards"], prepared, op))
+
+    paths = sorted(receipts.glob("call-*.json"), key=lambda p: int(p.stem.split("-")[1]))
+    _need(len(paths) <= 44, "call-cap")
+    call_rows = [_read(path) for path in paths]
+    cursor = 0
+    attempts = 0
+    totals = {"input_tokens": 0, "output_tokens": 0}
+    unknown = False
+    terminal = False
+    verified_orders = {}
+    for opid, case, cards, built, op in schedule:
+        _need(type(op) is dict, "operation-missing")
+        if opid == "neutral":
+            _need(op.get("cards") == cards and op.get("provenance_order_ids") == [c["id"] for c in cards],
+                  "neutral-membership")
+        else:
+            _need(op.get("cards") == cards and op.get("provenance_order_ids") == built["provenance_order_ids"],
+                  "operation-membership")
+        arms = op.get("arms")
+        _need(type(arms) is dict and set(arms) == set(P.ARMS), "arms-inventory")
+        op_calls = op.get("calls")
+        _need(type(op_calls) is list, "embedded-calls")
+        _need(len(op_calls) <= 2, "operation-call-cap")
+        if terminal:
+            _need(not op_calls and all(row.get("status") == "uninvoked" for row in arms.values()),
+                  "post-stop-uninvoked")
+            continue
+        expected_requests = built
+        parsed = {}
+        proposed_fusion = None
+        failed = False
+        for index, arm in enumerate(("w0", "purpose_component")):
+            if index >= len(op_calls):
+                break
+            _need(cursor < len(call_rows), "sidecar-missing")
+            embedded = op_calls[index]
+            sidecar = call_rows[cursor]
+            cursor += 1
+            _need(embedded == sidecar, "embedded-sidecar-binding")
+            attempts, totals, unknown, raw, usage = _verify_call(
+                sidecar, opid, arm, built, expected_requests[arm], attempts, totals, unknown)
+            if sidecar["dispatched"]:
+                call_path = receipts / ("call-%02d.json" % (cursor - 1))
+                _need(call_path.is_file() and call_path.read_bytes() == json.dumps(
+                    sidecar, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode(),
+                    "call-receipt-durable")
+            if sidecar.get("status") != "validated":
+                failed = True
+                break
+            parsed[arm] = P.validate_score_response(raw, expected_requests[arm],
+                list(expected_requests[arm]["questions"]), 9 if arm == "w0" else 3)
+            _need(arms[arm].get("usage") == usage and arms[arm].get("elapsed_ms") == sidecar.get("elapsed_ms"),
+                  "arm-call-binding")
+        if failed:
+            terminal = True
+            if "w0" in parsed:
+                w_scores = parsed["w0"]
+                w_local = P.order_scores(w_scores["scores"], list(built["w0"]["questions"]), 9)
+                w_order = [built["w0_local_to_pool"][x] for x in w_local] + list(built["tail_ids"])
+                _need(arms["w0"].get("order_ids") == w_order, "interrupted-w0-order")
+                _need(arms["w0"].get("scores") == {
+                    built["w0_local_to_pool"][k]: v for k, v in w_scores["scores"].items()}, "interrupted-w0-scores")
+                fallback = arms["candidate"]
+                _need(fallback.get("status") == "failed_fallback" and fallback.get("order_ids") == w_order
+                      and fallback.get("rational_scores") == {}, "full-w0-fallback")
+                verified_orders[(opid, "w0")] = w_order
+            else:
+                _need(arms["w0"].get("status") == "failed" and arms["w0"].get("order_ids") == [],
+                      "no-fabricated-incumbent")
+                _need(arms["candidate"].get("order_ids") == [], "no-fabricated-fallback")
+        elif len(parsed) == 2:
+            w_scores, p_scores = parsed["w0"], parsed["purpose_component"]
+            w_local = P.order_scores(w_scores["scores"], list(expected_requests["w0"]["questions"]), 9)
+            w_order = [built["w0_local_to_pool"][x] for x in w_local] + list(built["tail_ids"])
+            p_order = P.order_scores(p_scores["scores"], list(expected_requests["purpose_component"]["questions"]), 3)
+            _need(arms["w0"].get("order_ids") == w_order, "w0-order")
+            _need(arms["w0"].get("scores") == {built["w0_local_to_pool"][k]: v for k, v in w_scores["scores"].items()}, "w0-scores")
+            _need(arms["purpose_component"].get("order_ids") == p_order
+                  and arms["purpose_component"].get("scores") == p_scores["scores"], "purpose-order-scores")
+            fused = _exact_fusion(cards, w_order, p_order)
+            proposed_fusion = fused
+            registered = P.FUSE.fuse(cards, w_order, p_order)
+            _need(fused == registered, "registered-rrf")
+            candidate = arms["candidate"]
+            if candidate.get("status") == "valid":
+                _need(candidate.get("order_ids") == fused["order_ids"]
+                      and candidate.get("rational_scores") == fused["rational_scores"], "candidate-fusion")
+                verified_orders[(opid, "candidate")] = fused["order_ids"]
+            else:
+                _need(candidate.get("status") == "failed_fallback"
+                      and candidate.get("order_ids") == w_order and candidate.get("rational_scores") == {}, "full-w0-fallback")
+            verified_orders[(opid, "w0")] = w_order
+            verified_orders[(opid, "purpose_component")] = p_order
+            expected_usage = {key: parsed["w0"]["usage"][key] + parsed["purpose_component"]["usage"][key]
+                              for key in ("input_tokens", "output_tokens")}
+            _need(candidate.get("usage") == expected_usage, "candidate-aggregate-usage")
+            _need(arms["w0"].get("raw_answers") == {
+                built["w0_local_to_pool"][k]: v for k, v in w_scores["raw_answers"].items()}, "w0-raw-answers")
+            _need(arms["purpose_component"].get("raw_answers") == p_scores["raw_answers"], "purpose-raw-answers")
+
+        phase = op.get("candidate_phase_ms")
+        _need(_finite_ms(phase) and op.get("phase_endpoint_after_fsync") is True, "phase-endpoint")
+        _need(type(op.get("final_receipt")) is dict, "final-receipt-record")
+        final_ref = op["final_receipt"]
+        _need(type(final_ref.get("path")) is str and _finite_ms(final_ref.get("fsync_ms")), "final-receipt-fsync")
+        expected_suffix = "-final.json" if arms["candidate"].get("status") == "valid" else "-failure.json"
+        safe_name = opid.replace("/", "-") + expected_suffix
+        _need(Path(final_ref["path"]).name == safe_name and ".." not in Path(final_ref["path"]).parts,
+              "final-receipt-path")
+        final_path = receipts / final_ref["path"]
+        _need(final_path.is_file() and _sha(final_path.read_bytes()) == final_ref.get("sha256"), "final-receipt-hash")
+        final = _read(final_path)
+        _need(final.get("receipt_status") in ("durable-candidate-body", "failed"), "final-receipt-status")
+        if final.get("receipt_status") == "durable-candidate-body":
+            proposed = final.get("operation", {}).get("arms", {}).get("candidate", {})
+            _need(proposed.get("order_ids") == arms["candidate"].get("order_ids")
+                  or arms["candidate"].get("status") == "failed_fallback", "durable-proposed-body")
+        else:
+            embedded_op = final.get("operation")
+            _need(type(embedded_op) is dict, "failure-sidecar-binding")
+            strip_fields = {"status", "synthetic_input", "quality_credit", "final_receipt",
+                            "candidate_phase_ms", "phase_endpoint_after_fsync"}
+            recorded_core = {key: value for key, value in op.items() if key not in strip_fields}
+            embedded_core = {key: value for key, value in embedded_op.items() if key not in strip_fields}
+            _need(embedded_core == recorded_core, "failure-sidecar-binding")
+
+        body_ref = op.get("candidate_body_receipt")
+        if type(body_ref) is dict:
+            body_name = opid.replace("/", "-") + "-final.json"
+            _need(body_ref.get("path") == body_name and _finite_ms(body_ref.get("fsync_ms")),
+                  "candidate-body-receipt-path")
+            body_path = receipts / body_name
+            _need(body_path.is_file() and _sha(body_path.read_bytes()) == body_ref.get("sha256"),
+                  "candidate-body-receipt-hash")
+            body = _read(body_path)
+            _need(body.get("receipt_status") == "durable-candidate-body", "candidate-body-receipt-status")
+            body_operation = body.get("operation", {})
+            body_candidate = body_operation.get("arms", {}).get("candidate", {})
+            _need(body_operation.get("cards") == cards, "candidate-body-membership")
+            _need(type(proposed_fusion) is dict
+                  and body_candidate.get("status") == "candidate_body_durable"
+                  and body_candidate.get("order_ids") == proposed_fusion["order_ids"]
+                  and body_candidate.get("rational_scores") == proposed_fusion["rational_scores"],
+                  "candidate-body-fusion")
+        elif type(proposed_fusion) is dict:
+            _need(arms["candidate"].get("status") != "failed_fallback", "lost-proposed-candidate-body")
+
+        phase_parts = []
+        for call_row in op_calls:
+            call_timing = call_row.get("timings", {})
+            for key in ("pending_receipt_fsync_ms", "elapsed_ms", "validation_ms", "response_receipt_fsync_ms"):
+                value = call_row.get(key) if key == "elapsed_ms" else call_timing.get(key)
+                if _finite_ms(value):
+                    phase_parts.append(value)
+        candidate_elapsed = arms["candidate"].get("elapsed_ms")
+        if _finite_ms(candidate_elapsed):
+            phase_parts.append(candidate_elapsed)
+        _need(phase + 1e-3 >= sum(phase_parts), "operation-phase-lower-bound")
+        known_calls = [row for row in op_calls if row.get("dispatched")]
+        if not known_calls:
+            expected_candidate_usage = None if not op_calls else {
+                "input_tokens": 0, "output_tokens": 0}
+        elif any(type(row.get("usage")) is not dict for row in known_calls):
+            expected_candidate_usage = None
+        else:
+            expected_candidate_usage = {key: sum(row["usage"][key] for row in known_calls)
+                                        for key in ("input_tokens", "output_tokens")}
+        _need(arms["candidate"].get("usage") == expected_candidate_usage, "partial-usage-binding")
+
+        if len(parsed) == 2 and all(arms[name].get("status") == "valid" for name in P.ARMS):
+            _need(phase <= 1000, "combined-phase-deadline")
+        if failed or any(arms[name].get("status") != "valid" for name in P.ARMS):
+            _need(run.get("status") == "incomplete", "failed-call-complete-run")
+            terminal = True
+    _need(cursor == len(call_rows), "extra-call-receipts")
+    budget = run.get("budget", {})
+    _need(budget.get("attempts") == attempts and budget.get("input_tokens") == totals["input_tokens"]
+          and budget.get("output_tokens") == totals["output_tokens"] and budget.get("unknown_usage") == unknown,
+          "budget-binding")
+    if run["status"] == "complete":
+        _need(not terminal and attempts == 44 and len(call_rows) == 44, "complete-call-inventory")
+    else:
+        _need(terminal, "incomplete-stop-evidence")
+    phases = [op.get("candidate_phase_ms") for op in [run.get("neutral"), *run.get("operations", [])]
+              if type(op) is dict]
+    measured_phases = [x for x in phases if _finite_ms(x)]
+    wall = run.get("wall_seconds")
+    _need(_finite_ms(wall, 7200), "wall-clock")
+    _need(wall * 1000 + 1.0 >= sum(measured_phases), "wall-phase-lower-bound")
+    analyzer = A.analyze(run, acquisition, references, queries, protocol, inputs, protocol_raw,
+                         registration_raw, qualification_bytes=qualification_bytes)
+    analysis_path = outdir / "analysis.json"
+    if require_analysis:
+        _need(analysis_path.is_file() and _read(analysis_path) == analyzer, "analysis-binding")
+    if run["status"] == "complete" and run["synthetic"]:
+        _need(analyzer.get("outcome") == "synthetic_fixture_only"
+              and analyzer.get("quality_analysis_performed") is False
+              and analyzer.get("adoption_eligible") is False, "synthetic-no-quality")
+    elif run["status"] == "complete":
+        _need(analyzer.get("quality_analysis_performed") is True
+              and analyzer.get("adoption_eligible") is False, "real-complete-analysis-policy")
+    else:
+        _need(analyzer.get("outcome") == "incomplete"
+              and analyzer.get("quality_analysis_performed") is False
+              and analyzer.get("adoption_eligible") is False, "incomplete-no-quality")
+    return {"schema": "exp074-raw-verification/1", "verified": True, "status": run["status"],
+            "synthetic": run["synthetic"], "physical_attempts": attempts, "known_usage": totals,
+            "unknown_usage": unknown, "raw_calls_checked": len(call_rows),
+            "timing_basis": "hash-bound in-process HTTP intervals and operation receipt endpoint; no subprocess telemetry",
+            "analysis_policy": analyzer["outcome"], "analysis": analyzer}
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("run_dir", type=Path)
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    result = verify(args.run_dir)
+    raw = json.dumps(result, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()
+    if args.output:
+        args.output.write_bytes(raw)
+    print(json.dumps({"verified": result["verified"], "status": result["status"],
+                      "physical_attempts": result["physical_attempts"]}))

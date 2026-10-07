@@ -1,0 +1,60 @@
+import copy
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+import unittest
+
+path = Path(__file__).with_name('verify-spans.py.txt')
+loader = importlib.machinery.SourceFileLoader('spans', str(path))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+mod = importlib.util.module_from_spec(spec)
+loader.exec_module(mod)
+
+class SpanTests(unittest.TestCase):
+    def setUp(self):
+        self.packet = {'cases':[{'id':'q', 'facets':[{'id':'f'}], 'sources':[{'source_id':'S001','context':'Compiler diagnostics before edits. Test after edits.'}]}]}
+        self.assessment = {'sources':[{'task_id':'q','source_id':'S001','facet_assessments':[{'facet_id':'f','status':'evidence_available','quote':'Compiler diagnostics before edits.','role':'support'}]}]}
+
+    def test_exact_link_has_no_semantic_credit(self):
+        result = mod.verify(self.packet, self.assessment)
+        self.assertFalse(result['entailment_verified'])
+        self.assertFalse(result['source_truth_verified'])
+        self.assertEqual(result['links'][0]['start'],0)
+        self.assertEqual(result['links'][0]['end'],34)
+
+    def test_paraphrase_cannot_count(self):
+        self.assessment['sources'][0]['facet_assessments'][0]['quote'] = 'Use diagnostics before editing.'
+        with self.assertRaises(ValueError): mod.verify(self.packet,self.assessment)
+
+    def test_missing_source_cannot_pass(self):
+        with self.assertRaises(ValueError): mod.verify(self.packet,{'sources':[]})
+
+    def test_duplicate_source_cannot_pass(self):
+        self.assessment['sources'].append(copy.deepcopy(self.assessment['sources'][0]))
+        with self.assertRaises(ValueError): mod.verify(self.packet,self.assessment)
+
+    def test_wrong_facet_cannot_pass(self):
+        self.assessment['sources'][0]['facet_assessments'][0]['facet_id']='unknown'
+        with self.assertRaises(ValueError): mod.verify(self.packet,self.assessment)
+
+    def test_missing_facet_cannot_pass(self):
+        self.assessment['sources'][0]['facet_assessments']=[]
+        with self.assertRaises(ValueError): mod.verify(self.packet,self.assessment)
+
+    def test_overlong_quote_cannot_pass(self):
+        self.packet['cases'][0]['sources'][0]['context']=' '.join(['word']*26)
+        self.assessment['sources'][0]['facet_assessments'][0]['quote']=' '.join(['word']*26)
+        with self.assertRaises(ValueError): mod.verify(self.packet,self.assessment)
+
+    def test_unavailable_empty_source_has_no_links(self):
+        self.packet['cases'][0]['sources'][0]['context']=''
+        j=self.assessment['sources'][0]['facet_assessments'][0]
+        j.update(status='not_acquired',quote='',role='none')
+        self.assertEqual(mod.verify(self.packet,self.assessment)['links'],[])
+
+    def test_available_cannot_be_not_acquired(self):
+        j=self.assessment['sources'][0]['facet_assessments'][0]
+        j.update(status='not_acquired',quote='',role='none')
+        with self.assertRaises(ValueError): mod.verify(self.packet,self.assessment)
+
+if __name__=='__main__': unittest.main()

@@ -1,0 +1,90 @@
+"""Independent synthetic CLI sequence for EXP046; mocked transport only."""
+import base64
+import importlib.machinery
+import importlib.util
+import json
+import pathlib
+import shutil
+import sys
+import tempfile
+from unittest import mock
+
+RUNNER = pathlib.Path(sys.argv[1]).resolve()
+FIXTURES = RUNNER.with_name("fixture_tests.py.txt")
+loader = importlib.machinery.SourceFileLoader("exp046_cli_fixtures", str(FIXTURES))
+spec = importlib.util.spec_from_loader("exp046_cli_fixtures", loader)
+F = importlib.util.module_from_spec(spec)
+loader.exec_module(F)
+R = F.R
+
+FILES = {
+    "replay.py.txt", "fixture_tests.py.txt", "manual-choice-checks.py.txt",
+    "publication-gates-checks.py.txt", "transport-fixtures.py.txt",
+    "transport-qualification.json", "source-pins.json",
+    "registration-integrity.json", "registration-review.md",
+}
+OFFLINE_FILES = {
+    "replay.py.txt", "fixture_tests.py.txt", "manual-choice-checks.py.txt",
+    "publication-gates-checks.py.txt", "transport-fixtures.py.txt",
+    "transport-qualification.json", "prepared-plan.json", "neutral-body.json",
+    "neutral-inventory.json", "source-pins.json", "registration-integrity.json",
+}
+REV_OFFLINE = "a" * 40
+REV_NEUTRAL = "b" * 40
+transport_calls = []
+
+
+def fake_transport(argv, envelope, seconds):
+    request = R.strict_json(envelope)
+    body = json.loads(base64.b64decode(request["body_base64"]))
+    response = F.response_for(body)
+    transport_calls.append({"questions": len(body["questions"]), "options": sum(len(q["criteria"]) for q in body["questions"].values())})
+    return R.wire(response), 0, 1.0, False, False
+
+
+with tempfile.TemporaryDirectory(prefix="exp046-independent-cli-") as td:
+    root = pathlib.Path(td)
+    for name in FILES:
+        source = RUNNER.parent / name
+        if source.is_file():
+            shutil.copyfile(source, root / name)
+        else:
+            (root / name).write_bytes(b"synthetic qualification fixture\n")
+    R.prepare(root)
+    files = {name: R.sha((root / name).read_bytes()) for name in OFFLINE_FILES}
+    offline = {
+        "schema": "exp046-offline-qualification/1", "status": "passed", "files": files,
+        "fixture_tests_passed": 21, "manual_checks_passed": 8, "synthetic_operations": 21,
+        "primary_deltas": {"A": 8, "B": 8}, "pool_inventory": 13,
+        "neutral_quality_failed": True, "provider_calls": 0, "search_calls": 0,
+    }
+    (root / "offline-qualification.json").write_bytes(R.pretty(offline))
+    argv_mock = mock.patch.object(R.H, "read_transport_argv", return_value=["local-fake"])
+    process_mock = mock.patch.object(R.H, "bounded_process", side_effect=fake_transport)
+    pub_mock = mock.patch.object(R, "_verify_publication_revision", side_effect=lambda _root, _name, rev: rev)
+    with argv_mock, process_mock, pub_mock:
+        sys.argv = [str(RUNNER), "--root", str(root), "--neutral", "fixture.argv", "--offline-publication-revision", REV_OFFLINE]
+        R.main()
+        assert (root / "neutral-receipt.json").is_file()
+        sys.argv = [str(RUNNER), "--root", str(root), "--run", "fixture.argv", "--offline-publication-revision", REV_OFFLINE, "--neutral-publication-revision", REV_NEUTRAL]
+        R.main()
+        assert len(transport_calls) == 22, transport_calls
+        assert transport_calls[0] == {"questions": 11, "options": 721}, transport_calls[0]
+        sys.argv = [str(RUNNER), "--root", str(root), "--analyze", "--offline-publication-revision", REV_OFFLINE, "--neutral-publication-revision", REV_NEUTRAL]
+        R.main()
+    analysis = R.load_json(root / "analysis.json")
+    result = R.load_json(root / "operation-results.json")
+    journal = R._validate_case_journal(root, R.validate_baseline(), result)
+    assert analysis["decision"] == "development_candidate_rejected", analysis["decision"]
+    assert analysis["development_analysis"]["development_screen_passed"] is False
+    assert len(result["operations"]) == 21
+    assert journal["attempts"] == 21 and journal["usage_complete"] is True
+    assert analysis["total_attempts"] == 22
+    print(json.dumps({
+        "schema": "exp046-independent-cli-sequence/1", "status": "passed",
+        "stages": ["prepare", "cli-neutral", "cli-run-21", "cli-analyze"],
+        "transport": "local mocked response only", "transport_attempts": len(transport_calls),
+        "neutral_shape": transport_calls[0], "case_operations": len(result["operations"]),
+        "analysis_decision": analysis["decision"], "neutral_quality_failed": True,
+        "case_attempts": journal["attempts"], "search_calls": 0, "provider_calls": 0,
+    }, indent=2))

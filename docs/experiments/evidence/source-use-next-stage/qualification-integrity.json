@@ -1,0 +1,55 @@
+{
+  "schema": "source-use-capture-qualification/1",
+  "qualified": true,
+  "selector_qualification": false,
+  "untouched_confirmation": false,
+  "owned_files": {
+    "capture-runner.py.txt": "5a32c6675a323fb1d956908a2b6c0ef276b2584e668adbc8bd43f324151b0354",
+    "capture-tests.py.txt": "3ea4b24d827b50785ddab399e95a448972730260aef8ff2a2d960f833bc241af"
+  },
+  "input_files": {
+    "pilot-manifest.json": "1a2beae40b71d3cf9003a251234bb098e3538414387980ef610b1b100ce6f324",
+    "answerer-prompt.txt": "117bb672dd2162dfafbeefe8d62e56a1f0dbc37f728f202dc8e9baba86a52562",
+    "answer-output-schema.json": "adcf4757008eaf7a3a9481bb7feeb60551c09e8aae56f29e44372c10b36cbc28",
+    "source-assessor-prompt.txt": "5ba8c9b81d2415de0fe4ebe18e41c717763610c297ea93f757dd2b61af8dd766",
+    "answer-assessor-prompt.txt": "1ac7eea2e7606be827f97b4984417c6188b9216405d6275e9644b55681296f13"
+  },
+  "checks": {
+    "capture_tests": {
+      "passed": 11,
+      "skipped": 0,
+      "live_http_calls": 0
+    },
+    "span_tests": {
+      "passed": 9
+    },
+    "root_actual_consumer_fake_transport": {
+      "calls": 29,
+      "source_union_counts": [
+        13,
+        15
+      ],
+      "answer_packets": 4,
+      "sources_per_answer": 5,
+      "markdown_characters": 8000,
+      "shared_context_identity": "passed",
+      "sockets_opened": 0
+    },
+    "independent_luna_review": "resolved all material findings before capture",
+    "setup_correction": {
+      "endpoint_selection": "existing Hermes discovery after removing inherited endpoint variables in isolated child",
+      "persistent_configuration_changed": false,
+      "same_manifest_lease_exclusive": true,
+      "previous_attempt_source_calls": 0,
+      "retry_environment_restored": true,
+      "inherited_endpoint_environment_restored": true,
+      "environment_restored_on_client_construction_failure": true
+    }
+  },
+  "limits": [
+    "Unix main-thread SIGALRM required for hard owned request deadlines.",
+    "Internal service fetches/countermeasures not controlled or fully counted.",
+    "Qualification proves helper behavior only, not task utility or production ranking improvement.",
+    "Each fresh answerer receives only its individual opaque packet and prompt/schema."
+  ]
+}

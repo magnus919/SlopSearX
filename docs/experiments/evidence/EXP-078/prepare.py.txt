@@ -1,0 +1,146 @@
+"""Build the fixed EXP-078 effective inputs after its registered correction.
+
+No search, selector, capture or model calls occur in this module. All original
+receipts remain external immutable inputs; d12 uses the correction response
+alone, never an old/new union.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+from slopsearx.service import _rerank_text, _rerank_url  # noqa: E402
+from slopsearx import rerank as _rerank  # noqa: E402
+
+
+class PrepareError(ValueError):
+    pass
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+
+def _source_id(native: dict, task_id: str, index: int) -> str:
+    url = native.get("url")
+    if isinstance(url, str) and url:
+        return "u" + _sha(url.split("#", 1)[0].encode("utf-8"))
+    return "r" + _sha(_canonical({"task_id": task_id, "result_index": index, "result": native}))
+
+
+def project_card(task_id: str, index: int, native: dict) -> dict:
+    """Apply the unchanged deployed UTF-8 card projection and occurrence ID."""
+    if type(native) is not dict:
+        raise PrepareError("native-result-shape")
+    title, content, url = native.get("title"), native.get("content"), native.get("url")
+    if not isinstance(title, str) or not isinstance(content, str) or (url is not None and not isinstance(url, str)):
+        raise PrepareError("native-result-text-type")
+    raw_url = url if isinstance(url, str) else ""
+    occurrence = "g" + _sha(_canonical({"task_id": task_id, "result_index": index, "result": native}))
+    return {"id": occurrence, "url": _rerank_url(raw_url),
+            "title": _rerank_text(title, _rerank.MAX_TITLE_BYTES),
+            "snippet": _rerank_text(content, _rerank.MAX_SNIPPET_BYTES)}
+
+def prepare_stage(reused: dict, correction: dict, *, cohorts_path: Path | None = None,
+                  stage_clock: dict | None = None, stage_clock_bytes: bytes | None = None) -> dict:
+    """Assemble the 13 effective task pools from 12 exact reuse rows + one new d12.
+
+    A missing d12 target remains a visible quality-gate failure; the bridge does
+    not invent, merge, or substitute results.
+    """
+    from importlib.machinery import SourceFileLoader
+    from importlib.util import module_from_spec, spec_from_loader
+
+    loader = SourceFileLoader("exp078_input_bridge", str(HERE / "input-bridge.py.txt"))
+    spec = spec_from_loader(loader.name, loader)
+    module = module_from_spec(spec)
+    loader.exec_module(module)
+    if type(reused) is not dict or reused.get("schema") != "exp078-reused-inputs/1" or reused.get("synthetic") is not False:
+        raise PrepareError("reused-inputs-schema")
+    if type(correction) is not dict or correction.get("schema") != "exp078-corrective-query-receipt/1":
+        raise PrepareError("correction-schema")
+    expected = {"task_id": "d12", "query": "cosign", "target_url": "https://github.com/sigstore/cosign", "engine": "github"}
+    if any(correction.get(key) != value for key, value in expected.items()):
+        raise PrepareError("correction-identity")
+    if correction.get("effective_pool_source") != "corrective_github_query":
+        raise PrepareError("correction-effective-source")
+    if (type(correction.get("results")) is not list or type(correction.get("engine_outcomes")) is not list
+            or correction.get("partial") is not False or correction.get("all_unresponsive") is not False
+            or correction.get("cached") is not False or type(correction.get("receipt_sha256")) is not str):
+        raise PrepareError("correction-incomplete")
+    calls = correction.get("physical_http_calls")
+    if calls != 1:
+        raise PrepareError("correction-call-budget")
+    engine_rows = correction["engine_outcomes"]
+    if len(engine_rows) != 1 or engine_rows[0].get("engine") != "github":
+        raise PrepareError("correction-engine-coverage")
+    if correction.get("status") != "complete" or engine_rows[0].get("status") != "ok":
+        raise PrepareError("correction-not-complete")
+    if type(correction.get("target_acquired")) is not bool:
+        raise PrepareError("correction-target-flag")
+    target = expected["target_url"].rstrip("/")
+    present = any(type(row) is dict and type(row.get("url")) is str and row["url"].rstrip("/") == target
+                  for row in correction["results"])
+    if correction["target_acquired"] is not present:
+        raise PrepareError("correction-target-binding")
+
+    pools = dict(reused.get("pools", {}))
+    if set(pools) != {f"d{i}" for i in range(1, 12)} | {"d13"}:
+        raise PrepareError("reused-membership")
+    if "d12" in pools or reused.get("historical_d12", {}).get("effective") is not False:
+        raise PrepareError("historical-d12-not-excluded")
+    pools["d12"] = {"task_id": "d12", "kind": "navigation", "results": correction["results"],
+                     "engine_outcomes": correction["engine_outcomes"], "receipt_path": "corrective-query.json",
+                     "receipt_sha256": correction["receipt_sha256"], "reused": False,
+                     "wikipedia_unavailable": False, "target_present": present}
+    ordered = {f"d{i}": pools[f"d{i}"] for i in range(1, 14)}
+    projected = {}
+    source_ids, native_by_id = {}, {}
+    for task_id, pool in ordered.items():
+        cards = [project_card(task_id, i, row) for i, row in enumerate(pool["results"])]
+        source_ids[task_id] = {card["id"]: _source_id(native, task_id, i)
+                               for i, (card, native) in enumerate(zip(cards, pool["results"]))}
+        native_by_id[task_id] = {card["id"]: native
+                                 for card, native in zip(cards, pool["results"])}
+        projected[task_id] = {"cards": cards, "natural_count": len(cards),
+                              "merged_count": len(cards)}
+    cohorts_path = cohorts_path or HERE / "cohorts.json"
+    cohorts = module.strict_json(Path(cohorts_path).read_bytes())
+    ids = [row["id"] for row in cohorts["cohorts"]["development"]]
+    if ids != list(ordered):
+        raise PrepareError("cohort-order")
+    if type(stage_clock) is not dict or type(stage_clock_bytes) is not bytes:
+        raise PrepareError("stage-clock-required")
+    if _canonical(stage_clock) != stage_clock_bytes or stage_clock.get("schema") != "exp078-stage-clock/1":
+        raise PrepareError("stage-clock-binding")
+    return {"schema": "exp078-effective-acquisition/1", "stage": "development",
+            "synthetic": False, "pools": projected,
+            "engine_outcomes": {task_id: {row["engine"]: row for row in pools[task_id]["engine_outcomes"]}
+                                for task_id in projected},
+            "source_id_by_card_id": source_ids,
+            "native_results_by_card_id": native_by_id,
+            "input_provenance": {task_id: {"receipt_sha256": pools[task_id]["receipt_sha256"],
+                                            "reused": pools[task_id]["reused"]}
+                                 for task_id in ordered},
+            "historical_d12": reused["historical_d12"],
+            "acquisition_receipt": {"stage_manifest_sha256": stage_clock["stage_manifest_sha256"],
+                                    "stage_clock": stage_clock,
+                                    "stage_clock_digest": _sha(stage_clock_bytes)},
+            "corrective_query_sha256": correction["receipt_sha256"],
+            "target_acquired": present,
+            "engine_availability": {"research": ["arxiv", "openalex", "github"],
+                                    "wikipedia": "blocked outcomes retained in eight reused receipts"},
+            "numerical_thresholds_changed": False}

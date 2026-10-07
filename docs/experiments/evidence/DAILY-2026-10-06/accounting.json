@@ -1,0 +1,34 @@
+{
+  "cycle_start": "2026-10-06T13:02:16.258000+00:00",
+  "recorded_at": "2026-10-06T13:05:54.339307+00:00",
+  "elapsed_seconds": 218.081307,
+  "baseline": "1b34184",
+  "decision": "process correction; EXP-082 remains pending; no runtime adoption",
+  "latest_seven_completed": [
+    "EXP-081",
+    "EXP-080",
+    "EXP-079",
+    "EXP-078",
+    "EXP-077",
+    "EXP-076",
+    "EXP-075"
+  ],
+  "provider_calls": 0,
+  "paid_calls": 0,
+  "quality_measurements": 0,
+  "subscription_usage": "unknown",
+  "automation_verified": {
+    "active": true,
+    "daily_0900": true,
+    "same_start_date_guard": true,
+    "explicit_live_jev_permission": true,
+    "old_zero_paid_sentence_removed": true
+  },
+  "exp082_missing_closure_artifacts": [
+    "registration-integrity.json",
+    "qualification-integrity.json",
+    "stage-development-manifest.json"
+  ],
+  "credential_read": "not retried; permission requested",
+  "deployment": false
+}

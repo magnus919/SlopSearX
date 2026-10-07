@@ -1,0 +1,40 @@
+import json,subprocess,sys,platform,hashlib
+from pathlib import Path
+from importlib.metadata import version
+out=Path('docs/experiments/evidence/EXP-031');out.mkdir(exist_ok=True);rows=[]
+def norm(x):
+ mapping={}
+ def collect(y):
+  if isinstance(y,dict):
+   for k,v in y.items():
+    if k in ['query_id','cursor','result_id'] and isinstance(v,str):mapping[v]='<'+k+'>'
+    collect(v)
+  elif isinstance(y,list):
+   for v in y:collect(v)
+ collect(x)
+ def walk(y):
+  if isinstance(y,dict):return {k:('<elapsed>' if k=='response_time_ms' else walk(v)) for k,v in y.items()}
+  if isinstance(y,list):return [walk(v) for v in y]
+  if isinstance(y,str):
+   for a,b in sorted(mapping.items(),key=lambda kv:-len(kv[0])):y=y.replace(a,b)
+  return y
+ return walk(x)
+def size(x):return len(json.dumps(x,sort_keys=True,separators=(',',':')).encode())
+for tool in ['slopsearx_search','slopsearx_search_targeted']:
+ for consumes in [False,True]:
+  for rep in [1,2]:
+   dest=out/f'{tool}-{int(consumes)}-{rep}';dest.mkdir(exist_ok=True)
+   with (dest/'stdout.txt').open('w') as o,(dest/'stderr.txt').open('w') as e:
+    r=subprocess.run([sys.executable,'/private/tmp/exp031-worker.py',str(dest),tool,str(int(consumes)),str(rep)],stdout=o,stderr=e,timeout=30)
+   (dest/'exit-code.txt').write_text(str(r.returncode)+'\n');assert r.returncode==0,dest
+   b=norm(json.loads((dest/'baseline.json').read_text()));c=norm(json.loads((dest/'candidate.json').read_text()))
+   bw=[w for w in b['warnings'] if w.startswith(('language ','time_range '))];cw=[w for w in c['warnings'] if w.startswith(('language ','time_range '))];assert len(bw)==len(cw)==2
+   row={'tool':tool,'consumes':consumes,'rep':rep,'baseline_truthful':0 if consumes else 2,'candidate_truthful':sum('not enforced by selected adapters' in w for w in cw),'warnings':2,'baseline_bytes':size(b),'candidate_bytes':size(c)}
+   b['warnings']=[w.replace('not consumed by any adapter','not enforced by selected adapters') for w in b['warnings']]
+   row['guard_equal']=b==c;assert row['guard_equal']
+   assert all(c['enforcement'][f]['status']=='unsupported' for f in ['language','time_range'])
+   dispatch=json.loads((dest/'dispatch.json').read_text());assert len(dispatch)==4
+   assert all(x['params'].get('language')=='en' and x['params'].get('time_range')=='month' for x in dispatch)
+   rows.append(row);(out/'rows.json').write_text(json.dumps(rows,indent=2)+'\n')
+summary={'pairs':len(rows),'baseline_truthful_fraction':sum(r['baseline_truthful'] for r in rows)/16,'candidate_truthful_fraction':sum(r['candidate_truthful'] for r in rows)/16,'byte_growth':sum(r['candidate_bytes'] for r in rows)/sum(r['baseline_bytes'] for r in rows)-1,'guardrails_equal':all(r['guard_equal'] for r in rows),'environment':{'python':platform.python_version(),'packages':{p:version(p) for p in ['mcp','httpx','uvicorn']}}}
+(out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2))

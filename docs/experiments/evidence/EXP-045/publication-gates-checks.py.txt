@@ -1,0 +1,221 @@
+"""Synthetic, offline-only EXP-045 publication-gate tests.
+
+Usage: python exp045-publication-gates-checks.py.txt /path/to/EXP-045/replay.py.txt
+Mocks git subprocess reads and never calls network/provider/search. It checks that
+neutral qualification is gated by a published offline qualification, case runs
+require both published receipts, and tracked receipts do not contain a
+self-referential commit SHA.
+"""
+import hashlib
+import importlib.util
+import json
+import pathlib
+import sys
+import tempfile
+import types
+
+
+def load_runner(path):
+    module = types.ModuleType("exp045_publication_gate_runner")
+    module.__file__ = path
+    exec(compile(pathlib.Path(path).read_text(encoding="utf-8"), path, "exec"), module.__dict__)
+    return module
+
+
+def write_json(R, path, value):
+    path.write_bytes(R.pretty(value))
+
+
+def offline_artifacts(R, root):
+    neutral = R.make_neutral_fixture()
+    (root / "neutral-body.json").write_bytes(neutral["body"])
+    inv = {k: v for k, v in neutral.items() if k not in {"body", "state"}}
+    write_json(R, root / "neutral-inventory.json", inv)
+    # Names and bytes are synthetic. This gate unit does not pretend to qualify
+    # test results; it checks publication binding and phase ordering only.
+    names = {"replay.py.txt", "fixture_tests.py.txt", "manual-choice-checks.py.txt",
+             "prepared-plan.json", "neutral-body.json", "neutral-inventory.json",
+             "source-pins.json", "registration-integrity.json",
+             "publication-gates-checks.py.txt", "transport-fixtures.py.txt", "transport-qualification.json"}
+    for name in names - {"neutral-body.json", "neutral-inventory.json"}:
+        (root / name).write_bytes(("synthetic:" + name).encode())
+    qual = {
+        "schema": "exp045-offline-qualification/1", "status": "passed",
+        "files": {name: R._hash(root / name) for name in sorted(names)},
+        "fixture_tests_passed": 10, "manual_checks_passed": 1,
+        "synthetic_operations": 21, "primary_deltas": {"A": 8, "B": 8},
+        "pool_inventory": 13, "neutral_quality_failed": True,
+        "provider_calls": 0, "search_calls": 0,
+    }
+    write_json(R, root / "offline-qualification.json", qual)
+    return neutral, qual
+
+
+def mock_git(R, root):
+    real_run = R.subprocess.run
+    seen = []
+    state = {"wrong_revision": None}
+    def fake_run(args, *pargs, **kwargs):
+        seen.append(list(args))
+        if args[:3] == ["git", "merge-base", "--is-ancestor"]:
+            return types.SimpleNamespace(stdout=b"", returncode=0)
+        if len(args) >= 3 and args[:2] == ["git", "show"]:
+            revision_path = args[2]
+            filename = revision_path.split(":", 1)[1].rsplit("/", 1)[-1]
+            data = (root / filename).read_bytes()
+            if state["wrong_revision"] == filename:
+                data += b"tampered"
+            return types.SimpleNamespace(stdout=data, returncode=0)
+        raise AssertionError(f"unexpected subprocess call: {args}")
+    R.subprocess.run = fake_run
+    return real_run, seen, state
+
+
+def accepted_neutral(R, root, neutral):
+    body = neutral["body"]
+    batch = R.strict_json(body)
+    questions = batch["questions"]
+    answers = {}
+    for qid, question in questions.items():
+        options = list(question["criteria"])
+        probabilities = {option: (1.0 if option == "KEEP" else 0.0) for option in options}
+        answers[qid] = {"type": "choice", "choice": "KEEP", "probabilities": probabilities, "confidence": 0.8}
+    parsed = {"model": R.MODEL, "answers": answers,
+              "usage": {"input_tokens": 200, "output_tokens": 100}, "_elapsed_ms": 20.0}
+    raw = json.dumps(parsed, separators=(",", ":")).encode()
+    # publication_gates parses raw through this local pure stub; no transport is called.
+    R.parse_transport = lambda _raw: parsed
+    (root / "neutral.response.bin").write_bytes(raw)
+    write_json(R, root / "neutral-parsed.json", parsed)
+    body_sha = hashlib.sha256(body).hexdigest()
+    raw_sha = hashlib.sha256(raw).hexdigest()
+    events = [
+        {"event": "attempt_started", "attempt": 1, "request_id": "neutral-acceptance",
+         "request_sha256": body_sha, "remote_deadline_ms": R.MAX_REMOTE_MS},
+        {"event": "attempt_finished", "attempt": 1, "request_id": "neutral-acceptance",
+         "request_sha256": body_sha, "response_sha256": raw_sha, "response_bytes": len(raw),
+         "status": "valid", "error": None, "input_tokens": 200, "output_tokens": 100,
+         "remote_http_ms": 20.0},
+    ]
+    ledger = b"".join(json.dumps(event, separators=(",", ":")).encode() + b"\n" for event in events)
+    (root / "neutral-attempts.jsonl").write_bytes(ledger)
+    rec = {"schema": "exp045-neutral-receipt/1", "status": "accepted", "error": None,
+           "model": R.MODEL, "body_sha256": body_sha, "raw_sha256": raw_sha,
+           "raw_bytes": len(raw), "response": parsed, "usage": parsed["usage"],
+           "remote_http_ms": 20.0, "transport_wall_ms": 30.0, "transport_exit_code": 0,
+           "attempt_count": 1, "retry_count": 0,
+           "attempts_sha256": hashlib.sha256(ledger).hexdigest()}
+    write_json(R, root / "neutral-receipt.json", rec)
+    return rec
+
+
+def run(path):
+    R = load_runner(path)
+    with tempfile.TemporaryDirectory(prefix="exp045-pub-gates-") as temp:
+        root = pathlib.Path(temp)
+        neutral, qual = offline_artifacts(R, root)
+        rev = "a" * 40
+        real_run, seen, git_state = mock_git(R, root)
+        try:
+            # No offline receipt means the first neutral phase cannot qualify.
+            saved = (root / "offline-qualification.json").read_bytes()
+            (root / "offline-qualification.json").unlink()
+            try:
+                R.publication_gates(root, required=True, offline_revision=rev, require_neutral=False)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("neutral phase accepted without offline qualification")
+            (root / "offline-qualification.json").write_bytes(saved)
+
+            # A published offline qualification alone is sufficient for the one
+            # neutral acceptance phase, but not for real case execution.
+            gate = R.publication_gates(root, required=True, offline_revision=rev, require_neutral=False)
+            assert gate["offline"] is True and gate["neutral"] is False
+
+            # The neutral command itself must reject before transport when the
+            # offline artifact has not been published/pinned.
+            old_verify = R.verify
+            old_bounded = R.H.bounded_process
+            R.verify = lambda *args, **kwargs: {"ok": True}
+            def forbidden_transport(*args, **kwargs):
+                raise AssertionError("neutral transport dispatched before offline publication gate")
+            R.H.bounded_process = forbidden_transport
+            try:
+                try:
+                    R.run_neutral(root, "synthetic-transport-argv", None)
+                except ValueError as exc:
+                    assert "offline-publication-revision" in str(exc)
+                else:
+                    raise AssertionError("neutral command accepted without offline publication revision")
+            finally:
+                R.verify = old_verify
+                R.H.bounded_process = old_bounded
+
+            try:
+                R.publication_gates(root, required=True, offline_revision=rev, neutral_revision=None, require_neutral=True)
+            except ValueError as exc:
+                assert "neutral acceptance receipt is required" in str(exc)
+            else:
+                raise AssertionError("real-case gate accepted before neutral acceptance")
+
+            # Commit-content mismatch fails closed; revision string is mocked,
+            # ancestry/content verification still executes through the git seam.
+            git_state["wrong_revision"] = "offline-qualification.json"
+            try:
+                R.publication_gates(root, required=True, offline_revision=rev, require_neutral=False)
+            except ValueError as exc:
+                assert "differs from local" in str(exc)
+            else:
+                raise AssertionError("mismatched published content accepted")
+            git_state["wrong_revision"] = None
+
+            # Published neutral fixture must be bound to frozen body/raw/ledger.
+            rec = accepted_neutral(R, root, neutral)
+            try:
+                R.publication_gates(root, required=True, offline_revision=rev,
+                                    neutral_revision=None, require_neutral=True)
+            except ValueError as exc:
+                assert "neutral-publication-revision" in str(exc)
+            else:
+                raise AssertionError("real-case gate accepted without published neutral artifact")
+            gate = R.publication_gates(root, required=True, offline_revision=rev,
+                                       neutral_revision="b" * 40, require_neutral=True)
+            assert gate["offline"] and gate["neutral"]
+            assert {"offline-qualification.json", "neutral-receipt.json"} == {
+                cmd[2].split(":", 1)[1].rsplit("/", 1)[-1]
+                for cmd in seen if len(cmd) >= 3 and cmd[:2] == ["git", "show"]
+            }
+
+            # Exact schemas forbid putting publication commit SHAs into either
+            # tracked receipt; the external CLI revision binds publication.
+            q = dict(qual); q["publication_revision"] = rev
+            write_json(R, root / "offline-qualification.json", q)
+            try:
+                R.publication_gates(root, required=True, offline_revision=rev,
+                                    neutral_revision="b" * 40, require_neutral=True)
+            except ValueError as exc:
+                assert "schema/inventory mismatch" in str(exc)
+            else:
+                raise AssertionError("self-referential offline commit field accepted")
+            q.pop("publication_revision")
+            # Restore exact valid receipt, and test the same prohibition for neutral.
+            write_json(R, root / "offline-qualification.json", qual)
+            rec["publication_revision"] = "b" * 40
+            write_json(R, root / "neutral-receipt.json", rec)
+            try:
+                R.publication_gates(root, required=True, offline_revision=rev,
+                                    neutral_revision="b" * 40, require_neutral=True)
+            except ValueError as exc:
+                assert "identity mismatch" in str(exc)
+            else:
+                raise AssertionError("self-referential neutral commit field accepted")
+        finally:
+            R.subprocess.run = real_run
+    print("EXP-045 synthetic publication gate checks passed; git mocked; provider/search calls=0")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: python exp045-publication-gates-checks.py.txt /path/to/EXP-045/replay.py.txt")
+    run(sys.argv[1])

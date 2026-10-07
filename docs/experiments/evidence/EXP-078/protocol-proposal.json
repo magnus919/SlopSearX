@@ -1,0 +1,58 @@
+{
+  "admission": {
+    "bypass_or_patch_exp077_guards": false,
+    "external_calls_before_separate_admission": 0,
+    "new_exp078_stage_manifest_and_clock_required": true,
+    "new_qualified_source_closure_required": true,
+    "reuse_exp077_live_runner_capability": false,
+    "single_use_live_capability_issued": false
+  },
+  "confirmation": {
+    "cohort_or_targets_modified": false,
+    "if_later_proposed": "prospectively use and disclose arXiv, OpenAlex, and GitHub for both development and confirmation; exclude unavailable Wikipedia; not comparable to prior four-engine studies",
+    "run_authorized": false
+  },
+  "decision": "Maintainer approved both acquisition exceptions on 2026-10-06; registration, qualification and bounded development execution authorized after source, input and one-shot admission checks.",
+  "frozen_candidate_and_gates": {
+    "EXP_076_protocol_sha256": "5dc07f3a59428210489e851e60d69fe5db1a8409c70440b3bf04f5aa82497e32",
+    "EXP_077_protocol_sha256": "04fed87ccaa12272c73fcb6e6af5ef7da619c77488a62ae947d7cb647f251992",
+    "candidate": "exact frozen EXP-076/EXP-077 candidate and prompts",
+    "candidate_or_prompt_changes": false,
+    "confirmation_cohort_changes": false,
+    "fusion": "exact Fraction reciprocal-rank fusion, k=60",
+    "new_searches_for_confirmation": false,
+    "threshold_or_metric_changes": false
+  },
+  "invocation_authorized": false,
+  "predecessor": {
+    "id": "EXP-077",
+    "mutate_or_reclassify": false,
+    "terminal_status": "inconclusive"
+  },
+  "purpose": "development-only acquisition repair proposal; not confirmation or production adoption",
+  "requested_amendments": [
+    {
+      "effective_pool": "new response only; retain original missed-target response unchanged, do not union",
+      "id": "single_targeted_search_exception",
+      "other_engines_or_queries": 0,
+      "request": "one keyless GitHub search with exact query cosign for https://github.com/sigstore/cosign",
+      "retain_original_miss": true,
+      "retries": 0
+    },
+    {
+      "drop_or_replace_results": false,
+      "id": "partial_engine_outcome_exception",
+      "represent_failed_engine_as_success": false,
+      "request": "allow analysis of complete received research pools when Wikipedia is unavailable, retaining each failed engine outcome"
+    }
+  ],
+  "reuse": {
+    "grading_or_selection_previously_performed": false,
+    "input_pins": "reuse-input-pins.json",
+    "navigation_pools": 4,
+    "original_physical_http_receipts": 37,
+    "research_pools": 8
+  },
+  "schema": "exp078-proposal/1",
+  "status": "amendment_approved_pending_qualification"
+}

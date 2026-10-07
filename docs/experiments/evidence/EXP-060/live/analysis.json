@@ -1,0 +1,3734 @@
+{
+  "adoption_eligible": false,
+  "candidate_max_http_call_ms_by_operation": {
+    "q1-base": 322.5831249728799,
+    "q1-repeat": 330.7051670271903,
+    "q1-rotate20": 343.59583305194974,
+    "q10-base": 183.83300001733005,
+    "q11-base": 434.7142910119146,
+    "q12-base": 283.3432499319315,
+    "q13-base": 222.91866596788168,
+    "q2-base": 278.69970817118883,
+    "q3-base": 345.0062908232212,
+    "q4-base": 470.6557500176132,
+    "q4-repeat": 560.5697080027312,
+    "q4-rotate20": 398.35120900534093,
+    "q5-base": 373.1137500144541,
+    "q6-base": 321.3977499399334,
+    "q7-base": 343.376083066687,
+    "q7-repeat": 426.3400421477854,
+    "q7-rotate20": 388.443750096485,
+    "q8-base": 367.44058411568403,
+    "q8-repeat": 373.5769160557538,
+    "q8-rotate20": 379.0237088687718,
+    "q9-base": 292.54133300855756
+  },
+  "candidate_remote_ms_by_operation": {
+    "q1-base": 1077.3673749063164,
+    "q1-repeat": 1111.8311239406466,
+    "q1-rotate20": 1142.9490421433002,
+    "q10-base": 183.83300001733005,
+    "q11-base": 434.7142910119146,
+    "q12-base": 283.3432499319315,
+    "q13-base": 222.91866596788168,
+    "q2-base": 992.1984581742436,
+    "q3-base": 902.5538328569382,
+    "q4-base": 1124.4177501648664,
+    "q4-repeat": 1254.9034170806408,
+    "q4-rotate20": 1041.6856680531055,
+    "q5-base": 925.8519180584699,
+    "q6-base": 868.648667819798,
+    "q7-base": 888.3672079537064,
+    "q7-repeat": 985.9300828538835,
+    "q7-rotate20": 955.0308752804995,
+    "q8-base": 957.454000134021,
+    "q8-repeat": 926.4954172540456,
+    "q8-rotate20": 984.1885841451585,
+    "q9-base": 292.54133300855756
+  },
+  "coverage": {
+    "by_reference": {
+      "A": {
+        "e_minus_d_star": 0.0,
+        "eligible_pool_count": 8,
+        "facet_opportunity_ceiling": {
+          "q1": 3,
+          "q2": 3,
+          "q3": 3,
+          "q4": 3,
+          "q5": 3,
+          "q6": 3,
+          "q7": 3,
+          "q8": 3
+        },
+        "macro_coverage_at_10": {
+          "d_star": 0.9583333333333334,
+          "e": 0.9583333333333334,
+          "w0": 0.9583333333333334
+        },
+        "missing_order_pools": [],
+        "per_pool": {
+          "q1": {
+            "coverage": {
+              "d_star": 0.6666666666666666,
+              "e": 0.6666666666666666,
+              "w0": 0.6666666666666666
+            },
+            "covered_facets": {
+              "d_star": [
+                "q1_f1",
+                "q1_f2"
+              ],
+              "e": [
+                "q1_f1",
+                "q1_f2"
+              ],
+              "w0": [
+                "q1_f1",
+                "q1_f2"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q1_f1",
+              "q1_f2",
+              "q1_f3"
+            ],
+            "facet_inventory": {
+              "q1_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c15",
+                    "c18",
+                    "c25"
+                  ],
+                  "e": [
+                    "c25",
+                    "c5"
+                  ],
+                  "w0": [
+                    "c15",
+                    "c18",
+                    "c5",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c10",
+                  "c13",
+                  "c15",
+                  "c18",
+                  "c2",
+                  "c24",
+                  "c25",
+                  "c3",
+                  "c5",
+                  "c7",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q1_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c25"
+                  ],
+                  "e": [
+                    "c0",
+                    "c14",
+                    "c16",
+                    "c25",
+                    "c5"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c14",
+                    "c15",
+                    "c18",
+                    "c5",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 18,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c10",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c2",
+                  "c20",
+                  "c24",
+                  "c25",
+                  "c28",
+                  "c3",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q1_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [],
+                  "e": [],
+                  "w0": []
+                },
+                "evaluable": true,
+                "tagged_useful_count": 4,
+                "tagged_useful_ids": [
+                  "c10",
+                  "c17",
+                  "c28",
+                  "c3"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q2": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ],
+              "e": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ],
+              "w0": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q2_f1",
+              "q2_f2",
+              "q2_f3"
+            ],
+            "facet_inventory": {
+              "q2_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c16",
+                    "c20",
+                    "c3",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c11",
+                    "c16",
+                    "c20",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c11",
+                    "c16",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 11,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c11",
+                  "c12",
+                  "c16",
+                  "c20",
+                  "c22",
+                  "c3",
+                  "c4",
+                  "c5",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 1,
+                "uncertain_tagged_useful_ids": [
+                  "c0"
+                ]
+              },
+              "q2_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c4",
+                    "c9"
+                  ],
+                  "e": [
+                    "c1",
+                    "c11",
+                    "c4",
+                    "c9"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c11",
+                    "c4",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 5,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c11",
+                  "c22",
+                  "c4",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q2_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0"
+                  ],
+                  "e": [
+                    "c0"
+                  ],
+                  "w0": [
+                    "c0"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 2,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c12"
+                ],
+                "uncertain_tagged_useful_count": 1,
+                "uncertain_tagged_useful_ids": [
+                  "c0"
+                ]
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q3": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ],
+              "e": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ],
+              "w0": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q3_f1",
+              "q3_f2",
+              "q3_f3"
+            ],
+            "facet_inventory": {
+              "q3_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c12",
+                    "c19",
+                    "c2",
+                    "c38",
+                    "c5",
+                    "c6"
+                  ],
+                  "e": [
+                    "c12",
+                    "c19",
+                    "c2",
+                    "c38",
+                    "c5",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c13",
+                    "c19",
+                    "c2"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c12",
+                  "c13",
+                  "c15",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c38",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q3_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c12",
+                    "c14",
+                    "c19",
+                    "c38",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "e": [
+                    "c1",
+                    "c12",
+                    "c14",
+                    "c19",
+                    "c38",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c14",
+                    "c19",
+                    "c7"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 16,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c11",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c30",
+                  "c38",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 2,
+                "uncertain_tagged_useful_ids": [
+                  "c17",
+                  "c30"
+                ]
+              },
+              "q3_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c14",
+                    "c19",
+                    "c2",
+                    "c3",
+                    "c6",
+                    "c7"
+                  ],
+                  "e": [
+                    "c1",
+                    "c14",
+                    "c19",
+                    "c2",
+                    "c3",
+                    "c6",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c10",
+                    "c13",
+                    "c14",
+                    "c16",
+                    "c19",
+                    "c2",
+                    "c3",
+                    "c7",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 15,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c13",
+                  "c14",
+                  "c16",
+                  "c17",
+                  "c19",
+                  "c2",
+                  "c21",
+                  "c3",
+                  "c6",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 1,
+                "uncertain_tagged_useful_ids": [
+                  "c17"
+                ]
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q4": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ],
+              "e": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ],
+              "w0": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q4_f1",
+              "q4_f2",
+              "q4_f3"
+            ],
+            "facet_inventory": {
+              "q4_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c16",
+                    "c2",
+                    "c20",
+                    "c22",
+                    "c40"
+                  ],
+                  "e": [
+                    "c16",
+                    "c2",
+                    "c20",
+                    "c22",
+                    "c40"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c12",
+                    "c2",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 22,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c12",
+                  "c13",
+                  "c16",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c22",
+                  "c23",
+                  "c28",
+                  "c31",
+                  "c35",
+                  "c40",
+                  "c43",
+                  "c44",
+                  "c50",
+                  "c51",
+                  "c52",
+                  "c56",
+                  "c58",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q4_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c3",
+                    "c40"
+                  ],
+                  "e": [
+                    "c3",
+                    "c40"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c19",
+                    "c3",
+                    "c4",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 14,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c12",
+                  "c14",
+                  "c19",
+                  "c25",
+                  "c3",
+                  "c4",
+                  "c40",
+                  "c48",
+                  "c56",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q4_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c16",
+                    "c17",
+                    "c18",
+                    "c2",
+                    "c20",
+                    "c22",
+                    "c3",
+                    "c40",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c16",
+                    "c17",
+                    "c18",
+                    "c2",
+                    "c20",
+                    "c22",
+                    "c3",
+                    "c40",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c12",
+                    "c2",
+                    "c3",
+                    "c5",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 32,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c12",
+                  "c13",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c22",
+                  "c23",
+                  "c26",
+                  "c28",
+                  "c3",
+                  "c31",
+                  "c34",
+                  "c40",
+                  "c45",
+                  "c47",
+                  "c49",
+                  "c5",
+                  "c50",
+                  "c51",
+                  "c52",
+                  "c53",
+                  "c55",
+                  "c57",
+                  "c58",
+                  "c6",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q5": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ],
+              "e": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ],
+              "w0": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q5_f1",
+              "q5_f2",
+              "q5_f3"
+            ],
+            "facet_inventory": {
+              "q5_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c23",
+                    "c29"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c23",
+                    "c29"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c14",
+                    "c16",
+                    "c17",
+                    "c2",
+                    "c24",
+                    "c29",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 22,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c12",
+                  "c13",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c19",
+                  "c2",
+                  "c21",
+                  "c23",
+                  "c24",
+                  "c25",
+                  "c27",
+                  "c29",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q5_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c10",
+                    "c14",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c29"
+                  ],
+                  "e": [
+                    "c1",
+                    "c10",
+                    "c14",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c29"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c11",
+                    "c14",
+                    "c16",
+                    "c2",
+                    "c29",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 17,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c14",
+                  "c16",
+                  "c19",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c25",
+                  "c27",
+                  "c29",
+                  "c3",
+                  "c33",
+                  "c4",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q5_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c10",
+                    "c14",
+                    "c2",
+                    "c23",
+                    "c29"
+                  ],
+                  "e": [
+                    "c0",
+                    "c10",
+                    "c14",
+                    "c2",
+                    "c23",
+                    "c29"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c11",
+                    "c14",
+                    "c17",
+                    "c2",
+                    "c24",
+                    "c29"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 15,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c10",
+                  "c11",
+                  "c14",
+                  "c17",
+                  "c19",
+                  "c2",
+                  "c23",
+                  "c24",
+                  "c25",
+                  "c26",
+                  "c29",
+                  "c32",
+                  "c33",
+                  "c5"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q6": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ],
+              "e": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ],
+              "w0": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "facet_inventory": {
+              "q6_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c10",
+                    "c17",
+                    "c4",
+                    "c7"
+                  ],
+                  "e": [
+                    "c10",
+                    "c17",
+                    "c4",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c10",
+                    "c17",
+                    "c2",
+                    "c4",
+                    "c7"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c10",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c4",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 1,
+                "uncertain_tagged_useful_ids": [
+                  "c15"
+                ]
+              },
+              "q6_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c3",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "e": [
+                    "c1",
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c3",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c2",
+                    "c3",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 17,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c12",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c3",
+                  "c33",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 1,
+                "uncertain_tagged_useful_ids": [
+                  "c15"
+                ]
+              },
+              "q6_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c4",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "e": [
+                    "c1",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c4",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c16",
+                    "c17",
+                    "c2",
+                    "c4",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 20,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c11",
+                  "c14",
+                  "c16",
+                  "c17",
+                  "c19",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c24",
+                  "c31",
+                  "c33",
+                  "c36",
+                  "c39",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q7": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ],
+              "e": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ],
+              "w0": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "facet_inventory": {
+              "q7_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c3"
+                  ],
+                  "e": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c3"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c3",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c10",
+                  "c11",
+                  "c12",
+                  "c13",
+                  "c14",
+                  "c17",
+                  "c19",
+                  "c3",
+                  "c4",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q7_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c18",
+                  "c2",
+                  "c3",
+                  "c5",
+                  "c6",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q7_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 18,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c12",
+                  "c13",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c3",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q8": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ],
+              "e": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ],
+              "w0": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "facet_inventory": {
+              "q8_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c12",
+                    "c2",
+                    "c4",
+                    "c5",
+                    "c8"
+                  ],
+                  "e": [
+                    "c12",
+                    "c2",
+                    "c4",
+                    "c5",
+                    "c8"
+                  ],
+                  "w0": [
+                    "c3",
+                    "c4",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 10,
+                "tagged_useful_ids": [
+                  "c12",
+                  "c14",
+                  "c16",
+                  "c2",
+                  "c3",
+                  "c33",
+                  "c4",
+                  "c5",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q8_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c19",
+                    "c2",
+                    "c5",
+                    "c8"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c19",
+                    "c2",
+                    "c5",
+                    "c8"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c10",
+                    "c18",
+                    "c3",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 19,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c21",
+                  "c22",
+                  "c3",
+                  "c36",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q8_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c20",
+                    "c4",
+                    "c8"
+                  ],
+                  "e": [
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c20",
+                    "c4",
+                    "c8"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c18",
+                    "c20",
+                    "c26",
+                    "c3",
+                    "c4",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 16,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c12",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c20",
+                  "c21",
+                  "c25",
+                  "c26",
+                  "c27",
+                  "c3",
+                  "c33",
+                  "c38",
+                  "c4",
+                  "c6",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 1,
+                "uncertain_tagged_useful_ids": [
+                  "c27"
+                ]
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          }
+        },
+        "strict_improvement_pool_ids": [],
+        "zero_denominator_pools": []
+      },
+      "B": {
+        "e_minus_d_star": 0.0,
+        "eligible_pool_count": 8,
+        "facet_opportunity_ceiling": {
+          "q1": 3,
+          "q2": 3,
+          "q3": 3,
+          "q4": 3,
+          "q5": 3,
+          "q6": 3,
+          "q7": 3,
+          "q8": 3
+        },
+        "macro_coverage_at_10": {
+          "d_star": 1.0,
+          "e": 1.0,
+          "w0": 1.0
+        },
+        "missing_order_pools": [],
+        "per_pool": {
+          "q1": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ],
+              "e": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ],
+              "w0": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q1_f1",
+              "q1_f2",
+              "q1_f3"
+            ],
+            "facet_inventory": {
+              "q1_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c14",
+                    "c15",
+                    "c18",
+                    "c23"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c14",
+                    "c23",
+                    "c5"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c18",
+                    "c5",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c18",
+                  "c2",
+                  "c23",
+                  "c5",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q1_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c11",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c19",
+                    "c23",
+                    "c25"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c11",
+                    "c14",
+                    "c16",
+                    "c19",
+                    "c23",
+                    "c25",
+                    "c5"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c11",
+                    "c14",
+                    "c15",
+                    "c18",
+                    "c19",
+                    "c5",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 16,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c13",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c23",
+                  "c25",
+                  "c5",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q1_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c25"
+                  ],
+                  "e": [
+                    "c0",
+                    "c12",
+                    "c25"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c12"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 4,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c12",
+                  "c25",
+                  "c28"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q2": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ],
+              "e": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ],
+              "w0": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q2_f1",
+              "q2_f2",
+              "q2_f3"
+            ],
+            "facet_inventory": {
+              "q2_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c10",
+                    "c16",
+                    "c2",
+                    "c3",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c10",
+                    "c11",
+                    "c16",
+                    "c2",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c10",
+                    "c11",
+                    "c16",
+                    "c2",
+                    "c4",
+                    "c5",
+                    "c7",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c16",
+                  "c17",
+                  "c2",
+                  "c3",
+                  "c4",
+                  "c5",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q2_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c10",
+                    "c16"
+                  ],
+                  "e": [
+                    "c10",
+                    "c11",
+                    "c16"
+                  ],
+                  "w0": [
+                    "c10",
+                    "c11",
+                    "c16"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 3,
+                "tagged_useful_ids": [
+                  "c10",
+                  "c11",
+                  "c16"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q2_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c20",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ],
+                  "e": [
+                    "c1",
+                    "c20",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c4",
+                    "c5",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 5,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c20",
+                  "c4",
+                  "c5",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q3": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ],
+              "e": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ],
+              "w0": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q3_f1",
+              "q3_f2",
+              "q3_f3"
+            ],
+            "facet_inventory": {
+              "q3_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c12",
+                    "c14",
+                    "c19",
+                    "c2",
+                    "c3",
+                    "c38",
+                    "c5",
+                    "c6"
+                  ],
+                  "e": [
+                    "c12",
+                    "c14",
+                    "c19",
+                    "c2",
+                    "c3",
+                    "c38",
+                    "c5",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c13",
+                    "c14",
+                    "c19",
+                    "c2",
+                    "c3",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 19,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c12",
+                  "c13",
+                  "c14",
+                  "c15",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c27",
+                  "c29",
+                  "c3",
+                  "c38",
+                  "c5",
+                  "c6",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q3_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c12",
+                    "c19",
+                    "c38",
+                    "c5",
+                    "c6"
+                  ],
+                  "e": [
+                    "c12",
+                    "c19",
+                    "c38",
+                    "c5",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c16",
+                    "c19"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 14,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c12",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c20",
+                  "c29",
+                  "c38",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q3_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c14",
+                    "c19",
+                    "c2"
+                  ],
+                  "e": [
+                    "c1",
+                    "c14",
+                    "c19",
+                    "c2"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c10",
+                    "c13",
+                    "c14",
+                    "c16",
+                    "c19",
+                    "c2",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c13",
+                  "c14",
+                  "c16",
+                  "c19",
+                  "c2",
+                  "c21",
+                  "c27",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q4": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ],
+              "e": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ],
+              "w0": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q4_f1",
+              "q4_f2",
+              "q4_f3"
+            ],
+            "facet_inventory": {
+              "q4_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c16",
+                    "c2",
+                    "c20",
+                    "c22",
+                    "c3",
+                    "c40",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c16",
+                    "c2",
+                    "c20",
+                    "c22",
+                    "c3",
+                    "c40",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c12",
+                    "c2",
+                    "c3",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 25,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c12",
+                  "c13",
+                  "c16",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c22",
+                  "c28",
+                  "c3",
+                  "c31",
+                  "c35",
+                  "c40",
+                  "c41",
+                  "c43",
+                  "c44",
+                  "c45",
+                  "c50",
+                  "c52",
+                  "c56",
+                  "c58",
+                  "c6",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q4_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c20",
+                    "c3",
+                    "c40"
+                  ],
+                  "e": [
+                    "c20",
+                    "c3",
+                    "c40"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c19",
+                    "c3",
+                    "c4",
+                    "c5",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 14,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c12",
+                  "c14",
+                  "c19",
+                  "c20",
+                  "c3",
+                  "c4",
+                  "c40",
+                  "c48",
+                  "c5",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q4_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c17",
+                    "c18",
+                    "c2",
+                    "c22",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c17",
+                    "c18",
+                    "c2",
+                    "c22",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c12",
+                    "c2",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 21,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c12",
+                  "c13",
+                  "c15",
+                  "c17",
+                  "c18",
+                  "c2",
+                  "c21",
+                  "c22",
+                  "c25",
+                  "c26",
+                  "c31",
+                  "c45",
+                  "c47",
+                  "c51",
+                  "c55",
+                  "c57",
+                  "c58",
+                  "c6",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q5": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ],
+              "e": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ],
+              "w0": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q5_f1",
+              "q5_f2",
+              "q5_f3"
+            ],
+            "facet_inventory": {
+              "q5_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c23",
+                    "c29"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c23",
+                    "c29"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c14",
+                    "c16",
+                    "c17",
+                    "c2",
+                    "c24",
+                    "c29",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 22,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c12",
+                  "c13",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c2",
+                  "c21",
+                  "c23",
+                  "c24",
+                  "c25",
+                  "c27",
+                  "c29",
+                  "c32",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q5_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c10",
+                    "c14",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c29"
+                  ],
+                  "e": [
+                    "c1",
+                    "c10",
+                    "c14",
+                    "c16",
+                    "c2",
+                    "c21",
+                    "c29"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c14",
+                    "c16",
+                    "c2",
+                    "c29"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 14,
+                "tagged_useful_ids": [
+                  "c1",
+                  "c10",
+                  "c14",
+                  "c16",
+                  "c19",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c25",
+                  "c27",
+                  "c29",
+                  "c3",
+                  "c4",
+                  "c7"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q5_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c10",
+                    "c15",
+                    "c23",
+                    "c29"
+                  ],
+                  "e": [
+                    "c10",
+                    "c15",
+                    "c23",
+                    "c29"
+                  ],
+                  "w0": [
+                    "c11",
+                    "c17",
+                    "c24",
+                    "c29",
+                    "c9"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 14,
+                "tagged_useful_ids": [
+                  "c10",
+                  "c11",
+                  "c15",
+                  "c17",
+                  "c19",
+                  "c23",
+                  "c24",
+                  "c26",
+                  "c29",
+                  "c3",
+                  "c32",
+                  "c33",
+                  "c5",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q6": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ],
+              "e": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ],
+              "w0": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q6_f1",
+              "q6_f2",
+              "q6_f3"
+            ],
+            "facet_inventory": {
+              "q6_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c10",
+                    "c4",
+                    "c7"
+                  ],
+                  "e": [
+                    "c1",
+                    "c10",
+                    "c4",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c10",
+                    "c2",
+                    "c4",
+                    "c7"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 13,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c36",
+                  "c4",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q6_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c1",
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c3",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "e": [
+                    "c1",
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c3",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c1",
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c2",
+                    "c3",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 18,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c12",
+                  "c13",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c3",
+                  "c33",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q6_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c4",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "e": [
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c21",
+                    "c4",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ],
+                  "w0": [
+                    "c10",
+                    "c16",
+                    "c17",
+                    "c2",
+                    "c4",
+                    "c5",
+                    "c6",
+                    "c7"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 20,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c10",
+                  "c11",
+                  "c13",
+                  "c14",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c24",
+                  "c31",
+                  "c33",
+                  "c36",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q7": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ],
+              "e": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ],
+              "w0": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q7_f1",
+              "q7_f2",
+              "q7_f3"
+            ],
+            "facet_inventory": {
+              "q7_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c3",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c14",
+                    "c3",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c3",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 13,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c10",
+                  "c11",
+                  "c12",
+                  "c13",
+                  "c14",
+                  "c17",
+                  "c3",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q7_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c12",
+                    "c14",
+                    "c15",
+                    "c16",
+                    "c18",
+                    "c2",
+                    "c3",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 14,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c3",
+                  "c4",
+                  "c5",
+                  "c6",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q7_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c15",
+                    "c16",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "e": [
+                    "c0",
+                    "c10",
+                    "c12",
+                    "c15",
+                    "c16",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c12",
+                    "c15",
+                    "c16",
+                    "c2",
+                    "c3",
+                    "c6"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 15,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c11",
+                  "c12",
+                  "c13",
+                  "c15",
+                  "c16",
+                  "c17",
+                  "c19",
+                  "c2",
+                  "c3",
+                  "c5",
+                  "c6",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          },
+          "q8": {
+            "coverage": {
+              "d_star": 1.0,
+              "e": 1.0,
+              "w0": 1.0
+            },
+            "covered_facets": {
+              "d_star": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ],
+              "e": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ],
+              "w0": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            },
+            "e_minus_d_star": 0.0,
+            "evaluable_facets": [
+              "q8_f1",
+              "q8_f2",
+              "q8_f3"
+            ],
+            "facet_inventory": {
+              "q8_f1": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c2",
+                    "c20",
+                    "c4",
+                    "c5",
+                    "c8"
+                  ],
+                  "e": [
+                    "c2",
+                    "c20",
+                    "c4",
+                    "c5",
+                    "c8"
+                  ],
+                  "w0": [
+                    "c10",
+                    "c20",
+                    "c26",
+                    "c4",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 12,
+                "tagged_useful_ids": [
+                  "c10",
+                  "c14",
+                  "c15",
+                  "c16",
+                  "c2",
+                  "c20",
+                  "c21",
+                  "c26",
+                  "c4",
+                  "c5",
+                  "c7",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q8_f2": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c19",
+                    "c2",
+                    "c5",
+                    "c8"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c19",
+                    "c2",
+                    "c5",
+                    "c8"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c10",
+                    "c18",
+                    "c3",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 21,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c10",
+                  "c12",
+                  "c14",
+                  "c15",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c2",
+                  "c21",
+                  "c22",
+                  "c3",
+                  "c33",
+                  "c36",
+                  "c39",
+                  "c5",
+                  "c6",
+                  "c7",
+                  "c8",
+                  "c9"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              },
+              "q8_f3": {
+                "covered_ids_at_10": {
+                  "d_star": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c19",
+                    "c20",
+                    "c4",
+                    "c8"
+                  ],
+                  "e": [
+                    "c0",
+                    "c1",
+                    "c12",
+                    "c18",
+                    "c19",
+                    "c20",
+                    "c4",
+                    "c8"
+                  ],
+                  "w0": [
+                    "c0",
+                    "c1",
+                    "c18",
+                    "c20",
+                    "c26",
+                    "c3",
+                    "c4",
+                    "c6",
+                    "c8"
+                  ]
+                },
+                "evaluable": true,
+                "tagged_useful_count": 16,
+                "tagged_useful_ids": [
+                  "c0",
+                  "c1",
+                  "c12",
+                  "c13",
+                  "c16",
+                  "c17",
+                  "c18",
+                  "c19",
+                  "c20",
+                  "c21",
+                  "c26",
+                  "c3",
+                  "c33",
+                  "c4",
+                  "c6",
+                  "c8"
+                ],
+                "uncertain_tagged_useful_count": 0,
+                "uncertain_tagged_useful_ids": []
+              }
+            },
+            "facet_opportunity_ceiling": {
+              "count": 3,
+              "fraction": 1.0,
+              "total": 3
+            },
+            "unsupported_facet_ids": []
+          }
+        },
+        "strict_improvement_pool_ids": [],
+        "zero_denominator_pools": []
+      }
+    },
+    "nondecrease_both_references": true,
+    "passed": false,
+    "strict_improvement_at_least_one_reference": false
+  },
+  "gates": {
+    "both_reference_quality": false,
+    "complete_membership": true,
+    "five_navigation_targets": false,
+    "four_natural_primary_pools_over_40": false,
+    "four_stability_triples": false,
+    "fresh_candidate_remote_budget": true,
+    "macro_coverage": false
+  },
+  "limits": {
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 91940,
+    "no_production_or_causal_claim": true
+  },
+  "natural_primary_pools_over_40": [
+    "q4"
+  ],
+  "navigation": {
+    "q10": {
+      "d_rank": null,
+      "e_identity_bypass": true,
+      "passed": false,
+      "target_present": false,
+      "w0_rank": null
+    },
+    "q11": {
+      "d_rank": null,
+      "e_identity_bypass": true,
+      "passed": false,
+      "target_present": false,
+      "w0_rank": null
+    },
+    "q12": {
+      "d_rank": 1,
+      "e_identity_bypass": true,
+      "passed": true,
+      "target_present": true,
+      "w0_rank": 1
+    },
+    "q13": {
+      "d_rank": 1,
+      "e_identity_bypass": true,
+      "passed": true,
+      "target_present": true,
+      "w0_rank": 1
+    },
+    "q9": {
+      "d_rank": 1,
+      "e_identity_bypass": true,
+      "passed": true,
+      "target_present": true,
+      "w0_rank": 1
+    }
+  },
+  "outcome": "rejected",
+  "pool_sizes": {
+    "q1": 29,
+    "q10": 9,
+    "q11": 20,
+    "q12": 20,
+    "q13": 20,
+    "q2": 23,
+    "q3": 40,
+    "q4": 59,
+    "q5": 37,
+    "q6": 40,
+    "q7": 39,
+    "q8": 40,
+    "q9": 20
+  },
+  "quality_analysis_performed": true,
+  "references": {
+    "A": {
+      "passed": true,
+      "per_pool": {
+        "q1": {
+          "d_star": {
+            "comparator_useful_at_10": 6,
+            "e_useful_at_10": 5,
+            "lost_useful_count": 2,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c15",
+              "c18"
+            ],
+            "nDCG_delta_e_minus_comparator": -0.023874572516348613,
+            "net_useful_loss": 1,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 6,
+            "e_useful_at_10": 5,
+            "lost_useful_count": 3,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c15",
+              "c18",
+              "c9"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.05435078432410251,
+            "net_useful_loss": 1,
+            "passed": true
+          }
+        },
+        "q2": {
+          "d_star": {
+            "comparator_useful_at_10": 8,
+            "e_useful_at_10": 8,
+            "lost_useful_count": 1,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c3"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.000921494167504977,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 7,
+            "e_useful_at_10": 8,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0663599154941863,
+            "net_useful_loss": -1,
+            "passed": true
+          }
+        },
+        "q3": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 4,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c10",
+              "c13",
+              "c16",
+              "c8"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.13920075391829578,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q4": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 8,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c1",
+              "c10",
+              "c12",
+              "c14",
+              "c19",
+              "c4",
+              "c5",
+              "c8"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.03967498396387259,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q5": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 4,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c11",
+              "c17",
+              "c24",
+              "c9"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.08672125204459158,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q6": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 1,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c2"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q7": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 1,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c8"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q8": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 4,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c10",
+              "c26",
+              "c3",
+              "c6"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.0049155411770700486,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        }
+      },
+      "per_pool_loss_gate": true,
+      "primary_E_minus_D": {
+        "mean_e_minus_d_star": -0.0028691347936054545,
+        "minimum_mean": -0.01,
+        "missing_queries": [],
+        "paired_deltas": {
+          "q1": -0.023874572516348613,
+          "q2": 0.000921494167504977,
+          "q3": 0.0,
+          "q4": 0.0,
+          "q5": 0.0,
+          "q6": 0.0,
+          "q7": 0.0,
+          "q8": 0.0
+        },
+        "passed": true
+      },
+      "primary_E_minus_W0": {
+        "bootstrap": {
+          "draws": 10000,
+          "lower95": 0.019161511723643457,
+          "mean": 0.04890290386526485,
+          "query_units": 8,
+          "seed": 91940,
+          "upper95": 0.0824094954735819
+        },
+        "mean_gain": 0.04890290386526485,
+        "paired_deltas": {
+          "q1": 0.05435078432410251,
+          "q2": 0.0663599154941863,
+          "q3": 0.13920075391829578,
+          "q4": 0.03967498396387259,
+          "q5": 0.08672125204459158,
+          "q6": 0.0,
+          "q7": 0.0,
+          "q8": 0.0049155411770700486
+        },
+        "passed": true
+      },
+      "supported_facet_retention_gate": true,
+      "useful_retention_gate": true
+    },
+    "B": {
+      "passed": false,
+      "per_pool": {
+        "q1": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 2,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c15",
+              "c18"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 3,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c15",
+              "c18",
+              "c9"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.1791206098939524,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q2": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 1,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c3"
+            ],
+            "nDCG_delta_e_minus_comparator": -0.044774296151020354,
+            "net_useful_loss": 0,
+            "passed": false
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 1,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c7"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.12811512390859592,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q3": {
+          "d_star": {
+            "comparator_useful_at_10": 9,
+            "e_useful_at_10": 9,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 9,
+            "e_useful_at_10": 9,
+            "lost_useful_count": 4,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c10",
+              "c13",
+              "c16",
+              "c8"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.14210460772711464,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q4": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 8,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c1",
+              "c10",
+              "c12",
+              "c14",
+              "c19",
+              "c4",
+              "c5",
+              "c8"
+            ],
+            "nDCG_delta_e_minus_comparator": -0.07753454022352357,
+            "net_useful_loss": 0,
+            "passed": false
+          }
+        },
+        "q5": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 4,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c11",
+              "c17",
+              "c24",
+              "c9"
+            ],
+            "nDCG_delta_e_minus_comparator": 0.07421429237333765,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q6": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 1,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c2"
+            ],
+            "nDCG_delta_e_minus_comparator": -0.014230151718525264,
+            "net_useful_loss": 0,
+            "passed": true
+          }
+        },
+        "q7": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 1,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c8"
+            ],
+            "nDCG_delta_e_minus_comparator": -0.03967498396387259,
+            "net_useful_loss": 0,
+            "passed": false
+          }
+        },
+        "q8": {
+          "d_star": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 0,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [],
+            "nDCG_delta_e_minus_comparator": 0.0,
+            "net_useful_loss": 0,
+            "passed": true
+          },
+          "w0": {
+            "comparator_useful_at_10": 10,
+            "e_useful_at_10": 10,
+            "lost_useful_count": 4,
+            "lost_useful_facets": [],
+            "lost_useful_ids": [
+              "c10",
+              "c26",
+              "c3",
+              "c6"
+            ],
+            "nDCG_delta_e_minus_comparator": -0.04192224119963439,
+            "net_useful_loss": 0,
+            "passed": false
+          }
+        }
+      },
+      "per_pool_loss_gate": false,
+      "primary_E_minus_D": {
+        "mean_e_minus_d_star": -0.005596787018877544,
+        "minimum_mean": -0.01,
+        "missing_queries": [],
+        "paired_deltas": {
+          "q1": 0.0,
+          "q2": -0.044774296151020354,
+          "q3": 0.0,
+          "q4": 0.0,
+          "q5": 0.0,
+          "q6": 0.0,
+          "q7": 0.0,
+          "q8": 0.0
+        },
+        "passed": true
+      },
+      "primary_E_minus_W0": {
+        "bootstrap": {
+          "draws": 10000,
+          "lower95": -0.01964645334818668,
+          "mean": 0.0437740895996806,
+          "query_units": 8,
+          "seed": 91940,
+          "upper95": 0.10877790939495524
+        },
+        "mean_gain": 0.0437740895996806,
+        "paired_deltas": {
+          "q1": 0.1791206098939524,
+          "q2": 0.12811512390859592,
+          "q3": 0.14210460772711464,
+          "q4": -0.07753454022352357,
+          "q5": 0.07421429237333765,
+          "q6": -0.014230151718525264,
+          "q7": -0.03967498396387259,
+          "q8": -0.04192224119963439
+        },
+        "passed": false
+      },
+      "supported_facet_retention_gate": true,
+      "useful_retention_gate": true
+    }
+  },
+  "schema": "exp060-analysis/1",
+  "stability": {
+    "q1": {
+      "comparisons": {
+        "repeat": {
+          "passed": true,
+          "top10_overlap": 1.0
+        },
+        "rotate20": {
+          "passed": true,
+          "top10_overlap": 1.0
+        }
+      },
+      "passed": true
+    },
+    "q4": {
+      "comparisons": {
+        "repeat": {
+          "passed": true,
+          "top10_overlap": 0.9
+        },
+        "rotate20": {
+          "passed": false,
+          "top10_overlap": 0.6
+        }
+      },
+      "passed": false
+    },
+    "q7": {
+      "comparisons": {
+        "repeat": {
+          "passed": true,
+          "top10_overlap": 0.9
+        },
+        "rotate20": {
+          "passed": true,
+          "top10_overlap": 0.8
+        }
+      },
+      "passed": true
+    },
+    "q8": {
+      "comparisons": {
+        "repeat": {
+          "passed": true,
+          "top10_overlap": 0.9
+        },
+        "rotate20": {
+          "passed": true,
+          "top10_overlap": 0.9
+        }
+      },
+      "passed": true
+    }
+  },
+  "timing_interpretation": "Fresh W0 and D/F/E phase timings are separate; acquisition and analysis were not one uninterrupted production request."
+}

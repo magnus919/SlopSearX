@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+"""Offline structural qualification for the EXP-051 private delivery builder.
+
+This reads only pinned local packet inputs and the already captured private
+projection. It creates synthetic adversarial fixtures in a temporary directory,
+prepares the real delivery bytes in memory, and writes only a count-only receipt.
+It performs no provider, reviewer, search, grading, or page-fetch calls.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import argparse
+import importlib.machinery
+import importlib.util
+import json
+import os
+import tempfile
+from pathlib import Path
+from typing import Any, Callable
+
+
+ROOT = Path(__file__).resolve().parents[4]
+HERE = Path(__file__).resolve().parent
+RECEIPT = HERE / "qualification-receipt-v3.json"
+FIRST_FAILURE = HERE / "qualification-initial-failure.json"
+EXPECTED_BUILDER_SHA256 = "61f04a44ef65389131656d7d6a4b7dbd3576c139829b35ea6c84a40c5f9ed627"
+
+
+def _load_builder() -> Any:
+    source = HERE / "delivery-builder.py.txt"
+    loader = importlib.machinery.SourceFileLoader("exp051_delivery_builder", str(source))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("could not load builder")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def _sha(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _expect_error(function: Callable[[], Any], error_type: type[BaseException], label: str) -> None:
+    try:
+        function()
+    except error_type:
+        return
+    raise AssertionError(f"fixture did not reject: {label}")
+
+
+def _field(status: str = "reported", value: Any = None) -> dict[str, Any]:
+    return {"status": status, "value": value}
+
+
+def _metadata(status: str = "matched", abstract: str = "Synthetic abstract Ω") -> dict[str, Any]:
+    if status in {"unknown", "no_identifier"}:
+        return {
+            "status": status,
+            "reason": "Synthetic unresolved state",
+            "reported_by": "Synthetic fixture",
+            "captured_at": "2030-01-01T00:00:00Z",
+            "later_lookup_provenance": "Synthetic later lookup fixture",
+            "original_engine_provenance": {"status": "unknown", "value": None},
+            "requested_identifier": {"status": "unknown", "value": None},
+        }
+    fields = {
+        "title": {"status": "reported", "value": "Reported synthetic title", "clipped": False, "original_characters": 24},
+        "publication_date": {"status": "unknown", "value": None, "clipped": False, "original_characters": None},
+        "year": {"status": "reported", "value": 2030},
+        "journal": {
+            "status": "reported",
+            "value": {
+                "name": {"status": "reported", "value": "Example venue", "clipped": False, "original_characters": 13},
+                "volume": {"status": "unknown", "value": None, "clipped": False, "original_characters": None},
+                "pages": {"status": "unknown", "value": None, "clipped": False, "original_characters": None},
+            },
+        },
+        "publication_types": {"status": "unknown", "values": None, "original_count": None, "clipped": False, "clipped_items": 0},
+        "authors": {"status": "reported", "values": ["Example Author"], "original_count": 1, "clipped": False, "clipped_items": 0},
+        "abstract": {"status": "reported", "value": abstract, "clipped": False, "original_characters": len(abstract), "original_sha256": "a" * 64},
+    }
+    return {
+        "status": "matched",
+        "reason": None,
+        "reported_by": "Synthetic fixture",
+        "captured_at": "2030-01-01T00:00:00Z",
+        "later_lookup_provenance": "Synthetic later lookup fixture",
+        "original_engine_provenance": {"status": "unknown", "value": None},
+        "requested_identifier": {"namespace": "doi", "identifier": "10.0000/example"},
+        "paper_id": {"status": "reported", "value": "synthetic-paper"},
+        "reported_identifiers": {"doi": {"status": "reported", "value": "10.0000/example"}},
+        "fields": fields,
+    }
+
+
+def _card(card_id: str, suffix: str = "", snippet: str = "Synthetic original snippet") -> dict[str, str]:
+    return {"id": card_id, "title": f"Synthetic {card_id}{suffix}", "url": f"https://example.invalid/{card_id}{suffix}", "snippet": snippet}
+
+
+def _packet(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    cards = [row["card"] for row in rows]
+    ids = [card["id"] for card in cards]
+    selected = ids[:2]
+    return {
+        "schema": "exp048-pool-delivery/1",
+        "pool": {"pool_ref": "P01", "purpose": "Synthetic purpose", "facets": [{"id": "f1", "description": "Synthetic facet"}], "candidates": cards, "selected_ids": selected},
+        "cases": [
+            {"case_id": "C1", "pool_ref": "P01", "removed_id": ids[0], "added_id": ids[2], "after_selected_ids": [ids[1], ids[2]]},
+            {"case_id": "C2", "pool_ref": "P01", "removed_id": ids[1], "added_id": ids[3], "after_selected_ids": [ids[0], ids[3]]},
+        ],
+        "delivery_end_marker": "synthetic",
+    }
+
+
+def _fixture_checks(builder: Any) -> list[str]:
+    checks: list[str] = []
+    valid_rows = [{"card": _card(f"id-{i}"), "metadata": _metadata()} for i in range(4)]
+    packet = _packet(valid_rows)
+
+    # A content-derived abstract excerpt survives exactly, but its source digest
+    # and all projection-only card identifiers stay out of the candidate row.
+    copied = builder._metadata_copy(valid_rows[0]["metadata"])
+    assert copied["fields"]["abstract"]["value"] == "Synthetic abstract Ω"
+    assert "original_sha256" not in copied["fields"]["abstract"]
+    assert copied["original_engine_provenance"] == {"status": "unknown", "value": None}
+    checks.append("metadata_allowlist_and_abstract_digest_omission")
+
+    for state in ("unknown", "no_identifier"):
+        preserved = builder._metadata_copy(_metadata(state))
+        assert preserved["status"] == state and "fields" not in preserved
+        checks.append(f"preserve_{state}")
+
+    # Duplicate projection keys, absent matches, wrong visible fields, extra
+    # metadata keys and inconsistent original provenance fail closed.
+    duplicate = [
+        {"pool": "synthetic", "card": valid_rows[0]["card"], "metadata": valid_rows[0]["metadata"]},
+        {"pool": "synthetic", "card": valid_rows[0]["card"], "metadata": valid_rows[0]["metadata"]},
+    ]
+    _expect_error(lambda: builder._projection_index(duplicate), builder.DeliveryError, "duplicate projection triple")
+    _expect_error(lambda: builder._join_pool(packet, {}), builder.DeliveryError, "missing candidate join")
+    wrong_card = dict(valid_rows[0]["card"], snippet="different visible snippet")
+    wrong_index = {builder._triple(wrong_card): {"card": wrong_card, "metadata": valid_rows[0]["metadata"]}}
+    _expect_error(lambda: builder._join_pool(packet, wrong_index), builder.DeliveryError, "mismatched snippet")
+    checks.append("exact_unique_triple_join_rejections")
+
+    duplicate_metadata = dict(valid_rows[0]["metadata"], extra_identifier="must-not-leak")
+    _expect_error(lambda: builder._metadata_copy(duplicate_metadata), builder.DeliveryError, "extra metadata key")
+    wrong_provenance = dict(valid_rows[0]["metadata"], original_engine_provenance={"status": "reported", "value": "invented"})
+    _expect_error(lambda: builder._metadata_copy(wrong_provenance), builder.DeliveryError, "original engine inference")
+    malformed_fields = json.loads(json.dumps(valid_rows[0]["metadata"]))
+    malformed_fields["fields"]["abstract"]["clipped"] = 1
+    _expect_error(lambda: builder._metadata_copy(malformed_fields), builder.DeliveryError, "boolean clipping type")
+    checks.append("metadata_schema_and_provenance_fail_closed")
+
+    # Deterministic greedy partitioning is whole-card only, converges with the
+    # final marker count, and reconstructs exact original cards and cases.
+    large_rows = [{"card": _card(f"big-{i}", snippet="x" * 3_600), "metadata": _metadata(abstract="y" * 2_200)} for i in range(8)]
+    large_packet = _packet(large_rows)
+    chunks_a = builder._partition_pool(large_packet, large_rows)
+    chunks_b = builder._partition_pool(large_packet, large_rows)
+    assert chunks_a == chunks_b and len(chunks_a) > 1
+    assert all(len(chunk) <= builder.MAX_CHUNK_BYTES for chunk in chunks_a)
+    builder._validate_reassembly(large_packet, chunks_a)
+    parsed = [json.loads(chunk) for chunk in chunks_a]
+    assert [chunk["chunk_index"] for chunk in parsed] == list(range(1, len(parsed) + 1))
+    assert all(chunk["chunk_total"] == len(parsed) for chunk in parsed)
+    checks.append("deterministic_whole_card_chunking_and_reassembly")
+
+    oversized_row = {"card": _card("oversized", snippet="z" * builder.MAX_CHUNK_BYTES), "metadata": _metadata()}
+    oversized_packet = _packet([oversized_row, *valid_rows[1:]])
+    _expect_error(lambda: builder._partition_pool(oversized_packet, [oversized_row, *valid_rows[1:]]), builder.DeliveryError, "single oversize card")
+    checks.append("oversize_card_refusal")
+
+    # Duplicate-key and floating-point overflow JSON cannot enter the source
+    # parser, even when otherwise valid UTF-8 JSON text.
+    with tempfile.TemporaryDirectory(prefix="exp051-json-qualification-") as folder:
+        path = Path(folder) / "bad.json"
+        path.write_text('{"key":1,"key":2}', encoding="utf-8")
+        _expect_error(lambda: builder._read_json(path), builder.DeliveryError, "duplicate JSON key")
+        path.write_text('{"number":1e999}', encoding="utf-8")
+        _expect_error(lambda: builder._read_json(path), builder.DeliveryError, "overflow float")
+    checks.append("strict_json_parser")
+
+    with tempfile.TemporaryDirectory(prefix="exp051-output-qualification-") as folder:
+        temp = Path(folder)
+        existing = temp / "already-there"
+        existing.mkdir()
+        (existing / "sentinel").write_text("keep", encoding="utf-8")
+        _expect_error(lambda: builder.build_delivery(Path("missing-projection"), existing, repo_root=temp), builder.DeliveryError, "pre-existing destination")
+        assert (existing / "sentinel").read_text(encoding="utf-8") == "keep"
+
+        repo = temp / "repo"
+        repo.mkdir()
+        redirected = temp / "repo-alias"
+        redirected.symlink_to(repo, target_is_directory=True)
+        private_alias_output = redirected / "candidate-delivery"
+        _expect_error(lambda: builder.build_delivery(Path("missing-projection"), private_alias_output, repo_root=repo), builder.DeliveryError, "symlink into repository")
+    checks.append("destination_no_overwrite_and_repository_escape_guard")
+
+    return checks
+
+
+def _real_source_checks(builder: Any, projection: Path) -> tuple[list[str], dict[str, int]]:
+    builder.verify_registration(ROOT)
+    packets, staged_chunks, manifest = builder.prepare_delivery(projection, ROOT)
+    projection_rows = builder._load_projection(projection)
+    projection_by_triple = builder._projection_index(projection_rows)
+    assert [packet["pool"]["pool_ref"] for packet in packets] == list(builder.EXPECTED_POOLS)
+    assert len(packets) == 6 and sum(len(packet["cases"]) for packet in packets) == 12
+    assert sum(len(packet["pool"]["candidates"]) for packet in packets) == 232
+    assert manifest == builder._manifest(staged_chunks)
+    assert manifest["pool_count"] == 6 and manifest["candidate_count"] == 232 and manifest["case_count"] == 12
+    assert all(len(chunk[4]) <= builder.MAX_CHUNK_BYTES for chunk in staged_chunks)
+
+    by_pool: dict[str, list[tuple[str, str, int, int, bytes, int]]] = {pool: [] for pool in builder.EXPECTED_POOLS}
+    for item in staged_chunks:
+        by_pool[item[1]].append(item)
+    for packet in packets:
+        pool_ref = packet["pool"]["pool_ref"]
+        pool_bodies = [item[4] for item in by_pool[pool_ref]]
+        builder._validate_reassembly(packet, pool_bodies)
+        seen_card_ids: list[str] = []
+        for body in pool_bodies:
+            for wrapped in json.loads(body)["cards"]:
+                original = wrapped["card"]
+                seen_card_ids.append(original["id"])
+                expected_metadata = builder._metadata_copy(projection_by_triple[builder._triple(original)]["metadata"])
+                assert wrapped["metadata"] == expected_metadata
+                if "fields" in expected_metadata:
+                    abstract = expected_metadata["fields"]["abstract"]
+                    observed = wrapped["metadata"]["fields"]["abstract"]
+                    assert observed == abstract
+                    assert "original_sha256" not in observed
+        assert len(seen_card_ids) == len(set(seen_card_ids)) == len(packet["pool"]["candidates"])
+    manifest_keys = set(manifest)
+    assert manifest_keys == {"schema", "pool_count", "candidate_count", "case_count", "chunks"}
+    for entry in manifest["chunks"]:
+        assert set(entry) == {"filename", "pool_ref", "chunk_index", "chunk_total", "sha256", "bytes", "candidate_count", "case_count", "end_marker"}
+        assert entry["bytes"] <= builder.MAX_CHUNK_BYTES
+
+    # Verify privacy by checking serialized candidate metadata shape in memory;
+    # never report or persist candidate strings, abstract values, or ID mappings.
+    for _filename, _pool_ref, _index, _total, body, _count in staged_chunks:
+        decoded = json.loads(body)
+        for row in decoded["cards"]:
+            assert set(row) == {"card", "metadata"}
+            assert "original_sha256" not in row["metadata"].get("fields", {}).get("abstract", {})
+            assert "id" not in row["metadata"]
+    checks = [
+        "registration_and_source_hashes",
+        "six_pools_twelve_cases_232_cards",
+        "exact_unique_projection_joins_and_status_inventory",
+        "exact_registered_metadata_and_abstract_excerpt_round_trip",
+        "all_chunks_bounded_and_exactly_reassemblable",
+        "allowlist_and_private_abstract_digest_omission",
+        "public_manifest_logical_metadata_only",
+    ]
+    counts = {
+        "pool_count": len(packets),
+        "candidate_count": sum(len(packet["pool"]["candidates"]) for packet in packets),
+        "case_count": sum(len(packet["cases"]) for packet in packets),
+        "chunk_count": len(staged_chunks),
+        "max_chunk_bytes": max(len(item[4]) for item in staged_chunks),
+    }
+    return checks, counts
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--projection", type=Path, default=os.environ.get("EXP051_PROJECTION"))
+    args = parser.parse_args()
+    projection = args.projection
+    if projection is None or not Path(projection).is_file():
+        raise RuntimeError("registered private projection is unavailable")
+    projection = Path(projection)
+    builder_path = HERE / "delivery-builder.py.txt"
+    builder_hash = _sha(builder_path)
+    if builder_hash != EXPECTED_BUILDER_SHA256:
+        raise RuntimeError("builder bytes differ from qualification pin")
+    builder = _load_builder()
+    try:
+        synthetic_checks = _fixture_checks(builder)
+        actual_checks, counts = _real_source_checks(builder, projection)
+    except Exception as exc:
+        failure = {
+            "schema": "exp051-delivery-qualification-failure/1",
+            "stage": "offline_builder_qualification",
+            "error_type": type(exc).__name__,
+            "builder_sha256": builder_hash,
+            "provider_calls": 0,
+            "search_calls": 0,
+            "reviewer_invocations": 0,
+            "packets_written": 0,
+        }
+        if not FIRST_FAILURE.exists():
+            FIRST_FAILURE.write_text(json.dumps(failure, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+            os.chmod(FIRST_FAILURE, 0o600)
+        return 1
+
+    receipt = {
+        "schema": "exp051-delivery-qualification/1",
+        "builder_sha256": builder_hash,
+        "synthetic_checks_passed": len(synthetic_checks),
+        "synthetic_check_names": synthetic_checks,
+        "actual_source_checks_passed": len(actual_checks),
+        "actual_source_check_names": actual_checks,
+        "counts": counts,
+        "provider_calls": 0,
+        "search_calls": 0,
+        "reviewer_invocations": 0,
+        "packets_written": 0,
+        "meaning": "Deterministic offline delivery integrity only; no review or quality result.",
+    }
+    serialized_receipt = json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    if RECEIPT.exists():
+        if RECEIPT.read_text(encoding="utf-8") != serialized_receipt:
+            raise RuntimeError("qualification receipt differs; refusing overwrite")
+        print(json.dumps({"schema": receipt["schema"], "counts": counts, "synthetic_checks_passed": len(synthetic_checks), "actual_source_checks_passed": len(actual_checks), "receipt_reused_unchanged": True}, sort_keys=True))
+        return 0
+    RECEIPT.write_text(serialized_receipt, encoding="utf-8")
+    os.chmod(RECEIPT, 0o600)
+    print(json.dumps({"schema": receipt["schema"], "counts": counts, "synthetic_checks_passed": len(synthetic_checks), "actual_source_checks_passed": len(actual_checks)}, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

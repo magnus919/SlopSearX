@@ -1,0 +1,258 @@
+"""Read-only EXP-087 frozen-input bridge.
+
+The bridge binds the original 13 acquisition inputs and EXP-084's completed
+capture snapshot. EXP-084 grader outputs are excluded. Old stage clocks are
+provenance only; only EXP-087 admission may mint a live clock.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+PINS_PATH = HERE / "reuse-input-pins.json"
+TASK_IDS = [f"d{i}" for i in range(1, 14)]
+ORIGINAL_FILES = {
+    "acquisition/corrective-query.json", "acquisition/http/http-001.body",
+    "acquisition/http/http-001.json", "acquisition/reused-inputs.json",
+    "acquisition/stage-final.json", "capture/capture-phase-terminal.json",
+    "capture/card-source-binding.json",
+    "capture/portable-capture-wire/private-raw/http-transports.json",
+    "capture/portable-capture-wire/receipts.json", "configuration-binding.json",
+    "development-terminal.json", "effective-acquisition.json", "stage-clock.json",
+}
+REQUIRED_EXP084 = {
+    "exp084/development-terminal.json", "exp084/effective-input-envelope.json",
+    "exp084/stage-clock.json", "exp084/capture/capture-phase.json",
+    "exp084/capture/card-source-binding.json",
+}
+FORBIDDEN_PARTS = {"card-references", "source-assessments", "answer-assessments",
+                   "answerer", "selector", "analysis", "answers"}
+
+
+class InputError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise InputError("duplicate-json-key")
+            result[key] = value
+        return result
+
+    def constant(_value):
+        raise InputError("non-finite-json")
+
+    try:
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise InputError("invalid-json") from exc
+
+
+def _safe_path(relative: str) -> PurePosixPath:
+    if type(relative) is not str:
+        raise InputError("unsafe-input-path")
+    rel = PurePosixPath(relative)
+    if rel.is_absolute() or not rel.parts or any(x in {"", ".", ".."} for x in rel.parts):
+        raise InputError("unsafe-input-path")
+    if any(part in FORBIDDEN_PARTS for part in rel.parts):
+        raise InputError("grader-output-is-not-input")
+    if rel.parts[0] == "original":
+        if "/".join(rel.parts[1:]) not in ORIGINAL_FILES:
+            raise InputError("unexpected-original-input")
+    elif rel.parts[0] == "exp084":
+        if len(rel.parts) == 2 and rel.parts[1] in {"development-terminal.json", "effective-input-envelope.json", "stage-clock.json"}:
+            pass
+        elif len(rel.parts) >= 3 and rel.parts[1] == "capture":
+            pass
+        else:
+            raise InputError("unexpected-snapshot-artifact")
+    else:
+        raise InputError("input-root")
+    return rel
+
+
+def _read(root: Path, relative: str) -> bytes:
+    rel = _safe_path(relative)
+    path, cursor = root.joinpath(*rel.parts), root
+    for part in rel.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise InputError("symlink-input")
+    if not path.is_file():
+        raise InputError("missing-input")
+    return path.read_bytes()
+
+
+def _load_pins(pins_path: Path) -> tuple[dict, bytes]:
+    raw = Path(pins_path).read_bytes()
+    pins = strict_json(raw)
+    if (type(pins) is not dict or pins.get("schema") != "exp087-reused-input-pins/1"
+            or pins.get("status") != "registered_input_provenance"
+            or type(pins.get("files")) is not list):
+        raise InputError("pins-schema")
+    rows = pins["files"]
+    names = [row.get("path") for row in rows if type(row) is dict]
+    if len(names) != len(rows) or len(names) != len(set(names)):
+        raise InputError("pins-membership")
+    for name in names:
+        _safe_path(name)
+    original = {name.removeprefix("original/") for name in names if name.startswith("original/")}
+    if original != ORIGINAL_FILES or not REQUIRED_EXP084.issubset(set(names)):
+        raise InputError("pins-required-inputs")
+    if not any(name.startswith("exp084/capture/portable-capture-wire/private-raw/source-")
+               for name in names):
+        raise InputError("capture-snapshot-missing")
+    for row in rows:
+        digest, size = row.get("sha256"), row.get("bytes")
+        if (type(digest) is not str or len(digest) != 64
+                or any(c not in "0123456789abcdef" for c in digest)
+                or type(size) is not int or size < 0):
+            raise InputError("pins-entry")
+    if pins.get("file_count") != len(rows) or pins.get("total_bytes") != sum(x["bytes"] for x in rows):
+        raise InputError("pins-count")
+    runtime_sha = pins.get("runtime_config_receipt_sha256")
+    config = next((r for r in rows if r["path"] == "original/configuration-binding.json"), None)
+    if not config or runtime_sha != config["sha256"]:
+        raise InputError("runtime-config-pin")
+    return pins, raw
+
+
+def verify_input_bundle(bundle_root: Path, pins_path: Path = PINS_PATH) -> dict:
+    """Check exact inventory, paths, sizes, hashes, and source-stage binding."""
+    root = Path(bundle_root)
+    if root.is_symlink() or not root.is_dir():
+        raise InputError("bundle-root")
+    pins, pins_raw = _load_pins(pins_path)
+    expected = {r["path"] for r in pins["files"]}
+    actual = set()
+    for base, dirs, files in os.walk(root, followlinks=False):
+        if any((Path(base) / name).is_symlink() for name in dirs):
+            raise InputError("bundle-symlink-directory")
+        for name in files:
+            path = Path(base) / name
+            rel = path.relative_to(root).as_posix()
+            _safe_path(rel)
+            if path.is_symlink() or not path.is_file():
+                raise InputError("bundle-nonregular-file")
+            actual.add(rel)
+    if actual != expected:
+        raise InputError("bundle-inventory-mismatch")
+    total = 0
+    rows = sorted(pins["files"], key=lambda r: r["path"])
+    for row in rows:
+        raw = _read(root, row["path"])
+        if len(raw) != row["bytes"] or sha(raw) != row["sha256"]:
+            raise InputError("bundle-hash-mismatch")
+        total += len(raw)
+    if total != pins["total_bytes"]:
+        raise InputError("bundle-total-bytes")
+    inventory = {"schema": "exp087-input-bundle/1", "files": rows}
+    return {"input_pins_sha256": sha(pins_raw),
+            "input_bundle_sha256": sha(canonical_json(inventory)),
+            "runtime_config_receipt_sha256": pins["runtime_config_receipt_sha256"],
+            "file_count": len(rows), "total_bytes": total}
+
+
+def _immutable_effective(value: dict) -> dict:
+    """Fields that must remain identical across EXP-084 snapshot and EXP-087."""
+    ignored = {"acquisition_receipt", "recovery_provenance", "stage"}
+    return {key: item for key, item in value.items() if key not in ignored}
+
+
+def _validate_effective(original: dict, snapshot: dict) -> None:
+    if (type(original) is not dict or original.get("schema") != "exp078-effective-acquisition/1"
+            or original.get("synthetic") is not False
+            or type(snapshot) is not dict or snapshot.get("schema") != original.get("schema")
+            or snapshot.get("synthetic") is not False):
+        raise InputError("effective-acquisition-schema")
+    for value in (original, snapshot):
+        pools = value.get("pools")
+        if type(pools) is not dict or set(pools) != set(TASK_IDS):
+            raise InputError("effective-pool-membership")
+        src, native = value.get("source_id_by_card_id"), value.get("native_results_by_card_id")
+        if (type(src) is not dict or type(native) is not dict or set(src) != set(TASK_IDS)
+                or set(native) != set(TASK_IDS)):
+            raise InputError("effective-provenance-map")
+        for task in TASK_IDS:
+            pool = pools[task]
+            cards = pool.get("cards") if type(pool) is dict else None
+            if (type(cards) is not list or not cards or pool.get("natural_count") != len(cards)
+                    or pool.get("merged_count") != len(cards)):
+                raise InputError("effective-card-count")
+            ids = []
+            for card in cards:
+                if (type(card) is not dict or set(card) != {"id", "url", "title", "snippet"}
+                        or any(type(card[k]) is not str for k in ("id", "url", "title", "snippet"))):
+                    raise InputError("effective-card-shape")
+                ids.append(card["id"])
+            if (len(ids) != len(set(ids)) or set(src[task]) != set(ids)
+                    or set(native[task]) != set(ids)):
+                raise InputError("effective-card-id-map")
+    if _immutable_effective(original) != _immutable_effective(snapshot):
+        raise InputError("snapshot-mutates-pool-or-provenance")
+
+
+def prepare_reused_inputs(bundle_root: Path, *, stage_clock: dict, stage_clock_digest: str,
+                          pins_path: Path = PINS_PATH) -> dict:
+    """Return a new-clock envelope over byte-identical EXP-078/084 inputs."""
+    root = Path(bundle_root)
+    integrity = verify_input_bundle(root, pins_path)
+    original = strict_json(_read(root, "original/effective-acquisition.json"))
+    snapshot = strict_json(_read(root, "exp084/effective-input-envelope.json"))
+    _validate_effective(original, snapshot)
+    if (type(stage_clock) is not dict or stage_clock.get("schema") != "exp078-stage-clock/1"
+            or stage_clock.get("stage") != "development"
+            or type(stage_clock_digest) is not str or len(stage_clock_digest) != 64
+            or any(c not in "0123456789abcdef" for c in stage_clock_digest)
+            or sha(canonical_json(stage_clock)) != stage_clock_digest):
+        raise InputError("new-stage-clock-required")
+    old_provenance = snapshot.get("recovery_provenance")
+    if (type(old_provenance) is not dict or old_provenance.get("study_id") != "EXP-084"
+            or old_provenance.get("prior_study_credit") is not False
+            or old_provenance.get("new_searches") != 0):
+        raise InputError("old-stage-has-no-credit")
+    old_clock_raw = _read(root, "exp084/stage-clock.json")
+    old_clock = strict_json(old_clock_raw)
+    if (old_clock.get("schema") != "exp078-stage-clock/1"
+            or sha(old_clock_raw) != snapshot.get("acquisition_receipt", {}).get("stage_clock_digest")):
+        raise InputError("old-clock-provenance-binding")
+    phase = strict_json(_read(root, "exp084/capture/capture-phase.json"))
+    card_binding_raw = _read(root, "exp084/capture/card-source-binding.json")
+    if (phase.get("schema") != "exp078-capture-phase/1"
+            or phase.get("status") != "complete"
+            or phase.get("stage_clock_sha256") != sha(old_clock_raw)
+            or phase.get("card_source_binding_sha256") != sha(card_binding_raw)):
+        raise InputError("capture-snapshot-binding")
+    effective = json.loads(json.dumps(snapshot))
+    effective["acquisition_receipt"] = {"stage_clock": stage_clock,
+                                        "stage_clock_digest": stage_clock_digest}
+    effective["recovery_provenance"] = {
+        "study_id": "EXP-087", "source_study_id": "EXP-084",
+        "source_effective_envelope_sha256": sha(_read(root, "exp084/effective-input-envelope.json")),
+        "input_bundle_sha256": integrity["input_bundle_sha256"],
+        "prior_stage_clock_credit_seconds": 0, "new_searches": 0,
+        "old_grader_outputs_used": False}
+    return {"schema": "exp087-reused-inputs/1", "study_id": "EXP-087",
+            "effective_acquisition": effective,
+            "input_integrity": integrity,
+            "capture_snapshot": {"root_relative": "exp084/capture",
+                "stage_clock_sha256": sha(old_clock_raw),
+                "capture_phase_sha256": sha(_read(root, "exp084/capture/capture-phase.json")),
+                "card_source_binding_sha256": sha(card_binding_raw),
+                "old_grader_outputs_used": False}}

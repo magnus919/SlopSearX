@@ -192,12 +192,13 @@ slopsearx-mcp --remote http://<slopsearx-host>:8000/mcp --oauth
 MCP_TRANSPORT=http MCP_OAUTH_ENABLED=1 MCP_OAUTH_ISSUER_URL=https://mcp.example.com slopsearx-mcp
 ```
 
-- 35 tools: `slopsearx_search`, `slopsearx_search_targeted`,
+- 38 tools: `slopsearx_search`, `slopsearx_search_targeted`,
   `slopsearx_search_jobs`, `slopsearx_search_security`,
   `slopsearx_search_science`, `slopsearx_list_capabilities`,
   `slopsearx_explain_search_scope`, `slopsearx_get_service_status`,
   `slopsearx_read_results`, `slopsearx_read_result`, `slopsearx_read_entities`,
-  `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
+  `slopsearx_plan_research`, `slopsearx_plan_query_variants`,
+  `slopsearx_plan_research_followup`, `slopsearx_start_research`, `slopsearx_get_job`, `slopsearx_cancel_job`,
   `slopsearx_retry_research`, `slopsearx_extend_research`,
   `slopsearx_update_research`,
   `slopsearx_create_saved_search`, `slopsearx_get_saved_search`,
@@ -257,14 +258,24 @@ Brave API key (`ENGINE_BRAVE_API_KEY`) for a reliable API-backed web-search
 source. A Brave key supplements the other active Tier-1 engines; it does not
 disable them.
 
-### Optional Jev specialist routing
+### Optional Jev routing and result reranking
 
-Set `TYPESAFE_API_KEY` to enable TypeSafe Jev routing automatically. SlopSearX
+Set `TYPESAFE_API_KEY` to enable TypeSafe Jev specialist routing and result
+reranking automatically. SlopSearX
 keeps its ordinary general-engine base and asks Jev which eligible specialist
 engines can add distinctive evidence for the query. Every specialist meeting
 the `0.65` threshold is added; there is no arbitrary engine-count cap. Without
 the key, or if Jev is unavailable, the existing deterministic routing path is
-used unchanged. Explicit engine, category, and media scopes never invoke Jev.
+used unchanged. Explicit engine, category, and media scopes bypass Jev routing.
+
+After retrieval, Jev orders a bounded result-card shortlist using ordinary Score,
+across general and specialist source tiers. A configured reranker disables
+specialist promotion, including when advice fails. Without
+the key, or on invalid/unavailable reranking advice, results retain the configured
+deterministic presence/RRF order. Providing the key opts into sending query,
+bounded titles, sanitized URLs and snippets to TypeSafe; sensitive-engine scopes
+are excluded. See [Jev result reranking](docs/JEV_RERANKING.md) for payload bounds,
+timeouts, caching, privacy and the replaceable provider contract.
 
 See [TypeSafe Jev specialist routing](docs/JEV_ROUTING.md) for configuration,
 failure behavior, policy boundaries, and routing-card maintenance.
@@ -277,7 +288,7 @@ warnings rather than failures because a search can legitimately have no matches.
 FEATURE_EMPTY_SCRAPE_DIAGNOSTICS=true
 ```
 
-Pre-built Docker images are available from GitHub Container Registry. Builds run automatically on every push to `main` (`latest`, `unstable`) and on version tags (`stable`, `X`, `X.Y`, `X.Y.Z`).
+Pre-built Docker images are available from GitHub Container Registry for `linux/amd64` and `linux/arm64`. Docker selects the native architecture automatically, including on Apple Silicon. Builds run on every push to `main` (`latest` and a short commit SHA) and on version tags (`X.Y` and `X.Y.Z`, plus a short commit SHA). Each architecture is built on a native runner, Trivy-scanned, and smoke-tested before the combined manifest is published. Pull requests validate both architectures without publishing. Existing deployment digest pins retain their original platforms until promoted to a new multi-platform image digest.
 
 The repository's own deployment surfaces (`docker-compose.yml`, `k8s/deployment.yaml`) pin the image **by digest**, so they always run exactly the artifact that CI built, Trivy-scanned, and smoke-tested. To deploy the same verified artifact as a given commit, resolve its short-SHA tag to the current digest:
 
@@ -329,3 +340,7 @@ and troubleshooting runbook.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+Scholarly results are grouped by [identified work](docs/SCHOLARLY_WORK_GROUPING.md) before reranking, with bounded internal source provenance and optional SearXNG Paper metadata.
+
+Caller-directed query planning previews decomposition, terminology variants and evidence-linked follow-ups without dispatch. See [query planning](docs/QUERY_PLANNING.md).

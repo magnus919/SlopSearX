@@ -1,0 +1,17 @@
+{
+  "schema": "whole-pool-baseline-size-audit/1",
+  "scope": "Offline feasibility only; no scoring, quality analysis, provider call or new search. Does not override the provider current 40-candidate cap.",
+  "source_repository": "magnus919/groktocrawl-x",
+  "source_revision": "3612affba3b51e7240a0e60d079499739052c0b1",
+  "source_corpus_sha256": "1d472ef33f4a251711090aee3744bc4f75d3c44b90e88a13ab3797a72947f10c",
+  "source_candidates": 44,
+  "projected_candidates": 44,
+  "instruction_contract": "baseline-contract.json",
+  "request_utf8_bytes": 68510,
+  "request_sha256": "e6a8425645751aeaae5cce97edc06fcd4c75ca632c921b076fa0b8e182eb85f2",
+  "request_limit_bytes": 128000,
+  "fits_byte_limit": true,
+  "limitation": "Byte compatibility is not semantic validity, production-cap reachability, latency qualification, complete-pool quality, or approval to deploy.",
+  "compact_json_audit_bytes": 67448,
+  "encoding": "json.dumps(body, ensure_ascii=False).encode(utf-8), matching the current provider default separators"
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "exp073-retained-verifier-status-regression/1",
+  "source_revision": "f019425862175e7553a2b7007d76bd29677b5b12",
+  "provider_calls": 0,
+  "search_calls": 0,
+  "mutation": "Complete44-call offline fixture relabeled incomplete without failure; matching analyzer regenerated.",
+  "verification_returned": true,
+  "run_status": "incomplete",
+  "analysis_outcome": "incomplete",
+  "analysis_structural_failures": [
+    "incomplete-run"
+  ],
+  "interpretation": "Verifier accepted contradictory terminal status; qualification withheld pending status and failure-sidecar binding fixes. No quality/adoption credit.",
+  "artifact_sha256": {
+    "run.json": "0bacc5a94d88f6dfc2dceb29b545a3a6a490e1346b05ea3fc41027b7c848dcf8",
+    "analysis.json": "52332fcfb2a95cbf08fdf4e6a8ea780872522c30d3f3568ff060c8294530831d"
+  }
+}

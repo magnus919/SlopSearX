@@ -1,0 +1,194 @@
+"""Offline tests for EXP-071 Choice admission, policy, and guarded runner."""
+from pathlib import Path
+import hashlib,importlib.machinery,importlib.util,json,math,os,shutil,tempfile,unittest
+from unittest.mock import patch
+HERE=Path(__file__).resolve().parent
+def load(name,path):
+ l=importlib.machinery.SourceFileLoader(name,str(path));s=importlib.util.spec_from_loader(name,l);m=importlib.util.module_from_spec(s);l.exec_module(m);return m
+P=load("exp071_test_prepare",HERE/"prepare.py.txt");N=load("exp071_test_runner",HERE/"normal-runner.py.txt");A=load("exp071_test_analysis",HERE/"analyze.py.txt");OLD=load("exp070_prepare_control",HERE.parent/"EXP-070"/"prepare.py.txt")
+def card(i):return {"id":"x%02d"%i,"url":"https://example.test/%02d"%i,"title":"Example source %02d"%i,"snippet":"A bounded public metadata excerpt %02d."%i}
+def case():return {"id":"q1","query":"ordinary query","purpose":"Find strong public reading leads for this task.","facets":[{"id":"f1","description":"implementation"},{"id":"f2","description":"validation"}]}
+def choice_raw(body,probs=None,selected=None,usage=True):
+ answers={}
+ options=list(P.PROTOCOL["criteria"])
+ for qid,q in body["questions"].items():
+  if q["type"]=="score": answers[qid]={"type":"score","score":5}
+  else:
+   weights=probs or {"unsupported":0.2,"supported_1":0.2,"supported_2":0.2,"supported_3":0.2,"supported_4":0.2}
+   answers[qid]={"type":"choice","choice":selected or max(options,key=lambda k:weights[k]),"probabilities":{k:weights[k] for k in options},"confidence":0.8}
+ d={"model":P.MODEL,"answers":answers}
+ if usage:d["usage"]={"input_tokens":11,"output_tokens":3}
+ return json.dumps(d,allow_nan=False,separators=(",",":")).encode()
+class PrepareTests(unittest.TestCase):
+ def test_full_canonical_choice_contract_and_native_w0(self):
+  cards=[card(i) for i in range(80)];b=P.bodies(case(),cards);rot=P.bodies(case(),cards,"rotate")
+  self.assertEqual(b["relative"],rot["relative"]);self.assertEqual(len(b["relative"]["questions"]),80)
+  for cid,q in b["relative"]["questions"].items():self.assertEqual(q,{"type":"choice","instructions":P.PROTOCOL["instructions"].format(id=cid),"criteria":dict(P.PROTOCOL["criteria"])})
+  prior=OLD.bodies(case(),cards)
+  self.assertEqual(P.wire(b["w0"]),OLD.wire(prior["w0"]));self.assertEqual(P.wire(b["relative"]),OLD.wire(prior["relative"]))
+  self.assertEqual(b["w0"]["state"]["query"],case()["query"]);self.assertEqual(len(b["w0"]["questions"]),40)
+  self.assertEqual(b["tail_ids"],[c["id"] for c in cards[40:]])
+ def test_decimal_normalized_support_mass_semantics_and_thresholds(self):
+  b=P.bodies(case(),[card(0),card(1)]);q=b["relative"]
+  probs={"unsupported":.4,"supported_1":.15,"supported_2":.15,"supported_3":.15,"supported_4":.15}
+  val=P.validate_choice_response(choice_raw(q,probs,selected="unsupported"),q,b["ids"])
+  cid=b["ids"][0];self.assertEqual(float(val["support_mass"][cid]),0.6);self.assertEqual(float(val["conditional_expected_band"][cid]),2.5)
+  order=P.choice_order(val["support_mass"],val["conditional_expected_band"],b["ids"]);self.assertIn(cid,order)
+  weights={"unsupported":0,"supported_1":.25,"supported_2":.25,"supported_3":.25,"supported_4":.25}
+  v=P.validate_choice_response(choice_raw(q,weights,selected="supported_1"),q,b["ids"]);self.assertEqual(float(v["support_mass"][cid]),1.0)
+  zero={"unsupported":1,"supported_1":0,"supported_2":0,"supported_3":0,"supported_4":0}
+  v=P.validate_choice_response(choice_raw(q,zero,selected="unsupported"),q,b["ids"]);self.assertIsNone(v["conditional_expected_band"][cid]);self.assertEqual(P.choice_order(v["support_mass"],v["conditional_expected_band"],b["ids"]),b["ids"])
+  for accepted in (True,):
+   raw=choice_raw(q,{"unsupported":.25,"supported_1":.25,"supported_2":.25,"supported_3":.24,"supported_4":0},selected="unsupported")
+   self.assertEqual(P.validate_choice_response(raw,q,b["ids"])["usage"],{"input_tokens":11,"output_tokens":3})
+  over_one={"unsupported":.25,"supported_1":.25,"supported_2":.25,"supported_3":.25,"supported_4":.01}
+  self.assertEqual(float(P.validate_choice_response(choice_raw(q,over_one,selected="unsupported"),q,b["ids"])["support_mass"][cid]),.7524752475247525)
+  bad=choice_raw(q,{"unsupported":.25,"supported_1":.25,"supported_2":.25,"supported_3":.25,"supported_4":.01001},selected="unsupported")
+  with self.assertRaises(ValueError):P.validate_choice_response(bad,q,b["ids"])
+  exact_half={"unsupported":.495,"supported_1":.061,"supported_2":.104,"supported_3":.196,"supported_4":.134}
+  v=P.validate_choice_response(choice_raw(q,exact_half,selected="unsupported"),q,b["ids"]);self.assertEqual(v["support_mass"][cid],"0.5");self.assertIsNone(v["conditional_expected_band"][cid])
+ def test_numeric_argmax_admits_only_registered_binary64_roundoff_and_leaves_policy_unchanged(self):
+  b=P.bodies(case(),[card(0),card(1)]);q=b["relative"];cid=b["ids"][0]
+  exact={"unsupported":.2,"supported_1":.2,"supported_2":.2,"supported_3":.2,"supported_4":.2}
+  observed={"unsupported":.1,"supported_1":.34,"supported_2":.33999999999999997,"supported_3":.11,"supported_4":.11}
+  observed_result=P.validate_choice_response(choice_raw(q,observed,selected="supported_2"),q,b["ids"])
+  self.assertEqual(observed_result["choices"][cid]["probabilities"],observed)
+  one=math.nextafter(.2,0.0);one_dist={**exact,"supported_1":one}
+  baseline=P.validate_choice_response(choice_raw(q,one_dist,selected="supported_2"),q,b["ids"])
+  accepted=P.validate_choice_response(choice_raw(q,one_dist,selected="supported_1"),q,b["ids"])
+  self.assertEqual(accepted["choices"][cid]["probabilities"],one_dist)
+  self.assertEqual(accepted["normalized_probabilities"],baseline["normalized_probabilities"])
+  self.assertEqual(accepted["support_mass"],baseline["support_mass"])
+  self.assertEqual(accepted["conditional_expected_band"],baseline["conditional_expected_band"])
+  self.assertEqual(P.choice_order(accepted["support_mass"],accepted["conditional_expected_band"],b["ids"]),P.choice_order(baseline["support_mass"],baseline["conditional_expected_band"],b["ids"]))
+  four=.2
+  for _ in range(4):four=math.nextafter(four,0.0)
+  four_dist={**exact,"supported_1":four}
+  P.validate_choice_response(choice_raw(q,four_dist,selected="supported_1"),q,b["ids"])
+  five=math.nextafter(four,0.0);five_dist={**exact,"supported_1":five}
+  with self.assertRaises(ValueError):P.validate_choice_response(choice_raw(q,five_dist,selected="supported_1"),q,b["ids"])
+  material={**exact,"supported_1":.199}
+  with self.assertRaises(ValueError):P.validate_choice_response(choice_raw(q,material,selected="supported_1"),q,b["ids"])
+ def test_argmax_confidence_membership_and_malformed_questions(self):
+  b=P.bodies(case(),[card(0),card(1)]);q=b["relative"]
+  reversed_raw=json.loads(choice_raw(q));answer=next(iter(reversed_raw["answers"].values()));answer["probabilities"]={k:answer["probabilities"][k] for k in reversed(answer["probabilities"])}
+  self.assertEqual(set(P.validate_choice_response(json.dumps(reversed_raw).encode(),q,b["ids"])["choices"]),set(b["ids"]))
+  with self.assertRaises(ValueError):P.validate_choice_response(choice_raw(q,{"unsupported":.1,"supported_1":.225,"supported_2":.225,"supported_3":.225,"supported_4":.225},selected="unsupported"),q,b["ids"])
+  good=json.loads(choice_raw(q));first=next(iter(good["answers"].values()));first["choice"]="unsupported";first["probabilities"]["unsupported"]=.19
+  with self.assertRaises(ValueError):P.validate_choice_response(json.dumps(good).encode(),q,b["ids"])
+  req=json.loads(P.wire(q));cid=next(iter(req["questions"]));req["questions"][cid]["criteria"].pop("supported_4")
+  with self.assertRaises(ValueError):P.validate_request(P.wire(req))
+  w0=b["w0"];self.assertEqual(P.validate_score_response(choice_raw(w0),w0,list(w0["questions"]))["scores"]["c0"],5.0)
+  valid=json.loads(choice_raw(q));cases=[]
+  changed=json.loads(json.dumps(valid));changed["model"]="other-model";cases.append(json.dumps(changed).encode())
+  changed=json.loads(json.dumps(valid));changed["answers"].pop(next(iter(changed["answers"])));cases.append(json.dumps(changed).encode())
+  changed=json.loads(json.dumps(valid));changed["answers"]["unknown-id"]=next(iter(changed["answers"].values()));cases.append(json.dumps(changed).encode())
+  changed=json.loads(json.dumps(valid));aid=next(iter(changed["answers"]));changed["answers"][aid]["probabilities"]["unsupported"]=True;cases.append(json.dumps(changed).encode())
+  cases.append(choice_raw(q).replace(b"0.2",b"NaN",1))
+  cases.append(b'{"model":"jev-1.13.0","model":"jev-1.13.0","answers":{}}')
+  for malformed in cases:
+   with self.subTest(raw=malformed[:40]),self.assertRaises(ValueError):P.validate_choice_response(malformed,q,b["ids"])
+ def test_choice_order_positive_support_then_conditional_expected_band_and_canonical_ties(self):
+  ids=["z","a","m"];mass={"z":".7","a":".8","m":".5"};band={"z":"3","a":"2","m":None}
+  self.assertEqual(P.choice_order(mass,band,ids),["z","a","m"])
+  self.assertEqual(P.choice_order({x:".8" for x in ids},{x:"2" for x in ids},ids),ids)
+  with self.assertRaises(ValueError):P.choice_order(mass,{**band,"m":"1"},ids)
+class RunnerTests(unittest.TestCase):
+ def test_http_fixture_and_no_redirect(self):
+  W=load("exp071_wrapper_test",HERE/"http-wrapper.py.txt");b=P.bodies(case(),[card(0),card(1)])
+  self.assertEqual(W.PREP.validate_request(P.wire(b["relative"])),b["relative"])
+  self.assertEqual(W.PREP.validate_request(P.wire(b["w0"])),b["w0"])
+  self.assertIsNone(W.HTTP.NoRedirect().redirect_request(None,None,302,"redirect",{},"https://other.test"))
+ def test_registration_gate_checks_three_registered_files_before_dns(self):
+  self.assertEqual(set(P.PROTOCOL["criteria"]),{"unsupported","supported_1","supported_2","supported_3","supported_4"})
+  with patch.object(N,"committed",side_effect=ValueError("not pinned")),patch.object(N.socket,"getaddrinfo",side_effect=AssertionError("DNS called")):
+   with self.assertRaises(ValueError):N.live_gate({},"a"*40)
+ def test_mocked_positive_gate_accepts_actual_registered_schema_and_three_files(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   root=Path(tmp);here=root/"EXP-071";here.mkdir();lease=root/"leases";lease.mkdir()
+   for name in N.OWNED_FILES:shutil.copy2(HERE/name,here/name)
+   for name in ("protocol.json","registration-integrity.json","request-envelope-check.json"):shutil.copy2(HERE/name,here/name)
+   reg=(HERE/"registration-integrity.json").read_bytes();protocol=(HERE/"protocol.json").read_bytes();inputs={k:(N.REPO/k).read_bytes() for k in P.PROTOCOL["inputs"]}
+   qual={"schema":"exp071-qualification-integrity/1","qualified":True,"files":{name:hashlib.sha256((here/name).read_bytes()).hexdigest() for name in N.OWNED_FILES},"source_pins":{name:hashlib.sha256((N.REPO/name).read_bytes()).hexdigest() for name in N.SOURCE_FILES},"protocol_sha256":hashlib.sha256(protocol).hexdigest(),"registration_sha256":hashlib.sha256(reg).hexdigest()}
+   qraw=json.dumps(qual,separators=(",",":")).encode();(here/"qualification-integrity.json").write_bytes(qraw)
+   def committed(path,revision):
+    if path.endswith("registration-integrity.json"):return reg
+    if path.endswith("protocol.json"):return protocol
+    if path.endswith("qualification-integrity.json"):return qraw
+    return inputs[path]
+   supplied={k:inputs[k] for k in inputs}
+   with patch.object(N,"HERE",here),patch.object(N,"committed",side_effect=committed),patch.object(N.socket,"getaddrinfo",return_value=[]) as dns,patch.dict(os.environ,{"TYPESAFE_API_KEY":"fixture-only"}),patch("tempfile.gettempdir",return_value=str(lease)):
+    result=N.live_gate(supplied,"a"*40)
+    self.assertEqual(result["registration_sha256"],hashlib.sha256(reg).hexdigest());dns.assert_called_once();self.assertEqual(len(list(lease.iterdir())),1)
+ def test_complete_43_call_fixture_has_choice_signals_and_analyzes(self):
+  acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes());refs=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-064/completed/metric-reference-view.json").read_bytes())
+  with tempfile.TemporaryDirectory() as tmp:
+   result=N.run(acq,queries,Path(tmp)/"run",True);analysis=A.analyze(result,acq,refs,queries,P.PROTOCOL)
+   self.assertEqual((result["status"],result["budget"]["attempts"],result["neutral"]["questions"]),("complete",43,80));self.assertEqual(result["neutral"]["status"],"valid")
+   self.assertLessEqual(result["neutral"]["candidate_phase_ms"],1000);self.assertEqual(analysis["outcome"],"synthetic_fixture_only");self.assertFalse(analysis["structural_failures"],analysis["structural_failures"])
+   for op in result["operations"]:
+    self.assertLessEqual(op["candidate_phase_ms"],1000);self.assertEqual(set(op["arms"]["relative"]["choices"]),set(op["provenance_order_ids"]))
+   self.assertEqual(len(list((Path(tmp)/"run"/"receipts").glob("call-*.json"))),43)
+ def test_known_usage_bad_choice_stops_and_falls_back_to_w0(self):
+  acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.n+=1;req=P.strict_json(body)
+    probs={"unsupported":.1,"supported_1":.225,"supported_2":.225,"supported_3":.225,"supported_4":.225}
+    self.last_raw=choice_raw(req,probs,selected="unsupported") if len(req["state"]["candidates"])<80 and "purpose" in req["state"] else choice_raw(req)
+    return self.last_raw,1.0
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   out=Path(tmp)/"out";result=N.run(acq,queries,out,True)
+   self.assertEqual((result["status"],Fake.n),("incomplete",3));op=result["operations"][0]
+   self.assertEqual(op["arms"]["relative"]["status"],"failed");self.assertEqual(op["arms"]["relative"]["order_ids"],op["arms"]["w0"]["order_ids"])
+   self.assertEqual(result["budget"]["input_tokens"],33);self.assertEqual(result["operations"][1]["arms"]["w0"]["status"],"uninvoked")
+ def test_owned_receives_remaining_deadline_only_for_candidate_calls(self):
+  acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+  class Fake:
+   timeouts=[]
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.timeouts.append(timeout_s);req=P.strict_json(body);self.last_raw=choice_raw(req);return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   result=N.run(acq,queries,Path(tmp)/"out",True)
+   self.assertEqual(result["status"],"complete");self.assertEqual(len(Fake.timeouts),43)
+   self.assertLessEqual(Fake.timeouts[0],1);self.assertEqual(Fake.timeouts[1],60)
+   self.assertTrue(all(0<value<=1 for value in Fake.timeouts[2::2]))
+ def test_unknown_candidate_usage_is_charged_unknown_and_fails_stops(self):
+  acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.n+=1;req=P.strict_json(body)
+    if Fake.n==3:self.last_raw=choice_raw(req,usage=False)
+    else:self.last_raw=choice_raw(req)
+    return self.last_raw,.1
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   out=Path(tmp)/"out";result=N.run(acq,queries,out,True)
+   self.assertEqual((result["status"],Fake.n),("incomplete",3));self.assertTrue(result["budget"]["unknown_usage"])
+   self.assertEqual(result["budget"]["input_tokens"],22)
+   receipt=json.loads((out/"receipts"/"call-02.json").read_text());self.assertEqual(receipt["usage"],None);self.assertIsNotNone(receipt["raw_response"])
+   self.assertEqual(result["operations"][1]["arms"]["w0"]["status"],"uninvoked")
+ def test_candidate_phase_overrun_fails_stops_and_falls_back(self):
+  import time
+  acq=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/fresh-acquisition.json").read_bytes());queries=P.strict_json((N.REPO/"docs/experiments/evidence/EXP-060/queries.json").read_bytes())
+  class Fake:
+   n=0
+   def __init__(self,*_):self.last_raw=None
+   def __call__(self,body,timeout_s=60):
+    Fake.n+=1;req=P.strict_json(body);self.last_raw=choice_raw(req)
+    if len(req["state"]["candidates"])<80 and "purpose" in req["state"]:time.sleep(1.01)
+    return self.last_raw,1.0
+  with tempfile.TemporaryDirectory() as tmp,patch.object(N,"Owned",Fake):
+   result=N.run(acq,queries,Path(tmp)/"out",True)
+   op=result["operations"][0]
+   self.assertEqual((result["status"],Fake.n),("incomplete",3))
+   self.assertEqual(op["arms"]["relative"]["status"],"failed")
+   self.assertEqual(op["arms"]["relative"]["order_ids"],op["arms"]["w0"]["order_ids"])
+   self.assertGreater(op["candidate_phase_ms"],1000)
+   self.assertEqual(result["operations"][1]["arms"]["w0"]["status"],"uninvoked")
+
+if __name__=="__main__":unittest.main()

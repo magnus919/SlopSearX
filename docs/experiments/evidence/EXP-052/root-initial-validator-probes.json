@@ -1,0 +1,35 @@
+{
+  "schema": "exp052-root-initial-validator-probes/1",
+  "status": "failed",
+  "validator_sha256": "87f4e68cc6e0c37a5e4b28801de828eff607b68ee97a72d9ad1cf81689f1118c",
+  "checks": [
+    {
+      "id": "removed-uncertainty-valid",
+      "expected_valid": true,
+      "observed_valid": false,
+      "passed": false,
+      "errors": [
+        "review-reading-uncertainty"
+      ]
+    },
+    {
+      "id": "affected-uncertainty-cannot-be-same",
+      "expected_valid": false,
+      "observed_valid": true,
+      "passed": false,
+      "errors": []
+    },
+    {
+      "id": "reading-uncertainty-without-forced-discovery-label",
+      "expected_valid": true,
+      "observed_valid": false,
+      "passed": false,
+      "errors": [
+        "review-reading-uncertainty"
+      ]
+    }
+  ],
+  "reference_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0
+}

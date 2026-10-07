@@ -1,0 +1,962 @@
+{
+  "q3-a-000": {
+    "card_sha256": "30040fc0a31772376f4425dce66d7b28ebcdca9bb8817231b4eb4991c8d41028",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Study directly notes interleaved AI/human code and missing repository provenance records.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "AI usage is not always explicitly recorded in the repository history"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "AI usage is not always explicitly recorded in the repository history"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "AI usage is not always explicitly recorded in the repository history"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "AI usage is not always explicitly recorded in the repository history"
+        }
+      ]
+    }
+  },
+  "q3-a-001": {
+    "card_sha256": "a212d6e2e5aa4c8d7182b26e0d835b35939623076a0077a3a6ee1da453896638",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The title and snippet signal copyright concerns in coding assistants, but show no provenance-retention method or detection limitation for incorporated code.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "copyright infringement"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-002": {
+    "card_sha256": "3acf460fba5db06cf3e94a3a0748da19f889b4beb214bfb07bcdec4761a1bd3f",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "Visible discussion says attribution is often absent and mentions detectable agent fingerprints as a separate signal.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "developers often default to vague or absent attribution"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "developers often default to vague or absent attribution"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "developers often default to vague or absent attribution"
+        }
+      ]
+    }
+  },
+  "q3-a-003": {
+    "card_sha256": "42eb239840a958bc111d6dea094e41d44005222e3d7c150cd6659eb02a3be8fb",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "This benchmark concerns data-intensive agent tasks without visible licensing provenance relevance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "CODA-BENCH: Can Code Agents Handle Data-Intensive Tasks?"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-004": {
+    "card_sha256": "d4fc99b2b6cfb3c288c92e165f5b0f691c35fd1861ef79de61963f500cfb6704",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The card contrasts explicit PR or commit markers with behavioral attribution and notes unknown agents evade detection.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "explicit markers such as PR templates and “Generated with” commit trailers"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "explicit markers such as PR templates and “Generated with” commit trailers"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "explicit markers such as PR templates and “Generated with” commit trailers"
+        }
+      ]
+    }
+  },
+  "q3-a-005": {
+    "card_sha256": "3a98fc8c09f30bf6789943d6488f814c403b54094e40956cb8cdb8c7d5045c89",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The card warns code filters miss repeated code and recommends additional IP checks.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "filtering tools do not catch all instances of repeated code"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "filtering tools do not catch all instances of repeated code"
+        }
+      ]
+    }
+  },
+  "q3-a-006": {
+    "card_sha256": "7eb358b9508d077b984232f3e54ba83fb6ddc2c0df3c64671a53db57f119fc06",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "It directly claims traditional SCA misses similarity-based license violations and favors generation-time scanning.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "fall completely outside traditional SCA detection methods"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "fall completely outside traditional SCA detection methods"
+        }
+      ]
+    }
+  },
+  "q3-a-007": {
+    "card_sha256": "77d3e27134fa225b74a6e0d2cc02bc50a0aaac4358ec3c242b9b497d49b404c8",
+    "lead": 1,
+    "visible": 1,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The card discusses governable agentic engineering and inspectability broadly, with no visible license provenance or attribution mechanism.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "remains inspectable, correctable, and maintainable"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-008": {
+    "card_sha256": "21e4a7b00505c166a31b9d4045c2e4270cb8d86a9bd4f85240890b6096bc26c5",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q3_f1"
+    ],
+    "uncertain": true,
+    "rationale": "AI bill-of-material provenance is about AI system lifecycle metadata, not incorporated source-code attribution.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Operationalising artificial intelligence bills of materials"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "title",
+          "quote": "Operationalising artificial intelligence bills of materials"
+        }
+      ]
+    }
+  },
+  "q3-a-009": {
+    "card_sha256": "cd1e636e0ac64f7f9f45b41dff61724ef97378b58fb8fa87be316d032e9197dc",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The card is about multimodal task-solving and has no visible code licensing provenance link.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Sandboxed Coding Agents are Competitive Omni-modal Task Solvers"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-010": {
+    "card_sha256": "60a30eb3eed31425589127e54cdfa5073d4927fd9bc1daa1fe47f804239bff85",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The playbook identifies missing artifact and commit provenance for AI-assisted work.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "provenance at both the artifact layer and the commit layer"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "provenance at both the artifact layer and the commit layer"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "provenance at both the artifact layer and the commit layer"
+        }
+      ]
+    }
+  },
+  "q3-a-011": {
+    "card_sha256": "c4fb4ce977c3b313ceeaa99e681361485b70766dd81368aaf3045bdcb0e38907",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "It names license obligations and says models do not track source provenance.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Attribution. Share-alike. Notice preservation."
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "Attribution. Share-alike. Notice preservation."
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "Attribution. Share-alike. Notice preservation."
+        }
+      ]
+    }
+  },
+  "q3-a-012": {
+    "card_sha256": "9946959b68676f639663669688b828c2603df160fb7a1c0d6cba875edf310d32",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": true,
+    "rationale": "Workflow fields capture agent, files, and evidence, but the visible text distinguishes this from detection and gives no license specifics.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "agent or model used, files touched"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "agent or model used, files touched"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "agent or model used, files touched"
+        }
+      ]
+    }
+  },
+  "q3-a-013": {
+    "card_sha256": "fed4f0eecd3824b95273fb057e1eff6af890dd592d50870a652433e2c6738c4c",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The systematic review directly covers code-origin tracing through watermarking and authorship attribution.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "active provenance through code watermarking, and passive provenance through authorship attribution"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "active provenance through code watermarking, and passive provenance through authorship attribution"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "active provenance through code watermarking, and passive provenance through authorship attribution"
+        }
+      ]
+    }
+  },
+  "q3-a-014": {
+    "card_sha256": "1c7dd280fae8510418d1f0956d67f1ca882ed0f6fdce410781e56c5da605a9bd",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q3_f3"
+    ],
+    "uncertain": true,
+    "rationale": "Title signals limits and responsibility around provenance marks, but no details are visible.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Watermarks are Not Verdicts"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f3": [
+        {
+          "field": "title",
+          "quote": "Watermarks are Not Verdicts"
+        }
+      ]
+    }
+  },
+  "q3-a-015": {
+    "card_sha256": "0b43ef1f2eb370ca7e61d3ac6fe1623b86754c2df30c28407fded5294b365bb6",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The benchmark is about sustained coding-agent evaluation, not license or attribution provenance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "LoopsBench: From Harness Engineering to Loop Engineering in Coding Agent Evaluation"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-016": {
+    "card_sha256": "dce2a50410fdf94347816d89f84ecad5cb03081cfb9927b7313b888d5e2547f7",
+    "lead": 1,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The broad software lifecycle topic gives no visible license or provenance details.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "THE IMPACT OF AGENTIC CODING ON THE MODERN SOFTWARE DEVELOPMENT LIFECYCLE"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-017": {
+    "card_sha256": "e36ce647b4c4111887ebeddd0384359ff679a2a4837d25bcf729f708583e0690",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": false,
+    "rationale": "It states reused or generated code may lack license metadata needed to trace origins and attribution.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "may not carry clear license metadata for provenance and attribution"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "may not carry clear license metadata for provenance and attribution"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "may not carry clear license metadata for provenance and attribution"
+        }
+      ]
+    }
+  },
+  "q3-a-018": {
+    "card_sha256": "d94fedf4f019f6c9a2412db175eddf737363f4db40cfc22aa07ac972cbb68ef7",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The article directly proposes layered AI attribution and provenance using Git metadata.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Most of the fix is attribution you can build from git metadata"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "Most of the fix is attribution you can build from git metadata"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "Most of the fix is attribution you can build from git metadata"
+        }
+      ]
+    }
+  },
+  "q3-a-019": {
+    "card_sha256": "ac059fff95c979ff1a173e32f128830c69cb67b0ce66ca9089ac51b7c27a59be",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Merge-conflict dataset relevance to AI contributions does not address license provenance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "AgenticFlict: A Large-Scale Dataset of Merge Conflicts"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-020": {
+    "card_sha256": "5957e3a0cb24afbfd7bb52de22b54eeb6d5935a733f34da10713e3beb8357bda",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The study reports documentation strategies including system records, AI purpose, chat links, risk, memory, and version control.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "keeping system/configuration records"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "keeping system/configuration records"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "keeping system/configuration records"
+        }
+      ]
+    }
+  },
+  "q3-a-021": {
+    "card_sha256": "04f4e9bd4b9c61b3ec07ee37bbc71d69b7d074628e1fdd9da30d265f73d4651d",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "This survey is about agent architecture and has no visible code attribution or licensing focus.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Agentic AI: a comprehensive survey of architectures, applications, and future directions"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-022": {
+    "card_sha256": "6a15d9f459cc13068e3eaec04e0bc652b7436d8df234b7a93a9a3b7abec615ec",
+    "lead": 2,
+    "visible": 2,
+    "facets": [
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The benchmark evaluates AI-code detection and explicitly notes narrow existing datasets and settings.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "existing datasets and benchmarks are narrow"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "existing datasets and benchmarks are narrow"
+        }
+      ]
+    }
+  },
+  "q3-a-023": {
+    "card_sha256": "2c6aa44cb61bca38f81d052f8cca2d04d60e85fe2766a4d6e700279d56fa4b90",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q3_f2"
+    ],
+    "uncertain": true,
+    "rationale": "The title concerns AI-generated-content marking policy, but no code-specific mechanism is visible.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Draft Guidelines on Article 50 AI Act Transparency Obligations"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "title",
+          "quote": "Draft Guidelines on Article 50 AI Act Transparency Obligations"
+        }
+      ]
+    }
+  },
+  "q3-a-024": {
+    "card_sha256": "c0d93a16bf1e317a980225859655317cad02ed55c74ca83cbf0275c8ec258eba",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Security-patch detection is unrelated to code-license provenance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "A Comprehensive Evaluation of Code Language Models for Security Patch Detection"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-025": {
+    "card_sha256": "1d11276d59fa4c88da65142e1538651c5e5780be5c7181ede81b2f48989d7ce7",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The benchmark concerns security of generated code, without visible licensing provenance relevance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "A.S.E: A Repository-Level Benchmark for Evaluating Security in AI-Generated Code"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-026": {
+    "card_sha256": "f4325b5f87a8e617833f14a37b20cf742909b91ec8f3261bf5cc7a47fb044c42",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": false,
+    "rationale": "Tabnine docs describe a pre-apply provenance check and tools that show attribution and licensing.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "apply attribution by showing results and their respective licensing"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "apply attribution by showing results and their respective licensing"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "apply attribution by showing results and their respective licensing"
+        }
+      ]
+    }
+  },
+  "q3-a-027": {
+    "card_sha256": "0ce5f73d28e32f8fbbf4345b19a3eb68bbd233d346142e342eab37a94a605192",
+    "lead": 3,
+    "visible": 3,
+    "facets": [
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The card directly critiques post-generation detection and attribution-by-link reliability.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Attribution-by-link approaches, in which AI assistants cite web sources along with generated code"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "Attribution-by-link approaches, in which AI assistants cite web sources along with generated code"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "Attribution-by-link approaches, in which AI assistants cite web sources along with generated code"
+        }
+      ]
+    }
+  },
+  "q3-a-028": {
+    "card_sha256": "75af336aa5f41823e4a5ffb98d96439dfd855d769352764949bba7ebad3d7542",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": true,
+    "rationale": "The rights paper covers media licensing provenance, not software code incorporation.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Digital Rights Management and AI Licensing in the Creative Industries"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "title",
+          "quote": "Digital Rights Management and AI Licensing in the Creative Industries"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "title",
+          "quote": "Digital Rights Management and AI Licensing in the Creative Industries"
+        }
+      ]
+    }
+  },
+  "q3-a-029": {
+    "card_sha256": "d50c2fc72e56c4a2c372f1fc3257ec0fec47dc4499a56e660b8d46c1a116f8ae",
+    "lead": 2,
+    "visible": 1,
+    "facets": [
+      "q3_f3"
+    ],
+    "uncertain": true,
+    "rationale": "This is a code-provenance tools roundup, but its visible claim is generic and vendor-oriented.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "10 Best AI Code Provenance Tools 2026"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f3": [
+        {
+          "field": "title",
+          "quote": "10 Best AI Code Provenance Tools 2026"
+        }
+      ]
+    }
+  },
+  "q3-a-030": {
+    "card_sha256": "17649dd28b4ae182f6c5c2e3059aa1e0859e566e7e0d30ce2005eece21872ce1",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "FOSSA describes IP risks, guardrail limits, and snippet scanning for generated-code compliance.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "limitations of built-in guardrails"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "limitations of built-in guardrails"
+        }
+      ]
+    }
+  },
+  "q3-a-031": {
+    "card_sha256": "29f7ff9d4b7dc10df788db7061a0723c4daf6bf277fdf3ffab8a3f08c2fda1ae",
+    "lead": 1,
+    "visible": 1,
+    "facets": [
+      "q3_f1"
+    ],
+    "uncertain": true,
+    "rationale": "Dataset licensing audit relates to training data transparency, not provenance in incorporated code.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "A large-scale audit of dataset licensing and attribution in AI"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "title",
+          "quote": "A large-scale audit of dataset licensing and attribution in AI"
+        }
+      ]
+    }
+  },
+  "q3-a-032": {
+    "card_sha256": "be7c1745a46d92432267f41d3cba89b4b2bbd1358dd60be4674837297c41d798",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The article directly says agentic platforms obscure external-code provenance, scope, and license obligations.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "provenance, scope, and license obligations harder to track"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "provenance, scope, and license obligations harder to track"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "provenance, scope, and license obligations harder to track"
+        }
+      ]
+    }
+  },
+  "q3-a-033": {
+    "card_sha256": "56e1f1d05107bf0145a26df55976344cc43225b6ac172db8eb5bf5093e5938bb",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Quantum code ethics is unrelated to retaining license provenance in incorporated code.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Ethical Considerations of LLM-Driven Quantum Code Generation"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-034": {
+    "card_sha256": "052564f442005b924cfc116ff8d4d53fb8588daca086825110c6f8f5d3006722",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "Broad agentic SDLC coverage shows no visible license attribution mechanism.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "THE IMPACT OF AGENTIC CODING ON THE MODERN SOFTWARE DEVELOPMENT LIFECYCLE"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-035": {
+    "card_sha256": "6531b1694e944ef1532139177bc6782dd4ce9db6de2476cf795402c1c9c1c152",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The comparative application-development overview does not show relevant provenance or licensing content.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "The Role of AI in Application Development: A Comparative Study with Manual Coding"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-036": {
+    "card_sha256": "8697ac883aae27a2efe14eeef5a942a24ec8863066f2431ea964362166b429b0",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f1",
+      "q3_f2"
+    ],
+    "uncertain": false,
+    "rationale": "The guide recommends attribution comments on agent-authored code blocks and discusses vendoring/SBOM implications.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Require attribution comments on agent-authored code blocks"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f1": [
+        {
+          "field": "snippet",
+          "quote": "Require attribution comments on agent-authored code blocks"
+        }
+      ],
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "Require attribution comments on agent-authored code blocks"
+        }
+      ]
+    }
+  },
+  "q3-a-037": {
+    "card_sha256": "b801acd41a274f95c17492047848c7d5f3ce98af332aba34841d50007c91ce0b",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The census argues commit-level distinction is unreliable and calls for standardized attribution metadata.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "standardized AI attribution metadata in Git commits"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "standardized AI attribution metadata in Git commits"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "standardized AI attribution metadata in Git commits"
+        }
+      ]
+    }
+  },
+  "q3-a-038": {
+    "card_sha256": "0aa9df8623f3e3050e9266882467b11dc25e4df768a48e408c9d3459e960a78c",
+    "lead": 0,
+    "visible": 0,
+    "facets": [],
+    "uncertain": true,
+    "rationale": "The paper concerns physical-world agent intelligence, not code provenance.",
+    "anchors": [
+      {
+        "field": "title",
+        "quote": "Self-Evolving Coding Agents: From Digital Programs to Physical-World Intelligence"
+      }
+    ],
+    "facet_anchors": {}
+  },
+  "q3-a-039": {
+    "card_sha256": "d819059cf4fce2a68e70a5dbab45447d232b60312fdff26d5d899dfd1bb3cc88",
+    "lead": 3,
+    "visible": 2,
+    "facets": [
+      "q3_f2",
+      "q3_f3"
+    ],
+    "uncertain": false,
+    "rationale": "The card presents a license-scan workflow with blocking and review outcomes by risk category.",
+    "anchors": [
+      {
+        "field": "snippet",
+        "quote": "Agent code detected → License scan"
+      }
+    ],
+    "facet_anchors": {
+      "q3_f2": [
+        {
+          "field": "snippet",
+          "quote": "Agent code detected → License scan"
+        }
+      ],
+      "q3_f3": [
+        {
+          "field": "snippet",
+          "quote": "Agent code detected → License scan"
+        }
+      ]
+    }
+  }
+}

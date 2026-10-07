@@ -1,0 +1,31 @@
+{
+  "schema": "metadata-integration-qualification/1",
+  "passed": true,
+  "checks": {
+    "exact_frozen_body_hash": true,
+    "shuffled_actual_217_query_plan_completes": true,
+    "all_423_original_cards_unchanged": true,
+    "all_219_mapped_cards_identity_matched": true,
+    "all_204_no_identifier_retained": true,
+    "synthetic_information_screen_uses_all_12_pools": true,
+    "durable_ledger_precedes_single_request": true,
+    "response_closed": true,
+    "raw_receipt_only_in_private_runner_result": true,
+    "all_null_retains_cards_without_screen_gain": true,
+    "duplicate_key_fails_atomically_without_retry": true,
+    "wrong_count_fails_atomically_without_retry": true,
+    "parsed_callback_enforces_record_cap": true
+  },
+  "checks_passed": 13,
+  "network_calls": 0,
+  "credential_reads": 0,
+  "provider_calls": 0,
+  "fixture_only": true,
+  "input_hashes": {
+    "plan.json": "27da79250c05e6293b44aa25e7764deaae6108ae144732ec5681169f84c2608e",
+    "batch-body.json": "0c328f18ef4e5cfbad7319f28db64be2bf8b6c2f28f04ebd88cca9dbfbce0513",
+    "runner.py.txt": "a4a42b8ae41c550f860f3747c0a40d5309dbe6f6e735c7113555f6cea46f20ed",
+    "projection.py.txt": "6429170f56a630c584e8169c6d06c150f0ebb3f5270bf11d97b96fd47ad69548",
+    "integration-qualification.py.txt": "108cb2f9b19aafe5e1697ea934657bb41ae0661af1bf8659872d5a2ee168e9db"
+  }
+}

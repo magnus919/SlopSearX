@@ -1,0 +1,246 @@
+"""Offline contract tests for capture-runner.py.txt; never opens a socket."""
+import importlib.util
+import importlib.machinery
+import json
+import os
+import shutil
+import sys
+import tempfile
+import time
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("capture_runner", str(HERE / "capture-runner.py.txt"))
+spec = importlib.util.spec_from_loader("capture_runner", loader)
+R = importlib.util.module_from_spec(spec)
+loader.exec_module(R)
+
+
+class CaptureRunnerTests(unittest.TestCase):
+    def test_manifest_has_exact_public_inventory_and_frozen_orders(self):
+        m, _ = R.validate_manifest()
+        self.assertEqual(len(m["source_url_inventory"]), 28)
+        self.assertEqual({c["id"] for c in m["cases"]}, {"q6", "q8"})
+        for c in m["cases"]:
+            self.assertEqual(len(c["presentation_orders"]["w0"]), 10)
+            self.assertEqual(len(c["presentation_orders"]["candidate"]), 10)
+
+    def test_malformed_last_url_fails_before_environment_or_network(self):
+        m = json.loads(R.MANIFEST.read_text())
+        m["source_url_inventory"][-1]["url"] = "file:///bad"
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "manifest.json"; p.write_text(json.dumps(m))
+            with patch.dict(os.environ, {}, clear=True), patch.object(R, "_live", side_effect=AssertionError("network")):
+                with self.assertRaisesRegex(ValueError, "url-inventory-url"):
+                    R.validate_manifest(p)
+
+    def test_tampered_prompt_pin_fails(self):
+        m = json.loads(R.MANIFEST.read_text())
+        name = next(iter(m["prompt_pins"]))
+        m["prompt_pins"][name] = "0" * 64
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "manifest.json"; p.write_text(json.dumps(m))
+            with self.assertRaisesRegex(ValueError, "prompt-pin"):
+                R.validate_manifest(p)
+
+    def test_existing_and_symlink_outdirs_are_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); existing = root / "existing"; existing.mkdir()
+            link = root / "link"; link.symlink_to(existing, target_is_directory=True)
+            for p in (existing, link):
+                with self.assertRaisesRegex(ValueError, "outdir-exists-or-symlink"):
+                    R.validate_outdir(p)
+
+    def test_transport_bounds_retry_and_parallel_contract(self):
+        m, _ = R.validate_manifest()
+        b = m["bounds"]
+        self.assertEqual((b["owned_http_total_calls"], b["source_api_calls"], b["health_preflight_calls"]), (29, 28, 1))
+        self.assertEqual((b["capture_concurrency"], b["retries"], b["source_response_bytes"], b["capture_wall_seconds"]), (1, 0, 2_000_000, 1800))
+
+    def test_barrier_envelope_and_challenge_refusals(self):
+        self.assertFalse(R.barrier_flagged({"success": True, "data": {"markdown": "ok"}}))
+        self.assertTrue(R.barrier_flagged({"success": True, "warning": "low quality"}))
+        self.assertTrue(R.barrier_flagged({"data": {"quality": {"checks": {"block_detected": "warn"}}}}))
+        self.assertTrue(R.barrier_flagged({"data": {"quality": {"checks": {"block_detected": "fail"}}}}))
+        self.assertFalse(R.barrier_flagged({"data": {"quality": {"checks": {"block_detected": "pass"}}}}))
+        self.assertTrue(R.markdown_challenge("Please enable JavaScript to continue"))
+
+    def test_shared_selection_deduplicates_prefers_nonvideo_and_uses_first_five(self):
+        case = {"sources": [
+            {"id": f"c{i}", "url": ("https://youtube.com/watch?v=x" if i == 0 else f"https://example.test/{i}")}
+            for i in range(11)], "presentation_orders": {"w0": [f"c{i}" for i in range(10)]}}
+        records = {s["url"]: {"accepted": True} for s in case["sources"]}
+        chosen = R.choose_sources(case, "w0", records)
+        self.assertEqual([s["id"] for s in chosen], [f"c{i}" for i in range(1, 6)])
+        records[case["sources"][1]["url"]] = {"accepted": False}
+        self.assertEqual(len(R.choose_sources(case, "w0", records)), 5)
+
+    def test_offline_cli_creates_only_zero_network_receipt(self):
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "run"
+            m, _ = R.validate_manifest()
+            with patch.object(R, "_live", side_effect=AssertionError("network")):
+                result = R.offline_fixture(m, out)
+            self.assertEqual(result["network_calls"], 0)
+            self.assertTrue(result["synthetic"])
+            self.assertEqual(json.loads((out / "capture.json").read_text())["status"], "offline_fixture_only")
+
+    def test_installed_sync_cli_fake_http_end_to_end(self):
+        cli_path = os.environ.get("GROKTOCRAWL_CLI_PATH") or shutil.which("groktocrawl")
+        if not cli_path:
+            self.skipTest("provide GROKTOCRAWL_CLI_PATH to run pinned installed CLI contract")
+        m = json.loads(R.MANIFEST.read_text())
+        self.assertEqual(R.sha(Path(cli_path).read_bytes()), m["cli_sha256"])
+        m["consumer_source_pins"] = {}
+        packet_ids = {c["id"]: {a: f"uuid-{c['id']}-{a}" for a in ("w0", "candidate")} for c in m["cases"]}
+        source_order = {}
+        for c in m["cases"]:
+            by_id = {s["id"]: s for s in c["sources"]}
+            eligible = {by_id[sid]["url"] for arm in ("w0", "candidate") for sid in c["presentation_orders"][arm]}
+            source_order[c["id"]] = [x["neutral_source_id"] for x in reversed(m["source_url_inventory"]) if x["url"] in eligible]
+
+        # Minimal exact module boundary for exercising the pinned projection call.
+        class FakeSourceArtifact:
+            def __init__(self, url, markdown=None): self.url, self.markdown = url, markdown or ""
+            def to_document(self):
+                from urllib.parse import urlsplit
+                return f"Source: {self.url} (domain: {urlsplit(self.url).hostname})\n\n{self.markdown[:8000]}"
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); repo = root / "consumer"; (repo / "common").mkdir(parents=True)
+            (repo / "agent-svc/agent/research").mkdir(parents=True)
+            (repo / "common/url.py").write_text("from urllib.parse import urlsplit\ndef extract_domain(url): return urlsplit(url).hostname or ''\n")
+            (repo / "agent-svc/agent/research/sources.py").write_text(
+                "class SourceArtifact:\n def __init__(self,url,title='',relevance='',markdown=None,**kwargs): self.url=url; self.markdown=markdown or ''\n"
+                " def to_document(self,max_chars=8000):\n  from common.url import extract_domain\n  return f'Source: {self.url} (domain: {extract_domain(self.url)})\\n\\n{self.markdown[:max_chars]}'\n")
+            out = root / "run"; out.mkdir(mode=0o700)
+            import requests
+            calls = []
+            class FakeResponse:
+                status_code = 200
+                headers = {}
+                url = "https://fixture.invalid"
+                def __init__(self, body, slow=False): self.body=body; self.slow=slow
+                def iter_content(self, chunk_size):
+                    if self.slow: time.sleep(1)
+                    yield self.body
+                def json(self): return json.loads(self.body)
+                def close(self): pass
+            mode = {"oversize": False, "slow": False, "ratelimit": False}
+            def fake_request(method, url, **kwargs):
+                calls.append((method, url, kwargs))
+                if url.endswith("/health"):
+                    body={"status":"ok","runtime":{"model":"free","revision":"fixture-revision"}}
+                else:
+                    source_url = kwargs.get("json", {}).get("url")
+                    idx = len([x for x in calls if not x[1].endswith("/health")])
+                    self.assertEqual(os.environ.get("GROKTOCRAWL_RETRY_MAX_ATTEMPTS"), "1")
+                    if mode["ratelimit"] and idx == 3:
+                        response = FakeResponse(json.dumps({"success":False,"error":"rate limited"}).encode())
+                        response.status_code = 429
+                        return response
+                    if mode["oversize"] and idx == 3:
+                        return FakeResponse(b"x" * (R.MAX_RESPONSE + 1))
+                    if mode["slow"] and idx == 3:
+                        return FakeResponse(b"{}", slow=True)
+                    if source_url == m["source_url_inventory"][0]["url"]:
+                        body={"success":True,"warning":"challenge","data":{"markdown":"not accepted"}}
+                    elif source_url == m["source_url_inventory"][1]["url"]:
+                        body={"success":True,"data":{"markdown":""}}
+                    else:
+                        body={"success":True,"data":{"markdown":"source-body"}}
+                return FakeResponse(json.dumps(body).encode())
+            integrity={"synthetic":True}
+            with patch.object(requests, "request", side_effect=fake_request):
+                result=R._live(m,out,integrity,Path(cli_path),repo,packet_ids,source_order)
+            self.assertEqual(result["capture_calls_including_health"],29)
+            self.assertEqual(len(calls),29)
+            self.assertEqual(calls[0][2]["timeout"],8)
+            self.assertTrue(all(x[2]["timeout"]==45 for x in calls[1:]))
+            self.assertTrue(all(x[2]["allow_redirects"] is False and x[2]["stream"] is True for x in calls))
+            self.assertTrue(all(x[2]["json"].get("timeout")==30000 for x in calls[1:]))
+            self.assertFalse(result["captures"][0]["accepted"])
+            self.assertFalse(result["captures"][1]["accepted"])
+            self.assertTrue((out / "private-raw/http-29.bin").is_file())
+            packet=json.loads((out/"private-raw/answerer-controller-bundle.json").read_text())
+            self.assertEqual(len(packet["cases"]),4)
+            for item in packet["cases"]:
+                individual=json.loads((out/"private-packets"/(item["packet_id"]+".json")).read_text())
+                self.assertEqual(individual,{"cases":[item]})
+                self.assertEqual(len(individual["cases"]),1)
+            self.assertFalse((out/"private-packets/answerer-packets.json").exists())
+            self.assertTrue(all(s["source_id"].startswith("S") for c in packet["cases"] for s in c["sources"]))
+            for task in ("q6", "q8"):
+                arms=[c for c in packet["cases"] if c["task_id"]==task]
+                self.assertEqual(len(arms),2)
+                shared={s["source_id"]:s["context"] for s in arms[0]["sources"]} \
+                    .keys() & {s["source_id"] for s in arms[1]["sources"]}
+                left={s["source_id"]:s["context"] for s in arms[0]["sources"]}
+                right={s["source_id"]:s["context"] for s in arms[1]["sources"]}
+                self.assertTrue(all(left[sid]==right[sid] for sid in shared))
+                self.assertTrue(all(left[sid].startswith("Source: https://") for sid in shared))
+            srcpkt=json.loads((out/"private-packets/source-assessor-packets.json").read_text())
+            self.assertTrue(all("expected_evidence" in f and "boundary_checks" in f for c in srcpkt["cases"] for f in c["facets"]))
+            for c in m["cases"]:
+                by_id={s["id"]:s for s in c["sources"]}
+                eligible={by_id[sid]["url"] for arm in ("w0","candidate") for sid in c["presentation_orders"][arm]}
+                case_packet=next(x for x in srcpkt["cases"] if x["task_id"]==c["id"])
+                expected={s["neutral_source_id"] for s in m["source_url_inventory"] if s["url"] in eligible}
+                self.assertEqual({s["source_id"] for s in case_packet["sources"]},expected)
+                unavailable={s["neutral_source_id"] for s in m["source_url_inventory"]
+                    if s["url"] in eligible and s["url"] in {m["source_url_inventory"][0]["url"],m["source_url_inventory"][1]["url"]}}
+                self.assertTrue(all(s["context"]=="" for s in case_packet["sources"] if s["source_id"] in unavailable))
+
+            # HTTP429 receives no retry, even when the ambient policy requests three.
+            out4=root/"rate-limited"; out4.mkdir(mode=0o700); calls.clear(); mode["ratelimit"]=True
+            with patch.dict(os.environ, {"GROKTOCRAWL_RETRY_MAX_ATTEMPTS":"3", "GROKTOCRAWL_API_URL":"https://unintended.invalid"}), patch.object(requests,"request",side_effect=fake_request), patch.object(time,"sleep",side_effect=AssertionError("unexpected retry sleep")):
+                rate_result=R._live(m,out4,integrity,Path(cli_path),repo,packet_ids,source_order)
+                self.assertEqual(os.environ["GROKTOCRAWL_RETRY_MAX_ATTEMPTS"],"3")
+                self.assertEqual(os.environ["GROKTOCRAWL_API_URL"],"https://unintended.invalid")
+                self.assertTrue(all(not call[1].startswith("https://unintended.invalid") for call in calls))
+            self.assertEqual(len(calls),29)
+            self.assertFalse(rate_result["captures"][2]["accepted"])
+            transport=json.loads((out4/"private-raw/http-transport.json").read_text())
+            self.assertEqual(transport[3]["status_code"],429)
+            mode["ratelimit"]=False
+
+            # A hard response-byte breach stops and marks all later sources.
+            out2=root/"oversize"; out2.mkdir(mode=0o700); calls.clear(); mode["oversize"]=True
+            with patch.object(requests, "request", side_effect=fake_request):
+                with self.assertRaises(R.CaptureBudgetError):
+                    R._live(m,out2,integrity,Path(cli_path),repo,packet_ids,source_order)
+            rows=json.loads((out2/"receipts.json").read_text())
+            self.assertEqual(rows[3]["status"],"budget_error")
+            self.assertTrue(all(x["status"]=="not_attempted_budget_suffix" for x in rows[4:]))
+
+            # A hard wall timeout also fails closed without attempting the suffix.
+            out3=root/"slow"; out3.mkdir(mode=0o700); calls.clear(); mode["oversize"]=False; mode["slow"]=True
+            with patch.object(R, "SOURCE_TIMEOUT", 0.02), patch.object(requests, "request", side_effect=fake_request):
+                with self.assertRaises(R.CaptureBudgetError):
+                    R._live(m,out3,integrity,Path(cli_path),repo,packet_ids,source_order)
+            rows=json.loads((out3/"receipts.json").read_text())
+            self.assertEqual(rows[3]["status"],"budget_error")
+            self.assertTrue(all(x["status"]=="not_attempted_budget_suffix" for x in rows[4:]))
+
+    def test_environment_restored_when_cli_construction_fails(self):
+        ambient={"GROKTOCRAWL_API_URL":"https://unintended.invalid", "FIRECRAWL_API_URL":"https://legacy.invalid", "GROKTOCRAWL_RETRY_MAX_ATTEMPTS":"3"}
+        with patch.dict(os.environ,ambient), patch.object(R,"_capture_live",side_effect=ImportError("client construction failed")):
+            with self.assertRaises(ImportError): R._live({},Path("unused"),{},Path("unused"),Path("unused"),{}, {})
+            self.assertTrue(all(os.environ[name]==value for name,value in ambient.items()))
+
+    def test_lease_is_exclusive_and_durable(self):
+        with tempfile.TemporaryDirectory() as td:
+            lease = R.acquire_lease(Path(td))
+            self.assertTrue(lease.is_file())
+            with self.assertRaises(FileExistsError):
+                R.acquire_lease(Path(td))
+            first=R.acquire_lease(Path(td), "a"*64)
+            second=R.acquire_lease(Path(td), "b"*64)
+            self.assertNotEqual(first,second)
+            with self.assertRaises(FileExistsError): R.acquire_lease(Path(td), "a"*64)
+            self.assertTrue(lease.exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

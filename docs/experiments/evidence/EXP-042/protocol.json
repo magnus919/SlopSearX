@@ -1,0 +1,55 @@
+{
+  "schema": "exp042-protocol/1",
+  "model": "jev-1.13.0",
+  "groups": {
+    "software": "q1-q9: W0 and E (18 calls); q1-q8 primary, q9 separate",
+    "extended": "cardiac, research, evaluation, constructed80: W0, D, E, exact E repeat, cyclic rotated20 E (20 calls)",
+    "navigation": "five frozen targets: W0 and D (10 calls); E bypass is local only",
+    "total": 48,
+    "execution": "serial, no retries, four-hour window"
+  },
+  "arms": {
+    "W0": "pinned current production Score contract, first 40 post-group cards, complete original tail appended unchanged",
+    "D_star": "stable complete-pool ranking from Score answers in the same E batch; no separate provider call",
+    "D": "separate pinned EXP-040 ordinal-only purpose Score, extended-pool diagnostic only",
+    "E": "same-batch D Score plus typed Noul answers for every explicit facet/candidate pair and frozen deterministic selector"
+  },
+  "limits": {
+    "candidates": 80,
+    "facets": 4,
+    "questions": 400,
+    "baseline_request_utf8_bytes": 128000,
+    "purpose_request_utf8_bytes": 384000,
+    "query_utf8_bytes": 4096,
+    "title_utf8_bytes": 256,
+    "url_utf8_bytes": 512,
+    "snippet_utf8_bytes": 1200,
+    "facet_description_utf8_bytes": 256,
+    "response_bytes": 2000000,
+    "remote_http_ms": 1000,
+    "total_transport_seconds": 60,
+    "actual_input_tokens": 3000000,
+    "actual_output_tokens": 100000,
+    "preflight": "estimates only; actual token gates apply after response and cannot cap in-flight spend"
+  },
+  "serialization": "json.dumps(body, ensure_ascii=False).encode('utf-8')",
+  "fallback": "Any invalid/oversize request or response, timeout, usage gate, or expiry preserves the complete W0 order; no truncation, chunking, retries, or cross-call score fusion.",
+  "grouping": "Apply pinned scholarly-work-v3 group_publications to a single synthetic frozen_projection feed. This is not engine provenance. Preserve all original member IDs and project only the selected original representative row; never merge labels, snippets, scores, or references.",
+  "selector": {
+    "min_score": 5,
+    "min_noul": 0.8,
+    "top_k": 10,
+    "max_insertions": 4,
+    "tie_order": "current request candidate order",
+    "algorithm": "stable score sort; while an eligible outside candidate adds missing model-qualified facets, greedily select the candidate covering the most uncovered facets (then score descending, then request order), evict the lowest-score selected non-reservation that is not the sole qualified representative of an already covered facet (eviction ties later request order), reserve the inserted card; stop after four insertions or no safe insertion; stable-sort the selected set by score and append remaining cards in stable score order"
+  },
+  "analysis": {
+    "primary": "E minus W0 development screen for q1-q8, both EXP-039 references independently; paired query bootstrap 10000 draws seed 91940; mean nDCG@10 >= 0.03 and lower95 > 0",
+    "selector_quality": "E minus D* mean nDCG@10 >= -0.01 per reference; per-query useful loss <= 1 and E retains >=9 when comparator has 10; preserve all reference-supported useful facets vs W0 and D*",
+    "natural_pools": "same useful/facet guards and per-pool nDCG loss <= 0.03 vs D*; E vs D separately descriptive",
+    "coverage": "macro coverage@10 on facets with >=1 post-group representative tagged by that reference and lead>=2; E >= D* for each reference and strict aggregate improvement under at least one; zero-evaluable cases excluded and reported",
+    "navigation": "pinned exact target top3 under W0 and D; E bypass must not reorder",
+    "stress": "constructed80 is operational only; post-v3 grouping yields 79 candidates, not 80; no relevance claims",
+    "references": "reuse sealed EXP-039/EXP-040 reference rows unchanged for original representative only; no relabel/aggregation"
+  }
+}

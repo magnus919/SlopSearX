@@ -1,0 +1,76 @@
+{
+  "schema": "exp041-qualification/1",
+  "baseline_revision": "13acdf2cc59af764f3f71103885e4f2dd4c3bc42",
+  "registration_revision": "9f737149eae71128fb76abcff2d2be69851bc55a",
+  "baseline_source_sha256": "8443732adee9065de3b7ab3d0a2c11b0e903538a8dc474d1ec6a3785cd10de7f",
+  "candidate_source_sha256": "cfa7ab4c0326b0a3c3da97e527766a65c657a9865897193d3ae59964779b77d5",
+  "initial_fixture_sha256": "595172a60226e2d13791e9dc3159a549437f74cf968849b31d95371502c46a60",
+  "final_fixture_sha256": "ede1d18cb9684f6eccc5e051c35bc0751c708f288c8ccf88e66c3d876d714b06",
+  "initial_matrix_sha256": "3fa46c66ca5cb5494f0257818f982837c3d9c7c5a2bce3b8c40ed16c03c6cf33",
+  "initial_baseline": {
+    "failed": 13,
+    "passed": 7
+  },
+  "final_fixture_old_code_check": {
+    "failed": 14,
+    "passed": 7,
+    "method": "execute exact pinned baseline scholarly module in an isolated Python subprocess, then collect unchanged final fixture file; worktree files untouched"
+  },
+  "candidate_focused": {
+    "passed": 55,
+    "command": "PYTHONPATH=. .venv/bin/python -m pytest --no-cov -q tests/test_scholarly.py tests/test_scholarly_arxiv_html_identity.py"
+  },
+  "mypy": "118 source files passed",
+  "portal_api_contracts": "114 passed",
+  "pre_commit_all_files": "passed",
+  "graphify": "AST-only update passed",
+  "provider_calls": 0,
+  "brave_attempts": 0,
+  "deployment_changes": false,
+  "fixture_history": "Initial fixture used an unversioned illustrative HTML route. A subsequent version corrected the observed regression to the exact saved v4 URL/title/snippet with plain source cards, and added mixed revision and wire/cache checks. Both baseline outcomes are retained; final comparison uses the unchanged final fixture. Original fixture-file hash is retained, but only final source is delivered; initial declared URL matrix and sanitized baseline output remain available.",
+  "full_suite": {
+    "passed": 2333,
+    "skipped": 57,
+    "warnings": 7,
+    "coverage_percent": 85.41,
+    "seconds": 57.44,
+    "command": "PYTHONPATH=. .venv/bin/python -m pytest --cov=slopsearx --cov=engines --cov-report=term-missing",
+    "local_permissions": "temporary loopback fixture servers permitted; no external engine/provider calls"
+  },
+  "restricted_full_suite_attempt": {
+    "passed": 2295,
+    "failed": 32,
+    "errors": 6,
+    "skipped": 57,
+    "cause": "loopback binding denied by execution sandbox; direct first-failure reproduction confirmed PermissionError; full permitted run passed"
+  },
+  "formatted_delivery_fixture_sha256": "8a9781238cd166f90d57f9d6ad68074d50d46064bd4507b58a93cc91ebee67e7",
+  "fixture_formatting": "Pre-commit reformatted the added test after staging; AST equality against the qualified fixture confirmed. Focused tests and hooks rerun. Runtime source unchanged.",
+  "initial_baseline_original_sha256": "022d6367fe569f6d112cdbcde2ba2e9861c608a584012be6f2f4767e4c324c48",
+  "baseline_sanitization": "Personal/local runtime paths redacted; trailing whitespace normalized in published copy. Private original remains unchanged.",
+  "ci_first_pass": {
+    "revision": "af8c16bde44698ba7341d65958a7e23104cf26ef",
+    "failed_job": "test (3.13)",
+    "run_id": 37183178356,
+    "failure": "existing queue-deadline fixture allowed earlier requests to release slots before queued request deadline; immediate mock success is valid",
+    "repair": "hold both admission slots explicitly until queued request times out; release in finally; confirm later HTTP call succeeds",
+    "runtime_source_changed_by_repair": false,
+    "focused_after_repair": {
+      "passed": 103,
+      "seconds": 1.12
+    },
+    "mypy_after_repair": "118 source files passed",
+    "droid_first_pass": "substantive positive runtime/test/security review; one ledger-row placement finding addressed"
+  },
+  "delivery": {
+    "implementation_pr": 529,
+    "final_head_revision": "681c28be8b129e869a58c5d44803bfafcf97bb66",
+    "merge_revision": "80029eb1b85a12a5d407075bf9ce091d0fa33ba0",
+    "merged_at": "2026-10-04T06:51:36Z",
+    "required_ci": "all applicable jobs successful; trigger-only/publish skips expected",
+    "review": "Droid initial positive substantive pass; ledger finding addressed; final doc/test-only repair independently reviewed by Luna and runner; final review recorded on PR",
+    "final_review_url": "https://github.com/magnus919/SlopSearX/pull/529#issuecomment-5977463819",
+    "issue_527": "closed",
+    "deployed": false
+  }
+}

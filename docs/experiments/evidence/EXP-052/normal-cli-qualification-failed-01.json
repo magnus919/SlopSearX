@@ -1,0 +1,15 @@
+{
+  "schema": "exp052-normal-cli-qualification/1",
+  "status": "failed",
+  "trusted_head": "ed0492aa127c8bf4a58619d3693466f3d22c8d27",
+  "validator_sha256": "9349910ca442230d3e341793cb18f66c57f11d65c72332887a1f2c89f2fc1269",
+  "attempted_pool": "P01",
+  "errors": [
+    "registration-trust-schema"
+  ],
+  "normal_cli_checks_passed": 0,
+  "reference_invocations": 0,
+  "provider_calls": 0,
+  "search_calls": 0,
+  "meaning": "First normal CLI attempt rejected the actual registration due to an omitted meaning property in the validator expected-key set; no reference was invoked."
+}

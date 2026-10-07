@@ -1,0 +1,478 @@
+"""Strict offline EXP-060 quality analysis adapter.
+
+This module consumes only frozen run artifacts. It makes no provider, search,
+or network calls. Ranking and annotation data are treated as untrusted input.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.machinery
+import json
+import math
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[3]
+PRIMARY = tuple(f"q{i}" for i in range(1, 9))
+NAVIGATION = tuple(f"q{i}" for i in range(9, 14))
+STABILITY = {"q1", "q4", "q7", "q8"}
+MAX_CARDS = 80
+MAX_ROUNDS = 4
+MAX_HTTP_MS = 1000.0
+MAX_CANDIDATE_MS = 2000.0
+MIN_LARGE_POOLS = 4
+DRAW_COUNT = 10000
+BOOTSTRAP_SEED = 91940
+
+
+def _load_json(path: Path) -> Any:
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"non_finite_json:{value}")
+
+    def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate_json_key")
+            result[key] = value
+        return result
+
+    return json.loads(
+        path.read_text(encoding="utf-8"),
+        parse_constant=reject_constant,
+        object_pairs_hook=unique_object,
+    )
+
+
+def _module(name: str, path: Path) -> Any:
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    module = loader.load_module()
+    return module
+
+
+def _load_pinned_helpers() -> tuple[Any, Any, dict[str, Any], list[dict[str, Any]]]:
+    protocol = _load_json(HERE / "protocol.json")
+    cohort = _load_json(HERE / "queries.json")
+    pins = _load_json(HERE / "source-pins.json")
+    if hashlib.sha256((HERE / "protocol.json").read_bytes()).hexdigest() != pins.get("protocol_sha256"):
+        raise ValueError("pinned_protocol_mismatch")
+    if hashlib.sha256((HERE / "queries.json").read_bytes()).hexdigest() != pins.get("cohort_sha256"):
+        raise ValueError("pinned_cohort_mismatch")
+    pinned = pins.get("sources", {})
+    paths = {
+        "docs/experiments/evidence/EXP-039/replay.py.txt": ROOT / "docs/experiments/evidence/EXP-039/replay.py.txt",
+        "docs/experiments/evidence/EXP-042/analysis.py.txt": ROOT / "docs/experiments/evidence/EXP-042/analysis.py.txt",
+    }
+    for relative, path in paths.items():
+        expected = pinned.get(relative)
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if not expected or actual != expected:
+            raise ValueError("pinned_analysis_helper_mismatch")
+    ndcg = _module("exp060_exp039_replay", paths["docs/experiments/evidence/EXP-039/replay.py.txt"])
+    exp042 = _module("exp060_exp042_analysis", paths["docs/experiments/evidence/EXP-042/analysis.py.txt"])
+    return ndcg, exp042, protocol, cohort
+
+
+def _inconclusive(*issues: str, details: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    return {
+        "schema": "exp060-analysis/1",
+        "outcome": "inconclusive",
+        "adoption_eligible": False,
+        "issues": sorted(set(issues)),
+        "details": dict(details or {}),
+        "quality_analysis_performed": False,
+    }
+
+
+def _is_int_grade(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 3
+
+
+def _valid_card_rows(cards: Any) -> tuple[list[str], dict[str, dict[str, Any]]]:
+    if not isinstance(cards, list) or not cards:
+        raise ValueError("missing_or_empty_cards")
+    ids: list[str] = []
+    by_id: dict[str, dict[str, Any]] = {}
+    for card in cards:
+        if not isinstance(card, dict) or set(card) != {"id", "title", "url", "snippet"}:
+            raise ValueError("invalid_card_projection")
+        cid = card["id"]
+        if not isinstance(cid, str) or not cid or cid in by_id:
+            raise ValueError("duplicate_or_invalid_card_id")
+        if any(not isinstance(card[k], str) for k in ("title", "url", "snippet")):
+            raise ValueError("invalid_card_text")
+        ids.append(cid)
+        by_id[cid] = card
+    return ids, by_id
+
+
+def _valid_label_rows(
+    raw: Any, expected_ids: set[str], allowed_facets: set[str]
+) -> dict[str, dict[str, Any]]:
+    if not isinstance(raw, dict) or set(raw) != expected_ids:
+        raise ValueError("reference_card_inventory_mismatch")
+    normalized: dict[str, dict[str, Any]] = {}
+    for cid, row in raw.items():
+        if not isinstance(row, dict):
+            raise ValueError("invalid_reference_row")
+        required = {"lead", "visible", "facets", "uncertain", "rationale"}
+        if set(row) != required:
+            raise ValueError("invalid_reference_fields")
+        if not _is_int_grade(row["lead"]) or not _is_int_grade(row["visible"]):
+            raise ValueError("invalid_reference_grade")
+        tags = row["facets"]
+        if not isinstance(tags, list) or any(not isinstance(x, str) for x in tags):
+            raise ValueError("invalid_reference_facets")
+        if len(tags) != len(set(tags)) or not set(tags) <= allowed_facets:
+            raise ValueError("unknown_or_duplicate_reference_facet")
+        if not isinstance(row["uncertain"], bool) or not isinstance(row["rationale"], str) or not row["rationale"].strip():
+            raise ValueError("invalid_reference_annotation_metadata")
+        normalized[cid] = {
+            "lead": row["lead"],
+            "visible": row["visible"],
+            "facets": list(tags),
+            "uncertain": row["uncertain"],
+        }
+    return normalized
+
+
+def _expected_ops(protocol: Mapping[str, Any]) -> list[dict[str, Any]]:
+    ops = protocol.get("ordered_case_plan")
+    if not isinstance(ops, list) or not ops:
+        raise ValueError("missing_frozen_operation_plan")
+    return ops
+
+
+def _timing_valid(op: Mapping[str, Any], navigation: bool, w0_call_expected: bool) -> None:
+    attempts = op.get("attempts")
+    if not isinstance(attempts, list):
+        raise ValueError("missing_http_attempt_inventory")
+    valid_attempts: list[dict[str, Any]] = []
+    for attempt in attempts:
+        if not isinstance(attempt, dict) or attempt.get("status") != "valid":
+            raise ValueError("failed_or_unvalidated_http_attempt")
+        arm = attempt.get("arm")
+        ms = attempt.get("remote_http_ms")
+        if arm not in {"w0", "d", "f", "e"} or not isinstance(ms, (int, float)) or isinstance(ms, bool) or not math.isfinite(ms) or ms < 0:
+            raise ValueError("invalid_http_timing")
+        valid_attempts.append(attempt)
+    expected_arms = ({"w0"} if w0_call_expected else set()) | {"d"}
+    if not navigation:
+        expected_arms.add("f")
+    arms = [a["arm"] for a in valid_attempts]
+    for arm in expected_arms:
+        if arms.count(arm) != 1:
+            raise ValueError("missing_or_duplicate_required_arm_attempt")
+    if not w0_call_expected and "w0" in arms:
+        raise ValueError("unexpected_w0_attempt_for_single_candidate_prefix")
+    if navigation:
+        if "f" in arms or "e" in arms:
+            raise ValueError("unexpected_navigation_candidate_call")
+    else:
+        if arms.count("e") > MAX_ROUNDS:
+            raise ValueError("too_many_candidate_round_calls")
+        rounds = [a.get("round") for a in valid_attempts if a["arm"] == "e"]
+        if any(not isinstance(n, int) or isinstance(n, bool) or n not in range(1, MAX_ROUNDS + 1) for n in rounds):
+            raise ValueError("invalid_candidate_round_index")
+        if rounds != sorted(set(rounds)):
+            raise ValueError("duplicate_or_out_of_order_candidate_round")
+    computed = sum(float(a["remote_http_ms"]) for a in valid_attempts if a["arm"] in {"d", "f", "e"})
+    reported = op.get("remote_d_f_e_ms")
+    if not isinstance(reported, (int, float)) or isinstance(reported, bool) or not math.isfinite(reported) or abs(float(reported) - computed) > 0.01:
+        raise ValueError("candidate_remote_time_binding_mismatch")
+    if op.get("terminal_reason") == "remote_budget_stop":
+        remaining = op.get("remaining_remote_ms")
+        if not isinstance(remaining, (int, float)) or isinstance(remaining, bool) or not math.isfinite(remaining) or not 0 <= remaining < MAX_HTTP_MS:
+            raise ValueError("invalid_successful_budget_stop")
+
+
+def _validate_run(
+    run: Mapping[str, Any], protocol: Mapping[str, Any], cohort: list[dict[str, Any]]
+) -> tuple[dict[str, Any], dict[str, dict[str, dict[str, Any]]], dict[str, list[str]], dict[str, dict[str, dict[str, list[str]]]]]:
+    if not isinstance(run, Mapping) or run.get("schema") != "exp060-run-artifacts/1":
+        raise ValueError("wrong_run_schema")
+    if run.get("reference_source") != "fresh_exp060" or run.get("historical_labels_reused") is not False:
+        raise ValueError("reference_provenance_not_fresh")
+    expected_questions = {row["id"]: row for row in cohort}
+    if set(expected_questions) != set((*PRIMARY, *NAVIGATION)):
+        raise ValueError("frozen_cohort_inventory_mismatch")
+    pools_raw = run.get("pools")
+    if not isinstance(pools_raw, dict) or set(pools_raw) != set(expected_questions):
+        raise ValueError("pool_inventory_mismatch")
+    pool_cards: dict[str, dict[str, Any]] = {}
+    pool_ids: dict[str, list[str]] = {}
+    for qid, question in expected_questions.items():
+        pool = pools_raw[qid]
+        if not isinstance(pool, dict):
+            raise ValueError("invalid_pool_record")
+        ids, cards_by_id = _valid_card_rows(pool.get("cards"))
+        if len(ids) > MAX_CARDS:
+            raise ValueError("pool_exceeds_frozen_card_limit")
+        pool_cards[qid] = cards_by_id
+        pool_ids[qid] = ids
+        if question["kind"] == "navigation":
+            if pool.get("target_url") != question.get("target_url"):
+                raise ValueError("navigation_target_binding_mismatch")
+
+    refs_raw = run.get("references")
+    if not isinstance(refs_raw, dict) or set(refs_raw) != {"A", "B"}:
+        raise ValueError("missing_reference_sets")
+    refs: dict[str, dict[str, dict[str, Any]]] = {"A": {}, "B": {}}
+    for reviewer in ("A", "B"):
+        reference = refs_raw[reviewer]
+        if not isinstance(reference, dict) or set(reference) != set((*PRIMARY, *NAVIGATION)):
+            raise ValueError("reference_query_inventory_mismatch")
+        for qid in (*PRIMARY, *NAVIGATION):
+            facet_ids = {facet["id"] for facet in expected_questions[qid].get("facets", [])}
+            refs[reviewer][qid] = _valid_label_rows(reference[qid], set(pool_ids[qid]), facet_ids)
+
+    operations_raw = run.get("operations")
+    plan = _expected_ops(protocol)
+    expected_ids = [item.get("id") for item in plan]
+    if not isinstance(operations_raw, list) or any(not isinstance(op, dict) for op in operations_raw):
+        raise ValueError("invalid_operation_inventory")
+    if [op.get("id") for op in operations_raw] != expected_ids:
+        raise ValueError("operation_inventory_or_order_mismatch")
+    rankings: dict[str, dict[str, dict[str, list[str]]]] = {}
+    statuses: dict[str, dict[str, Any]] = {}
+    for frozen, op in zip(plan, operations_raw):
+        opid, qid = frozen["id"], frozen["id"].split("-", 1)[0]
+        mode = frozen["id"].split("-", 1)[1]
+        if op.get("case") != qid or op.get("mode") != mode:
+            raise ValueError("operation_identity_mismatch")
+        status = op.get("status")
+        if status not in {"valid", "failed", "not-invoked"}:
+            raise ValueError("invalid_operation_status")
+        statuses[opid] = op
+        if status != "valid":
+            continue
+        ids, op_cards = _valid_card_rows(op.get("cards"))
+        base_ids = pool_ids[qid]
+        expected_input = base_ids
+        if mode in {"repeat", "base"}:
+            expected_input = base_ids
+        elif mode == "rotate20":
+            shift = 20 % len(base_ids)
+            expected_input = base_ids[shift:] + base_ids[:shift]
+        if ids != expected_input or op_cards != pool_cards[qid]:
+            raise ValueError("operation_card_identity_or_rotation_mismatch")
+        orders = op.get("orders")
+        expected_arms = {"w0", "d", "e"}
+        if not isinstance(orders, dict) or set(orders) != expected_arms:
+            raise ValueError("operation_ranking_arm_inventory_mismatch")
+        for arm, order in orders.items():
+            if not isinstance(order, list) or any(not isinstance(cid, str) for cid in order):
+                raise ValueError("invalid_arm_order")
+            if len(order) != len(base_ids) or len(set(order)) != len(order) or set(order) != set(base_ids):
+                raise ValueError("incomplete_or_duplicate_arm_order")
+        if qid in NAVIGATION and orders["e"] != orders["w0"]:
+            raise ValueError("navigation_e_not_identity_bypass")
+        # prepare.bodies() invokes W0 only when its exact first-40 eligible
+        # candidate prefix has at least two records. The prepared pool is
+        # identity-equal to the acquired pool above, so this cardinality is
+        # derivable without treating an arbitrary missing attempt as valid.
+        w0_call_expected = len(expected_input[:40]) >= 2
+        if not w0_call_expected and orders["w0"] != base_ids:
+            raise ValueError("single_candidate_w0_fallback_must_preserve_identity_order")
+        _timing_valid(op, qid in NAVIGATION, w0_call_expected)
+        rankings[opid] = {arm: list(order) for arm, order in orders.items()}
+    return statuses, refs, pool_ids, rankings
+
+
+def analyze(run: Mapping[str, Any]) -> dict[str, Any]:
+    """Fail closed on incomplete evidence; distinguish rejection from missing data."""
+    try:
+        ndcg, exp042, protocol, cohort = _load_pinned_helpers()
+        statuses, refs, pool_ids, op_rankings = _validate_run(run, protocol, cohort)
+    except (OSError, ValueError, TypeError, KeyError, ImportError) as exc:
+        return _inconclusive(str(exc) if str(exc).startswith(("pinned_", "non_finite_json", "duplicate_json_key")) else "invalid_or_unbound_run_artifact")
+
+    expected_ops = [item["id"] for item in protocol["ordered_case_plan"]]
+    missing = [opid for opid in expected_ops if statuses[opid].get("status") != "valid"]
+    if missing:
+        return _inconclusive("incomplete_measurement_inventory", details={"missing_or_failed_operations": missing})
+
+    # Both arms of each primary pair use identical cohort cards and exact grades.
+    base_rankings: dict[str, dict[str, list[str]]] = {}
+    for qid in PRIMARY:
+        source = op_rankings[f"{qid}-base"]
+        base_rankings[qid] = {"w0": source["w0"], "d_star": source["d"], "e": source["e"]}
+    facets = {
+        row["id"]: [facet["id"] for facet in row.get("facets", [])]
+        for row in cohort if row["kind"] == "research"
+    }
+    primary_refs = {
+        reviewer: {qid: refs[reviewer][qid] for qid in PRIMARY}
+        for reviewer in ("A", "B")
+    }
+    original = exp042.analyze(
+        base_rankings,
+        primary_refs,
+        facets,
+        ndcg.ndcg_at_10,
+        ndcg.paired_bootstrap,
+    )
+
+    by_reference: dict[str, Any] = {}
+    quality_failed: list[str] = []
+    for reviewer in ("A", "B"):
+        primary = original["primary"][reviewer]
+        ordinal = original["ordinal_noninferiority"][reviewer]
+        pool_metrics = original["diagnostics"]["per_reference_pool_metrics"][reviewer]
+        per_pool: dict[str, Any] = {}
+        perpool_gate = True
+        retention_gate = True
+        facet_gate = True
+        for qid in PRIMARY:
+            metrics = pool_metrics[qid]
+            comparisons: dict[str, Any] = {}
+            for comparator in ("w0", "d_star"):
+                comparison = metrics["comparisons"].get(comparator)
+                if comparison is None:
+                    comparisons[comparator] = {"present": False, "passed": False}
+                    perpool_gate = retention_gate = facet_gate = False
+                    continue
+                delta = comparison.get("ndcg_delta_e_minus_comparator")
+                loss = comparison.get("useful_loss")
+                lost_ids = comparison.get("lost_useful_ids")
+                top_count_ok = comparison.get("baseline10_requires_e_at_least9") is True
+                net_retention_ok = isinstance(loss, int) and not isinstance(loss, bool) and loss <= 1
+                pair_pass = (
+                    isinstance(delta, (int, float)) and not isinstance(delta, bool)
+                    and math.isfinite(delta) and delta >= -0.03
+                    and net_retention_ok
+                    and top_count_ok
+                    and not comparison.get("lost_useful_facets")
+                )
+                perpool_gate &= pair_pass
+                retention_gate &= net_retention_ok and top_count_ok
+                facet_gate &= not comparison.get("lost_useful_facets")
+                comparisons[comparator] = {
+                    "nDCG_delta_e_minus_comparator": delta,
+                    "net_useful_loss": loss,
+                    "lost_useful_ids": lost_ids,
+                    "lost_useful_count": len(lost_ids) if isinstance(lost_ids, list) else None,
+                    "comparator_useful_at_10": comparison.get("useful_count_comparator"),
+                    "e_useful_at_10": comparison.get("useful_count_e"),
+                    "lost_useful_facets": comparison.get("lost_useful_facets"),
+                    "passed": pair_pass,
+                }
+            per_pool[qid] = comparisons
+        ref_pass = bool(primary.get("passed")) and bool(ordinal.get("passed")) and perpool_gate and retention_gate and facet_gate
+        if not ref_pass:
+            quality_failed.append(reviewer)
+        by_reference[reviewer] = {
+            "primary_E_minus_W0": primary,
+            "primary_E_minus_D": ordinal,
+            "per_pool": per_pool,
+            "per_pool_loss_gate": perpool_gate,
+            "useful_retention_gate": retention_gate,
+            "supported_facet_retention_gate": facet_gate,
+            "passed": ref_pass,
+        }
+
+    coverage = original["diagnostics"]["coverage"]
+    coverage_pass = coverage.get("passed") is True
+    stability: dict[str, Any] = {}
+    for qid in sorted(STABILITY):
+        base = op_rankings[f"{qid}-base"]["e"]
+        outcomes: dict[str, Any] = {}
+        for mode in ("repeat", "rotate20"):
+            variant = op_rankings[f"{qid}-{mode}"]["e"]
+            denom = min(10, len(base))
+            overlap = len(set(base[:10]) & set(variant[:10])) / denom if denom else None
+            outcomes[mode] = {"top10_overlap": overlap, "passed": overlap is not None and overlap >= 0.80}
+        stability[qid] = {"comparisons": outcomes, "passed": all(item["passed"] for item in outcomes.values())}
+    stability_pass = all(item["passed"] for item in stability.values()) and len(stability) == 4
+
+    navigation: dict[str, Any] = {}
+    navigation_pass = True
+    cohort_by_id = {row["id"]: row for row in cohort}
+    for qid in NAVIGATION:
+        target = cohort_by_id[qid]["target_url"]
+        cards = {card_id: card for card_id, card in zip(pool_ids[qid], run["pools"][qid]["cards"])}
+        matches = {cid for cid, card in cards.items() if card["url"] == target}
+        orders = op_rankings[f"{qid}-base"]
+        w0_position = next((i + 1 for i, cid in enumerate(orders["w0"]) if cid in matches), None)
+        d_position = next((i + 1 for i, cid in enumerate(orders["d"]) if cid in matches), None)
+        passed = w0_position is not None and w0_position <= 3 and d_position is not None and d_position <= 3 and orders["e"] == orders["w0"]
+        navigation[qid] = {"target_present": bool(matches), "w0_rank": w0_position, "d_rank": d_position, "e_identity_bypass": orders["e"] == orders["w0"], "passed": passed}
+        navigation_pass &= passed
+
+    large_pools = [qid for qid in PRIMARY if len(pool_ids[qid]) > 40]
+    large_pool_pass = len(large_pools) >= MIN_LARGE_POOLS
+    remote_gate = True
+    remote_by_operation: dict[str, float] = {}
+    max_call_by_operation: dict[str, float] = {}
+    for opid, op in statuses.items():
+        if op.get("status") != "valid":
+            continue
+        timing = float(op["remote_d_f_e_ms"])
+        remote_by_operation[opid] = timing
+        measured_candidate_calls = [
+            float(a["remote_http_ms"]) for a in op["attempts"]
+            if a["arm"] in {"d", "f", "e"}
+        ]
+        max_call = max(measured_candidate_calls, default=0.0)
+        max_call_by_operation[opid] = max_call
+        if opid.split("-", 1)[0] not in NAVIGATION and (
+            timing > MAX_CANDIDATE_MS or max_call > MAX_HTTP_MS
+        ):
+            remote_gate = False
+
+    gates = {
+        "both_reference_quality": not quality_failed,
+        "macro_coverage": coverage_pass,
+        "four_stability_triples": stability_pass,
+        "five_navigation_targets": navigation_pass,
+        "four_natural_primary_pools_over_40": large_pool_pass,
+        "fresh_candidate_remote_budget": remote_gate,
+        "complete_membership": bool(original["membership"]["passed"]),
+    }
+    rejected = any(not gates[name] for name in ("both_reference_quality", "macro_coverage", "four_stability_triples", "five_navigation_targets", "fresh_candidate_remote_budget", "complete_membership"))
+    if rejected:
+        outcome = "rejected"
+    elif not large_pool_pass:
+        outcome = "inconclusive"
+    else:
+        outcome = "development_confirmation_passed"
+    return {
+        "schema": "exp060-analysis/1",
+        "outcome": outcome,
+        "adoption_eligible": False,
+        "quality_analysis_performed": True,
+        "gates": gates,
+        "references": by_reference,
+        "coverage": coverage,
+        "stability": stability,
+        "navigation": navigation,
+        "pool_sizes": {qid: len(ids) for qid, ids in pool_ids.items()},
+        "natural_primary_pools_over_40": large_pools,
+        "candidate_remote_ms_by_operation": remote_by_operation,
+        "candidate_max_http_call_ms_by_operation": max_call_by_operation,
+        "timing_interpretation": "Fresh W0 and D/F/E phase timings are separate; acquisition and analysis were not one uninterrupted production request.",
+        "limits": {
+            "bootstrap_draws": DRAW_COUNT,
+            "bootstrap_seed": BOOTSTRAP_SEED,
+            "no_production_or_causal_claim": True,
+        },
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("run", type=Path, help="EXP-060 run artifact JSON")
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    result = analyze(_load_json(args.run))
+    payload = json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    if args.output:
+        args.output.write_text(payload, encoding="utf-8")
+    else:
+        print(payload, end="")
+
+
+if __name__ == "__main__":
+    main()

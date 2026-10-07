@@ -1,0 +1,46 @@
+{
+  "schema": "exp075-offline-qualification-incident/1",
+  "kind": "synthetic-builder-variant-mismatch",
+  "live_provider_invoked": false,
+  "credential_read": false,
+  "network_access": false,
+  "original_temporary_receipts": "deleted; original command and source bytes not retained",
+  "preserved_reproduction": {
+    "synthetic": true,
+    "status": "incomplete",
+    "budget": {
+      "attempts": 1,
+      "input_tokens": 17,
+      "output_tokens": 6,
+      "unknown_usage": false
+    },
+    "failure": {
+      "type": "CallFailure",
+      "code": "valueerror"
+    },
+    "calls": [
+      {
+        "arm": "w0",
+        "status": "returned",
+        "dispatched": true,
+        "usage_status": "known"
+      },
+      {
+        "arm": "joint",
+        "status": "failed",
+        "dispatched": false,
+        "usage_status": "not_dispatched"
+      }
+    ],
+    "receipt_sha256": {
+      "receipts/call-00.json": "7828cc5501288a8edeca09612038a437e05a05b6b7539bba5cec859d6ce4b1dc",
+      "receipts/call-01.json": "574315be1ae7e2cdd3fa01540c36a7b33f7ed3896d0464f2e0c048704100233d",
+      "receipts/neutral-neutral-baseline.json": "c71ce4fc5190411fffa3db1c0a8c7c3a88ee311cdb8d8727a2689323796986c1",
+      "receipts/neutral-neutral-failure.json": "f3f17ffa0f09484ee26dcc7ecf746378ae065676e350986bffabc958b91a159b",
+      "run.json": "92c6126a035bc509bb39ae41e099b45d12584baa2e61058354a78f2908f9db8b"
+    }
+  },
+  "cause": "Synthetic variant neutral was passed to the inherited builder instead of base, stopping candidate construction before dispatch.",
+  "resolution": "Map synthetic variant to base; qualify corrected offline fixture path and measured build deadline.",
+  "interpretation": "Local fixtures only; no ranking quality, provider capacity, or production evidence. Reproduction does not reconstruct deleted original timings."
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "exp055-normal-cli-qualification/1",
+  "status": "passed",
+  "commit": "ceb96c9e1db5af3aeafe1a724e230b34f7f24f3b",
+  "checks": [
+    "P01-normal-cli",
+    "P02-normal-cli",
+    "P03-normal-cli",
+    "P04-normal-cli",
+    "P05-normal-cli",
+    "P06-normal-cli",
+    "reject-pin---registration-commit",
+    "reject-pin---method-sha256",
+    "reject-pin---qualification-sha256",
+    "reject-pin---registration-commit-shape",
+    "reject-live-tamper-registration-integrity.json",
+    "reject-live-tamper-execution-qualification.json",
+    "reject-live-tamper-output-guard.py.txt",
+    "two-draft-structural-correction"
+  ],
+  "count": 14,
+  "method_registration_sha256": "8735804d19e1469cfd02346b9fecde9259bf8e0fb9362f8729036b120bf6279d",
+  "guard_sha256": "cbdf2ebdddb99716619159481aa1531d351ccd2d7a9b5f7b2409b7456d7494ee",
+  "qualification_sha256": "c2bb9f1b16df6eeca59ab28eae518779a6b39ea98649ca14375bd834905ff66e",
+  "reference_invocations": 0,
+  "brave_attempts": 0
+}

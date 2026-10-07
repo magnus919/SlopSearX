@@ -1,0 +1,32 @@
+{
+  "schema": "exp052-study-outcome/1",
+  "outcome": "incomplete",
+  "reason": "Frozen invocation omitted registration artifact needed for requested hash verification.",
+  "required_valid_records": 12,
+  "observed_valid_records": 0,
+  "reference_invocations": 2,
+  "remaining_uninvoked_units": 10,
+  "retries": 0,
+  "substitutions": 0,
+  "records": [
+    {
+      "reviewer_id": "P01-R1",
+      "status": "incomplete",
+      "original_sha256": "8f056b5f8ddb53f0d3d3660c0d35693db8be47fdf48eeafa58bd48b38c3818d1",
+      "original_bytes": 123,
+      "diagnostic": "Registration hash could not be verified from supplied inputs."
+    },
+    {
+      "reviewer_id": "P01-R2",
+      "status": "incomplete",
+      "original_sha256": "71558c25642f19ed71e6e812c3eb77d19dfdfeae24979033ef0f8b0265f842d6",
+      "original_bytes": 155,
+      "diagnostic": "Registration hash could not be verified from the supplied contract, manifest, or pool chunks."
+    }
+  ],
+  "new_search_calls": 0,
+  "jev_calls": 0,
+  "metadata_calls": 0,
+  "ranking_quality_conclusion": "none",
+  "production_adoption_gate_passed": false
+}

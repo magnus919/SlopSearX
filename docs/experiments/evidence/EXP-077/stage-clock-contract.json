@@ -1,0 +1,28 @@
+{
+  "clock_creation": "one clock immediately before first acquisition; all later phases consume that file/digest and cannot refresh start/deadline",
+  "clock_serialization": "UTF8 JSON sorted keys, compact separators, ensure_ascii=false, allow_nan=false, one trailing newline",
+  "confirmation": "a separate runtime clock starts only after verified development pass; both static stage designs are registered before either acquisition",
+  "interval_seconds": 28800,
+  "receipt_binding": "acquisition final and all subsequent phase receipts preserve static stage_manifest_sha256 and runtime stage_clock_digest separately",
+  "runtime_clock_embedded_digest_field": false,
+  "runtime_clock_path": "stage-clock.json",
+  "runtime_clock_required_fields": [
+    "schema",
+    "stage_id",
+    "stage",
+    "stage_started_utc",
+    "stage_deadline_utc",
+    "stage_manifest_sha256",
+    "protocol_sha256",
+    "cohorts_sha256",
+    "source_revision",
+    "ordered_task_ids"
+  ],
+  "runtime_clock_schema": "exp077-stage-clock/1",
+  "runtime_digest": "stage_clock_digest is SHA256 of actual write-once clock file bytes; never a reserialized object or a self-including digest",
+  "schema": "exp077-clock-contract/1",
+  "static_manifest_binding": "registration.stage_manifest_sha256[stage] is SHA256 of actual committed static manifest file bytes",
+  "static_manifest_files_namespace": "files keys are EXP077-relative owned design/code/schema filenames; candidate_source_pins keys are separately repository-relative reused dependencies. Neither map contains the static manifest itself.",
+  "static_manifest_path": "docs/experiments/evidence/EXP-077/stage-{stage}-manifest.json",
+  "static_manifest_schema": "exp077-stage-design/1"
+}

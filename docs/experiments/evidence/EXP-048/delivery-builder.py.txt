@@ -1,0 +1,106 @@
+"""Lossless offline EXP-048 delivery construction; no inference or network."""
+import hashlib
+import json
+from pathlib import Path
+
+BASE = Path(__file__).parent
+ROOT = BASE.parents[3]
+PRIOR = BASE.parent / "EXP-047"
+PACKET_SHA = "1e69910780a1db2eccfdb10dd9aa2aa41e410de71347e79323b4e4b85db9b6a2"
+REFS = [f"P{i:02d}" for i in range(1, 7)]
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def strict_load(data):
+    def unique(items):
+        obj = {}
+        for key, value in items:
+            if key in obj:
+                raise ValueError("duplicate JSON key")
+            obj[key] = value
+        return obj
+    return json.loads(data, object_pairs_hook=unique,
+                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
+
+
+def canonical(value):
+    return (json.dumps(value, ensure_ascii=True, sort_keys=True, indent=2) + "\n").encode()
+
+
+def guard(data, contract=False):
+    limit = 16000 if contract else 30000
+    assert len(data) <= limit, "byte overflow"
+    if not contract:
+        assert len(data.decode().split()) <= 6000, "word overflow"
+
+
+def immutable_write(path, data):
+    if path.exists():
+        assert path.read_bytes() == data, "existing frozen artifact differs"
+    else:
+        path.write_bytes(data)
+
+
+def verify_sources():
+    comparisons = 0
+    pins = strict_load((BASE / "source-pins.json").read_bytes())
+    registration = strict_load((BASE / "registration-integrity.json").read_bytes())
+    for mapping in [pins["files"], registration["files"]]:
+        for name, expected in mapping.items():
+            assert sha((ROOT / name).read_bytes()) == expected
+            comparisons += 1
+    historical = strict_load((PRIOR / "packet-integrity.json").read_bytes())
+    for name, expected in historical["files"].items():
+        assert sha((PRIOR / name).read_bytes()) == expected
+        comparisons += 1
+    raw = (PRIOR / "review-packet.json").read_bytes()
+    assert sha(raw) == PACKET_SHA
+    packet = strict_load(raw)
+    assert packet["schema"] == "exp047-blinded-packet/1"
+    assert [p["pool_ref"] for p in packet["pools"]] == REFS
+    assert [c["case_id"] for c in packet["cases"]] == [f"T{i:03d}" for i in range(1, 13)]
+    return packet, comparisons
+
+
+def build():
+    packet, comparisons = verify_sources()
+    contract = (BASE / "review-contract.md").read_bytes()
+    guard(contract, contract=True)
+    entries, recovered_pools, recovered_cases = [], [], []
+    for pool in packet["pools"]:
+        ref = pool["pool_ref"]
+        cases = [c for c in packet["cases"] if c["pool_ref"] == ref]
+        assert len(cases) == 2
+        value = {"schema": "exp048-pool-delivery/1", "pool": pool, "cases": cases,
+                 "delivery_end_marker": f"EXP048-{ref}-END"}
+        raw = (json.dumps(value, ensure_ascii=True, separators=(",", ":")) + "\n").encode()
+        guard(raw)
+        name = f"pool-{ref}.json"
+        immutable_write(BASE / name, raw)
+        restored = strict_load(raw)
+        assert restored == value
+        recovered_pools.append(restored["pool"])
+        recovered_cases.extend(restored["cases"])
+        entries.append({"pool_ref": ref, "file": name, "sha256": sha(raw),
+                        "bytes": len(raw), "cases": [c["case_id"] for c in cases]})
+    assert recovered_pools == packet["pools"] and recovered_cases == packet["cases"]
+    scripts = {n: sha((BASE / n).read_bytes()) for n in
+               ["delivery-builder.py.txt", "review-validator.py.txt", "qualification-checks.py.txt"]}
+    manifest = {"schema": "exp048-delivery-manifest/1", "packet_sha256": PACKET_SHA,
+                "contract_sha256": sha(contract), "registration_integrity_sha256":
+                sha((BASE / "registration-integrity.json").read_bytes()),
+                "scripts": scripts, "deliveries": entries}
+    raw_manifest = canonical(manifest)
+    immutable_write(BASE / "delivery-manifest.json", raw_manifest)
+    return {"schema": "exp048-delivery-construction/1", "status": "passed",
+            "pools": 6, "cases": 12, "cards": sum(len(p["candidates"]) for p in recovered_pools),
+            "source_hash_comparisons": comparisons, "complete_payload_equality": True,
+            "delivery_manifest_sha256": sha(raw_manifest), "provider_calls": 0,
+            "search_calls": 0, "reviewer_invocations": 0}
+
+
+if __name__ == "__main__":
+    print(json.dumps(build(), indent=2))

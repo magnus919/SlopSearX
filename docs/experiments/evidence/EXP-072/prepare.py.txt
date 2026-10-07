@@ -1,0 +1,142 @@
+"""Inert EXP-072 request construction and strict Score validation."""
+from __future__ import annotations
+import hashlib,json,math,sys
+from pathlib import Path
+HERE=Path(__file__).resolve().parent;REPO=HERE.parents[3]
+if str(REPO) not in sys.path:sys.path.insert(0,str(REPO))
+PROTOCOL=json.loads((HERE/"protocol.json").read_bytes())
+CONTRACT=json.loads((REPO/"docs/experiments/evidence/EXP-039/source-selection-contract.json").read_bytes())
+MODEL=PROTOCOL["model"]
+
+def wire(value):return json.dumps(value,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+def digest(raw):return hashlib.sha256(raw).hexdigest()
+def strict_json(raw):
+ def pairs(items):
+  out={}
+  for k,v in items:
+   if k in out:raise ValueError("duplicate-json-key")
+   out[k]=v
+  return out
+ def constant(_):raise ValueError("nonfinite-json")
+ def number(text):
+  value=float(text)
+  if not math.isfinite(value):raise ValueError("nonfinite-json")
+  return value
+ return json.loads(raw,object_pairs_hook=pairs,parse_constant=constant,parse_float=number)
+
+def canonical(cards):
+ if type(cards)is not list or not 2<=len(cards)<=80:raise ValueError("card-inventory")
+ seen=set();out=[]
+ for source in cards:
+  if type(source)is not dict or set(source)!={"id","url","title","snippet"}:raise ValueError("card-shape")
+  card={k:source[k] for k in ("id","url","title","snippet")};bounds={"id":80,"title":256,"url":512,"snippet":1200}
+  if any(type(v)is not str for v in card.values()) or not card["id"] or not card["url"]:raise ValueError("card-field")
+  if any(len(card[k].encode("utf-8"))>bounds[k] for k in bounds):raise ValueError("card-field-bound")
+  if card["id"] in seen:raise ValueError("duplicate-card-id")
+  seen.add(card["id"]);out.append(card)
+ return sorted(out,key=lambda c:tuple(c[k].encode("utf-8") for k in ("url","title","snippet","id")))
+
+def validate_context(case):
+ query=case.get("query");purpose=case.get("purpose");facets=case.get("facets")
+ if type(query)is not str or not query or len(query.encode("utf-8"))>4096:raise ValueError("query")
+ if type(purpose)is not str or not purpose or len(purpose.encode("utf-8"))>4096:raise ValueError("purpose")
+ if type(facets)is not list or len(facets)>4:raise ValueError("facets")
+ out=[];seen=set()
+ for f in facets:
+  if type(f)is not dict or set(f)!={"id","description"} or any(type(v)is not str or not v for v in f.values()):raise ValueError("facet-shape")
+  if len(f["id"].encode("utf-8"))>80 or len(f["description"].encode("utf-8"))>256:raise ValueError("facet-bound")
+  if f["id"] in seen:raise ValueError("duplicate-facet")
+  seen.add(f["id"]);out.append(dict(f))
+ return query,purpose,out
+
+def bodies(case,cards,variant="base"):
+ query,purpose,facets=validate_context(case)
+ native=[dict(c) for c in cards]
+ if variant=="rotate" and native:
+  offset=20%len(native);native=native[offset:]+native[:offset]
+ elif variant not in ("base","repeat","rotate"):raise ValueError("variant")
+ pool=canonical(cards);ids=[c["id"] for c in pool];facet_context=[{"id":f["id"],"description":f["description"]} for f in facets]
+ common_state={"query":purpose,"purpose":purpose,"requested_facets":facet_context}
+ candidate={"model":MODEL,"state":dict(common_state),"questions":{}}
+ control={"model":MODEL,"state":dict(common_state),"questions":{}}
+ for card in pool:
+  cid=card["id"]
+  candidate["questions"][cid]={"type":"score","instructions":{"candidate":card,"question":PROTOCOL["instructions"]},"criteria":list(PROTOCOL["criteria"])}
+  ctrl_instruction=CONTRACT["instructions"].replace("candidate `{id}`","`candidate`").format(id=cid)
+  control["questions"][cid]={"type":"score","instructions":{"candidate":card,"question":ctrl_instruction},"criteria":list(CONTRACT["criteria"])}
+ from slopsearx.rerank import INSTRUCTIONS,LEVELS
+ prefix=native[:40];local_to_pool={"c"+str(i):card["id"] for i,card in enumerate(prefix)}
+ w0={"model":MODEL,"state":{"query":query,"candidates":[{**card,"id":"c"+str(i)} for i,card in enumerate(prefix)]},
+     "questions":{"c"+str(i):{"type":"score","instructions":INSTRUCTIONS.format(id="c"+str(i)),"criteria":list(LEVELS)} for i in range(len(prefix))}}
+ for label,body,cap in (("w0",w0,128000),("absolute_control",control,384000),("candidate",candidate,384000)):
+  if len(wire(body))>cap or len(wire(body["state"]))>128000:raise ValueError(label+"-request-bound")
+ return {"w0":w0,"absolute_control":control,"candidate":candidate,"ids":ids,"cards":pool,"w0_local_to_pool":local_to_pool,
+         "tail_ids":[c["id"] for c in native[40:]],"provenance_order_ids":[c["id"] for c in native]}
+
+def validate_score_response(raw,request,expected_ids,maximum):
+ if type(raw)is not bytes or len(raw)>2_000_000:raise ValueError("response-bound")
+ data=strict_json(raw)
+ if type(data)is not dict or not {"model","answers"}.issubset(data) or set(data)-{"model","answers","usage"} or data.get("model")!=MODEL or type(data.get("answers"))is not dict:raise ValueError("response-envelope")
+ answers=data["answers"]
+ if set(answers)!=set(request["questions"]) or set(answers)!=set(expected_ids):raise ValueError("answer-membership")
+ scores={};raw_answers={}
+ for cid,answer in answers.items():
+  if type(answer)is not dict or not {"type","score"}.issubset(answer) or answer.get("type")!="score" or type(answer.get("score"))not in (int,float):raise ValueError("score-type")
+  value=answer["score"]
+  if not math.isfinite(value) or not 0<=value<=maximum:raise ValueError("score-range")
+  scores[cid]=value;raw_answers[cid]=answer
+ usage=valid_usage(data.get("usage"))
+ return {"scores":scores,"raw_answers":raw_answers,"usage":usage}
+
+def valid_usage(value):
+ if type(value)is not dict or set(value)!={"input_tokens","output_tokens"} or any(type(v)is not int or v<0 for v in value.values()):return None
+ return dict(value)
+def usage_from_raw(raw):
+ try:
+  if type(raw)is not bytes or len(raw)>2_000_000:return None
+  data=strict_json(raw);return valid_usage(data.get("usage")) if type(data)is dict else None
+ except (ValueError,TypeError,UnicodeDecodeError):return None
+
+def order_scores(scores,ids,maximum):
+ if type(scores)is not dict or set(scores)!=set(ids) or any(type(v)not in (int,float) or not math.isfinite(v) or not 0<=v<=maximum for v in scores.values()):raise ValueError("score-membership")
+ return sorted(ids,key=lambda cid:-scores[cid])
+
+def validate_request(raw):
+ if type(raw)is not bytes or len(raw)>384000:raise ValueError("request-bound")
+ data=strict_json(raw)
+ if type(data)is not dict or set(data)!={"model","state","questions"} or data["model"]!=MODEL or type(data["questions"])is not dict:raise ValueError("request-envelope")
+ state=data["state"];qs=data["questions"]
+ if type(state)is not dict:raise ValueError("state-shape")
+ if "purpose" in state:
+  if set(state)!={"query","purpose","requested_facets"} or any(type(state[k])is not str or not state[k] or len(state[k].encode("utf-8"))>4096 for k in ("query","purpose")) or state["query"]!=state["purpose"]:raise ValueError("purpose-state")
+  facets=state["requested_facets"]
+  if type(facets)is not list or len(facets)>4 or any(type(f)is not dict or set(f)!={"id","description"} or any(type(v)is not str or not v for v in f.values()) or len(f["id"].encode())>80 or len(f["description"].encode())>256 for f in facets) or len({f["id"] for f in facets})!=len(facets):raise ValueError("facet-state")
+  cards=canonical([q.get("instructions",{}).get("candidate") for q in qs.values()])
+  if not 2<=len(qs)<=80 or list(qs)!=[c["id"] for c in cards]:raise ValueError("purpose-question-order")
+  candidate_criteria=list(PROTOCOL["criteria"]);control_criteria=list(CONTRACT["criteria"])
+  for cid,q in qs.items():
+   if type(q)is not dict or q.get("type")!="score" or type(q.get("instructions"))is not dict or set(q["instructions"])!={"candidate","question"}:raise ValueError("purpose-question-shape")
+   if q["instructions"]["candidate"]!=next(c for c in cards if c["id"]==cid):raise ValueError("candidate-binding")
+   question=q["instructions"]["question"]
+   if q["criteria"]==candidate_criteria:
+    if question!=PROTOCOL["instructions"]:raise ValueError("candidate-question-contract")
+   elif q["criteria"]==control_criteria:
+    expected=CONTRACT["instructions"].replace("candidate `{id}`","`candidate`").format(id=cid)
+    if question!=expected:raise ValueError("control-question-contract")
+   else:raise ValueError("criteria-contract")
+  if len(wire(state))>128000:raise ValueError("purpose-state-bound")
+ else:
+  if set(state)!={"query","candidates"} or type(state["query"])is not str or not state["query"] or len(state["query"].encode())>4096:raise ValueError("w0-state")
+  cards=state["candidates"]
+  if type(cards)is not list or not 2<=len(cards)<=40 or len(qs)!=len(cards):raise ValueError("w0-inventory")
+  from slopsearx.rerank import INSTRUCTIONS,LEVELS
+  ids=[]
+  for i,card in enumerate(cards):
+   if type(card)is not dict or set(card)!={"id","url","title","snippet"} or card["id"]!="c"+str(i) or any(type(v)is not str for v in card.values()):raise ValueError("w0-card")
+   bounds={"id":80,"url":512,"title":256,"snippet":1200}
+   if not card["url"] or any(len(card[k].encode("utf-8"))>bounds[k] for k in bounds):raise ValueError("w0-card-bound")
+   ids.append(card["id"])
+   if qs.get(card["id"])!={"type":"score","instructions":INSTRUCTIONS.format(id=card["id"]),"criteria":list(LEVELS)}:raise ValueError("w0-question-contract")
+  if set(qs)!=set(ids):raise ValueError("w0-membership")
+  if len(wire(state))>128000:raise ValueError("w0-state-bound")
+ return data

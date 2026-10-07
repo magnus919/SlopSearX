@@ -1,0 +1,447 @@
+"""Inert, offline-qualifiable bounded metadata request runner.
+
+This file is evidence text, not imported by SlopSearX. It performs no credential,
+environment, filesystem-configuration, or network access of its own. A future
+private transport is an async callable supplied by its caller; it owns private
+credential loading and must bind a fixed official HTTPS origin, disable redirects,
+and stream response bytes. Never pass an API key to this module or publish the
+private transport source/configuration.
+"""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import json
+import math
+import multiprocessing
+import re
+import time
+from dataclasses import dataclass
+from typing import Any, AsyncIterator, Awaitable, Callable, Mapping
+
+
+ENDPOINT = "https://api.semanticscholar.org/graph/v1/paper/batch"
+METHOD = "POST"
+MAX_IDS = 500
+MAX_REQUEST_BYTES = 64_000
+MAX_RESPONSE_BYTES = 8_388_608
+ATTEMPT_SECONDS = 20.0
+RUN_SECONDS = 120.0
+MAX_ATTEMPTS = 3
+RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+MAX_RETRY_DELAY = 30.0
+DEFAULT_RETRY_DELAY = 5.0
+HEX_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+FIELDS = "title,abstract,externalIds,authors.name,publicationDate,publicationTypes,journal,year"
+
+
+class RunnerError(Exception):
+    """Terminal input, protocol, transport, or response error."""
+
+
+class DuplicateJSONKey(RunnerError):
+    pass
+
+
+def _no_duplicate_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise DuplicateJSONKey(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_constant(value: str) -> None:
+    raise RunnerError(f"non-finite JSON number: {value}")
+
+
+def strict_json(data: bytes) -> Any:
+    return json.loads(data.decode("utf-8"), object_pairs_hook=_no_duplicate_pairs,
+                      parse_constant=_reject_constant)
+
+
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+@dataclass(frozen=True)
+class Request:
+    method: str
+    url: str
+    fields: str
+    headers: Mapping[str, str]
+    body: bytes
+
+
+class ResponseProtocol:
+    """Transport response shape: status, headers, async byte iterator, close()."""
+    status: int
+    headers: Mapping[str, str]
+
+    def iter_bytes(self) -> AsyncIterator[bytes]:  # pragma: no cover - protocol stub
+        raise NotImplementedError
+
+    async def close(self) -> None:  # pragma: no cover - protocol stub
+        raise NotImplementedError
+
+
+Transport = Callable[[Request], Awaitable[ResponseProtocol]]
+Ledger = Callable[[dict[str, Any]], Awaitable[None]]
+Project = Callable[[Any], Any]
+Clock = Callable[[], float]
+Sleeper = Callable[[float], Awaitable[None]]
+
+
+def _contract(data: bytes, expected_hash: str) -> dict[str, Any]:
+    if not isinstance(expected_hash, str) or not HEX_SHA256.fullmatch(expected_hash):
+        raise RunnerError("invalid frozen contract SHA-256")
+    if _sha256(data) != expected_hash:
+        raise RunnerError("frozen contract hash mismatch")
+    value = strict_json(data)
+    if type(value) is not dict:
+        raise RunnerError("contract must be a JSON object")
+    fixed = {
+        "schema": "exp049-metadata-api-contract/1", "endpoint": ENDPOINT,
+        "method": METHOD, "fields": FIELDS, "max_unique_ids": MAX_IDS,
+        "max_request_bytes": MAX_REQUEST_BYTES,
+        "max_response_bytes": MAX_RESPONSE_BYTES,
+        "http_timeout_seconds": 20, "max_http_attempts": MAX_ATTEMPTS,
+        "max_retry_delay_seconds": 30, "max_run_seconds": 120,
+    }
+    for key, expected in fixed.items():
+        if value.get(key) != expected or type(value.get(key)) is not type(expected):
+            raise RunnerError(f"contract field mismatch: {key}")
+    if value.get("retry_statuses") != sorted(RETRY_STATUSES):
+        raise RunnerError("contract retry status mismatch")
+    return value
+
+
+def _validate_body(body: bytes, expected_hash: str, contract: dict[str, Any]) -> list[str]:
+    if not isinstance(expected_hash, str) or not HEX_SHA256.fullmatch(expected_hash):
+        raise RunnerError("invalid frozen request SHA-256")
+    if _sha256(body) != expected_hash:
+        raise RunnerError("frozen request hash mismatch")
+    if not isinstance(body, bytes) or len(body) > contract["max_request_bytes"]:
+        raise RunnerError("frozen request exceeds byte bound")
+    parsed = strict_json(body)
+    if type(parsed) is not dict or set(parsed) != {"ids"} or type(parsed["ids"]) is not list:
+        raise RunnerError("request body must contain only an ids array")
+    ids = parsed["ids"]
+    if len(ids) > contract["max_unique_ids"]:
+        raise RunnerError("request exceeds unique identifier bound")
+    if any(type(item) is not str or not item for item in ids):
+        raise RunnerError("request identifiers must be nonempty strings")
+    if len(ids) != len(set(ids)) or ids != sorted(ids):
+        raise RunnerError("request identifiers must be unique and lexicographically sorted")
+    return ids
+
+
+def _retry_after(headers: Mapping[str, str]) -> tuple[float, bool]:
+    raw = None
+    for key, value in headers.items():
+        if key.lower() == "retry-after":
+            raw = value
+            break
+    if raw is None or not isinstance(raw, str):
+        return DEFAULT_RETRY_DELAY, False
+    candidate = raw.strip()
+    if not re.fullmatch(r"(?:\d+(?:\.\d*)?|\.\d+)", candidate):
+        return DEFAULT_RETRY_DELAY, False
+    try:
+        delay = float(candidate)
+    except ValueError:
+        return DEFAULT_RETRY_DELAY, False
+    if not math.isfinite(delay) or delay < 0:
+        return DEFAULT_RETRY_DELAY, False
+    if delay > MAX_RETRY_DELAY:
+        return delay, True
+    return delay, False
+
+
+async def _read_limited(response: ResponseProtocol, limit: int) -> bytes:
+    chunks: list[bytes] = []
+    size = 0
+    async for chunk in response.iter_bytes():
+        if not isinstance(chunk, bytes):
+            raise RunnerError("transport yielded a non-bytes response chunk")
+        size += len(chunk)
+        if size > limit:
+            raise RunnerError("successful response exceeds byte bound")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _projection_child(send_pipe: Any, raw: bytes, project: Project, input_mode: str) -> None:
+    """Isolated child makes CPU-bound parser/project work hard-cancellable."""
+    try:
+        parsed = strict_json(raw)
+        projected = project(raw if input_mode == "raw" else parsed)
+        payload = json.dumps(projected, ensure_ascii=False, allow_nan=False,
+                             separators=(",", ":")).encode("utf-8")
+        send_pipe.send_bytes(b"O" + payload)
+    except BaseException as exc:
+        send_pipe.send_bytes(b"E" + type(exc).__name__.encode("ascii", "replace")[:120])
+    finally:
+        send_pipe.close()
+
+
+async def _isolated_parse_project(raw: bytes, project: Project, timeout: float,
+                                  input_mode: str = "parsed") -> Any:
+    """Run strict JSON parsing and pure projection in a killable forked process."""
+    if timeout <= 0:
+        raise asyncio.TimeoutError("no processing time remains")
+    try:
+        context = multiprocessing.get_context("fork")
+    except ValueError as exc:
+        raise RunnerError("killable fork process is unavailable") from exc
+    receive_pipe, send_pipe = context.Pipe(duplex=False)
+    if input_mode not in {"parsed", "raw"}:
+        raise RunnerError("project_input must be 'parsed' or 'raw'")
+    child = context.Process(target=_projection_child,
+                            args=(send_pipe, raw, project, input_mode), daemon=True)
+
+    def stop_child() -> None:
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=0.05)
+        if child.is_alive():
+            child.kill()
+            child.join(timeout=0.05)
+
+    try:
+        child.start()
+        send_pipe.close()
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            if receive_pipe.poll():
+                try:
+                    payload = receive_pipe.recv_bytes(MAX_RESPONSE_BYTES + 1)
+                except OSError as exc:
+                    raise RunnerError("projection worker output exceeded bound") from exc
+                child.join(timeout=0.05)
+                stop_child()
+                if len(payload) > MAX_RESPONSE_BYTES:
+                    raise RunnerError("projection worker output exceeded bound")
+                if not payload or payload[:1] != b"O":
+                    error = payload[1:].decode("ascii", "replace") if payload else "unknown"
+                    raise RunnerError(f"parse or projection failed: {error}")
+                return strict_json(payload[1:])
+            if not child.is_alive():
+                raise RunnerError("projection worker exited without a result")
+            await asyncio.sleep(0.005)
+        stop_child()
+        raise asyncio.TimeoutError("run deadline during isolated parse/projection")
+    finally:
+        stop_child()
+        receive_pipe.close()
+        try:
+            send_pipe.close()
+        except OSError:
+            pass
+
+
+async def _durable(ledger: Ledger, event: dict[str, Any], *, deadline: float,
+                   clock: Clock) -> None:
+    """Await an async append-and-flush callback within the overall run deadline."""
+    remaining = deadline - clock()
+    if remaining <= 0:
+        raise asyncio.TimeoutError("run deadline before durable ledger write")
+    pending = ledger(event)
+    if not isinstance(pending, Awaitable):
+        raise RunnerError("ledger callback must be async and durable")
+    await asyncio.wait_for(pending, timeout=remaining)
+
+
+async def _execute(body: bytes, body_sha256: str, contract_bytes: bytes,
+                   contract_sha256: str, transport: Transport, ledger: Ledger,
+                   project: Project, *, clock: Clock, sleep: Sleeper,
+                   progress: dict[str, Any], project_input: str) -> dict[str, Any]:
+    start = clock()
+    deadline = start + RUN_SECONDS
+    contract = _contract(contract_bytes, contract_sha256)
+    ids = _validate_body(body, body_sha256, contract)
+    run_id = hashlib.sha256((body_sha256 + contract_sha256).encode("ascii")).hexdigest()
+    attempts: list[dict[str, Any]] = []
+    progress["attempts"] = attempts
+    outcome = "incomplete"
+    result: Any = None
+    stop_reason = "not_started"
+    request = Request(METHOD, ENDPOINT, FIELDS,
+                      {"Content-Type": "application/json", "Accept": "application/json"}, body)
+    # The private transport adds credentials internally and never returns them here.
+    try:
+        for number in range(1, MAX_ATTEMPTS + 1):
+            if clock() >= deadline:
+                stop_reason = "run_deadline_before_attempt"
+                break
+            started = clock()
+            entry = {"event": "attempt_started", "run_id": run_id,
+                     "attempt": number, "body_sha256": body_sha256,
+                     "contract_sha256": contract_sha256, "started_monotonic": started}
+            await _durable(ledger, entry, deadline=deadline, clock=clock)
+            attempt_result: dict[str, Any] = {"attempt": number, "status": "incomplete"}
+            attempts.append(attempt_result)
+            response: ResponseProtocol | None = None
+            attempt_deadline = clock() + ATTEMPT_SECONDS
+            phase = "transport"
+            close_failed = False
+
+            def attempt_remaining() -> float:
+                return min(attempt_deadline - clock(), deadline - clock())
+
+            try:
+                remaining = attempt_remaining()
+                if remaining <= 0:
+                    raise asyncio.TimeoutError("attempt deadline before HTTP attempt")
+                response = await asyncio.wait_for(transport(request),
+                                                  timeout=remaining)
+                status = response.status
+                attempt_result["http_status"] = status
+                if status in RETRY_STATUSES:
+                    delay, too_long = _retry_after(response.headers)
+                    attempt_result.update(status="retryable_http", retry_after_seconds=delay,
+                                          retry_after_over_limit=too_long)
+                    stop_reason = "retry_after_over_30_seconds" if too_long else "retryable_http"
+                elif status != 200:
+                    attempt_result.update(status="terminal_http", error_class="http_status")
+                    stop_reason = f"terminal_http_{status}"
+                else:
+                    phase = "response_read"
+                    remaining = attempt_remaining()
+                    if remaining <= 0:
+                        raise asyncio.TimeoutError("attempt deadline before response read")
+                    raw = await asyncio.wait_for(
+                        _read_limited(response, contract["max_response_bytes"]), timeout=remaining)
+                    if attempt_remaining() <= 0:
+                        raise asyncio.TimeoutError("attempt deadline during response read")
+                    # Close the HTTP response while its 20-second budget is active.
+                    # Parsing and projection that follow consume only the 120s run budget.
+                    phase = "response_close"
+                    await asyncio.wait_for(response.close(), timeout=attempt_remaining())
+                    response = None
+                    raw_hash = _sha256(raw)
+                    # Parsing/projection run in a killable process so a blocked callback
+                    # cannot hold up the absolute run deadline after its result is rejected.
+                    phase = "parse"
+                    phase = "project"
+                    projected = await _isolated_parse_project(
+                        raw, project, max(0.0, deadline - clock()), project_input)
+                    if clock() >= deadline:
+                        raise asyncio.TimeoutError("run deadline during projection")
+                    attempt_result.update(status="success", response_sha256=raw_hash,
+                                          response_bytes=len(raw))
+                    outcome, result, stop_reason = "complete", projected, "success"
+            except asyncio.TimeoutError:
+                if phase in {"transport", "response_read", "response_close"}:
+                    attempt_result.update(status="timeout", error_class="timeout")
+                    stop_reason = "timeout"
+                else:
+                    attempt_result.update(status="processing_timeout", error_class="deadline")
+                    stop_reason = "processing_deadline"
+            except Exception as exc:
+                attempt_result.update(status="terminal_error", error_class=type(exc).__name__)
+                stop_reason = f"terminal_error_{type(exc).__name__}"
+            finally:
+                if response is not None:
+                    try:
+                        await asyncio.wait_for(response.close(), timeout=max(0.001, attempt_remaining()))
+                    except Exception:
+                        # Close errors are recorded without replacing the original result.
+                        attempt_result["close_error"] = True
+                        close_failed = True
+            if close_failed or clock() >= deadline:
+                if outcome == "complete":
+                    outcome, result = "incomplete", None
+                    stop_reason = "response_close_error" if close_failed else "run_deadline_after_response"
+                    attempt_result.update(status="terminal_error",
+                                          error_class="response_close_error" if close_failed else "deadline")
+            attempt_result["finished_monotonic"] = clock()
+            await _durable(ledger, {"event": "attempt_finished", "run_id": run_id,
+                                    "attempt": number, **attempt_result},
+                           deadline=deadline, clock=clock)
+            if clock() >= deadline:
+                outcome, result, stop_reason = "incomplete", None, "run_deadline_after_attempt"
+                attempt_result.update(status="terminal_error", error_class="deadline")
+                break
+            if outcome == "complete":
+                break
+            retryable = attempt_result["status"] == "timeout" or attempt_result["status"] == "retryable_http"
+            if not retryable:
+                break
+            if attempt_result.get("retry_after_over_limit"):
+                break
+            if number >= MAX_ATTEMPTS:
+                stop_reason = "attempt_limit"
+                break
+            delay = attempt_result.get("retry_after_seconds", DEFAULT_RETRY_DELAY)
+            remaining = deadline - clock()
+            if delay + ATTEMPT_SECONDS > remaining:
+                stop_reason = "retry_window_does_not_fit"
+                break
+            if delay:
+                await sleep(delay)
+        return {"schema": "exp049-runner-result/1", "run_id": run_id,
+                "outcome": outcome, "stop_reason": stop_reason,
+                "body_sha256": body_sha256, "contract_sha256": contract_sha256,
+                "attempt_count": len(attempts), "attempts": attempts,
+                "result": result, "elapsed_seconds": max(0.0, clock() - start)}
+    finally:
+        # A crash/outer cancellation is still visible if the durable ledger is available.
+        try:
+            await _durable(ledger, {"event": "runner_stopped", "run_id": run_id,
+                                    "attempt_count": len(attempts), "outcome": outcome,
+                                    "stop_reason": stop_reason, "finished_monotonic": clock()},
+                           deadline=deadline, clock=clock)
+        except Exception:
+            # Deadline/cancellation must not be extended by a secondary ledger failure.
+            pass
+
+
+async def run(body: bytes, body_sha256: str, contract_bytes: bytes,
+              contract_sha256: str, transport: Transport, ledger: Ledger,
+              project: Project, *, clock: Clock = time.monotonic,
+              sleep: Sleeper = asyncio.sleep,
+              project_input: str = "parsed") -> dict[str, Any]:
+    """Execute at most three identical-body attempts under one 120s deadline.
+
+    ``transport(request)`` is an async callable supplied by a future private
+    integration. It must use the fixed endpoint in ``request.url``, attach any
+    credential internally, disable redirects, apply an absolute connect/read
+    timeout, and expose a streaming ``ResponseProtocol``. No key is accepted here.
+    ``ledger(event)`` asynchronously appends and durably flushes each event before
+    returning; its await is bounded by the same 120s absolute run deadline.
+    ``project_input`` selects the projection callback input: ``parsed`` (default)
+    passes the strictly parsed JSON value; ``raw`` passes the exact response bytes
+    after duplicate-key/nonfinite/UTF-8 validation. Raw mode lets a separately
+    reviewed projector retain original response bytes for record hashes and
+    identity receipts without reserialization. Both modes run in a killable child
+    process, emit strict bounded JSON, and use the 120s run budget.
+    ``clock`` and ``sleep`` are injectable solely for offline deterministic tests.
+    """
+    if project_input not in {"parsed", "raw"}:
+        return {"schema": "exp049-runner-result/1", "outcome": "incomplete",
+                "stop_reason": "invalid_project_input_mode", "body_sha256": body_sha256,
+                "contract_sha256": contract_sha256, "attempt_count": 0,
+                "attempts": [], "result": None}
+    progress: dict[str, Any] = {"attempts": [], "body_sha256": body_sha256,
+                                "contract_sha256": contract_sha256}
+    try:
+        return await asyncio.wait_for(
+            _execute(body, body_sha256, contract_bytes, contract_sha256,
+                     transport, ledger, project, clock=clock, sleep=sleep, progress=progress,
+                     project_input=project_input),
+            timeout=RUN_SECONDS)
+    except asyncio.TimeoutError:
+        return {"schema": "exp049-runner-result/1", "outcome": "incomplete",
+                "stop_reason": "run_deadline", "body_sha256": body_sha256,
+                "contract_sha256": contract_sha256,
+                "attempt_count": len(progress["attempts"]),
+                "attempts": progress["attempts"], "result": None}
+    except Exception as exc:
+        return {"schema": "exp049-runner-result/1", "outcome": "incomplete",
+                "stop_reason": "setup_or_durability_error",
+                "error_class": type(exc).__name__, "body_sha256": body_sha256,
+                "contract_sha256": contract_sha256,
+                "attempt_count": len(progress["attempts"]),
+                "attempts": progress["attempts"], "result": None}

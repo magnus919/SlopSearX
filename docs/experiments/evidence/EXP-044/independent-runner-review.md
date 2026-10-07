@@ -1,0 +1,28 @@
+# EXP-044 runner review (current snapshot; not final)
+
+Read-only review began on registration `7542774cbdf09359752f05fcd5983600e7338966f5a06137b2188a4fa5d0aa6f`, runner SHA `39eebcfb7b62846827e7aa6c220712ddf7dea8b4546ced85f5d94aec813f1b5f`, and fixture SHA `5fce55c13101f5e85fd47b8c2522c0f34fcb18dc000e62cf0ff02b1fa1846fcb`. On recheck, runner changed to SHA `9310c1851575abd77a4598a91948dcc7068cf7ae75cf2dc789113faf0c514655`; fixtures remained unchanged. No replay, provider, or search call was made.
+
+## Blockers
+
+1. **The advertised qualification gate is only an input-hash presence check.** `replay()` requires `qualification_hash(root, True)` at runner lines 113–127 and 249–255. That function verifies that a manifest names hashes matching the runner, fixture, prepared plan and pins; it has no evidence that `--selftest` ran or passed, or that a qualification result was published. `selftest()` is a separate optional CLI mode (lines 237–240). Therefore a syntactically valid hash manifest can unlock the actual E44 computation without satisfying registration's requirement to publish offline qualification before replay (registration lines 39–43). Bind the qualification receipt to successful fixture execution and the required frozen inventories/assertions, and have replay verify that receipt; keep direct `compute_report()` from bypassing the gate as root already flagged.
+
+2. **Tamper-rejection requirements lack fixtures.** Registration line 41 requires strict raw/history tamper rejection. Current `fixture_tests.py.txt` validates the real frozen corpus at test lines 8–18, but has no isolated tamper cases for receipt JSON, raw response bytes, and attempt history. The runner's production `validate_published_result()` does call EXP-043 verifier, receipt validator and history validator (runner lines 61–83), which is a positive chain; however this does not qualify that validators reject corrupted raw/history state in controlled fixtures. Add synthetic/copy-based negative cases which change each layer and assert rejection without modifying the frozen published evidence.
+
+3. **Fixed in the moving runner.** The updated `_pair_order()` now places membership, pair-contract and selector validation inside a full-W0 fallback path, including malformed `status=valid` answers (current runner lines 175–185). This should still be covered by fixtures for bad type/range, missing/extra IDs, mismatched candidate order/task/facet contract, and no D-only adoption.
+
+## Positive observations
+
+- Source-chain validation pins the EXP-043 integrity manifest, all 219 linked files, all 65 receipt/history entries, the published unsupported decision and source/helper hashes before rankings are constructed (`validate_published_result`, lines 61–83). The generated prepared plan also records raw/receipt hashes and attempts hash (line 104).
+- The selector expresses the frozen Score>=5 eligibility, within-facet Noul max and tie breaks, shared leader union, D-stable fill/tail, and full membership in a compact deterministic function (lines 132–173). It bounds new top-ten insertions to at most the distinct facet leaders.
+- `build_rankings()` reconstructs W0 and D from original receipts; all 21 D/F pairs use both answers; extended repeat/rotation reuse their respective original responses; navigation computes only W0/D (lines 202–230). EXP-043 references are explicitly transposed to A/B→pool before actual analysis (lines 185–200, 232–244).
+- The synthetic 65-response fixture reaches the same EXP-042 analysis function, checks both references/eight primary paired deltas, full pool membership and neutral-reference failure (fixture lines 94–119). It is appropriate synthetic pipeline proof, not observed quality evidence.
+
+Root already fixed the direct `compute_report()` bypass by adding the same qualification gate inside that function (current runner lines 230–239). Two blockers remain: the input-hash manifest is not evidence that fixture qualification ran and passed, and strict raw/history tamper rejection has no negative fixtures. I have no further findings outside those qualification gaps.
+
+## Final recheck of updated handoff
+
+Updated runner SHA: `ad84904514c94244b1537751ff2aafbed04264d5f26165948f53a0ec28f96e16`. Updated fixtures SHA: `cb4426e418aa1b920d4cf64b455701f9ac2958b2278dde297f79d476eeb321ec`.
+
+The latest runner now binds a qualification result receipt to the qualification-input hash and to frozen runner/fixture/prepared-plan/manual-check file hashes, with minimum fixture/manual counts and zero call counts (`qualification_hash`, current lines 113–133). Both `replay()` and the callable analysis path `compute_report()` require this gate before rankings (current lines 239–255). New fixtures assert those gates fail before `build_rankings`, reject altered result/qualification inputs, exercise copied EXP-043 evidence tampering, and check malformed typed or contract-mismatched D/F pairs fall back to the full W0 order. The raw-plus-updated-receipt test correctly demonstrates that response history binding rejects a changed provider response; structured-receipt-only alteration is rejected by `read_receipts`.
+
+I found no remaining blocker in the requested integrity, fallback, EXP-043 interface, or synthetic-analysis integration areas. The EX043 chain is validated before `build_rankings`; the synthetic 65-receipt fixture feeds both reference arms and all eight primary deltas to the actual EXP-042 analysis implementation, and neutral synthetic references must fail. This is offline qualification evidence only, not measured quality or production-readiness evidence. Root reports the updated offline fixtures and independent selector checks passed; I did not run actual replay or any provider/search calls.

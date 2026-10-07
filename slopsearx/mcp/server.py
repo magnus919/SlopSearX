@@ -341,6 +341,7 @@ def create_server(
     mcp.prompt()(_prompts.investigate_vulnerability)
     mcp.prompt()(_prompts.find_company_jobs)
     mcp.prompt()(_prompts.compare_package_or_project)
+    mcp.prompt()(_prompts.plan_research_with_evidence)
 
     return mcp
 

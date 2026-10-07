@@ -1,0 +1,57 @@
+{
+  "schema": "exp060-analysis-qualification/1",
+  "status": "offline adapter qualified; live-run analysis not performed",
+  "adapter": "analyze.py.txt",
+  "tests": "analysis-tests.py.txt",
+  "runtime": "Python 3.13",
+  "network_calls": 0,
+  "provider_calls": 0,
+  "test_count": 22,
+  "test_result": "passed",
+  "qualified_contract": {
+    "input_schema": "exp060-run-artifacts/1",
+    "reference_source": "fresh_exp060",
+    "historical_labels_reused": false,
+    "primary_queries": ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"],
+    "navigation_queries": ["q9", "q10", "q11", "q12", "q13"],
+    "reference_inventory": "Each reviewer supplies complete fresh annotations for all 13 query pools; only the eight primary pools enter quality calculations.",
+    "stability_queries": ["q1", "q4", "q7", "q8"],
+    "fresh_candidate_http_budget_ms": 2000,
+    "single_http_call_deadline_ms": 1000,
+    "maximum_pool_cards": 80,
+    "primary_mean_e_minus_w0_minimum": 0.03,
+    "primary_bootstrap": {"draws": 10000, "seed": 91940, "lower95_strictly_positive": true},
+    "mean_e_minus_d_minimum": -0.01,
+    "per_pool_e_minus_comparator_minimum": -0.03,
+    "per_pool_useful_loss_maximum": 1,
+    "comparator_useful_top10_of_10_requires_e_at_least": 9,
+    "macro_coverage": {"nondecrease_vs_d_both_references": true, "strict_gain_required_for_any_reference": true},
+    "stability_top10_overlap_minimum": 0.8,
+    "navigation": "Exact target URL must occur in W0 and fresh D top three; E must equal W0.",
+    "large_pool_gate": "At least four natural primary pools must exceed 40 cards.",
+    "incomplete_or_failed_measurement": "inconclusive; no reduced cohort analysis",
+    "hard_quality_failure": "rejected",
+    "adoption_eligible": false,
+    "timing_claim": "Fresh W0 and D/F/E phase timings are separate; adapter does not claim uninterrupted production wall time."
+  },
+  "test_coverage": [
+    "complete controlled fixture passes all original conjunctive gates",
+    "Missing operations, malformed inventories, duplicate ranks, historical labels, bad grades, unknown facets, and more than 80 cards fail closed; complete references cover all 13 pools.",
+    "No primary uplift rejects; useful retention matches frozen EXP-042 net-count loss and retains facet protection while preserving identity-loss diagnostics.",
+    "navigation target ranking and exact E identity are enforced",
+    "the pinned singleton candidate prefix permits exactly the no-W0-call identity fallback; missing W0 for a larger prefix remains inconclusive",
+    "all four repeat/rotation stability triples and fixed rotation order are enforced",
+    "at least four natural primary pools over 40 cards are required",
+    "successful remote-budget stop is included; invalid remaining budget is inconclusive",
+    "HTTP attempt timing binds to aggregate, per-call deadline, and cumulative candidate budget; valid over-budget measurements reject"
+  ],
+  "frozen_analysis_helpers": {
+    "EXP-039 replay.py.txt": "73ecbce9a04e0952fb2cb10c17728d887e6975ace5c9d22166c58ba980b06669",
+    "EXP-042 analysis.py.txt": "b1d14cd2828d046ac852f331c17de15cd3ebd566f912a19e8be57c05fc261db3"
+  },
+  "scope_limitations": [
+    "Controlled synthetic fixture verifies adapter behavior, not experiment quality or production uplift.",
+    "Fresh reference provenance is represented by run-artifact metadata and must be bound by the qualified acquisition runner.",
+    "Passing this offline qualification does not authorize acquisition, adoption, deployment, or production claims."
+  ]
+}

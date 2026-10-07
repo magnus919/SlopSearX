@@ -1,0 +1,85 @@
+"""EXP-059 owned exchange seam with EXP-065 exact request reconstruction."""
+import argparse, hashlib, json, os, sys, urllib.error, urllib.request
+import importlib.machinery,importlib.util
+HERE=__import__("pathlib").Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+sys.path.insert(0,str(REPO))
+from slopsearx.rerank import INSTRUCTIONS,LEVELS
+CONTRACT=json.loads((REPO/"docs/experiments/evidence/EXP-039/source-selection-contract.json").read_bytes())
+loader=importlib.machinery.SourceFileLoader("exp065_exp059_http",str(REPO/"docs/experiments/evidence/EXP-059/http-wrapper.py.txt"))
+spec=importlib.util.spec_from_loader(loader.name,loader);OLD=importlib.util.module_from_spec(spec);loader.exec_module(OLD)
+def validate_request(raw):
+    if type(raw)is not bytes or len(raw)>384000: raise ValueError("request-bound")
+    data=json.loads(raw)
+    if type(data)is not dict or set(data)!={"model","state","questions"} or data["model"]!="jev-1.13.0": raise ValueError("request-shape")
+    if type(data["questions"])is not dict or not 2<=len(data["questions"])<=80: raise ValueError("question-count")
+    if type(data["state"])is not dict: raise ValueError("state-shape")
+    state=data["state"]
+    purpose_arm="purpose" in state
+    arm="local" if purpose_arm and "candidates" not in state else "shared" if purpose_arm else "w0"
+    fields={"query","purpose","requested_facets"}|({"candidates"} if arm=="shared" else set())
+    if set(state)!=(fields if purpose_arm else {"query","candidates"}):raise ValueError("state-fields")
+    context_keys=("query","purpose") if purpose_arm else ("query",)
+    if any(type(state[k])is not str or not state[k] or len(state[k].encode())>4096 for k in context_keys):raise ValueError("state-context")
+    if purpose_arm:
+        facets=state["requested_facets"]
+        if type(facets)is not list or len(facets)>4 or any(type(f)is not dict or set(f)!={"id","description"} or type(f["id"])is not str or type(f["description"])is not str or not f["id"] or len(f["id"].encode())>80 or len(f["description"].encode())>256 for f in facets) or len({f["id"] for f in facets})!=len(facets):raise ValueError("facet-shape")
+    candidates=state.get("candidates")
+    if arm in {"shared","w0"}:
+        if type(candidates)is not list or len(candidates)!=len(data["questions"]):raise ValueError("shared-membership")
+        candidate_ids=[]
+        for card in candidates:
+            if type(card)is not dict or set(card)!={"id","url","title","snippet"} or any(type(card[k])is not str for k in card):raise ValueError("card-shape")
+            bounds={"id":80,"url":512,"title":256,"snippet":1200}
+            if not card["id"] or not card["url"] or any(len(card[k].encode())>bound for k,bound in bounds.items()):raise ValueError("card-bound")
+            candidate_ids.append(card["id"])
+        if len(set(candidate_ids))!=len(candidate_ids) or set(candidate_ids)!=set(data["questions"]):raise ValueError("shared-membership")
+    for q in data["questions"].values():
+        if type(q)is not dict or set(q)!={"type","instructions","criteria"} or q["type"]!="score":raise ValueError("question-shape")
+        if arm=="local":
+            ins=q["instructions"]
+            if type(ins)is not dict or set(ins)!={"candidate","question"} or type(ins["candidate"])is not dict or set(ins["candidate"])!={"id","url","title","snippet"} or ins["candidate"]["id"] not in data["questions"]:raise ValueError("local-card-shape")
+        elif type(q["instructions"])is not str or not q["instructions"]:raise ValueError("question-instructions")
+        if type(q["criteria"])is not list or len(q["criteria"])!=10 or any(type(x)is not str for x in q["criteria"]): raise ValueError("criteria")
+    if arm=="local" and any(q["instructions"]["candidate"]["id"]!=qid for qid,q in data["questions"].items()):raise ValueError("local-question-binding")
+    if arm=="local":
+        local_cards=[q["instructions"]["candidate"] for q in data["questions"].values()]
+        canonical_ids=[c["id"] for c in sorted(local_cards,key=lambda c:tuple(c[k].encode() for k in ("url","title","snippet","id")))]
+        if list(data["questions"])!=canonical_ids:raise ValueError("canonical-order")
+    if arm=="shared":
+        if candidate_ids!=sorted(candidate_ids,key=lambda cid:tuple(next(c[k].encode() for c in candidates if c["id"]==cid) for k in ("url","title","snippet","id"))):raise ValueError("canonical-order")
+    if arm=="w0" and candidate_ids!=["c"+str(i) for i in range(len(candidate_ids))]:raise ValueError("w0-native-ids")
+    if arm=="w0" and len(candidate_ids)>40:raise ValueError("w0-question-count")
+    for qid,q in data["questions"].items():
+        instruction=INSTRUCTIONS.format(id=qid) if arm=="w0" else CONTRACT["instructions"].format(id=qid)
+        if arm=="local":instruction={"candidate":q["instructions"]["candidate"],"question":CONTRACT["instructions"].replace("candidate `{id}`","`candidate`").format(id=qid)}
+        criteria=list(LEVELS) if arm=="w0" else CONTRACT["criteria"]
+        if q["instructions"]!=instruction or q["criteria"]!=criteria:raise ValueError("registered-question-contract")
+    return data
+OLD.validate_request=validate_request
+class FixtureOpener:
+    def open(self,req,timeout):
+        if req.full_url!=OLD.ENDPOINT or req.method!="POST" or timeout!=1:raise ValueError("fixture-request-envelope")
+        body=validate_request(req.data)
+        answers={key:{"type":"score","score":4.5} for key in body["questions"]}
+        return OLD.FixtureResponse(json.dumps({"model":"jev-1.13.0","answers":answers,"usage":{"input_tokens":1,"output_tokens":1}}).encode())
+def main():
+    p=argparse.ArgumentParser();p.add_argument("--offline-fixture",action="store_true");a=p.parse_args()
+    raw=sys.stdin.buffer.read(384001)
+    try:
+        validate_request(raw)
+        token="offline-fixture" if a.offline_fixture else os.environ.get("TYPESAFE_API_KEY","")
+        if not token: raise ValueError("missing-key")
+        timing={};opener=FixtureOpener() if a.offline_fixture else urllib.request.build_opener(OLD.NoRedirect())
+        try:out=OLD.exchange(raw,token,opener,timing=timing)
+        except OLD.HTTPFailure as error:
+            sys.stdout.buffer.write(error.raw)
+            print(json.dumps({"http_status":error.status,"remote_http_ms":error.elapsed,"request_sha256":hashlib.sha256(raw).hexdigest(),"response_sha256":hashlib.sha256(error.raw).hexdigest()}),file=sys.stderr)
+            return 2
+        elapsed=timing["remote_http_ms"]
+        sys.stdout.buffer.write(out)
+        print(json.dumps({"request_sha256":hashlib.sha256(raw).hexdigest(),"response_sha256":hashlib.sha256(out).hexdigest(),"remote_http_ms":elapsed}),file=sys.stderr)
+        return 0
+    except Exception as exc:
+        print("owned-http-"+type(exc).__name__,file=sys.stderr);return 2
+if __name__=="__main__":sys.exit(main())

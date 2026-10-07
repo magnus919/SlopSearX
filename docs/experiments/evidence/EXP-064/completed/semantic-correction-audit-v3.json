@@ -1,0 +1,31 @@
+{
+  "assessor": "exp064_semantic_audit",
+  "scope": "Independent recheck of the single corrected-v3 B replacement against rubric and same-card content.",
+  "coverage": {
+    "B": 1,
+    "total": 1
+  },
+  "status_counts": {
+    "pass": 1
+  },
+  "records": [
+    {
+      "assessor": "exp064_semantic_audit",
+      "dataset": "B",
+      "case": "q6",
+      "id": "q6-b-031",
+      "status": "pass",
+      "assessment": "The replacement removes q6_f1; the card itself specifies cross-file rename/refactoring and test fixtures for supported language-server operations, supporting q6_f2 and q6_f3. Grades and same-card rationale fit this direct but implementation-oriented issue lead.",
+      "source_binding": {
+        "card_fingerprint_matches": true,
+        "anchors_match_same_card": true,
+        "facet_anchors_match_tagged_facets": true
+      },
+      "input_file_sha256": {
+        "rubric.md": "b6774e2f0de43644887c660995a231123d072df7e34fba2b7725ef298acb5873",
+        "B/cards.json": "6540478553fccef6f7a4a76b1e41cca01006cd45192b0a65ba9b1acd8d97e0bb",
+        "B/corrected-v3/reference-q6.json": "8537912de7a57fd6f00f720ad7b724fe2653e47d51d814df46aa47c07ab8ba7e"
+      }
+    }
+  ]
+}

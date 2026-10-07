@@ -1,0 +1,3173 @@
+{
+  "schema": "exp039-annotation/1",
+  "reviewer": "A",
+  "items": [
+    {
+      "label": "q1-r00",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "Names a collaboration benchmark and exposes its task count and conflicting-feature setup; useful high-priority empirical lead, with some design detail visible."
+    },
+    {
+      "label": "q1-r01",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "Direct benchmark paper with 600-plus collaborative coding tasks and a concrete conflict setup; strong empirical lead, though results are not shown here."
+    },
+    {
+      "label": "q1-r02",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "coordination",
+        "conflict_resolution",
+        "asynchronous_work"
+      ],
+      "uncertain": false,
+      "rationale": "Directly studies shared-code editing, inconsistent views, and costly post-hoc conflict handling; the visible proposal addresses coordination mechanics in detail."
+    },
+    {
+      "label": "q1-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coordination",
+        "asynchronous_work"
+      ],
+      "uncertain": false,
+      "rationale": "Software-engineering agent method with dependency-wave dispatch and validation gates; useful for coordination, although asynchronous conflict outcomes are not yet visible."
+    },
+    {
+      "label": "q1-r04",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Protocol concerns coordination among agents editing shared repositories, but its focus is cross-principal interoperability rather than empirical coding-team evaluation."
+    },
+    {
+      "label": "q1-r05",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Thesis signals general task-oriented multi-agent coordination, without a visible software-engineering or coding-agent connection."
+    },
+    {
+      "label": "q1-r06",
+      "lead": 0,
+      "visible": 0,
+      "facets": [
+        "benchmarks"
+      ],
+      "uncertain": false,
+      "rationale": "The benchmark concerns generating agents for the Agentic Web, not collaboration among software-engineering coding agents."
+    },
+    {
+      "label": "q1-r07",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "Review card gives a specific shared-workspace mechanism and benchmark comparisons for detecting and resolving edits at write time."
+    },
+    {
+      "label": "q1-r08",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "Empirical study explicitly centers coordination modes in from-scratch multi-agent coding; snippet identifies evaluation shortcomings but truncates before results."
+    },
+    {
+      "label": "q1-r09",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Secondary article reports a collaboration benchmark and a concrete solo-versus-team success-rate finding; useful lead, but not the primary study."
+    },
+    {
+      "label": "q1-r10",
+      "lead": 0,
+      "visible": 0,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "Multi-agent coordination is applied to household entity resolution, outside software-engineering collaboration."
+    },
+    {
+      "label": "q1-r11",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "Blockchain collaboration survey is distant from coding-agent teamwork; snippet offers only general collaboration framing."
+    },
+    {
+      "label": "q1-r12",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "A multi-agent coding assistant is directly in domain, but the visible abstract describes system motivation and gives no coordination evaluation detail."
+    },
+    {
+      "label": "q1-r13",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Software-engineering multi-agent literature review directly discusses benchmark requirements and task delegation; useful overview rather than empirical study."
+    },
+    {
+      "label": "q1-r14",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Coding framework paper highlights gaps between configured and actual collaboration; the snippet provides a concrete evaluation concern but little outcome evidence."
+    },
+    {
+      "label": "q1-r15",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Team-based autonomous software engineering is relevant and uses SWE-bench, but the snippet describes system aims rather than coordination evidence."
+    },
+    {
+      "label": "q1-r16",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "asynchronous_work"
+      ],
+      "uncertain": false,
+      "rationale": "Direct asynchronous software-engineering collaboration benchmark; snippet explains why outcome scores mask dependencies and describes cross-component dependency analysis."
+    },
+    {
+      "label": "q1-r17",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Long-horizon software evolution benchmark mentions specialized-agent coordination, but the visible detail is broad and not focused on collaboration measurement."
+    },
+    {
+      "label": "q1-r18",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "CooperBench paper explicitly benchmarks cooperation on potentially conflicting software tasks; bibliographic PDF card is a strong direct lead with brief design detail."
+    },
+    {
+      "label": "q1-r19",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Multi-agent coordination is central, but the focus is reward engineering in reinforcement learning rather than software-engineering teams."
+    },
+    {
+      "label": "q1-r20",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "Direct CooperBench result with task scale and conflicting independent features; strong benchmark lead, though no measured findings are visible."
+    },
+    {
+      "label": "q1-r21",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "asynchronous_work"
+      ],
+      "uncertain": true,
+      "rationale": "AsynCodeBench is an exact asynchronous coding-collaboration benchmark; snippet offers a specific dependency-resolution pattern but little benchmark setup."
+    },
+    {
+      "label": "q1-r22",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "benchmarks"
+      ],
+      "uncertain": true,
+      "rationale": "GUI-agent software engineering is adjacent, but the card discusses GUI agent maturity rather than collaboration between coding agents."
+    },
+    {
+      "label": "q1-r23",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Vendor benchmark overview mentions developer workflows and coordination patterns, but does not establish empirical coding-agent collaboration evidence."
+    },
+    {
+      "label": "q1-r24",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "Direct dataset of merge conflicts in coding-agent pull requests, with reproducible labels and conflict-region metadata visible."
+    },
+    {
+      "label": "q1-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": false,
+      "rationale": "MultiAgentBench measures collaboration and conflict resolution across role-based scenarios; useful empirical lead, though not specific to software engineering."
+    },
+    {
+      "label": "q1-r26",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination",
+        "benchmarks"
+      ],
+      "uncertain": false,
+      "rationale": "General blog surveys multi-agent planning and benchmarks, with no clear software-engineering study or detailed evidence in the excerpt."
+    },
+    {
+      "label": "q1-r27",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "coordination",
+        "asynchronous_work",
+        "benchmarks"
+      ],
+      "uncertain": false,
+      "rationale": "Direct study of asynchronous software-engineering agents on shared-artifact tasks including Commit0 and PaperBench; concrete evaluation setup is visible."
+    },
+    {
+      "label": "q1-r28",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "coordination",
+        "asynchronous_work",
+        "conflict_resolution"
+      ],
+      "uncertain": true,
+      "rationale": "Multi-agent coding method includes asynchronous voting and cross-verification, but its competitive-programming focus makes it secondary to team software engineering."
+    },
+    {
+      "label": "q1-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": false,
+      "rationale": "Software-engineering multi-agent survey specifies collaborative design and delegation benchmark needs; useful overview, not direct empirical evidence."
+    },
+    {
+      "label": "q1-r30",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "benchmarks",
+        "coordination",
+        "conflict_resolution"
+      ],
+      "uncertain": true,
+      "rationale": "MultiAgentBench result page describes a benchmark measuring collaboration as well as task completion; relevant source, but broad interactive scenarios."
+    },
+    {
+      "label": "q1-r31",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Competitive agent debate addresses software issue resolution, but visible text does not show collaborative coding-team coordination."
+    },
+    {
+      "label": "q1-r32",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "benchmarks",
+        "coordination"
+      ],
+      "uncertain": true,
+      "rationale": "Secondary commentary repeats CooperBench scale and broad conclusion; useful pointer, but the primary benchmark cards are stronger leads."
+    },
+    {
+      "label": "q1-r33",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "coordination",
+        "benchmarks",
+        "asynchronous_work"
+      ],
+      "uncertain": false,
+      "rationale": "Direct coding-agent coordination study proposes temporal networks of messages and file reads/writes with costs, an explicit method addressing coordination measurement."
+    },
+    {
+      "label": "q2-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls",
+        "human_approval"
+      ],
+      "uncertain": true,
+      "rationale": "Enterprise agent governance article describes structured workflows, approved data, configurable autonomy, and ongoing monitoring; practitioner guidance rather than primary study."
+    },
+    {
+      "label": "q2-r01",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "SAFE-AGENT is a direct runtime-monitoring and policy-enforcement study for tool-using agents, but the visible abstract gives little specific control evidence."
+    },
+    {
+      "label": "q2-r02",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Product page names tamper-proof audit records and intent checks, but offers vendor feature claims rather than independent guidance or evaluation."
+    },
+    {
+      "label": "q2-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Enterprise governance article defines ownership, access, actions, and data boundaries; useful conceptual control source, with little on approvals or audit specifics."
+    },
+    {
+      "label": "q2-r04",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "Paper directly concerns independently verifiable agent execution history and tamper-evident records; relevant to auditability, less clearly to approvals or policy controls."
+    },
+    {
+      "label": "q2-r05",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Practitioner guide distinguishes runtime policy checks from paper policies, a relevant control concept but not primary guidance or study."
+    },
+    {
+      "label": "q2-r06",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Enterprise agentic governance framework is directly on topic, but the excerpt provides only broad motivation and no control details."
+    },
+    {
+      "label": "q2-r07",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Enterprise AI-agent governance framework is a plausible framework lead; visible card describes agent capabilities without specific controls."
+    },
+    {
+      "label": "q2-r08",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Framework article explicitly includes permissions and when agents need human approval; useful explanatory source, not primary evidence."
+    },
+    {
+      "label": "q2-r09",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Runtime policy firewall targets governance for enterprise agent execution; abstract is only introductory in the visible card."
+    },
+    {
+      "label": "q2-r10",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Research paper directly addresses policy-driven access control for autonomous enterprise agents, though the snippet shows motivation rather than its proposed controls."
+    },
+    {
+      "label": "q2-r11",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Unified policy architecture is relevant governance design, but the visible text states the challenge without specifying controls."
+    },
+    {
+      "label": "q2-r12",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "audit_logging",
+        "human_approval"
+      ],
+      "uncertain": true,
+      "rationale": "Palo Alto guide gives a concrete attributed audit-trail concept and notes approval is risk-dependent; useful secondary guidance."
+    },
+    {
+      "label": "q2-r13",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Implementation guide maps regulatory requirements to approval records and governance evidence; directly useful crosswalk, but secondary."
+    },
+    {
+      "label": "q2-r14",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Article links access restrictions, logs, and intervention triggers to operational controls; relevant practitioner synthesis."
+    },
+    {
+      "label": "q2-r15",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Duplicate SAFE-AGENT record is still a direct research lead on runtime monitoring and policy enforcement; abstract snippet is nonspecific."
+    },
+    {
+      "label": "q2-r16",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Duplicate framework citation signals a potentially relevant governance source but exposes no concrete control details."
+    },
+    {
+      "label": "q2-r17",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "Enterprise best-practices article calls for complete audit trails in regulated financial settings; relevant but sector-specific secondary guidance."
+    },
+    {
+      "label": "q2-r18",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "Workflow article directly names built-in approvals and reconstructable agent behavior; useful operational guidance, not an independent study."
+    },
+    {
+      "label": "q2-r19",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "Vendor product card itemizes traces of prompts, retrieval, tools, approvals, and outputs; concrete audit lead but commercial framing."
+    },
+    {
+      "label": "q2-r20",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "Vendor overview signals enterprise observability and logging, but excerpt provides little task-specific control detail."
+    },
+    {
+      "label": "q2-r21",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Official Microsoft guidance explicitly assigns humans deployment approval and ongoing compliance monitoring; strong primary guidance lead."
+    },
+    {
+      "label": "q2-r22",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "Enterprise governance guide connects sanctioned tools with retention controls and audit logging; useful background, but not specifically agent controls."
+    },
+    {
+      "label": "q2-r23",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Decision-governance platform mentions immutable trails and policy-enforced workflows, but product framing and broad scope limit its value as guidance."
+    },
+    {
+      "label": "q2-r24",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Enterprise analytics assurance architecture is adjacent to AI governance, with no visible concrete human-approval, logging, or policy guidance."
+    },
+    {
+      "label": "q2-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Article identifies gaps between access controls and agent orchestration, a useful governance problem framing but not primary guidance."
+    },
+    {
+      "label": "q2-r26",
+      "lead": 1,
+      "visible": 3,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Product card gives four explicit controls, including per-action permissions, human approval, and immutable logs; substantive but commercial claims."
+    },
+    {
+      "label": "q2-r27",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Practitioner guide specifies policy, RBAC, and logging documents required before staging; unusually concrete implementation guidance."
+    },
+    {
+      "label": "q2-r28",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging"
+      ],
+      "uncertain": false,
+      "rationale": "Commercial compliance article lists audit logging and human oversight among controls; relevant summary but not primary guidance."
+    },
+    {
+      "label": "q2-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "human_approval",
+        "audit_logging"
+      ],
+      "uncertain": true,
+      "rationale": "Governance guide gives approval thresholds, owners, decision logs, and audit trails; useful secondary checklist."
+    },
+    {
+      "label": "q2-r30",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "Duplicate UPA paper is on enterprise governance architecture, but visible abstract remains high-level."
+    },
+    {
+      "label": "q2-r31",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "human_approval",
+        "audit_logging",
+        "policy_controls"
+      ],
+      "uncertain": true,
+      "rationale": "Curated repository snippet describes a pending action held until human approval, a concrete policy and approval mechanism; resource list is a secondary lead."
+    },
+    {
+      "label": "q2-r32",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "policy_controls"
+      ],
+      "uncertain": false,
+      "rationale": "CAGE-1 explicitly evaluates enterprise agent governance and control assurance, directly matching the requested study type; snippet lacks details of its evaluation."
+    },
+    {
+      "label": "q3-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "Architecture proposal discusses journaling and deterministic replay for durable state, but peer-to-peer replication is its distinctive focus."
+    },
+    {
+      "label": "q3-r01",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "Temporal guide explicitly separates replay, retries, and idempotency; direct practical coverage of several requested safety concerns."
+    },
+    {
+      "label": "q3-r02",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "Agent authorization paper addresses retries, crashes, and replay-resistant actions; relevant safety angle, though authorization state is its main focus."
+    },
+    {
+      "label": "q3-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": true,
+      "rationale": "Essay identifies concrete workflow-contract needs including version pinning, recorded LLM outputs, compensation, and idempotency; useful secondary synthesis."
+    },
+    {
+      "label": "q3-r04",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "Agent-runtime article gives concrete non-idempotent effects and stricter recovery handling; relevant explanation, not primary technical documentation."
+    },
+    {
+      "label": "q3-r05",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "idempotency",
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "Durable-execution guide explains completed-step replay and recorded results; strong practical lead with specific mechanism visible."
+    },
+    {
+      "label": "q3-r06",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "Focused explanation clarifies idempotency despite varying response and execution path; useful narrow concept source."
+    },
+    {
+      "label": "q3-r07",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "idempotency",
+        "recovery"
+      ],
+      "uncertain": true,
+      "rationale": "AWS developer documentation directly covers retries and idempotency for durable execution, but card reveals no substantive guidance."
+    },
+    {
+      "label": "q3-r08",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "external_side_effects",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "Workflow engine page explicitly says persistence cannot be atomic with external effects and recommends idempotency; direct safety detail."
+    },
+    {
+      "label": "q3-r09",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "external_side_effects",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "Technical article ties deterministic replay to side effects and idempotency; relevant backend workflow guidance."
+    },
+    {
+      "label": "q3-r10",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency",
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": true,
+      "rationale": "Distributed event-processing paper addresses retries and exactly-once claims, useful adjacent treatment of side-effect safety."
+    },
+    {
+      "label": "q3-r11",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "Issue proposes replay-safe orchestration and recorded outcomes for external effects; concrete engineering proposal, not general documentation."
+    },
+    {
+      "label": "q3-r12",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "Issue specifies effect identities, recorded results, and safe redispatch policy for crash recovery; directly relevant design material."
+    },
+    {
+      "label": "q3-r13",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency",
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": true,
+      "rationale": "AgentRun design explicitly assigns idempotency and recovery semantics to external effects; relevant proposal with little further detail."
+    },
+    {
+      "label": "q3-r14",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "recovery"
+      ],
+      "uncertain": true,
+      "rationale": "Durable functions semantics is foundational workflow material, but snippet does not expose replay or side-effect behavior."
+    },
+    {
+      "label": "q3-r15",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "Upgrade-risk model discusses immutable-log replay and code-version coupling; relevant recovery context but focused on upgrades."
+    },
+    {
+      "label": "q3-r16",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "recovery",
+        "external_side_effects",
+        "idempotency"
+      ],
+      "uncertain": true,
+      "rationale": "Agent-tool boundary study directly examines workflow failures under retries, concurrency, and partial effects; strong lead, limited details visible."
+    },
+    {
+      "label": "q3-r17",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "idempotency"
+      ],
+      "uncertain": true,
+      "rationale": "Payment reliability patterns are only indirectly related; the visible abstract emphasizes broader failover and migration concerns."
+    },
+    {
+      "label": "q3-r18",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "replay",
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "Agent workflow runtime explicitly targets crashes around external side effects and replayable boundaries; direct and substantive fit."
+    },
+    {
+      "label": "q3-r19",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "recovery",
+        "external_side_effects",
+        "idempotency"
+      ],
+      "uncertain": true,
+      "rationale": "Issue states that unknown external outcomes must not be silently replayed without safe recovery; directly useful failure rule."
+    },
+    {
+      "label": "q3-r20",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": true,
+      "rationale": "Article warns durable execution alone does not protect non-idempotent payment calls; useful narrow explanation."
+    },
+    {
+      "label": "q3-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "recovery",
+        "external_side_effects"
+      ],
+      "uncertain": false,
+      "rationale": "Agent-runtime article gives a concrete duplicate-effect failure from retrying a run and points to step boundaries and recorded progress."
+    },
+    {
+      "label": "q3-r22",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": true,
+      "rationale": "Issue outlines dispatch recovery using durable run records and retrying failures without duplicating a logical run."
+    },
+    {
+      "label": "q3-r23",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "Developer guide explains recorded results restore workflow state and execution resumes after the last completed event."
+    },
+    {
+      "label": "q3-r24",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "recovery",
+        "external_side_effects",
+        "idempotency"
+      ],
+      "uncertain": false,
+      "rationale": "Runtime issue clearly rejects atomicity or exactly-once promises for arbitrary external calls and ties resume to durable correlated outcomes."
+    },
+    {
+      "label": "q3-r25",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "external_side_effects"
+      ],
+      "uncertain": true,
+      "rationale": "Title suggests authorization and execution governance, but the card has no snippet to establish replay or recovery coverage."
+    },
+    {
+      "label": "q3-r26",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "replay",
+        "recovery",
+        "idempotency",
+        "external_side_effects"
+      ],
+      "uncertain": true,
+      "rationale": "Agent-runtime overview explicitly combines checkpoints, replay boundaries, and avoiding duplicated side effects; useful secondary source."
+    },
+    {
+      "label": "q3-r27",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "external_side_effects",
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "Atomix paper directly concerns tool-mediated external mutations and fault recovery, though snippet is introductory."
+    },
+    {
+      "label": "q3-r28",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "recovery"
+      ],
+      "uncertain": false,
+      "rationale": "Distributed speculative execution concerns application fault tolerance generally, with no visible agent-workflow or side-effect specifics."
+    },
+    {
+      "label": "q3-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "recovery",
+        "idempotency"
+      ],
+      "uncertain": true,
+      "rationale": "Temporal data-workflow article discusses activity retry policy and limits; useful implementation background, secondary source."
+    },
+    {
+      "label": "q4-r00",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-bench source card explicitly summarizes contamination and data-quality concerns in the target benchmark; direct evidence-oriented lead with concrete issue framing."
+    },
+    {
+      "label": "q4-r01",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Optimization-agent benchmark is outside SWE-bench evaluation and contamination."
+    },
+    {
+      "label": "q4-r02",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "decontamination",
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-rebench paper describes an automated pipeline and a 21,000-task dataset for decontaminated evaluation; direct study and specific setup."
+    },
+    {
+      "label": "q4-r03",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "TLA specification benchmark addresses a different evaluation domain, with no SWE-bench contamination connection."
+    },
+    {
+      "label": "q4-r04",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": false,
+      "rationale": "Paper directly asks whether SWE-bench performance reflects memorization; snippet identifies repository benchmark leakage as the concern."
+    },
+    {
+      "label": "q4-r05",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Graph-learning evaluation review is unrelated to SWE-bench temporal contamination."
+    },
+    {
+      "label": "q4-r06",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "live_evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "SWE-MERA is a dynamic software-engineering evaluation benchmark; useful lead for evolving evaluations, but this excerpt does not identify leakage measures."
+    },
+    {
+      "label": "q4-r07",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Memory-hygiene benchmark is not about SWE-bench contamination or temporal splits."
+    },
+    {
+      "label": "q4-r08",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "live_evaluation",
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-bench Goes Live directly concerns live benchmark evaluation and exposes temporal issue distribution; some method detail is visible."
+    },
+    {
+      "label": "q4-r09",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-Bench++ is built from dated pull requests and allows filtering by creation date, directly supporting temporal splits though not SWE-bench contamination itself."
+    },
+    {
+      "label": "q4-r10",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Contamination-aware Rust vulnerability benchmark is a useful analogy but outside software issue-fixing SWE-bench."
+    },
+    {
+      "label": "q4-r11",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Java vulnerability benchmark includes leakage-aware splits, but its task domain is not SWE-bench coding-agent evaluation."
+    },
+    {
+      "label": "q4-r12",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "live_evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "Official SWE-rebench leaderboard describes continuously evolving standardized evaluation, a direct current benchmark source with limited details."
+    },
+    {
+      "label": "q4-r13",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "OpenAI's direct SWE-bench assessment discusses why Verified no longer measures frontier capability and reports a move to a newer public split."
+    },
+    {
+      "label": "q4-r14",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-Bench Pro is a candidate alternative benchmark, but snippet gives no specific leakage, live-evaluation, or temporal-split detail."
+    },
+    {
+      "label": "q4-r15",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Agent commitment-integrity benchmark is unrelated to SWE-bench contamination."
+    },
+    {
+      "label": "q4-r16",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Entertainment promotion benchmark does not address requested benchmark evaluation concerns."
+    },
+    {
+      "label": "q4-r17",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "live_evaluation",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "Prospective live tournament evaluation directly illustrates leakage avoidance by evaluating before outcomes are known, albeit in an unrelated domain."
+    },
+    {
+      "label": "q4-r18",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": true,
+      "rationale": "Secondary explainer clearly describes benchmark data leaking into training corpora; relevant background but not primary SWE-bench evidence."
+    },
+    {
+      "label": "q4-r19",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "time_splits"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-Bench+ uses issues created after model training cutoffs, a direct temporal-split approach to test memorization."
+    },
+    {
+      "label": "q4-r20",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": true,
+      "rationale": "Commentary reports a specific SWE-bench leakage rate and reporting change; useful pointer, but secondary claims require checking original sources."
+    },
+    {
+      "label": "q4-r21",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": true,
+      "rationale": "SWE-Bench Pro analysis is directly related to benchmark reliability, but the snippet does not show its contamination method or findings."
+    },
+    {
+      "label": "q4-r22",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "time_splits",
+        "decontamination"
+      ],
+      "uncertain": true,
+      "rationale": "Secondary explainer describes post-training-cutoff issues as a contamination control; useful context, not primary evidence."
+    },
+    {
+      "label": "q4-r23",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "ECG biometrics benchmark is unrelated to software-agent benchmark contamination."
+    },
+    {
+      "label": "q4-r24",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": true,
+      "rationale": "Reddit discussion mentions SWE-bench leakage but provides hearsay commentary rather than a primary study."
+    },
+    {
+      "label": "q4-r25",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": false,
+      "rationale": "Explainer describes exact-match contamination detection, useful method background but not direct SWE-bench temporal evaluation evidence."
+    },
+    {
+      "label": "q4-r26",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "live_evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "SWE-MERA is a dynamic benchmark lead, though this card describes ordinary task construction rather than its dynamic evaluation features."
+    },
+    {
+      "label": "q4-r27",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "live_evaluation",
+        "decontamination"
+      ],
+      "uncertain": true,
+      "rationale": "Overview explicitly identifies dynamic and decontaminated benchmarking as directions, useful secondary summary."
+    },
+    {
+      "label": "q4-r28",
+      "lead": 1,
+      "visible": 2,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Receipted public-split run documents SWE-Bench Pro evaluation details, but is an agent-run report rather than contamination or temporal-method source."
+    },
+    {
+      "label": "q4-r29",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "EVA operations benchmark is unrelated to SWE-bench contamination."
+    },
+    {
+      "label": "q4-r30",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": false,
+      "rationale": "Paper argues SWE-bench Verified gains may reflect benchmark-specific memory; direct source for the contamination question."
+    },
+    {
+      "label": "q4-r31",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "leakage"
+      ],
+      "uncertain": false,
+      "rationale": "SWE-Bench source reports manual evidence of solution leakage in successful cases; concrete direct contamination detail."
+    },
+    {
+      "label": "q4-r32",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "decontamination"
+      ],
+      "uncertain": false,
+      "rationale": "Benchmark-mutation paper directly addresses SWE-bench problems and a human-verified replacement set; strong lead, with brief method detail."
+    },
+    {
+      "label": "q4-r33",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "leakage",
+        "time_splits"
+      ],
+      "uncertain": true,
+      "rationale": "SWE-bench Verified issue benchmark card identifies cutoff age and direct solution leakage; relevant concern but unclear primary status."
+    },
+    {
+      "label": "q4-r34",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Channel foundation-model benchmark concerns a different evaluation domain."
+    },
+    {
+      "label": "q5-r00",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Official verifier repository explains proving builder.id by binding it to the signing identity; directly matches verifier implementation and builder identity."
+    },
+    {
+      "label": "q5-r01",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "O-RAN application supply-chain rubric is not an SLSA provenance source."
+    },
+    {
+      "label": "q5-r02",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Explanatory article says SLSA provenance mainly mitigates build threats; useful boundary framing, but not canonical specification."
+    },
+    {
+      "label": "q5-r03",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "verifier_specification",
+        "threat_model",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Official SLSA Build verification page states the verification goal: artifact applicability and provenance trustworthiness; canonical source."
+    },
+    {
+      "label": "q5-r04",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Explainer describes provenance format and builder identity, but is not the official specification requested."
+    },
+    {
+      "label": "q5-r05",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "General CI/CD compliance article has only broad supply-chain relevance in the visible card."
+    },
+    {
+      "label": "q5-r06",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "OpenSSF article explains what SLSA provenance proves about a builder and source repository, useful threat-boundary analysis."
+    },
+    {
+      "label": "q5-r07",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "verifier_specification",
+        "threat_model",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Official SLSA verification page directly explains checking artifact applicability and provenance trustworthiness."
+    },
+    {
+      "label": "q5-r08",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "Canonical SLSA provenance page is a direct spec lead, while the shown excerpt repeats verification goals rather than provenance fields."
+    },
+    {
+      "label": "q5-r09",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Generative-AI security practices paper does not visibly address SLSA verification."
+    },
+    {
+      "label": "q5-r10",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "attestations",
+        "threat_model"
+      ],
+      "uncertain": true,
+      "rationale": "Third-party deep dive offers broad SLSA security context but no specific verifier or threat-model detail is visible."
+    },
+    {
+      "label": "q5-r11",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Explainer gives a concrete OIDC-to-certificate builder identity example, useful background but not a canonical SLSA document."
+    },
+    {
+      "label": "q5-r12",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "Tutorial states provenance detects build-path tampering but not human malice; relevant limit, secondary source."
+    },
+    {
+      "label": "q5-r13",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity"
+      ],
+      "uncertain": false,
+      "rationale": "Third-party wiki says the tool validates trusted builders and build provenance; pointer to implementation, not canonical documentation."
+    },
+    {
+      "label": "q5-r14",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Official SLSA verifier repository details proving builder identity through signer binding; direct implementation lead."
+    },
+    {
+      "label": "q5-r15",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "TEE-based attested build system is adjacent provenance work but not specifically SLSA verifier/specification."
+    },
+    {
+      "label": "q5-r16",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity"
+      ],
+      "uncertain": false,
+      "rationale": "A forked verifier repository repeats the builder identity proof detail; relevant code lead but the official project is preferable."
+    },
+    {
+      "label": "q5-r17",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "builder_identity"
+      ],
+      "uncertain": true,
+      "rationale": "Checklist mentions platform-controlled builder identity and threat verification, but is explanatory rather than canonical."
+    },
+    {
+      "label": "q5-r18",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Third-party overview describes in-toto predicate structure; useful format background but not official SLSA verification material."
+    },
+    {
+      "label": "q5-r19",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "SCAI attribute-integrity specification is a separate supply-chain format, not SLSA provenance verification."
+    },
+    {
+      "label": "q5-r20",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Human-certified module repository architecture is unrelated to the requested SLSA source set."
+    },
+    {
+      "label": "q5-r21",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "Explainer describes JSON in-toto provenance within DSSE; useful context but secondary and not verifier guidance."
+    },
+    {
+      "label": "q5-r22",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Coding-model repository entropy paper is unrelated to SLSA provenance."
+    },
+    {
+      "label": "q5-r23",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "Confidential-computing attestation is a different trust-chain topic and does not indicate SLSA coverage."
+    },
+    {
+      "label": "q5-r24",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Official verifier repository shows a concrete verified builder example; direct implementation lead, though excerpt is a single example."
+    },
+    {
+      "label": "q5-r25",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "threat_model",
+        "builder_identity",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Explainer gives a specific compromised-runner threat and why signature validity alone is insufficient; useful analysis, not canonical source."
+    },
+    {
+      "label": "q5-r26",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Agentic engineering accountability is outside SLSA verifier/specification scope."
+    },
+    {
+      "label": "q5-r27",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Authorized agent transitions are not SLSA provenance verification."
+    },
+    {
+      "label": "q5-r28",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "attestations"
+      ],
+      "uncertain": true,
+      "rationale": "Blog stresses consumer verification of signatures and attestations; helpful secondary explanation, not official guidance."
+    },
+    {
+      "label": "q5-r29",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "verifier_specification",
+        "attestations"
+      ],
+      "uncertain": false,
+      "rationale": "Tutorial describes cosign verification checks, a practical pointer but not the canonical SLSA verifier source."
+    },
+    {
+      "label": "q6-r00",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Evaluation-context protocol does not concern OpenTelemetry GenAI conventions."
+    },
+    {
+      "label": "q6-r01",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Agent-run evidence and observability is adjacent, but no OpenTelemetry convention source is visible."
+    },
+    {
+      "label": "q6-r02",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions"
+      ],
+      "uncertain": false,
+      "rationale": "Vendor explainer defines GenAI conventions as a vendor-neutral trace schema; useful orientation, not official documentation."
+    },
+    {
+      "label": "q6-r03",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Scientific-agent observability is outside the requested OpenTelemetry convention guidance."
+    },
+    {
+      "label": "q6-r04",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "semantic_conventions"
+      ],
+      "uncertain": false,
+      "rationale": "Official OpenTelemetry page is a direct documentation entry point and links to markdown, but the card itself exposes no convention details."
+    },
+    {
+      "label": "q6-r05",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls",
+        "spans"
+      ],
+      "uncertain": false,
+      "rationale": "Third-party guide explicitly maps tool calls, model invocations, and retrieval to child spans; useful implementation lead, not official."
+    },
+    {
+      "label": "q6-r06",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Canonical action verification addresses governance and runtime attestation, not OTel semantic conventions."
+    },
+    {
+      "label": "q6-r07",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls"
+      ],
+      "uncertain": false,
+      "rationale": "Vendor technical guide explicitly covers span trees, GenAI conventions, and tool tracing; relevant implementation background."
+    },
+    {
+      "label": "q6-r08",
+      "lead": 0,
+      "visible": 1,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Governance telemetry article does not visibly identify OpenTelemetry conventions or attributes."
+    },
+    {
+      "label": "q6-r09",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions"
+      ],
+      "uncertain": true,
+      "rationale": "Observability explainer connects OpenTelemetry traces with evaluation, but visible details on convention fields are limited."
+    },
+    {
+      "label": "q6-r10",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Business-process agent mining has no visible OTel convention details."
+    },
+    {
+      "label": "q6-r11",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions"
+      ],
+      "uncertain": false,
+      "rationale": "Traceloop page describes its extension of OTel conventions; relevant source, though not official OpenTelemetry documentation."
+    },
+    {
+      "label": "q6-r12",
+      "lead": 1,
+      "visible": 3,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls",
+        "spans"
+      ],
+      "uncertain": false,
+      "rationale": "Specific guide maps SDK traces to invoke_agent, chat, and execute_tool spans; concrete but third-party."
+    },
+    {
+      "label": "q6-r13",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls",
+        "spans"
+      ],
+      "uncertain": false,
+      "rationale": "Official OpenTelemetry article gives a trace hierarchy with invoke_agent, chat, and execute_tool spans; strong direct technical source."
+    },
+    {
+      "label": "q6-r14",
+      "lead": 1,
+      "visible": 3,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls",
+        "spans"
+      ],
+      "uncertain": true,
+      "rationale": "Guide specifies chat, invoke_agent, and execute_tool span types; substantive overview but secondary."
+    },
+    {
+      "label": "q6-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans"
+      ],
+      "uncertain": false,
+      "rationale": "Agent observability benchmark discusses limits of current GenAI conventions; useful technical study lead, less focused on implementation details."
+    },
+    {
+      "label": "q6-r16",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans"
+      ],
+      "uncertain": true,
+      "rationale": "Third-party page signals a four-activity taxonomy for agent spans, but the excerpt does not name details."
+    },
+    {
+      "label": "q6-r17",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "Official semantic-conventions repository document is a direct specification source and exposes guidance on attribute fallback values."
+    },
+    {
+      "label": "q6-r18",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": true,
+      "rationale": "Secondary explainer describes standardized span names and attribute keys; useful overview, not canonical specification."
+    },
+    {
+      "label": "q6-r19",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "attributes"
+      ],
+      "uncertain": true,
+      "rationale": "Practical guide identifies the gen_ai vocabulary as the conventions' purpose, with little concrete field detail."
+    },
+    {
+      "label": "q6-r20",
+      "lead": 1,
+      "visible": 3,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "Implementation guide explains signals, spans, and attributes; relevant technical detail but not official documentation."
+    },
+    {
+      "label": "q6-r21",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": false,
+      "rationale": "Vendor overview describes conventions as definitions for spans, metrics, and events; useful background."
+    },
+    {
+      "label": "q6-r22",
+      "lead": 3,
+      "visible": 1,
+      "facets": [
+        "semantic_conventions"
+      ],
+      "uncertain": false,
+      "rationale": "Official trace semantic-conventions page is a direct spec lead, but its card only exposes a documentation link."
+    },
+    {
+      "label": "q6-r23",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "attributes"
+      ],
+      "uncertain": true,
+      "rationale": "MLflow guidance describes exporting traces in GenAI convention format; useful integration lead rather than convention authority."
+    },
+    {
+      "label": "q6-r24",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "spans"
+      ],
+      "uncertain": true,
+      "rationale": "Long-horizon agent profiling is adjacent, but no OTel convention implementation detail is visible."
+    },
+    {
+      "label": "q6-r25",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "attributes"
+      ],
+      "uncertain": true,
+      "rationale": "Blog explains standard span and attribute names for model calls; relevant secondary source."
+    },
+    {
+      "label": "q6-r26",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Decision-evidence maturity model is not visibly about OTel GenAI conventions."
+    },
+    {
+      "label": "q6-r27",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "spans"
+      ],
+      "uncertain": true,
+      "rationale": "Long-horizon trace model is adjacent to spans, but not visibly an OpenTelemetry convention source."
+    },
+    {
+      "label": "q6-r28",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "tool_calls"
+      ],
+      "uncertain": false,
+      "rationale": "Datadog documentation explicitly says conventions cover prompts, responses, tokens, and tool/agent calls; useful vendor implementation reference."
+    },
+    {
+      "label": "q6-r29",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Reasoning provenance and behavioral analytics do not visibly address OTel conventions."
+    },
+    {
+      "label": "q6-r30",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "semantic_conventions",
+        "spans",
+        "tool_calls"
+      ],
+      "uncertain": false,
+      "rationale": "Greptime article explains trace continuity across MCP tool calls; relevant instrumentation background, not official convention source."
+    },
+    {
+      "label": "q7-r00",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "MedRAGChecker directly evaluates claim-level evidence support in biomedical RAG; strong method lead, although details of its benchmark are not visible."
+    },
+    {
+      "label": "q7-r01",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": true,
+      "rationale": "Citation-verification card describes ranking evidence snippets by relevance to the cited claim; specific method detail but secondary source."
+    },
+    {
+      "label": "q7-r02",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "Issue proposes checking whether cited source passages support manuscript claims and gives an example claim; practical design lead, not study."
+    },
+    {
+      "label": "q7-r03",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "support",
+        "contradiction",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "DeepSciVerify explicitly targets scientific claim-citation alignment and situates benchmark methods including SCitance; direct research lead with method context."
+    },
+    {
+      "label": "q7-r04",
+      "lead": 0,
+      "visible": 2,
+      "facets": [
+        "support"
+      ],
+      "uncertain": false,
+      "rationale": "Writing guide gives general advice for using evidence in arguments, not systems or benchmarks for claim verification."
+    },
+    {
+      "label": "q7-r05",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "Peerify benchmarks peer-review claim verification; directly related method, though claim scope is manuscript evidence rather than cited scientific passages."
+    },
+    {
+      "label": "q7-r06",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "contradiction",
+        "support"
+      ],
+      "uncertain": false,
+      "rationale": "ConRAG explicitly handles conflicting evidence in RAG, useful for contradiction methods but not citation alignment specifically."
+    },
+    {
+      "label": "q7-r07",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "contradiction",
+        "support"
+      ],
+      "uncertain": true,
+      "rationale": "Paper addresses multi-source disagreement in claim verification; relevant contradiction method, but not specifically scientific citations."
+    },
+    {
+      "label": "q7-r08",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "CiteVQA identifies wrong-passage attribution despite correct answers; strong adjacent evidence-attribution benchmark lead."
+    },
+    {
+      "label": "q7-r09",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "support",
+        "contradiction",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "Biomedical claim-verification study evaluates supported, contradicted, and unaddressed labels and generated evidence; direct methods/benchmark lead."
+    },
+    {
+      "label": "q7-r10",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "Systematization of autonomous research verification is relevant overview, but the card has no snippet detail."
+    },
+    {
+      "label": "q7-r11",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "SciCiteVal is a multi-domain scientific citation-verification dataset, directly matching the requested benchmark type."
+    },
+    {
+      "label": "q7-r12",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "RefVerifier explicitly extracts citation-bearing claims and evaluates claim-support verdicts with explanations; direct method and evaluation details."
+    },
+    {
+      "label": "q7-r13",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "Duplicate RefVerifier entry frames the tool around citation-support checks in software-engineering review; relevant, with less benchmark detail visible."
+    },
+    {
+      "label": "q7-r14",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "Essay argues citations must be checked against supporting passages; useful conceptual framing, not a method or benchmark."
+    },
+    {
+      "label": "q7-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "contradiction",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "AmbiFC studies disagreement when annotators assign contradictory veracity labels to ambiguous claims; useful evaluation context, not citation-specific."
+    },
+    {
+      "label": "q7-r16",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "Issue proposes a frozen set of claim-citation pairs and support categories; useful design sketch, not an evaluated method."
+    },
+    {
+      "label": "q7-r17",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": true,
+      "rationale": "SemanticCite describes evidence-snippet scoring against a citation claim; relevant direct method detail, but secondary result page."
+    },
+    {
+      "label": "q7-r18",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": true,
+      "rationale": "ClaimVer explicitly combines claim verification and evidence attribution; relevant method lead with limited specifics in the excerpt."
+    },
+    {
+      "label": "q7-r19",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "contradiction",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "BioDivergence benchmark examines context-dependent apparent contradictions across biomedical abstracts; useful contradiction evaluation, adjacent domain."
+    },
+    {
+      "label": "q7-r20",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "ClaimVer example demonstrates an explanation tying a claim to contradictory knowledge-graph evidence; useful attribution method pointer."
+    },
+    {
+      "label": "q7-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": true,
+      "rationale": "Post-hoc verifier proposes claim decomposition, retrieval, NLI, and traceable citations; directly relevant method, though excerpt is broad."
+    },
+    {
+      "label": "q7-r22",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "CoVeGAT benchmarks verification of quotations and citations; relevant, but visible detail is limited."
+    },
+    {
+      "label": "q7-r23",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": false,
+      "rationale": "Commercial checker promises exact cited passages for support checks; product lead, not independent research or benchmark."
+    },
+    {
+      "label": "q7-r24",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": true,
+      "rationale": "Peerispect studies claim verification in scientific peer reviews and misalignment with submissions; relevant source type, limited details visible."
+    },
+    {
+      "label": "q7-r25",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "contradiction",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "DeepSciVerify result page names citation-verification benchmark extensions and SCITANCE; strong direct research pointer, though sparse."
+    },
+    {
+      "label": "q7-r26",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "Paper benchmarks rubric LLMs for deep-research source attribution; directly related evaluation question, not solely citation verification."
+    },
+    {
+      "label": "q7-r27",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment"
+      ],
+      "uncertain": true,
+      "rationale": "Scientific claim verification using citation text directly matches the original-method facet; snippet names prior method lineage but is sparse."
+    },
+    {
+      "label": "q7-r28",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "Biomedical verifier generates evidence-based rationales before relation labels and evaluates the framework; direct method detail, though domain-specific."
+    },
+    {
+      "label": "q7-r29",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "Evidence-ledger proposal describes author review and a benchmark combining components; relevant traceability design, less clearly established."
+    },
+    {
+      "label": "q7-r30",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "HALLMARK diagnoses failure modes in citation verifiers; directly useful evaluation lead, with few specifics in the visible snippet."
+    },
+    {
+      "label": "q7-r31",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "support",
+        "contradiction",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "DeepSciVerify excerpt reports contradiction recall and abstract-level review, giving concrete evaluation evidence for citation alignment."
+    },
+    {
+      "label": "q7-r32",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "support",
+        "evaluation"
+      ],
+      "uncertain": true,
+      "rationale": "SURE-RAG focuses on evidence sufficiency and uncertainty in retrieval verification; useful adjacent method, not specifically scientific citations."
+    },
+    {
+      "label": "q7-r33",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "support",
+        "citation_alignment",
+        "evaluation"
+      ],
+      "uncertain": false,
+      "rationale": "FactReview defines support categories for claims in peer review; directly relevant evaluation detail, though its setting is reviewer claims."
+    },
+    {
+      "label": "q8-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "Systematic-review appraisal guide discusses defining the research question to shape evidence work; useful general method source, not stopping criteria."
+    },
+    {
+      "label": "q8-r01",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "uncertainty",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "Research-priority framework references patient, caregiver, and clinician uncertainties; relevant systematic-review gap work."
+    },
+    {
+      "label": "q8-r02",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Multi-criteria decision uncertainty is not about search stopping or evidence coverage."
+    },
+    {
+      "label": "q8-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "Article distinguishes meaningful research gaps from mere absence; useful caution for evidence-gap criteria, not agent stopping methods."
+    },
+    {
+      "label": "q8-r04",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "coverage",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "Scoping review directly examines frameworks linking evidence syntheses to research priorities; strong systematic-review methods source."
+    },
+    {
+      "label": "q8-r05",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "uncertainty"
+      ],
+      "uncertain": true,
+      "rationale": "Fact-checking uncertainty calibration is adjacent but not search stopping or research coverage."
+    },
+    {
+      "label": "q8-r06",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Clinical-code forecasting does not concern research-agent stopping criteria."
+    },
+    {
+      "label": "q8-r07",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "Methods review directly covers ways to identify and display research gaps; relevant systematic-review method lead."
+    },
+    {
+      "label": "q8-r08",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "NCBI systematic-review framework is a direct source lead, but the card shows only an access interstitial."
+    },
+    {
+      "label": "q8-r09",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "Deep research agent paper analyzes stagnation and low-value iterations, useful for stopping/control methods though the snippet lacks a criterion."
+    },
+    {
+      "label": "q8-r10",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "Long-horizon search-agent study diagnoses search failure modes and suggests query formulation; directly relevant agent-search research."
+    },
+    {
+      "label": "q8-r11",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coverage",
+        "evidence_gaps"
+      ],
+      "uncertain": true,
+      "rationale": "Systematic-review results report screening volume and exclusion reasons, offering evidence about search workload rather than a stopping method."
+    },
+    {
+      "label": "q8-r12",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "uncertainty",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "Guide argues gaps should reflect unresolved uncertainty after reviewing evidence; useful conceptual criterion, not agent method."
+    },
+    {
+      "label": "q8-r13",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "coverage",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "Autonomous research-agent survey is relevant background, but this card lacks visible stopping or evidence-gap details."
+    },
+    {
+      "label": "q8-r14",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "POMDP framework directly models context gathering for agentic search under bounded context; strong decision-method lead."
+    },
+    {
+      "label": "q8-r15",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "coverage"
+      ],
+      "uncertain": true,
+      "rationale": "Computational pharmacology agent workflow is domain-specific and does not show search stopping methods."
+    },
+    {
+      "label": "q8-r16",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coverage",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "Auditable deep-research system uses recursive search and rubric-grounded reasoning; useful agent method lead, but stopping criteria are not shown."
+    },
+    {
+      "label": "q8-r17",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "coverage"
+      ],
+      "uncertain": true,
+      "rationale": "Practitioner presentation connects global evidence mapping and gap analysis after systematic review; useful secondary methods guidance."
+    },
+    {
+      "label": "q8-r18",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "stopping",
+        "coverage",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "Guide states coverage and methodological understanding needed before stopping; direct conceptual criteria, but not empirical study."
+    },
+    {
+      "label": "q8-r19",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "stopping",
+        "uncertainty"
+      ],
+      "uncertain": true,
+      "rationale": "Decision-search study reports evidence level and surprise as stopping signals; useful adjacent empirical evidence."
+    },
+    {
+      "label": "q8-r20",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": true,
+      "rationale": "Named methods paper is directly on research gaps, but access-check snippet reveals no method detail."
+    },
+    {
+      "label": "q8-r21",
+      "lead": 0,
+      "visible": 1,
+      "facets": [
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "Molecular optimization agent is unrelated to literature-search stopping despite its iterative search framing."
+    },
+    {
+      "label": "q8-r22",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "uncertainty",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "Guide gives factors for deciding whether a gap matters, including uncertainty and consequences; useful conceptual framework."
+    },
+    {
+      "label": "q8-r23",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "coverage",
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "Psychological-health synthesis reports preliminary one-database scans and remaining uncertainty; useful example of coverage limits."
+    },
+    {
+      "label": "q8-r24",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "uncertainty",
+        "evidence_gaps"
+      ],
+      "uncertain": false,
+      "rationale": "Guide recommends describing what remains uncertain when evidence exists but is insufficient or inconsistent; useful gap reasoning."
+    },
+    {
+      "label": "q8-r25",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "uncertainty"
+      ],
+      "uncertain": false,
+      "rationale": "Paper evaluates uncertainty signals in agent trajectories; relevant uncertainty measurement, but not directly search coverage or stopping."
+    },
+    {
+      "label": "q8-r26",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "stopping",
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "Systematic-review paper explicitly studies statistical stopping criteria and explains recall-related bias; exact methods lead."
+    },
+    {
+      "label": "q8-r27",
+      "lead": 3,
+      "visible": 2,
+      "facets": [
+        "evidence_gaps",
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "Scoping review surveys methods to identify, prioritize, and display research gaps; direct systematic-review methods source."
+    },
+    {
+      "label": "q8-r28",
+      "lead": 3,
+      "visible": 3,
+      "facets": [
+        "coverage"
+      ],
+      "uncertain": false,
+      "rationale": "Environmental Evidence guidance explicitly calls for comprehensive, documented searches and reporting unavoidable coverage gaps; direct primary methods guidance."
+    },
+    {
+      "label": "q8-r29",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "evidence_gaps"
+      ],
+      "uncertain": true,
+      "rationale": "Book chapter citation signals research-gap identification but excerpt gives no method beyond a cited example."
+    },
+    {
+      "label": "q9-r00",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "mitigation",
+        "adaptation"
+      ],
+      "uncertain": true,
+      "rationale": "Article names mitigation and adaptation strategies, with renewable energy, carbon sinks, and resilience examples; broad useful overview."
+    },
+    {
+      "label": "q9-r01",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation"
+      ],
+      "uncertain": true,
+      "rationale": "Title identifies a focused study of climate impacts on water demand and adaptation; no substantive content is shown."
+    },
+    {
+      "label": "q9-r02",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Review concerns ecosystem services and climate vulnerability, and defines mitigation; useful focused review lead."
+    },
+    {
+      "label": "q9-r03",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Research article focuses on Australian livestock and names temperature, water, pasture, and disease impacts alongside adaptation/mitigation."
+    },
+    {
+      "label": "q9-r04",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Repository description signals climate findings across the requested themes, but provides no research substance and is not a study."
+    },
+    {
+      "label": "q9-r05",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Workshop volume title and description cover integrated assessments across impacts and both response areas; older broad reading lead."
+    },
+    {
+      "label": "q9-r06",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Interview title signals climate-health impacts and adaptation policy, but no research content appears in the card."
+    },
+    {
+      "label": "q9-r07",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": true,
+      "rationale": "Air-pollution interventions are not visibly climate-change research."
+    },
+    {
+      "label": "q9-r08",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Study discusses regional mitigation efforts and why adaptation remains necessary as impacts persist; substantive synthesis, though title emphasizes imbalance."
+    },
+    {
+      "label": "q9-r09",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "PubMed review covers all three requested themes but the snippet only describes an agriculture schematic."
+    },
+    {
+      "label": "q9-r10",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Review excerpt describes future mitigation research and climate impacts across socioeconomic and environmental sectors; useful broad lead."
+    },
+    {
+      "label": "q9-r11",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "adaptation",
+        "impacts"
+      ],
+      "uncertain": true,
+      "rationale": "Primary-study title directly concerns farmers' adaptation to climate impacts on sorghum, but no methods or findings are visible."
+    },
+    {
+      "label": "q9-r12",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Systematic review defines adaptation and mitigation and says both are needed; broad but directly relevant synthesis."
+    },
+    {
+      "label": "q9-r13",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "Title identifies a primary study on climate impacts on global food security, but snippet is bibliographic only."
+    },
+    {
+      "label": "q9-r14",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": true,
+      "rationale": "Title identifies a primary study on recent and future climate impacts on vector-borne disease, with no detail visible."
+    },
+    {
+      "label": "q9-r15",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Article excerpt describes adaptation's potential effects on carbon stocks, a specific interaction between response strategies."
+    },
+    {
+      "label": "q9-r16",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Review title spans climate impacts, adaptation, and mitigation in Pakistan; citation-only snippet limits visible evidence."
+    },
+    {
+      "label": "q9-r17",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "FAO report title directly concerns climate adaptation and mitigation challenges, but card snippet appears unrelated current-site text."
+    },
+    {
+      "label": "q9-r18",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Cross-cultural study reports weak evidence on how adaptation focus affects mitigation behavior; relevant empirical interaction."
+    },
+    {
+      "label": "q9-r19",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Working-paper title directly concerns scenarios for impacts, vulnerability, adaptation, and mitigation, but snippet only links a PDF."
+    },
+    {
+      "label": "q9-r20",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Review describes impacts across ecosystems and economy plus mitigation measures and adaptation synergy; substantive broad overview."
+    },
+    {
+      "label": "q9-r21",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "Review describes research shifting toward impacts, vulnerability, adaptation, and mitigation; useful overview across topics."
+    },
+    {
+      "label": "q9-r22",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": true,
+      "rationale": "Climate-health systematic review focuses on gendered vulnerability, a narrow impacts lead without visible evidence detail."
+    },
+    {
+      "label": "q9-r23",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Title directly identifies plant-health impacts and adaptation/mitigation research, but the card has no snippet."
+    },
+    {
+      "label": "q9-r24",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation"
+      ],
+      "uncertain": false,
+      "rationale": "Primary-study title directly covers oyster-aquaculture impacts and adaptation; snippet only gives citation metadata."
+    },
+    {
+      "label": "q9-r25",
+      "lead": 0,
+      "visible": 0,
+      "facets": [],
+      "uncertain": false,
+      "rationale": "Card explicitly says the personal biography provides no climate research evidence."
+    },
+    {
+      "label": "q9-r26",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": true,
+      "rationale": "Climate-health title is a narrow impacts source; no substantive detail appears in the citation snippet."
+    },
+    {
+      "label": "q9-r27",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "mitigation",
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "Scoping review title connects mitigation policy and Indigenous health co-impacts, but card provides no findings."
+    },
+    {
+      "label": "q9-r28",
+      "lead": 1,
+      "visible": 1,
+      "facets": [
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "Overview of climate-health systematic reviews is relevant background but narrower than the three-theme reading list."
+    },
+    {
+      "label": "q9-r29",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "NASA page gives concrete local adaptation measures including flood defenses and heat planning and situates them alongside mitigation."
+    },
+    {
+      "label": "q9-r30",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation",
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "Scoping review excerpt links warning systems and other measures to reduced climate-health morbidity and mortality."
+    },
+    {
+      "label": "q9-r31",
+      "lead": 1,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "impacts"
+      ],
+      "uncertain": true,
+      "rationale": "UNFCCC page gives current adaptation framework context and goal, but does not cover impacts and mitigation broadly."
+    },
+    {
+      "label": "q9-r32",
+      "lead": 2,
+      "visible": 1,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Title identifies plant-health climate impacts and research on both responses; no snippet evidence is visible."
+    },
+    {
+      "label": "q9-r33",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": false,
+      "rationale": "OECD report addresses agricultural impacts, adaptation responses, and emissions mitigation with concrete sector framing."
+    },
+    {
+      "label": "q9-r34",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "impacts",
+        "adaptation",
+        "mitigation"
+      ],
+      "uncertain": true,
+      "rationale": "Review describes climate impacts and mitigation/adaptation across social, economic, and environmental sectors; broad relevant lead."
+    },
+    {
+      "label": "q9-r35",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "adaptation",
+        "mitigation",
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "Article distinguishes mitigation and adaptation and discusses joint approaches; useful conceptual and synthesis lead."
+    },
+    {
+      "label": "q9-r36",
+      "lead": 2,
+      "visible": 3,
+      "facets": [
+        "adaptation",
+        "mitigation",
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "WRI article gives agriculture, forestry, and land-use practices that reduce emissions and improve resilience; specific co-benefit examples."
+    },
+    {
+      "label": "q9-r37",
+      "lead": 2,
+      "visible": 2,
+      "facets": [
+        "mitigation",
+        "adaptation",
+        "impacts"
+      ],
+      "uncertain": false,
+      "rationale": "Government toolkit defines mitigation and adaptation and says both are needed; useful explanatory source, not a research review."
+    }
+  ]
+}

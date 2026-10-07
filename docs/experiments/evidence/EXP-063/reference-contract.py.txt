@@ -1,0 +1,56 @@
+"""Inert source-association admission; semantic correctness needs independent review."""
+import hashlib,json
+FIELDS={'id':80,'title':256,'url':512,'snippet':1200}
+ROW_FIELDS={'card_sha256','lead','visible','facets','uncertain','rationale','anchors','facet_anchors'}
+
+def fingerprint(card):
+    if type(card)is not dict or set(card)!=set(FIELDS):raise ValueError('card-fields')
+    for name,limit in FIELDS.items():
+        if type(card[name])is not str or len(card[name].encode('utf-8'))>limit or (name=='id' and not card[name]):raise ValueError('card-text')
+    return hashlib.sha256(json.dumps(card,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode('utf-8')).hexdigest()
+
+def parse(raw):
+    if type(raw)is not bytes or len(raw)>4000000:raise ValueError('reference-bytes')
+    def pairs(items):
+        result={}
+        for key,value in items:
+            if key in result:raise ValueError('duplicate-json-key')
+            result[key]=value
+        return result
+    def constant(value):raise ValueError('nonfinite-json')
+    return json.loads(raw,object_pairs_hook=pairs,parse_constant=constant)
+
+def check_anchors(card,anchors):
+    if type(anchors)is not list or not anchors:raise ValueError('missing-anchor')
+    seen=set()
+    for anchor in anchors:
+        if type(anchor)is not dict or set(anchor)!={'field','quote'}:raise ValueError('anchor-fields')
+        field,quote=anchor['field'],anchor['quote']
+        if type(field)is not str or field not in {'title','url','snippet'} or type(quote)is not str or not quote.strip() or len(quote.encode('utf-8'))>256 or quote not in card[field]:raise ValueError('wrong-source-anchor')
+        pair=(field,quote)
+        if pair in seen:raise ValueError('duplicate-anchor')
+        seen.add(pair)
+
+def validate(cards,facet_ids,rows):
+    if type(cards)is not list or not 1<=len(cards)<=80:raise ValueError('card-inventory')
+    byid={}
+    for card in cards:
+        fingerprint(card)
+        if card['id'] in byid:raise ValueError('duplicate-card-id')
+        byid[card['id']]=card
+    if type(facet_ids)is not list or len(facet_ids)>4 or any(type(f)is not str or not f for f in facet_ids) or len(set(facet_ids))!=len(facet_ids):raise ValueError('facet-inventory')
+    if type(rows)is not dict or set(rows)!=set(byid):raise ValueError('reference-inventory')
+    normalized={}
+    for cid,card in byid.items():
+        row=rows[cid]
+        if type(row)is not dict or set(row)!=ROW_FIELDS:raise ValueError('reference-fields')
+        if row['card_sha256']!=fingerprint(card):raise ValueError('wrong-source-fingerprint')
+        if any(type(row[key])is not int or not 0<=row[key]<=3 for key in ('lead','visible')):raise ValueError('grade')
+        tags=row['facets']
+        if type(tags)is not list or any(type(f)is not str or f not in facet_ids for f in tags) or len(set(tags))!=len(tags):raise ValueError('facet-tags')
+        if type(row['uncertain'])is not bool or type(row['rationale'])is not str or not row['rationale'].strip():raise ValueError('rationale-or-uncertainty')
+        check_anchors(card,row['anchors'])
+        if type(row['facet_anchors'])is not dict or set(row['facet_anchors'])!=set(tags):raise ValueError('facet-anchor-inventory')
+        for anchors in row['facet_anchors'].values():check_anchors(card,anchors)
+        normalized[cid]={key:row[key] for key in ('lead','visible','facets','uncertain','rationale')}
+    return normalized

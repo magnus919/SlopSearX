@@ -1,0 +1,290 @@
+"""Meaningful synthetic-only offline checks for policy.py.txt; no network access."""
+from pathlib import Path
+import math
+
+namespace = {}
+source = Path(__file__).with_name("policy.py.txt").read_text(encoding="utf-8")
+exec(compile(source, "policy.py.txt", "exec"), namespace)
+
+stable_order = namespace["stable_order"]
+build_round = namespace["build_round"]
+choose_action = namespace["choose_action"]
+final_order = namespace["final_order"]
+
+
+def pool(n=20, facets_n=2):
+    ids = [f"c{i}" for i in range(n)]
+    cards = [{"id": cid, "title": f"Synthetic title {cid}", "url": f"https://fixture.invalid/{cid}", "snippet": f"Synthetic visible snippet for {cid}."} for cid in ids]
+    scores = {cid: float(9 - i / 20) if i < min(10, n) else 6.0 - i / 100 for i, cid in enumerate(ids)}
+    facets = [{"id": f"facet-{i}", "description": f"Visible facet description {i}"} for i in range(facets_n)]
+    nouls = {cid: {i: 0.1 for i in range(facets_n)} for cid in ids}
+    return ids, cards, scores, facets, nouls
+
+
+def raises(call, label):
+    try:
+        call()
+    except (TypeError, ValueError):
+        return
+    raise AssertionError(f"expected rejection: {label}")
+
+
+def raises_reason(call, phrase, label):
+    try:
+        call()
+    except ValueError as exc:
+        assert phrase in str(exc), f"{label}: unexpected rejection reason {exc!r}"
+        return
+    raise AssertionError(f"expected {phrase!r} rejection: {label}")
+
+
+def batch_for(n=20, facets_n=2, nominated=None, protected=(), evicted=(), round_number=1):
+    ids, cards, scores, facets, nouls = pool(n, facets_n)
+    if nominated:
+        for facet_i, candidate_i in enumerate(nominated):
+            for cid in ids:
+                nouls[cid][facet_i] = 0.2
+            if candidate_i is not None:
+                nouls[candidate_i][facet_i] = 0.9
+    request, batch = build_round(cards, "Find useful source leads", facets, scores, nouls,
+                                 ids[:min(10, n)], list(protected), list(evicted), round_number)
+    return ids, cards, scores, facets, nouls, request, batch
+
+
+def values(batch, addition, loss):
+    return {qid: (addition if binding["kind"] == "addition" else loss) for qid, binding in batch["bindings"].items()}
+
+
+# Stable tie order and full-pool validation.
+assert stable_order({"c0": 5, "c1": 5, "c2": 9}, ["c0", "c1", "c2"]) == ["c2", "c0", "c1"]
+raises(lambda: stable_order({"c0": 5}, ["c0", "c1"]), "incomplete Score membership")
+raises(lambda: stable_order({"c0": True}, ["c0"]), "boolean Score")
+raises(lambda: stable_order({"c0": math.nan}, ["c0"]), "nonfinite Score")
+raises(lambda: stable_order({"c0": 10}, ["c0"]), "out-of-range Score")
+raises(lambda: stable_order({"c0": 1, "c1": 2}, ["c0", "c0"]), "duplicate IDs")
+
+# Every removable victim is exposed, including stronger standalone sources.
+ids, cards, scores, facets, nouls, request, batch = batch_for(n=20, facets_n=1, nominated=["c10"])
+assert request is not None
+assert len(batch["proposals"]) == 10
+assert {p["victim_id"] for p in batch["proposals"]} == set(ids[:10])
+assert any(scores[p["victim_id"]] > scores["c9"] for p in batch["proposals"])
+assert batch["nominees"] == [{"candidate_id": "c10", "facet_id": "facet-0", "facet_index": 0}]
+
+# Repeated nominee across facets creates facet-specific additions and one shared loss per pair.
+ids, cards, scores, facets, nouls, request, repeated = batch_for(n=20, facets_n=2, nominated=["c10", "c10"])
+assert len(repeated["proposals"]) == 20
+assert sum(b["kind"] == "addition" for b in repeated["bindings"].values()) == 20
+assert sum(b["kind"] == "loss" for b in repeated["bindings"].values()) == 10
+for p in repeated["proposals"]:
+    assert repeated["bindings"][p["addition_question_id"]]["facet_index"] == p["facet_index"]
+    assert repeated["bindings"][p["loss_question_id"]] == {"kind": "loss", "candidate_id": p["candidate_id"], "victim_id": p["victim_id"]}
+
+# Question wording carries the full swap and question IDs reveal only round/positions/type.
+first = repeated["proposals"][0]
+add = request["questions"][first["addition_question_id"]]["instructions"]
+loss = request["questions"][first["loss_question_id"]]["instructions"]
+for phrase in ("original current selected IDs", "remaining selected IDs", "resulting selected IDs", "facet-0", "Find useful source leads"):
+    assert phrase in add
+for phrase in ("original current selected IDs", "remaining selected IDs", "resulting selected IDs", "any requested facet"):
+    assert phrase in loss
+assert request["questions"][first["addition_question_id"]]["criteria"] == {"true": namespace["ADD_TRUE"], "false": namespace["ADD_FALSE"]}
+assert first["addition_question_id"].startswith("a-r1-c10-v00-f00")
+
+# Three exact-criteria card contrasts are represented as fixture data only; this does
+# not assert or simulate semantic judgments about the cards.
+scenario_ids, scenario_cards, scenario_scores, scenario_facets, scenario_f = pool(20, 1)
+scenario_cards[0]["title"] = "Duplicate lead: same report"
+scenario_cards[0]["snippet"] = "Visible abstract for the same report already represented by c1."
+scenario_cards[1]["title"] = "Existing source: original report"
+scenario_cards[1]["snippet"] = "Visible abstract for the original report."
+scenario_cards[10]["title"] = "Distinct reading lead: complementary study"
+scenario_cards[10]["snippet"] = "Bibliographic record names a visibly complementary study."
+scenario_cards[11]["title"] = "Stronger but redundant: larger review"
+scenario_cards[11]["snippet"] = "Visible abstract indicates greater scope but duplicates the selected review's contribution."
+scenario_scores["c11"] = 9.0
+scenario_f["c10"][0] = scenario_f["c11"][0] = 0.99
+scenario_request, scenario_batch = build_round(scenario_cards, "Find source leads about the topic", scenario_facets, scenario_scores, scenario_f, scenario_ids[:10], [], [], 1)
+scenario_texts = [q["instructions"] for q in scenario_request["questions"].values() if q["type"] == "noul"]
+visible_titles = {c["title"] for c in scenario_request["state"]["candidates"]}
+assert "Duplicate lead: same report" in visible_titles
+assert "Distinct reading lead: complementary study" in visible_titles
+assert "Stronger but redundant: larger review" in visible_titles
+assert all("Mere domain overlap, repeated information or a duplicate lead is not an addition." in t for t in scenario_texts if "Would this exact resulting set add" in t)
+scenario_values = values(scenario_batch, 0.5, 0.1)
+assert choose_action(scenario_values, scenario_batch, scenario_scores, scenario_ids) is None
+
+# The exact two-threshold rule abstains at equality; adjacent representable values behave as specified.
+assert choose_action(values(batch, 0.5, 0.2), batch, scores, ids) is None
+assert choose_action(values(batch, math.nextafter(0.5, 1.0), 0.2), batch, scores, ids) is not None
+assert choose_action(values(batch, 0.9, 0.5), batch, scores, ids) is None
+assert choose_action(values(batch, 0.9, math.nextafter(0.5, 0.0)), batch, scores, ids) is not None
+
+# Different pair answers cannot cross-bind; exact response membership and numeric type are mandatory.
+vals = values(repeated, 0.9, 0.1)
+winner = choose_action(vals, repeated, scores, ids)
+assert winner["candidate_id"] == "c10"
+mutated = dict(repeated)
+mutated["bindings"] = dict(repeated["bindings"])
+mutated["bindings"][first["addition_question_id"]] = dict(mutated["bindings"][first["addition_question_id"]], victim_id="c1")
+raises(lambda: choose_action(vals, mutated, scores, ids), "wrong victim answer association")
+raises(lambda: choose_action({**vals, "extra": 0.9}, repeated, scores, ids), "extra answer ID")
+raises(lambda: choose_action({k: v for k, v in vals.items() if k != first["addition_question_id"]}, repeated, scores, ids), "missing answer ID")
+raises(lambda: choose_action({**vals, first["addition_question_id"]: True}, repeated, scores, ids), "boolean answer")
+raises(lambda: choose_action({**vals, first["addition_question_id"]: math.inf}, repeated, scores, ids), "nonfinite answer")
+raises(lambda: choose_action(vals, {**repeated, "question_ids": repeated["question_ids"][:-1]}, scores, ids), "incomplete question inventory")
+
+# Candidate tie order: higher D candidate, lower D victim, then original positions and facet.
+ids, cards, scores, facets, nouls, request, two_candidates = batch_for(n=20, facets_n=2, nominated=["c10", "c11"])
+all_yes_no = values(two_candidates, 0.9, 0.1)
+selected_action = choose_action(all_yes_no, two_candidates, scores, ids)
+assert selected_action["candidate_id"] == "c10"  # c10 has the higher D Score.
+assert selected_action["victim_id"] == "c9"  # c9 is the lowest D Score among all removable victims.
+assert selected_action["facet_index"] == 0
+
+# Full 80-card worst case: four distinct nominees, ten victims each => exactly 80 questions.
+ids80, cards80, scores80, facets80, nouls80 = pool(80, 4)
+for facet_i, cidx in enumerate((10, 11, 12, 13)):
+    for cid in ids80:
+        nouls80[cid][facet_i] = 0.1
+    nouls80[f"c{cidx}"][facet_i] = 0.99
+request80, batch80 = build_round(cards80, "Bounded purpose for stress fixture", facets80, scores80, nouls80, ids80[:10], [], [], 1)
+assert len(batch80["proposals"]) == 40
+assert len(request80["questions"]) == 80
+assert sum(binding["kind"] == "addition" for binding in batch80["bindings"].values()) == 40
+assert sum(binding["kind"] == "loss" for binding in batch80["bindings"].values()) == 40
+assert len(request80["state"]["candidates"]) == 80
+
+# Eligible floor, excluded low-score/outside and evicted candidates; protected selections are not victims.
+ids, cards, scores, facets, nouls, request, protected_batch = batch_for(n=20, facets_n=1, nominated=["c10"], protected=[f"c{i}" for i in range(10)], evicted=["c10"])
+assert request is None and protected_batch["proposals"] == []
+assert protected_batch["nominees"] == []
+raises(lambda: build_round(cards, "p", facets, scores, nouls, ids[:10], ["c10"], [], 1), "protected outside selection")
+raises(lambda: build_round(cards, "p", facets, scores, nouls, ids[:10], [], ["c9"], 1), "evicted selected ID")
+raises(lambda: build_round(cards, "p", facets, scores, nouls, ids[:10], ["c0"], ["c0"], 1), "protected and evicted")
+
+ids, cards, scores, facets, nouls = pool(20, 1)
+scores["c10"] = 4.999
+nouls["c10"][0] = 1.0
+nouls["c11"][0] = 0.8
+request, floor_batch = build_round(cards, "p", facets, scores, nouls, ids[:10], [], [], 1)
+assert floor_batch["nominees"][0]["candidate_id"] == "c11"
+
+# Nomination ties use higher D then earlier input position; complete facet F inventory is required.
+ids, cards, scores, facets, nouls = pool(20, 1)
+nouls["c10"][0] = nouls["c11"][0] = 0.8
+assert build_round(cards, "p", facets, scores, nouls, ids[:10], [], [], 1)[1]["nominees"][0]["candidate_id"] == "c10"
+raises(lambda: build_round(cards, "p", facets, {**scores, "c10": True}, nouls, ids[:10], [], [], 1), "boolean score")
+raises(lambda: build_round(cards, "p", facets, scores, {**nouls, "c10": {}}, ids[:10], [], [], 1), "missing facet Noul")
+raises(lambda: build_round(cards, "p", facets, scores, {**nouls, "c10": {0: True}}, ids[:10], [], [], 1), "boolean F Noul")
+raises(lambda: build_round(cards, "p", facets, scores, {**nouls, "c10": {0: math.nan}}, ids[:10], [], [], 1), "nonfinite F Noul")
+
+# Empty facets or no eligible candidate produce no question batch; no candidates are clipped.
+ids, cards, scores, facets, nouls = pool(12, 0)
+assert build_round(cards, "p", facets, scores, {}, ids[:10], [], [], 1) == (None, {"bindings": {}, "proposals": [], "nominees": [], "question_ids": []})
+ids, cards, scores, facets, nouls = pool(12, 1)
+scores.update({cid: 4.0 for cid in ids[10:]})
+assert build_round(cards, "p", facets, scores, nouls, ids[:10], [], [], 1)[0] is None
+
+# Projection field overflows reject the complete operation; no clipping or partial card set.
+ids, cards, scores, facets, nouls = pool(12, 1)
+empty_fields = [dict(c) for c in cards]
+empty_fields[0]["title"] = ""
+empty_fields[0]["url"] = ""
+empty_request, empty_batch = build_round(empty_fields, "p", facets, scores, nouls, ids[:10], [], [], 1)
+assert empty_request["state"]["candidates"][0] == empty_fields[0]
+assert empty_batch["proposals"]
+for key, maxlen in namespace["FIELD_LIMITS"].items():
+    oversized = [dict(c) for c in cards]
+    oversized[0][key] = "x" * (maxlen + 1)
+    raises(lambda oversized=oversized: build_round(oversized, "p", facets, scores, nouls, ids[:10], [], [], 1), f"overflow {key}")
+unicode_overflow = [dict(c) for c in cards]
+unicode_overflow[0]["title"] = "é" * 129  # 258 UTF-8 bytes exceeds the registered 256-byte title bound.
+raises(lambda: build_round(unicode_overflow, "p", facets, scores, nouls, ids[:10], [], [], 1), "UTF-8 byte field overflow")
+raises(lambda: build_round(cards, "p" * 4097, facets, scores, nouls, ids[:10], [], [], 1), "purpose overflow")
+raises(lambda: build_round(cards, "p", [{"id": "f" * 65, "description": "x"}], scores, {cid: {0: 0.2} for cid in ids}, ids[:10], [], [], 1), "facet id overflow")
+raises(lambda: build_round(cards, "p", [{"id": "f", "description": "x" * 257}], scores, {cid: {0: 0.2} for cid in ids}, ids[:10], [], [], 1), "facet description overflow")
+ids80, huge, scores80, facets80, nouls80 = pool(80, 4)
+for card in huge:
+    card["snippet"] = "s"
+for facet_i, candidate in enumerate(("c10", "c11", "c12", "c13")):
+    for cid in ids80:
+        nouls80[cid][facet_i] = 0.1
+    nouls80[candidate][facet_i] = 0.99
+
+# Exercise the exact state-byte boundary with default json.dumps spacing. Every source
+# field remains inside its individual UTF-8 byte cap, and source bytes are unchanged.
+def exact_state_request(cards_for_state, target, purpose_value="Purpose"):
+    request0, _ = build_round(cards_for_state, purpose_value, facets80, scores80, nouls80, ids80[:10], [], [], 1)
+    current = len(__import__("json").dumps(request0["state"], ensure_ascii=False).encode("utf-8"))
+    assert current <= target
+    remaining = target - current
+    for card in cards_for_state:
+        for field, limit in (("title", 256), ("url", 512), ("snippet", 1200)):
+            room = limit - len(card[field].encode("utf-8"))
+            take = min(room, remaining)
+            card[field] += "x" * take
+            remaining -= take
+            if remaining == 0:
+                break
+        if remaining == 0:
+            break
+    assert remaining == 0, "synthetic source fields lacked byte capacity to reach boundary"
+    exact_request, _ = build_round(cards_for_state, purpose_value, facets80, scores80, nouls80, ids80[:10], [], [], 1)
+    exact_state = len(__import__("json").dumps(exact_request["state"], ensure_ascii=False).encode("utf-8"))
+    assert exact_state == target
+    return exact_request
+
+
+state_boundary_cards = [dict(c) for c in huge]
+state_exact_request = exact_state_request(state_boundary_cards, namespace["MAX_STATE_BYTES"])
+assert len(__import__("json").dumps(state_exact_request, ensure_ascii=False).encode("utf-8")) <= namespace["MAX_REQUEST_BYTES"]
+state_overflow_cards = [dict(c) for c in state_boundary_cards]
+raises_reason(lambda: build_round(state_overflow_cards, "PurposeX", facets80, scores80, nouls80, ids80[:10], [], [], 1), "complete state exceeds 128000 bytes", "state cap plus one")
+
+# Exercise the request-byte boundary independently: the state remains small, request
+# instructions account for the larger serialized size, and one extra source byte fails.
+request_cards = [{"id": c, "title": "t", "url": "u", "snippet": "s"} for c in ids80]
+request_purpose = "p" * 3400
+request0, _ = build_round(request_cards, request_purpose, facets80, scores80, nouls80, ids80[:10], [], [], 1)
+state0_bytes = len(__import__("json").dumps(request0["state"], ensure_ascii=False).encode("utf-8"))
+request0_bytes = len(__import__("json").dumps(request0, ensure_ascii=False).encode("utf-8"))
+assert state0_bytes < namespace["MAX_STATE_BYTES"]
+request_padding = namespace["MAX_REQUEST_BYTES"] - request0_bytes
+for card in request_cards:
+    room = 1200 - len(card["snippet"].encode("utf-8"))
+    take = min(room, request_padding)
+    card["snippet"] += "x" * take
+    request_padding -= take
+    if request_padding == 0:
+        break
+assert request_padding == 0
+request_exact, _ = build_round(request_cards, request_purpose, facets80, scores80, nouls80, ids80[:10], [], [], 1)
+request_exact_bytes = len(__import__("json").dumps(request_exact, ensure_ascii=False).encode("utf-8"))
+request_exact_state_bytes = len(__import__("json").dumps(request_exact["state"], ensure_ascii=False).encode("utf-8"))
+assert request_exact_bytes == namespace["MAX_REQUEST_BYTES"]
+assert request_exact_state_bytes < namespace["MAX_STATE_BYTES"]
+request_overflow_cards = [dict(c) for c in request_cards]
+request_overflow_cards[0]["snippet"] += "x"
+raises_reason(lambda: build_round(request_overflow_cards, request_purpose, facets80, scores80, nouls80, ids80[:10], [], [], 1), "complete request exceeds 384000 bytes", "request cap plus one")
+ids, cards, scores, facets, nouls = pool(80, 4)
+for card in cards:
+    card["title"] = "T" * 256
+    card["snippet"] = "s" * 1200
+    card["url"] = "https://fixture.invalid/" + "u" * 480
+for facet_i, candidate in enumerate(("c10", "c11", "c12", "c13")):
+    for cid in ids:
+        nouls[cid][facet_i] = 0.1
+    nouls[candidate][facet_i] = 0.99
+raises(lambda: build_round(cards, "p" * 4096, facets, scores, nouls, ids[:10], [], [], 1), "complete request byte cap")
+
+# Round bounds, full stable tail permutation, and membership invariants.
+raises(lambda: build_round(cards, "p", facets, scores, nouls, ids[:10], [], [], 0), "round zero")
+raises(lambda: build_round(cards, "p", facets, scores, nouls, ids[:10], [], [], 5), "round five")
+selected = ids[:10]
+rank = final_order(selected, scores, ids)
+assert len(rank) == len(ids) and set(rank) == set(ids)
+assert rank == [cid for cid in stable_order(scores, ids) if cid in set(selected)] + [cid for cid in stable_order(scores, ids) if cid not in set(selected)]
+raises(lambda: final_order(["unknown"], scores, ids), "foreign final selected ID")
+
+print("PASS: EXP-056 policy offline synthetic fixtures (no provider calls, searches, annotations, or candidate metrics)")

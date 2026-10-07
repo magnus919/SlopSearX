@@ -1,0 +1,195 @@
+"""Offline tests for EXP-078 committed-source admission and stage permits."""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import platform
+import subprocess
+import sys
+import tempfile
+import unittest
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name: str, path: Path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value: object) -> bytes:
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+
+class AdmissionTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="exp078-admission-test-")
+        self.root = Path(self.temp.name) / "repo"
+        self.exp = self.root / "docs/experiments/evidence/EXP-078"
+        self.exp.mkdir(parents=True)
+        self.admission = load("exp078_admission_test", HERE / "admission.py.txt")
+        self._make_committed_fixture()
+        # The fixture module resolves every Git object from the isolated test repo.
+        self.admission.REPO = self.root
+        self.admission.HERE = self.exp
+        self.admission.REG_PATH = "docs/experiments/evidence/EXP-078/registration-integrity.json"
+        self.admission.QUAL_PATH = "docs/experiments/evidence/EXP-078/qualification-integrity.json"
+        self.admission.MANIFEST_PATH = self.exp / "stage-development-manifest.json"
+        self.admission.LEASE_ROOT = Path(self.temp.name) / "leases"
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def _git(self, *args: str) -> bytes:
+        return subprocess.run(["git", *args], cwd=self.root, check=True,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+
+    def _commit(self, message: str) -> str:
+        self._git("add", "-A")
+        self._git("-c", "user.name=EXP-078 tests", "-c", "user.email=exp078-tests@example.invalid",
+                  "commit", "-m", message)
+        return self._git("rev-parse", "HEAD").decode().strip()
+
+    def _make_committed_fixture(self):
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        sources = {
+            "docs/experiments/evidence/EXP-078/admission.py.txt": (HERE / "admission.py.txt").read_bytes(),
+            "docs/experiments/evidence/EXP-078/controller.py.txt": (HERE / "controller.py.txt").read_bytes(),
+            "docs/experiments/evidence/EXP-078/protocol.json": (HERE / "protocol.json").read_bytes(),
+            "docs/experiments/evidence/EXP-078/cohorts.json": (HERE / "cohorts.json").read_bytes(),
+            "docs/experiments/evidence/EXP-078/reuse-input-pins.json": (HERE / "reuse-input-pins.json").read_bytes(),
+        }
+        for relative, raw in sources.items():
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+        protocol_raw = sources["docs/experiments/evidence/EXP-078/protocol.json"]
+        cohorts_raw = sources["docs/experiments/evidence/EXP-078/cohorts.json"]
+        source_hashes = {name: sha(raw) for name, raw in sources.items()}
+        manifest = {"schema": "exp078-stage-manifest/1", "stage": "development",
+                    "protocol_sha256": sha(protocol_raw), "cohorts_sha256": sha(cohorts_raw),
+                    "ordered_task_ids": [f"d{i}" for i in range(1, 14)],
+                    # Excludes the manifest and registration/qualification metadata:
+                    # the committed manifest digest is recorded externally in the qualification.
+                    "source_files": source_hashes}
+        manifest_raw = canonical(manifest)
+        (self.exp / "stage-development-manifest.json").write_bytes(manifest_raw)
+        self.qualified_revision = self._commit("fixture qualified source")
+        environment = {"python_implementation": platform.python_implementation(),
+                       "python_version": platform.python_version()}
+        deps = dict(self.admission.PINNED_DEPENDENCIES)
+        registration = {"schema": "exp078-registration/1", "status": "registered",
+                        "source_files": source_hashes}
+        registration_raw = canonical(registration)
+        qualification = {"schema": "exp078-qualification/1", "qualified": True,
+                         "qualified_source_revision": self.qualified_revision,
+                         "files": source_hashes, "environment": environment, "dependencies": deps,
+                         "protocol_sha256": sha(protocol_raw), "cohorts_sha256": sha(cohorts_raw),
+                         "stage_manifest_sha256": sha(manifest_raw),
+                         "input_bundle_sha256": "fixture-no-bundle"}
+        (self.exp / "registration-integrity.json").write_bytes(registration_raw)
+        (self.exp / "qualification-integrity.json").write_bytes(canonical(qualification))
+        self._commit("fixture registration and qualification")
+        qraw = (self.exp / "qualification-integrity.json").read_bytes()
+        self.source_integrity = {"synthetic": False, "qualification_sha256": sha(qraw),
+                                 "registration_sha256": sha(registration_raw),
+                                 "qualified_source_revision": self.qualified_revision,
+                                 "protocol_sha256": sha(protocol_raw), "cohorts_sha256": sha(cohorts_raw),
+                                 "input_pins_sha256": sha(
+                                     sources["docs/experiments/evidence/EXP-078/reuse-input-pins.json"]),
+                                 "environment": environment, "dependencies": deps}
+        self.qualification_raw = qraw
+
+    def _new_clock(self, output: Path):
+        output.mkdir(mode=0o700)
+        return self.admission.create_stage_clock(output, self.qualified_revision)
+
+    def test_committed_closure_clock_binding_and_expiry(self):
+        proof = self.admission.verify_closure(self.source_integrity, self.qualification_raw)
+        self.assertEqual(proof["qualified_source_revision"], self.qualified_revision)
+        self.assertEqual(proof["files_verified"], 5)
+        with self.assertRaisesRegex(self.admission.AdmissionError, "qualification-not-committed-head"):
+            self.admission.verify_closure(self.source_integrity, self.qualification_raw + b" ")
+        wrong_environment = dict(self.source_integrity,
+                                 environment={"python_implementation": "Other", "python_version": "0"})
+        with self.assertRaisesRegex(self.admission.AdmissionError, "python-environment-mismatch"):
+            self.admission.verify_closure(wrong_environment, self.qualification_raw)
+        output = Path(self.temp.name) / "clock"
+        clock, raw, digest = self._new_clock(output)
+        manifest_raw = (self.exp / "stage-development-manifest.json").read_bytes()
+        accepted = self.admission._active_clock(raw, self.admission.strict_json(manifest_raw), sha(manifest_raw),
+            proof["protocol_sha256"], proof["cohorts_sha256"], self.qualified_revision)
+        self.assertEqual(accepted["stage_id"], clock["stage_id"])
+        bad = dict(clock, protocol_sha256="0" * 64)
+        with self.assertRaisesRegex(self.admission.AdmissionError, "stage-clock-binding"):
+            self.admission._active_clock(canonical(bad), self.admission.strict_json(manifest_raw), sha(manifest_raw),
+                proof["protocol_sha256"], proof["cohorts_sha256"], self.qualified_revision)
+        started = datetime.now(timezone.utc) - timedelta(hours=9)
+        expired = dict(clock, stage_started_utc=started.isoformat().replace("+00:00", "Z"),
+                       stage_deadline_utc=(started + timedelta(hours=8)).isoformat().replace("+00:00", "Z"))
+        with self.assertRaisesRegex(self.admission.AdmissionError, "stage-clock-inactive"):
+            self.admission._active_clock(
+                canonical(expired), self.admission.strict_json(manifest_raw), sha(manifest_raw),
+                proof["protocol_sha256"], proof["cohorts_sha256"], self.qualified_revision)
+        # The source/hash gate catches local edits even when qualification bytes are unchanged.
+        pinned = self.exp / "protocol.json"
+        original = pinned.read_bytes()
+        pinned.write_bytes(original + b" ")
+        with self.assertRaisesRegex(self.admission.AdmissionError, "qualified-source-hash-or-dirty-tree"):
+            self.admission.verify_closure(self.source_integrity, self.qualification_raw)
+
+    def test_stage_lease_is_stable_across_fresh_clock_and_phase_permits_are_one_shot(self):
+        first_dir = Path(self.temp.name) / "run-one"
+        first_clock = self._new_clock(first_dir)
+        cap = self.admission.admit_live(first_dir, self.source_integrity, self.qualification_raw, None)
+        permit = self.admission.consume_capability(cap)
+        with self.assertRaisesRegex(self.admission.AdmissionError, "live-capability-invalid-or-used"):
+            self.admission.consume_capability(cap)
+        phase = self.admission.acquire_phase(permit, "selector", first_dir, first_clock[1])
+        self.admission.require_phase(phase, first_clock[1], first_dir)
+        self.admission.require_phase(phase, first_clock[1], first_dir)
+        with self.assertRaisesRegex(self.admission.AdmissionError, "stage-already-admitted"):
+            self.admission.acquire_phase(permit, "selector", first_dir, first_clock[1])
+        second_dir = Path(self.temp.name) / "run-two"
+        second_clock = self._new_clock(second_dir)
+        self.assertNotEqual(first_clock[2], second_clock[2])
+        with self.assertRaisesRegex(self.admission.AdmissionError, "stage-already-admitted"):
+            self.admission.admit_live(second_dir, self.source_integrity, self.qualification_raw, None)
+
+    def test_controller_keeps_one_shared_admission_module_identity(self):
+        controller = load("exp078_controller_test", HERE / "controller.py.txt")
+        controller.REPO = self.root
+        controller.HERE = self.exp
+        suffix = str(id(self))
+        shared_name = "exp078_admission_shared_" + suffix
+        first = controller.load(shared_name, "admission.py.txt")
+        again = controller.load(shared_name, "admission.py.txt")
+        self.assertIs(first, again)
+        first.LEASE_ROOT = Path(self.temp.name) / "leases"
+        clock = self._new_clock(Path(self.temp.name) / "run")
+        capability = first.admit_live(Path(self.temp.name) / "run", self.source_integrity,
+                                      self.qualification_raw, None)
+        permit = first.consume_capability(capability)
+        phase = first.acquire_phase(permit, "capture", Path(self.temp.name) / "run", clock[1])
+        self.assertIsNotNone(phase)
+        isolated = controller.load("exp078_admission_isolated_" + suffix, "admission.py.txt")
+        with self.assertRaisesRegex(isolated.AdmissionError, "live-capability-invalid-or-used"):
+            isolated.consume_capability(capability)
+
+
+if __name__ == "__main__":
+    unittest.main()

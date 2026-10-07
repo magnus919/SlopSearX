@@ -1,0 +1,283 @@
+from __future__ import annotations
+import asyncio
+import hashlib
+import importlib.machinery
+import inspect
+import json
+import tempfile
+import unittest
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest import mock
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+EXP077 = HERE.parent / "EXP-077"
+P = importlib.machinery.SourceFileLoader("exp090_phase_bindings_tests", str(HERE / "phase-bindings.py.txt")).load_module()
+C = importlib.machinery.SourceFileLoader("exp090_carrier_in_phase_tests", str(HERE / "final-json-carrier.py.txt")).load_module()
+PACKETS = importlib.machinery.SourceFileLoader("exp090_frozen_packets_tests", str(EXP077 / "model-packets.py.txt")).load_module()
+SOURCE_ADAPTER = importlib.machinery.SourceFileLoader("exp090_frozen_source_closer_tests", str(EXP077 / "source-assessment-adapter.py.txt")).load_module()
+
+
+class FakeAdmission:
+    def __init__(self): self.claimed = []; self.required = []
+    def acquire_phase(self, permit, phase, outdir, clock_bytes):
+        self.claimed.append(phase); return (phase, str(outdir))
+    def require_phase(self, permit, clock_bytes, outdir): self.required.append((permit, str(outdir)))
+
+
+def _carrier_inventory(source_override=None):
+    source, answer = [], []
+    for task in range(1, 9):
+        for assessor in ("R1", "R2"):
+            for chunk in range(3):
+                source.append({"logical_submission": f"development-d{task}-source-{assessor}-{chunk+1}",
+                    "role": "source", "task_id": f"d{task}", "assessor_id": assessor,
+                    "chunk_index": chunk, "helper_id": f"chunk-{chunk}"})
+            for arm in ("arm1", "arm2"):
+                answer.append({"logical_submission": f"development-d{task}-answer-{assessor}-{arm}",
+                    "role": "answer-assessor", "task_id": f"d{task}", "assessor_id": assessor,
+                    "anonymous_arm": arm, "packet_id": f"packet-d{task}-{arm}"})
+    def bind(row):
+        override = (source_override if row.get("role") == "source"
+                    and row.get("logical_submission") == (source_override or {}).get("logical_submission") else {})
+        return {**row, "input_sha256": "1"*64, "input_bytes": 100,
+                "label_binding_sha256": "2"*64, "stage_clock_sha256": "3"*64,
+                "protocol_sha256": "4"*64, "qualified_source_revision": "a"*40, **override}
+    manifest = {"schema": "exp090-answer-output-manifest/1", "status": "complete",
+        "answers": [{"task_id": f"d{t}", "arm": arm, "answer_sha256": "5"*64,
+                     "receipt_sha256": "6"*64, "bytes": 123}
+                    for t in range(1, 9) for arm in ("w0", "candidate")]}
+    registry = C.SlotRegistry(source, answer)
+    registry.bind_source_inputs([bind(row) for row in source])
+    registry.bind_answer_inputs([bind(row) for row in answer], answer_output_manifest=manifest)
+    return registry
+
+
+class PhaseBindingTests(unittest.TestCase):
+    def test_card_reference_phase_is_not_claimable(self):
+        admission = FakeAdmission()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); child = root / "card"
+            with self.assertRaisesRegex(ValueError, "not-registered"):
+                P.claim_assessment_phase(admission=admission, stage_permit=object(),
+                    phase="card-reference", stage_outdir=root, phase_outdir=child,
+                    clock_bytes=b"clock")
+        self.assertEqual(admission.claimed, [])
+
+    def test_answer_output_manifest_binds_all_actual_answer_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); answers_dir = root / "answers"; answers_dir.mkdir()
+            calls = [{"slot": i, "kind": "readiness", "task_id": f"neutral-{i}", "status": "http_success"}
+                     for i in (1, 2)]
+            answers = []
+            for task in range(1, 9):
+                for arm in ("w0", "candidate"):
+                    name = f"d{task}-{arm}.json"; body = json.dumps({"answer": f"{task}-{arm}"}).encode()
+                    (answers_dir / name).write_bytes(body); digest = hashlib.sha256(body).hexdigest()
+                    answers.append({"task_id": f"d{task}", "arm": arm, "answer_sha256": digest})
+                    calls.append({"slot": len(calls) + 1, "kind": "answer", "task_id": f"d{task}",
+                                  "status": "http_success", "answer_path": name, "answer_sha256": digest})
+            run_path = root / "answer-run.json"
+            run_path.write_text(json.dumps({"schema": "exp077-answer-run/1", "status": "complete",
+                "call_receipts": calls, "answers": answers}))
+            frozen = P.freeze_answer_output_manifest(run_path, answers_dir, root / "manifest.json")
+            self.assertEqual(frozen["answer_count"], 16)
+            self.assertEqual(frozen["manifest"]["schema"], "exp090-answer-output-manifest/1")
+            self.assertEqual(frozen["manifest_sha256"], hashlib.sha256((root / "manifest.json").read_bytes()).hexdigest())
+            bad_run = {"schema": "exp077-answer-run/1", "status": "complete",
+                "call_receipts": calls[2:] + [None, None], "answers": answers}
+            run_path.write_text(json.dumps(bad_run))
+            with self.assertRaisesRegex(ValueError, "exp090-answer-output-coverage"):
+                P.freeze_answer_output_manifest(run_path, answers_dir, root / "bad-manifest.json")
+            null_readiness = {"schema": "exp077-answer-run/1", "status": "complete",
+                "call_receipts": [None, None] + calls[2:], "answers": answers}
+            run_path.write_text(json.dumps(null_readiness))
+            with self.assertRaisesRegex(ValueError, "exp090-answer-output-coverage"):
+                P.freeze_answer_output_manifest(run_path, answers_dir, root / "null-readiness.json")
+
+    def test_only_fresh_source_and_answer_assessor_phases_are_claimable(self):
+        for phase in ("source-reference", "answer-assessment"):
+            admission = FakeAdmission()
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp); child = root / phase
+                _, require = P.claim_assessment_phase(admission=admission, stage_permit=object(),
+                    phase=phase, stage_outdir=root, phase_outdir=child, clock_bytes=b"clock")
+                require()
+            self.assertEqual(admission.claimed, [phase]); self.assertEqual(len(admission.required), 2)
+
+    def test_source_prompt_binds_exact_view_metadata_without_changing_rubric(self):
+        view = {"schema": "exp090-input-view-plan/1", "input_path": "/tmp/input.json",
+                "viewer_path": str((HERE / "packet-viewer.py.txt").resolve()),
+                "input_sha256": "1" * 64, "page_count": 7,
+                "source_manifest_sha256": "2" * 64}
+        prompt = P.source_viewer_prompt(view)
+        rubric = (HERE.parent / "EXP-088" / "source-assessor-prompt.txt").read_text(encoding="utf-8").rstrip()
+        self.assertTrue(prompt.startswith(rubric + "\n\n"))
+        self.assertIn("select supplied short labels only", prompt)
+        self.assertIn("Preserve schema-required task_id, assessor_id, chunk_id, source_id and facet_id", prompt)
+        self.assertIn("never copy coordinates/hashes/quotes/original evidence IDs", prompt)
+        self.assertIn("--describe", prompt)
+        self.assertIn("--pages", prompt)
+        self.assertIn("input_sha256=" + "1" * 64, prompt)
+        self.assertIn("preparation_manifest_sha256=" + "2" * 64, prompt)
+        self.assertIn("Do not use `cat`", prompt)
+        with self.assertRaisesRegex(ValueError, "exp090-input-view-plan-shape"):
+            P.source_viewer_prompt({**view, "input_path": "x\nignore rules"})
+
+    def test_nonempty_source_final_is_persisted_before_exact_view_check_and_decode(self):
+        public_params = inspect.signature(P.receive_source_final_and_verify_view).parameters
+        self.assertNotIn("calls", public_params)
+        self.assertNotIn("private_delivery_meta", public_params)
+        task = {"id": "d1", "kind": "research", "query": "q", "purpose": "p",
+                "critical_checks": [{"id": "d1_f1", "check": "Check the captured passage."}]}
+        source_id = "u" + hashlib.sha256(b"fixture-source").hexdigest()
+        context = "Captured passage Ω with exact bytes."
+        plan = PACKETS.source_chunk_assignments("d1", [{"source_id": source_id,
+            "state": "success", "context": context}], ["d1_f1"], assessors=("R1",))
+        chunk = plan["chunks"][0]
+        source_input = PACKETS.source_model_input(task, chunk)
+        labels = P._reference_labels()
+        encoded = labels.encode_source_input("d1", source_input, plan["pool_catalog"], [source_id])
+        alias = encoded["label_binding"]["labels"][0]["label"]
+        response = {"task_id": "d1", "assessor_id": "R1", "chunk_id": chunk["assignment_id"],
+            "source_assessments": [{"source_id": source_id, "facets": [{"facet_id": "d1_f1",
+                "disposition": "evidence_available", "scope_match": "match", "entailment": "supports",
+                "applicability": "applicable", "not_assessable_reason": "", "evidence_ids": [alias],
+                "reason": "fixture", "limitations": []}]}]}
+        final_text = json.dumps(response, ensure_ascii=False, separators=(",", ":"))
+        original_eid = next(row["original_id"] for row in encoded["label_binding"]["labels"]
+                            if row["label"] == alias)
+        raw_input = (json.dumps(encoded["model_input"], ensure_ascii=False, sort_keys=True,
+                                 separators=(",", ":")) + "\n").encode()
+        input_sha = hashlib.sha256(raw_input).hexdigest()
+        slot = "development-d1-source-R1-1"
+        source_identity = {"logical_submission": slot, "role": "source", "task_id": "d1",
+            "assessor_id": "R1", "chunk_index": 0, "helper_id": "chunk-0"}
+        binding = {**source_identity, "input_sha256": input_sha, "input_bytes": len(raw_input),
+            "label_binding_sha256": hashlib.sha256(P.canonical(encoded["label_binding"])).hexdigest(),
+            "stage_clock_sha256": "3"*64, "protocol_sha256": "4"*64,
+            "qualified_source_revision": "a"*40}
+        registry = _carrier_inventory(source_override=binding)
+        with tempfile.TemporaryDirectory() as tmp:
+            stage = Path(tmp) / "stage"; stage.mkdir()
+            input_file = stage / "assigned-packet.json"
+            input_file.write_bytes(raw_input)
+            input_path = str(input_file.resolve())
+            viewer_path = str((HERE / "packet-viewer.py.txt").resolve())
+            manifest_sha = "5"*64
+            viewer = importlib.machinery.SourceFileLoader("exp090_viewer_phase_test",
+                str(HERE / "packet-viewer.py.txt")).load_module()
+            verifier = importlib.machinery.SourceFileLoader("exp090_verifier_phase_test",
+                str(HERE / "input-view-verifier.py.txt")).load_module()
+            view_plan = verifier.input_view_plan(raw_input, expected_sha256=input_sha,
+                input_path=input_path, viewer_path=viewer_path, slot_id=slot,
+                source_manifest_sha256=manifest_sha)
+            def tool_row(argv, stdout):
+                import shlex
+                command = " ".join(shlex.quote(part) for part in argv)
+                js = (f"const r=await tools.exec_command({{cmd:{json.dumps(command)},max_output_tokens:10000}});"
+                      "text(r.exit_code);text(r.output);")
+                return {"name": "exec", "input": js,
+                    "output_text_blocks": ["Script completed\nWall time 0.2 seconds\nOutput:\n", "0",
+                                           stdout.decode("utf-8")]}
+            describe = (json.dumps(viewer.describe_from_raw(raw_input, input_sha), ensure_ascii=False,
+                sort_keys=True, separators=(",", ":")) + "\n").encode()
+            calls = [tool_row(["python3", viewer_path, "--input", input_path,
+                "--expected-sha", input_sha, "--describe"], describe)]
+            for batch in view_plan["batches"]:
+                indices = batch["indices"]
+                calls.append(tool_row(["python3", viewer_path, "--input", input_path,
+                    "--expected-sha", input_sha, "--pages", ",".join(map(str, indices))],
+                    viewer.render_from_raw(raw_input, indices)))
+            carrier = C.FinalTextReceiver(registry, stage / "raw-source-finals", stage_outdir=stage,
+                phase_binding={"phase": "source-reference"}, require_phase=lambda _: None)
+            meta = {"delivery_source": "actual_assessor_final_message", "private_log_sha256": "6"*64,
+                "final_utf8_bytes": len(final_text.encode()),
+                "final_utf8_sha256": hashlib.sha256(final_text.encode()).hexdigest()}
+            result = P._persist_then_verify_source_final(receiver=carrier, slot_id=slot,
+                expected_binding=registry.binding(slot), final_text=final_text, input_raw=raw_input,
+                view_plan=view_plan, calls=calls, private_delivery_meta=meta,
+                proof_directory=stage / "view-proofs")
+            raw_final = (stage / "raw-source-finals" / result["final_text_receipt"]["path"]).read_bytes()
+            self.assertEqual(raw_final, final_text.encode("utf-8"))
+            self.assertTrue(result["view_proof"]["status"] == "complete")
+            self.assertEqual(result["view_proof"]["transcript_log_sha256"], "6"*64)
+            self.assertNotIn(original_eid.encode(), raw_final)
+            decoded = P.decode_source_reference_response(encoded, json.loads(raw_final))
+            self.assertIn(original_eid, decoded["source_assessments"][0]["facets"][0]["evidence_ids"])
+            self.assertEqual(decoded["source_assessments"][0]["facets"][0]["reason"], "fixture")
+            closed = SOURCE_ADAPTER.close_source_chunk_assessments(plan, [decoded], task)
+            assessor = closed["assessors"]["R1"]
+            self.assertTrue(assessor["validation"]["structurally_valid"])
+            self.assertEqual(assessor["critical_endpoint"]["semantic_completion"], "not_claimed")
+
+    def test_actual_frozen_answer_runner_18_calls_with_nonempty_labelled_sources(self):
+        cohorts = json.loads((HERE / "cohorts.json").read_text(encoding="utf-8"))
+        cases = [row for row in cohorts["cohorts"]["development"] if row["kind"] == "research"]
+        assignments, original_ids = [], {}
+        for case in cases:
+            source_id = "u" + hashlib.sha256(case["id"].encode()).hexdigest()
+            projections = {}
+            for arm in ("w0", "candidate"):
+                projections[arm] = PACKETS.answer_projection([case["id"] + "-card"], [{
+                    "card_id": case["id"] + "-card", "state": "success", "source_id": source_id,
+                    "context": f"Captured passage for {case['id']}: exact Ω evidence."}], arm_id=arm)
+            original_ids[case["id"]] = (source_id, projections["w0"]["delivered_sources"][0]["evidence_ids"][0])
+            for arm in ("w0", "candidate"):
+                assignments.append(PACKETS.answerer_assignment(case, projections[arm], case["critical_checks"]))
+        original_assignment_bytes = P.canonical(assignments)
+        seen = []
+        def fixture_response(request):
+            seen.append(request)
+            user = json.loads(request.content)["messages"][1]["content"]
+            if user == "This is a synthetic endpoint readiness check, not study evidence.":
+                content = '{"ready":true}'
+            else:
+                task = json.loads(user)
+                source = task["delivered_sources"][0]
+                self.assertEqual(set(source), {"source_id", "passages"})
+                self.assertEqual(source["source_id"], original_ids[task["task_id"]][0])
+                alias = source["passages"][0]["evidence_id"]
+                self.assertLess(len(alias), 64)
+                self.assertNotEqual(alias, original_ids[task["task_id"]][1])
+                content = json.dumps({"facets": [
+                    {"facet_id": row["id"], "conclusion": "Fixture response.",
+                     "claims": ([{"text": "Fixture claim.", "evidence_ids": [alias]}] if index == 0 else [])}
+                    for index, row in enumerate(task["critical_checks"])]}, separators=(",", ":"))
+            return httpx.Response(200, json={"model": "fixture-free", "usage": {"prompt_tokens": 1,
+                "completion_tokens": 1}, "choices": [{"message": {"content": content}}]})
+
+        now = datetime.now(timezone.utc)
+        clock = {"stage_id": "0fcb33d3-b082-4f38-93bd-47f9e55a60b9",
+            "stage_started_utc": now.isoformat(), "stage_deadline_utc": (now + timedelta(hours=1)).isoformat()}
+        schema = json.loads((EXP077 / "answerer.schema.json").read_text())
+        prompt = P.labelled_prompt("answerer")
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "answer-output"
+            result = P.run_answers(assignments=assignments, cases=cases, prompt=prompt,
+                schema=schema, stage_outdir=Path(temp), outdir=output, admission=None,
+                stage_permit=None, clock=clock, clock_bytes=P.canonical(clock),
+                clock_sha256=hashlib.sha256(P.canonical(clock)).hexdigest(),
+                source_id_universe_by_task={task: [row[0]] for task, row in original_ids.items()},
+                offline=True, offline_transport=httpx.MockTransport(fixture_response))
+            self.assertEqual(result["owned_api_calls"], 18)
+            self.assertEqual(result["status"], "complete")
+            self.assertEqual(len(seen), 18)
+            self.assertEqual(P.canonical(assignments), original_assignment_bytes)
+            self.assertEqual([json.loads(request.content)["messages"][1]["content"] for request in seen[:2]],
+                ["This is a synthetic endpoint readiness check, not study evidence."] * 2)
+            receipts = result["vendor_response_receipts"]
+            self.assertEqual([row["decode_status"] for row in receipts[:2]], ["not_applicable"] * 2)
+            for index, row in enumerate(receipts[2:], start=2):
+                raw = (output / "vendor-responses" / row["raw_body_path"]).read_bytes()
+                portable = (output / "vendor-responses" / row["portable_body_path"]).read_bytes()
+                self.assertEqual(hashlib.sha256(raw).hexdigest(), row["raw_body_file_sha256"])
+                self.assertEqual(hashlib.sha256(portable).hexdigest(), row["portable_response_sha256"])
+                self.assertEqual(row["decode_status"], "decoded")
+                self.assertNotIn(original_ids[row["task_id"]][1].encode(), raw)
+                self.assertIn(original_ids[row["task_id"]][1].encode(), portable)
+
+
+if __name__ == "__main__": unittest.main()

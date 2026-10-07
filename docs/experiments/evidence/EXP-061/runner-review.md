@@ -1,0 +1,7 @@
+# EXP-061 bounded independent review
+
+GPT-6 Luna independently reviewed the paired coordinator and owned normal CLI. The parent verified execution of 19 offline tests and a retained owned fixture run across all 21 operations with 127 child processes/receipts and 21 physical shared baselines. These are synthetic transport results, not model quality or production latency evidence.
+
+The first pass found wrong IDs in uninvoked suffix fallbacks and loss of successful arm observations during paired rollback. Both were corrected before qualification; regression tests cover suffix membership, second-arm failure, W0 failure, unknown E usage and rejection before W0 resource admission. The second pass found those blockers resolved and no remaining blocking issue in source provenance, shared-W0 accounting, exact request schedule, bounded transport, registration/qualification checks, token reservations, deadlines or atomic fallback. The parent additionally corrected analysis of a suffix whose W0 was never invoked; it now yields inconclusive rather than raising a missing-field error.
+
+Frozen EXP-059 cannot expose internal discarded action records after E failure. Available observations and counts are retained; unavailable action records are explicitly marked. No missing records are invented, and no failed pair can support adoption. Live execution was not enabled during review. No provider or search calls were made.

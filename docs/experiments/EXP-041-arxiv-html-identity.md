@@ -1,0 +1,29 @@
+# EXP-041: Recognize arXiv HTML publication identity
+
+## Registration
+
+- State: registered. Owner: repository maintainer; 2026-10-04. Issues #527 and #516.
+- Problem: the current publication parser identifies abstract/PDF routes but not official HTML routes. Saved research cards for arXiv 2501.09136 occupy two top-ten slots as abstract and HTML representations. This is an exact URL-identity defect, independent of fallible relevance labels. [arXiv documents HTML as another paper representation](https://info.arxiv.org/about/accessible_HTML.html).
+- Baseline: main 13acdf2cc59af764f3f71103885e4f2dd4c3bc42; scholarly.py SHA-256 8443732adee9065de3b7ab3d0a2c11b0e903538a8dc474d1ec6a3785cd10de7f. Existing grouping, Presence/RRF and shared service remain authoritative.
+- Candidate: recognize valid `html/<arxiv-id>[vN]` paths on existing allowlisted arXiv hosts. Reuse existing identifier/base/version grouping and representative policy. Do not invent DOI links, merge titles, fetch pages, infer publication metadata, or alter ordinal ranking. Version the scholarly policy cache identity.
+- Evidence class: exhaustive deterministic correctness and regression checks on a fixed fixture matrix. Primary outcome: all declared equivalent HTML/abstract/PDF pairs group as one work with all original members preserved, for both rankers. Required useful effect: correct all previously unrecognized valid HTML fixture pairs with zero false merges in negative fixtures. No bootstrap or population-quality inference applies.
+- Fixed cases: modern versioned and unversioned IDs; legacy identifiers; existing allowlisted hosts; mixed versioned/unversioned representations; explicit older-version query; source metadata conflict; distinct IDs; distinct Zenodo DOI with identical titles; malformed/extra HTML path segments; HTML `.pdf` suffix; deceptive host; oversized version. Include the saved 2501.09136 abstract/HTML pair as an observed regression, using only saved URL/title/snippet fields. Freeze exact fixture file hash before execution.
+- Guards: no source-member loss or duplicate engine votes; preserve explicit-version selection and no invented recency; no input mutation; exact SearXNG wire compatibility and cache round-trip; changed policy cache identity; current service grouping path remains shared by API/MCP/portal. Existing grouping tests and applicable portal contracts must pass.
+- Resource/stopping limits: zero Brave, Jev or engine calls; no live deployment/Hermes changes. One bounded implementation and one required review pass with findings addressed; retain failed checks and repairs. Finish after the fixed comparison plus all required regression/CI/review checks, or report a blocker.
+- Development scope: this is an identified code defect with exhaustive functional expectations, not a fresh relevance experiment. EXP-040 corpus, references, calls and failed decision remain unchanged. Future relevance studies must share identical frozen post-grouping membership between arms; this correction cannot retroactively rescue EXP-040.
+- Commands: run `pytest --no-cov -q tests/test_scholarly.py` against baseline then candidate, retaining exact case outcomes. Run applicable server/formatter/portal/cache tests, the full `pytest --cov=slopsearx --cov=engines --cov-report=term-missing` suite (coverage >=80%), `mypy slopsearx/ engines/`, and `pre-commit run --all-files`; record exact commands/exit codes. Run `graphify update .` after source edits if available. Required CI and substantive Droid review gate implementation merge.
+- Retention: `docs/experiments/evidence/EXP-041/` for sanitized comparison, fixture hashes, commands/results, scope review and outcome. No private paths, addresses, credentials or operational metadata.
+- Portal impact: same result schema and shared grouping; visible duplicate works now collapse with existing representative/member semantics. Add deterministic contract coverage where needed; no UI redesign. No new ADR: correct a recognized-identifier implementation within existing architecture.
+- Decision: supported only if the fixed equivalence matrix and all guards pass; not-supported for deterministic incorrect merges/member losses; inconclusive for missing checks; blocked for external CI/review failures that prevent qualification. A supported result authorizes a reviewed repository fix, not deployment or a research-quality claim.
+
+## Readout
+
+Pending. Registration commit will be recorded in a subsequent append-only entry.
+
+### Functional qualification
+
+Registration commit: `9f737149eae71128fb76abcff2d2be69851bc55a`, merged in #528. The final fixed fixture fails 14 cases on the old module and passes all 55 grouping cases on the candidate. Full suite: 2,333 passed, 57 skipped, 85.41% coverage. Functional outcome supported; runtime PR, required CI and review pending. See [readout](evidence/EXP-041/readout.md) and [qualification](evidence/EXP-041/qualification.json). No provider calls or deployment.
+
+### Delivered
+
+Implementation [#529](https://github.com/magnus919/SlopSearX/pull/529) merged at `80029eb1b85a12a5d407075bf9ce091d0fa33ba0` after all applicable CI and substantive review. Issue #527 is closed. No deployment occurred. The preserved identity-only ranking diagnostic still shows the research grounding gap, supporting a separate prospective coverage experiment rather than revising EXP-040.

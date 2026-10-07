@@ -1,0 +1,15 @@
+{
+  "neutral_behavior_checks": 8,
+  "checks": [
+    "two outside leaders; D-stable fill and complete tail",
+    "all leaders protected before fill including existing low-ranked leader",
+    "one shared leader uses one reservation, no second-best substitution",
+    "Score floor excludes 4.99 and includes exactly 5",
+    "equal low probabilities and no eligible sources leave D unchanged",
+    "unequal low probability remains a relative reservation, not certainty",
+    "probability/Score ties use original input order",
+    "eight cardinalities through80 preserve exact IDs, D order, maxfour insertions and facet-order invariance"
+  ],
+  "new_provider_calls": 0,
+  "new_search_calls": 0
+}

@@ -448,7 +448,7 @@ class TestEnforcementLayer:
 
     async def test_time_range_warning_absent_when_enforced(self, state: McpState) -> None:
         """Prose warnings must not contradict the report: when every selected
-        adapter enforces time_range, no 'not consumed by any adapter' warning."""
+        adapter enforces time_range, no 'not enforced by selected adapters' warning."""
         state.ctx.active_engines = {
             "arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "local"}),
             "brave": _MockEngine("brave", enforced_filters={"time_range": "upstream"}),
@@ -456,10 +456,10 @@ class TestEnforcementLayer:
         result = await t.slopsearx_search_targeted("hello", engines=["arxiv", "brave"], time_range="week")
 
         assert result["enforcement"]["time_range"]["status"] == "enforced"
-        assert not any("time_range" in w and "not consumed" in w for w in result["warnings"])
+        assert not any("time_range" in w and "not enforced" in w for w in result["warnings"])
 
     async def test_time_range_warning_absent_when_partially_enforced(self, state: McpState) -> None:
-        """partially_enforced scopes also must not emit the 'not consumed' warning."""
+        """partially_enforced scopes also must not emit the 'not enforced' warning."""
         state.ctx.active_engines = {
             "arxiv": _MockEngine("arxiv", enforced_filters={"time_range": "upstream"}),
             "duckduckgo": _MockEngine("duckduckgo"),
@@ -467,14 +467,14 @@ class TestEnforcementLayer:
         result = await t.slopsearx_search_targeted("hello", engines=["arxiv", "duckduckgo"], time_range="week")
 
         assert result["enforcement"]["time_range"]["status"] == "partially_enforced"
-        assert not any("time_range" in w and "not consumed" in w for w in result["warnings"])
+        assert not any("time_range" in w and "not enforced" in w for w in result["warnings"])
 
     async def test_time_range_warning_emitted_when_unsupported(self, state: McpState) -> None:
         """The warning stays for genuinely unenforced time_range values."""
         result = await t.slopsearx_search("hello", time_range="month")
 
         assert result["enforcement"]["time_range"]["status"] == "unsupported"
-        assert any("time_range 'month'" in w and "not consumed" in w for w in result["warnings"])
+        assert any("time_range 'month'" in w and "not enforced" in w for w in result["warnings"])
 
 
 class TestModerateSafesearchWarning:

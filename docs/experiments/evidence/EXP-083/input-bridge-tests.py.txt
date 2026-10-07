@@ -1,0 +1,156 @@
+"""Deterministic offline tests for the EXP-083 frozen-input bridge."""
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("exp083_test_bridge", str(HERE / "input-bridge.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+BRIDGE = importlib.util.module_from_spec(spec)
+loader.exec_module(BRIDGE)
+prepare_loader = importlib.machinery.SourceFileLoader(
+    "exp083_test_frozen_exp078_prepare", str(HERE.parent / "EXP-078" / "prepare.py.txt"))
+prepare_spec = importlib.util.spec_from_loader(prepare_loader.name, prepare_loader)
+PREPARE = importlib.util.module_from_spec(prepare_spec)
+prepare_loader.exec_module(PREPARE)
+
+
+def write(path: Path, raw: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(raw)
+
+
+def make_bundle(root: Path) -> Path:
+    for relative in BRIDGE.EXPECTED_FILES:
+        write(root / relative, b"opaque fixture\n")
+    config = b"opaque private configuration receipt fixture\n"
+    write(root / "configuration-binding.json", config)
+    body = b"retained HTTP response fixture\n"
+    write(root / "acquisition/http/http-001.body", body)
+    sidecar = {"query_id":"d12","engine":"github","body_complete":True,
+               "body_truncated":False,"retained_body_sha256":BRIDGE.sha(body)}
+    side_raw = BRIDGE.canonical_json(sidecar)
+    write(root / "acquisition/http/http-001.json", side_raw)
+    clock = {"schema":"exp078-stage-clock/1","stage":"development","stage_id":"stage-old",
+             "stage_manifest_sha256":"a"*64,"protocol_sha256":"b"*64,"cohorts_sha256":"c"*64,
+             "source_revision":"1"*40,"stage_started_utc":"2026-10-06T00:00:00Z",
+             "stage_deadline_utc":"2026-10-06T08:00:00Z","ordered_task_ids":BRIDGE.TASK_IDS}
+    clock_raw=BRIDGE.canonical_json(clock); write(root/"stage-clock.json",clock_raw)
+    d12_result = {"url":BRIDGE.TARGET,"title":"cosign","content":"fixture"}
+    query={"schema":"exp078-corrective-query-receipt/1","task_id":"d12","query":"cosign",
+           "target_url":BRIDGE.TARGET,"engine":"github","status":"complete",
+           "effective_pool_source":"corrective_github_query","physical_http_calls":1,
+           "target_acquired":True,"partial":False,"all_unresponsive":False,"cached":False,
+           "stage_id":"stage-old","stage_clock_digest":BRIDGE.sha(clock_raw),
+           "original_d12_receipt_sha256":"d"*64,
+           "http_calls":[{"query_id":"d12","engine":"github","dispatched":True,
+             "body_complete":True,"body_truncated":False,"failure":None,"status_code":200,
+             "call_index":1,"sidecar_path":"http-001.json","body_path":"http-001.body",
+             "sidecar_sha256":BRIDGE.sha(side_raw),"retained_body_sha256":BRIDGE.sha(body),
+             "response_body_sha256":BRIDGE.sha(body),"retained_body_bytes":len(body)}],
+           "results":[d12_result]}
+    query_raw=BRIDGE.canonical_json(query); write(root/"acquisition/corrective-query.json",query_raw)
+    cards={}; source={}; native={}; pools={}
+    for task in BRIDGE.TASK_IDS:
+        card_id="g"+task
+        url=BRIDGE.TARGET if task=="d12" else f"https://example.invalid/{task}"
+        card={"id":card_id,"url":url,"title":task,"snippet":"fixture"}
+        cards[task]=[card]; source[task]={card_id:"u"+task}; native[task]={card_id:{"url":url}}
+        pools[task]={"cards":[card],"natural_count":1,"merged_count":1}
+    # Keep the fixture's corrected d12 exactly aligned with the pinned 078
+    # card projection, native row and deterministic source identity.
+    d12_card = PREPARE.project_card("d12", 0, d12_result)
+    cards["d12"] = [d12_card]
+    source["d12"] = {d12_card["id"]: PREPARE._source_id(d12_result, "d12", 0)}
+    native["d12"] = {d12_card["id"]: d12_result}
+    pools["d12"] = {"cards":[d12_card],"natural_count":1,"merged_count":1}
+    effective={"schema":"exp078-effective-acquisition/1","stage":"development","synthetic":False,
+        "pools":pools,"source_id_by_card_id":source,"native_results_by_card_id":native,
+        "historical_d12":{"receipt_sha256":"d"*64,"target_present":False,"effective":False},
+        "corrective_query_sha256":BRIDGE.sha(query_raw)}
+    write(root/"effective-acquisition.json",BRIDGE.canonical_json(effective))
+    final={"schema":"exp078-correction-run/1","status":"complete","fatal_stop":None,
+           "physical_http_calls":1,"target_acquired":True,"original_d12_modified":False,
+           "corrective_query_receipt_sha256":BRIDGE.sha(query_raw),"stage_id":"stage-old",
+           "stage_clock_sha256":BRIDGE.sha(clock_raw)}
+    write(root/"acquisition/stage-final.json",BRIDGE.canonical_json(final))
+    write(root/"development-terminal.json",BRIDGE.canonical_json({"schema":"exp078-development-terminal/1",
+        "status":"inconclusive","stage_clock_sha256":BRIDGE.sha(clock_raw)}))
+    write(root/"acquisition/reused-inputs.json",BRIDGE.canonical_json({
+        "schema":"exp078-reused-inputs-reference/1","historical_d12_receipt_sha256":"d"*64,
+        "d12_effective_pool_source":"corrective_github_query","no_predecessor_bytes_modified":True}))
+    return root
+
+
+def write_pins(root: Path, path: Path) -> dict:
+    rows=[]
+    for relative in sorted(BRIDGE.EXPECTED_FILES):
+        raw=(root/relative).read_bytes()
+        rows.append({"path":relative,"sha256":BRIDGE.sha(raw),"bytes":len(raw)})
+    config=next(row["sha256"] for row in rows if row["path"]=="configuration-binding.json")
+    pins={"schema":"exp083-reused-input-pins/1","status":"registered_input_provenance",
+          "files":rows,"file_count":len(rows),"total_bytes":sum(x["bytes"] for x in rows),
+          "runtime_config_receipt_sha256":config}
+    path.write_bytes(BRIDGE.canonical_json(pins))
+    return pins
+
+
+class InputBridgeTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory(prefix="exp083-input-")
+        self.root=Path(self.temp.name)/"bundle"; self.root.mkdir()
+        self.pins=Path(self.temp.name)/"pins.json"
+        make_bundle(self.root); write_pins(self.root,self.pins)
+
+    def tearDown(self): self.temp.cleanup()
+
+    def test_all_thirteen_pools_and_prior_correction_bind(self):
+        result=BRIDGE.prepare_recovery_inputs(self.root,self.pins)
+        self.assertEqual(result["schema"],"exp083-recovery-inputs/1")
+        self.assertEqual(set(result["pools"]["pools"]),set(BRIDGE.TASK_IDS))
+        self.assertEqual(result["quality_credit_from_exp078"],False)
+        self.assertEqual(result["runtime_config_receipt_sha256"],BRIDGE.sha((self.root/"configuration-binding.json").read_bytes()))
+
+    def test_mutated_input_rejected_even_if_path_is_same(self):
+        (self.root/"effective-acquisition.json").write_bytes(b"mutated")
+        with self.assertRaisesRegex(BRIDGE.InputError,"bundle-hash-mismatch"):
+            BRIDGE.prepare_recovery_inputs(self.root,self.pins)
+
+    def test_extra_file_rejected(self):
+        (self.root/"extra.json").write_text("{}")
+        with self.assertRaisesRegex(BRIDGE.InputError,"bundle-inventory-mismatch"):
+            BRIDGE.verify_input_bundle(self.root,self.pins)
+
+    def test_mutated_correction_body_rejected(self):
+        (self.root/"acquisition/http/http-001.body").write_bytes(b"different")
+        write_pins(self.root,self.pins)
+        with self.assertRaisesRegex(BRIDGE.InputError,"correction-body-binding"):
+            BRIDGE.prepare_recovery_inputs(self.root,self.pins)
+
+    def test_unpinned_configuration_receipt_mutation_rejected(self):
+        (self.root/"configuration-binding.json").write_bytes(b"different opaque receipt")
+        with self.assertRaisesRegex(BRIDGE.InputError,"bundle-hash-mismatch"):
+            BRIDGE.verify_input_bundle(self.root,self.pins)
+
+    def test_corrected_d12_pool_must_match_complete_frozen_projection(self):
+        effective_path = self.root / "effective-acquisition.json"
+        effective = BRIDGE.strict_json(effective_path.read_bytes())
+        card = effective["pools"]["d12"]["cards"][0]
+        self.assertEqual(card, PREPARE.project_card("d12", 0,
+            effective["native_results_by_card_id"]["d12"][card["id"]]))
+        self.assertEqual(len(BRIDGE.prepare_recovery_inputs(self.root, self.pins)["pools"]["pools"]), 13)
+
+        # Even a completely re-pinned bundle cannot substitute or alter d12's
+        # result projection while retaining the correction receipt claim.
+        card["snippet"] += " altered"
+        effective_path.write_bytes(BRIDGE.canonical_json(effective))
+        write_pins(self.root, self.pins)
+        with self.assertRaisesRegex(BRIDGE.InputError, "d12-pool-projection"):
+            BRIDGE.prepare_recovery_inputs(self.root, self.pins)
+
+
+if __name__ == "__main__": unittest.main()

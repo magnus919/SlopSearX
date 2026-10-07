@@ -1,0 +1,7 @@
+# Independent source-association review
+
+GPT-6 Luna independently confirmed four q1 reference-A rationales describe other supplied cards. The pipeline-aware regression-testing paper rationale is attached to the official Bazel overview; the repository-intelligence paper rationale is attached to a monorepo tools comparison; the affected-package guide rationale is attached to a tool-readiness article; and the Bazel background rationale is attached to the repository-intelligence paper. The private blinded label rows already contain these associations, so this is an assessor association/grounding error rather than publication remapping.
+
+Reference A is not a trustworthy independent quality/coverage reference for this cohort. Its favorable and unfavorable computed gate results must not support adoption or further tuning. Preserve the sealed bytes and raw analyses; do not relabel after observing scores to rescue an experiment. Build a new, source-bound, independently checked reference process prospectively. The inspected q4/q7 reference-B displacement rows were grounded in their shown cards, so those bounded regressions cannot be dismissed as the same error. This does not certify all of B.
+
+Request-byte identity, recorded scores, rank permutations, usage, exact membership and repeat/rotation diagnostics do not use reference labels and remain valid descriptive mechanism evidence. Corrected references or metadata cannot turn these exposed model runs into untouched confirmation.

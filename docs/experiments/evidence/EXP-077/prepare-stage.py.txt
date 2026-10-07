@@ -1,0 +1,492 @@
+"""Inert bridge from one frozen acquisition stage to capture and answer inputs.
+
+This module performs no acquisition, scraping, selector call, or model call.
+It maps existing complete native result receipts into the strict capture and
+selector contracts, then joins an already completed capture and selector run
+into the existing answer-packet contract. Original query receipts stay in the
+bridge bundle; card projection uses the production Jev UTF-8 helpers verbatim.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+class BridgeError(ValueError):
+    """A frozen input did not match the adjacent EXP-077 stage contract."""
+
+
+def digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                       allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise BridgeError("duplicate-json-key")
+            out[key] = value
+        return out
+
+    def constant(_):
+        raise BridgeError("non-finite-json")
+
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+
+
+def _load(name: str, path: Path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise BridgeError("source-loader")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+CAPTURE = _load("exp077_bridge_capture", HERE / "capture-runner.py.txt")
+SELECTOR = _load("exp077_bridge_selector", HERE / "selector-runner.py.txt")
+PACKETS = _load("exp077_bridge_model_packets", HERE / "model-packets.py.txt")
+ANSWER = _load("exp077_bridge_answer", HERE / "answer-runner.py.txt")
+SOURCE_POLICY = _load("exp077_pinned_source_policy",
+                      HERE.parent / "source-use-next-stage" / "capture-runner.py.txt")
+
+from slopsearx import rerank as _rerank  # noqa: E402
+from slopsearx.service import _rerank_text, _rerank_url  # noqa: E402
+
+
+def _safe_read(path: Path) -> bytes:
+    if path.is_symlink() or not path.is_file():
+        raise BridgeError("input-file-type")
+    return path.read_bytes()
+
+
+def _global_id(task_id: str, index: int, result: dict) -> str:
+    # A Jev card is an occurrence in one complete task pool, not a source URL.
+    # Keep repeated URLs and fragment variants as distinct pool members.
+    return "g" + digest(canonical_json({"task_id": task_id, "result_index": index,
+                                        "result": result}))
+
+
+def _source_id(result: dict, task_id: str, index: int) -> str:
+    url = result.get("url")
+    if isinstance(url, str) and url:
+        return "u" + digest(url.split("#", 1)[0].encode("utf-8"))
+    return "r" + digest(canonical_json({"task_id": task_id, "result_index": index, "result": result}))
+
+
+def project_card(task_id: str, index: int, result: dict) -> dict:
+    """Apply the deployed Jev ID and UTF-8 projection, without altering source metadata."""
+    if type(result) is not dict:
+        raise BridgeError("native-result-shape")
+    title, content, url = result.get("title"), result.get("content"), result.get("url")
+    if not isinstance(title, str) or not isinstance(content, str):
+        raise BridgeError("native-result-text-type")
+    if url is not None and not isinstance(url, str):
+        raise BridgeError("native-result-url-type")
+    raw_url = url if isinstance(url, str) else ""
+    return {"id": _global_id(task_id, index, result),
+            "url": _rerank_url(raw_url),
+            "title": _rerank_text(title, _rerank.MAX_TITLE_BYTES),
+            "snippet": _rerank_text(content, _rerank.MAX_SNIPPET_BYTES)}
+
+
+def _expected_task_rows(cohorts: dict, stage: str) -> list[dict]:
+    try:
+        rows = cohorts["cohorts"][stage]
+    except (KeyError, TypeError):
+        raise BridgeError("cohort-stage-missing") from None
+    if type(rows) is not list or len(rows) != 13 or len({r.get("id") for r in rows if type(r) is dict}) != 13:
+        raise BridgeError("cohort-stage-shape")
+    return rows
+
+
+def prepare_stage(acquisition_dir: Path, stage: str, *, cohorts: dict | None = None) -> dict:
+    """Convert exact acquire.py stage receipts into capture and selector inputs."""
+    if stage not in {"development", "confirmation"}:
+        raise BridgeError("stage")
+    root = Path(acquisition_dir)
+    if root.is_symlink() or not root.is_dir():
+        raise BridgeError("acquisition-directory")
+    protocol = strict_json(_safe_read(HERE / "protocol.json"))
+    cohort_obj = cohorts if cohorts is not None else strict_json(_safe_read(HERE / "cohorts.json"))
+    tasks = _expected_task_rows(cohort_obj, stage)
+    final_raw = _safe_read(root / "stage-final.json")
+    clock_raw = _safe_read(root / "stage-clock.json")
+    final = strict_json(final_raw)
+    stage_clock = strict_json(clock_raw)
+    clock_fields = {"schema", "stage_id", "stage", "stage_started_utc", "stage_deadline_utc",
+                    "stage_manifest_sha256", "protocol_sha256", "cohorts_sha256", "source_revision",
+                    "ordered_task_ids"}
+    if (type(final) is not dict or final.get("schema") != "exp077-acquisition-run/1"
+            or final.get("status") != "complete" or final.get("synthetic") is not False
+            or final.get("stage") != stage):
+        raise BridgeError("acquisition-not-complete-live-stage")
+    if (type(stage_clock) is not dict or set(stage_clock) != clock_fields
+            or canonical_json(stage_clock) != clock_raw or stage_clock.get("schema") != "exp077-stage-clock/1"
+            or stage_clock.get("stage") != stage or final.get("stage_clock") != stage_clock
+            or final.get("stage_clock_digest") != digest(clock_raw)
+            or final.get("stage_manifest_sha256") != stage_clock.get("stage_manifest_sha256")
+            or final.get("stage_id") != stage_clock.get("stage_id")
+            or final.get("source_revision") != stage_clock.get("source_revision")):
+        raise BridgeError("acquisition-stage-clock-binding")
+    if (final.get("protocol_sha256") != stage_clock.get("protocol_sha256")
+            or final.get("cohorts_sha256") != stage_clock.get("cohorts_sha256")
+            or stage_clock.get("protocol_sha256") != digest(_safe_read(HERE / "protocol.json"))
+            or stage_clock.get("cohorts_sha256") != digest(_safe_read(HERE / "cohorts.json"))):
+        raise BridgeError("acquisition-design-binding")
+    if (final.get("cohort_task_count") != len(tasks)
+            or final.get("completed_logical_searches") != len(tasks)
+            or type(final.get("eligibility")) is not dict
+            or final["eligibility"].get("eligible_for_next_stage") is not True):
+        raise BridgeError("acquisition-stage-ineligible")
+    if final.get("registration_sha256") is None or final.get("qualification_sha256") is None:
+        raise BridgeError("acquisition-integrity-binding")
+
+    query_receipts, artifact_hashes = [], {"stage-final.json": digest(final_raw), "stage-clock.json": digest(clock_raw)}
+    inventory_sources, inventory_source_ids, selector_pools, selector_outcomes = [], {}, {}, {}
+    native_records = {}
+    expected_engines = protocol["acquisition"]
+    for index, task in enumerate(tasks, 1):
+        name = f"query-{index:02d}-{task['id']}.json"
+        raw = _safe_read(root / name)
+        receipt = strict_json(raw)
+        artifact_hashes[name] = digest(raw)
+        if (type(receipt) is not dict or receipt.get("task_id") != task["id"]
+                or receipt.get("kind") != task["kind"] or receipt.get("query") != task["query"]
+                or receipt.get("purpose") != task["purpose"] or receipt.get("target_url") != task.get("target_url")
+                or receipt.get("stage_id") != stage_clock["stage_id"]
+                or receipt.get("stage_manifest_sha256") != stage_clock["stage_manifest_sha256"]
+                or receipt.get("stage_clock_digest") != digest(clock_raw)
+                or receipt.get("qualification_sha256") != final.get("qualification_sha256")):
+            raise BridgeError("query-receipt-stage-binding")
+        results = receipt.get("results")
+        if (type(results) is not list or receipt.get("post_group_pool_count") != len(results)
+                or receipt.get("partial") is not False or receipt.get("all_unresponsive") is not False
+                or receipt.get("deadline_exceeded") is not False or receipt.get("cached") is not False):
+            raise BridgeError("query-receipt-incomplete")
+        engine_names = (expected_engines["research_engines"] if task["kind"] == "research"
+                        else expected_engines["navigation_engines"])
+        if receipt.get("selected_engines") != engine_names:
+            raise BridgeError("query-engine-scope")
+        outcome_rows = receipt.get("engine_outcomes")
+        if type(outcome_rows) is not list:
+            raise BridgeError("query-engine-outcome-coverage")
+        returned_engines = [row.get("engine") for row in outcome_rows if type(row) is dict]
+        if returned_engines != engine_names:
+            raise BridgeError("query-engine-outcome-coverage")
+        outcomes = {row["engine"]: row for row in outcome_rows}
+        if any(row.get("status") != "ok" for row in outcome_rows):
+            raise BridgeError("query-engine-incomplete")
+        cards, records = [], []
+        for result_index, native in enumerate(results):
+            card = project_card(task["id"], result_index, native)
+            source_id = _source_id(native, task["id"], result_index)
+            global_id = card["id"]
+            native_url = native.get("url")
+            normalized_url = native_url.split("#", 1)[0] if isinstance(native_url, str) else None
+            if source_id not in inventory_source_ids:
+                inventory_source_ids[source_id] = normalized_url
+                inventory_sources.append({"source_id": source_id, "url": native_url,
+                                          "title": native.get("title")})
+            elif inventory_source_ids[source_id] != normalized_url:
+                raise BridgeError("global-id-url-collision")
+            cards.append(card)
+            records.append({"global_id": global_id, "source_id": source_id,
+                            "result_index": result_index, "native": native, "card": card})
+        selector_pools[task["id"]] = {"cards": cards, "natural_count": len(results), "merged_count": len(results)}
+        selector_outcomes[task["id"]] = outcomes
+        native_records[task["id"]] = records
+        query_receipts.append(receipt)
+
+    capture_inventory = {
+        "schema": "exp077-acquired-pools/1", "synthetic": False,
+        "stage": stage, "stage_id": stage_clock["stage_id"],
+        "stage_clock": stage_clock,
+        "stage_clock_digest": digest(clock_raw),
+        "stage_manifest_sha256": stage_clock["stage_manifest_sha256"],
+        "registration_sha256": final["registration_sha256"],
+        "qualification_sha256": final["qualification_sha256"],
+        "sources": inventory_sources,
+        # Exact parsed receipts retain all native SearchResult metadata, engine
+        # outcomes, HTTP diagnostics and source-to-pool membership.
+        "native_query_receipts": query_receipts,
+        "source_global_ids_by_task": {task["id"]: [{"global_id": r["global_id"], "source_id": r["source_id"]}
+                                                      for r in native_records[task["id"]]]
+                                       for task in tasks},
+        "acquisition_artifact_sha256": artifact_hashes,
+        "acquisition_eligibility": final["eligibility"],
+    }
+    capture_raw = canonical_json(capture_inventory)
+    CAPTURE.validate_inventory(capture_raw)
+    selector_acquisition = {
+        "schema": SELECTOR.P.SCHEMA, "stage": stage,
+        "pools": selector_pools, "engine_outcomes": selector_outcomes,
+        "acquisition_receipt": {
+            "stage_manifest_sha256": stage_clock["stage_manifest_sha256"],
+            "stage_clock": stage_clock, "stage_clock_digest": digest(clock_raw)},
+    }
+    return {"schema": "exp077-stage-bridge/1", "stage": stage,
+            "stage_id": stage_clock["stage_id"], "synthetic": False,
+            "stage_clock": stage_clock,
+            "stage_manifest_sha256": stage_clock["stage_manifest_sha256"],
+            "stage_clock_digest": digest(clock_raw),
+            "acquisition_artifact_sha256": artifact_hashes,
+            "capture_inventory": capture_inventory,
+            "selector_acquisition": selector_acquisition,
+            "native_records_by_task": native_records}
+
+
+def _captured_markdown(capture_root: Path, row: dict, expected_source: dict) -> str:
+    if row.get("status") != "captured" or row.get("accepted") is not True:
+        raise BridgeError("capture-not-success")
+    rel = row.get("raw_path")
+    if type(rel) is not str or Path(rel).is_absolute() or ".." in Path(rel).parts:
+        raise BridgeError("capture-raw-path")
+    capture_root = Path(capture_root)
+    path = capture_root / rel
+    try:
+        path.resolve(strict=True).relative_to(capture_root.resolve(strict=True))
+    except (OSError, ValueError):
+        raise BridgeError("capture-raw-path") from None
+    if path.is_symlink() or not path.is_file():
+        raise BridgeError("capture-raw-file")
+    payload = strict_json(_safe_read(path))
+    if (type(payload) is not dict or set(payload) != {"source_id", "url", "markdown"}
+            or payload.get("source_id") != expected_source["source_id"]
+            or payload.get("url") != expected_source.get("url")
+            or not isinstance(payload.get("markdown"), str)):
+        raise BridgeError("capture-raw-binding")
+    markdown = payload["markdown"]
+    raw_text = markdown.encode("utf-8")
+    if row.get("captured_sha256") != digest(raw_text) or row.get("captured_bytes") != len(raw_text):
+        raise BridgeError("capture-raw-digest")
+    if row.get("assessment_context_sha256") != digest(markdown[:8000].encode("utf-8")):
+        raise BridgeError("capture-context-digest")
+    return markdown
+
+
+def _apply_source_policy(projection: dict | None, openings: list[dict], urls: dict[str, str | None]) -> dict | None:
+    """Apply the exact prior shared-source dedup/challenge/video selection policy."""
+    seen_urls, usable, nonvideo, video = set(), [], [], []
+    by_card = {row["card_id"]: row for row in openings}
+    for row in openings:
+        sid = row.get("source_id")
+        url = urls.get(sid)
+        key = url.split("#", 1)[0] if isinstance(url, str) else None
+        if key is not None and key in seen_urls:
+            row.update(state="duplicate", context=None)
+            continue
+        if key is not None:
+            seen_urls.add(key)
+        if row.get("state") == "success" and SOURCE_POLICY.markdown_challenge(row.get("context")):
+            row.update(state="refused", context=None)
+        if row.get("state") == "success":
+            usable.append(row["card_id"])
+            (video if url and SOURCE_POLICY.video_url(url) else nonvideo).append(row["card_id"])
+
+    selected = set((nonvideo + video)[:5])
+    if projection is None:
+        return None
+    delivered = []
+    for card_id in (nonvideo + video)[:5]:
+        row = by_card[card_id]
+        context = row["context"][:8000]
+        delivered.append({"source_id": row["source_id"], "context": context,
+                          "context_sha256": hashlib.sha256(context.encode("utf-8")).hexdigest(),
+                          "characters": len(context), "truncated": len(context) < len(row["context"]),
+                          "original_characters": len(row["context"])})
+    for outcome in projection["opening_outcomes"]:
+        if outcome.get("state") != "success":
+            continue
+        outcome["delivered"] = outcome["card_id"] in selected
+        if outcome["delivered"]:
+            outcome["projected_characters"] = len(by_card[outcome["card_id"]]["context"][:8000])
+            outcome.pop("not_delivered_reason", None)
+        else:
+            outcome["not_delivered_reason"] = "source_policy_priority_limit"
+            outcome.pop("projected_characters", None)
+    contexts = {row["source_id"]: row["context"] for row in delivered}
+    if contexts:
+        catalog = PACKETS.C.build([{"source_id": sid, "context": value}
+                                   for sid, value in contexts.items()])
+    else:
+        catalog = {"version": 1, "sources": {}, "passages": {}}
+    for source in delivered:
+        source["evidence_ids"] = [eid for eid, passage in catalog["passages"].items()
+                                  if passage["source_id"] == source["source_id"]]
+    projection["delivered_sources"] = delivered
+    projection["assigned_source_ids"] = list(contexts)
+    projection["catalog"] = catalog
+    projection["catalog_sha256"] = PACKETS._hash(PACKETS._canonical(catalog))
+    return projection
+
+
+def build_answer_packet(bridge: dict, capture_result: dict, capture_root: Path, selector_run: dict,
+                        *, cohorts: dict | None = None) -> dict:
+    """Build the fixed 16 research-arm assignments from shared frozen capture."""
+    if type(bridge) is not dict or bridge.get("schema") != "exp077-stage-bridge/1":
+        raise BridgeError("bridge-schema")
+    stage = bridge["stage"]
+    cohort_obj = cohorts if cohorts is not None else strict_json(_safe_read(HERE / "cohorts.json"))
+    tasks = [task for task in _expected_task_rows(cohort_obj, stage) if task["kind"] == "research"]
+    inventory = bridge["capture_inventory"]
+    inventory_raw = canonical_json(inventory)
+    _, inventory_rows = CAPTURE.validate_inventory(inventory_raw)
+    if (type(capture_result) is not dict or capture_result.get("schema") != "exp077-source-capture/1"
+            or capture_result.get("synthetic") is not False or capture_result.get("status") != "complete"):
+        raise BridgeError("capture-stage-incomplete")
+    clock = capture_result.get("stage_clock")
+    if (type(clock) is not dict or clock.get("stage_id") != bridge.get("stage_id")
+            or clock.get("stage_manifest_sha256") != bridge.get("stage_manifest_sha256")
+            or clock.get("stage_clock_digest") != bridge.get("stage_clock_digest")
+            or capture_result.get("inventory_count") != len(inventory_rows)):
+        raise BridgeError("capture-stage-binding")
+    captures = capture_result.get("captures")
+    if type(captures) is not list or len(captures) != len(inventory_rows):
+        raise BridgeError("capture-inventory-coverage")
+    source_rows = {row["source_id"]: row for row in inventory_rows}
+    capture_by_id = {}
+    for row in captures:
+        if (type(row) is not dict or row.get("source_id") not in source_rows
+                or row["source_id"] in capture_by_id):
+            raise BridgeError("capture-source-identity")
+        expected = source_rows[row["source_id"]]
+        if row.get("url_sha256") != digest((expected.get("url") or "").encode("utf-8")):
+            raise BridgeError("capture-source-url-binding")
+        capture_by_id[row["source_id"]] = row
+    if set(capture_by_id) != set(source_rows):
+        raise BridgeError("capture-source-coverage")
+    if (type(selector_run) is not dict or selector_run.get("status") != "complete"
+            or selector_run.get("stage") != stage
+            or selector_run.get("stage_manifest_sha256") != bridge.get("stage_manifest_sha256")
+            or selector_run.get("stage_clock_digest") != bridge.get("stage_clock_digest")
+            or selector_run.get("source_acquisition_sha256") !=
+            digest(SELECTOR.P.wire(bridge["selector_acquisition"]))):
+        raise BridgeError("selector-stage-binding")
+    op_by_case = {op.get("case"): op for op in selector_run.get("operations", [])
+                  if type(op) is dict and op.get("variant") == "base"}
+    raw_records = bridge.get("native_records_by_task")
+    global_to_source = {r["global_id"]: r["source_id"]
+                        for records in raw_records.values() for r in records}
+    assignments = []
+    for task in tasks:
+        op = op_by_case.get(task["id"])
+        pool = bridge["selector_acquisition"]["pools"][task["id"]]["cards"]
+        expected_ids = [card["id"] for card in pool]
+        if (op is None or op.get("status") != "complete"
+                or op.get("baseline_order_ids") is None or op.get("candidate_order_ids") is None):
+            raise BridgeError("selector-task-incomplete")
+        orders = {"w0": op["baseline_order_ids"], "candidate": op["candidate_order_ids"]}
+        for arm, order in orders.items():
+            if type(order) is not list or len(order) != len(expected_ids) or set(order) != set(expected_ids):
+                raise BridgeError("selector-order-membership")
+            top = order[:10]
+            openings = []
+            native_lookup = {r["global_id"]: r["native"] for r in raw_records[task["id"]]}
+            for card_id in top:
+                native = native_lookup.get(card_id)
+                if native is None:
+                    raise BridgeError("selector-card-source-map")
+                source_id = global_to_source.get(card_id)
+                capture_row = capture_by_id.get(source_id) if source_id else None
+                if (capture_row is not None and capture_row.get("status") == "captured"
+                        and capture_row.get("accepted") is True):
+                    markdown = _captured_markdown(Path(capture_root), capture_row, source_rows[source_id])
+                    openings.append({"card_id": card_id, "source_id": source_id,
+                                     "state": "success", "context": markdown})
+                else:
+                    state = capture_row.get("status", "not_acquired") if capture_row else "not_acquired"
+                    openings.append({"card_id": card_id, "source_id": source_id, "state": state})
+            task_urls = {r["source_id"]: r["native"].get("url") for r in raw_records[task["id"]]}
+            _apply_source_policy(None, openings, task_urls)
+            projection = PACKETS.answer_projection(top, openings, arm_id=arm,
+                max_cards=10, max_successes=5,
+                context_chars=SELECTOR.P.STUDY_PROTOCOL["consumer"]["source_context_character_limit"])
+            projection = _apply_source_policy(projection, openings, task_urls)
+            assignment = PACKETS.answerer_assignment(task, projection, task["critical_checks"])
+            assignments.append(assignment)
+    packet = {"schema": "exp077-answer-packet/1", "synthetic": False,
+              "stage_id": bridge["stage_id"], "stage_clock_digest": bridge["stage_clock_digest"],
+              "stage_manifest_sha256": bridge["stage_manifest_sha256"], "assignments": assignments}
+    answer_schema = ANSWER.validate_schema(_safe_read(HERE / "answerer.schema.json"))
+    ANSWER.validate_packet(canonical_json(packet), answer_schema)
+    return packet
+
+
+def durable_json(path: Path, value: Any) -> dict:
+    """Write one private bridge artifact without overwriting existing output."""
+    path = Path(path)
+    if path.exists() or path.is_symlink() or not path.parent.is_dir():
+        raise BridgeError("output-path")
+    raw = canonical_json(value)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "wb", closefd=False) as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(fd)
+    dir_fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dir_fd)
+    finally:
+        os.close(dir_fd)
+    return {"path": path.name, "sha256": digest(raw), "bytes": len(raw)}
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+    prepare = sub.add_parser("prepare", help="map completed acquire.py receipts to capture and selector inputs")
+    prepare.add_argument("--stage", choices=("development", "confirmation"), required=True)
+    prepare.add_argument("--acquisition-dir", type=Path, required=True)
+    prepare.add_argument("--outdir", type=Path, required=True)
+    answer = sub.add_parser("answer", help="map frozen capture and selector outputs to an answer packet")
+    answer.add_argument("--bridge", type=Path, required=True)
+    answer.add_argument("--capture", type=Path, required=True)
+    answer.add_argument("--capture-dir", type=Path, required=True)
+    answer.add_argument("--selector-run", type=Path, required=True)
+    answer.add_argument("--out", type=Path, required=True)
+    args = parser.parse_args(argv)
+    if args.command == "prepare":
+        result = prepare_stage(args.acquisition_dir, args.stage)
+        if args.outdir.exists() or args.outdir.is_symlink() or not args.outdir.parent.is_dir():
+            raise BridgeError("output-path")
+        args.outdir.mkdir(mode=0o700)
+        durable_json(args.outdir / "bridge.json", result)
+        durable_json(args.outdir / "capture-inventory.json", result["capture_inventory"])
+        durable_json(args.outdir / "selector-acquisition.json", result["selector_acquisition"])
+        print(json.dumps({"status": "prepared", "stage": result["stage"],
+                          "native_tasks": len(result["native_records_by_task"]),
+                          "capture_sources": len(result["capture_inventory"]["sources"]),
+                          "capture_inventory_sha256": digest(canonical_json(result["capture_inventory"]))}))
+        return 0
+    bridge = strict_json(_safe_read(args.bridge))
+    capture_result = strict_json(_safe_read(args.capture))
+    selector_run = strict_json(_safe_read(args.selector_run))
+    packet = build_answer_packet(bridge, capture_result, args.capture_dir, selector_run)
+    durable_json(args.out, packet)
+    print(json.dumps({"status": "packet-prepared", "assignments": len(packet["assignments"]),
+                      "packet_sha256": digest(canonical_json(packet))}))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

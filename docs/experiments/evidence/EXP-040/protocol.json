@@ -1,0 +1,83 @@
+{
+  "schema": "exp040-protocol/1",
+  "prior_result": "EXP-039 not supported; retained unchanged. Revised guard is a new exposed development study.",
+  "candidate": "Exactly EXP-039 D source-selection questions, model jev-1.13.0, explicit caller purpose in state.query; one complete shared-state request, stable descending fractional Score order, no chunks or fusion.",
+  "baseline": "Current W0 keyword-query generic score on first40, stable descending Score then unchanged full tail. Diagnostic source-selection first40 keeps the candidate purpose/rubric fixed to isolate pool expansion.",
+  "primary_queries": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8"
+  ],
+  "reference_sources": {
+    "A": "EXP-039/reference-a.json",
+    "B": "EXP-039/reference-b.json"
+  },
+  "extended_quality_pools": [
+    "cardiac",
+    "research",
+    "evaluation"
+  ],
+  "constructed_only": "constructed80 is a membership, bound, latency and stability stress case; synthetic copies are not independent relevance evidence.",
+  "primary": {
+    "metric": "nDCG@10",
+    "gain": "2**lead_grade-1; ideal over complete eligible pool; stable input ties",
+    "comparison": "complete purpose candidate minus current production baseline",
+    "mean_minimum": 0.03,
+    "bootstrap_lower95_must_exceed": 0,
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 91940,
+    "unit": "query, q1-q8; each reference independently; no card/repeat pooling"
+  },
+  "guards": {
+    "useful_definition": "lead>=2",
+    "maximum_useful_count_loss_per_query": 1,
+    "no_baseline_useful_named_facet_loss": true,
+    "baseline10_useful_requires_candidate_at_least": 9,
+    "extended_per_pool_ndcg_loss_maximum": {
+      "maximum": 0.03,
+      "pools": [
+        "cardiac",
+        "research",
+        "evaluation"
+      ],
+      "reference_rule": "each independent new reference for each listed natural pool; constructed80 excluded from relevance judgments"
+    },
+    "navigation": "all five pinned exact requested targets remain in candidate top3, independent of sparse snippets",
+    "stability": "full-pool candidate top10 set overlap >=0.8 against exact repeat and a rotated state-candidate/question insertion order for every extended pool",
+    "membership": "one exact permutation of all original IDs; no duplicates, omissions or scored prefix plus unscored tail in the candidate",
+    "identity_retention": "diagnostic only; report displaced useful IDs, gains, losses, rationale and facets. Not a gate because improving selection can replace useful sources. No claim that individual displaced sources are redundant."
+  },
+  "limits": {
+    "candidate_count": 80,
+    "candidate_request_bytes": 256000,
+    "baseline_request_bytes": 128000,
+    "query_utf8_bytes": 4096,
+    "title_utf8_bytes": 256,
+    "url_utf8_bytes": 512,
+    "snippet_utf8_bytes": 1200,
+    "response_bytes": 2000000,
+    "remote_http_seconds": 1,
+    "total_transport_seconds": 60,
+    "serial_calls": 48,
+    "retries": 0,
+    "execution_window_hours": 4,
+    "actual_input_token_gate": 2000000,
+    "actual_output_token_gate": 100000,
+    "tokens": "Estimates before dispatch; post-response actual-usage qualification gates, not provider-enforced hard spend ceilings."
+  },
+  "call_plan": {
+    "software": "q1-q9: baseline first40 and complete candidate, 18 calls; q9 climate reported separately",
+    "extended": "four pools: baseline first40, candidate complete, candidate first40 diagnostic, complete repeat and complete rotated; 20 calls",
+    "navigation": "five frozen exact-target tasks, baseline and complete source-selection candidate; 10 calls",
+    "boundary": "one exact 80-card maximum-field ineligible body locally rejected and full incumbent-order fallback verified; no provider call",
+    "total_provider_calls": 48
+  },
+  "selection": "all primary, extended quality, navigation, stability, membership and operational gates must pass; otherwise preserve failed or inconclusive evidence. Supported result advances only to separately preregistered untouched confirmation, not production adoption.",
+  "fresh_confirmation": "up to10 Brave attempts reserved. Freeze final candidate and prospective protocol before searches; blind independent labels before Jev outputs; no replacement searches or tuning on heldout results.",
+  "implementation_target": "SharedSlopSearX service additive caller research purpose + complete pool up to80/256k; ordinary query-only semantics remain qualified separately; cache/singleflight identity covers purpose and contract; deterministic sensitive/keyless/failure protections; API/MCP/portal compatibility; GroktoCrawl X explicit purpose forwarding on compatible Slop provider, no duplicate reranker. Merge with required tests, CI, review; no deployment."
+}

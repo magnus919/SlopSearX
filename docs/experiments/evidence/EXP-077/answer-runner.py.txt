@@ -1,0 +1,556 @@
+"""EXP-077 isolated OpenAI-compatible answer runner; inert on import.
+
+Live API calls require a separately qualified exact source hash receipt. This
+runner deliberately does not invoke search, source acquisition, Jev, or the
+candidate; it consumes only the frozen arm-specific packet from capture.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+import tempfile
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.parse import urlsplit
+
+HERE = Path(__file__).resolve().parent
+MAX_CALLS = 18
+MAX_REQUEST_BYTES = 384_000
+MAX_RESPONSE_BYTES = 2_000_000
+MAX_OUTPUT_TOKENS = 8192
+MAX_ANSWER_WORDS = 800
+MAX_WALL = 28_800
+LEASE_PREFIX = "exp077-answer"
+PROMPT_PATH = HERE / "answerer-prompt.txt"
+SCHEMA_PATH = HERE / "answerer.schema.json"
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def stage_clock_active(stage_clock: dict) -> bool:
+    deadline = datetime.fromisoformat(stage_clock["stage_deadline_utc"].replace("Z", "+00:00"))
+    return datetime.now(timezone.utc) < deadline
+
+
+def strict_json(raw: bytes):
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise ValueError("duplicate-json-key")
+            out[key] = value
+        return out
+    return json.loads(raw, object_pairs_hook=pairs,
+                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite-json")))
+
+
+def safe_file(path: Path) -> bytes:
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("input-file-type")
+    return path.read_bytes()
+
+
+def durable(path: Path, value) -> None:
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(path.parent, 0o700)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "xb") as stream:
+        stream.write((json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode())
+        stream.flush(); os.fsync(stream.fileno())
+    os.replace(tmp, path)
+    fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def validate_packet(raw: bytes, schema: dict) -> tuple[dict, list[dict]]:
+    obj = strict_json(raw)
+    if obj.get("schema") != "exp077-answer-packet/1" or obj.get("synthetic") is not False:
+        raise ValueError("answer-packet-schema-or-synthetic")
+    if not isinstance(obj.get("stage_id"), str) or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", obj["stage_id"]):
+        raise ValueError("answer-packet-stage-id")
+    if not isinstance(obj.get("stage_clock_digest"), str) or not re.fullmatch(r"[0-9a-f]{64}", obj["stage_clock_digest"]):
+        raise ValueError("answer-packet-stage-clock")
+    tasks = obj.get("assignments")
+    if not isinstance(tasks, list) or len(tasks) != 16:
+        raise ValueError("answer-task-count")
+    seen = set()
+    for assignment in tasks:
+        if (not isinstance(assignment, dict)
+                or set(assignment) != {"model_input", "private_binding"}):
+            raise ValueError("answer-assignment-fields")
+        model_input = assignment["model_input"]
+        binding = assignment["private_binding"]
+        if (not isinstance(model_input, dict)
+                or set(model_input) != {"task", "cards", "opening_outcomes", "delivered_sources", "output_schema"}
+                or not isinstance(binding, dict)
+                or set(binding) != {"arm_id", "catalog", "catalog_sha256", "assigned_source_ids"}):
+            raise ValueError("answer-assignment-fields")
+        task = model_input["task"]
+        if (not isinstance(task, dict) or set(task) != {"task_id", "kind", "query", "purpose", "critical_checks"}
+                or not isinstance(task["critical_checks"], list) or not task["critical_checks"]):
+            raise ValueError("answer-task-fields")
+        arm = binding["arm_id"]
+        key = (task["task_id"], arm)
+        if key in seen or arm not in {"w0", "candidate"}:
+            raise ValueError("answer-task-duplicate-or-arm")
+        seen.add(key)
+        if not isinstance(task["purpose"], str) or not task["purpose"].strip():
+            raise ValueError("answer-purpose")
+        cards = model_input["cards"]
+        if not isinstance(cards, list) or not 0 <= len(cards) <= 10 or len(set(cards)) != len(cards):
+            raise ValueError("answer-card-prefix")
+        outcomes = model_input["opening_outcomes"]
+        if not isinstance(outcomes, list) or len(outcomes) != len(cards):
+            raise ValueError("answer-opening-outcomes")
+        if any(not isinstance(row, dict) or row.get("card_id") != cards[index]
+               or not isinstance(row.get("state"), str) or not isinstance(row.get("delivered"), bool)
+               for index, row in enumerate(outcomes)):
+            raise ValueError("answer-opening-outcome-order")
+        delivered = model_input["delivered_sources"]
+        if not isinstance(delivered, list) or len(delivered) > 5:
+            raise ValueError("answer-context-count")
+        delivered_ids = set()
+        evidence_ids = set()
+        delivered_contexts = []
+        for source in delivered:
+            if (not isinstance(source, dict) or set(source) != {"source_id", "passages"}
+                    or not isinstance(source["source_id"], str) or source["source_id"] in delivered_ids
+                    or not isinstance(source["passages"], list) or not source["passages"]):
+                raise ValueError("answer-delivered-source")
+            delivered_ids.add(source["source_id"])
+            context_parts = []
+            source_evidence_ids = []
+            for passage in source["passages"]:
+                if (not isinstance(passage, dict) or set(passage) != {"evidence_id", "text"}
+                        or not isinstance(passage["text"], str) or not passage["text"]):
+                    raise ValueError("answer-delivered-passage")
+                eid = passage["evidence_id"]
+                if (not isinstance(eid, str) or not schema["evidence_id_pattern"].fullmatch(eid)
+                        or eid in evidence_ids):
+                    raise ValueError("answer-delivered-evidence-id")
+                evidence_ids.add(eid)
+                source_evidence_ids.append(eid)
+                context_parts.append(passage["text"])
+            context = "".join(context_parts)
+            if len(context) > 8000:
+                raise ValueError("answer-delivered-context-bound")
+            delivered_contexts.append({"source_id": source["source_id"], "context": context,
+                                       "evidence_ids": source_evidence_ids})
+        if (not isinstance(binding["assigned_source_ids"], list)
+                or binding["assigned_source_ids"] != [source["source_id"] for source in delivered]):
+            raise ValueError("answer-private-assignment-binding")
+        if not isinstance(binding["catalog"], dict) or not isinstance(binding["catalog_sha256"], str):
+            raise ValueError("answer-private-catalog-shape")
+        catalog_bytes = json.dumps(binding["catalog"], ensure_ascii=False, sort_keys=True,
+                                   separators=(",", ":")).encode()
+        if sha(catalog_bytes) != binding["catalog_sha256"]:
+            raise ValueError("answer-private-catalog-hash")
+        # Rebuild the same fixed-width catalog so no other arm's passages or
+        # IDs can be substituted into this model-facing packet.
+        catalog_path = HERE.parent / "source-use-next-stage" / "evidence-catalog.py.txt"
+        loader = importlib.machinery.SourceFileLoader("exp077_answer_catalog", str(catalog_path))
+        catalog_spec = importlib.util.spec_from_loader("exp077_answer_catalog", loader)
+        catalog_module = importlib.util.module_from_spec(catalog_spec)
+        loader.exec_module(catalog_module)
+        expected_catalog = (catalog_module.build([{"source_id": row["source_id"], "context": row["context"]}
+                                                   for row in delivered_contexts]) if delivered_contexts else
+                            {"version": 1, "sources": {}, "passages": {}})
+        if expected_catalog != binding["catalog"]:
+            raise ValueError("answer-catalog-context-binding")
+        expected_by_source = {sid: [] for sid in delivered_ids}
+        for eid, passage in expected_catalog["passages"].items():
+            if not schema["evidence_id_pattern"].fullmatch(eid):
+                raise ValueError("answer-private-catalog-passage-id")
+            expected_by_source[passage["source_id"]].append(eid)
+        for source in delivered_contexts:
+            expected_ids = expected_by_source[source["source_id"]]
+            matching_delivery = next(item for item in delivered
+                                     if item["source_id"] == source["source_id"])
+            delivered_texts = [row["text"] for row in matching_delivery["passages"]]
+            catalog_texts = [expected_catalog["passages"][eid]["text"] for eid in expected_ids]
+            if (source["evidence_ids"] != expected_ids or
+                    delivered_texts != catalog_texts):
+                raise ValueError("answer-catalog-evidence-binding")
+        output_schema = model_input["output_schema"]
+        if (not isinstance(output_schema, dict) or output_schema.get("type") != "object"
+                or output_schema.get("additionalProperties") is not False
+                or output_schema.get("required") != ["facets"]):
+            raise ValueError("answer-assignment-output-schema")
+        expected_facet_ids = [row["id"] for row in task["critical_checks"]]
+        expected_schema = json.loads(json.dumps(schema["document"]))
+        expected_schema["properties"]["facets"]["items"]["properties"]["facet_id"] = {"enum": expected_facet_ids}
+        if output_schema != expected_schema:
+            raise ValueError("answer-assignment-facet-schema")
+        # The anonymous model input must not contain the treatment label.
+        if "arm_id" in model_input or "catalog_sha256" in model_input:
+            raise ValueError("answer-treatment-label-or-controller-catalog-leak")
+    if len(seen) != 16 or {arm for _, arm in seen} != {"w0", "candidate"}:
+        raise ValueError("answer-task-arm-completeness")
+    return obj, tasks
+
+
+def validate_schema(raw: bytes) -> dict:
+    schema = strict_json(raw)
+    if (schema.get("type") != "object" or schema.get("additionalProperties") is not False
+            or schema.get("required") != ["facets"]):
+        raise ValueError("answer-output-schema-version")
+    props = schema.get("properties", {}).get("facets", {}).get("items", {}).get("properties", {})
+    if set(props) != {"facet_id", "conclusion", "claims"}:
+        raise ValueError("answer-output-schema-contract")
+    return {"document": schema, "evidence_id_pattern": re.compile(r"^[0-9a-f]{64}$")}
+
+
+def validate_answer(answer: str, schema: dict, delivered: set[str], expected_facets: list[str],
+                    allowed_conclusions: set[str] | None = None) -> dict:
+    obj = strict_json(answer.encode())
+    expected_top = {"facets"}
+    if not isinstance(obj, dict) or set(obj) != expected_top:
+        raise ValueError("answer-json-shape")
+    rows = obj["facets"]
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("answer-facet-completeness")
+    facet_ids = []
+    for row in rows:
+        if (not isinstance(row, dict) or set(row) != {"facet_id", "conclusion", "claims"}
+                or not isinstance(row["conclusion"], str) or not row["conclusion"].strip()
+                or (allowed_conclusions is not None and row["conclusion"] not in allowed_conclusions)):
+            raise ValueError("answer-facet-shape")
+        if not isinstance(row["facet_id"], str) or not row["facet_id"] or row["facet_id"] in facet_ids:
+            raise ValueError("answer-facet-id")
+        facet_ids.append(row["facet_id"])
+        claims = row["claims"]
+        if not isinstance(claims, list):
+            raise ValueError("answer-claims")
+        for claim in claims:
+            if (not isinstance(claim, dict) or set(claim) != {"text", "evidence_ids"}
+                    or not isinstance(claim["text"], str) or not claim["text"].strip()):
+                raise ValueError("answer-claim-shape")
+            refs = claim["evidence_ids"]
+            if (not isinstance(refs, list) or len(set(refs)) != len(refs)
+                    or any(not isinstance(eid, str) or not schema["evidence_id_pattern"].fullmatch(eid) for eid in refs)
+                    or not set(refs) <= delivered):
+                raise ValueError("answer-evidence-not-delivered")
+    if facet_ids != expected_facets:
+        raise ValueError("answer-facet-completeness-or-order")
+    text = " ".join([row["conclusion"] for row in rows] +
+                     [claim["text"] for row in rows for claim in row["claims"]])
+    if len(text.split()) > MAX_ANSWER_WORDS:
+        raise ValueError("answer-word-budget")
+    return obj
+
+
+def acquire_lease(packet_hash: str, root: Path | None = None) -> Path:
+    path = (root or Path(tempfile.gettempdir())) / f"{LEASE_PREFIX}.{packet_hash}.lease"
+    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(json.dumps({"pid": os.getpid(), "started_utc": datetime.now(timezone.utc).isoformat(),
+                                 "packet_sha256": packet_hash}).encode())
+        stream.flush(); os.fsync(stream.fileno())
+    return path
+
+
+def validate_stage_clock(raw: bytes, protocol_sha256: str, cohorts_sha256: str,
+                         cohorts: dict) -> dict:
+    obj = strict_json(raw)
+    if not isinstance(obj, dict) or obj.get("schema") != "exp077-stage-clock/1":
+        raise ValueError("stage-clock-schema")
+    expected_fields = {"schema", "stage_id", "stage", "stage_started_utc", "stage_deadline_utc",
+                       "stage_manifest_sha256", "protocol_sha256", "cohorts_sha256",
+                       "source_revision", "ordered_task_ids"}
+    if set(obj) != expected_fields:
+        raise ValueError("stage-clock-fields")
+    canonical = (json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                            allow_nan=False) + "\n").encode("utf-8")
+    if canonical != raw:
+        raise ValueError("stage-clock-not-canonical")
+    try:
+        started_at = datetime.fromisoformat(obj["stage_started_utc"].replace("Z", "+00:00"))
+        deadline_at = datetime.fromisoformat(obj["stage_deadline_utc"].replace("Z", "+00:00"))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("stage-clock-timestamp") from exc
+    if started_at.tzinfo is None or deadline_at.tzinfo is None or deadline_at <= started_at:
+        raise ValueError("stage-clock-order")
+    if (deadline_at - started_at).total_seconds() != MAX_WALL:
+        raise ValueError("stage-clock-interval")
+    now = datetime.now(timezone.utc)
+    if not started_at <= now < deadline_at:
+        raise ValueError("stage-clock-not-active")
+    stage, stage_id = obj.get("stage"), obj.get("stage_id")
+    if stage not in {"development", "confirmation"} or not isinstance(stage_id, str):
+        raise ValueError("stage-clock-identity")
+    if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", stage_id):
+        raise ValueError("stage-clock-uuid")
+    expected_tasks = [x["id"] for x in cohorts["cohorts"][stage]]
+    static_manifest = safe_file(HERE / f"stage-{stage}-manifest.json")
+    if (obj.get("protocol_sha256") != protocol_sha256 or obj.get("cohorts_sha256") != cohorts_sha256
+            or obj.get("ordered_task_ids") != expected_tasks
+            or obj.get("stage_manifest_sha256") != sha(static_manifest)
+            or not re.fullmatch(r"[0-9a-f]{40}", str(obj.get("source_revision", "")))):
+        raise ValueError("stage-clock-source-binding")
+    return {"stage": stage, "stage_id": stage_id, "stage_started_utc": started_at.isoformat(),
+            "stage_deadline_utc": deadline_at.isoformat(), "stage_manifest_sha256": obj["stage_manifest_sha256"],
+            "stage_clock_digest": sha(raw),
+            "remaining_seconds": (deadline_at-now).total_seconds()}
+
+
+def offline_fixture(outdir: Path) -> dict:
+    if outdir.exists() or outdir.is_symlink():
+        raise ValueError("outdir-exists-or-symlink")
+    outdir.mkdir(parents=True, mode=0o700)
+    result = {"schema": "exp077-answer-run/1", "status": "offline_fixture_only",
+              "synthetic": True, "owned_api_calls": 0,
+              "returned_model": "unobserved", "model_revision": "unobserved",
+              "reported_usage": "unobserved", "limitations": ["No model API called; no answer-quality evidence."]}
+    durable(outdir / "answers.json", result)
+    return result
+
+
+def chat_completion_url(base):
+    """Use the explicit configured OpenAI-compatible origin, /v1 base, or endpoint."""
+    parsed=urlsplit(base)
+    if parsed.scheme not in ('http','https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ValueError('answer-endpoint-invalid')
+    base=base.rstrip('/')
+    if base.endswith('/chat/completions'):return base
+    if base.endswith('/v1'):return base+'/chat/completions'
+    return base+'/v1/chat/completions'
+
+
+def run_answers(tasks: list[dict], prompt: str, schema: dict, endpoint: str,
+                api_key: str, outdir: Path, stage_clock: dict, *, transport=None) -> dict:
+    """Send two neutral readiness and sixteen task calls, serially, no retry."""
+    import httpx
+    parsed = urlsplit(endpoint)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ValueError("answer-endpoint-invalid")
+    if not api_key or "\n" in api_key or "\r" in api_key:
+        raise ValueError("answer-key-invalid")
+    client = httpx.Client(timeout=30.0, follow_redirects=False, trust_env=False,
+                          transport=transport)
+    calls, outputs = [], []
+    deadline_monotonic = time.monotonic() + max(0, (datetime.fromisoformat(
+        stage_clock["stage_deadline_utc"].replace("Z", "+00:00")) - datetime.now(timezone.utc)).total_seconds())
+    request_specs = []
+    for index in range(2):
+        request_specs.append({"kind": "readiness", "task_id": f"neutral-{index+1}",
+            "body": {"model": "free", "messages": [
+                {"role": "system", "content": "Return exactly the JSON object {\"ready\":true}."},
+                {"role": "user", "content": "This is a synthetic endpoint readiness check, not study evidence."}],
+                "max_tokens": 8192, "temperature": 0, "response_format": {"type": "json_object"}}})
+    for assignment in tasks:
+        task_data = assignment["model_input"]["task"]
+        model_input = {"task_id": task_data["task_id"], "kind": task_data["kind"],
+                       "query": task_data["query"], "purpose": task_data["purpose"],
+                       "critical_checks": task_data["critical_checks"],
+                       "cards": assignment["model_input"]["cards"],
+                       "opening_outcomes": assignment["model_input"]["opening_outcomes"],
+                       "delivered_sources": assignment["model_input"]["delivered_sources"],
+                       "output_schema": assignment["model_input"]["output_schema"]}
+        private = assignment["private_binding"]
+        user = json.dumps(model_input, ensure_ascii=False, sort_keys=True)
+        request_specs.append({"kind": "answer", "task_id": task_data["task_id"], "arm": private["arm_id"],
+            "body": {"model": "free", "messages": [{"role": "system", "content": prompt},
+                {"role": "user", "content": user}], "max_tokens": MAX_OUTPUT_TOKENS,
+                "temperature": 0, "response_format": {"type": "json_object"}}})
+    try:
+        for slot, spec in enumerate(request_specs, 1):
+            remaining_seconds = deadline_monotonic - time.monotonic()
+            if remaining_seconds <= 0:
+                for suffix in request_specs[slot-1:]:
+                    calls.append({"slot": len(calls)+1, "kind": suffix["kind"],
+                                  "task_id": suffix["task_id"], "status": "not_attempted_stage_deadline"})
+                break
+            body_raw = json.dumps(spec["body"], ensure_ascii=False, separators=(",", ":")).encode()
+            if len(body_raw) > MAX_REQUEST_BYTES:
+                raise ValueError("answer-request-byte-cap")
+            if len(calls) >= MAX_CALLS:
+                raise RuntimeError("answer-call-budget")
+            started_call = time.monotonic()
+            call = {"slot": slot, "kind": spec["kind"], "task_id": spec["task_id"],
+                    "status": "in_flight", "request_sha256": sha(body_raw),
+                    "request_bytes": len(body_raw)}
+            calls.append(call)
+            durable(outdir / "call-receipts.json", calls)
+            try:
+                response_chunks, response_size = [], 0
+                with client.stream("POST", chat_completion_url(endpoint),
+                        content=body_raw, headers={"Authorization": "Bearer " + api_key,
+                            "Content-Type": "application/json"}, timeout=min(30.0, remaining_seconds)) as response:
+                    response_status = response.status_code
+                    for chunk in response.iter_bytes(65536):
+                        response_size += len(chunk)
+                        if response_size > MAX_RESPONSE_BYTES:
+                            call.update(status="response_byte_cap", response_bytes=response_size,
+                                        usage_status="unknown")
+                            durable(outdir / "call-receipts.json", calls)
+                            raise ValueError("answer-response-byte-cap")
+                        response_chunks.append(chunk)
+                raw = b"".join(response_chunks)
+                if api_key.encode() in raw:
+                    raise ValueError("answer-credential-echo-suppressed")
+            except Exception as exc:
+                if call.get("status") == "in_flight":
+                    call.update(status="transport_error", error_class=type(exc).__name__, usage_status="unknown")
+                durable(outdir / "call-receipts.json", calls)
+                for suffix in request_specs[slot:]:
+                    calls.append({"slot": len(calls)+1, "kind": suffix["kind"],
+                                  "task_id": suffix["task_id"], "status": "not_attempted_after_failure"})
+                durable(outdir / "call-receipts.json", calls)
+                raise
+            response_sha = sha(raw)
+            call.update(status="http_success" if 200 <= response_status < 300 else "http_error",
+                        status_code=response_status, response_bytes=response_size,
+                        response_sha256=response_sha,
+                        elapsed_seconds=time.monotonic() - started_call)
+            if response_status < 200 or response_status >= 300:
+                try:
+                    error_payload = strict_json(raw)
+                    error_usage = error_payload.get("usage") if isinstance(error_payload, dict) else None
+                except (ValueError, TypeError):
+                    error_usage = None
+                call["usage_status"] = "known" if isinstance(error_usage, dict) else "unknown"
+                call["usage"] = error_usage if isinstance(error_usage, dict) else None
+                durable(outdir / "call-receipts.json", calls)
+                raise RuntimeError("answer-api-http-error")
+            payload = strict_json(raw)
+            returned_model = payload.get("model")
+            usage = payload.get("usage")
+            call["returned_model"] = returned_model if isinstance(returned_model, str) else "unobserved"
+            call["returned_model_fingerprint"] = (payload.get("system_fingerprint")
+                if isinstance(payload.get("system_fingerprint"), str) else "unobserved")
+            call["usage_status"] = "known" if isinstance(usage, dict) else "unknown"
+            call["usage"] = usage if isinstance(usage, dict) else None
+            choices = payload.get("choices")
+            if not isinstance(choices, list) or len(choices) != 1:
+                raise ValueError("answer-choice-shape")
+            content = (choices[0].get("message") or {}).get("content")
+            if not isinstance(content, str):
+                raise ValueError("answer-content-shape")
+            if time.monotonic() >= deadline_monotonic:
+                call.update(status="completed_after_stage_deadline")
+                durable(outdir / "call-receipts.json", calls)
+                raise RuntimeError("answer-stage-deadline-expired")
+            if spec["kind"] == "readiness":
+                check = strict_json(content.encode())
+                if check != {"ready": True}:
+                    raise ValueError("answer-readiness-rejected")
+            else:
+                assignment = next(x for x in tasks if x["model_input"]["task"]["task_id"] == spec["task_id"] and x["private_binding"]["arm_id"] == spec["arm"])
+                model_input = assignment["model_input"]
+                delivered_ids = {eid for source in model_input["delivered_sources"] for eid in source["evidence_ids"]}
+                expected_facets = [check["id"] for check in model_input["task"]["critical_checks"]]
+                obj = validate_answer(content, schema, delivered_ids, expected_facets)
+                answer_bytes = content.encode()
+                answer_path = outdir / f"{spec['task_id']}-{spec['arm']}.json"
+                with open(answer_path, "xb") as stream:
+                    stream.write(answer_bytes); stream.flush(); os.fsync(stream.fileno())
+                call["answer_path"] = answer_path.name
+                call["answer_sha256"] = sha(answer_bytes)
+                outputs.append({"task_id": spec["task_id"], "arm": spec["arm"],
+                                "answer_sha256": sha(answer_bytes), "parsed": obj})
+            if not stage_clock_active(stage_clock):
+                call.update(status="completed_after_stage_deadline")
+            durable(outdir / "call-receipts.json", calls)
+        clock_still_active = stage_clock_active(stage_clock)
+        result = {"schema": "exp077-answer-run/1", "status": "complete" if clock_still_active
+                  and len(calls) == MAX_CALLS and all(c.get("status") == "http_success" for c in calls) else "incomplete",
+                  "synthetic": False, "stage_clock": {k: v for k, v in stage_clock.items() if k != "remaining_seconds"},
+                  "owned_api_calls": len([c for c in calls if c.get("status") in {"http_success", "http_error", "transport_error", "completed_after_stage_deadline"}]),
+                  "configured_model_alias": "free", "returned_models": sorted({c.get("returned_model", "unobserved") for c in calls}),
+                  "immutable_model_revision": "unobserved unless provider separately exposes one",
+                  "reported_usage": [c.get("usage") for c in calls], "call_receipts": calls,
+                  "answers": [{k: v for k, v in item.items() if k != "parsed"} for item in outputs],
+                  "limitations": ["In-app grader usage may not be exposed.",
+                                  "The alias and returned model string do not prove checkpoint identity or production equivalence."]}
+        durable(outdir / "answer-run.json", result)
+        return result
+    except Exception as exc:
+        current = calls[-1] if calls else None
+        if current is not None and current.get("status") in {"in_flight", "http_success"}:
+            current.update(status="invalid_response_or_output", error_class=type(exc).__name__)
+            durable(outdir / "call-receipts.json", calls)
+        durable(outdir / "answer-terminal-error.json", {"error_class": type(exc).__name__,
+            "calls": calls, "stage_clock_digest": stage_clock["stage_clock_digest"]})
+        raise
+    finally:
+        client.close()
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=("offline", "live"), default="offline")
+    parser.add_argument("--outdir", required=True, type=Path)
+    parser.add_argument("--packet", type=Path)
+    parser.add_argument("--qualification", type=Path)
+    parser.add_argument("--stage-clock", type=Path)
+    args = parser.parse_args(argv)
+    if args.mode == "offline":
+        return offline_fixture(args.outdir)
+    if not args.packet or not args.qualification or not args.stage_clock:
+        raise ValueError("live-requires-packet-stage-clock-and-qualification")
+    # Static checks and receipt identity precede reading any secret or endpoint.
+    qraw = safe_file(args.qualification)
+    q = strict_json(qraw)
+    expected = {name: sha(safe_file(HERE / name))
+                for name in ("answer-runner.py.txt", "capture-runner.py.txt", "runner-tests.py.txt",
+                             "answerer-prompt.txt", "answerer.schema.json")}
+    if args.outdir.exists() or args.outdir.is_symlink():
+        raise ValueError("outdir-exists-or-symlink")
+    # Reuse capture's independent source-closure validator. It is import-inert.
+    loader = importlib.machinery.SourceFileLoader("exp077_capture_for_answer", str(HERE / "capture-runner.py.txt"))
+    spec = importlib.util.spec_from_loader("exp077_capture_for_answer", loader)
+    capture = importlib.util.module_from_spec(spec)
+    loader.exec_module(capture)
+    capture.verify_qualification(q, qraw, args.qualification, expected)
+    admission = capture.validate_static(live=True)
+    cohorts_raw = safe_file(HERE / "cohorts.json")
+    cohorts_obj = strict_json(cohorts_raw)
+    stage_clock_raw = safe_file(args.stage_clock)
+    stage_clock = validate_stage_clock(stage_clock_raw, admission["protocol_sha256"],
+                                       admission["cohorts_sha256"], cohorts_obj)
+    if strict_json(stage_clock_raw).get("source_revision") != q.get("qualified_source_revision"):
+        raise ValueError("stage-clock-qualified-revision-mismatch")
+    packet_raw, prompt_raw, schema_raw = safe_file(args.packet), safe_file(PROMPT_PATH), safe_file(SCHEMA_PATH)
+    schema = validate_schema(schema_raw)
+    _, tasks = validate_packet(packet_raw, schema)
+    packet_obj = strict_json(packet_raw)
+    if (packet_obj.get("stage_id") != stage_clock["stage_id"]
+            or packet_obj.get("stage_clock_digest") != stage_clock["stage_clock_digest"]
+            or packet_obj.get("stage_manifest_sha256") != stage_clock["stage_manifest_sha256"]):
+        raise ValueError("answer-packet-stage-clock-binding")
+    expected_research_ids = [row["id"] for row in cohorts_obj["cohorts"][stage_clock["stage"]]
+                             if row["kind"] == "research"]
+    by_task = {}
+    for assignment in tasks:
+        task_id = assignment["model_input"]["task"]["task_id"]
+        by_task.setdefault(task_id, set()).add(assignment["private_binding"]["arm_id"])
+    if by_task != {task_id: {"w0", "candidate"} for task_id in expected_research_ids}:
+        raise ValueError("answer-cohort-assignment-coverage")
+    packet_hash = sha(packet_raw)
+    acquire_lease(packet_hash)
+    args.outdir.mkdir(parents=True, mode=0o700)
+    durable(args.outdir / "admission.json", {"packet_sha256": packet_hash,
+        "prompt_sha256": sha(prompt_raw), "schema_sha256": sha(schema_raw), "task_count": len(tasks),
+        "stage_clock": {k: v for k, v in stage_clock.items() if k != "remaining_seconds"}, "synthetic": False})
+    # These secrets are process-only and never copied to files or receipts.
+    endpoint = os.environ.get("EXP077_ANSWER_API_BASE_URL", "")
+    api_key = os.environ.get("EXP077_ANSWER_API_KEY", "")
+    if not endpoint or not api_key:
+        raise ValueError("answer-api-configuration-missing")
+    prompt = prompt_raw.decode("utf-8")
+    return run_answers(tasks, prompt, schema, endpoint, api_key, args.outdir, stage_clock)
+
+
+if __name__ == "__main__":
+    main()

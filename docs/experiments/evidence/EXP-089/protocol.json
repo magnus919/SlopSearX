@@ -1,0 +1,312 @@
+{
+  "acquisition": {
+    "answer_assessments_fresh": 32,
+    "carried_card_grades_are_immutable_inputs": true,
+    "carried_grade_analysis_before_freeze": false,
+    "carry_forward_card_assignments": 16,
+    "carry_forward_card_records": 884,
+    "confirmation_untouched": true,
+    "failed_source_submission_reused": false,
+    "new_searches": 0,
+    "new_source_fetches": 0,
+    "retries": 0,
+    "source": "Exact same 381 original frozen inputs and EXP-084 capture snapshot, plus the complete EXP-088 card-reference checkpoint inventory.",
+    "source_assessments_fresh": 48
+  },
+  "adoption": "No production adoption from this recovery. EXP-078 remains terminal inconclusive; separate untouched confirmation and full product delivery remain required.",
+  "candidate": {
+    "contract": "Exact EXP-076 canonical complete-pool dual Score populations and equal-weight Fraction RRF k60. Same query/purpose instructions, criteria, model, projection and tie rule; only fresh caller task/pool data differ.",
+    "fallback": "entire pre-Jev native/provenance order",
+    "jev_model": "jev-1.13.0",
+    "legacy_w0_request_bytes": 128000,
+    "maximum_cards": 80,
+    "maximum_questions": 160,
+    "phase_deadline_ms": 1000,
+    "phase_includes": "fresh construction/serialization, exchange, parsing/fusion, final receipt fsync",
+    "request_bytes": 384000,
+    "response_bytes": 2000000,
+    "state_bytes": 128000,
+    "tuning_allowed": false
+  },
+  "capture": {
+    "health": "One read-only health request after new EXP-089 admission; parse status and runtime identity, require the pinned free model/revision, and retain only nonsecret identity fields. Failure is terminal.",
+    "health_calls_maximum_per_stage": 1,
+    "health_timeout_seconds": 8,
+    "new_source_http_requests_maximum": 0,
+    "physical_http_calls_maximum_per_stage": 1,
+    "raw_content_publication": "private evidence storage; public sanitized hashes/aggregates only",
+    "source_snapshot": "Reuse the complete pinned EXP-084 capture subtree and its 442-source inventory; do not dispatch source HTTP requests or rewrite any captured bytes. Use the same bounded source contexts and source availability states."
+  },
+  "card_reference_ids": {
+    "catalog": "For each frozen card, partition title/url/snippet independently in field order into consecutive non-overlapping Python-Unicode-code-point windows. Greedily extend each window while its UTF-8 encoding stays at or below 256 bytes; empty fields have no windows. Preserve every field character exactly once.",
+    "closure": "Pin the exact EXP-088 card-reference adapter, short-label codec, prompt, preparation frontend, and tests in the EXP-089 source closure before admission; re-run their deterministic validation against all sixteen carried assignments.",
+    "failure": "Unknown, cross-card, malformed, or unhydratable IDs, duplicate catalog IDs, duplicate facets/cards, or incomplete card/facet coverage remain invalid and terminal. Repeated IDs that each resolve within the same card are accepted and expanded once per occurrence in emitted order; no model response is repaired or deduplicated.",
+    "granularity": "A selected ID hydrates to its complete deterministic window, not a model-selected subspan. Windows may include adjacent text; that bounded citation granularity is disclosed and is not a new content judgment.",
+    "hydration": "Only known IDs assigned to the exact card and field are accepted. Hydration deterministically expands each ID to the legacy `{field, quote}` form and runs the unchanged exact-substring/byte-limit validator. No model-authored quote, field, offsets, or cross-card references.",
+    "id_derivation": "IDs use the frozen exp077-card-reference-id/1 domain and bind task ID, card SHA-256, field name, window index and window-text SHA-256. Exact catalog entries also bind Unicode start/end and UTF-8 text hash.",
+    "input_presentation": "The model receives the unchanged full original card fields plus the deterministic per-card window catalog. Both assessors receive the identical presentation and same finite IDs. This duplication/windowing is a prospective presentation change; do not compare grades directly to EXP-084.",
+    "maximum_hydrated_quote_utf8_bytes": 256,
+    "output_shape": "Keep the frozen EXP-077 arrays and item schema exactly: no uniqueItems constraint for anchors or facet_anchors. Repeated known same-card evidence_id values are valid array entries and hydrate to repeated legacy {field, quote} objects in exactly the same order. All other frozen checks remain unchanged.",
+    "purpose": "Mechanical transport for the unchanged exact same-card anchor requirement.",
+    "semantic_scope": "Does not alter lead/visible axes, facet definitions, scoring anchors, rubric, or thresholds. Window presentation is a prospective measurement change; preserve full original fields and present the same catalog to A and B.",
+    "source_fields": [
+      "title",
+      "url",
+      "snippet"
+    ]
+  },
+  "card_reference_labels": {
+    "identity": "Card labels are assigned from the complete per-task card catalogs with stable per-card ordinals; source labels are assigned from the complete per-task source-ID universe and use a content-derived 16-hex passage suffix so labels do not change across chunk/arm subsets. The same source/passage has one label in source and answer-assessor roles.",
+    "invalid": "Unknown, malformed, cross-task, cross-card, or cross-source aliases and binding/hash mismatches remain invalid and terminal. No model-response repair, deduplication, evidence change, rubric change, or grade change.",
+    "output_carrier": "No changes to model-facing short-label grammar or response semantics. EXP-089 changes only how final text is captured.",
+    "presentation": "Keep every card field, source passage, catalog row, context, task, and non-reference response value in its original order and exact content. Replace only reference identifiers at the registered model-facing fields.",
+    "purpose": "Replace long evidence identifiers with deterministic short labels only in model-facing evidence-reference fields. Decode each label back to its exact original identifier before unchanged EXP-077 validation.",
+    "scope": [
+      "card anchors and facet anchors",
+      "source evidence_ids",
+      "answerer evidence_ids",
+      "answer-assessor evidence_ids"
+    ],
+    "stability": "Task-scoped mappings derive from the complete canonical catalog/universe and are independent of rank, arm, request order, and response order. Source aliases use the full per-task frozen source-ID universe shared by both arms.",
+    "transport": "Preserve exact raw vendor response bytes in separate private response receipts. Store decoded portable response bytes separately. Both forms have independent hashes and response-size checks. Preserve field content, claim/rationale text, list order, multiplicity, and all non-reference fields exactly."
+  },
+  "cohorts_file": "cohorts.json",
+  "confirmation_requires_development_pass": false,
+  "confirmation_scope": {
+    "cohort_untouched": true,
+    "future_requirement": "A separate confirmation must use entirely new tasks and pools with fresh independent references; no carried EXP-088 card references or EXP-089 development outputs qualify as confirmation.",
+    "not_run": true
+  },
+  "consumer": {
+    "alias_limitations": "record configured and returned model identity; do not assert immutable checkpoint equivalence",
+    "candidate_prefix_presented": 10,
+    "evidence_catalog_segment_characters": 600,
+    "same_projection_for_arms": true,
+    "source_availability_and_ordering": "apply same dedup/refusal/video/availability policy to each fixed top-ten order; preserve failed openings separately",
+    "source_context_character_limit": 8000,
+    "successful_sources_maximum": 5
+  },
+  "date": "2026-10-06",
+  "duplicate_reference_policy": {
+    "allowed": "Repeated known IDs bound to the same card and field, in anchors or a facet_anchors list; expand every occurrence in original order.",
+    "change": "Mechanical validator alignment only: remove the EXP-086-only duplicate-reference-ID rejection.",
+    "no_repair_or_regrade": true,
+    "still_invalid": [
+      "unknown IDs",
+      "cross-card IDs",
+      "duplicate catalog evidence IDs",
+      "duplicate cards or card rows",
+      "duplicate facets or uncertainty tags",
+      "missing/extra/reordered card coverage",
+      "missing facet-anchor coverage",
+      "invalid grade scales",
+      "legacy exact-substring or quote-size failures"
+    ]
+  },
+  "final_json_carrier": {
+    "answer_output_manifest_coverage": "Exactly 16 complete d1-d8 × w0/candidate answer receipts with their exact response and durable receipt hashes and byte counts.",
+    "answer_output_manifest_schema": "exp089-answer-output-manifest/1",
+    "answer_slot_bindings": "Predeclare 32 answer-assessor identities only. After the 16 answer outputs are complete and frozen in a complete answer-output manifest, bind exact answer-assessment input hashes, schema/prompt hashes, and label-binding hashes for all 32 slots once before the first answer-assessor dispatch; record the manifest digest.",
+    "binding_fields": [
+      "logical_submission",
+      "role",
+      "task_id",
+      "assessor_id",
+      "chunk_index/helper_id or anonymous_arm/packet_id",
+      "input_sha256",
+      "input_bytes",
+      "label_binding_sha256",
+      "stage_clock_sha256",
+      "protocol_sha256",
+      "qualified_source_revision"
+    ],
+    "maximum_bytes": 2000000,
+    "minimum_bytes": 1,
+    "mismatch_or_duplicate": "terminal; no overwrite",
+    "missing_or_empty": "terminal invalid output; no retry",
+    "original_parser_unchanged": true,
+    "purpose": "Replace only final-response capture. The receiver obtains the exact current agent final text and persists its UTF-8 bytes without parsing, repair, normalization, fence removal, or reconstruction; the existing frozen parser and validators consume the retained bytes afterward.",
+    "raw_final_text_is_authoritative": true,
+    "receipt": "Receipt binds slot, role, exact raw final-text SHA-256 and byte count, frozen input and label-binding hashes; output storage uses exclusive create plus file and parent-directory fsync.",
+    "slot_plan": "Source slots match the frozen EXP-077 assignment-plan logical_submission values for the 48 active source chunks only; the sixteen no-call trailing source slots do not receive invented inputs. Answer-assessor identities are predeclared; their exact inputs are bound once after answer outputs and packets are frozen, before the first answer-assessor call.",
+    "source_slot_bindings": "All 48 exact source-assessment packet hashes freeze before any source-assessor dispatch."
+  },
+  "fresh_stage_scope": {
+    "EXP_084_stage_clock_credit_seconds": 0,
+    "covers": [
+      "one read-only candidate health validation",
+      "local validation of carried card references",
+      "fresh source reference generation",
+      "selector comparison",
+      "answer generation",
+      "fresh answer assessment grading",
+      "raw verification",
+      "analysis"
+    ],
+    "covers_seconds": 28800,
+    "historical_input_time_credit_seconds": 0,
+    "reuse_does_not_reset_or_extend_clock": "Only the newly admitted EXP-089 stage receives a clock; EXP-084 acquisition/capture and EXP-088 card-reference time receive zero credit.",
+    "starts_before": "the single candidate health request and first fresh source assessment"
+  },
+  "grading_order": [
+    "verify all 513 pinned frozen inputs, including the EXP-088 completed card checkpoint; exclude failed source grader output",
+    "perform source and CLI preflight; create and consume the new EXP-089 admission and clock",
+    "perform at most one read-only candidate health check; stop on failure",
+    "regenerate and validate all sixteen carried card assignments and raw-to-decoded-to-legacy verification; expose only structural hashes/counts",
+    "prepare/freeze 48 source slot input bindings before source-assessor calls",
+    "collect all 48 source assessments with exact-final-text carrier and unchanged validators",
+    "run unchanged selector comparison",
+    "generate fixed-budget answers",
+    "freeze exact 32 answer-assessment inputs before the first answer-assessor call; collect all 32 with exact-final-text carrier",
+    "verify receipts and calculate the unchanged frozen endpoints"
+  ],
+  "input_provenance": {
+    "all_bytes_hash_bound": true,
+    "predecessor_terminal_private_sha256": "4e5f956ced4ba305f766077bc3cfbb5e40d8c5ebd88d40ecc0e7da5dca39cb9a",
+    "predecessor_terminal_public_sha256": "751d7e20efc58f48076541991fd6a61171fa5c7ee3bcce92c0f1392809c7768a",
+    "schema": "exp089-reused-input-pins/1",
+    "source": "Exact EXP-088 frozen input bundle inventory; no failed source submission, source grader output, or grade analysis is carried forward."
+  },
+  "jev_invocation": {
+    "call_slots": "neutral capacity pair plus 13 base and 8 repeat/rotate operation pairs",
+    "concurrency": 1,
+    "per_call_reported_input_tokens_maximum": 64000,
+    "per_call_reported_output_tokens_maximum": 32000,
+    "physical_calls_maximum_per_stage": 44,
+    "reported_input_tokens_total_maximum": 3000000,
+    "reported_output_tokens_total_maximum": 160000,
+    "reserve_before_each_call": {
+      "input": 64000,
+      "output": 32000
+    },
+    "retries": 0,
+    "unknown_usage": "terminal_stop"
+  },
+  "models": {
+    "answer_api_concurrency": 1,
+    "answer_assessment_calls_expected": 32,
+    "answer_calls_basis": "16 task/arm answers plus 2 declared neutral readiness checks",
+    "answer_max_output_tokens_requested": 8192,
+    "answer_provider_surface": "Existing process-configured OpenAI-compatible provider; secrets and endpoint values stay in memory and out of public artifacts.",
+    "answer_words_maximum": 800,
+    "answerer_alias": "free",
+    "card_and_source_and_answer_assessors": "Carried card references are the sixteen fully validated EXP-088 A/B assignments; no card calls occur. Fresh source and answer assessors are independent GPT-6 Luna packets, not human gold. EXP-084 grader outputs are never reused.",
+    "concurrency_luna_maximum": 2,
+    "cumulative_development_luna_call_accounting": "The 17 EXP-088 historical submissions remain charged; 80 new source/answer assessment calls yield cumulative 97 of 112. No refund or reclassification.",
+    "free_answer_calls_maximum": 18,
+    "fresh_source_and_answer_assessments": 80,
+    "historical_exp088_luna_submissions_counted": 17,
+    "input_bytes_per_submission": 384000,
+    "jev_calls_maximum": 44,
+    "maximum_answer_api_calls_per_stage": 18,
+    "maximum_logical_luna_submissions_per_stage": 112,
+    "maximum_total_logical_model_submissions_per_stage": 130,
+    "output_bytes_per_submission": 2000000,
+    "reported_usage": "retain where exposed; in-app grader billing/tokens may be unobservable, never invent them",
+    "retries": 0,
+    "source_assessment_calls_expected": 48,
+    "source_assessment_chunk_sources": 20,
+    "source_chunks_complete_inventory_required": true
+  },
+  "phase_plan": {
+    "assessment-preparation": "Local deterministic source/answer packet preparation under the new stage phase guard.",
+    "capture_phase_reused_as_data_only": true,
+    "card_reference_phase_permitted": false,
+    "carried-card-validation": "Local deterministic regeneration and byte/hash/coverage validation of the frozen EXP-088 card checkpoint. It is not a grader/model phase and cannot issue a card-reference permit.",
+    "health_before_assessments": true,
+    "ordered_phases": [
+      "health",
+      "assessment-preparation",
+      "carried-card-validation",
+      "source-reference",
+      "selector",
+      "answer",
+      "answer-assessment",
+      "analysis"
+    ],
+    "source-reference": "Fresh independent source judgments over the same bounded contexts; no source HTTP requests."
+  },
+  "predecessor": {
+    "failure": "The card checkpoint completed, then the first source-assessment final-output writing step failed. No source/answer assessments, selector/Jev, or quality analysis were completed.",
+    "id": "EXP-088",
+    "mutate_or_reclassify": false,
+    "private_terminal_sha256": "4e5f956ced4ba305f766077bc3cfbb5e40d8c5ebd88d40ecc0e7da5dca39cb9a",
+    "relation": "Prospective continuation with a new clock and authority; no time, lease, or call credit from EXP-088.",
+    "reuse": "Reuse only the complete sixteen validated card-reference assignments and their raw/decoded/verified artifacts as immutable development references. The first failed source submission and its script are excluded; all 48 source and 32 answer assessments are fresh.",
+    "terminal_path": "docs/experiments/evidence/EXP-088/completed/terminal.json",
+    "terminal_sha256": "751d7e20efc58f48076541991fd6a61171fa5c7ee3bcce92c0f1392809c7768a",
+    "terminal_status": "assessment_inconclusive"
+  },
+  "purpose": "Prospective development continuation after EXP-088 stopped before source grading. Carry forward the complete, hash-bound sixteen-assignment A/B card-reference checkpoint without reading or analyzing its grade values; collect all source and answer assessments fresh. The only intervention is the response carrier: persist the exact current agent final-message UTF-8 bytes, then run unchanged validation. Do not repair, parse-and-reserialize, strip fences, or infer missing output.",
+  "quality": {
+    "all_targets_acquired_and_top1_required": true,
+    "bootstrap95_lower_bound_strictly_positive": true,
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 7701,
+    "exact_navigation_targets_per_stage": 5,
+    "incumbent_identity_displacement": "diagnostic_only",
+    "independent_references": [
+      "A",
+      "B"
+    ],
+    "mean_ndcg10_gain_minimum": 0.02,
+    "natural_primary_pools_41_to_80_minimum": 4,
+    "per_case_delta_minimum": -0.03,
+    "primary_research_tasks_per_stage": 8,
+    "stability_task_indices": [
+      1,
+      4,
+      7,
+      8
+    ],
+    "top10_overlap_minimum": 0.8,
+    "useful_count_noninferiority": true,
+    "useful_facet_retention": true,
+    "useful_lead_grade_minimum": 2,
+    "variants": [
+      "base",
+      "repeat",
+      "rotate"
+    ]
+  },
+  "recovery_runtime": {
+    "candidate_identity_unchanged": true,
+    "file_or_deployment_edits": false,
+    "health": "One current read-only health request after the new EXP-089 admission, bound to the same frozen free-model identity; no retries.",
+    "health_request": "One post-admission health request; accept only HTTP 200, status ok, runtime.model free, and runtime.revision equal to the pinned EXP-084 health identity. No retry or source/model activity follows failure.",
+    "health_requests_maximum_per_stage": 1,
+    "model_identity_unchanged": true,
+    "private_binding": "Root-owned private salted configuration receipt binds the exact per-process runtime config. Never place URL, key, user profile, or raw config values in public protocol, source, logs, or receipts.",
+    "purpose": "No runtime or candidate change. Carry only the exact immutable card checkpoint; collect source and answer judgments fresh, using exact final-text byte capture and the unchanged validators.",
+    "runtime_config_receipt_sha256": "9b235c28265bfd6ef3968d128564f593655d7a914cb618079146b267cf2ec980"
+  },
+  "schema": "exp089-final-json-carrier/1",
+  "stage_wall_seconds_maximum": 28800,
+  "stages": [
+    "development"
+  ],
+  "status": "prospective_registered_development",
+  "stop": "Any source/input/config integrity failure, health failure, unregistered request, budget/deadline breach, missing required endpoint, incomplete assessment, invalid raw final text, or unchanged-validator failure stops the stage with retained partial evidence; no retries, searches, rescue, tuning, replacement, imputation, repair, or automatic confirmation.",
+  "task_use": {
+    "abstention_counts_as_completion": false,
+    "additional_complete_tasks_minimum_each": 2,
+    "assessor_disagreements": "separate endpoints, never average into a pass",
+    "candidate_material_unsupported_claims_allowed": 0,
+    "candidate_missed_critical_contradictions_or_qualifications_allowed": 0,
+    "candidate_target_or_version_errors_allowed": 0,
+    "completion": "all declared critical checks supported, applicable and correctly applied to delivered evidence; model self-certification is insufficient",
+    "independent_assessors": [
+      "R1",
+      "R2"
+    ],
+    "required_endpoint_unknown_or_invalid": "inconclusive, retained; never imputed/repaired",
+    "source_unavailability": "recorded in denominators; not-acquired is an observed state, not automatically a structural packet error",
+    "uncertainty_report": "Paired task bootstrap of completion-count difference, 10000 draws, seed7701; descriptive only, no additional significance gate.",
+    "w0_completed_to_candidate_incomplete_allowed": 0
+  },
+  "wire_types": {
+    "authority_boundary": "Preserve exp078-stage-clock/1 and EXP-078 payload schemas only as portable data types for frozen selector/answer helpers. Mint a new EXP-089 stage ID and bind it to EXP-089 registration, qualification, manifest, inputs, and lease. Never accept any earlier stage clock, capability, permit, or lease as EXP-089 authority.",
+    "card_reference_ids": "The EXP-088 card-reference outputs are immutable, byte- and hash-bound development inputs. Do not re-dispatch or regrade cards in EXP-089.",
+    "portable_reuse": "EXP-078 effective acquisition, card, selector, and receipt structures are immutable input/wire types only."
+  }
+}

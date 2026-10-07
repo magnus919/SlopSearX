@@ -1,0 +1,103 @@
+{
+  "author": "Interactive Codex caller",
+  "source_inputs": "Registered user questions only; no live result or analysis inspected while authoring these plans. Caller already knows target corpus: exposed development pilot, not blinded or held-out.",
+  "sampling": "Single authored trajectory; exact model revision and temperature unavailable.",
+  "cases": [
+    {
+      "id": "q01",
+      "queries": [
+        "dense passage retrieval open domain question answering",
+        "retrieval augmented generation knowledge intensive NLP"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q02",
+      "queries": [
+        "query expansion generated pseudo documents",
+        "hypothetical document embeddings zero shot dense retrieval"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q03",
+      "queries": [
+        "listwise permutation language model reranking",
+        "pairwise ranking prompting language models"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q04",
+      "queries": [
+        "modular decomposed prompting multi hop question answering",
+        "interleaving retrieval reasoning multi step questions"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q05",
+      "queries": [
+        "reasoning acting language models",
+        "self supervised language model tool use"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q06",
+      "queries": [
+        "self reflection retrieval augmented generation",
+        "corrective retrieval augmented generation"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q07",
+      "queries": [
+        "low rank adaptation language models",
+        "quantized low rank finetuning language models"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q08",
+      "queries": [
+        "attention only transformer architecture",
+        "bidirectional encoder pretraining language understanding"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q09",
+      "queries": [
+        "contextualized late interaction passage retrieval",
+        "sparse lexical expansion first stage ranking"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q10",
+      "queries": [
+        "Siamese sentence embeddings",
+        "unsupervised dense retrieval contrastive learning"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q11",
+      "queries": [
+        "heterogeneous zero shot information retrieval benchmark",
+        "massive text embedding benchmark"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    },
+    {
+      "id": "q12",
+      "queries": [
+        "language model resource selection federated search",
+        "web resource selection federated search"
+      ],
+      "rationale": "Separate the two requested evidence needs; preserve the shared original first pass."
+    }
+  ]
+}

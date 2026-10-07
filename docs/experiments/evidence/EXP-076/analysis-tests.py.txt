@@ -1,0 +1,109 @@
+"""Offline unit and coupled-path tests for EXP-076 analysis; no external calls."""
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+A = load("exp076_test_analyzer", HERE / "analyze.py.txt")
+
+
+def pinned_context():
+    protocol_bytes = (HERE / "protocol.json").read_bytes()
+    registration_bytes = (HERE / "registration-integrity.json").read_bytes()
+    protocol = A._strict_json(protocol_bytes)
+    registration = A._strict_json(registration_bytes)
+    input_bytes = {name: (REPO / name).read_bytes() for name in protocol["inputs"]}
+    parsed = {name: A._strict_json(raw) for name, raw in input_bytes.items()}
+    acquisition = parsed["docs/experiments/evidence/EXP-060/fresh-acquisition.json"]
+    queries = parsed["docs/experiments/evidence/EXP-060/queries.json"]
+    references = parsed["docs/experiments/evidence/EXP-064/completed/metric-reference-view.json"]
+    source_bound = parsed["docs/experiments/evidence/EXP-064/completed/source-bound-references.json"]
+    return acquisition, queries, references, source_bound, protocol, input_bytes, protocol_bytes, registration, registration_bytes
+
+
+def complete_order_map(acquisition):
+    orders = {}
+    for qid in [f"q{i}" for i in range(1, 14)]:
+        native = [card["id"] for card in acquisition["pools"][qid]["cards"]]
+        arms = {"w0": native, "candidate": native}
+        orders[(qid, "base")] = arms
+        if qid in A.STABILITY_CASES:
+            orders[(qid, "repeat")] = {"candidate": list(native)}
+            orders[(qid, "rotate")] = {"candidate": list(native)}
+    return orders
+
+
+def test_complete_nonsynthetic_shaped_path_assembles_both_reference_cases():
+    (acquisition, queries, references, source_bound, protocol, input_bytes,
+     protocol_bytes, registration, registration_bytes) = pinned_context()
+    run = {"schema": "exp076-run/1", "status": "complete", "synthetic": False}
+    report = A.analyze(run, acquisition, references, source_bound, queries, protocol, input_bytes,
+                       protocol_bytes, registration, registration_bytes,
+                       {"valid": True, "orders": complete_order_map(acquisition)}, test_fixture=True)
+    assert report["quality_analysis_performed"] is True
+    assert report["outcome"] == "fixture_test_only"
+    assert set(report["assessors"]) == {"A", "B"}
+    for assessor in ("A", "B"):
+        assert [case["case"] for case in report["assessors"][assessor]["cases"]] == list(A.QUALITY_CASES)
+        assert all("w0" in case and "candidate" in case for case in report["assessors"][assessor]["cases"])
+    assert report["quality_credit"] is False and report["adoption_eligible"] is False
+
+
+def test_synthetic_shortcut_does_not_calculate_quality():
+    (acquisition, queries, references, source_bound, protocol, input_bytes,
+     protocol_bytes, registration, registration_bytes) = pinned_context()
+    run = {"schema": "exp076-run/1", "status": "complete", "synthetic": True}
+    report = A.analyze(run, acquisition, references, source_bound, queries, protocol, input_bytes,
+                       protocol_bytes, registration, registration_bytes,
+                       {"valid": True, "orders": complete_order_map(acquisition)})
+    assert report["status"] == "synthetic_fixture_only"
+    assert report["quality_analysis_performed"] is False
+
+
+def test_identity_displacement_is_separate_gate():
+    ids = [f"c{i}" for i in range(20)]
+    rows = {sid: {"lead": 2, "facets": ["same-facet"]} for sid in ids}
+    source_rows = {sid: {"lead": 2} for sid in ids}
+    w0 = ids[:10]
+    candidate = ["c10", "c11", *ids[2:10], "c0", "c1", *ids[12:]]
+    order_map = {("q1", "base"): {"w0": w0, "candidate": candidate}}
+    report_row = A._metric_case("q1", order_map, {"A": {"q1": rows}}, {"A": {"q1": source_rows}}, "A")
+    assert report_row["candidate"]["useful10"] == report_row["w0"]["useful10"] == 10
+    assert report_row["lost_w0_facets"] == []
+    assert report_row["candidate_minus_w0_ndcg10"] == 0
+    assert report_row["displaced_useful_source_ids"] == ["c0", "c1"]
+    assert report_row["identity_displacement_count"] == 2
+    assert report_row["per_case_passed"] is False
+
+
+def test_tampered_pinned_input_blocks_before_quality():
+    (acquisition, queries, references, source_bound, protocol, input_bytes,
+     protocol_bytes, registration, registration_bytes) = pinned_context()
+    changed = dict(input_bytes)
+    path = "docs/experiments/evidence/EXP-060/queries.json"
+    changed[path] += b" "
+    report = A.analyze({"schema": "exp076-run/1", "status": "complete", "synthetic": True},
+                       acquisition, references, source_bound, queries, protocol, changed,
+                       protocol_bytes, registration, registration_bytes,
+                       {"valid": True, "orders": complete_order_map(acquisition)}, test_fixture=True)
+    assert report["status"] == "structural_rejection"
+    assert report["quality_analysis_performed"] is False
+    assert any(error.startswith("input-sha256:") for error in report["structural_errors"])
+
+
+if __name__ == "__main__":
+    _tests = [value for name, value in sorted(globals().items()) if name.startswith("test_") and callable(value)]
+    for _test in _tests:
+        _test()
+    print(f"{len(_tests)} EXP-076 analysis tests passed")

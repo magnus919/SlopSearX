@@ -160,3 +160,7 @@ cluster or host; record that live verification separately from these checks.
   `unresponsive_engines`, `/health`, and the configured engine credentials.
 - If the portal loads without styles, confirm the proxy forwards `/` and
   `/search` to the same service and does not cache an HTML error response.
+
+## Key-enabled result ordering
+
+The startup `TYPESAFE_API_KEY` enables [Jev result reranking](JEV_RERANKING.md) as well as specialist routing. The portal shares this provider with HTTP search; no browser-side provider call occurs. Successful advice orders the bounded scored pool across general and specialist source tiers. A configured reranker disables specialist promotion even when advice fails or is skipped. The card explanation identifies semantic ordering and keeps the numeric source-fusion score distinct from model confidence. Keyless and provider-fallback searches retain deterministic ordering; only the keyless path preserves legacy promotion behavior. Query/title/sanitized URL/snippet transmission and bounds are documented in the reranking guide.

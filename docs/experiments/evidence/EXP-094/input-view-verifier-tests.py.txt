@@ -1,0 +1,123 @@
+from __future__ import annotations
+import copy
+import hashlib
+import importlib.machinery
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+HERE = Path(__file__).resolve().parent
+V = importlib.machinery.SourceFileLoader("exp094_view_verifier_tests", str(HERE / "input-view-verifier.py.txt")).load_module()
+VIEW = importlib.machinery.SourceFileLoader("exp094_view_tests", str(HERE / "packet-viewer.py.txt")).load_module()
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+class InputViewVerifierTests(unittest.TestCase):
+    def fixture(self):
+        raw = (json.dumps({"body": ["snow 雪 " + str(i) + "x" * 1600 for i in range(12)]},
+                          ensure_ascii=False, indent=0) + "\n").encode("utf-8")
+        digest = sha(raw)
+        slot = "development-d1-source-R1-1"
+        path = "/private/stage/assessment-inputs/packet.json"
+        manifest = "a" * 64
+        log_sha = "b" * 64
+        viewer_path = str(V.VIEWER_PATH.resolve())
+        plan = V.input_view_plan(raw, expected_sha256=digest, input_path=path,
+                                 viewer_path=viewer_path,
+                                 slot_id=slot, source_manifest_sha256=manifest)
+        describe = (json.dumps(VIEW.describe_from_raw(raw, digest), ensure_ascii=False,
+                               sort_keys=True, separators=(",", ":")) + "\n").encode()
+        def row(argv, stdout):
+            command = " ".join(__import__("shlex").quote(part) for part in argv)
+            source = (f"const r=await tools.exec_command({{cmd:{json.dumps(command)},max_output_tokens:10000}});"
+                      "text(r.exit_code);text(r.output);")
+            return {"name": "exec", "input": source,
+                    "output_text_blocks": ["Script completed\nWall time 0.2 seconds\nOutput:\n",
+                                           "0", stdout.decode("utf-8")]}
+        calls = [row(["python3", viewer_path, "--input", path,
+                      "--expected-sha", digest, "--describe"], describe)]
+        for batch in plan["batches"]:
+            indices = batch["indices"]
+            stdout = VIEW.render_from_raw(raw, indices)
+            calls.append(row(["python3", viewer_path, "--input", path,
+                              "--expected-sha", digest, "--pages", ",".join(map(str, indices))], stdout))
+        return raw, digest, slot, path, viewer_path, manifest, log_sha, calls
+
+    def test_exact_complete_view_transcript_verifies_without_returning_source(self):
+        raw, digest, slot, path, viewer_path, manifest, log_sha, calls = self.fixture()
+        result = V.verify_tool_transcript(raw, expected_sha256=digest, input_path=path,
+            viewer_path=viewer_path,
+            slot_id=slot, source_manifest_sha256=manifest, calls=calls,
+            transcript_log_sha256=log_sha)
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["pages_covered"], list(range(1, result["page_count"] + 1)))
+        expected_batches = V.input_view_plan(raw, expected_sha256=digest, input_path=path,
+            viewer_path=viewer_path, slot_id=slot,
+            source_manifest_sha256=manifest)["batches"]
+        self.assertEqual(len(calls), 1 + len(expected_batches))
+        for row, batch in zip(calls[1:], expected_batches):
+            self.assertIn("--pages " + ",".join(map(str, batch["indices"])), row["input"])
+        self.assertEqual(result["input_sha256"], digest)
+        self.assertNotIn("snow", json.dumps(result))
+        self.assertNotIn(raw.decode(), json.dumps(result))
+
+    def test_missing_duplicate_reordered_truncated_or_modified_output_rejected(self):
+        raw, digest, slot, path, viewer_path, manifest, log_sha, calls = self.fixture()
+        kwargs = dict(expected_sha256=digest, input_path=path, viewer_path=viewer_path, slot_id=slot,
+                      source_manifest_sha256=manifest, transcript_log_sha256=log_sha)
+        zero_index_attempt = copy.deepcopy(calls[-1])
+        zero_index_attempt["input"] = zero_index_attempt["input"].replace(
+            "--pages ", "--pages 0,1 ", 1)
+        with self.assertRaisesRegex(V.ViewError, "transcript-call-count"):
+            V.verify_tool_transcript(raw, calls=calls + [zero_index_attempt], **kwargs)
+        for candidate, code in ((calls[:-1], "transcript-call-count"),
+                ([calls[0], calls[2], calls[1]] + calls[3:], "transcript-command-arguments"),
+                ([calls[0], calls[1], calls[1]] + calls[3:], "transcript-command-arguments")):
+            with self.subTest(code=code), self.assertRaisesRegex(V.ViewError, code):
+                V.verify_tool_transcript(raw, calls=candidate, **kwargs)
+        tampered = copy.deepcopy(calls)
+        tampered[1]["output_text_blocks"][2] = "truncated"
+        with self.assertRaisesRegex(V.ViewError, "transcript-output-mismatch"):
+            V.verify_tool_transcript(raw, calls=tampered, **kwargs)
+        tampered = copy.deepcopy(calls)
+        tampered[1]["output_text_blocks"][1] = "1"
+        with self.assertRaisesRegex(V.ViewError, "transcript-call-incomplete"):
+            V.verify_tool_transcript(raw, calls=tampered, **kwargs)
+
+    def test_wrong_assignment_hash_command_and_duplicate_slot_calls_rejected(self):
+        raw, digest, slot, path, viewer_path, manifest, log_sha, calls = self.fixture()
+        kwargs = dict(expected_sha256=digest, input_path=path, viewer_path=viewer_path, slot_id=slot,
+                      source_manifest_sha256=manifest, transcript_log_sha256=log_sha)
+        with self.assertRaisesRegex(V.ViewError, "assigned-input-hash"):
+            V.verify_tool_transcript(raw, calls=calls, **{**kwargs, "expected_sha256": "0" * 64})
+        tampered = copy.deepcopy(calls)
+        tampered[1]["input"] = tampered[1]["input"].replace("--pages", "--pagez")
+        with self.assertRaisesRegex(V.ViewError, "transcript-command-arguments"):
+            V.verify_tool_transcript(raw, calls=tampered, **kwargs)
+        tampered = copy.deepcopy(calls)
+        tampered[1]["input"] += "text(r.output);"
+        with self.assertRaisesRegex(V.ViewError, "transcript-call-wrapper"):
+            V.verify_tool_transcript(raw, calls=tampered, **kwargs)
+        with self.assertRaisesRegex(V.ViewError, "transcript-log-hash"):
+            V.verify_tool_transcript(raw, calls=calls, **{**kwargs, "transcript_log_sha256": "bad"})
+
+    def test_driver_reserve_and_manifest_binding_are_enforced(self):
+        raw, digest, slot, path, viewer_path, manifest, _log_sha, _calls = self.fixture()
+        plan = V.input_view_plan(raw, expected_sha256=digest, input_path=path,
+            viewer_path=str(V.VIEWER_PATH.resolve()),
+            slot_id=slot, source_manifest_sha256=manifest)
+        self.assertEqual(plan["total_delivered_bytes_with_reserve"],
+            plan["describe_bytes"] + sum(row["bytes"] for row in plan["batches"])
+            + V.MAX_DRIVER_RESERVE_BYTES)
+        with self.assertRaisesRegex(V.ViewError, "source-manifest-hash"):
+            V.input_view_plan(raw, expected_sha256=digest, input_path=path, slot_id=slot,
+                              viewer_path=str(V.VIEWER_PATH.resolve()),
+                              source_manifest_sha256="bad")
+
+
+if __name__ == "__main__":
+    unittest.main()

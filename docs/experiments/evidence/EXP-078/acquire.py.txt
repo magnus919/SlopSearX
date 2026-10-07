@@ -1,0 +1,467 @@
+"""One-shot, keyless EXP-078 GitHub acquisition correction.
+
+The EXP-077 d12 receipt remains an immutable input. This runner appends one
+fresh GitHub search for the same target and records the new pool separately;
+only that new response is marked as the effective d12 pool. It does not call
+other engines, reformulate the query, insert the target, or edit the predecessor.
+
+No acquisition occurs on import. Offline tests require an explicit
+``httpx.MockTransport``. A live call must pass the new EXP-078 admission module
+and its single-use capability; the old EXP-077 clock or capability is never
+accepted.
+"""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import pathlib
+import stat
+import sys
+import time
+from datetime import datetime, timezone
+from typing import Any, Callable
+
+import httpx
+
+
+class CorrectionError(RuntimeError):
+    """Safe, user-facing error for an invalid or interrupted correction."""
+
+
+HERE = pathlib.Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+EXP077_HELPERS = HERE.parent / "EXP-077" / "acquire.py.txt"
+ADMISSION_PATH = HERE / "admission.py.txt"
+INPUT_BRIDGE_PATH = HERE / "input-bridge.py.txt"
+MAX_PHYSICAL_CALLS = 1
+MAX_RESPONSE_BYTES = 2_000_000
+TARGET_URL = "https://github.com/sigstore/cosign"
+QUERY = "cosign"
+
+
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _load_module(name: str, path: pathlib.Path):
+    import sys
+    if name in sys.modules:
+        return sys.modules[name]
+    if not path.is_file() or path.is_symlink():
+        raise CorrectionError(f"required source is unavailable: {path.name}")
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise CorrectionError(f"cannot load required source: {path.name}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
+
+
+def _load_acquisition_helpers():
+    return _load_module("exp078_exp077_http_helpers", EXP077_HELPERS)
+
+
+def _load_admission():
+    return _load_module("exp078_admission", ADMISSION_PATH)
+
+
+def _load_input_bridge():
+    return _load_module("exp078_admission_input_bridge", INPUT_BRIDGE_PATH)
+
+
+def _write_once(path: pathlib.Path, data: bytes, mode: int = 0o600) -> None:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
+    try:
+        with os.fdopen(fd, "wb", closefd=False) as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(fd)
+    dfd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def _secure_output_dir(outdir: pathlib.Path) -> None:
+    if outdir.exists() or outdir.is_symlink():
+        raise CorrectionError("output directory already exists; correction receipts are immutable")
+    outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    if outdir.is_symlink() or not outdir.is_dir():
+        raise CorrectionError("output directory is not a private directory")
+
+
+def _require_private_directory(path: pathlib.Path) -> None:
+    if path.is_symlink() or not path.is_dir():
+        raise CorrectionError("stage output must be a real directory")
+    if stat.S_IMODE(path.stat().st_mode) & 0o077:
+        raise CorrectionError("stage output permissions must exclude group and other users")
+
+
+def _prepare_inputs(bridge, bundle_root: pathlib.Path, pins_path: pathlib.Path | None,
+                    cohorts_path: pathlib.Path | None) -> dict[str, Any]:
+    kwargs = {"bundle_root": bundle_root}
+    if pins_path is not None:
+        kwargs["pins_path"] = pins_path
+    if cohorts_path is not None:
+        kwargs["cohorts_path"] = cohorts_path
+    prepared = bridge.prepare_reused_inputs(**kwargs)
+    if prepared.get("schema") != "exp078-reused-inputs/1":
+        raise CorrectionError("reused input bundle did not pass EXP-078 provenance validation")
+    pools = prepared.get("pools")
+    expected = {f"d{i}" for i in range(1, 12)} | {"d13"}
+    if not isinstance(pools, dict) or set(pools) != expected:
+        raise CorrectionError("reused input preparation did not retain the twelve pinned effective cases")
+    historical = prepared.get("historical_d12")
+    if (not isinstance(historical, dict) or historical.get("task_id") != "d12"
+            or historical.get("effective") is not False
+            or not isinstance(historical.get("receipt_sha256"), str)
+            or len(historical["receipt_sha256"]) != 64):
+        raise CorrectionError("original d12 receipt provenance is unavailable")
+    for key in ("input_pins_sha256", "input_bundle_sha256"):
+        value = prepared.get(key)
+        if not isinstance(value, str) or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+            raise CorrectionError("reused input bundle digest is malformed")
+    return prepared
+
+
+class _PhaseGuard(httpx.AsyncBaseTransport):
+    """Recheck the genuine EXP-078 phase permit before each physical dispatch."""
+
+    def __init__(self, inner: httpx.AsyncBaseTransport, admission, phase_permit: Any,
+                 clock_bytes: bytes, outdir: pathlib.Path) -> None:
+        self.inner = inner
+        self.admission = admission
+        self.phase_permit = phase_permit
+        self.clock_bytes = clock_bytes
+        self.outdir = outdir
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        clock = json.loads(self.clock_bytes)
+        deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+        if datetime.now(timezone.utc) >= deadline:
+            raise CorrectionError("EXP-078 stage deadline expired before HTTP dispatch")
+        self.admission.require_phase(self.phase_permit, self.clock_bytes, self.outdir)
+        return await self.inner.handle_async_request(request)
+
+    async def aclose(self) -> None:
+        await self.inner.aclose()
+
+
+def _make_context(helper, recorder, transport: httpx.AsyncBaseTransport,
+                  phase_guard: _PhaseGuard | None = None):
+    from engines.github import GitHubAdapter
+
+    adapter = GitHubAdapter(config={"base_url": "https://api.github.com", "timeout_ms": 10_000,
+                                    "max_results": 20, "api_key": ""}, rate_limiter=None)
+    observed = phase_guard if phase_guard is not None else helper.AuditedTransport("github", transport, recorder)
+    adapter.set_http_transport(observed)
+    context = helper.AppContext(
+        active_engines={"github": adapter}, cache=None, rate_limiter=None, router=None,
+        suggestion_service=None, stats_tracker=None, audit_logger=None,
+        engine_semaphore=asyncio.Semaphore(1), tier1_engines={"github"},
+        sensitive_engines=set(), catalog=None, routing_budget=None,
+        ranking_strategy="presence", jev_router=None, rerank_provider=None)
+    return adapter, helper.SearchService(context)
+
+
+def _build_request(helper, case: dict[str, Any], isolation_key: str):
+    row = case.get("task", case)
+    if row.get("task_id", row.get("id")) != "d12":
+        raise CorrectionError("fixed d12 navigation case is missing from reused inputs")
+    if row.get("target_url") != TARGET_URL or row.get("query") != QUERY or row.get("engine") != "github":
+        raise CorrectionError("correction query or navigation target differs from the approved exception")
+    return helper.SearchRequest(
+        query=QUERY, categories=["reference"], engines=["github"], language="en", page=1,
+        max_results=20, include={"results", "engine_status", "diagnostics"},
+        freshness="no_preference", client_identifier="exp078-correction",
+        generate_suggestions=False, execution_isolation_key=isolation_key)
+
+
+def _pool_rows(helper, response: Any) -> list[dict[str, Any]]:
+    return [helper._result_receipt(item) for item in response.results]
+
+
+def _target_present(helper, results: list[dict[str, Any]]) -> bool:
+    expected = helper._canonical_target(TARGET_URL)
+    return any(helper._canonical_target(row.get("url", "")) == expected for row in results)
+
+
+def _safe_exception(exc: BaseException) -> str:
+    # Never persist provider exception strings, request headers, or credentials.
+    return type(exc).__name__
+
+
+async def run_correction(*, outdir: pathlib.Path, bundle_root: pathlib.Path,
+                         pins_path: pathlib.Path | None = None,
+                         cohorts_path: pathlib.Path | None = None,
+                         offline: bool = False,
+                         transport_factory: Callable[[], httpx.AsyncBaseTransport] | None = None,
+                         stage_permit: Any | None = None,
+                         source_integrity: dict[str, Any] | None = None,
+                         stage_clock: tuple[dict[str, Any], bytes, str] | None = None) -> dict[str, Any]:
+    """Retain one fresh query after new EXP-078 input and admission checks.
+
+    ``offline`` is explicit and accepts only MockTransport. Live mode accepts
+    no transport injection and requires a coordinator-issued EXP-078 stage
+    permit plus its shared stage clock.
+    """
+    if offline and transport_factory is None:
+        raise CorrectionError("offline correction requires an explicit MockTransport factory")
+    if not offline and transport_factory is not None:
+        raise CorrectionError("live transport is owned by EXP-078 after admission")
+    if not offline and (pins_path is not None or cohorts_path is not None):
+        raise CorrectionError("live correction uses only the frozen registered input paths")
+    if not offline and (stage_permit is None or stage_clock is None or type(source_integrity) is not dict):
+        raise CorrectionError("live correction requires the genuine EXP-078 stage permit, source proof, and clock")
+    if outdir.is_symlink() or (outdir.exists() and not outdir.is_dir()):
+        raise CorrectionError("stage output path is not a directory")
+
+    protocol_path = HERE / "protocol.json"
+    admission = _load_admission()
+    bridge = _load_input_bridge()
+    prepared = _prepare_inputs(bridge, bundle_root, pins_path, cohorts_path)
+    protocol = bridge.strict_json(protocol_path.read_bytes())
+    if protocol.get("schema") != "exp078-fixed-research-usefulness/1":
+        raise CorrectionError("unsupported EXP-078 acquisition amendment")
+    correction = protocol.get("acquisition", {}).get("correction_query", {})
+    if correction.get("query") != QUERY or correction.get("target_url") != TARGET_URL:
+        raise CorrectionError("registered correction scope differs from the approved query")
+    if protocol.get("acquisition", {}).get("corrective_http_requests_maximum") != MAX_PHYSICAL_CALLS:
+        raise CorrectionError("registered correction HTTP budget must be exactly one call")
+
+    helper = _load_acquisition_helpers()
+    if offline:
+        if stage_permit is not None or stage_clock is None:
+            raise CorrectionError("offline fixture requires an explicit EXP-078 test clock only")
+        _require_private_directory(outdir)
+        clock, clock_bytes, clock_sha = stage_clock
+        clock_path = outdir / "stage-clock.json"
+        if clock_path.is_symlink() or not clock_path.is_file() or clock_path.read_bytes() != clock_bytes:
+            raise CorrectionError("offline test clock bytes must match the EXP-078 clock file")
+    else:
+        if stage_permit is None or stage_clock is None or type(source_integrity) is not dict:
+            raise CorrectionError("live correction requires the genuine EXP-078 stage permit, source proof, and clock")
+        if (source_integrity.get("synthetic") is not False
+                or source_integrity.get("input_pins_sha256") != prepared["input_pins_sha256"]
+                or source_integrity.get("input_bundle_sha256") != prepared["input_bundle_sha256"]
+                or source_integrity.get("protocol_sha256") != sha256(protocol_path.read_bytes())):
+            raise CorrectionError("live source proof differs from the verified correction inputs")
+        clock, clock_bytes, clock_sha = stage_clock
+        if (not outdir.is_dir() or outdir.is_symlink() or
+                not (outdir / "stage-clock.json").is_file() or
+                (outdir / "stage-clock.json").read_bytes() != clock_bytes):
+            raise CorrectionError("live stage clock file does not match the admitted clock bytes")
+        _require_private_directory(outdir)
+    if (type(clock) is not dict or type(clock_bytes) is not bytes or
+            type(clock_sha) is not str or sha256(clock_bytes) != clock_sha or
+            bridge.strict_json(clock_bytes) != clock or canonical_json(clock) != clock_bytes):
+        raise CorrectionError("EXP-078 stage clock digest mismatch")
+    if clock.get("schema") != "exp078-stage-clock/1" or clock.get("stage") != "development":
+        raise CorrectionError("invalid EXP-078 development stage clock")
+    if not offline and (
+        source_integrity.get("qualified_source_revision") != clock.get("source_revision")
+        or source_integrity.get("stage_manifest_sha256") != clock.get("stage_manifest_sha256")
+        or source_integrity.get("cohorts_sha256") != clock.get("cohorts_sha256")
+        or source_integrity.get("registration_sha256") is None
+        or source_integrity.get("qualification_sha256") is None
+    ):
+        raise CorrectionError("live stage clock differs from the admitted source proof")
+    if not offline:
+        for key in ("registration_sha256", "qualification_sha256", "stage_manifest_sha256",
+                    "cohorts_sha256", "qualified_source_revision"):
+            value = source_integrity.get(key)
+            if not isinstance(value, str) or not value:
+                raise CorrectionError("live source proof is incomplete")
+        if clock.get("protocol_sha256") != sha256(protocol_path.read_bytes()):
+            raise CorrectionError("live stage clock protocol digest differs from committed protocol")
+    phase_permit = None if offline else admission.acquire_phase(
+        stage_permit, "acquisition", outdir, clock_bytes)
+    registration_sha = None if offline else source_integrity.get("registration_sha256")
+    qualification_sha = None if offline else source_integrity.get("qualification_sha256")
+    source_record = {
+        "synthetic": offline,
+        "registration_sha256": registration_sha,
+        "qualification_sha256": qualification_sha,
+        "input_pins_sha256": prepared["input_pins_sha256"],
+        "input_bundle_sha256": prepared["input_bundle_sha256"],
+        "protocol_sha256": sha256(protocol_path.read_bytes()),
+        "cohorts_sha256": clock["cohorts_sha256"],
+        "stage_manifest_sha256": clock["stage_manifest_sha256"],
+        "qualified_source_revision": None if offline else source_integrity.get("qualified_source_revision"),
+        "environment": None if offline else source_integrity.get("environment"),
+        "dependencies": None if offline else source_integrity.get("dependencies"),
+    }
+
+    acquisition_dir = outdir / "acquisition"
+    acquisition_dir.mkdir(mode=0o700, exist_ok=False)
+    if acquisition_dir.is_symlink():
+        raise CorrectionError("acquisition output directory may not be symlinked")
+
+    # Stage root and clock are created by the stage coordinator; acquisition
+    # artifacts remain in a new private child directory.
+    _write_once(acquisition_dir / "reused-inputs.json", canonical_json({
+        "schema": "exp078-reused-inputs-reference/1",
+        "input_pins_sha256": prepared["input_pins_sha256"],
+        "input_bundle_sha256": prepared["input_bundle_sha256"],
+        "source_integrity": source_record,
+        "registration_sha256": registration_sha,
+        "qualification_sha256": qualification_sha,
+        "predecessor_stage_final_sha256": prepared["input_integrity"]["historical_stage_final_sha256"],
+        "historical_d12_receipt_sha256": prepared["historical_d12"]["receipt_sha256"],
+        "historical_d12_effective_pool": False,
+        "d12_effective_pool_source": "corrective_github_query",
+        "no_predecessor_bytes_modified": True,
+    }))
+
+    http_dir = acquisition_dir / "http"
+    http_dir.mkdir(mode=0o700)
+    recorder = helper.Recorder(http_dir, MAX_PHYSICAL_CALLS, MAX_RESPONSE_BYTES)
+    recorder.bind_stage_clock(clock["stage_id"], clock["stage_manifest_sha256"],
+                              clock_sha, qualification_sha or "")
+    recorder.begin_query("d12")
+    helper_module = helper
+    transport: httpx.AsyncBaseTransport | None = None
+    adapter = None
+    started = time.monotonic()
+    query_receipt: dict[str, Any] = {}
+    cleanup_failure: str | None = None
+    try:
+        # Consume the capability above; only now make the effectful transport.
+        if offline:
+            assert transport_factory is not None
+            transport = transport_factory()
+            if not isinstance(transport, httpx.MockTransport):
+                if isinstance(transport, httpx.AsyncBaseTransport):
+                    await transport.aclose()
+                raise CorrectionError("offline correction transport must be MockTransport")
+        else:
+            admission.require_phase(phase_permit, clock_bytes, outdir)
+            deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+            if datetime.now(timezone.utc) >= deadline:
+                raise CorrectionError("EXP-078 stage deadline expired before HTTP client construction")
+            transport = httpx.AsyncHTTPTransport(retries=0, trust_env=False)
+        correction_case = prepared["corrective_query"]
+        request = _build_request(helper_module, correction_case, f"exp078:d12:{clock['stage_id']}")
+        guard = None if offline else _PhaseGuard(
+            helper.AuditedTransport("github", transport, recorder), admission,
+            phase_permit, clock_bytes, outdir)
+        adapter, service = _make_context(helper_module, recorder, transport,
+                                         phase_guard=guard)
+        response = await service.search(request)
+        pool = _pool_rows(helper_module, response)
+        outcome_rows = [{"engine": item.engine, "status": item.status,
+                         "result_count": item.result_count, "latency_ms": item.latency_ms}
+                        for item in response.engine_outcomes]
+        http_snapshot = recorder.snapshot()
+        call_count = http_snapshot["physical_http_calls"]
+        success = (call_count == 1 and len(outcome_rows) == 1
+                   and outcome_rows[0]["engine"] == "github" and outcome_rows[0]["status"] == "ok"
+                   and response.partial is False and response.all_unresponsive is False
+                   and response.cached is False and recorder.fatal is None)
+        query_receipt = {
+            "schema": "exp078-corrective-query-receipt/1", "task_id": "d12",
+            "query": QUERY, "target_url": TARGET_URL, "engine": "github",
+            "category": "reference", "language": "en", "page": 1, "max_results": 20,
+            "stage_id": clock["stage_id"], "stage_clock_digest": clock_sha,
+            "registration_sha256": registration_sha,
+            "qualification_sha256": qualification_sha,
+            "input_pins_sha256": prepared["input_pins_sha256"],
+            "input_bundle_sha256": prepared["input_bundle_sha256"],
+            "source_integrity": source_record,
+            "original_d12_receipt_sha256": prepared["historical_d12"]["receipt_sha256"],
+            "original_d12_unchanged": True,
+            "effective_pool_source": "corrective_github_query" if success else "unavailable",
+            "results": pool,
+            "engine_outcomes": outcome_rows,
+            "partial": response.partial, "all_unresponsive": response.all_unresponsive,
+            "cached": response.cached, "suggestions": list(response.suggestions),
+            "ranking_explanation": response.ranking_explanation,
+            "post_group_pool_count": len(pool),
+            "target_acquired": _target_present(helper_module, pool),
+            **http_snapshot,
+            "logical_elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+            "physical_http_calls": call_count,
+            "status": "complete" if success else "incomplete",
+            "failure": None if success else (recorder.fatal or "corrective-query-not-successful"),
+        }
+        _write_once(acquisition_dir / "corrective-query.json", canonical_json(query_receipt))
+        status = query_receipt["status"]
+        failure = None if success else (recorder.fatal or "corrective-query-not-successful")
+    except BaseException as exc:
+        status = "incomplete"
+        failure = _safe_exception(exc)
+        query_receipt = {
+            "schema": "exp078-corrective-query-receipt/1", "task_id": "d12",
+            "query": QUERY, "target_url": TARGET_URL, "engine": "github",
+            "stage_id": clock["stage_id"], "stage_clock_digest": clock_sha,
+            "registration_sha256": registration_sha,
+            "qualification_sha256": qualification_sha,
+            "input_pins_sha256": prepared["input_pins_sha256"],
+            "input_bundle_sha256": prepared["input_bundle_sha256"],
+            "source_integrity": source_record,
+            "original_d12_receipt_sha256": prepared["historical_d12"]["receipt_sha256"],
+            "category": "reference", "language": "en", "page": 1, "max_results": 20,
+            "original_d12_unchanged": True, "effective_pool_source": "unavailable",
+            "results": [], "engine_outcomes": [], "target_acquired": False,
+            "failure": failure, "logical_elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+            **recorder.snapshot(),
+            "status": "incomplete",
+        }
+        if not (acquisition_dir / "corrective-query.json").exists():
+            _write_once(acquisition_dir / "corrective-query.json", canonical_json(query_receipt))
+    finally:
+        try:
+            recorder.end_query()
+        except BaseException:
+            cleanup_failure = "ReceiptStateError"
+            # The query receipt is immutable and reflects the completed service
+            # result. A cleanup/state error is retained separately in stage-final.
+        if adapter is not None:
+            try:
+                await adapter._http_transport.aclose()
+            except BaseException:
+                cleanup_failure = cleanup_failure or "TransportCleanupError"
+        elif transport is not None:
+            try:
+                await transport.aclose()
+            except BaseException:
+                cleanup_failure = cleanup_failure or "TransportCleanupError"
+
+    final = {
+        "schema": "exp078-correction-run/1", "status": status,
+        "synthetic": offline, "quality_credit": False, "adoption_eligible": False,
+        "stage": "development", "stage_id": clock["stage_id"],
+        "stage_clock": clock, "stage_clock_sha256": clock_sha,
+        "input_pins_sha256": prepared["input_pins_sha256"],
+        "input_bundle_sha256": prepared["input_bundle_sha256"],
+        "source_integrity": source_record,
+        "registration_sha256": registration_sha,
+        "qualification_sha256": qualification_sha,
+        "original_d12_receipt_sha256": prepared["historical_d12"]["receipt_sha256"],
+        "original_d12_modified": False,
+        "effective_d12_pool": "corrective_github_query" if status == "complete" else None,
+        "corrective_query_receipt_sha256": sha256(canonical_json(query_receipt)),
+        "target_acquired": query_receipt.get("target_acquired", False),
+        "physical_http_calls": len(recorder.calls), "http_budget": MAX_PHYSICAL_CALLS,
+        "fatal_stop": failure or recorder.fatal,
+        "failure": failure,
+        "cleanup_failure": cleanup_failure,
+    }
+    _write_once(acquisition_dir / "stage-final.json", canonical_json(final))
+    return final

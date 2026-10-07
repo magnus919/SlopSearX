@@ -1,0 +1,211 @@
+"""Inert EXP-071 analysis; exposed development is never production adoption."""
+from decimal import Decimal, InvalidOperation, localcontext
+import math,random,statistics
+
+ARMS=('w0','relative')
+OPTIONS=('unsupported','supported_1','supported_2','supported_3','supported_4')
+BANDS={'supported_1':1,'supported_2':2,'supported_3':3,'supported_4':4}
+TOKEN_CAPS={'input_tokens':3000000,'output_tokens':160000}
+TOL=Decimal('0.000000000001')
+
+def ndcg(order,rows):
+    def dcg(ids):return sum((2**rows[c]['lead']-1)/math.log2(i+2) for i,c in enumerate(ids[:10]))
+    ideal=dcg(sorted(rows,key=lambda c:-rows[c]['lead']))
+    return dcg(order)/ideal if ideal else 0.0
+
+def useful(order,rows):return sum(rows[c]['lead']>=2 for c in order[:10])
+
+def covered(order,rows):return {f for c in order[:10] if rows[c]['lead']>=2 for f in rows[c]['facets']}
+
+def interval(values):
+    rng=random.Random(6501);samples=sorted(statistics.mean(rng.choices(values,k=len(values))) for _ in range(10000))
+    return [samples[249],samples[9749]]
+
+def finite_number(value,low,high):
+    if type(value)is int:return low<=value<=high
+    return type(value)is float and math.isfinite(value) and low<=value<=high
+
+def canonical_ids(cards):
+    return [c['id'] for c in sorted(cards,key=lambda c:tuple(c[f].encode('utf-8') for f in ('url','title','snippet','id')))]
+
+def _decimal_string(value):
+    if type(value)is not str:return None
+    try:
+        result=Decimal(value)
+        return result if result.is_finite() else None
+    except (InvalidOperation,ValueError):return None
+
+def validate_choices(choices,ids,normalized_signals,support_signals,conditional_signals,errors,label):
+    """Recompute normalized policy signals from raw typed Choice answers."""
+    if type(choices)is not dict or set(choices)!=set(ids):
+        errors.append(label+'-choice-inventory');return None
+    if type(normalized_signals)is not dict or set(normalized_signals)!=set(ids):errors.append(label+'-normalized-inventory')
+    if type(support_signals)is not dict or set(support_signals)!=set(ids):errors.append(label+'-support-inventory')
+    if type(conditional_signals)is not dict or set(conditional_signals)!=set(ids):errors.append(label+'-conditional-inventory')
+    computed={};normalized={};support_mass={};conditional={}
+    with localcontext() as ctx:
+        ctx.prec=100
+        for cid in ids:
+            answer=choices[cid]
+            if type(answer)is not dict or set(answer)!={'type','choice','probabilities','confidence'}:
+                errors.append(label+'-answer-schema');continue
+            valid_choice=answer.get('choice') in OPTIONS
+            if answer.get('type')!='choice' or not valid_choice:errors.append(label+'-answer-choice')
+            confidence=answer.get('confidence')
+            if not finite_number(confidence,0,1):errors.append(label+'-confidence')
+            raw=answer.get('probabilities')
+            if type(raw)is not dict or set(raw)!=set(OPTIONS):errors.append(label+'-distribution-options');continue
+            if any(not finite_number(v,0,1) for v in raw.values()):errors.append(label+'-distribution-value');continue
+            dec={key:Decimal(str(raw[key])) for key in OPTIONS}
+            total=sum(dec.values(),Decimal(0))
+            if total<=0 or abs(total-Decimal(1))>Decimal('0.01'):
+                errors.append(label+'-distribution-mass');continue
+            if valid_choice:
+                max_raw=max(raw.values());chosen_raw=raw[answer['choice']]
+                gap=Decimal(str(max_raw))-Decimal(str(chosen_raw))
+                tolerance=Decimal(str(4*max(math.ulp(float(max_raw)),math.ulp(float(chosen_raw)))))
+                if not Decimal(0)<=gap<=tolerance:errors.append(label+'-argmax')
+            norm={key:dec[key]/total for key in OPTIONS}
+            raw_support=sum((dec[key] for key in BANDS),Decimal(0))
+            support=raw_support/total
+            supported_bucket=2*raw_support>total
+            band=(sum((Decimal(BANDS[key])*dec[key] for key in BANDS),Decimal(0))/raw_support) if supported_bucket else None
+            normalized[cid]=norm;support_mass[cid]=support;conditional[cid]=band
+            computed[cid]={'support_mass':support,'conditional_expected_band':band,'supported_bucket':supported_bucket}
+            if type(normalized_signals)is dict and cid in normalized_signals:
+                signal=normalized_signals[cid]
+                if type(signal)is not dict or set(signal)!=set(OPTIONS):errors.append(label+'-normalized-schema')
+                else:
+                    for key in OPTIONS:
+                        parsed=_decimal_string(signal[key])
+                        if parsed is None or parsed!=norm[key]:errors.append(label+'-normalized-mismatch');break
+            if type(support_signals)is dict and cid in support_signals:
+                parsed=_decimal_string(support_signals[cid])
+                if parsed is None or parsed!=support:errors.append(label+'-support-mismatch')
+            if type(conditional_signals)is dict and cid in conditional_signals:
+                supplied=conditional_signals[cid]
+                if band is None:
+                    if supplied is not None:errors.append(label+'-conditional-boundary')
+                else:
+                    parsed=_decimal_string(supplied)
+                    if parsed is None or parsed!=band:errors.append(label+'-conditional-mismatch')
+    if len(computed)!=len(ids):return None
+    return {'normalized':normalized,'support_mass':support_mass,'conditional':conditional,'supported_bucket':{cid:computed[cid]['supported_bucket'] for cid in computed}}
+
+def expected_order(canonical,policy):
+    return sorted(canonical,key=lambda cid:(0 if policy['supported_bucket'][cid] else 1,
+        -policy['conditional'][cid] if policy['conditional'][cid] is not None else Decimal(0),canonical.index(cid)))
+
+def analyze(run,acquisition,references,queries,protocol):
+    schedule=protocol['schedule'];operations=run.get('operations',[]);structural=[]
+    expected=[(x['case'],x['variant']) for x in schedule]
+    actual=[(x.get('case'),x.get('variant')) for x in operations if type(x)is dict]
+    if actual!=expected:structural.append('registered_schedule')
+    if any(x.get('arms')!=list(ARMS) for x in schedule):structural.append('registered_arm_schedule')
+    query_ids=[q.get('id') for q in queries]
+    if len(query_ids)!=13 or set(query_ids)!={f'q{i}' for i in range(1,14)}:structural.append('query-inventory')
+    if {q.get('id') for q in queries if q.get('kind')=='navigation'}!={f'q{i}' for i in range(9,14)}:structural.append('navigation-inventory')
+    if run.get('status')!='complete':structural.append('incomplete_run')
+    if run.get('budget',{}).get('unknown_usage')is not False:structural.append('unknown_usage')
+    if run.get('budget',{}).get('attempts')!=43:structural.append('physical_call_inventory')
+    if type(run.get('synthetic'))is not bool:structural.append('missing_execution_identity')
+    for key,cap in TOKEN_CAPS.items():
+        value=run.get('budget',{}).get(key)
+        if type(value)is not int or not 0<=value<=cap:structural.append('budget-'+key)
+
+    neutral=run.get('neutral',{})
+    if type(neutral)is not dict:structural.append('neutral-schema')
+    else:
+        if neutral.get('status')!='valid' or neutral.get('questions')!=80 or neutral.get('synthetic_input')is not True:structural.append('neutral-acceptance')
+        neutral_choices=neutral.get('choices')
+        neutral_ids=list(neutral_choices) if type(neutral_choices)is dict else []
+        if len(neutral_ids)!=80 or any(type(cid)is not str or not cid for cid in neutral_ids):structural.append('neutral-id-inventory')
+        validate_choices(neutral.get('choices'),neutral_ids,neutral.get('normalized_probabilities'),neutral.get('support_mass'),neutral.get('conditional_expected_band'),structural,'neutral')
+        elapsed=neutral.get('elapsed_ms');phase=neutral.get('candidate_phase_ms')
+        if not finite_number(elapsed,0,1000):structural.append('neutral-deadline')
+        if not finite_number(phase,0,1000) or not finite_number(elapsed,0,1000) or phase+1e-6<elapsed:structural.append('neutral-phase')
+
+    usage_rows=[]
+    if type(neutral)is dict:usage_rows.append(neutral)
+    for op in operations:
+        if type(op)is dict and type(op.get('arms'))is dict:usage_rows.extend(row for row in op['arms'].values() if type(row)is dict)
+    if len(usage_rows)!=43:structural.append('receipt-count')
+    totals={key:0 for key in TOKEN_CAPS}
+    for row in usage_rows:
+        usage=row.get('usage',{})
+        if type(usage)is not dict or set(usage)!=set(totals) or any(type(v)is not int or not 0<=v<=64000 for v in usage.values()):structural.append('per-call-usage')
+        else:
+            if any(totals[key]+64000>TOKEN_CAPS[key] for key in totals):structural.append('usage-reservation-admission')
+            for key in totals:totals[key]+=usage[key]
+    if any(totals[key]!=run.get('budget',{}).get(key) for key in totals):structural.append('usage-sum')
+    wall=run.get('wall_seconds')
+    if not finite_number(wall,0,7200):structural.append('wall-deadline')
+
+    policies={}
+    for op in operations:
+        if type(op)is not dict:structural.append('operation-schema');continue
+        if type(op.get('case'))is not str or op.get('case') not in acquisition['pools']:
+            structural.append('unknown-operation-case');continue
+        cards=acquisition['pools'][op['case']]['cards'];ids=[c['id'] for c in cards]
+        if op['variant']=='rotate':
+            offset=20%len(ids);ids=ids[offset:]+ids[:offset]
+        if op.get('provenance_order_ids')!=ids:structural.append(op['case']+'-provenance')
+        canonical=canonical_ids(cards)
+        if type(op.get('arms'))is not dict or set(op['arms'])!=set(ARMS):structural.append(op['case']+'-arms');continue
+        for arm in ARMS:
+            row=op['arms'][arm]
+            if type(row)is not dict:structural.append(op['case']+'-'+arm+'-schema');continue
+            order=row.get('order_ids',[])
+            if type(order)is not list or any(type(cid)is not str for cid in order):structural.append(op['case']+'-'+arm+'-order-schema');continue
+            if row.get('status')!='valid':structural.append(op['case']+'-'+arm+'-failure')
+            if len(order)!=len(ids) or len(set(order))!=len(order) or set(order)!=set(ids):structural.append(op['case']+'-'+arm+'-membership')
+            if arm=='w0':
+                if set(order[:40])!=set(ids[:40]) or order[40:]!=ids[40:]:structural.append(op['case']+'-w0-tail')
+                scores=row.get('scores',{})
+                if type(scores)is not dict or set(scores)!=set(ids[:40]) or any(not finite_number(v,0,9) for v in scores.values()):structural.append(op['case']+'-w0-scores')
+                elif order!=sorted(ids[:40],key=lambda c:-scores[c])+ids[40:]:structural.append(op['case']+'-w0-score_order')
+                elapsed=row.get('elapsed_ms')
+                if not finite_number(elapsed,0,1000):structural.append(op['case']+'-w0-deadline')
+            else:
+                policy=validate_choices(row.get('choices'),ids,row.get('normalized_probabilities'),row.get('support_mass'),row.get('conditional_expected_band'),structural,op['case']+'-relative')
+                if policy is not None:
+                    policies[(op['case'],op['variant'])]=policy
+                    if order!=expected_order(canonical,policy):structural.append(op['case']+'-relative-policy_order')
+                elapsed=row.get('elapsed_ms');phase=op.get('candidate_phase_ms')
+                if not finite_number(elapsed,0,1000):structural.append(op['case']+'-relative-deadline')
+                if not finite_number(phase,0,1000) or not finite_number(elapsed,0,1000) or phase+1e-6<elapsed:structural.append(op['case']+'-candidate-phase')
+
+    result={'schema':'exp071-joint-support-argmax-roundoff-analysis/1','dataset':'exposed development; not untouched confirmation','adoption_eligible':False,'quality_analysis_performed':False,'structural_failures':structural,'synthetic':run.get('synthetic'),'assessors':{}}
+    if structural:return dict(result,outcome='incomplete')
+    bykey={(op['case'],op['variant']):op for op in operations}
+    stability=[]
+    for q in ('q1','q4','q7','q8'):
+        base=set(bykey[q,'base']['arms']['relative']['order_ids'][:10])
+        for variant in ('repeat','rotate'):
+            other=set(bykey[q,variant]['arms']['relative']['order_ids'][:10]);overlap=len(base&other)/min(10,len(base))
+            stability.append({'case':q,'variant':variant,'overlap':overlap,'passed':overlap>=.8})
+    nav=[]
+    for q in queries:
+        if q['kind']!='navigation':continue
+        target=q['target_url'].rstrip('/');cards=acquisition['pools'][q['id']]['cards']
+        targets={c['id'] for c in cards if c['url'].rstrip('/')==target}
+        orders=bykey[q['id'],'base']['arms']
+        nav.append({'case':q['id'],'target_present':bool(targets),'target_ids':sorted(targets),'relative_target_top1':bool(targets and orders['relative']['order_ids'][0] in targets)})
+    result.update(stability=stability,navigation=nav,natural_long_pools=sum(len(p['cards'])>40 for p in acquisition['pools'].values()))
+    for assessor in ('A','B'):
+        records=[]
+        for q in protocol['primary_cases']:
+            rows=references[assessor][q];cards=acquisition['pools'][q]['cards'];assert set(rows)=={c['id'] for c in cards}
+            for row in rows.values():assert type(row['lead'])is int and 0<=row['lead']<=3
+            orders=bykey[q,'base']['arms'];metrics={arm:{'ndcg10':ndcg(orders[arm]['order_ids'],rows),'useful10':useful(orders[arm]['order_ids'],rows),'covered_facets':sorted(covered(orders[arm]['order_ids'],rows))} for arm in ARMS}
+            delta=metrics['relative']['ndcg10']-metrics['w0']['ndcg10'];lost=sorted(set(metrics['w0']['covered_facets'])-set(metrics['relative']['covered_facets']))
+            records.append({'case':q,'metrics':metrics,'relative_minus_w0':delta,'lost_w0_facets':lost,'per_case_passed':delta>=-.03-1e-12 and not lost and metrics['relative']['useful10']>=metrics['w0']['useful10']})
+        deltas=[r['relative_minus_w0'] for r in records];mean=statistics.mean(deltas);ci=interval(deltas)
+        result['assessors'][assessor]={'cases':records,'mean_relative_minus_w0':mean,'bootstrap95':ci,'quality_gate_passed':mean>=.05-1e-12 and ci[0]>0 and all(r['per_case_passed'] for r in records)}
+    result['quality_analysis_performed']=run.get('synthetic')is False
+    result['development_quality_passed']=run.get('synthetic')is False and all(r['quality_gate_passed'] for r in result['assessors'].values()) and all(r['passed'] for r in stability)
+    result['navigation_gate_met']=all(r['relative_target_top1'] for r in nav if r['target_present'])
+    result['acquisition_recall_met']=all(r['target_present'] for r in nav)
+    result['development_all_gates_passed']=result['development_quality_passed'] and result['navigation_gate_met'] and result['acquisition_recall_met']
+    result['outcome']='synthetic_fixture_only' if run.get('synthetic')is True else 'development_pass' if result['development_all_gates_passed'] else 'development_quality_pass_navigation_unmet' if result['development_quality_passed'] else 'development_rejected'
+    return result

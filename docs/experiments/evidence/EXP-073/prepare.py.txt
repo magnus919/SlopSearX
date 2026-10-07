@@ -1,0 +1,85 @@
+"""Inert EXP-073 request and input validation; exact EXP-072 builders reused."""
+from __future__ import annotations
+import hashlib, importlib.machinery, importlib.util, json, math, subprocess
+from pathlib import Path
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+PROTOCOL=json.loads((HERE/'protocol.json').read_bytes())
+REGISTRATION=json.loads((HERE/'registration-integrity.json').read_bytes())
+PINS=PROTOCOL['inputs']
+REGISTRATION_REVISION='e90534bcad9aff3daa34b34399293bfbbec76088'
+ARMS=('w0','purpose_component','candidate')
+BUILDER_PATH='docs/experiments/evidence/EXP-072/prepare.py.txt'
+BUILDER_SHA256=''
+
+def strict_json(raw):
+    def pairs(items):
+        out={}
+        for k,v in items:
+            if k in out: raise ValueError('duplicate-json-key')
+            out[k]=v
+        return out
+    def constant(_): raise ValueError('nonfinite-json')
+    def number(s):
+        v=float(s)
+        if not math.isfinite(v): raise ValueError('nonfinite-json')
+        return v
+    return json.loads(raw,object_pairs_hook=pairs,parse_constant=constant,parse_float=number)
+
+def wire(value): return json.dumps(value,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+def digest(raw): return hashlib.sha256(raw).hexdigest()
+
+def committed(path,revision):
+    if revision=='HEAD': revision=subprocess.run(['git','rev-parse','HEAD'],cwd=REPO,check=True,capture_output=True,text=True).stdout.strip()
+    if not isinstance(revision,str) or len(revision)!=40 or any(c not in '0123456789abcdef' for c in revision): raise ValueError('input-revision')
+    p=Path(path)
+    if p.is_absolute() or '..' in p.parts: raise ValueError('unsafe-source-path')
+    return subprocess.run(['git','show',revision+':'+path],cwd=REPO,check=True,capture_output=True).stdout
+
+def builder():
+    raw=committed(BUILDER_PATH,REGISTRATION_REVISION)
+    path=HERE.parent/'EXP-072'/'prepare.py.txt'
+    if not path.is_file() or path.is_symlink() or path.read_bytes()!=raw: raise ValueError('builder-pin')
+    loader=importlib.machinery.SourceFileLoader('exp073_pinned_exp072_prepare',str(path))
+    spec=importlib.util.spec_from_loader(loader.name,loader); module=importlib.util.module_from_spec(spec);loader.exec_module(module)
+    return module
+
+BASE=builder()
+MODEL=BASE.MODEL
+
+def validate_inputs(input_bytes,input_revision):
+    if type(input_bytes)is not dict or set(input_bytes)!=set(PINS): raise ValueError('input-contract')
+    for path,want in PINS.items():
+        data=input_bytes[path]
+        if type(data)is not bytes or digest(data)!=want: raise ValueError('input-pin')
+        src=REPO/path
+        if src.is_symlink() or not src.is_file() or src.read_bytes()!=data or committed(path,input_revision)!=data: raise ValueError('input-source-mismatch')
+    protocol_raw=(HERE/'protocol.json').read_bytes();registration_raw=(HERE/'registration-integrity.json').read_bytes()
+    reg=committed('docs/experiments/evidence/EXP-073/registration-integrity.json',REGISTRATION_REVISION)
+    proto=committed('docs/experiments/evidence/EXP-073/protocol.json',REGISTRATION_REVISION)
+    if reg!=registration_raw or proto!=protocol_raw: raise ValueError('registration-pin')
+    metadata=strict_json(reg)
+    if metadata!=REGISTRATION or metadata.get('schema')!='exp073-registration/1' or metadata.get('provider_calls')!=0 or metadata.get('search_calls')!=0: raise ValueError('registration-contract')
+    for path,want in metadata['pins'].items():
+        if digest(committed(path,REGISTRATION_REVISION))!=want or digest((REPO/path).read_bytes())!=want: raise ValueError('registration-source-pin')
+    return {'input_pins':dict(PINS),'input_revision':input_revision,'protocol_sha256':digest(protocol_raw),'registration_sha256':digest(registration_raw)}
+
+def bodies(case,cards,variant='base'):
+    built=BASE.bodies(case,cards,variant)
+    # Byte-identical EXP-072 W0 and full purpose component, including rotation semantics.
+    return {'w0':built['w0'],'purpose_component':built['candidate'],'cards':built['cards'],'ids':built['ids'],
+            'tail_ids':built['tail_ids'],'w0_local_to_pool':built['w0_local_to_pool'],
+            'provenance_order_ids':built['provenance_order_ids']}
+
+def validate_score_response(raw,request,expected_ids,maximum):
+    return BASE.validate_score_response(raw,request,expected_ids,maximum)
+def order_scores(scores,ids,maximum): return BASE.order_scores(scores,ids,maximum)
+
+def response_fixture(request,score=2,usage=None):
+    answers={}
+    for cid,q in request['questions'].items():
+        maximum=3 if len(q['criteria'])==4 else 9
+        answers[cid]={'type':'score','score':min(score,maximum),'confidence':0.8,'legend':'synthetic fixture metadata'}
+    obj={'model':MODEL,'answers':answers,'usage':usage or {'input_tokens':11,'output_tokens':3}}
+    return json.dumps(obj,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()

@@ -1,0 +1,702 @@
+{
+  "schema": "exp072-analysis/1",
+  "dataset": "exposed development; not untouched confirmation",
+  "adoption_eligible": false,
+  "quality_analysis_performed": true,
+  "structural_failures": [],
+  "synthetic": false,
+  "assessors": {
+    "A": {
+      "cases": [
+        {
+          "case": "q1",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.8338691899235883,
+              "useful10": 10,
+              "covered_facets": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 1.0,
+              "useful10": 10,
+              "covered_facets": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 1.0,
+              "useful10": 10,
+              "covered_facets": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.16613081007641173,
+          "absolute_control_minus_w0_descriptive": 0.16613081007641173,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q2",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.9631342191665593,
+              "useful10": 9,
+              "covered_facets": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.8719014242164865,
+              "useful10": 10,
+              "covered_facets": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.882033596051561,
+              "useful10": 10,
+              "covered_facets": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": -0.08110062311499833,
+          "absolute_control_minus_w0_descriptive": -0.09123279495007275,
+          "lost_w0_facets": [],
+          "per_case_passed": false
+        },
+        {
+          "case": "q3",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.7549486805521336,
+              "useful10": 10,
+              "covered_facets": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.7310050400561016,
+              "useful10": 9,
+              "covered_facets": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.8181033349822536,
+              "useful10": 10,
+              "covered_facets": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.06315465443012003,
+          "absolute_control_minus_w0_descriptive": -0.023943640496032037,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q4",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.7417915194480328,
+              "useful10": 10,
+              "covered_facets": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.8769240118417218,
+              "useful10": 10,
+              "covered_facets": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.9094245487194395,
+              "useful10": 10,
+              "covered_facets": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.16763302927140666,
+          "absolute_control_minus_w0_descriptive": 0.13513249239368896,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q5",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.7958853280861213,
+              "useful10": 9,
+              "covered_facets": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.7769899661957194,
+              "useful10": 9,
+              "covered_facets": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.7748484592108494,
+              "useful10": 10,
+              "covered_facets": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": -0.021036868875271897,
+          "absolute_control_minus_w0_descriptive": -0.018895361890401974,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q6",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.918846253041356,
+              "useful10": 10,
+              "covered_facets": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.911671805955201,
+              "useful10": 10,
+              "covered_facets": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.8838634664270282,
+              "useful10": 10,
+              "covered_facets": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": -0.034982786614327854,
+          "absolute_control_minus_w0_descriptive": -0.007174447086155,
+          "lost_w0_facets": [],
+          "per_case_passed": false
+        },
+        {
+          "case": "q7",
+          "metrics": {
+            "w0": {
+              "ndcg10": 1.0,
+              "useful10": 10,
+              "covered_facets": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.9239702799224406,
+              "useful10": 10,
+              "covered_facets": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.9636452638863133,
+              "useful10": 10,
+              "covered_facets": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": -0.03635473611368667,
+          "absolute_control_minus_w0_descriptive": -0.07602972007755937,
+          "lost_w0_facets": [],
+          "per_case_passed": false
+        },
+        {
+          "case": "q8",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.8698055002826973,
+              "useful10": 10,
+              "covered_facets": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.8432768745969325,
+              "useful10": 10,
+              "covered_facets": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.8227592322019783,
+              "useful10": 10,
+              "covered_facets": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": -0.04704626808071899,
+          "absolute_control_minus_w0_descriptive": -0.02652862568576486,
+          "lost_w0_facets": [],
+          "per_case_passed": false
+        }
+      ],
+      "mean_candidate_minus_w0": 0.022049651372366835,
+      "bootstrap95": [
+        -0.038438049141561154,
+        0.08978489204416311
+      ],
+      "mean_absolute_control_minus_w0_descriptive": 0.007182339035514337,
+      "quality_gate_passed": false
+    },
+    "B": {
+      "cases": [
+        {
+          "case": "q1",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.8853533418192956,
+              "useful10": 10,
+              "covered_facets": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.9472213759810548,
+              "useful10": 10,
+              "covered_facets": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.9472213759810548,
+              "useful10": 10,
+              "covered_facets": [
+                "q1_f1",
+                "q1_f2",
+                "q1_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.06186803416175923,
+          "absolute_control_minus_w0_descriptive": 0.06186803416175923,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q2",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.8228695494367372,
+              "useful10": 9,
+              "covered_facets": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.8809009341015064,
+              "useful10": 10,
+              "covered_facets": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.9646631885990927,
+              "useful10": 10,
+              "covered_facets": [
+                "q2_f1",
+                "q2_f2",
+                "q2_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.14179363916235554,
+          "absolute_control_minus_w0_descriptive": 0.0580313846647692,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q3",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.8787277908726202,
+              "useful10": 10,
+              "covered_facets": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.8613612255514267,
+              "useful10": 10,
+              "covered_facets": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.8771324975457362,
+              "useful10": 10,
+              "covered_facets": [
+                "q3_f1",
+                "q3_f2",
+                "q3_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": -0.0015952933268840175,
+          "absolute_control_minus_w0_descriptive": -0.017366565321193517,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q4",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.8323110352014628,
+              "useful10": 10,
+              "covered_facets": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 1.0,
+              "useful10": 10,
+              "covered_facets": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.9580777588003657,
+              "useful10": 10,
+              "covered_facets": [
+                "q4_f1",
+                "q4_f2",
+                "q4_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.12576672359890295,
+          "absolute_control_minus_w0_descriptive": 0.16768896479853723,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q5",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.8319459440230464,
+              "useful10": 10,
+              "covered_facets": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.91552600519117,
+              "useful10": 10,
+              "covered_facets": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.9010362095152994,
+              "useful10": 10,
+              "covered_facets": [
+                "q5_f1",
+                "q5_f2",
+                "q5_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.06909026549225294,
+          "absolute_control_minus_w0_descriptive": 0.08358006116812355,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q6",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.918846253041356,
+              "useful10": 10,
+              "covered_facets": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.911671805955201,
+              "useful10": 10,
+              "covered_facets": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.921723022686679,
+              "useful10": 10,
+              "covered_facets": [
+                "q6_f1",
+                "q6_f2",
+                "q6_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.0028767696453230185,
+          "absolute_control_minus_w0_descriptive": -0.007174447086155,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q7",
+          "metrics": {
+            "w0": {
+              "ndcg10": 1.0,
+              "useful10": 10,
+              "covered_facets": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 0.9603250160361274,
+              "useful10": 10,
+              "covered_facets": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 1.0,
+              "useful10": 10,
+              "covered_facets": [
+                "q7_f1",
+                "q7_f2",
+                "q7_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.0,
+          "absolute_control_minus_w0_descriptive": -0.03967498396387259,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        },
+        {
+          "case": "q8",
+          "metrics": {
+            "w0": {
+              "ndcg10": 0.918846253041356,
+              "useful10": 10,
+              "covered_facets": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            },
+            "absolute_control": {
+              "ndcg10": 1.0,
+              "useful10": 10,
+              "covered_facets": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            },
+            "candidate": {
+              "ndcg10": 0.9513467899190737,
+              "useful10": 10,
+              "covered_facets": [
+                "q8_f1",
+                "q8_f2",
+                "q8_f3"
+              ]
+            }
+          },
+          "candidate_minus_w0": 0.0325005368777177,
+          "absolute_control_minus_w0_descriptive": 0.08115374695864397,
+          "lost_w0_facets": [],
+          "per_case_passed": true
+        }
+      ],
+      "mean_candidate_minus_w0": 0.05403758445142842,
+      "bootstrap95": [
+        0.01934535710180095,
+        0.09138501236649557
+      ],
+      "mean_absolute_control_minus_w0_descriptive": 0.04851327442257651,
+      "quality_gate_passed": true
+    }
+  },
+  "stability": [
+    {
+      "case": "q1",
+      "variant": "repeat",
+      "overlap": 1.0,
+      "passed": true
+    },
+    {
+      "case": "q1",
+      "variant": "rotate",
+      "overlap": 1.0,
+      "passed": true
+    },
+    {
+      "case": "q4",
+      "variant": "repeat",
+      "overlap": 0.9,
+      "passed": true
+    },
+    {
+      "case": "q4",
+      "variant": "rotate",
+      "overlap": 0.9,
+      "passed": true
+    },
+    {
+      "case": "q7",
+      "variant": "repeat",
+      "overlap": 1.0,
+      "passed": true
+    },
+    {
+      "case": "q7",
+      "variant": "rotate",
+      "overlap": 1.0,
+      "passed": true
+    },
+    {
+      "case": "q8",
+      "variant": "repeat",
+      "overlap": 1.0,
+      "passed": true
+    },
+    {
+      "case": "q8",
+      "variant": "rotate",
+      "overlap": 1.0,
+      "passed": true
+    }
+  ],
+  "navigation": [
+    {
+      "case": "q9",
+      "target_present": true,
+      "target_ids": [
+        "c0"
+      ],
+      "candidate_target_top1": true
+    },
+    {
+      "case": "q10",
+      "target_present": false,
+      "target_ids": [],
+      "candidate_target_top1": false
+    },
+    {
+      "case": "q11",
+      "target_present": false,
+      "target_ids": [],
+      "candidate_target_top1": false
+    },
+    {
+      "case": "q12",
+      "target_present": true,
+      "target_ids": [
+        "c0"
+      ],
+      "candidate_target_top1": true
+    },
+    {
+      "case": "q13",
+      "target_present": true,
+      "target_ids": [
+        "c0"
+      ],
+      "candidate_target_top1": true
+    }
+  ],
+  "natural_long_pools": 1,
+  "development_quality_passed": false,
+  "navigation_gate_met": true,
+  "acquisition_recall_met": false,
+  "development_all_gates_passed": false,
+  "outcome": "development_rejected"
+}
