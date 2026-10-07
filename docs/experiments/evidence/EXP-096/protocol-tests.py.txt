@@ -138,6 +138,77 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(protocol["acquisition"]["carry_forward_card_records"], 884)
         self.assertFalse(protocol["acquisition"]["failed_source_submission_reused"])
 
+    def test_cohort_assessment_accounting_matches_registered_protocol(self):
+        protocol = json.loads(CURRENT.read_text())
+        cohorts = json.loads((HERE / "cohorts.json").read_text())
+        protocol_acquisition = protocol["acquisition"]
+        models = protocol["models"]
+        cohort_acquisition = cohorts["acquisition"]
+
+        self.assertEqual(cohorts["fresh_source_assessments"], 43)
+        self.assertEqual(cohort_acquisition["fresh_source_assessments"], 43)
+        self.assertEqual(cohorts["fresh_source_assessments"],
+                         protocol_acquisition["source_assessments_fresh"])
+        self.assertEqual(cohort_acquisition["fresh_source_assessments"],
+                         protocol_acquisition["source_assessments_fresh"])
+        self.assertEqual(cohorts["fresh_answer_assessments"],
+                         protocol_acquisition["fresh_answer_assessments"])
+        for section in (cohorts, cohort_acquisition):
+            self.assertEqual(section["source_assessments_carried_unchanged"], 5)
+            self.assertEqual(section["source_assessments_total_required"], 48)
+            self.assertEqual(section["fresh_source_assessments"] +
+                             section["source_assessments_carried_unchanged"],
+                             section["source_assessments_total_required"])
+            self.assertEqual(section["source_assessments_carried_unchanged"],
+                             protocol_acquisition["source_assessments_carried_unchanged"])
+            self.assertEqual(section["source_assessments_total_required"],
+                             protocol_acquisition["source_assessments_total_required"])
+        self.assertEqual(cohort_acquisition["fresh_answer_assessments"], 32)
+        self.assertEqual(cohorts["fresh_answer_assessments"], 32)
+        self.assertEqual(cohorts["fresh_answer_assessments"], models["answer_assessment_calls_expected"])
+        self.assertEqual(cohorts["fresh_grader_submissions_total"], 75)
+        self.assertEqual(cohorts["fresh_grader_submissions_total"],
+                         protocol_acquisition["fresh_grader_submissions_total"])
+        self.assertEqual(cohorts["fresh_source_assessments"] +
+                         cohorts["fresh_answer_assessments"],
+                         cohorts["fresh_grader_submissions_total"])
+        self.assertEqual(cohorts["historical_grader_submissions_total"], 28)
+        self.assertEqual(cohorts["historical_grader_submissions_total"],
+                         protocol_acquisition["historical_grader_submissions_total"])
+        self.assertEqual(cohorts["planned_grader_submissions_total"], 103)
+        self.assertEqual(cohorts["fresh_grader_submissions_total"] +
+                         cohorts["historical_grader_submissions_total"],
+                         cohorts["planned_grader_submissions_total"])
+        self.assertEqual(cohorts["planned_grader_submissions_total"],
+                         protocol_acquisition["planned_grader_submissions_total"])
+        self.assertEqual(cohorts["maximum_logical_grader_submissions_per_stage"],
+                         models["maximum_logical_grader_submissions_per_stage"])
+        self.assertLessEqual(cohorts["planned_grader_submissions_total"],
+                             cohorts["maximum_logical_grader_submissions_per_stage"])
+        self.assertEqual(cohorts["planned_answer_api_calls"], 18)
+        self.assertEqual(cohorts["planned_answer_api_calls"], models["planned_fresh_answer_api_calls"])
+        self.assertEqual(cohorts["planned_answer_api_calls"],
+                         protocol_acquisition["planned_answer_api_calls"])
+        self.assertEqual(cohorts["planned_all_model_submissions_total"], 121)
+        self.assertEqual(cohorts["planned_grader_submissions_total"] +
+                         cohorts["planned_answer_api_calls"],
+                         cohorts["planned_all_model_submissions_total"])
+        self.assertEqual(cohorts["planned_all_model_submissions_total"],
+                         protocol_acquisition["planned_all_model_submissions_total"])
+        self.assertEqual(cohorts["maximum_total_logical_model_submissions_per_stage"],
+                         models["maximum_total_logical_model_submissions_per_stage"])
+        self.assertLessEqual(cohorts["planned_all_model_submissions_total"],
+                             cohorts["maximum_total_logical_model_submissions_per_stage"])
+        basis = cohorts["request_count_basis"]
+        for phrase in ("5 carried unchanged plus 43 fresh = 48 source slots",
+                       "43 source plus 32 answer = 75",
+                       "28 historical grader submissions",
+                       "103 of the 112 maximum",
+                       "18 free answer API calls",
+                       "121 of 130 planned total model submissions",
+                       "unchanged Jev limit is 44 calls"):
+            self.assertIn(phrase, basis)
+
     def test_exp094_is_terminal_and_no_previous_grader_response_is_reused(self):
         protocol = json.loads(CURRENT.read_text())
         predecessor = protocol["predecessor"]
