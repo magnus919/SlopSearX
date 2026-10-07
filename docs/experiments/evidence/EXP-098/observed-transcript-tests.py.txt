@@ -1,0 +1,60 @@
+import hashlib
+import importlib.machinery
+import unittest
+from pathlib import Path
+
+C = importlib.machinery.SourceFileLoader('observed_transcript', str(Path(__file__).with_name('observed-transcript.py.txt'))).load_module()
+
+
+class TranscriptContract(unittest.TestCase):
+    def setUp(self):
+        self.original = b'{"type":"event_msg","payload":{"type":"task_complete"}}\n'
+        self.sha = hashlib.sha256(self.original).hexdigest()
+
+    def test_exact_full_log(self):
+        self.assertEqual(C.observed_bytes(self.original, self.sha), self.original)
+
+    def test_only_settings_after_observation(self):
+        settings = b'{"type":"event_msg","payload":{"type":"thread_settings_applied"}}\n'
+        archive = self.original + settings
+        self.assertEqual(C.observed_bytes(archive, self.sha), self.original)
+        self.assertEqual(archive, self.original + settings)
+
+    def test_wrong_hash_and_truncation(self):
+        for raw, digest in [(self.original, '0' * 64), (self.original[:10] + b'\n', self.sha)]:
+            with self.assertRaises(C.TranscriptError):
+                C.observed_bytes(raw, digest)
+
+    def test_partial_line(self):
+        with self.assertRaises(C.TranscriptError):
+            C.observed_bytes(self.original + b'{"type":"event_msg"}', self.sha)
+
+    def test_mid_line_hash_not_a_boundary(self):
+        with self.assertRaises(C.TranscriptError):
+            C.observed_bytes(self.original, hashlib.sha256(self.original[:-1]).hexdigest())
+
+    def test_extra_tool_message_or_final_rejected(self):
+        rows = [b'{"type":"response_item","payload":{"type":"function_call"}}\n',
+                b'{"type":"response_item","payload":{"type":"message","role":"user"}}\n',
+                b'{"type":"response_item","payload":{"type":"message","role":"assistant","phase":"final_answer"}}\n']
+        for row in rows:
+            with self.subTest(row=row), self.assertRaises(C.TranscriptError):
+                C.observed_bytes(self.original + row, self.sha)
+
+    def test_duplicate_keys_rejected(self):
+        row = b'{"type":"response_item","type":"event_msg","payload":{"type":"thread_settings_applied"}}\n'
+        with self.assertRaises(C.TranscriptError):
+            C.observed_bytes(self.original + row, self.sha)
+
+    def test_nonfinite_values_rejected(self):
+        row = b'{"type":"event_msg","payload":{"type":"thread_settings_applied","value":NaN}}\n'
+        with self.assertRaises(C.TranscriptError):
+            C.observed_bytes(self.original + row, self.sha)
+
+    def test_malformed_appended_record(self):
+        with self.assertRaises(C.TranscriptError):
+            C.observed_bytes(self.original + b'not json\n', self.sha)
+
+
+if __name__ == '__main__':
+    unittest.main()

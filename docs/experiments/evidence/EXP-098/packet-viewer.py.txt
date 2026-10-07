@@ -1,0 +1,254 @@
+"""Read-only byte-preserving paged viewer for an assigned JSON packet.
+
+Pages greedily group original UTF-8 byte ranges, preferring newline boundaries
+and splitting an overlong physical line only at a UTF-8 boundary. Nothing is
+parsed for presentation, normalized, filtered, summarized, or re-serialized.
+The exact concatenation of page_data equals the assigned bytes.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import stat
+import sys
+from pathlib import Path
+from typing import Any
+
+SCHEMA = "exp095-packet-view/1"
+MAX_INPUT_BYTES = 384_000
+MAX_PAGE_BYTES = 4_096
+MAX_PAGES_PER_REQUEST = 2
+MAX_RENDER_BYTES = 9_000
+_SHA = re.compile(r"^[0-9a-f]{64}$")
+
+
+class ViewerError(ValueError):
+    """Stable, non-path-bearing viewer error."""
+    def __init__(self, code: str):
+        self.code = code
+        super().__init__(code)
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        value = {}
+        for key, item in items:
+            if key in value:
+                raise ViewerError("duplicate-json-key")
+            value[key] = item
+        return value
+    def constant(_value):
+        raise ViewerError("non-finite-json")
+    try:
+        text = raw.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise ViewerError("invalid-utf8") from exc
+    try:
+        return json.loads(text, object_pairs_hook=pairs, parse_constant=constant)
+    except ViewerError:
+        raise
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise ViewerError("invalid-json") from exc
+
+
+def _check_raw(raw: bytes, expected_sha256: str | None = None) -> None:
+    if type(raw) is not bytes:
+        raise ViewerError("input-bytes-required")
+    if not raw:
+        raise ViewerError("empty-input")
+    if len(raw) > MAX_INPUT_BYTES:
+        raise ViewerError("input-oversize")
+    if type(_strict_json(raw)) is not dict:
+        raise ViewerError("packet-root-not-object")
+    if expected_sha256 is not None:
+        if type(expected_sha256) is not str or not _SHA.fullmatch(expected_sha256):
+            raise ViewerError("expected-sha-invalid")
+        if sha(raw) != expected_sha256:
+            raise ViewerError("input-hash-mismatch")
+
+
+def _page_units(raw: bytes) -> list[bytes]:
+    if not raw:
+        raise ViewerError("empty-input")
+    # bytes.splitlines(keepends=True) preserves every CR/LF byte and the final
+    # unterminated line. JSON strings encode their newlines, so boundaries here
+    # are the packet's original physical lines only.
+    lines = raw.splitlines(keepends=True)
+    if b"".join(lines) != raw:
+        raise ViewerError("line-boundary-loss")
+    units: list[bytes] = []
+    for line in lines:
+        if len(line) <= MAX_PAGE_BYTES:
+            units.append(line)
+            continue
+        start = 0
+        while start < len(line):
+            end = min(start + MAX_PAGE_BYTES, len(line))
+            if end < len(line):
+                while end > start and line[end] & 0xC0 == 0x80:
+                    end -= 1
+            if end == start:
+                raise ViewerError("utf8-page-boundary")
+            units.append(line[start:end])
+            start = end
+    if b"".join(units) != raw:
+        raise ViewerError("page-unit-loss")
+    return units
+
+
+def build_views(raw: bytes) -> dict:
+    """Return compact page metadata plus private byte pages for exact rendering."""
+    _check_raw(raw)
+    lines = _page_units(raw)
+    pages: list[bytes] = []
+    current = bytearray()
+    for line in lines:
+        if current and len(current) + len(line) > MAX_PAGE_BYTES:
+            pages.append(bytes(current))
+            current.clear()
+        current.extend(line)
+    if current:
+        pages.append(bytes(current))
+    if b"".join(pages) != raw:
+        raise ViewerError("page-concatenation-mismatch")
+    metadata = [{"index": i, "bytes": len(page), "sha256": sha(page)}
+                for i, page in enumerate(pages, 1)]
+    return {"schema": SCHEMA, "input_sha256": sha(raw), "input_bytes": len(raw),
+            "page_count": len(pages), "page_bytes_limit": MAX_PAGE_BYTES,
+            "pages": metadata, "_page_data": pages}
+
+
+def describe_from_raw(raw: bytes, expected_sha256: str) -> dict:
+    """Small public description; full per-page digest lists remain internal."""
+    _check_raw(raw, expected_sha256)
+    view = build_views(raw)
+    return {"schema": SCHEMA, "input_sha256": view["input_sha256"],
+            "input_bytes": view["input_bytes"], "page_count": view["page_count"],
+            "first_page_index": 1, "last_page_index": view["page_count"],
+            "page_bytes_limit": MAX_PAGE_BYTES,
+            "max_pages_per_request": MAX_PAGES_PER_REQUEST,
+            "max_render_bytes": MAX_RENDER_BYTES,
+            "instructions": "Page indices are one-based: request every integer from 1 through page_count inclusive, in ascending order; 0 is never valid. Retain exact packet bytes."}
+
+
+def _validate_page_indices(indices, page_count: int) -> list[int]:
+    if type(indices) not in (list, tuple) or not 1 <= len(indices) <= MAX_PAGES_PER_REQUEST:
+        raise ViewerError("page-request-limit")
+    values = []
+    for index in indices:
+        if type(index) is not int or index < 1 or index > page_count:
+            raise ViewerError("page-index-out-of-bounds")
+        if index in values:
+            raise ViewerError("page-index-duplicate")
+        values.append(index)
+    return values
+
+
+def render_from_raw(raw: bytes, page_indices) -> bytes:
+    """Render selected original pages with length/hash framing and fixed caps."""
+    view = build_views(raw)
+    indices = _validate_page_indices(page_indices, view["page_count"])
+    chunks = []
+    for index in indices:
+        page = view["_page_data"][index - 1]
+        digest = view["pages"][index - 1]["sha256"]
+        chunks.extend((f"BEGIN_PACKET_PAGE|schema={SCHEMA}|index={index}|count={view['page_count']}|bytes={len(page)}|sha256={digest}\n".encode("ascii"),
+                       page,
+                       f"\nEND_PACKET_PAGE|index={index}|bytes={len(page)}|sha256={digest}\n".encode("ascii")))
+    rendered = b"".join(chunks)
+    if len(rendered) > MAX_RENDER_BYTES:
+        raise ViewerError("render-oversize")
+    return rendered
+
+
+def _read_verified(input_path: str | os.PathLike[str], expected_sha256: str) -> bytes:
+    if type(expected_sha256) is not str or not _SHA.fullmatch(expected_sha256):
+        raise ViewerError("expected-sha-invalid")
+    try:
+        path = Path(input_path)
+    except (TypeError, ValueError, OSError) as exc:
+        raise ViewerError("unsafe-path") from exc
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    # Refuse symlinks in every component before opening, then use O_NOFOLLOW
+    # where available to close the final-component race.
+    cursor = Path(path.anchor)
+    for component in path.parts[1:]:
+        cursor = cursor / component
+        try:
+            if cursor.is_symlink():
+                raise ViewerError("symlink-input")
+        except OSError as exc:
+            raise ViewerError("unsafe-path") from exc
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        fd = os.open(path, flags)
+    except OSError as exc:
+        raise ViewerError("unsafe-path") from exc
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise ViewerError("unsafe-file-type")
+        if info.st_size > MAX_INPUT_BYTES:
+            raise ViewerError("input-oversize")
+        with os.fdopen(fd, "rb", closefd=False) as handle:
+            raw = handle.read(MAX_INPUT_BYTES + 1)
+    finally:
+        os.close(fd)
+    _check_raw(raw, expected_sha256)
+    return raw
+
+
+def describe(input_path: str | os.PathLike[str], expected_sha256: str) -> dict:
+    return describe_from_raw(_read_verified(input_path, expected_sha256), expected_sha256)
+
+
+def render(input_path: str | os.PathLike[str], expected_sha256: str, page_indices) -> bytes:
+    return render_from_raw(_read_verified(input_path, expected_sha256), page_indices)
+
+
+def _parse_pages(value: str) -> list[int]:
+    try:
+        parts = value.split(",")
+        if not parts or any(not part or not part.isascii() or not part.isdecimal() for part in parts):
+            raise ValueError
+        return [int(part) for part in parts]
+    except ValueError as exc:
+        raise ViewerError("page-request-invalid") from exc
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(prog="packet-viewer")
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--expected-sha", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--describe", action="store_true")
+    mode.add_argument("--pages")
+    args = parser.parse_args(argv)
+    try:
+        if args.describe:
+            output = (json.dumps(describe(args.input, args.expected_sha), ensure_ascii=False,
+                                 sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+        else:
+            output = render(args.input, args.expected_sha, _parse_pages(args.pages))
+        if len(output) > MAX_RENDER_BYTES:
+            raise ViewerError("render-oversize")
+        sys.stdout.buffer.write(output)
+        return 0
+    except ViewerError as exc:
+        sys.stderr.write(f"PACKET_VIEWER_ERROR:{exc.code}\n")
+        return 2
+    except OSError:
+        sys.stderr.write("PACKET_VIEWER_ERROR:io-error\n")
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

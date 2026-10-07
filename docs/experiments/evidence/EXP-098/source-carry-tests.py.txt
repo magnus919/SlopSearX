@@ -1,0 +1,110 @@
+import importlib.machinery
+import shutil
+import tempfile
+from pathlib import Path
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--checkpoint-root', required=True)
+parser.add_argument('--pins-path', required=True)
+args = parser.parse_args()
+source = Path(__file__).resolve().with_name('source-carry.py.txt')
+m = importlib.machinery.SourceFileLoader('carry_under_test', str(source)).load_module()
+checkpoint = Path(args.checkpoint_root)
+pins = Path(args.pins_path)
+passed = []
+
+def reject(name, root, manifest=pins, expected=None):
+    try:
+        m.verify_source_checkpoint(root, manifest, expected or m.CHECKPOINT_PINS_SHA256)
+    except ValueError:
+        passed.append(name)
+    else:
+        raise RuntimeError(name + ' was accepted')
+
+# Challenge the actual sequence-before-observation use site without inventory
+# short-circuiting the branch under test.
+manifest = {'active_source_slots': [{'logical_submission': 'slot-%d' % i} for i in range(1,49)]}
+validation_rows = [{'slot': i, 'job': 'slot-%d' % i, 'status': 'valid' if i<24 else 'invalid'} for i in range(6,25)]
+validation_rows[-1]['error_code'] = 'evidence_available requires an ID'
+terminal = {'terminal': True, 'accepted_source_assignments':23, 'fresh_source_submissions':19}
+actors = [{'logical_submission':'slot-%d'%i} for i in range(6,25)]
+seen = []
+m.project_accepted_observations(validation_rows, manifest, terminal, actors, lambda actor: seen.append(actor['logical_submission']))
+if len(seen)!=18 or 'slot-24' in seen:
+    raise RuntimeError('invalid actor observation selected')
+passed.append('projection_excludes_invalid_actor')
+changed = [dict(row) for row in validation_rows]
+changed[0]['slot'] = 7
+seen = []
+try:
+    m.project_accepted_observations(changed, manifest, terminal, actors, lambda actor: seen.append(actor))
+except ValueError:
+    if seen:
+        raise RuntimeError('observed before rejecting sequence')
+else:
+    raise RuntimeError('changed slot sequence accepted')
+passed.append('sequence_guard_precedes_observed_bytes')
+for date, name in [('2026/10/07','../../escape.jsonl'), ('../../escape','log.jsonl'), ('2026/99/07','log.jsonl'), ('/2026/10/07','log.jsonl')]:
+    try:
+        m.actor_log_relative({'session_date':date, 'session_log_name':name})
+    except ValueError:
+        pass
+    else:
+        raise RuntimeError('unsafe actor path accepted')
+passed.append('unsafe_actor_path_components_rejected')
+if m.actor_log_relative({'session_date':'2026/10/07','session_log_name':'rollout-safe.jsonl'}).as_posix()!='2026/10/07/rollout-safe.jsonl':
+    raise RuntimeError('valid actor path rejected')
+passed.append('safe_actor_path_components_accepted')
+
+r = m.verify_source_checkpoint(checkpoint, pins, m.CHECKPOINT_PINS_SHA256)
+if len(r['payloads']) != 23:
+    raise RuntimeError('valid replay count')
+passed.append('all_23_original_replay')
+if r['proof']['fresh_assignments'] != 18 or r['proof']['historical_assignments'] != 5 or 'development-d4-source-R2-3' in r['payloads']:
+    raise RuntimeError('invalid assessment entered carry payloads')
+passed.append('exact_23_excludes_invalid_slot')
+reject('unregistered_manifest_digest', checkpoint, expected='0' * 64)
+with tempfile.TemporaryDirectory(prefix='carry-adversarial-') as tmp:
+    tmp = Path(tmp)
+    badpins = tmp / 'pins.json'
+    badpins.write_bytes(pins.read_bytes() + b' ')
+    reject('modified_manifest_bytes', checkpoint, manifest=badpins)
+    copied = tmp / 'checkpoint'
+    shutil.copytree(checkpoint, copied)
+    targets = {
+        'modified_original_source': copied / 'original-source/docs/experiments/evidence/EXP-097/phase-bindings.py.txt',
+        'modified_acceptance_receipt': copied / 'origin-stage/source-reference/validation-006.json',
+        'changed_acceptance_sequence': copied / 'origin-stage/terminal-outcome-private.json',
+        'substituted_original_observation_hash': next((copied / 'origin-stage/source-reference/views').glob('*.view.json')),
+        'modified_original_transcript': next((copied / 'profile/.codex/sessions/2026/10/07').glob('*.jsonl')),
+    }
+    for name, path in targets.items():
+        raw = path.read_bytes()
+        path.write_bytes(raw + b' ')
+        reject(name, copied)
+        path.write_bytes(raw)
+    extra = copied / 'unregistered-extra-file'
+    extra.write_text('extra')
+    reject('extra_file', copied)
+    extra.unlink()
+    target = copied / 'origin-stage/source-reference/validation-006.json'
+    raw = target.read_bytes()
+    target.unlink()
+    target.symlink_to(checkpoint / 'origin-stage/source-reference/validation-006.json')
+    reject('symlink_substitution', copied)
+    target.unlink()
+    target.write_bytes(raw)
+    # Challenge repository-source pins separately from checkpoint file pins.
+    fake_repo = tmp / 'source-repository'
+    shutil.copytree(checkpoint / 'original-source', fake_repo)
+    here = fake_repo / 'docs/experiments/evidence/EXP-098'
+    here.mkdir()
+    saved_here = m.HERE
+    m.HERE = here
+    original = fake_repo / 'docs/experiments/evidence/EXP-097/phase-bindings.py.txt'
+    original.write_bytes(original.read_bytes() + b'\n# changed source\n')
+    reject('changed_replay_validator_source', checkpoint)
+    m.HERE = saved_here
+print('Optimized carry adversarial checks PASS:', len(passed), ', '.join(passed))
