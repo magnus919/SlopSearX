@@ -39,9 +39,9 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 Europe PMC is opt-in; see [configuration, attribution, and evaluation](docs/EUROPEPMC.md).
 
-## Engines (50)
+## Engines (51)
 
-The table below is maintained to match the live adapter registry (50 registered
+The table below is maintained to match the live adapter registry (51 registered
 adapters as of this writing). The MCP server's `slopsearx_list_capabilities`
 tool and the `slopsearx://capabilities` resource are generated from that same
 registry at runtime — treat them as authoritative.
