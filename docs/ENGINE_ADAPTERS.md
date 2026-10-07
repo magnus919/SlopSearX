@@ -267,6 +267,7 @@ the adapter does not fall back to browser automation or scraping.
 | ClinicalTrials.gov | `engines/clinicaltrials.py` | api | general, medical, health, science | None |
 | openFDA | `engines/openfda.py` | api | general, medical, health, science, government | None |
 | PubChem | `engines/pubchem.py` | api | general, science, reference, chemistry, medical | None |
+| Europe PMC (EMBL-EBI) | `engines/europepmc.py` | api | science, reference, medical, health | None; opt-in |
 | PubMed | `engines/pubmed.py` | api | general, science, reference, medical, health | None |
 
 ### Security / Threat Intelligence

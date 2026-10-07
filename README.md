@@ -37,6 +37,8 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 | `GET /metrics` | OpenMetrics for Prometheus scraping |
 | `GET /config` | Categories→engines mapping for runtime discovery |
 
+Europe PMC is opt-in; see [configuration, attribution, and evaluation](docs/EUROPEPMC.md).
+
 ## Engines (50)
 
 The table below is maintained to match the live adapter registry (50 registered
@@ -92,6 +94,7 @@ the adapter behavior is authoritative for the selected sub-category.
 | [ClinicalTrials.gov](https://clinicaltrials.gov/) | API | None | medical, health, science |
 | [openFDA](https://open.fda.gov/) | API | None | medical, health, science, government |
 | [PubChem](https://pubchem.ncbi.nlm.nih.gov/) | API | None | science, reference, chemistry, medical |
+| [Europe PMC](https://europepmc.org/) | API | None; opt-in | science, reference, medical, health |
 | [PubMed](https://pubmed.ncbi.nlm.nih.gov/) | API | None | science, reference, medical, health |
 
 ### Security / Threat Intelligence

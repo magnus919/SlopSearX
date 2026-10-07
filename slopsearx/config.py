@@ -96,6 +96,15 @@ class Config:
 # ---------------------------------------------------------------------------
 
 _DEFAULT_ENGINES: dict[str, dict[str, Any]] = {
+    "europepmc": {
+        "enabled": False,
+        "base_url": "https://www.ebi.ac.uk/europepmc/webservices/rest",
+        "type": "api",
+        "timeout_ms": 5000,
+        "max_results": 10,
+        "rate_limit": 0.5,
+        "weight": 0.8,
+    },
     "arxiv": {
         "base_url": "https://export.arxiv.org/api/query",
         "type": "api",
