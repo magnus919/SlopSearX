@@ -1,6 +1,6 @@
 # EXP-094 — Sol independent assessments
 
-Status: prospective registration; no admission, clock or live call.
+Status: interrupted/deadline expired; [five valid source assignments retained](evidence/EXP-094/completed/readout.md), comparison incomplete.
 
 The maintainer approved GPT-6.1 Sol for independent assessments on 2026-10-06. [EXP-093](EXP-093-fixed-citation-codes.md) retained a terminal response that passed complete input delivery but cited one passage belonging to another source. It is not repaired, reused, graded or credited here. That observation does not establish a model-level cause or predict success with another model.
 

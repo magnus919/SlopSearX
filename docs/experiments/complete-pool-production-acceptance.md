@@ -4,15 +4,15 @@ Implementation acceptance plan inspected against SlopSearX `3d5e8bac38b619aec1bd
 
 The cross-service boundary follows accepted X ADR-0082: GroktoCrawl owns the caller's question, constraints, evidence sufficiency and completion; SlopSearX owns bounded search dispatch, merge/ranking and immutable result snapshots. Keep the SlopSearX ordinary HTTP behavior unchanged when the option is absent. The proposed ADR-0093 provenance work is not an accepted substitute for candidate quality evidence.
 
-## Current evidence and next action (2026-10-06)
+## Current evidence and next action (2026-10-07)
 
-The latest source-reference continuation, [EXP-093](EXP-093-fixed-citation-codes.md), is terminal/inconclusive. [PR #702](https://github.com/magnus919/SlopSearX/pull/702) merged reviewed offline transport qualification; [PR #703](https://github.com/magnus919/SlopSearX/pull/703) retained the failed live outcome. All 42 assigned pages passed exact delivery verification, but strict citation decoding rejected one wrong-source reference among 127 occurrences. Zero required source assessments were accepted. The sixteen carried card assignments remain immutable inputs; they do not replace source references or task-use judgments. No ranking or task-completion quality analysis occurred, and no confirmation was run. No further harness retry is proposed.
+[EXP-094](EXP-094-sol-assessments.md) retained five valid Sol source assignments before the app rejected the sixth agent spawn for reaching this chat's thread limit. The process is gone and the eight-hour deadline expired; the [interruption readout](evidence/EXP-094/completed/readout.md) preserves the partial outcome and conservative accounting. This is platform/interruption evidence, not a model-validation failure. No complete ranking/task-use comparison or confirmation was run. A successor must prospectively freeze all five valid inputs and use fresh independent tasks for the remaining assignments under unchanged gates and ceilings. Previous EXP-093 remains terminal/inconclusive with its wrong-source citation rejection; its response is not repaired or reused.
 
 The immediate evidence gap is a complete independently validated source-reference set, followed by the registered ranking and task-use comparisons. Reliable delivery, shorter citation codes, passing offline fixtures, and merged experiment documents do not fill that gap. The current frozen candidate, +.02 mean-gain threshold, bootstrap seed 7701, diagnostic-only incumbent identity displacement, task-use protections, resource ceilings and untouched-confirmation requirement remain unchanged. This outcome establishes neither improvement nor inferiority of the selector.
 
 | Release requirement | Current evidence | State |
 | --- | --- | --- |
-| Complete valid development references | Carried card references exist; the first required source response failed scope validation | Incomplete |
+| Complete valid development references | Carried card references and five valid Sol source assignments exist; 43 source and 32 answer assessments remain | Incomplete |
 | Registered development ranking and task-use gates | No complete qualifying comparison | Unproven |
 | Wholly fresh untouched confirmation | Not run | Incomplete |
 | Purpose/facet integration, compatibility and recovery checks | Checklist below remains required after candidate qualification | Not delivered by these experiments |
