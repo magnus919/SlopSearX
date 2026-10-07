@@ -1,0 +1,125 @@
+{
+  "all_runtime_helper_hashes_stable": true,
+  "live_admission": false,
+  "private_proof_sha256": "b4fd1f47f1093a519f306becec09af90595c3e97327f1f7135d80818c97f8a1a",
+  "receipt": {
+    "actual_capture_rows": 442,
+    "answer_assessor_packets": 32,
+    "answer_assignments": 16,
+    "answer_closure_sha256": "cb9068f3dc857db8039d1023c9a70ebb45dedafaec98c63aad533dfec0432581",
+    "answerer_mock_calls": 18,
+    "external_calls": 0,
+    "grader_calls": 0,
+    "metrics_computed": false,
+    "model_provider_calls": 0,
+    "selector_cases": 13,
+    "selector_mock_calls": 44,
+    "selector_operations": 21,
+    "selector_receipt_sha256": "53d9600a98f17eabcc5d5a8136cfcef57134a7cce9a25a0485913b2cc5f9c663",
+    "semantic_completion": "not_claimed",
+    "source_closure_tasks": 8,
+    "source_fetches": 0,
+    "status": "offline_full_handoff_pass",
+    "structural_closures": 32,
+    "synthetic_answers": true,
+    "synthetic_assessor_finals": true,
+    "synthetic_orders": true
+  },
+  "runtime_helper_count": 18,
+  "schema": "exp096-bounded-fix-full-handoff/1",
+  "scientific_quality_analysis": false,
+  "scope": "Bounded decoder safeguards: mandatory independent original-packet hash and rejection of unused grouped evidence. Full offline handoff passed with mock answers and synthetic finals.",
+  "source_pins": [
+    {
+      "name": "admission.py.txt",
+      "scope": "public",
+      "sha256": "f4e6047945d4eb0f0f1243ed5650c5b889e8876f5626dc5457c46a1f14890eb0"
+    },
+    {
+      "name": "answer-input-bridge.py.txt",
+      "scope": "public",
+      "sha256": "5e2dfe20ce2cff2b05617eef4cba6c5f55f9faaa098e44143e3ce7704faa15d5"
+    },
+    {
+      "name": "citation-codec.py.txt",
+      "scope": "public",
+      "sha256": "2886c7cc2bd6f4faa1397f663a26fdb98b0a9996dfe5a3ffdb4ed85c5e3f12f2"
+    },
+    {
+      "name": "controller.py.txt",
+      "scope": "public",
+      "sha256": "4f1fcf01749d7c99cfa3776b5a07e4cdbddb1cbca8e0b51d2894885b5bee0ec1"
+    },
+    {
+      "name": "final-json-carrier.py.txt",
+      "scope": "public",
+      "sha256": "268e589e86ad637ecde2b36ce682fa33e33ec5e0f4d2b8eaabccd88980da1ecc"
+    },
+    {
+      "name": "grouped-evidence-catalog.py.txt",
+      "scope": "public",
+      "sha256": "1874ef900e6d80466a5bd46954ac632f454adacbc2abef5c1d55a9be944189e5"
+    },
+    {
+      "name": "input-bridge.py.txt",
+      "scope": "public",
+      "sha256": "08ef965887787341f161f8e7b54d5a4f1a5a805db9bdf41806c5eeb4790f7762"
+    },
+    {
+      "name": "input-view-verifier.py.txt",
+      "scope": "public",
+      "sha256": "57a1d3be9c2bfc54e437fc040ac69e70dcf14b11e2f7f19e10a853829831ecf7"
+    },
+    {
+      "name": "packet-viewer.py.txt",
+      "scope": "public",
+      "sha256": "138c53bd29469b548c8f6ff82cacaba504ae0a19bf4597c55abb68d69bcbcb73"
+    },
+    {
+      "name": "phase-bindings.py.txt",
+      "scope": "public",
+      "sha256": "35543eae688ca71e1cc05f25a7cd1d638659c7d64ef67ccccf22304b8d361196"
+    },
+    {
+      "name": "prepare-source-assessments.py.txt",
+      "scope": "public",
+      "sha256": "d42759dcd0f0ab83027777bdc238fd6d1f8ae9358dcd90531d875fd30aac7f95"
+    },
+    {
+      "name": "source-carry.py.txt",
+      "scope": "public",
+      "sha256": "8ec6139f01d25f5fdf02992e861e8adafb4c8a603aed380138d29fc08cd3ac01"
+    },
+    {
+      "name": "protocol.json",
+      "scope": "public",
+      "sha256": "5af2c42b53fd73e5731bdb4fc0a8a7ebc57fff84d3416bea7d15ebe46b17ca92"
+    },
+    {
+      "name": "cohorts.json",
+      "scope": "public",
+      "sha256": "61c5945b2ec47014e771922b9410f73505bd83c68c79a1aad6e3aab8281cd4e9"
+    },
+    {
+      "name": "exp096-source-coordinator.py",
+      "scope": "private",
+      "sha256": "82330aaf095708b6dd144abb465a862019ed8b634758f1f42cd371325050fc84"
+    },
+    {
+      "name": "exp096-answer-coordinator.py",
+      "scope": "private",
+      "sha256": "5490f3fc72d69ee059f83c586a88bf3e9ad2d014cc780b3ce9bfa9f14637e5ba"
+    },
+    {
+      "name": "exp096-actor-bindings.py",
+      "scope": "private",
+      "sha256": "b61ec563ba98c9282fa509ce0bf7519d227adc1a5b63aaf9b60f5f5e05eab30d"
+    },
+    {
+      "name": "exp096-final-log-reader.py",
+      "scope": "private",
+      "sha256": "b0eebdb6594f76f08e692c16683a1bb433beed238802b7e1ff6bfec18d878a5d"
+    }
+  ],
+  "status": "pass"
+}

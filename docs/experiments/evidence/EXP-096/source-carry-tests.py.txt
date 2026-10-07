@@ -1,0 +1,81 @@
+"""Integrity tests; actual checkpoint replay never computes judgment metrics."""
+import importlib.machinery
+import json
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+C = importlib.machinery.SourceFileLoader('exp095_carry_tests', str(HERE/'source-carry.py.txt')).load_module()
+ROOT = Path('/private/tmp/exp095-source-checkpoint')
+PINS = HERE/'source-checkpoint-pins.json'
+
+class CarryTests(unittest.TestCase):
+    def test_actual_all_five_replay_and_exact_decoded_bytes(self):
+        if not ROOT.is_dir(): self.skipTest('private frozen checkpoint unavailable')
+        result=C.verify_source_checkpoint(ROOT)
+        self.assertEqual((result['proof']['accepted_assignments'], result['proof']['accepted_source_records']),(5,76))
+        self.assertEqual(len(result['payloads']),5)
+        self.assertFalse(result['proof']['quality_analyzed'])
+        for logical,payload in result['payloads'].items():
+            raw=(ROOT/'source-reference'/f'{logical}.decoded.json').read_bytes()
+            self.assertEqual(C.canonical(payload['decoded_response']),raw)
+            self.assertEqual(C.sha(raw),payload['decoded_file_sha256'])
+
+    def test_changed_manifest_rejected_before_replay(self):
+        with self.assertRaisesRegex(ValueError,'manifest-pin'):
+            C.verify_inventory(ROOT,PINS.read_bytes()+b' ')
+
+    def test_paths_reject_traversal_absolute_and_symlinks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); (root/'real').write_bytes(b'fixture');(root/'alias').symlink_to(root/'real')
+            for name in ('../real','/real','alias'):
+                with self.subTest(path=name),self.assertRaises(ValueError): C.safe_file(root,name)
+
+    def test_current_source_input_and_codebook_drift_rejected(self):
+        if not ROOT.is_dir(): self.skipTest('private frozen checkpoint unavailable')
+        manifest=json.loads((ROOT/'assessment-inputs/source-slot-manifest.json').read_bytes())
+        for kind in ('input','table'):
+            bad=json.loads(json.dumps(manifest))
+            if kind=='input':bad['active_source_slots'][0]['input_sha256']='0'*64
+            else:bad['citation_codebooks'][0]['table_sha256']='0'*64
+            with self.subTest(kind=kind),self.assertRaisesRegex(ValueError,'current-input-or-table-drift'):
+                C.verify_source_checkpoint(ROOT,source_input_manifest=bad)
+
+    def test_original_parent_extra_turn_and_duplicate_log_rejected(self):
+        if not ROOT.is_dir(): self.skipTest('private frozen checkpoint unavailable')
+        pins=json.loads(PINS.read_bytes())
+        for kind in ('parent','turn','duplicate'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp)/'checkpoint';shutil.copytree(ROOT,root)
+                log=root/'profile/.codex/sessions/2026/10/06/slot-001.jsonl'
+                if kind=='duplicate':shutil.copyfile(log,log.with_name('duplicate.jsonl'))
+                else:
+                    rows=[json.loads(line) for line in log.read_text().splitlines()]
+                    if kind=='parent':rows[0]['payload']['source']['subagent']['thread_spawn']['parent_thread_id']='unrelated'
+                    else:rows.append({'type':'event_msg','payload':{'type':'task_started'}})
+                    log.write_text('\n'.join(json.dumps(row) for row in rows)+'\n')
+                # Defense-in-depth replay rejects identity even if an attacker
+                # could present newly hashed files. Production also pins the
+                # complete inventory before this internal replay.
+                with self.assertRaises(ValueError):C._replay(root,pins,None)
+
+    def test_extra_validation_cannot_select_or_add_a_carry(self):
+        if not ROOT.is_dir(): self.skipTest('private frozen checkpoint unavailable')
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/'checkpoint';shutil.copytree(ROOT,root)
+            shutil.copyfile(root/'source-reference/validation-001.json',root/'source-reference/validation-006.json')
+            with self.assertRaisesRegex(ValueError,'all-valid-coverage'):
+                C._replay(root,json.loads(PINS.read_bytes()),None)
+
+    def test_mutated_original_final_is_never_repaired(self):
+        if not ROOT.is_dir(): self.skipTest('private frozen checkpoint unavailable')
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/'checkpoint';shutil.copytree(ROOT,root)
+            final=next((root/'source-reference/finals').glob('*.final.txt'))
+            final.write_bytes(final.read_bytes()+b' ')
+            with self.assertRaisesRegex(ValueError,'checkpoint-file-pin'):
+                C.verify_source_checkpoint(root)
+
+if __name__=='__main__':unittest.main()

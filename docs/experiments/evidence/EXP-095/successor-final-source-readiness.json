@@ -1,0 +1,29 @@
+{
+  "actual_luna_viewer_probe_pages": 85,
+  "actual_luna_viewer_probe_tool_calls": 44,
+  "all_18_runtime_hashes_stable_during_handoff": true,
+  "all_48_source_model_inputs_exact_original_bytes": true,
+  "all_5_carried_slots_reused_without_dispatch": true,
+  "all_8_underlying_citation_table_digests_and_counts_unchanged": true,
+  "citation_receipt_changed_fields": [
+    "schema"
+  ],
+  "first_fresh_slot_reserved_only_in_offline_fixture": 6,
+  "full_offline_structural_closures": 32,
+  "health_or_provider_calls": 0,
+  "live_admission": false,
+  "mechanical_checks_passed": true,
+  "private_proof_sha256": {
+    "full_handoff": "27efbf5abd205e2c2e80b1d5229d984b52bc67a3011945f923e1a06c183bd21b",
+    "real_admission_negatives": "c81469c2448b05b1418aa6a94e77207c20f391317144d7dc4cff5910a430724b",
+    "real_unsealed_controller": "e16ee3b9413ec9c93e0cd24016c757592a4cf98392e91d9543f2a18db7d0b60c",
+    "source_inputs": "ff7f0f72836e69ba94fc72505f8b40079c8e127e982554a1a7732030aa006be3"
+  },
+  "real_admission_negative_cases_rejected": 5,
+  "real_unsealed_controller_rejection": "registration-schema",
+  "remaining_gate": "Commit qualified registration, then verify real positive controller preflight on that clean sealed checkout; merge the registration PR before any live stage.",
+  "schema": "exp096-final-unsealed-source-readiness/1",
+  "scientific_quality_analysis": false,
+  "source_revision": "359389a197f0b515c6b11b92fb6d66d2386ed182",
+  "unbound_final_rejected": true
+}

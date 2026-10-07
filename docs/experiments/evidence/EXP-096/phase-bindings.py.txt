@@ -1,0 +1,1159 @@
+"""EXP-096 assessment and answer bindings to fresh EXP-096 admission.
+
+EXP-077 packet/answer code is consumed only as immutable wire behavior. Prior
+study admissions and terminal receipts grant no EXP-096 authority. Import is inert.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+from pathlib import Path
+import time
+import sys
+from datetime import datetime, timezone
+
+import httpx
+
+HERE = Path(__file__).resolve().parent
+EXP077 = HERE.parent / "EXP-077"
+REPO = HERE.parents[3]
+REFERENCE_LABELS_PATH = HERE.parent / "EXP-088" / "reference-labels.py.txt"
+REFERENCE_LABELS_SHA256 = "f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c"
+ANSWERER_PROMPT_PATH = HERE / "answerer-prompt.txt"
+ANSWERER_PROMPT_SHA256 = "6b32ce442150ee69531ed5f440619b616ed08187d89dac7d756acadedbace425"
+ANSWER_ASSESSOR_PROMPT_PATH = HERE / "answer-assessor-prompt.txt"
+ANSWER_ASSESSOR_PROMPT_SHA256 = "58522f899b391a1cc8e472b583f0e46d42766661eda2fafad7b15018bd4f4222"
+SOURCE_PROMPT_PATH = HERE / "source-assessor-prompt.txt"
+SOURCE_PROMPT_SHA256 = "9d1ab655cd88512d8347d3b3fa158d808f8d9e6295264fdd51083c1a7d2b3544"
+SOURCE_VIEW_INSTRUCTIONS_PATH = HERE / "source-viewer-instructions.txt"
+SOURCE_VIEW_INSTRUCTIONS_SHA256 = "62c776d0adaecea41e66e75acc63119b99ca43533e1f3012900e60c5c644b3d0"
+CITATION_CODEC_PATH = HERE / "citation-codec.py.txt"
+CITATION_CODEC_SHA256 = "2886c7cc2bd6f4faa1397f663a26fdb98b0a9996dfe5a3ffdb4ed85c5e3f12f2"
+ANSWER_VIEW_INSTRUCTIONS_PATH = HERE / "answer-viewer-instructions.txt"
+ANSWER_VIEW_INSTRUCTIONS_SHA256 = "6033a9a592db7f215a4989a4ccdd2a374c2f74069b09a0f3115e28d50e6eb38f"
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+
+def _load(name: str, path: Path):
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("pinned-helper-unavailable")
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    if spec is None:
+        raise ValueError("pinned-helper-loader")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def shared_stage_elapsed(clock: dict) -> float:
+    started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+    if started.tzinfo is None or started.utcoffset().total_seconds() != 0:
+        raise ValueError("exp078-stage-clock-timezone")
+    return max(0.0, (datetime.now(timezone.utc) - started).total_seconds())
+
+
+def write_once(path: Path, value) -> dict:
+    raw = value if type(value) is bytes else canonical(value)
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    directory = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+    return {"path": path.name, "sha256": sha(raw), "bytes": len(raw)}
+
+
+def _phase(admission, stage_permit, name: str, stage_outdir: Path,
+           phase_outdir: Path, clock_bytes: bytes):
+    if not isinstance(clock_bytes, bytes) or not clock_bytes:
+        raise ValueError("exp078-clock-bytes-required")
+    stage_root = Path(stage_outdir).resolve()
+    phase_root = Path(phase_outdir).resolve()
+    if phase_root == stage_root or not phase_root.is_relative_to(stage_root):
+        raise ValueError("exp078-phase-output-must-be-inside-stage")
+    phase_permit = admission.acquire_phase(stage_permit, name, stage_root, clock_bytes)
+    admission.require_phase(phase_permit, clock_bytes, stage_root)
+    return phase_permit
+
+
+def validate_answer_coverage(assignments: list[dict], cases: list[dict]) -> None:
+    research_ids = [case.get("id") for case in cases if case.get("kind") == "research"]
+    if len(research_ids) != 8 or len(set(research_ids)) != 8:
+        raise ValueError("exp078-answer-research-cohort")
+    observed = []
+    for assignment in assignments:
+        if not isinstance(assignment, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        model_input = assignment.get("model_input")
+        binding = assignment.get("private_binding")
+        if not isinstance(model_input, dict) or not isinstance(binding, dict):
+            raise ValueError("exp078-answer-assignment-shape")
+        task = model_input.get("task")
+        if not isinstance(task, dict):
+            raise ValueError("exp078-answer-assignment-task")
+        observed.append((task.get("task_id"), binding.get("arm_id")))
+    expected = {(task_id, arm) for task_id in research_ids for arm in ("w0", "candidate")}
+    if len(observed) != 16 or set(observed) != expected:
+        raise ValueError("exp078-answer-assignment-coverage")
+
+
+def prepare_answer_assessment_inputs(*, answer_bridge: dict, cases: list[dict],
+                                     answer_payloads: dict, answer_output_manifest: dict,
+                                     own_source_assessments: dict, source_catalogs: dict,
+                                     citation_tables: dict, output_root: Path,
+                                     preparation_manifest_sha256: str,
+                                     anonymous_arm_map: dict | None = None) -> dict:
+    """Build and freeze all 32 answer-assessor inputs; make no model calls."""
+    bridge = _load("exp095_answer_input_bridge", HERE / "answer-input-bridge.py.txt")
+    return bridge.build_answer_assessor_packets(
+        answer_bridge=answer_bridge, cases=cases, answer_payloads=answer_payloads,
+        answer_output_manifest=answer_output_manifest,
+        own_source_assessments=own_source_assessments,
+        source_catalogs=source_catalogs, citation_tables=citation_tables,
+        output_root=output_root,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+        anonymous_arm_map=anonymous_arm_map)
+
+
+
+
+def prepare_assessment_inputs(*, state, cases, outdir=None):
+    """Prepare frozen grader packets under an EXP-096 phase guard; no model calls."""
+    stage_root = Path(state.outdir).resolve()
+    output = Path(outdir) if outdir is not None else stage_root / "assessment-inputs"
+    output = output.resolve()
+    phase_permit = _phase(state.admission, state.permit, "assessment-preparation",
+                          stage_root, output, state.clock[1])
+    guard = lambda: state.admission.require_phase(phase_permit, state.clock[1], stage_root)
+    helper = _load("exp094_source_assessment_preparer", HERE / "prepare-source-assessments.py.txt")
+    return helper.prepare_source_assessments(
+        output_root=output, acquisition=state.effective_acquisition, cases=cases, guard=guard,
+        source_snapshot_root=state.bundle_root / "exp084",
+        carried_card_references=state.carried_card_references,
+        carried_source_references=getattr(state, "carried_source_references", None),
+        carried_source_payloads=getattr(state, "carried_source_payloads", None),
+        stage_clock_sha256=state.clock[2],
+        protocol_sha256=sha((HERE / "protocol.json").read_bytes()),
+        qualified_source_revision=state.integrity["qualified_source_revision"])
+
+
+async def run_selector(*, state, cases, outdir, offline=False, transport_factory=None):
+    """Run the unchanged EXP-078 selector helper on EXP-096 inputs/admission."""
+    selector = _load("exp094_portable_selector_runner",
+                     HERE.parent / "EXP-078" / "selector-runner.py.txt")
+    return await selector.run_selector(state.effective_acquisition, cases, state.clock[1],
+        state.outdir, Path(outdir), offline=offline, stage_permit=None if offline else state.permit,
+        admission_module=None if offline else state.admission,
+        transport_factory=transport_factory, source_integrity=state.integrity)
+
+
+def claim_assessment_phase(*, admission, stage_permit, phase, stage_outdir, phase_outdir,
+                           clock_bytes):
+    """Claim one registered grader phase and return its reusable dispatch guard."""
+    if phase not in {"source-reference", "answer-assessment"}:
+        raise ValueError("exp095-assessment-phase-not-registered")
+    phase_permit = _phase(admission, stage_permit, phase, Path(stage_outdir),
+                          Path(phase_outdir), clock_bytes)
+    root = Path(stage_outdir).resolve()
+    def require():
+        admission.require_phase(phase_permit, clock_bytes, root)
+    return phase_permit, require
+
+
+def _reference_labels():
+    if (REFERENCE_LABELS_PATH.is_symlink() or not REFERENCE_LABELS_PATH.is_file()
+            or sha(REFERENCE_LABELS_PATH.read_bytes()) != REFERENCE_LABELS_SHA256):
+        raise ValueError("exp095-reference-label-codec-pin")
+    return _load("exp094_reference_labels_phase", REFERENCE_LABELS_PATH)
+
+
+def _citation_codec():
+    if (CITATION_CODEC_SHA256.startswith("__") or CITATION_CODEC_PATH.is_symlink()
+            or not CITATION_CODEC_PATH.is_file()
+            or sha(CITATION_CODEC_PATH.read_bytes()) != CITATION_CODEC_SHA256):
+        raise ValueError("exp095-citation-codec-pin")
+    return _load("exp094_citation_codec_phase", CITATION_CODEC_PATH)
+
+
+def _table_manifest_set_sha(manifests):
+    return sha((json.dumps(manifests, ensure_ascii=False, sort_keys=True,
+                           separators=(",", ":"), allow_nan=False) + "\n").encode())
+
+
+def _verify_table_receipt(table, *, task_id, manifest=None, entries=None):
+    """Rebuild a supplied table from its sealed receipt before any decoding."""
+    codec = _citation_codec()
+    if getattr(table, "task_id", None) != task_id:
+        raise ValueError("exp095-codebook-task-scope")
+    receipt = codec.manifest(table)
+    if manifest is not None and receipt != manifest:
+        raise ValueError("exp095-codebook-manifest-mismatch")
+    rows = [list(row) for row in table.entries]
+    if entries is not None and rows != entries:
+        raise ValueError("exp095-codebook-entries-mismatch")
+    rebuilt = codec.table_from_entries(task_id, rows, receipt.get("table_sha256"))
+    if codec.manifest(rebuilt) != receipt:
+        raise ValueError("exp095-codebook-reconstruction-mismatch")
+    return rebuilt
+
+
+def load_task_tables(*, source_slot_manifest: dict, preparation_root: Path) -> dict:
+    """Load codebooks only after the root manifest and slot receipt hashes verify."""
+    if (type(source_slot_manifest) is not dict
+            or source_slot_manifest.get("schema") != "exp096-source-slot-manifest/1"
+            or source_slot_manifest.get("study_id") != "EXP-096"):
+        raise ValueError("exp095-source-manifest-shape")
+    manifests = source_slot_manifest.get("citation_codebooks")
+    if (type(manifests) is not list or len(manifests) != 8
+            or source_slot_manifest.get("citation_codebook_set_sha256") != _table_manifest_set_sha(manifests)):
+        raise ValueError("exp095-codebook-manifest-set")
+    expected = {row.get("task_id"): row for row in manifests if type(row) is dict}
+    if set(expected) != {f"d{i}" for i in range(1, 9)}:
+        raise ValueError("exp095-codebook-task-coverage")
+    codec = _citation_codec()
+    slots = source_slot_manifest.get("active_source_slots")
+    refs = source_slot_manifest.get("source_input_refs")
+    if type(slots) is not list or len(slots) != 48 or type(refs) is not list or len(refs) != 48:
+        raise ValueError("exp095-codebook-source-slot-coverage")
+    ref_by_slot = {row.get("logical_submission"): row for row in refs if type(row) is dict}
+    if len(ref_by_slot) != 48:
+        raise ValueError("exp095-codebook-source-input-refs")
+    result = {}
+    observed_by_task = {task: set() for task in expected}
+    for slot in slots:
+        if type(slot) is not dict or slot.get("role") != "source":
+            raise ValueError("exp095-codebook-source-slot-shape")
+        logical, task_id = slot.get("logical_submission"), slot.get("task_id")
+        ref = ref_by_slot.get(logical)
+        if type(ref) is not dict or task_id not in expected:
+            raise ValueError("exp095-codebook-source-slot-ref")
+        label_path = Path(preparation_root) / ref.get("label_binding_path", "")
+        if label_path.is_symlink() or not label_path.is_file():
+            raise ValueError("exp095-codebook-slot-binding-missing")
+        binding_raw = label_path.read_bytes()
+        if sha(binding_raw) != slot.get("label_binding_sha256"):
+            raise ValueError("exp095-codebook-slot-binding-hash")
+        binding = json.loads(binding_raw)
+        manifest = expected[task_id]
+        if (binding.get("schema") not in {"exp096-slot-citation-binding/1", "exp095-slot-citation-binding/1"}
+                or binding.get("logical_submission") != logical
+                or binding.get("task_id") != task_id
+                or binding.get("task_table") != manifest
+                or binding.get("task_table_sha256") != manifest.get("table_sha256")):
+            raise ValueError("exp095-codebook-slot-binding-scope")
+        old_bundle = binding.get("source_binding")
+        if sha(canonical(old_bundle)) != binding.get("source_binding_sha256"):
+            raise ValueError("exp095-codebook-original-binding-hash")
+        label_codec = _reference_labels()
+        label_codec._verify_bundle(old_bundle, domains={"source_pool"})
+        table = codec.table_from_entries(task_id, binding.get("task_table_entries"),
+                                         manifest.get("table_sha256"))
+        if task_id in result and result[task_id].binding_sha256 != table.binding_sha256:
+            raise ValueError("exp095-codebook-inconsistent-slots")
+        result[task_id] = table
+        observed_by_task[task_id].add(logical)
+        # The original EXP-088 bundle must still prove the source/citation map.
+        original_model = old_bundle.get("model_input") if type(old_bundle) is dict else None
+        if (old_bundle.get("label_binding", {}).get("task_id") != task_id
+                or old_bundle.get("label_binding", {}).get("domain") != "source_pool"
+                or not isinstance(original_model, dict)):
+            raise ValueError("exp095-codebook-original-binding-scope")
+        input_path = Path(ref.get("input_path", ""))
+        if input_path.is_symlink() or not input_path.is_file():
+            raise ValueError("exp095-codebook-wire-input-missing")
+        wire_raw = input_path.read_bytes()
+        if (len(wire_raw) != slot.get("input_bytes")
+                or len(wire_raw) > 384_000
+                or sha(wire_raw) != slot.get("input_sha256")):
+            raise ValueError("exp095-codebook-wire-input-integrity")
+        wire_packet = json.loads(wire_raw)
+        wire_model = wire_packet.get("source_model_input") if type(wire_packet) is dict else None
+        restored_model = codec.rewrite_grouped_rows(wire_model, ("sources",), "source_id",
+            (("passages", "*", "evidence_id"),), table, decode=True, restore_alias=True)
+        if restored_model != original_model:
+            raise ValueError("exp095-codebook-wire-input-binding")
+    if any(len(values) != 6 for values in observed_by_task.values()):
+        raise ValueError("exp095-codebook-six-slot-binding")
+    return result
+
+
+def labelled_prompt(role: str) -> str:
+    """Read one frozen label-aware prompt; criteria and rubrics remain unchanged."""
+    paths = {"answerer": (ANSWERER_PROMPT_PATH, ANSWERER_PROMPT_SHA256),
+             "answer-assessor": (ANSWER_ASSESSOR_PROMPT_PATH, ANSWER_ASSESSOR_PROMPT_SHA256)}
+    if role not in paths:
+        raise ValueError("exp095-prompt-role")
+    path, expected = paths[role]
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("exp095-prompt-pin")
+    raw = path.read_bytes()
+    if sha(raw) != expected:
+        raise ValueError("exp095-prompt-pin")
+    return raw.decode("utf-8")
+
+
+def answer_assessor_viewer_prompt(view_plan: dict) -> str:
+    """Add only generic byte-view instructions to the frozen answer rubric."""
+    if (type(view_plan) is not dict or view_plan.get("schema") != "exp095-input-view-plan/1"
+            or type(view_plan.get("input_path")) is not str
+            or "\n" in view_plan["input_path"] or "\r" in view_plan["input_path"]
+            or type(view_plan.get("viewer_path")) is not str
+            or "\n" in view_plan["viewer_path"] or "\r" in view_plan["viewer_path"]
+            or type(view_plan.get("input_sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", view_plan["input_sha256"])
+            or type(view_plan.get("page_count")) is not int or view_plan["page_count"] < 1
+            or type(view_plan.get("source_manifest_sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", view_plan["source_manifest_sha256"])):
+        raise ValueError("exp095-answer-input-view-plan-shape")
+    if (ANSWER_VIEW_INSTRUCTIONS_PATH.is_symlink() or not ANSWER_VIEW_INSTRUCTIONS_PATH.is_file()
+            or sha(ANSWER_VIEW_INSTRUCTIONS_PATH.read_bytes()) != ANSWER_VIEW_INSTRUCTIONS_SHA256):
+        raise ValueError("exp095-answer-view-instructions-pin")
+    first, last = 1, view_plan["page_count"]
+    batches = [list(range(start, min(start + 2, last + 1))) for start in range(first, last + 1, 2)]
+    schedule = "; ".join("--pages " + ",".join(str(index) for index in batch) for batch in batches)
+    assignment = ("\n\nFrozen answer-packet view values (copy exactly):\n"
+                  f"viewer_path={view_plan['viewer_path']}\n"
+                  f"input_path={view_plan['input_path']}\n"
+                  f"input_sha256={view_plan['input_sha256']}\n"
+                  f"page_count={last}\nfirst_page_index={first}\nlast_page_index={last}\n"
+                  f"Page indices are one-based, 1 through {last} inclusive; index 0 is invalid.\n"
+                  f"page_request_schedule={schedule}\n"
+                  f"preparation_manifest_sha256={view_plan['source_manifest_sha256']}\n")
+    rubric = labelled_prompt("answer-assessor")
+    instructions = ANSWER_VIEW_INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+    return rubric.rstrip() + "\n\n" + instructions.rstrip() + assignment
+
+
+def source_viewer_prompt(view_plan: dict) -> str:
+    """Bind the unchanged source rubric to exact input-view task metadata."""
+    if (type(view_plan) is not dict or view_plan.get("schema") != "exp095-input-view-plan/1"
+            or type(view_plan.get("input_path")) is not str
+            or "\n" in view_plan["input_path"] or "\r" in view_plan["input_path"]
+            or type(view_plan.get("viewer_path")) is not str
+            or not Path(view_plan["viewer_path"]).is_absolute()
+            or "\n" in view_plan["viewer_path"] or "\r" in view_plan["viewer_path"]
+            or type(view_plan.get("page_count")) is not int or view_plan["page_count"] < 1):
+        raise ValueError("exp095-input-view-plan-shape")
+    for key in ("input_sha256", "source_manifest_sha256"):
+        if type(view_plan.get(key)) is not str or not re.fullmatch(r"[0-9a-f]{64}", view_plan[key]):
+            raise ValueError("exp095-input-view-plan-digest")
+    if (SOURCE_PROMPT_PATH.is_symlink() or not SOURCE_PROMPT_PATH.is_file()
+            or sha(SOURCE_PROMPT_PATH.read_bytes()) != SOURCE_PROMPT_SHA256
+            or SOURCE_VIEW_INSTRUCTIONS_PATH.is_symlink()
+            or not SOURCE_VIEW_INSTRUCTIONS_PATH.is_file()
+            or sha(SOURCE_VIEW_INSTRUCTIONS_PATH.read_bytes()) != SOURCE_VIEW_INSTRUCTIONS_SHA256):
+        raise ValueError("exp095-source-prompt-pin")
+    rubric = SOURCE_PROMPT_PATH.read_text(encoding="utf-8")
+    instructions = SOURCE_VIEW_INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+    first_index = 1
+    last_index = view_plan["page_count"]
+    batches = [list(range(start, min(start + 2, last_index + 1)))
+               for start in range(first_index, last_index + 1, 2)]
+    schedule = "; ".join("--pages " + ",".join(str(index) for index in batch)
+                           for batch in batches)
+    assignment = ("\n\nFrozen source-slot values (copy exactly into viewer commands):\n"
+                  f"viewer_path={view_plan['viewer_path']}\n"
+                  f"input_path={view_plan['input_path']}\n"
+                  f"input_sha256={view_plan['input_sha256']}\n"
+                  f"page_count={last_index}\n"
+                  f"first_page_index={first_index}\n"
+                  f"last_page_index={last_index}\n"
+                  f"Page indices are one-based, 1 through {last_index} inclusive; index 0 is invalid.\n"
+                  f"page_request_schedule={schedule}\n"
+                  f"preparation_manifest_sha256={view_plan['source_manifest_sha256']}\n")
+    return rubric.rstrip() + "\n\n" + instructions.rstrip() + assignment
+
+
+def _persist_then_verify_assessor_final(*, receiver, slot_id: str, expected_binding: dict,
+                                        final_text: str, input_raw: bytes, view_plan: dict,
+                                        calls: list[dict], private_delivery_meta: dict,
+                                        proof_directory: Path) -> dict:
+    """Persist exact assessor final, then require transcript-bound full input view.
+
+    The final text is durable even if view coverage fails. No parser, decoder,
+    source validator, or source-grade acceptor should run unless this returns.
+    """
+    receipt = receiver.receive(slot_id, expected_binding, final_text)
+    if (type(final_text) is not str or type(private_delivery_meta) is not dict
+            or private_delivery_meta.get("delivery_source") != "actual_assessor_final_message"
+            or private_delivery_meta.get("final_utf8_bytes") != len(final_text.encode("utf-8"))
+            or private_delivery_meta.get("final_utf8_sha256") != sha(final_text.encode("utf-8"))
+            or type(private_delivery_meta.get("private_log_sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", private_delivery_meta["private_log_sha256"])):
+        raise ValueError("exp095-private-final-delivery-binding")
+    verifier_path = HERE / "input-view-verifier.py.txt"
+    verifier = _load("exp094_input_view_verifier_phase", verifier_path)
+    if (type(view_plan) is not dict or view_plan.get("logical_submission") != slot_id
+            or view_plan.get("input_sha256") != expected_binding.get("input_sha256")
+            or view_plan.get("input_bytes") != expected_binding.get("input_bytes")
+            or type(view_plan.get("input_path")) is not str):
+        raise ValueError("exp095-view-slot-binding")
+    proof = verifier.verify_tool_transcript(input_raw,
+        expected_sha256=view_plan["input_sha256"], input_path=view_plan["input_path"],
+        viewer_path=view_plan["viewer_path"],
+        slot_id=slot_id, source_manifest_sha256=view_plan["source_manifest_sha256"],
+        calls=calls, transcript_log_sha256=private_delivery_meta["private_log_sha256"])
+    expected_plan = verifier.input_view_plan(input_raw,
+        expected_sha256=view_plan["input_sha256"], input_path=view_plan["input_path"],
+        viewer_path=view_plan["viewer_path"],
+        slot_id=slot_id, source_manifest_sha256=view_plan["source_manifest_sha256"])
+    if canonical(view_plan) != canonical(expected_plan):
+        raise ValueError("exp095-view-plan-mismatch")
+    proof["final_text_sha256"] = receipt["sha256"]
+    proof["final_text_bytes"] = receipt["bytes"]
+    proof["final_text_persisted_exactly"] = receipt["persisted_exact_final_text"] is True
+    proof_raw = canonical(proof)
+    reference = write_once(Path(proof_directory) / (sha(slot_id.encode("utf-8"))[:20] + ".view.json"),
+                           proof_raw)
+    return {"final_text_receipt": receipt, "view_proof": proof,
+            "view_proof_sha256": reference["sha256"]}
+
+
+def _read_pinned_assessor_final(*, state, expected_binding: dict, expected_agent_id: str,
+                                agent_path: str, reader_path: Path):
+    """Read one source or answer assessor final against the frozen slot, UUID, and clock."""
+    admission = state.admission
+    qualification_path = HERE / "qualification-integrity.json"
+    if qualification_path.is_symlink() or not qualification_path.is_file():
+        raise ValueError("exp095-qualified-final-reader-missing")
+    qualification_bytes = qualification_path.read_bytes()
+    if sha(qualification_bytes) != state.integrity.get("qualification_sha256"):
+        raise ValueError("exp095-qualified-final-reader-qualification")
+    qualification = admission.strict_json(qualification_bytes)
+    external = qualification.get("external_source_pins")
+    reader_pin = external.get("final_text_reader") if type(external) is dict else None
+    if (qualification.get("study_id") != "EXP-096" or qualification.get("qualified") is not True
+            or type(reader_pin) is not dict or set(reader_pin) != {"sha256"}
+            or type(reader_pin.get("sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", reader_pin["sha256"])
+            or state.integrity.get("external_source_pins") != external):
+        raise ValueError("exp095-qualified-final-reader-pin")
+    reader_path = Path(reader_path)
+    if (reader_path.is_symlink() or not reader_path.is_file()
+            or sha(reader_path.read_bytes()) != reader_pin["sha256"]):
+        raise ValueError("exp095-final-reader-source-mismatch")
+    reader = _load("exp095_pinned_final_log_reader", reader_path)
+    return reader.read_exact_assessor_final(
+        agent_path=agent_path, expected_binding=expected_binding,
+        expected_agent_id=expected_agent_id, expected_clock=state.clock[0])
+
+
+def receive_source_final_and_verify_view(*, state, phase_permit, receiver, slot_id: str,
+                                  expected_binding: dict, expected_agent_id: str,
+                                  agent_path: str, reader_path: Path,
+                                  input_raw: bytes, view_plan: dict,
+                                  proof_directory: Path) -> dict:
+    """Use only the registered log reader; callers cannot inject transcript claims."""
+    root = Path(state.outdir).resolve()
+    admission = state.admission
+    admission.require_phase(phase_permit, state.clock[1], root)
+    final_text, calls, private_meta = _read_pinned_assessor_final(
+        state=state, expected_binding=expected_binding, expected_agent_id=expected_agent_id,
+        agent_path=agent_path, reader_path=reader_path)
+    admission.require_phase(phase_permit, state.clock[1], root)
+    result = _persist_then_verify_assessor_final(receiver=receiver, slot_id=slot_id,
+        expected_binding=expected_binding, final_text=final_text, input_raw=input_raw,
+        view_plan=view_plan, calls=calls, private_delivery_meta=private_meta,
+        proof_directory=proof_directory)
+    admission.require_phase(phase_permit, state.clock[1], root)
+    # Do not return log content, argv, source paths, agent paths, or delivery metadata.
+    return result
+
+
+def source_id_universes(effective_acquisition: dict, cases: list[dict]) -> dict[str, list[str]]:
+    """Derive one canonical full-pool source universe per research task."""
+    pools = effective_acquisition.get("pools") if type(effective_acquisition) is dict else None
+    maps = effective_acquisition.get("source_id_by_card_id") if type(effective_acquisition) is dict else None
+    if type(pools) is not dict or type(maps) is not dict:
+        raise ValueError("exp095-source-universe-acquisition")
+    result = {}
+    for case in cases:
+        if case.get("kind") != "research":
+            continue
+        task_id = case.get("id")
+        pool, mapping = pools.get(task_id), maps.get(task_id)
+        if type(pool) is not dict or type(pool.get("cards")) is not list or type(mapping) is not dict:
+            raise ValueError("exp095-source-universe-pool")
+        ids, seen = [], set()
+        for card in pool["cards"]:
+            card_id = card.get("id") if type(card) is dict else None
+            source_id = mapping.get(card_id)
+            if type(source_id) is not str or not source_id:
+                raise ValueError("exp095-source-universe-membership")
+            if source_id not in seen:
+                seen.add(source_id)
+                ids.append(source_id)
+        result[task_id] = ids
+    return result
+
+
+def _decode_code_values(value, table, paths):
+    codec = _citation_codec()
+    by_code = {entry[0]: (entry[1], entry[2], entry[3]) for entry in table.entries}
+    def restore(code):
+        if type(code) is not str or code not in by_code:
+            raise ValueError("exp095-citation-code-unknown")
+        return by_code[code][2]
+    cloned = json.loads(json.dumps(value, ensure_ascii=False, allow_nan=False))
+    for path in paths:
+        _rewrite_optional(cloned, path, restore)
+    return cloned
+
+
+def _rewrite_optional(node, path, transform):
+    if not path:
+        return
+    head, *tail = path
+    if head == "*":
+        children = node.values() if isinstance(node, dict) else node if isinstance(node, list) else ()
+        for child in children:
+            _rewrite_optional(child, tail, transform)
+    elif isinstance(node, dict) and head in node:
+        if tail:
+            _rewrite_optional(node[head], tail, transform)
+        elif isinstance(node[head], list):
+            node[head] = [transform(item) for item in node[head]]
+        elif isinstance(node[head], str):
+            node[head] = transform(node[head])
+
+
+def _table_receipt(table) -> dict:
+    codec = _citation_codec()
+    return {"manifest": codec.manifest(table), "entries": [list(row) for row in table.entries]}
+
+
+def _verify_bundle_table(bundle, table, *, task_id=None):
+    if type(bundle) is not dict:
+        raise ValueError("exp095-codebook-bundle-shape")
+    expected_task = task_id or bundle.get("task_id") or bundle.get("label_binding", {}).get("task_id")
+    receipt = bundle.get("task_table")
+    if type(receipt) is dict and "manifest" in receipt:
+        manifest, entries = receipt.get("manifest"), receipt.get("entries")
+    else:
+        manifest, entries = receipt, bundle.get("task_table_entries")
+    rebuilt = _verify_table_receipt(table, task_id=expected_task, manifest=manifest, entries=entries)
+    binding = bundle.get("label_binding")
+    if type(binding) is dict:
+        if (binding.get("task_id") != expected_task
+                or binding.get("task_table_sha256") != rebuilt.binding_sha256):
+            raise ValueError("exp095-codebook-binding-scope")
+        source_binding = bundle.get("source_binding")
+        if type(source_binding) is dict and binding.get("source_binding_sha256") is not None:
+            expected_binding_sha = sha(canonical(source_binding.get("label_binding")))
+            if binding.get("source_binding_sha256") != expected_binding_sha:
+                raise ValueError("exp095-original-label-binding-hash")
+    if bundle.get("schema") in {"exp095-slot-citation-binding/1", "exp096-slot-citation-binding/1"}:
+        source_binding = bundle.get("source_binding")
+        if (type(source_binding) is not dict
+                or sha(canonical(source_binding)) != bundle.get("source_binding_sha256")):
+            raise ValueError("exp095-original-source-binding-hash")
+    return rebuilt
+
+
+def _replace_task_codes(model_input: dict, table, *, to_codes: bool) -> dict:
+    """Rewrite only citation fields and catalog keys in a frozen packet copy."""
+    codec = _citation_codec()
+    by_alias = {(group, alias): code for code, group, _orig, alias in table.entries}
+    by_code = {code: (group, alias) for code, group, _orig, alias in table.entries}
+    def code_for(group, alias):
+        if group is None:
+            matches = [code for (candidate_group, candidate_alias), code in by_alias.items()
+                       if candidate_alias == alias]
+            if len(matches) == 1:
+                return matches[0]
+            raise ValueError("exp095-reference-alias-ambiguous")
+        try: return by_alias[(group, alias)]
+        except KeyError as exc: raise ValueError("exp095-reference-outside-task-table") from exc
+    def alias_for(code, group=None):
+        row = by_code.get(code)
+        if row is None or (group is not None and row[0] != group):
+            raise ValueError("exp095-reference-code-outside-scope")
+        return row[1]
+    cloned = json.loads(json.dumps(model_input, ensure_ascii=False, allow_nan=False))
+    # Answerer and delivered-source projection: IDs sit on each passage and
+    # source_id is an unchanged scope key.
+    for collection_name in ("sources", "delivered_sources"):
+        for source in cloned.get(collection_name, []):
+            if type(source) is not dict or type(source.get("source_id")) is not str:
+                raise ValueError("exp095-delivered-source-shape")
+            sid = source["source_id"]
+            for passage in source.get("passages", []):
+                if type(passage) is not dict or type(passage.get("evidence_id")) is not str:
+                    raise ValueError("exp095-delivered-passage-shape")
+                passage["evidence_id"] = (code_for(sid, passage["evidence_id"]) if to_codes
+                                           else alias_for(passage["evidence_id"], sid))
+            if "evidence_ids" in source:
+                source["evidence_ids"] = [(code_for(sid, item) if to_codes else alias_for(item, sid))
+                                           for item in source["evidence_ids"]]
+    # Answer-assessor claim and frozen own-assessment references are scoped by
+    # source_id on dispositions and by the task-wide table on claims.
+    def map_ids(values, group=None):
+        if type(values) is not list:
+            raise ValueError("exp095-reference-list-shape")
+        return [(code_for(group, item) if to_codes else alias_for(item, group)) for item in values]
+    facets = list(cloned.get("answer_facets", []))
+    if type(cloned.get("facet_claims")) is dict:
+        facets.extend({"claims": rows} for rows in cloned["facet_claims"].values())
+    for facet in facets:
+        for claim in facet.get("claims", []):
+            claim["evidence_ids"] = map_ids(claim.get("evidence_ids"))
+    own = cloned.get("own_source_assessment")
+    if type(own) is dict:
+        for task in own.get("tasks", []):
+            for arm in task.get("arms", []):
+                for facet in arm.get("facet_assessments", []):
+                    for disposition in facet.get("evidence_dispositions", []):
+                        group = disposition.get("source_id")
+                        if "evidence_ids" in disposition:
+                            disposition["evidence_ids"] = map_ids(disposition["evidence_ids"], group)
+                        for ref in disposition.get("references", []):
+                            ref["evidence_id"] = (code_for(group, ref["evidence_id"]) if to_codes
+                                                   else alias_for(ref["evidence_id"], group))
+    # The answer assessor receives a mapping keyed by references; transform
+    # only those keys, retaining each catalog value and insertion order.
+    catalog = cloned.get("catalog")
+    if type(catalog) is dict:
+        passages = catalog.get("passages")
+        if type(passages) is not dict:
+            raise ValueError("exp095-catalog-passage-map")
+        mapped = {}
+        for key, value in passages.items():
+            if to_codes:
+                matches = [code for (group, alias), code in by_alias.items() if alias == key]
+                if len(matches) != 1: raise ValueError("exp095-catalog-key-scope")
+                mapped[matches[0]] = value
+            else:
+                row = by_code.get(key)
+                if row is None: raise ValueError("exp095-catalog-code-unknown")
+                mapped[row[1]] = value
+        catalog["passages"] = mapped
+    return cloned
+
+
+def decode_assessment_response(role: str, bundle: dict, response: dict, *, table) -> dict:
+    """Restore fixed codes to EXP-088 aliases, then the original IDs."""
+    labels = _reference_labels()
+    if role == "source":
+        if type(bundle) is not dict or type(bundle.get("source_binding")) is not dict:
+            raise ValueError("exp095-source-response-binding")
+        binding = bundle
+        task_id = bundle.get("task_id")
+        _verify_bundle_table(binding, table, task_id=task_id)
+        coded = _citation_codec().rewrite_grouped_rows(response, ("source_assessments",),
+            "source_id", (("facets", "*", "evidence_ids"),), table,
+            decode=True, restore_alias=True)
+        return labels.decode_source_response(bundle["source_binding"], coded)
+    if role == "answerer":
+        _verify_bundle_table(bundle, table, task_id=bundle.get("label_binding", {}).get("task_id"))
+        coded = _decode_code_values(response, table,
+            (("facets", "*", "claims", "*", "evidence_ids"),))
+        return labels.decode_answerer_response(bundle["source_binding"], coded)
+    if role == "answer-assessor":
+        _verify_bundle_table(bundle, table,
+            task_id=bundle.get("task_table", {}).get("manifest", {}).get("task_id"))
+        coded = _decode_code_values(response, table,
+            (("tasks", "*", "arms", "*", "facet_assessments", "*", "claims", "*", "evidence_ids"),
+             ("tasks", "*", "arms", "*", "facet_assessments", "*", "evidence_dispositions", "*", "evidence_ids"),
+             ("tasks", "*", "arms", "*", "facet_assessments", "*", "evidence_dispositions", "*", "references", "*", "evidence_id"),
+             ("tasks", "*", "arms", "*", "facet_assessments", "*", "references", "*", "evidence_id")))
+        return labels.decode_answer_assessor_response(bundle["source_binding"], coded)
+    raise ValueError("exp095-response-role")
+
+
+def decode_source_reference_response(bundle: dict, response: dict, *, table) -> dict:
+    """Restore codes to aliases and original IDs before frozen validation."""
+    if type(bundle) is not dict or type(bundle.get("source_binding")) is not dict:
+        raise ValueError("exp095-source-response-binding")
+    _verify_bundle_table(bundle, table, task_id=bundle.get("task_id"))
+    coded = _citation_codec().rewrite_grouped_rows(response, ("source_assessments",),
+        "source_id", (("facets", "*", "evidence_ids"),), table,
+        decode=True, restore_alias=True)
+    return _reference_labels().decode_source_response(bundle["source_binding"], coded)
+
+
+def encode_answer_assessor_packet(*, task_id: str, packet_input: dict, source_catalog: dict,
+                                  answer_catalog: dict, source_ids: list[str], table, outdir: Path) -> dict:
+    """Build a two-domain packet using the task-wide, arm-independent codebook."""
+    _verify_table_receipt(table, task_id=task_id)
+    labels = _reference_labels()
+    bundle = labels.encode_answer_assessor_input(task_id, packet_input, source_catalog,
+                                                 answer_catalog, source_ids)
+    coded = json.loads(json.dumps(bundle["model_input"], ensure_ascii=False))
+    coded = _replace_task_codes(coded, table, to_codes=True)
+    bundle = {"source_binding": bundle, "model_input": coded,
+              "task_table": _table_receipt(table)}
+    output = Path(outdir)
+    if output.exists() or output.is_symlink():
+        raise ValueError("exp095-answer-assessor-output-must-be-new")
+    output.mkdir(mode=0o700, parents=True, exist_ok=False)
+    binding_ref = write_once(output / "label-binding.json", bundle)
+    return {"model_input": bundle["model_input"], "label_binding": binding_ref,
+            "label_binding_bundle": bundle}
+
+
+def decode_answer_assessor_response(bundle: dict, response: dict, *, table) -> dict:
+    """Restore task codes and EXP-088 labels before the unchanged validator."""
+    _verify_bundle_table(bundle, table,
+                         task_id=bundle.get("task_table", {}).get("manifest", {}).get("task_id"))
+    coded = _decode_code_values(response, table,
+        (("tasks", "*", "arms", "*", "facet_assessments", "*", "claims", "*", "evidence_ids"),
+         ("tasks", "*", "arms", "*", "facet_assessments", "*", "evidence_dispositions", "*", "evidence_ids"),
+         ("tasks", "*", "arms", "*", "facet_assessments", "*", "evidence_dispositions", "*", "references", "*", "evidence_id"),
+         ("tasks", "*", "arms", "*", "facet_assessments", "*", "references", "*", "evidence_id")))
+    return _reference_labels().decode_answer_assessor_response(bundle["source_binding"], coded)
+
+class _GuardedHTTPTransport(httpx.BaseTransport):
+    """Sync HTTPX transport checking the EXP-078 permit before each send."""
+    def __init__(self, inner, admission, phase_permit, clock_bytes, stage_outdir, limit):
+        if not isinstance(inner, httpx.BaseTransport):
+            raise ValueError("exp078-answer-transport-type")
+        self.inner, self.admission = inner, admission
+        self.phase_permit, self.clock_bytes, self.stage_outdir = phase_permit, clock_bytes, Path(stage_outdir).resolve()
+        self.limit, self.calls = limit, 0
+
+    def handle_request(self, request):
+        self.admission.require_phase(self.phase_permit, self.clock_bytes, self.stage_outdir)
+        self.calls += 1
+        if self.calls > self.limit:
+            raise ValueError("exp078-answer-http-budget")
+        return self.inner.handle_request(request)
+
+    def close(self):
+        self.inner.close()
+
+
+class _LabelledAnswerTransport(httpx.BaseTransport):
+    """Alias answer evidence references on the wire and retain both body forms.
+
+    The frozen EXP-077 runner continues to validate and persist its ordinary
+    64-hex-ID response. This outer transport stores the provider body separately
+    and supplies only a mechanically decoded body to that unchanged runner.
+    """
+    def __init__(self, inner, *, assignments, bundles, outdir: Path, api_key: str):
+        if not isinstance(inner, httpx.BaseTransport):
+            raise ValueError("exp095-answer-transport-type")
+        self.inner, self.assignments, self.bundles = inner, assignments, bundles
+        self.outdir, self.api_key = Path(outdir), api_key
+        self.outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+        self.calls = 0
+        self.receipts = []
+
+    @staticmethod
+    def _answer_wire_input(assignment: dict) -> dict:
+        model = assignment["model_input"]
+        task = model["task"]
+        return {"task_id": task["task_id"], "kind": task["kind"], "query": task["query"],
+                "purpose": task["purpose"], "critical_checks": task["critical_checks"],
+                "cards": model["cards"], "opening_outcomes": model["opening_outcomes"],
+                "delivered_sources": model["delivered_sources"], "output_schema": model["output_schema"]}
+
+    def _rewrite_request(self, request: httpx.Request):
+        raw = request.read()
+        envelope = json.loads(raw)
+        safe_headers = [(key, value) for key, value in request.headers.multi_items()
+                        if key.lower() not in {"content-length", "transfer-encoding", "host"}]
+        messages = envelope.get("messages")
+        if not isinstance(messages, list) or len(messages) != 2:
+            raise ValueError("exp095-answer-request-message-shape")
+        user = messages[1].get("content") if isinstance(messages[1], dict) else None
+        if not isinstance(user, str):
+            raise ValueError("exp095-answer-request-user-content")
+        # This exact plaintext is emitted by the frozen EXP-077 runner for its
+        # two readiness calls; it is deliberately outside the JSON task schema.
+        if user == "This is a synthetic endpoint readiness check, not study evidence.":
+            return httpx.Request(request.method, request.url, headers=safe_headers,
+                                 content=raw), None
+        model_input = json.loads(user)
+        task_id = model_input.get("task_id") if isinstance(model_input, dict) else None
+        match_input = json.loads(json.dumps(model_input, ensure_ascii=False))
+        # The frozen EXP-077 transport helper asks for this derived private
+        # set, although its closed assignment schema stores it on passages.
+        # It is never part of the actual request: replaced below from the
+        # sealed label bundle before the HTTP exchange.
+        for source in match_input.get("delivered_sources", []):
+            if isinstance(source, dict):
+                source.pop("evidence_ids", None)
+        matches = []
+        for assignment in self.assignments:
+            original = self._answer_wire_input(assignment)
+            if original == match_input:
+                binding = assignment["private_binding"]
+                key = (task_id, binding["arm_id"])
+                bundle = self.bundles.get(key)
+                if bundle is None:
+                    raise ValueError("exp095-answer-label-binding-missing")
+                _verify_bundle_table(bundle, bundle["task_table_object"], task_id=task_id)
+                matches.append((assignment, bundle))
+        if not matches:
+            raise ValueError("exp095-answer-input-unassigned")
+        assignment, bundle = matches[0]
+        def same_code_map(candidate_bundle):
+            return (candidate_bundle["task_table"]["manifest"] == bundle["task_table"]["manifest"]
+                    and candidate_bundle["source_binding"]["label_binding"].get("labels")
+                    == bundle["source_binding"]["label_binding"].get("labels"))
+        if any(not same_code_map(candidate_bundle) for _, candidate_bundle in matches[1:]):
+            raise ValueError("exp095-answer-input-ambiguous-label-map")
+        encoded = bundle["model_input"]
+        if (encoded.get("task", {}).get("task_id") != task_id
+                or encoded.get("task") != assignment["model_input"]["task"]):
+            raise ValueError("exp095-answer-label-task-binding")
+        model_input["delivered_sources"] = encoded["delivered_sources"]
+        rewritten_user = json.dumps(model_input, ensure_ascii=False, sort_keys=True,
+                                    separators=(",", ":"))
+        for row in bundle["source_binding"]["label_binding"]["labels"]:
+            if row["original_id"] in rewritten_user:
+                raise ValueError("exp095-original-reference-id-leaked-to-model")
+        messages[1]["content"] = rewritten_user
+        rewritten = json.dumps(envelope, ensure_ascii=False, sort_keys=True,
+                               separators=(",", ":")).encode("utf-8")
+        return httpx.Request(request.method, request.url, headers=safe_headers,
+                             content=rewritten), (task_id, bundle, sha(rewritten))
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        self.calls += 1
+        if self.calls > 18:
+            raise ValueError("exp095-answer-http-budget")
+        rewritten, binding = self._rewrite_request(request)
+        response = self.inner.handle_request(rewritten)
+        chunks = []
+        count = 0
+        complete = True
+        for chunk in response.iter_bytes(65536):
+            count += len(chunk)
+            if count > 2_000_000:
+                chunks.append(chunk[:max(0, 2_000_001 - (count - len(chunk)))])
+                complete = False
+                break
+            chunks.append(chunk)
+        raw = b"".join(chunks)
+        status = response.status_code
+        response_headers = list(response.headers.multi_items())
+        response_extensions = dict(response.extensions)
+        response.close()
+        slot = self.calls
+        record = {"schema": "exp095-vendor-response/1", "slot": slot,
+                  "task_id": binding[0] if binding else None,
+                  "request_sha256": binding[2] if binding else sha(rewritten.content),
+                  "http_status": status, "response_bytes": len(raw),
+                  "response_sha256": sha(raw), "response_complete": complete,
+                  "label_binding_sha256": sha(canonical(binding[1]["label_binding"])) if binding else None,
+                  "decoded_response_sha256": None, "decode_status": "not_applicable" if binding is None else "pending"}
+        echo = bool(self.api_key and self.api_key.encode() in raw)
+        if echo:
+            record["body_suppressed"] = "credential_echo"
+        else:
+            raw_path = self.outdir / f"vendor-response-{slot:02d}.body"
+            write_once(raw_path, raw)
+            record["raw_body_path"] = raw_path.name
+            record["raw_body_file_sha256"] = sha(raw)
+        portable = raw
+        decoded_over_cap = False
+        if binding is not None and complete and not echo and 200 <= status < 300:
+            try:
+                envelope = json.loads(raw)
+                content = envelope["choices"][0]["message"]["content"]
+                coded_response = _decode_code_values(json.loads(content), binding[1]["task_table_object"],
+                    (("facets", "*", "claims", "*", "evidence_ids"),))
+                decoded = _reference_labels().decode_answerer_response(binding[1]["source_binding"], coded_response)
+                envelope["choices"][0]["message"]["content"] = json.dumps(
+                    decoded, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                portable = json.dumps(envelope, ensure_ascii=False, sort_keys=True,
+                                      separators=(",", ":")).encode("utf-8")
+                record["decoded_response_bytes"] = len(portable)
+                record["decoded_response_sha256"] = sha(portable)
+                if len(portable) > 2_000_000:
+                    decoded_over_cap = True
+                    portable = raw
+                    record["decode_status"] = "portable_response_byte_cap"
+                    record["portable_body_status"] = "oversized_decoded_body_not_persisted"
+                else:
+                    record["decode_status"] = "decoded"
+            except (ValueError, KeyError, TypeError):
+                # Leave the aliased response intact so the unchanged validator
+                # rejects it while preserving its parsed usage when available.
+                record["decode_status"] = "rejected_by_codec"
+        if not echo and not decoded_over_cap:
+            portable_path = self.outdir / f"portable-response-{slot:02d}.body"
+            write_once(portable_path, portable)
+            record["portable_body_path"] = portable_path.name
+            record.setdefault("decoded_response_sha256", sha(portable))
+            record["portable_response_bytes"] = len(portable)
+            record["portable_response_sha256"] = sha(portable)
+        meta_path = self.outdir / f"response-{slot:02d}.json"
+        write_once(meta_path, record)
+        self.receipts.append(record)
+        if decoded_over_cap:
+            raise ValueError("exp095-portable-response-byte-cap")
+        headers = [(k, v) for k, v in response_headers
+                   if k.lower() not in {"content-length", "content-encoding", "transfer-encoding"}]
+        return httpx.Response(status, headers=headers, content=portable,
+                              request=rewritten, extensions=response_extensions)
+
+    def close(self):
+        self.inner.close()
+
+
+
+def freeze_answer_output_manifest(answer_run_path: Path, answer_directory: Path,
+                                  output_path: Path, guard=lambda: None) -> dict:
+    """Bind all sixteen validated frozen-runner answers before answer assessment."""
+    run_path, answer_root = Path(answer_run_path), Path(answer_directory)
+    if (run_path.is_symlink() or not run_path.is_file()
+            or answer_root.is_symlink() or not answer_root.is_dir()):
+        raise ValueError("exp095-answer-output-receipt-missing")
+    raw = run_path.read_bytes()
+    run = json.loads(raw)
+    if run.get("schema") != "exp077-answer-run/1" or run.get("status") != "complete":
+        raise ValueError("exp095-answer-output-run-incomplete")
+    calls = run.get("call_receipts")
+    answers = run.get("answers")
+    if type(calls) is not list or len(calls) != 18 or type(answers) is not list or len(answers) != 16:
+        raise ValueError("exp095-answer-output-coverage")
+    # Do not filter malformed call rows before the exact 2-readiness + 16-answer
+    # schedule check: null/non-object rows must fail even when all 16 answer
+    # files happen to be present.
+    if any(type(row) is not dict for row in calls):
+        raise ValueError("exp095-answer-output-coverage")
+    if any(row.get("status") != "http_success" for row in calls):
+        raise ValueError("exp095-answer-output-coverage")
+    expected = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+    # Bind the frozen 2-readiness + 16-answer dispatch sequence. EXP-077 call
+    # receipts omit the arm field; its exact answer filename is the identity.
+    expected_paths = {f"{task}-{arm}.json": (task, arm) for task, arm in expected}
+    expected_schedule = [("readiness", "neutral-1", None), ("readiness", "neutral-2", None)] + [
+        ("answer", f"d{task}", arm) for task in range(1, 9) for arm in ("w0", "candidate")]
+    receipt_by_answer = {}
+    for slot, (call, expected_row) in enumerate(zip(calls, expected_schedule), start=1):
+        kind, task_id, arm = expected_row
+        if (call.get("slot") != slot or call.get("kind") != kind
+                or call.get("task_id") != task_id):
+            raise ValueError("exp095-answer-output-call-sequence")
+        if kind == "readiness":
+            if any(key in call for key in ("answer_path", "answer_sha256", "arm")):
+                raise ValueError("exp095-answer-output-readiness-shape")
+            continue
+        path = call.get("answer_path")
+        key = expected_paths.get(path) if type(path) is str else None
+        digest = call.get("answer_sha256")
+        if (key != (task_id, arm) or key in receipt_by_answer
+                or type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            raise ValueError("exp095-answer-output-duplicate")
+        receipt_by_answer[key] = call
+    if set(receipt_by_answer) != expected:
+        raise ValueError("exp095-answer-output-identity")
+    rows = []
+    for answer in answers:
+        if type(answer) is not dict or set(answer) != {"task_id", "arm", "answer_sha256"}:
+            raise ValueError("exp095-answer-output-row")
+        key = (answer["task_id"], answer["arm"])
+        call = receipt_by_answer.get(key)
+        if call is None or call.get("answer_sha256") != answer["answer_sha256"]:
+            raise ValueError("exp095-answer-output-call-binding")
+        file_path = answer_root / call["answer_path"]
+        if file_path.is_symlink() or not file_path.is_file():
+            raise ValueError("exp095-answer-file-missing")
+        body = file_path.read_bytes()
+        if len(body) < 1 or len(body) > 2_000_000 or sha(body) != answer["answer_sha256"]:
+            raise ValueError("exp095-answer-file-hash-or-size")
+        rows.append({"task_id": key[0], "arm": key[1], "answer_sha256": sha(body),
+                     "receipt_sha256": sha(raw), "bytes": len(body)})
+    if {(r["task_id"], r["arm"]) for r in rows} != expected:
+        raise ValueError("exp095-answer-output-set")
+    manifest = {"schema": "exp095-answer-output-manifest/1", "status": "complete",
+                "answers": sorted(rows, key=lambda r: (r["task_id"], r["arm"]))}
+    output_path = Path(output_path)
+    ref = write_once(output_path, manifest)
+    return {"manifest": manifest, "manifest_sha256": ref["sha256"],
+            "manifest_path": ref["path"], "answer_run_sha256": sha(raw),
+            "answer_count": len(rows)}
+
+
+def run_answers(*, assignments: list[dict], cases: list[dict], prompt: str, schema: dict,
+                stage_outdir: Path, outdir: Path, admission, stage_permit, clock: dict, clock_bytes: bytes,
+                clock_sha256: str, source_id_universe_by_task: dict[str, list[str]],
+                citation_tables_by_task: dict,
+                offline_transport=None, offline: bool = False) -> dict:
+    """Run two readiness plus sixteen answer requests under one phase permit."""
+    if outdir.exists() or outdir.is_symlink():
+        raise ValueError("exp078-answer-output-must-be-new")
+    if not isinstance(assignments, list) or len(assignments) != 16:
+        raise ValueError("exp078-answer-assignment-count")
+    validate_answer_coverage(assignments, cases)
+    research_ids = [row["id"] for row in cases if row.get("kind") == "research"]
+    if (type(source_id_universe_by_task) is not dict
+            or set(source_id_universe_by_task) != set(research_ids)):
+        raise ValueError("exp095-answer-source-universe-coverage")
+    if type(citation_tables_by_task) is not dict or set(citation_tables_by_task) != set(research_ids):
+        raise ValueError("exp095-answer-codebook-task-coverage")
+    frozen_prompt = labelled_prompt("answerer")
+    if prompt != frozen_prompt:
+        raise ValueError("exp095-answerer-prompt-pin")
+    labels = _reference_labels()
+    label_bundles = {}
+    for assignment in assignments:
+        task_id = assignment["model_input"]["task"]["task_id"]
+        arm = assignment["private_binding"]["arm_id"]
+        if task_id not in source_id_universe_by_task:
+            raise ValueError("exp095-answer-source-universe-task")
+        original_bundle = labels.encode_answerer_input(task_id, assignment["model_input"],
+            assignment["private_binding"]["catalog"], source_id_universe_by_task[task_id])
+        table = citation_tables_by_task[task_id]
+        _verify_table_receipt(table, task_id=task_id)
+        coded_model = _replace_task_codes(original_bundle["model_input"], table, to_codes=True)
+        bundle = {"source_binding": original_bundle, "model_input": coded_model,
+                  "task_table": _table_receipt(table), "task_table_object": table,
+                  "label_binding": {"schema": "exp095-answer-code-binding/1",
+                      "task_id": task_id, "arm_id": arm,
+                      "source_binding_sha256": sha(canonical(original_bundle["label_binding"])),
+                      "task_table_sha256": table.binding_sha256}}
+        key = (task_id, arm)
+        if key in label_bundles:
+            raise ValueError("exp095-answer-label-assignment-duplicate")
+        label_bundles[key] = bundle
+    if sha(clock_bytes) != clock_sha256 or json.loads(clock_bytes) != clock:
+        raise ValueError("exp078-answer-clock-binding")
+    outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    phase_permit = None
+    if offline:
+        if not isinstance(offline_transport, httpx.MockTransport):
+            raise ValueError("exp078-answer-offline-requires-mock-transport")
+    else:
+        if stage_permit is None or admission is None or offline_transport is not None:
+            raise ValueError("exp078-answer-live-requires-common-admission")
+        phase_permit = _phase(admission, stage_permit, "answer", stage_outdir, outdir, clock_bytes)
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    answer_runner = _load("exp078_answer_runner", EXP077 / "answer-runner.py.txt")
+    packet = {"schema": "exp077-answer-packet/1", "synthetic": False,
+              "stage_id": clock["stage_id"], "stage_clock_digest": clock_sha256,
+              "assignments": assignments}
+    validated_schema = answer_runner.validate_schema(canonical(schema))
+    answer_runner.validate_packet(canonical(packet), validated_schema)
+    # Frozen EXP-077 run_answers consumes a derived evidence_ids list on each
+    # delivered source, while its validator/packet schema intentionally carries
+    # IDs only on passages. Add the private derived view after validating the
+    # original packet; _LabelledAnswerTransport removes it and sends only the
+    # unchanged passage schema with aliases.
+    runner_assignments = json.loads(json.dumps(assignments, ensure_ascii=False, allow_nan=False))
+    for assignment in runner_assignments:
+        for source in assignment["model_input"]["delivered_sources"]:
+            source["evidence_ids"] = [passage["evidence_id"] for passage in source["passages"]]
+    if offline:
+        endpoint, api_key = "https://fixture.invalid/v1/chat/completions", "exp078-offline-fixture"
+        # Keep the transport's lookup basis on the exact packet that passed
+        # the frozen validator. The derived evidence_ids list is only a local
+        # compatibility view for run_answers and must never enter lookup or
+        # the serialized model request.
+        alias_transport = _LabelledAnswerTransport(offline_transport, assignments=assignments,
+            bundles=label_bundles, outdir=outdir / "vendor-responses", api_key=api_key)
+        transport = alias_transport
+    else:
+        endpoint = os.environ.get("LLM_BASE_URL", "")
+        api_key = os.environ.get("LLM_API_KEY", "")
+        if not endpoint or not api_key:
+            raise ValueError("exp078-answer-configuration-unavailable-after-admission")
+        alias_transport = _LabelledAnswerTransport(httpx.HTTPTransport(retries=0, trust_env=False),
+            assignments=assignments, bundles=label_bundles,
+            outdir=outdir / "vendor-responses", api_key=api_key)
+        transport = _GuardedHTTPTransport(alias_transport,
+            admission, phase_permit, clock_bytes, stage_outdir, 18)
+    helper_out = outdir / "portable-answer-wire"
+    helper_out.mkdir(mode=0o700)
+    label_root = outdir / "private-label-bindings"
+    label_root.mkdir(mode=0o700)
+    label_refs = []
+    for (task_id, arm), bundle in sorted(label_bundles.items()):
+        durable_bundle = {key: value for key, value in bundle.items() if key != "task_table_object"}
+        label_refs.append({"task_id": task_id, "arm_id": arm,
+                           **write_once(label_root / f"{task_id}-{arm}.json", durable_bundle)})
+    started = time.monotonic()
+    try:
+        helper_result = answer_runner.run_answers(runner_assignments, prompt, validated_schema, endpoint, api_key,
+                                                   helper_out, clock, transport=transport)
+    except BaseException as exc:
+        receipt_path = helper_out / "call-receipts.json"
+        raw = receipt_path.read_bytes() if receipt_path.is_file() and not receipt_path.is_symlink() else b""
+        failed = {"schema": "exp078-answer-phase/1", "stage": "development",
+                  "status": "incomplete", "synthetic": offline,
+                  "quality_credit": False, "adoption_eligible": False,
+                  "stage_clock_sha256": clock_sha256,
+                  "terminal_error_class": type(exc).__name__,
+                  "helper_call_receipts_sha256": sha(raw) if raw else None,
+                  "vendor_response_receipts": alias_transport.receipts,
+                  "vendor_response_receipts_sha256": sha(canonical(alias_transport.receipts)),
+                  "private_label_bindings": label_refs,
+                  "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+                  "answer_phase_elapsed_seconds": time.monotonic() - started}
+        write_once(outdir / "answer-phase-terminal.json", failed)
+        raise
+    elapsed = time.monotonic() - started
+    answer_receipt = helper_out / "answer-run.json"
+    if answer_receipt.is_symlink() or not answer_receipt.is_file():
+        raise ValueError("exp078-answer-helper-receipt-missing")
+    helper_raw = answer_receipt.read_bytes()
+    answer_manifest = freeze_answer_output_manifest(answer_receipt, helper_out,
+        outdir / "answer-output-manifest.json",
+        guard=(lambda: None) if offline else
+            (lambda: admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())))
+    if not offline:
+        admission.require_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
+    status = "complete" if helper_result.get("status") == "complete" and elapsed <= 28_800 else "incomplete"
+    result = {"schema": "exp078-answer-phase/1", "stage": "development",
+              "status": status, "synthetic": offline,
+              "quality_credit": False, "adoption_eligible": False,
+              "stage_clock_sha256": clock_sha256,
+              "owned_api_calls": helper_result.get("owned_api_calls"),
+              "reported_usage": helper_result.get("reported_usage"),
+              "returned_models": helper_result.get("returned_models"),
+              "immutable_model_revision": helper_result.get("immutable_model_revision"),
+              "shared_stage_elapsed_seconds": shared_stage_elapsed(clock),
+              "answer_phase_elapsed_seconds": elapsed,
+              "helper_wire_receipt_sha256": sha(helper_raw),
+              "helper_wire_receipt_path": "portable-answer-wire/answer-run.json",
+              "vendor_response_receipts": alias_transport.receipts,
+              "vendor_response_receipts_sha256": sha(canonical(alias_transport.receipts)),
+              "answer_output_manifest_sha256": answer_manifest["manifest_sha256"],
+              "answer_output_manifest_path": answer_manifest["manifest_path"],
+              "private_label_bindings": label_refs}
+    ref = write_once(outdir / "answer-phase.json", result)
+    result["receipt"] = ref
+    return result
+
+
+def receive_exact_assessment_final(*, state, receiver, phase_permit, slot_id,
+                                   expected_binding, expected_agent_id,
+                                   agent_path, reader_path, input_raw, view_plan,
+                                   proof_directory):
+    """Require exact pinned final and complete transcript-bound answer-packet delivery."""
+    admission = state.admission
+    root = Path(state.outdir).resolve()
+    admission.require_phase(phase_permit, state.clock[1], root)
+    final_text, observed_calls, observed_meta = _read_pinned_assessor_final(
+        state=state, expected_binding=expected_binding, expected_agent_id=expected_agent_id,
+        agent_path=agent_path, reader_path=reader_path)
+    result = _persist_then_verify_assessor_final(receiver=receiver, slot_id=slot_id,
+        expected_binding=expected_binding, final_text=final_text, input_raw=input_raw,
+        view_plan=view_plan, calls=observed_calls, private_delivery_meta=observed_meta,
+        proof_directory=proof_directory)
+    admission.require_phase(phase_permit, state.clock[1], root)
+    return result
