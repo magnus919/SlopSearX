@@ -385,11 +385,11 @@ def source_viewer_prompt(view_plan: dict) -> str:
     return rubric.rstrip() + "\n\n" + instructions.rstrip() + assignment
 
 
-def _persist_then_verify_source_final(*, receiver, slot_id: str, expected_binding: dict,
-                                         final_text: str, input_raw: bytes, view_plan: dict,
-                                         calls: list[dict], private_delivery_meta: dict,
-                                         proof_directory: Path) -> dict:
-    """Persist exact source final text, then require transcript-bound full input view.
+def _persist_then_verify_assessor_final(*, receiver, slot_id: str, expected_binding: dict,
+                                        final_text: str, input_raw: bytes, view_plan: dict,
+                                        calls: list[dict], private_delivery_meta: dict,
+                                        proof_directory: Path) -> dict:
+    """Persist exact assessor final, then require transcript-bound full input view.
 
     The final text is durable even if view coverage fails. No parser, decoder,
     source validator, or source-grade acceptor should run unless this returns.
@@ -472,7 +472,7 @@ def receive_source_final_and_verify_view(*, state, phase_permit, receiver, slot_
         state=state, expected_binding=expected_binding, expected_agent_id=expected_agent_id,
         agent_path=agent_path, reader_path=reader_path)
     admission.require_phase(phase_permit, state.clock[1], root)
-    result = _persist_then_verify_source_final(receiver=receiver, slot_id=slot_id,
+    result = _persist_then_verify_assessor_final(receiver=receiver, slot_id=slot_id,
         expected_binding=expected_binding, final_text=final_text, input_raw=input_raw,
         view_plan=view_plan, calls=calls, private_delivery_meta=private_meta,
         proof_directory=proof_directory)
@@ -1142,14 +1142,18 @@ def run_answers(*, assignments: list[dict], cases: list[dict], prompt: str, sche
 
 def receive_exact_assessment_final(*, state, receiver, phase_permit, slot_id,
                                    expected_binding, expected_agent_id,
-                                   agent_path, reader_path):
-    """Require the active phase and persist only the exact pinned answer-assessor final."""
+                                   agent_path, reader_path, input_raw, view_plan,
+                                   proof_directory):
+    """Require exact pinned final and complete transcript-bound answer-packet delivery."""
     admission = state.admission
     root = Path(state.outdir).resolve()
     admission.require_phase(phase_permit, state.clock[1], root)
-    final_text, _, _ = _read_pinned_assessor_final(
+    final_text, observed_calls, observed_meta = _read_pinned_assessor_final(
         state=state, expected_binding=expected_binding, expected_agent_id=expected_agent_id,
         agent_path=agent_path, reader_path=reader_path)
-    receipt = receiver.receive(slot_id, expected_binding, final_text)
+    result = _persist_then_verify_assessor_final(receiver=receiver, slot_id=slot_id,
+        expected_binding=expected_binding, final_text=final_text, input_raw=input_raw,
+        view_plan=view_plan, calls=observed_calls, private_delivery_meta=observed_meta,
+        proof_directory=proof_directory)
     admission.require_phase(phase_permit, state.clock[1], root)
-    return receipt
+    return result

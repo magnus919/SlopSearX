@@ -224,7 +224,7 @@ class PhaseBindingTests(unittest.TestCase):
             meta = {"delivery_source": "actual_assessor_final_message", "private_log_sha256": "6"*64,
                 "final_utf8_bytes": len(final_text.encode()),
                 "final_utf8_sha256": hashlib.sha256(final_text.encode()).hexdigest()}
-            result = P._persist_then_verify_source_final(receiver=carrier, slot_id=slot,
+            result = P._persist_then_verify_assessor_final(receiver=carrier, slot_id=slot,
                 expected_binding=registry.binding(slot), final_text=final_text, input_raw=raw_input,
                 view_plan=view_plan, calls=calls, private_delivery_meta=meta,
                 proof_directory=stage / "view-proofs")
@@ -248,6 +248,85 @@ class PhaseBindingTests(unittest.TestCase):
             self.assertTrue(assessor["validation"]["structurally_valid"])
             self.assertEqual(assessor["critical_endpoint"]["semantic_completion"], "not_claimed")
 
+    def test_answer_receiver_requires_complete_pinned_packet_transcript(self):
+        viewer = importlib.machinery.SourceFileLoader("exp095_answer_viewer_receiver_test",
+            str(HERE / "packet-viewer.py.txt")).load_module()
+        verifier = importlib.machinery.SourceFileLoader("exp095_answer_verifier_receiver_test",
+            str(HERE / "input-view-verifier.py.txt")).load_module()
+        final_text = '{"fixture":"answer final"}'
+        final_raw = final_text.encode("utf-8")
+        private_meta = {"delivery_source": "actual_assessor_final_message",
+            "private_log_sha256": "6" * 64, "final_utf8_bytes": len(final_raw),
+            "final_utf8_sha256": hashlib.sha256(final_raw).hexdigest()}
+        with tempfile.TemporaryDirectory() as tmp:
+            stage = Path(tmp) / "stage"; stage.mkdir()
+            fixture_tests = importlib.machinery.SourceFileLoader("exp095_view_fixture_tests",
+                str(HERE / "input-view-verifier-tests.py.txt")).load_module()
+            raw, input_sha, _source_slot, input_path, viewer_path, manifest_sha, _log_sha, fixture_calls = (
+                fixture_tests.InputViewVerifierTests().fixture())
+            slot = "development-d1-answer-R1-arm1"
+            binding = {"logical_submission": slot, "role": "answer-assessor",
+                "input_sha256": input_sha, "input_bytes": len(raw),
+                "stage_clock_sha256": "3" * 64}
+            plan = verifier.input_view_plan(raw, expected_sha256=input_sha,
+                input_path=input_path, viewer_path=viewer_path, slot_id=slot,
+                source_manifest_sha256=manifest_sha)
+
+            def tool_row(argv, stdout):
+                import shlex
+                command = " ".join(shlex.quote(part) for part in argv)
+                js = (f"const r=await tools.exec_command({{cmd:{json.dumps(command)},max_output_tokens:10000}});"
+                      "text(r.exit_code);text(r.output);")
+                return {"name": "exec", "input": js,
+                    "output_text_blocks": ["Script completed\nWall time: 0.2 seconds\nOutput:\n", "0",
+                                           stdout.decode("utf-8")]}
+
+            describe = (json.dumps(viewer.describe_from_raw(raw, input_sha), ensure_ascii=False,
+                sort_keys=True, separators=(",", ":")) + "\n").encode()
+            complete_calls = [tool_row(["python3", viewer_path, "--input", input_path,
+                "--expected-sha", input_sha, "--describe"], describe)]
+            for batch in plan["batches"]:
+                indices = batch["indices"]
+                complete_calls.append(tool_row(["python3", viewer_path, "--input", input_path,
+                    "--expected-sha", input_sha, "--pages", ",".join(map(str, indices))],
+                    viewer.render_from_raw(raw, indices)))
+            complete_calls = fixture_calls
+            state = type("State", (), {"outdir": stage, "admission": FakeAdmission(),
+                "clock": ({"schema": "exp078-stage-clock/1"}, b"clock", "7" * 64)})()
+
+            def invoke(calls, proof_name):
+                receiver = type("Receiver", (), {"receive": mock.Mock(return_value={
+                    "sha256": hashlib.sha256(final_raw).hexdigest(), "bytes": len(final_raw),
+                    "persisted_exact_final_text": True})})()
+                with mock.patch.object(P, "_read_pinned_assessor_final",
+                        return_value=(final_text, calls, private_meta)) as read_final:
+                    result = P.receive_exact_assessment_final(state=state, receiver=receiver,
+                        phase_permit=object(), slot_id=slot, expected_binding=binding,
+                        expected_agent_id="00000000-0000-4000-8000-000000000001",
+                        agent_path="/root/exp095_d1_r1_answer_arm1", reader_path=stage/"pinned-reader",
+                        input_raw=raw, view_plan=plan, proof_directory=stage/proof_name)
+                self.assertEqual(result["view_proof"]["status"], "complete")
+                self.assertEqual(receiver.receive.call_count, 1)
+
+            invoke(complete_calls, "complete-proof")
+            invalid_calls = {
+                "missing": complete_calls[:-1],
+                "reordered": list(reversed(complete_calls)),
+                "extra": [*complete_calls, complete_calls[-1]],
+                "mutated": [complete_calls[0], {**complete_calls[1],
+                    "output_text_blocks": [*complete_calls[1]["output_text_blocks"][:-1], "mutated"]}],
+            }
+            for name, calls in invalid_calls.items():
+                with self.subTest(transcript=name), mock.patch.object(P, "_read_pinned_assessor_final",
+                        return_value=(final_text, calls, private_meta)):
+                    receiver = type("Receiver", (), {"receive": mock.Mock()})()
+                    with self.assertRaises(ValueError):
+                        P.receive_exact_assessment_final(state=state, receiver=receiver,
+                            phase_permit=object(), slot_id=slot, expected_binding=binding,
+                            expected_agent_id="00000000-0000-4000-8000-000000000001",
+                            agent_path="/root/exp095_d1_r1_answer_arm1", reader_path=stage/"pinned-reader",
+                            input_raw=raw, view_plan=plan, proof_directory=stage/name)
+                    self.assertEqual(receiver.receive.call_count, 1)
     def test_answer_assessor_uses_same_task_codebook_for_source_and_answer_refs(self):
         task = {"id": "d1", "kind": "research", "query": "q", "purpose": "p",
                 "critical_checks": [{"id": "d1_f1", "check": "Check this captured fact."}]}
