@@ -1,0 +1,51 @@
+"""Sterile checks of carry-before-clock ordering; no credentials or live authority."""
+import importlib.machinery
+import importlib.util
+import sys
+import json
+import tempfile
+import types
+import unittest
+from pathlib import Path
+from unittest import mock
+
+HERE=Path(__file__).resolve().parent
+loader=importlib.machinery.SourceFileLoader('exp095_controller_carry_tests',str(HERE/'controller.py.txt'))
+spec=importlib.util.spec_from_loader(loader.name,loader);C=importlib.util.module_from_spec(spec);sys.modules[loader.name]=C;loader.exec_module(C)
+
+class ControllerCarryTests(unittest.TestCase):
+    def test_missing_checkpoint_fails_before_dependency_credentials_or_clock(self):
+        with mock.patch.object(C,'load') as load:
+            with self.assertRaisesRegex(ValueError,'source-checkpoint-required'):C.preflight(Path('unused'))
+            load.assert_not_called()
+    def test_failed_carry_replay_cannot_create_clock_or_read_configuration(self):
+        admission=types.SimpleNamespace(create_stage_clock=mock.Mock())
+        def reject(*args):raise ValueError('invalid-frozen-checkpoint')
+        carry=types.SimpleNamespace(verify_source_checkpoint=reject)
+        with tempfile.TemporaryDirectory() as tmp,mock.patch.object(C,'preflight',return_value=(admission,{},b'',{})),mock.patch.object(C,'load',return_value=carry),mock.patch.object(C,'_read_bound_capture_configuration') as config:
+            target=Path(tmp)/'stage'
+            with self.assertRaisesRegex(ValueError,'invalid-frozen-checkpoint'):
+                C.begin(target,Path(tmp),source_checkpoint_root=Path(tmp)/'checkpoint')
+            self.assertFalse(target.exists());config.assert_not_called();admission.create_stage_clock.assert_not_called()
+    def test_valid_carry_is_kept_separate_from_opaque_card_proof(self):
+        from types import SimpleNamespace
+        carried={'proof':{'schema':'exp095-source-checkpoint-proof/1','accepted_assignments':5},'payloads':{'fixture-slot':{'decoded_response':{'fixture':True}}}}
+        events=[]
+        class Admission:
+            strict_json=staticmethod(json.loads)
+            def create_stage_clock(self,*args):events.append('clock');return ({'fixture':True},b'{}','digest')
+            def admit_live(self,*args):return object()
+            def consume_capability(self,*args):return object()
+            def canonical_json(self,value):return repr(value).encode()
+            def _write_once(self,*args):return None
+        def verify(*args):events.append('carry');return carried
+        def modules(name,filename):
+            if filename=='source-carry.py.txt':return SimpleNamespace(verify_source_checkpoint=verify)
+            if filename=='input-bridge.py.txt':return SimpleNamespace(prepare_reused_inputs=lambda *args,**kwargs:{'effective_acquisition':{},'input_integrity':{},'carried_card_references':{'fixture':True}})
+            raise AssertionError(filename)
+        with tempfile.TemporaryDirectory() as tmp,mock.patch.object(C,'preflight',return_value=(Admission(),{'qualified_source_revision':'fixture'},b'',{})),mock.patch.object(C,'load',side_effect=modules),mock.patch.object(C,'_read_bound_capture_configuration',return_value=('fixture','fixture')),mock.patch.object(C,'_configure_capture'),mock.patch.object(C,'_opaque_card_proof',return_value={'opaque-card':True}):
+            state=C.begin(Path(tmp)/'stage',Path(tmp),source_checkpoint_root=Path(tmp)/'checkpoint')
+            self.assertEqual(events,['carry','clock']);self.assertEqual(state.carried_card_references,{'opaque-card':True})
+            self.assertEqual(state.carried_source_references,carried['proof']);self.assertEqual(state.carried_source_payloads,carried['payloads'])
+
+if __name__=='__main__':unittest.main()

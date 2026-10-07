@@ -1,0 +1,97 @@
+"""Sterile identity/chronology tests for the externally pinned final reader."""
+import importlib.machinery
+import json
+import hashlib
+import os
+import tempfile
+import types
+import unittest
+from pathlib import Path
+
+READER_PATH=Path(os.environ.get('EXP096_FINAL_READER_PATH',str(Path(tempfile.gettempdir())/'exp096-final-log-reader.py')))
+UUID='00000000-0000-4000-8000-000000000001'
+OTHER='00000000-0000-4000-8000-000000000002'
+CLOCK={'schema':'exp078-stage-clock/1','stage':'development','stage_started_utc':'2030-01-01T00:00:00Z','stage_deadline_utc':'2030-01-01T08:00:00Z'}
+BINDING={'role':'source','task_id':'d1','assessor_id':'R1','chunk_index':0,'logical_submission':'development-d1-source-R1-1'}
+
+BINDING['stage_clock_sha256']=hashlib.sha256((json.dumps(CLOCK,sort_keys=True,ensure_ascii=False,separators=(',',':'))+'\n').encode()).hexdigest()
+
+def load():
+    return importlib.machinery.SourceFileLoader('exp096_final_reader_sterile',str(READER_PATH)).load_module()
+
+def records(reader,model=None,context_first=False):
+    path=reader.expected_path(BINDING)
+    rows=[{'type':'session_meta','payload':{'id':UUID,'source':{'subagent':{'thread_spawn':{'parent_thread_id':reader.AUTHORIZED_PARENT,'depth':1,'agent_path':path}}}}},
+          {'type':'event_msg','payload':{'type':'task_started'}}]
+    user={'type':'response_item','payload':{'type':'message','role':'user','content':[{'type':'input_text','text':'sterile fixture'}]}}
+    context={'type':'turn_context','payload':{'model':model or reader.SOL_MODEL}}
+    rows.extend([context,user] if context_first else [user,context])
+    rows.extend([{'type':'response_item','payload':{'type':'custom_tool_call','name':'exec','call_id':'call1','input':'sterile wrapper'}},
+                 {'type':'response_item','payload':{'type':'custom_tool_call_output','call_id':'call1','output':[{'type':'input_text','text':s} for s in ('metadata','0','fixture')] }},
+                 {'type':'response_item','payload':{'type':'message','role':'assistant','channel':'final','content':[{'type':'output_text','text':'{"fixture":true}'}]}},
+                 {'type':'event_msg','payload':{'type':'task_complete'}}])
+    for row in rows:row['timestamp']='2030-01-01T00:01:00Z'
+    return rows
+
+class ReaderTests(unittest.TestCase):
+    def setUp(self):
+        if not READER_PATH.is_file():self.skipTest('external private reader unavailable')
+        self.reader=load();self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
+        self.logs=self.root/'.codex/sessions/2030/01/01';self.logs.mkdir(parents=True)
+        self.reader.Path=types.SimpleNamespace(home=lambda:self.root)
+    def tearDown(self):
+        if hasattr(self,'tmp'):self.tmp.cleanup()
+    def write(self,rows,name='fixture.jsonl'):
+        (self.logs/name).write_text('\n'.join(json.dumps(r) for r in rows)+'\n')
+    def read(self,**kwargs):
+        return self.reader.read_exact_assessor_final(self.reader.expected_path(BINDING),session_date='2030/01/01',expected_binding=BINDING,expected_agent_id=kwargs.get('agent_id',UUID),expected_clock=CLOCK)
+    def test_single_turn_exact_identity_model_and_both_initial_layouts(self):
+        for context_first in (False,True):
+            self.write(records(self.reader,context_first=context_first));text,calls,meta=self.read()
+            self.assertEqual(text,'{"fixture":true}');self.assertEqual(len(calls),1);self.assertEqual(meta['observed_configured_model'],self.reader.SOL_MODEL)
+    def test_foreign_parent_depth_model_and_physical_id_rejected(self):
+        for kind in ('parent','depth','model','id'):
+            rows=records(self.reader)
+            if kind=='parent':rows[0]['payload']['source']['subagent']['thread_spawn']['parent_thread_id']='unrelated'
+            elif kind=='depth':rows[0]['payload']['source']['subagent']['thread_spawn']['depth']=2
+            elif kind=='model':rows[3]['payload']['model']='other-model'
+            else:rows[0]['payload']['id']=OTHER
+            self.write(rows)
+            with self.subTest(kind=kind),self.assertRaises(ValueError):self.read()
+    def test_mismatched_logical_slot_or_path_rejected(self):
+        self.write(records(self.reader));bad=dict(BINDING,logical_submission='different')
+        with self.assertRaises(ValueError):self.reader.read_exact_assessor_final(self.reader.expected_path(BINDING),expected_binding=bad,expected_agent_id=UUID,expected_clock=CLOCK)
+        with self.assertRaises(ValueError):self.reader.read_exact_assessor_final('/root/exp096_d2_r1_source_1',expected_binding=BINDING,expected_agent_id=UUID,expected_clock=CLOCK)
+    def test_extra_turn_duplicate_log_and_multiple_finals_rejected(self):
+        for kind in ('turn','duplicate','final'):
+            rows=records(self.reader)
+            if kind=='turn':rows.append({'type':'event_msg','payload':{'type':'task_started'}})
+            if kind=='final':rows.insert(-1,rows[-2])
+            self.write(rows)
+            if kind=='duplicate':self.write(rows,'duplicate.jsonl')
+            with self.subTest(kind=kind),self.assertRaises(ValueError):self.read()
+            if kind=='duplicate':(self.logs/'duplicate.jsonl').unlink()
+    def test_operations_and_messages_outside_or_after_turn_rejected(self):
+        for kind in ('late_tool','early_final','late_developer','extra_user'):
+            rows=records(self.reader)
+            if kind=='late_tool':rows.append(rows[4])
+            elif kind=='early_final':rows.insert(1,rows.pop(-2))
+            elif kind=='late_developer':rows.insert(-2,{'type':'response_item','payload':{'type':'message','role':'developer','content':[]}})
+            else:rows.insert(-2,rows[2])
+            self.write(rows)
+            with self.subTest(kind=kind),self.assertRaises(ValueError):self.read()
+    def test_outside_clock_and_changed_clock_binding_rejected(self):
+        rows=records(self.reader);rows[-1]['timestamp']='2030-01-02T00:00:00Z';self.write(rows)
+        with self.assertRaisesRegex(ValueError,'outside-stage-clock'):self.read()
+        self.write(records(self.reader));bad=dict(CLOCK,stage_deadline_utc='2030-01-02T00:00:00Z')
+        with self.assertRaisesRegex(ValueError,'stage-clock-binding'):
+            self.reader.read_exact_assessor_final(self.reader.expected_path(BINDING),session_date='2030/01/01',expected_binding=BINDING,expected_agent_id=UUID,expected_clock=bad)
+    def test_duplicate_calls_or_orphan_outputs_rejected(self):
+        for kind in ('call','output'):
+            rows=records(self.reader)
+            if kind=='call':rows.insert(5,rows[4])
+            else:rows.insert(-2,{'type':'response_item','payload':{'type':'custom_tool_call_output','call_id':'orphan','output':[]}})
+            self.write(rows)
+            with self.subTest(kind=kind),self.assertRaises(ValueError):self.read()
+
+if __name__=='__main__':unittest.main()

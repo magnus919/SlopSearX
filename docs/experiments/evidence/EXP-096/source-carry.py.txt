@@ -1,0 +1,271 @@
+"""Strict, offline replay of ALL five originally valid EXP-094 source assignments.
+
+No calls, credentials, metrics, new authority, repair or evidence selection.
+"""
+from __future__ import annotations
+import hashlib
+import json
+import sys
+import types
+from datetime import datetime
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+OLD = HERE.parent / "EXP-094"
+PINS_SHA256 = "6c1c5def8b0f55995790b74db0d58019fa3174ef67d1f23d59ab9db078953f92"
+OLD_PHASE_SHA256 = "89c1cf23cbb71bdf1dd1637ccad5f6574a8087c98d5824d0bf2907582b826ef4"
+OLD_VIEW_SHA256 = "f182a69c67ac95d00dc9a893a49507e70824abe83f1006b6d0eba41a38881dea"
+OLD_PACKETS_SHA256 = "92bc5ba825b76c2967a477da1d4481ee8ae9b696cd1eaf0956f552611c9912c7"
+
+class CheckpointError(ValueError):
+    pass
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, ensure_ascii=False,
+        separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
+
+def strict_json(raw):
+    def pairs(rows):
+        value = {}
+        for key, item in rows:
+            if key in value:
+                raise CheckpointError("duplicate-json-key")
+            value[key] = item
+        return value
+    def invalid(_):
+        raise CheckpointError("nonfinite-json-value")
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid)
+
+def safe_file(root, relative):
+    path = Path(relative)
+    if (not isinstance(relative, str) or not relative or path.is_absolute()
+            or any(part in (".", "..") for part in path.parts)):
+        raise CheckpointError("unsafe-checkpoint-path")
+    cursor = root
+    for part in path.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise CheckpointError("checkpoint-symlink")
+    if not cursor.is_file() or not cursor.resolve().is_relative_to(root):
+        raise CheckpointError("checkpoint-file-missing")
+    return cursor
+
+def verify_inventory(root, pins_raw):
+    if sha(pins_raw) != PINS_SHA256:
+        raise CheckpointError("checkpoint-manifest-pin")
+    pins = strict_json(pins_raw)
+    if (pins.get("schema") != "exp095-source-checkpoint-pins/1"
+            or pins.get("origin") != "EXP-094"
+            or pins.get("accepted_assignments") != 5
+            or pins.get("all_originally_valid_assignments_required") is not True
+            or pins.get("quality_analyzed") is not False
+            or pins.get("grade_repaired") is not False
+            or pins.get("prior_time_credit_seconds") != 0):
+        raise CheckpointError("checkpoint-scope")
+    rows = pins.get("files")
+    if not isinstance(rows, list) or len(rows) != pins.get("file_count"):
+        raise CheckpointError("checkpoint-inventory-count")
+    names = set()
+    total = 0
+    for row in rows:
+        if type(row) is not dict or set(row) != {"path", "bytes", "sha256"}:
+            raise CheckpointError("checkpoint-inventory-row")
+        path = safe_file(root, row["path"])
+        if row["path"] in names:
+            raise CheckpointError("checkpoint-inventory-duplicate")
+        names.add(row["path"])
+        raw = path.read_bytes()
+        if len(raw) != row["bytes"] or sha(raw) != row["sha256"]:
+            raise CheckpointError("checkpoint-file-pin")
+        total += len(raw)
+    observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
+    if observed != names or total != pins.get("total_bytes"):
+        raise CheckpointError("checkpoint-inventory-coverage")
+    return pins
+
+def load_pinned(name, path, expected):
+    if path.is_symlink() or sha(path.read_bytes()) != expected:
+        raise CheckpointError("checkpoint-verifier-source-pin")
+    module = types.ModuleType(name)
+    module.__file__ = str(path)
+    sys.modules[name] = module
+    exec(compile(path.read_bytes(), str(path), "exec"), module.__dict__)
+    return module
+
+def verify_source_checkpoint(checkpoint_root, pins_path=None, *, source_input_manifest=None):
+    root = Path(checkpoint_root).resolve()
+    if Path(checkpoint_root).is_symlink() or not root.is_dir():
+        raise CheckpointError("checkpoint-root")
+    pins_file = Path(pins_path) if pins_path is not None else HERE / "source-checkpoint-pins.json"
+    if pins_file.is_symlink():
+        raise CheckpointError("checkpoint-manifest-symlink")
+    pins = verify_inventory(root, pins_file.read_bytes())
+    old_bytecode = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        return _replay(root, pins, source_input_manifest)
+    finally:
+        sys.dont_write_bytecode = old_bytecode
+
+def _replay(root, pins, current_manifest):
+    root = Path(root).resolve()
+    terminal = strict_json(safe_file(root, "interrupted-terminal.json").read_bytes())
+    if (terminal.get("status") != "interrupted_deadline_expired"
+            or terminal.get("accepted_source_assignments") != 5
+            or terminal.get("quality_credit") is not False
+            or terminal.get("grade_repaired") is not False):
+        raise CheckpointError("checkpoint-origin-terminal")
+    clock_raw = safe_file(root, "stage-clock.json").read_bytes()
+    clock = strict_json(clock_raw)
+    if sha(clock_raw) != terminal.get("stage_clock_sha256"):
+        raise CheckpointError("checkpoint-origin-clock-binding")
+    started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+    deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+    phase = load_pinned("exp095_historical_phase", OLD / "phase-bindings.py.txt", OLD_PHASE_SHA256)
+    view = load_pinned("exp095_historical_view", OLD / "input-view-verifier.py.txt", OLD_VIEW_SHA256)
+    packets = load_pinned("exp095_historical_packets", HERE.parent / "EXP-077/model-packets.py.txt", OLD_PACKETS_SHA256)
+    qraw = safe_file(root, "origin-qualification.json").read_bytes()
+    q = strict_json(qraw)
+    if (sha(qraw) != pins["origin_qualification_sha256"] or q.get("study_id") != "EXP-094"
+            or q.get("qualified_source_revision") != terminal["qualified_source_revision"]
+            or q.get("external_source_pins", {}).get("final_text_reader", {}).get("sha256")
+                != pins["original_reader_sha256"]):
+        raise CheckpointError("checkpoint-origin-qualification")
+    reader = load_pinned("exp095_historical_reader", root / "historical-reader.py", pins["original_reader_sha256"])
+    # Redirect discovery to immutable copies ONLY. The original reader source,
+    # exact historical parent/path/depth checks, parser and tools remain intact.
+    reader.Path = types.SimpleNamespace(home=lambda: root / "profile")
+    manifest = strict_json(safe_file(root, "assessment-inputs/source-slot-manifest.json").read_bytes())
+    jobs = manifest["active_source_slots"]
+    if len(jobs) != 48 or manifest.get("requested_assessment_model_id") != "gpt-6.1-sol":
+        raise CheckpointError("checkpoint-original-slot-universe")
+    refs = {r["logical_submission"]: r for r in manifest["source_input_refs"]}
+    relocated = strict_json(canonical(manifest))
+    old_root = Path(refs[jobs[0]["logical_submission"]]["input_path"]).parents[2]
+    for reference in relocated["source_input_refs"]:
+        logical = reference["logical_submission"]
+        relative = "deterministic-preparation/wire-inputs/" + logical + ".json"
+        if Path(reference["input_path"]) != old_root / relative:
+            raise CheckpointError("checkpoint-original-input-path")
+        reference["input_path"] = str(safe_file(root, "assessment-inputs/" + relative))
+    tables = phase.load_task_tables(source_slot_manifest=relocated,
+        preparation_root=root / "assessment-inputs")
+    expected = jobs[:5]
+    # Retained argv names the original qualified checkout. Reuse the exact
+    # hash-checked historical renderer, while comparing argv to that one frozen
+    # URI. No new viewer source or arbitrary caller path is accepted.
+    original_viewer = jobs[0]["input_view_plan"]["viewer_path"]
+    if any(row["input_view_plan"]["viewer_path"] != original_viewer for row in jobs):
+        raise CheckpointError("checkpoint-original-viewer-universe")
+    renderer = view._viewer()
+    view._viewer = lambda: renderer
+    view.VIEWER_PATH = Path(original_viewer)
+    validations = sorted((root / "source-reference").glob("validation-*.json"))
+    if len(validations) != 5 or len(list((root / "source-reference/finals").glob("*.final.txt"))) != 5:
+        raise CheckpointError("checkpoint-all-valid-coverage")
+    binding_raw = safe_file(root, "source-input-bindings.json").read_bytes()
+    bindings = strict_json(binding_raw)
+    if bindings.get("bindings") != [{k:v for k,v in row.items() if k != "input_view_plan"} for row in jobs]:
+        raise CheckpointError("checkpoint-original-registry-binding")
+    legacy = strict_json(safe_file(root, "assessment-inputs/deterministic-preparation/manifest.json").read_bytes())
+    rows, payloads = [], {}
+    for index, job in enumerate(expected, 1):
+        logical = job["logical_submission"]
+        ref = refs[logical]
+        vpath = root / "source-reference" / ("validation-%03d.json" % index)
+        dpath = root / "source-reference" / ("dispatch-%03d.json" % index)
+        validation, dispatch = strict_json(vpath.read_bytes()), strict_json(dpath.read_bytes())
+        binding = {k:v for k,v in job.items() if k != "input_view_plan"}
+        if (validation.get("status") != "valid" or validation.get("job") != logical
+                or validation.get("grade_repaired") is True
+                or dispatch.get("binding") != binding
+                or dispatch.get("requested_model") != "gpt-6.1-sol"):
+            raise CheckpointError("checkpoint-original-validation")
+        agent = "/root/exp094_%s_%s_source_%d" % (job["task_id"], job["assessor_id"].lower(), job["chunk_index"] + 1)
+        log_raw = safe_file(root, "profile/.codex/sessions/2026/10/06/slot-%03d.jsonl" % index).read_bytes()
+        log_rows = [strict_json(line.encode("utf-8")) for line in log_raw.decode("utf-8").splitlines()]
+        contexts = [row for row in log_rows if row.get("type") == "turn_context"]
+        if (len(contexts) != 1 or contexts[0].get("payload", {}).get("model") != "gpt-6.1-sol"
+                or sum(row.get("type") == "session_meta" for row in log_rows) != 1):
+            raise CheckpointError("checkpoint-origin-model-or-session")
+        edges = {kind:[row for row in log_rows if row.get("type") == "event_msg"
+            and row.get("payload", {}).get("type") == kind]
+            for kind in ("task_started", "task_complete")}
+        if any(len(rows) != 1 for rows in edges.values()):
+            raise CheckpointError("checkpoint-origin-task-clock")
+        begin_time = datetime.fromisoformat(edges["task_started"][0]["timestamp"].replace("Z", "+00:00"))
+        finish_time = datetime.fromisoformat(edges["task_complete"][0]["timestamp"].replace("Z", "+00:00"))
+        if not started <= begin_time <= finish_time <= deadline:
+            raise CheckpointError("checkpoint-origin-task-outside-clock")
+        final_text, calls, meta = reader.read_exact_assessor_final(agent, session_date="2026/10/06")
+        meta_files = [(p, strict_json(p.read_bytes())) for p in (root / "source-reference/finals").glob("*.txt.json")]
+        matches = [(p, row) for p,row in meta_files if row.get("logical_submission") == logical]
+        if len(matches) != 1:
+            raise CheckpointError("checkpoint-final-receipt-identity")
+        _, final_receipt = matches[0]
+        final_raw = safe_file(root, "source-reference/finals/" + final_receipt["path"]).read_bytes()
+        if (final_raw != final_text.encode("utf-8") or sha(final_raw) != validation["response_sha256"]
+                or final_receipt.get("sha256") != sha(final_raw)
+                or final_receipt.get("persisted_exact_final_text") is not True
+                or final_receipt.get("parsed_or_repaired") is not False):
+            raise CheckpointError("checkpoint-original-final-text")
+        input_raw = safe_file(root, "assessment-inputs/deterministic-preparation/wire-inputs/" + logical + ".json").read_bytes()
+        label_raw = safe_file(root, "assessment-inputs/" + ref["label_binding_path"]).read_bytes()
+        if sha(input_raw) != job["input_sha256"] or sha(label_raw) != job["label_binding_sha256"]:
+            raise CheckpointError("checkpoint-original-input-binding")
+        plan = job["input_view_plan"]
+        calculated_view = view.verify_tool_transcript(input_raw, expected_sha256=plan["input_sha256"],
+            input_path=plan["input_path"], viewer_path=plan["viewer_path"], slot_id=logical,
+            source_manifest_sha256=plan["source_manifest_sha256"], calls=calls,
+            transcript_log_sha256=meta["private_log_sha256"])
+        stored_view = strict_json((root / "source-reference/views" / (sha(logical.encode())[:20] + ".view.json")).read_bytes())
+        if (any(stored_view.get(k) != value for k,value in calculated_view.items())
+                or stored_view.get("final_text_sha256") != sha(final_raw)
+                or stored_view.get("final_text_persisted_exactly") is not True):
+            raise CheckpointError("checkpoint-original-delivery-proof")
+        decoded = phase.decode_source_reference_response(strict_json(label_raw), strict_json(final_raw),
+            table=tables[job["task_id"]])
+        decoded_raw = (root / "source-reference" / (logical + ".decoded.json")).read_bytes()
+        if phase.canonical(decoded) != decoded_raw:
+            raise CheckpointError("checkpoint-original-decoded-bytes")
+        rel = "private/source-plans/" + job["task_id"] + ".json"
+        source_raw = safe_file(root, "assessment-inputs/deterministic-preparation/" + rel).read_bytes()
+        source_pin = next(row for row in legacy["files"] if row["path"] == rel)
+        if sha(source_raw) != source_pin["sha256"]:
+            raise CheckpointError("checkpoint-original-source-plan")
+        source_plan = strict_json(source_raw)
+        chunk = next(c for c in source_plan["chunks"] if c["assignment_id"] == job["helper_id"])
+        one = dict(source_plan, chunks=[chunk], inventory_source_ids=chunk["source_ids"], assessor_ids=[chunk["assessor_id"]])
+        packets.verify_source_chunk_coverage(one, [decoded])
+        if len(decoded["source_assessments"]) != validation["source_count"]:
+            raise CheckpointError("checkpoint-original-source-count")
+        hashes = {"logical_submission":logical,"input_sha256":sha(input_raw),
+            "task_table_sha256":tables[job["task_id"]].binding_sha256,
+            "validation_sha256":sha(vpath.read_bytes()),"decoded_response_sha256":sha(decoded_raw),
+            "decoded_file_sha256":sha(decoded_raw),"dispatch_sha256":sha(dpath.read_bytes()),
+            "label_binding_sha256":sha(label_raw),"final_text_sha256":sha(final_raw),
+            "transcript_log_sha256":meta["private_log_sha256"],"observed_configured_model_id":"gpt-6.1-sol",
+            "source_count":len(decoded["source_assessments"])}
+        rows.append(dict(hashes, slot_identity={k:binding[k] for k in
+            ("logical_submission","role","task_id","assessor_id","chunk_index","helper_id")}))
+        payloads[logical] = dict(hashes, decoded_response=decoded)
+    if current_manifest is not None:
+        current = {r["logical_submission"]:r for r in current_manifest["active_source_slots"]}
+        if len(current) != 48:
+            raise CheckpointError("checkpoint-current-slot-universe")
+        table_hashes = {r["task_id"]:r["table_sha256"] for r in current_manifest["citation_codebooks"]}
+        for row in rows:
+            job = current.get(row["logical_submission"])
+            if (job is None or any(job.get(k) != v for k,v in row["slot_identity"].items())
+                    or job.get("input_sha256") != row["input_sha256"]
+                    or table_hashes.get(job["task_id"]) != row["task_table_sha256"]):
+                raise CheckpointError("checkpoint-current-input-or-table-drift")
+    proof = {"schema":"exp095-source-checkpoint-proof/1","origin":"EXP-094",
+        "accepted_assignments":5,"accepted_source_records":sum(r["source_count"] for r in rows),
+        "all_originally_valid_assignments_required":True,"prior_time_credit_seconds":0,
+        "quality_analyzed":False,"grade_repaired":False,"pins_sha256":PINS_SHA256,
+        "assignments":rows}
+    return {"proof":proof,"payloads":payloads}
