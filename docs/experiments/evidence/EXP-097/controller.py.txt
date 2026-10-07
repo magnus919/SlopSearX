@@ -68,8 +68,11 @@ def preflight(bundle_root, cli_path=None, *, source_checkpoint_root=None,
         "runtime_config_receipt_sha256": q.get("runtime_config_receipt_sha256"),
         "environment": q.get("environment"), "dependencies": q.get("dependencies"),
         "external_source_pins": q.get("external_source_pins")}
-    admission.verify_closure(integrity, qraw)  # qualify code before importing the bridge
-    proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
+    baseline_path = admission._normalized_readiness_baseline_path(readiness_baseline_path)
+    admission.verify_closure(integrity, qraw, readiness_baseline_path=baseline_path)
+    proof = admission.verify_closure(integrity, qraw, Path(bundle_root), baseline_path)
+    if proof.get("readiness_baseline_path") != baseline_path:
+        raise admission.AdmissionError("readiness-baseline-path-binding")
     pins = q.get("external_source_pins")
     readiness_pin = pins.get("readiness_baseline") if type(pins) is dict else None
     if (type(readiness_pin) is not dict or set(readiness_pin) != {"sha256"}
@@ -77,8 +80,6 @@ def preflight(bundle_root, cli_path=None, *, source_checkpoint_root=None,
             or not re.fullmatch(r"[0-9a-f]{64}", readiness_pin["sha256"])):
         raise ValueError("readiness-baseline-pin-invalid")
     baseline_module = load("exp097_readiness_baseline", "readiness-baseline.py.txt")
-    baseline_path = Path(readiness_baseline_path) if readiness_baseline_path is not None else Path(
-        "/private/tmp/exp097-readiness-baseline.json")
     readiness_baseline = baseline_module.load_baseline(baseline_path, readiness_pin["sha256"])
     cli_pins = integrity.get("external_source_pins")
     pin = cli_pins.get("groktocrawl_cli") if isinstance(cli_pins, dict) else None
@@ -126,7 +127,8 @@ def begin(outdir, bundle_root, cli_path=None, *, source_checkpoint_root=None,
         raise ValueError("fresh-stage-output-required")
     output.mkdir(mode=0o700, parents=False, exist_ok=False)
     clock = admission.create_stage_clock(output, integrity["qualified_source_revision"])
-    capability = admission.admit_live(output, integrity, qraw, Path(bundle_root))
+    capability = admission.admit_live(output, integrity, qraw, Path(bundle_root),
+                                      readiness_baseline_path=proof["readiness_baseline_path"])
     permit = admission.consume_capability(capability)
     _configure_capture(capture_config)
     bridge = load("exp097_input_bridge", "input-bridge.py.txt")

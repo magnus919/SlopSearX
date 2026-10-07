@@ -53,6 +53,8 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(readiness["external_pin"], "external_source_pins.readiness_baseline.sha256")
         self.assertTrue(readiness["private_values"])
         self.assertEqual(readiness["private_file_mode"], "0600")
+        self.assertIn("every phase guard", readiness["selected_path_binding"])
+        self.assertIn("no process-global path override", readiness["selected_path_binding"])
         self.assertTrue(readiness["exactly_one_current_health_request"])
         self.assertEqual(set(readiness["successful_health_required_before"]), {
             "assessment-preparation", "carried-card-validation", "source-reference", "selector",

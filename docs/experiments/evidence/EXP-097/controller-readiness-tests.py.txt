@@ -1,5 +1,6 @@
 """Mocked one-shot current-readiness checks; never contacts the configured host."""
 import asyncio
+import hashlib
 import importlib.machinery
 import json
 import os
@@ -164,6 +165,10 @@ class ControllerReadinessTests(unittest.TestCase):
 
     def test_missing_pinned_baseline_stops_before_output_configuration_or_clock(self):
         class Admission:
+            @staticmethod
+            def _normalized_readiness_baseline_path(path):
+                return str(Path(path).absolute())
+
             def _committed_design(self):
                 return ({}, b"registration", b"qualification", {
                     "qualified_source_revision": "c" * 40,
@@ -175,8 +180,10 @@ class ControllerReadinessTests(unittest.TestCase):
                 import hashlib
                 return hashlib.sha256(raw).hexdigest()
 
-            def verify_closure(self, *_args):
-                return {"verified": True}
+            def verify_closure(self, *_args, **kwargs):
+                return {"verified": True,
+                        "readiness_baseline_path": kwargs.get("readiness_baseline_path") or
+                            (_args[3] if len(_args) > 3 else None)}
 
             def create_stage_clock(self, *_args):
                 raise AssertionError("clock must not be created")
@@ -202,6 +209,193 @@ class ControllerReadinessTests(unittest.TestCase):
                             readiness_baseline_path=Path(tmp) / "missing.json")
             config.assert_not_called()
             self.assertFalse(output.exists())
+
+    def test_malformed_symlink_wrong_hash_and_insecure_override_fail_before_clock(self):
+        baseline_module = importlib.machinery.SourceFileLoader(
+            "exp097_bad_override_baseline", str(HERE / "readiness-baseline.py.txt")
+        ).load_module()
+        valid = json.dumps({"schema": "exp097-readiness-baseline/1", "status": "ok",
+                            "model_alias": "free", "expected_revision": "a" * 40},
+                           sort_keys=True, separators=(",", ":")).encode() + b"\n"
+        cases = ("malformed", "symlink", "wrong-hash", "insecure-mode")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                selected = root / "selected.json"
+                if case == "malformed":
+                    selected.write_bytes(b"{\n")
+                    expected = hashlib.sha256(selected.read_bytes()).hexdigest()
+                elif case == "symlink":
+                    target = root / "target.json"
+                    target.write_bytes(valid)
+                    target.chmod(0o600)
+                    selected.symlink_to(target)
+                    expected = hashlib.sha256(valid).hexdigest()
+                else:
+                    selected.write_bytes(valid)
+                    selected.chmod(0o644 if case == "insecure-mode" else 0o600)
+                    expected = "d" * 64 if case == "wrong-hash" else hashlib.sha256(valid).hexdigest()
+
+                class Admission:
+                    def _committed_design(self):
+                        return ({}, b"registration", b"qualification", {
+                            "qualified_source_revision": "c" * 40,
+                            "external_source_pins": {"readiness_baseline": {"sha256": expected}},
+                        })
+
+                    @staticmethod
+                    def sha(raw):
+                        return hashlib.sha256(raw).hexdigest()
+
+                    @staticmethod
+                    def _normalized_readiness_baseline_path(path):
+                        return str(Path(path).absolute())
+
+                    def verify_closure(self, *_args, **kwargs):
+                        return {"readiness_baseline_path": kwargs.get("readiness_baseline_path") or
+                                (_args[3] if len(_args) > 3 else None)}
+
+                    def create_stage_clock(self, *_args):
+                        raise AssertionError("clock must not be created")
+
+                admission = Admission()
+
+                def load(name, _filename):
+                    if name == "exp097_admission":
+                        return admission
+                    if name == "exp097_readiness_baseline":
+                        return baseline_module
+                    raise AssertionError(name)
+
+                output = root / "stage"
+                with mock.patch.object(C, "load", side_effect=load), \
+                     mock.patch.object(C, "_read_bound_capture_configuration") as config:
+                    with self.assertRaises(ValueError):
+                        C.begin(output, root, source_checkpoint_root=root / "checkpoint",
+                                readiness_baseline_path=selected)
+                config.assert_not_called()
+                self.assertFalse(output.exists())
+
+    def test_preflight_passes_selected_override_to_both_closure_checks(self):
+        baseline_module = importlib.machinery.SourceFileLoader(
+            "exp097_positive_override_baseline", str(HERE / "readiness-baseline.py.txt")
+        ).load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            selected = root / "selected-baseline.json"
+            baseline_raw = json.dumps({"schema": "exp097-readiness-baseline/1", "status": "ok",
+                                       "model_alias": "free", "expected_revision": "a" * 40},
+                                      sort_keys=True, separators=(",", ":")).encode() + b"\n"
+            selected.write_bytes(baseline_raw)
+            selected.chmod(0o600)
+            cli = root / "groktocrawl"
+            cli.write_bytes(b"fixture-cli")
+            cli_sha = hashlib.sha256(cli.read_bytes()).hexdigest()
+            baseline_sha = hashlib.sha256(baseline_raw).hexdigest()
+            q = {"qualified_source_revision": "c" * 40,
+                 "external_source_pins": {
+                     "readiness_baseline": {"sha256": baseline_sha},
+                     "groktocrawl_cli": {"sha256": cli_sha, "revision": "c" * 40},
+                 }}
+            requested_paths = []
+
+            class Admission:
+                @staticmethod
+                def _committed_design():
+                    return {}, b"registration", b"qualification", q
+
+                @staticmethod
+                def sha(raw):
+                    return hashlib.sha256(raw).hexdigest()
+
+                @staticmethod
+                def _normalized_readiness_baseline_path(path):
+                    return str(Path(path).absolute())
+
+                def verify_closure(self, *_args, **kwargs):
+                    path = kwargs.get("readiness_baseline_path") or _args[3]
+                    requested_paths.append(path)
+                    return {"readiness_baseline_path": path}
+
+            carry = SimpleNamespace(verify_source_checkpoint=lambda _path: {"verified": True})
+            admission = Admission()
+
+            def load(name, _filename):
+                if name == "exp097_admission":
+                    return admission
+                if name == "exp097_readiness_baseline":
+                    return baseline_module
+                if name == "exp095_source_carry":
+                    return carry
+                raise AssertionError(name)
+
+            with mock.patch.object(C, "load", side_effect=load):
+                result = C.preflight(root, cli_path=cli, source_checkpoint_root=root / "checkpoint",
+                                     readiness_baseline_path=selected)
+            expected_path = str(selected.absolute())
+            self.assertEqual(requested_paths, [expected_path, expected_path])
+            self.assertEqual(result[3]["readiness_baseline_path"], expected_path)
+            self.assertEqual(result[4].sha256, baseline_sha)
+            self.assertEqual(result[4].expected_revision, "a" * 40)
+
+    def test_begin_passes_selected_override_into_admission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output = root / "stage"
+            selected = root / "selected-baseline.json"
+            selected.write_text("pinned fixture")
+            selected.chmod(0o600)
+            calls = []
+
+            class Admission:
+                @staticmethod
+                def strict_json(_raw):
+                    return {}
+
+                @staticmethod
+                def create_stage_clock(_outdir, _revision):
+                    return {}, b"clock", "clock-sha"
+
+                def admit_live(self, _outdir, _integrity, _qraw, _bundle, **kwargs):
+                    calls.append(kwargs.get("readiness_baseline_path"))
+                    return object()
+
+                @staticmethod
+                def consume_capability(_capability):
+                    return object()
+
+                @staticmethod
+                def canonical_json(value):
+                    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+
+                @staticmethod
+                def _write_once(path, raw):
+                    Path(path).write_bytes(raw)
+
+            admission = Admission()
+            proof = {"readiness_baseline_path": str(selected.absolute())}
+            prepared = {"effective_acquisition": {}, "input_integrity": {},
+                        "carried_card_references": {}}
+            carry = SimpleNamespace(verify_source_checkpoint=lambda _path: {
+                "proof": {"carried": True}, "payloads": {}})
+            bridge = SimpleNamespace(prepare_reused_inputs=lambda *_args, **_kwargs: prepared)
+
+            def load(name, _filename):
+                if name == "exp095_source_carry":
+                    return carry
+                if name == "exp097_input_bridge":
+                    return bridge
+                raise AssertionError(name)
+
+            with mock.patch.object(C, "preflight", return_value=(admission,
+                    {"qualified_source_revision": "c" * 40}, b"q", proof, object())), \
+                 mock.patch.object(C, "load", side_effect=load), \
+                 mock.patch.object(C, "_read_bound_capture_configuration", return_value={}), \
+                 mock.patch.object(C, "_configure_capture"), \
+                 mock.patch.object(C, "_opaque_card_proof", return_value={"opaque": True}):
+                C.begin(output, root, source_checkpoint_root=root / "checkpoint",
+                        readiness_baseline_path=selected)
+            self.assertEqual(calls, [str(selected.absolute())])
 
 
 if __name__ == "__main__":

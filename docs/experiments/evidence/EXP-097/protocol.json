@@ -322,6 +322,7 @@
     "external_pin": "external_source_pins.readiness_baseline.sha256",
     "private_values": true,
     "private_file_mode": "0600",
+    "selected_path_binding": "Preflight accepts the default private baseline path or an explicit caller override, verifies the selected regular 0600 file with no-follow open against the pinned SHA before configuration or clock creation, and carries that exact normalized path and digest through the opaque capability and every phase guard. Guards reopen the same path; no process-global path override is used.",
     "expected_status": "ok",
     "expected_model_alias": "free",
     "exactly_one_current_health_request": true,

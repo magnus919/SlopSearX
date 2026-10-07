@@ -67,7 +67,7 @@ class ControllerCarryTests(unittest.TestCase):
         class Admission:
             strict_json=staticmethod(json.loads)
             def create_stage_clock(self,*args):events.append('clock');return ({'fixture':True},b'{}','digest')
-            def admit_live(self,*args):return object()
+            def admit_live(self,*args,**kwargs):events.append(kwargs.get('readiness_baseline_path'));return object()
             def consume_capability(self,*args):return object()
             def canonical_json(self,value):return repr(value).encode()
             def _write_once(self,*args):return None
@@ -76,9 +76,10 @@ class ControllerCarryTests(unittest.TestCase):
             if filename=='source-carry.py.txt':return SimpleNamespace(verify_source_checkpoint=verify)
             if filename=='input-bridge.py.txt':return SimpleNamespace(prepare_reused_inputs=lambda *args,**kwargs:{'effective_acquisition':{},'input_integrity':{},'carried_card_references':{'fixture':True}})
             raise AssertionError(filename)
-        with tempfile.TemporaryDirectory() as tmp,mock.patch.object(C,'preflight',return_value=(Admission(),{'qualified_source_revision':'fixture'},b'',{},SimpleNamespace(model_alias='free',expected_revision='a'*40))),mock.patch.object(C,'load',side_effect=modules),mock.patch.object(C,'_read_bound_capture_configuration',return_value=('fixture','fixture')),mock.patch.object(C,'_configure_capture'),mock.patch.object(C,'_opaque_card_proof',return_value={'opaque-card':True}):
+        selected_path='synthetic-readiness-baseline-path'
+        with tempfile.TemporaryDirectory() as tmp,mock.patch.object(C,'preflight',return_value=(Admission(),{'qualified_source_revision':'fixture'},b'',{'readiness_baseline_path':selected_path},SimpleNamespace(model_alias='free',expected_revision='a'*40))),mock.patch.object(C,'load',side_effect=modules),mock.patch.object(C,'_read_bound_capture_configuration',return_value=('fixture','fixture')),mock.patch.object(C,'_configure_capture'),mock.patch.object(C,'_opaque_card_proof',return_value={'opaque-card':True}):
             state=C.begin(Path(tmp)/'stage',Path(tmp),source_checkpoint_root=Path(tmp)/'checkpoint')
-            self.assertEqual(events,['carry','clock']);self.assertEqual(state.carried_card_references,{'opaque-card':True})
+            self.assertEqual(events,['carry','clock',selected_path]);self.assertEqual(state.carried_card_references,{'opaque-card':True})
             self.assertEqual(state.carried_source_references,carried['proof']);self.assertEqual(state.carried_source_payloads,carried['payloads'])
 
 if __name__=='__main__':unittest.main()
