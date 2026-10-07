@@ -11,17 +11,17 @@
     "new_source_fetches": 0,
     "retries": 0,
     "source": "Exact same 513-file frozen input bundle and unchanged carried card references; no source search/fetch and no EXP-092 outputs.",
-    "source_assessments_fresh": 43,
-    "source_assessments_carried_unchanged": 5,
-    "carried_source_assignments": 5,
+    "source_assessments_fresh": 25,
+    "source_assessments_carried_unchanged": 23,
+    "carried_source_assignments": 23,
     "source_checkpoint": "All23 originally accepted assignments:5historical plus18EXP097, validated by original transcript/raw-final/citation/coverage replay. Rejected EXP097 assignment retained and excluded.",
     "source_assessments_total_required": 48,
     "fresh_answer_assessments": 32,
-    "fresh_grader_submissions_total": 75,
-    "historical_grader_submissions_total": 28,
-    "planned_grader_submissions_total": 103,
+    "fresh_grader_submissions_total": 57,
+    "historical_grader_submissions_total": 47,
+    "planned_grader_submissions_total": 104,
     "planned_answer_api_calls": 18,
-    "planned_all_model_submissions_total": 121,
+    "planned_all_model_submissions_total": 122,
     "maximum_all_model_submissions_total": 130
   },
   "adoption": "No production adoption follows from this development stage. All unchanged EXP-076 quality and task-use gates apply, and untouched confirmation with new tasks/pools remains required.",
@@ -121,7 +121,7 @@
     }
   },
   "final_json_carrier": {
-    "answer_output_manifest_coverage": "Exactly 16 complete d1-d8 \u00d7 w0/candidate answer receipts with their exact response and durable receipt hashes and byte counts.",
+    "answer_output_manifest_coverage": "Exactly 16 complete d1-d8 × w0/candidate answer receipts with their exact response and durable receipt hashes and byte counts.",
     "answer_output_manifest_schema": "exp095-answer-output-manifest/1",
     "answer_slot_bindings": "Predeclare 32 answer-assessor identities only. After the 16 answer outputs are complete and frozen in a complete answer-output manifest, bind exact answer-assessment input hashes, schema/prompt hashes, and label-binding hashes for all 32 slots once before the first answer-assessor dispatch; record the manifest digest.",
     "binding_fields": [
@@ -375,7 +375,7 @@
       "answerer.claims[*].evidence_ids",
       "answer-assessor claim and disposition evidence-reference fields"
     ],
-    "source_prompt_sha256": "9d1ab655cd88512d8347d3b3fa158d808f8d9e6295264fdd51083c1a7d2b3544",
+    "source_prompt_sha256": "d31ecee90065a3b641686c6884d7c9040f6488c1d798c63eed4ea62ea713c786",
     "source_scope": "Source_id, task/claim/facet/arm identities and all packet values except the declared evidence-reference fields remain unchanged.",
     "unchanged": [
       "source_id",

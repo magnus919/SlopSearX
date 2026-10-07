@@ -9,14 +9,21 @@ D=importlib.machinery.SourceFileLoader('design_contract',str(H/'design-contract.
 class CurrentDesign(unittest.TestCase):
     def setUp(self):
         self.args=[json.loads((H/name).read_bytes()) for name in ['protocol.json','cohorts.json','registration-integrity.json','qualification-integrity.json']]
-        self.args[2]['predecessor']='EXP-097'  # Expected prospective lineage for regenerated seal.
     def test_current_consistent_design(self):
-        self.assertTrue(D.validate(*self.args)['internally_consistent'])
+        self.assertTrue(D.validate(*self.args,source_prompt_raw=(H/'source-assessor-prompt.txt').read_bytes())['internally_consistent'])
     def reject_change(self,index,path,value):
         args=copy.deepcopy(self.args);obj=args[index]
         for key in path[:-1]:obj=obj[key]
         obj[path[-1]]=value
-        with self.assertRaises(ValueError):D.validate(*args)
+        with self.assertRaises(ValueError):D.validate(*args,source_prompt_raw=(H/'source-assessor-prompt.txt').read_bytes())
+    def test_protocol_acquisition_old_counts_rejected(self):
+        for key,value in [('source_assessments_fresh',43),('source_assessments_carried_unchanged',5),('carried_source_assignments',5),('fresh_grader_submissions_total',75),('historical_grader_submissions_total',28),('planned_grader_submissions_total',103),('planned_all_model_submissions_total',121)]:
+            with self.subTest(key=key): self.reject_change(0,['acquisition',key],value)
+    def test_stale_source_prompt_binding_rejected(self):
+        self.reject_change(0,['source_citation_aliases','source_prompt_sha256'],'0'*64)
+    def test_changed_prompt_bytes_rejected(self):
+        with self.assertRaisesRegex(ValueError,'current-source-prompt-binding'):
+            D.validate(*self.args,source_prompt_raw=b'changed prompt')
     def test_old_counts_rejected(self):
         for key,value in [('fresh_source_assessments',43),('source_assessments_carried_unchanged',5),('historical_grader_submissions_total',28),('planned_grader_submissions_total',103),('planned_all_model_submissions_total',121)]:
             with self.subTest(key=key):self.reject_change(1,[key],value)

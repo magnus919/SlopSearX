@@ -283,5 +283,39 @@ class SuccessfulHealthGateTests(unittest.TestCase):
         with self.assertRaisesRegex(MODULE.AdmissionError, "health-completion-binding"):
             MODULE.acquire_phase(self.stage_permit, "answer", self.outdir, self.clock_raw)
 
+
+class CurrentDesignAdmissionUseSiteTests(unittest.TestCase):
+    def reject_mutant(self, mutate, expected_error):
+        # Synthetic committed source view reaches the real verify_closure design
+        # guard with internally rehashed records; no clock or live calls.
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); here=root/'docs/experiments/evidence/EXP-098'
+            here.mkdir(parents=True)
+            names=['protocol.json','cohorts.json','design-contract.py.txt','source-assessor-prompt.txt']
+            for name in names: (here/name).write_bytes((HERE/name).read_bytes())
+            protocol=json.loads((here/'protocol.json').read_bytes()); mutate(protocol)
+            (here/'protocol.json').write_bytes(MODULE.canonical_json(protocol))
+            files={str((here/name).relative_to(root)):MODULE.sha((here/name).read_bytes()) for name in names}
+            reg=json.loads((HERE/'registration-integrity.json').read_bytes())
+            q=json.loads((HERE/'qualification-integrity.json').read_bytes())
+            reg['source_files']=files; reg['registered_source_revision']='a'*40
+            regraw=MODULE.canonical_json(reg)
+            q.update(files=files,qualified_source_revision='a'*40,registration_sha256=MODULE.sha(regraw))
+            qraw=MODULE.canonical_json(q)
+            integrity={'synthetic':False,'study_id':'EXP-098','qualification_sha256':MODULE.sha(qraw),'registration_sha256':MODULE.sha(regraw)}
+            with mock.patch.object(MODULE,'REPO',root), mock.patch.object(MODULE,'HERE',here), \
+                 mock.patch.object(MODULE,'_committed_design',return_value=(reg,regraw,qraw,q)), \
+                 mock.patch.object(MODULE,'_git_blob',side_effect=lambda rev,path:(root/path).read_bytes()):
+                with self.assertRaisesRegex(ValueError,expected_error):
+                    MODULE.verify_closure(integrity,qraw)
+            self.assertFalse(list(root.rglob('stage-clock.json')))
+            self.assertFalse(list(root.rglob('*.lease')))
+    def test_rehashed_stale_acquisition_rejected_before_admission(self):
+        for key,value in [('source_assessments_fresh',43),('source_assessments_carried_unchanged',5),('carried_source_assignments',5),('fresh_grader_submissions_total',75),('historical_grader_submissions_total',28),('planned_grader_submissions_total',103),('planned_all_model_submissions_total',121)]:
+            with self.subTest(key=key):
+                self.reject_mutant(lambda p:p['acquisition'].__setitem__(key,value),'protocol-acquisition-current-accounting')
+    def test_rehashed_stale_prompt_pin_rejected_before_admission(self):
+        self.reject_mutant(lambda p:p['source_citation_aliases'].__setitem__('source_prompt_sha256','0'*64),'current-source-prompt-binding')
+
 if __name__ == "__main__":
     unittest.main()

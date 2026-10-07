@@ -206,13 +206,14 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
         if sha(committed) != expected or head != committed or disk != committed:
             raise AdmissionError("qualified-source-hash-or-dirty-tree")
     contract_relative = "docs/experiments/evidence/EXP-098/design-contract.py.txt"
-    if contract_relative not in sources:
+    if contract_relative not in sources or "docs/experiments/evidence/EXP-098/source-assessor-prompt.txt" not in sources:
         raise AdmissionError("design-contract-source-pin")
     contract_raw = _git_blob(revision,contract_relative)
     contract_namespace = {"__file__":str(REPO/contract_relative)}
     exec(compile(contract_raw,str(REPO/contract_relative),"exec"),contract_namespace)
     contract_namespace["validate"](strict_json((HERE/"protocol.json").read_bytes()),
-        strict_json((HERE/"cohorts.json").read_bytes()),registration,qualification)
+        strict_json((HERE/"cohorts.json").read_bytes()),registration,qualification,
+        source_prompt_raw=_git_blob(revision,"docs/experiments/evidence/EXP-098/source-assessor-prompt.txt"))
     env, deps = qualification.get("environment"), qualification.get("dependencies")
     if type(env) is not dict or type(deps) is not dict or deps != PINNED_DEPENDENCIES:
         raise AdmissionError("qualified-environment-shape")
