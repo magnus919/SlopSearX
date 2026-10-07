@@ -1,0 +1,5 @@
+--- EXP-094/phase-bindings.py.txt (historical; do not modify)
++++ prospective successor phase-bindings.py.txt
+@@ encode_answer_assessor_packet
+-    _replace_task_codes(coded, table, to_codes=True)
++    coded = _replace_task_codes(coded, table, to_codes=True)
