@@ -101,9 +101,11 @@ class SourcePreparationTests(unittest.TestCase):
                     decoded = {"task_id": slot["task_id"], "assessor_id": slot["assessor_id"],
                                "chunk_id": slot["helper_id"], "synthetic_fixture": True}
                     decoded_sha = sha(P._canonical(decoded))
-                    row = {"logical_submission": logical, "task_id": slot["task_id"],
-                           "assessor_id": slot["assessor_id"], "chunk_index": slot["chunk_index"],
-                           "helper_id": slot["helper_id"], "input_sha256": slot["input_sha256"],
+                    row = {"logical_submission": logical, "slot_identity": {
+                               "logical_submission": logical, "role": "source",
+                               "task_id": slot["task_id"], "assessor_id": slot["assessor_id"],
+                               "chunk_index": slot["chunk_index"], "helper_id": slot["helper_id"]},
+                           "input_sha256": slot["input_sha256"],
                            "task_table_sha256": next(codebook["table_sha256"]
                                for codebook in first_manifest["citation_codebooks"]
                                if codebook["task_id"] == slot["task_id"]),

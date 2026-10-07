@@ -149,6 +149,12 @@ class PhaseBindingTests(unittest.TestCase):
         public_params = inspect.signature(P.receive_source_final_and_verify_view).parameters
         self.assertNotIn("calls", public_params)
         self.assertNotIn("private_delivery_meta", public_params)
+        self.assertIn("expected_agent_id", public_params)
+        self.assertTrue(public_params["expected_agent_id"].default is inspect.Parameter.empty)
+        answer_params = inspect.signature(P.receive_exact_assessment_final).parameters
+        self.assertIn("expected_agent_id", answer_params)
+        self.assertTrue(answer_params["expected_agent_id"].default is inspect.Parameter.empty)
+        self.assertNotIn("final_text", answer_params)
         task = {"id": "d1", "kind": "research", "query": "q", "purpose": "p",
                 "critical_checks": [{"id": "d1_f1", "check": "Check the captured passage."}]}
         source_id = "u" + hashlib.sha256(b"fixture-source").hexdigest()

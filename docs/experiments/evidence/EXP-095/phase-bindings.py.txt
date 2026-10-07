@@ -430,14 +430,10 @@ def _persist_then_verify_source_final(*, receiver, slot_id: str, expected_bindin
             "view_proof_sha256": reference["sha256"]}
 
 
-def receive_source_final_and_verify_view(*, state, phase_permit, receiver, slot_id: str,
-                                  expected_binding: dict, agent_path: str, reader_path: Path,
-                                  input_raw: bytes, view_plan: dict,
-                                  proof_directory: Path) -> dict:
-    """Use only the registered log reader; callers cannot inject transcript claims."""
-    root = Path(state.outdir).resolve()
+def _read_pinned_assessor_final(*, state, expected_binding: dict, expected_agent_id: str,
+                                agent_path: str, reader_path: Path):
+    """Read one source or answer assessor final against the frozen slot, UUID, and clock."""
     admission = state.admission
-    admission.require_phase(phase_permit, state.clock[1], root)
     qualification_path = HERE / "qualification-integrity.json"
     if qualification_path.is_symlink() or not qualification_path.is_file():
         raise ValueError("exp095-qualified-final-reader-missing")
@@ -457,8 +453,24 @@ def receive_source_final_and_verify_view(*, state, phase_permit, receiver, slot_
     if (reader_path.is_symlink() or not reader_path.is_file()
             or sha(reader_path.read_bytes()) != reader_pin["sha256"]):
         raise ValueError("exp095-final-reader-source-mismatch")
-    reader = _load("exp094_pinned_final_log_reader", reader_path)
-    final_text, calls, private_meta = reader.read_exact_assessor_final(agent_path=agent_path)
+    reader = _load("exp095_pinned_final_log_reader", reader_path)
+    return reader.read_exact_assessor_final(
+        agent_path=agent_path, expected_binding=expected_binding,
+        expected_agent_id=expected_agent_id, expected_clock=state.clock[0])
+
+
+def receive_source_final_and_verify_view(*, state, phase_permit, receiver, slot_id: str,
+                                  expected_binding: dict, expected_agent_id: str,
+                                  agent_path: str, reader_path: Path,
+                                  input_raw: bytes, view_plan: dict,
+                                  proof_directory: Path) -> dict:
+    """Use only the registered log reader; callers cannot inject transcript claims."""
+    root = Path(state.outdir).resolve()
+    admission = state.admission
+    admission.require_phase(phase_permit, state.clock[1], root)
+    final_text, calls, private_meta = _read_pinned_assessor_final(
+        state=state, expected_binding=expected_binding, expected_agent_id=expected_agent_id,
+        agent_path=agent_path, reader_path=reader_path)
     admission.require_phase(phase_permit, state.clock[1], root)
     result = _persist_then_verify_source_final(receiver=receiver, slot_id=slot_id,
         expected_binding=expected_binding, final_text=final_text, input_raw=input_raw,
@@ -1128,12 +1140,16 @@ def run_answers(*, assignments: list[dict], cases: list[dict], prompt: str, sche
     return result
 
 
-def receive_exact_assessment_final(*, receiver, admission, phase_permit,
-                                   stage_outdir, clock_bytes, slot_id,
-                                   expected_binding, final_text):
-    """Require the active registered phase, then persist the supplied final text unchanged."""
-    root = Path(stage_outdir).resolve()
-    admission.require_phase(phase_permit, clock_bytes, root)
+def receive_exact_assessment_final(*, state, receiver, phase_permit, slot_id,
+                                   expected_binding, expected_agent_id,
+                                   agent_path, reader_path):
+    """Require the active phase and persist only the exact pinned answer-assessor final."""
+    admission = state.admission
+    root = Path(state.outdir).resolve()
+    admission.require_phase(phase_permit, state.clock[1], root)
+    final_text, _, _ = _read_pinned_assessor_final(
+        state=state, expected_binding=expected_binding, expected_agent_id=expected_agent_id,
+        agent_path=agent_path, reader_path=reader_path)
     receipt = receiver.receive(slot_id, expected_binding, final_text)
-    admission.require_phase(phase_permit, clock_bytes, root)
+    admission.require_phase(phase_permit, state.clock[1], root)
     return receipt

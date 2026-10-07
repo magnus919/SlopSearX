@@ -261,14 +261,20 @@ def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: l
         slot_binding_raw = _canonical(slot_binding)
         carry = carry_by_slot.get(job["logical_submission"])
         if carry is not None:
+            carry_identity = carry.get("slot_identity")
             required = {"logical_submission", "input_sha256", "task_table_sha256",
-                        "validation_sha256", "decoded_response_sha256"}
-            if not required.issubset(carry):
+                        "validation_sha256", "decoded_response_sha256", "slot_identity"}
+            identity_fields = {"logical_submission", "role", "task_id", "assessor_id",
+                               "chunk_index", "helper_id"}
+            if (not required.issubset(carry) or type(carry_identity) is not dict
+                    or set(carry_identity) != identity_fields):
                 raise PrepareError("carried-source-proof-fields")
-            if (carry.get("task_id") != job["task_id"]
-                    or carry.get("assessor_id") != job["assessor_id"]
-                    or carry.get("chunk_index") != job["chunk_index"]
-                    or carry.get("helper_id") != job["helper_id"]):
+            if (carry_identity.get("logical_submission") != job["logical_submission"]
+                    or carry_identity.get("role") != "source"
+                    or carry_identity.get("task_id") != job["task_id"]
+                    or carry_identity.get("assessor_id") != job["assessor_id"]
+                    or carry_identity.get("chunk_index") != job["chunk_index"]
+                    or carry_identity.get("helper_id") != job["helper_id"]):
                 raise PrepareError("carried-source-original-slot-identity")
             if (carry["input_sha256"] != _sha(encoded_raw)
                     or carry["task_table_sha256"] != table.binding_sha256):
@@ -284,7 +290,7 @@ def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: l
                     raise PrepareError("carried-source-payload-binding-mismatch")
             if _sha(_canonical(payload["decoded_response"])) != carry["decoded_response_sha256"]:
                 raise PrepareError("carried-source-decoded-response-hash")
-            safe_carry_fields = {"logical_submission", "task_id", "assessor_id", "chunk_index", "helper_id",
+            safe_carry_fields = {"logical_submission", "slot_identity",
                                  "input_sha256", "task_table_sha256", "validation_sha256",
                                  "decoded_response_sha256", "decoded_file_sha256", "dispatch_sha256",
                                  "label_binding_sha256", "transcript_log_sha256", "final_text_sha256",
