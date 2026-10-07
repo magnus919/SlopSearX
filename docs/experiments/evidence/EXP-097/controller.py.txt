@@ -289,12 +289,15 @@ def health_check(state: State, *, client_factory=None):
                 failure_code = "health_exchange_failed" if attempts else "health_client_failed"
         receipt = {"schema": "exp097-health-receipt/1", "study_id": "EXP-097",
             "status": safe_status, "model_identity": model, "revision": revision,
-            "stage_clock_sha256": clock_sha, "physical_http_calls": attempts,
+            "stage_clock_sha256": clock_sha,
+            "readiness_baseline_sha256": getattr(baseline, "sha256", None),
+            "physical_http_calls": attempts,
             "failure_code": failure_code, "quality_credit": False,
             "endpoint_and_response_body_retained": False}
         state.admission._write_once(state.outdir / "health.json",
                                     state.admission.canonical_json(receipt))
         if safe_status != "healthy":
             raise ValueError(failure_code or "health_check_failed")
+        state.admission.complete_health_phase(phase, clock_raw, state.outdir)
         return receipt
     return perform()

@@ -325,6 +325,8 @@
     "expected_status": "ok",
     "expected_model_alias": "free",
     "exactly_one_current_health_request": true,
+    "successful_health_required_before": ["assessment-preparation", "carried-card-validation", "source-reference", "selector", "answer", "answer-assessment", "analysis"],
+    "downstream_gate": "Every non-health phase acquisition and every subsequent phase revalidates the canonical successful health receipt, its one-shot completion marker and lease, the active stage-clock digest, and the exact pinned private readiness baseline. Missing, failed, stale, or changed health/baseline state denies the phase before dispatch.",
     "verified_before": ["stage-clock", "lease", "health-http"],
     "distinct_from": "The EXP-084 captured health identity is immutable corpus provenance and is never a current runtime readiness baseline.",
     "mismatch_or_missing": "terminal before clock, configuration read, HTTP, source dispatch, or grader dispatch"

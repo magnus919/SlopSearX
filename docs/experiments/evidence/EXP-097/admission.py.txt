@@ -256,11 +256,18 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
                 or qualification.get("input_bundle_sha256") != input_result["input_bundle_sha256"]
                 or qualification.get("runtime_config_receipt_sha256") != input_result["runtime_config_receipt_sha256"]):
             raise AdmissionError("input-pins-binding")
+    pins = source_integrity.get("external_source_pins")
+    readiness_pin = pins.get("readiness_baseline") if type(pins) is dict else None
+    if (type(readiness_pin) is not dict or set(readiness_pin) != {"sha256"}
+            or type(readiness_pin.get("sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", readiness_pin["sha256"])):
+        raise AdmissionError("readiness-baseline-pin")
     return {"study_id": "EXP-097", "registration_sha256": sha(registration_bytes), "qualification_sha256": qsha,
             "qualified_source_revision": revision, "protocol_sha256": protocol_sha,
             "cohorts_sha256": cohorts_sha, "input_pins_sha256": pins_sha,
             "input_bundle_sha256": input_result["input_bundle_sha256"] if input_result else None,
             "runtime_config_receipt_sha256": input_result["runtime_config_receipt_sha256"] if input_result else None,
+            "readiness_baseline_sha256": readiness_pin["sha256"],
             "files_verified": len(sources), "input_integrity": input_result,
             "environment": actual_env, "dependencies": actual_deps}
 
@@ -324,37 +331,43 @@ def create_stage_clock(outdir: Path, source_revision: str) -> tuple[dict, bytes,
 
 
 class _Capability:
-    __slots__ = ("seal", "identity", "stage", "clock_digest", "outdir", "used")
+    __slots__ = ("seal", "identity", "stage", "clock_digest", "readiness_baseline_sha256", "outdir", "used")
 
-    def __init__(self, identity: str, clock_digest: str, outdir: Path):
+    def __init__(self, identity: str, clock_digest: str, readiness_baseline_sha256: str, outdir: Path):
         self.seal = _CAP_SENTINEL
         self.identity = identity
         self.stage = "development"
         self.clock_digest = clock_digest
+        self.readiness_baseline_sha256 = readiness_baseline_sha256
         self.outdir = outdir.resolve()
         self.used = False
 
 
 class _StagePermit:
-    __slots__ = ("seal", "identity", "stage", "clock_digest", "outdir")
+    __slots__ = ("seal", "identity", "stage", "clock_digest", "readiness_baseline_sha256", "outdir")
 
-    def __init__(self, identity: str, clock_digest: str, outdir: Path):
+    def __init__(self, identity: str, clock_digest: str, readiness_baseline_sha256: str, outdir: Path):
         self.seal = _PERMIT_SENTINEL
         self.identity = identity
         self.stage = "development"
         self.clock_digest = clock_digest
+        self.readiness_baseline_sha256 = readiness_baseline_sha256
         self.outdir = outdir.resolve()
 
 
 class _PhasePermit:
-    __slots__ = ("seal", "identity", "stage", "phase", "clock_digest", "outdir")
+    __slots__ = ("seal", "identity", "stage", "phase", "stage_identity", "clock_digest",
+                 "readiness_baseline_sha256", "outdir")
 
-    def __init__(self, identity: str, phase: str, clock_digest: str, outdir: Path):
+    def __init__(self, identity: str, phase: str, stage_identity: str, clock_digest: str,
+                 readiness_baseline_sha256: str, outdir: Path):
         self.seal = _PERMIT_SENTINEL
         self.identity = identity
         self.stage = "development"
         self.phase = phase
+        self.stage_identity = stage_identity
         self.clock_digest = clock_digest
+        self.readiness_baseline_sha256 = readiness_baseline_sha256
         self.outdir = outdir.resolve()
 
 
@@ -405,7 +418,7 @@ def admit_live(outdir: Path, source_integrity: dict, qualification_bytes: bytes,
     lease = {"schema": "exp097-stage-lease/1", "stage": "development", "identity": identity,
              "clock_sha256": sha(clock_raw), "qualification_sha256": proof["qualification_sha256"]}
     _write_once(LEASE_ROOT / f"{identity}.json", canonical_json(lease))
-    capability = _Capability(identity, sha(clock_raw), out)
+    capability = _Capability(identity, sha(clock_raw), proof["readiness_baseline_sha256"], out)
     _ISSUED[id(capability)] = capability
     return capability
 
@@ -416,7 +429,8 @@ def consume_capability(capability: _Capability) -> _StagePermit:
         raise AdmissionError("live-capability-invalid-or-used")
     capability.used = True
     _ISSUED.pop(id(capability), None)
-    permit = _StagePermit(capability.identity, capability.clock_digest, capability.outdir)
+    permit = _StagePermit(capability.identity, capability.clock_digest,
+                          capability.readiness_baseline_sha256, capability.outdir)
     _PERMITS[id(permit)] = permit
     return permit
 
@@ -441,6 +455,100 @@ def _check_clock_permit(outdir: Path, clock_bytes: bytes, identity: str, expecte
     return clock
 
 
+def _load_pinned_readiness_baseline(expected_sha256: str):
+    """Reload the exact private runtime baseline before each downstream phase."""
+    from importlib.machinery import SourceFileLoader
+    from importlib.util import module_from_spec, spec_from_loader
+    loader = SourceFileLoader("exp097_admission_readiness_baseline", str(HERE / "readiness-baseline.py.txt"))
+    spec = spec_from_loader(loader.name, loader)
+    module = module_from_spec(spec)
+    loader.exec_module(module)
+    try:
+        return module.load_baseline(Path("/private/tmp/exp097-readiness-baseline.json"), expected_sha256)
+    except (OSError, ValueError) as exc:
+        raise AdmissionError("readiness-baseline-invalid") from exc
+
+
+def _read_canonical_object(path: Path, expected_fields: set[str], error_code: str) -> dict:
+    if path.is_symlink() or not path.is_file():
+        raise AdmissionError(error_code)
+    raw = path.read_bytes()
+    value = strict_json(raw)
+    if type(value) is not dict or set(value) != expected_fields or canonical_json(value) != raw:
+        raise AdmissionError(error_code)
+    return value
+
+
+def _validated_health_receipt(stage_identity: str, clock_sha: str, baseline_sha: str,
+                              outdir: Path) -> tuple[Any, dict, dict, str]:
+    baseline = _load_pinned_readiness_baseline(baseline_sha)
+    health_identity = sha(canonical_json({"stage_identity": stage_identity, "phase": "health"}))
+    health_lease_path = LEASE_ROOT / f"{health_identity}.json"
+    health_lease = _read_canonical_object(health_lease_path,
+        {"schema", "stage_identity", "phase", "clock_sha256", "phase_identity"}, "health-phase-lease-invalid")
+    if health_lease != {"schema": "exp097-phase-lease/1", "stage_identity": stage_identity,
+                        "phase": "health", "clock_sha256": clock_sha,
+                        "phase_identity": health_identity}:
+        raise AdmissionError("health-phase-lease-binding")
+    receipt_fields = {"schema", "study_id", "status", "model_identity", "revision",
+                      "stage_clock_sha256", "readiness_baseline_sha256", "physical_http_calls",
+                      "failure_code", "quality_credit", "endpoint_and_response_body_retained"}
+    receipt = _read_canonical_object(Path(outdir) / "health.json", receipt_fields, "health-receipt-invalid")
+    if (receipt.get("schema") != "exp097-health-receipt/1" or receipt.get("study_id") != "EXP-097"
+            or receipt.get("status") != "healthy" or receipt.get("model_identity") != baseline.model_alias
+            or receipt.get("revision") != baseline.expected_revision
+            or receipt.get("stage_clock_sha256") != clock_sha
+            or receipt.get("readiness_baseline_sha256") != baseline.sha256
+            or receipt.get("physical_http_calls") != 1 or receipt.get("failure_code") is not None
+            or receipt.get("quality_credit") is not False
+            or receipt.get("endpoint_and_response_body_retained") is not False):
+        raise AdmissionError("health-receipt-not-successful")
+    return baseline, health_lease, receipt, health_identity
+
+
+def _successful_health(stage_permit: _StagePermit, outdir: Path, clock_bytes: bytes) -> None:
+    """Require an intact successful one-shot health receipt and matching completion lease."""
+    clock_sha = sha(clock_bytes)
+    baseline, health_lease, receipt, health_identity = _validated_health_receipt(
+        stage_permit.identity, clock_sha, stage_permit.readiness_baseline_sha256, outdir)
+    completion_fields = {"schema", "status", "stage_identity", "phase_identity", "stage_clock_sha256",
+                         "readiness_baseline_sha256", "health_phase_lease_sha256", "health_receipt_sha256"}
+    completion_path = Path(outdir) / "health-completion.json"
+    completion = _read_canonical_object(completion_path, completion_fields, "health-completion-invalid")
+    completion_lease = _read_canonical_object(LEASE_ROOT / f"{health_identity}.complete.json",
+                                               completion_fields, "health-completion-lease-invalid")
+    expected_completion = {"schema": "exp097-health-completion/1", "status": "complete",
+        "stage_identity": stage_permit.identity, "phase_identity": health_identity,
+        "stage_clock_sha256": clock_sha, "readiness_baseline_sha256": baseline.sha256,
+        "health_phase_lease_sha256": sha(canonical_json(health_lease)),
+        "health_receipt_sha256": sha(canonical_json(receipt))}
+    if completion != expected_completion or completion_lease != expected_completion:
+        raise AdmissionError("health-completion-binding")
+
+
+def complete_health_phase(phase_permit: _PhasePermit, clock_bytes: bytes, outdir: Path) -> None:
+    """Record durable completion only after a valid successful health response."""
+    if (not isinstance(phase_permit, _PhasePermit) or phase_permit.seal is not _PERMIT_SENTINEL
+            or _PHASES.get(id(phase_permit)) is not phase_permit or phase_permit.phase != "health"
+            or phase_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("health-phase-permit-required")
+    _check_clock_permit(outdir, clock_bytes, phase_permit.stage_identity, phase_permit.clock_digest)
+    baseline, health_lease, receipt, health_identity = _validated_health_receipt(
+        phase_permit.stage_identity, phase_permit.clock_digest,
+        phase_permit.readiness_baseline_sha256, outdir)
+    if phase_permit.identity != health_identity:
+        raise AdmissionError("health-phase-identity")
+    completion = {"schema": "exp097-health-completion/1", "status": "complete",
+        "stage_identity": phase_permit.stage_identity, "phase_identity": health_identity,
+        "stage_clock_sha256": phase_permit.clock_digest,
+        "readiness_baseline_sha256": baseline.sha256,
+        "health_phase_lease_sha256": sha(canonical_json(health_lease)),
+        "health_receipt_sha256": sha(canonical_json(receipt))}
+    raw = canonical_json(completion)
+    _write_once(Path(outdir) / "health-completion.json", raw)
+    _write_once(LEASE_ROOT / f"{health_identity}.complete.json", raw)
+
+
 def acquire_phase(stage_permit: _StagePermit, phase: str, outdir: Path,
                   clock_bytes: bytes) -> _PhasePermit:
     if (not isinstance(stage_permit, _StagePermit) or stage_permit.seal is not _PERMIT_SENTINEL
@@ -448,11 +556,14 @@ def acquire_phase(stage_permit: _StagePermit, phase: str, outdir: Path,
             or phase not in _PHASE_NAMES or stage_permit.outdir != Path(outdir).resolve()):
         raise AdmissionError("stage-permit-required")
     _check_clock_permit(outdir, clock_bytes, stage_permit.identity, stage_permit.clock_digest)
+    if phase != "health":
+        _successful_health(stage_permit, outdir, clock_bytes)
     phase_identity = sha(canonical_json({"stage_identity": stage_permit.identity, "phase": phase}))
     lease = {"schema": "exp097-phase-lease/1", "stage_identity": stage_permit.identity,
              "phase": phase, "clock_sha256": stage_permit.clock_digest, "phase_identity": phase_identity}
     _write_once(LEASE_ROOT / f"{phase_identity}.json", canonical_json(lease))
-    permit = _PhasePermit(phase_identity, phase, stage_permit.clock_digest, Path(outdir))
+    permit = _PhasePermit(phase_identity, phase, stage_permit.identity, stage_permit.clock_digest,
+                          stage_permit.readiness_baseline_sha256, Path(outdir))
     _PHASES[id(permit)] = permit
     return permit
 
@@ -464,3 +575,7 @@ def require_phase(phase_permit: _PhasePermit, clock_bytes: bytes, outdir: Path) 
             or phase_permit.outdir != Path(outdir).resolve()):
         raise AdmissionError("phase-permit-required")
     _check_clock_permit(outdir, clock_bytes, phase_permit.identity, phase_permit.clock_digest)
+    if phase_permit.phase != "health":
+        stage_permit = _StagePermit(phase_permit.stage_identity, phase_permit.clock_digest,
+                                    phase_permit.readiness_baseline_sha256, Path(outdir))
+        _successful_health(stage_permit, outdir, clock_bytes)

@@ -19,6 +19,7 @@ class FakeAdmission:
     def __init__(self):
         self.health_acquired = False
         self.writes = []
+        self.completions = []
 
     def acquire_phase(self, _permit, name, _outdir, _clock_raw):
         if name != "health" or self.health_acquired:
@@ -34,6 +35,9 @@ class FakeAdmission:
 
     def _write_once(self, path, raw):
         self.writes.append((path, raw))
+
+    def complete_health_phase(self, phase, clock_raw, outdir):
+        self.completions.append((phase, clock_raw, outdir))
 
 
 class FakeResponse:
@@ -71,6 +75,7 @@ class ControllerReadinessTests(unittest.TestCase):
             permit=object(), clock=({}, b"clock", "clock-sha"),
             readiness_baseline=SimpleNamespace(model_alias=model, expected_revision=expected_revision),
         )
+        state.readiness_baseline.sha256 = "c" * 64
         return state, admission
 
     def _client_factory(self, calls, response):
@@ -107,6 +112,7 @@ class ControllerReadinessTests(unittest.TestCase):
             self.assertEqual(http_calls, ["one-request"])
             self.assertEqual(receipt["status"], "healthy")
             self.assertEqual(receipt["revision"], "a" * 40)
+            self.assertEqual(len(state.admission.completions), 1)
 
     def test_mutated_historical_bytes_reject_before_a_healthy_runtime_or_dispatch(self):
         fixture_module = importlib.machinery.SourceFileLoader(
@@ -154,6 +160,7 @@ class ControllerReadinessTests(unittest.TestCase):
                         http_calls, FakeResponse())))
             self.assertEqual(http_calls, [])
             self.assertEqual(len(admission.writes), 1)
+            self.assertEqual(admission.completions, [])
 
     def test_missing_pinned_baseline_stops_before_output_configuration_or_clock(self):
         class Admission:

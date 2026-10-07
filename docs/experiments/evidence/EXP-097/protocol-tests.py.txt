@@ -54,6 +54,10 @@ class ProtocolTests(unittest.TestCase):
         self.assertTrue(readiness["private_values"])
         self.assertEqual(readiness["private_file_mode"], "0600")
         self.assertTrue(readiness["exactly_one_current_health_request"])
+        self.assertEqual(set(readiness["successful_health_required_before"]), {
+            "assessment-preparation", "carried-card-validation", "source-reference", "selector",
+            "answer", "answer-assessment", "analysis"})
+        self.assertIn("every subsequent phase revalidates", readiness["downstream_gate"])
         self.assertIn("never a current runtime readiness baseline", readiness["distinct_from"])
         self.assertIn("configuration read", readiness["mismatch_or_missing"])
         self.assertEqual(protocol["input_provenance"]["schema"], "exp097-reused-input-pins/1")

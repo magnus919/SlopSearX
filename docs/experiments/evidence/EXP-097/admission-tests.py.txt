@@ -1,14 +1,47 @@
 """Fail-closed EXP-097 authority tests: legacy/unsealed registration cannot mint a clock."""
 import importlib.machinery
+import asyncio
+import hashlib
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 MODULE = importlib.machinery.SourceFileLoader(
     "exp097_admission_authority_tests", str(HERE / "admission.py.txt")).load_module()
+CONTROLLER = importlib.machinery.SourceFileLoader(
+    "exp097_admission_health_gate_tests", str(HERE / "controller.py.txt")).load_module()
+
+
+class _HealthyResponse:
+    def __init__(self, status="ok", model="free", revision="a" * 40):
+        self.body = {"status": status, "runtime": {"model": model, "revision": revision}}
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self.body
+
+
+class _Client:
+    def __init__(self, response, calls):
+        self.response = response
+        self.calls = calls
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_args):
+        return False
+
+    async def get(self, _url):
+        self.calls.append("health")
+        return self.response
 
 
 class AdmissionAuthorityTests(unittest.TestCase):
@@ -57,6 +90,110 @@ class AdmissionAuthorityTests(unittest.TestCase):
                                      {"schema": "exp095-qualification/1", "study_id": "EXP-095",
                                       "qualified": True, "status": "qualified"})
 
+
+class SuccessfulHealthGateTests(unittest.TestCase):
+    clock_raw = b"synthetic-stage-clock"
+    baseline = SimpleNamespace(model_alias="free", expected_revision="a" * 40, sha256="b" * 64)
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.outdir = self.root / "stage"
+        self.outdir.mkdir()
+        self.lease_root = self.root / "leases"
+        self.stage_permit = MODULE._StagePermit("stage-identity", MODULE.sha(self.clock_raw),
+                                                self.baseline.sha256, self.outdir)
+        MODULE._PERMITS[id(self.stage_permit)] = self.stage_permit
+        self.clock_check = mock.patch.object(
+            MODULE, "_check_clock_permit",
+            side_effect=lambda _out, raw, _identity, expected: (
+                {} if raw == self.clock_raw and MODULE.sha(raw) == expected
+                else (_ for _ in ()).throw(MODULE.AdmissionError("phase-clock-file-binding"))))
+        self.baseline_loader = mock.patch.object(
+            MODULE, "_load_pinned_readiness_baseline", return_value=self.baseline)
+        self.lease_patch = mock.patch.object(MODULE, "LEASE_ROOT", self.lease_root)
+        self.clock_check.start()
+        self.baseline_loader.start()
+        self.lease_patch.start()
+
+    def tearDown(self):
+        self.clock_check.stop()
+        self.baseline_loader.stop()
+        self.lease_patch.stop()
+        MODULE._PERMITS.pop(id(self.stage_permit), None)
+        for key in list(MODULE._PHASES):
+            MODULE._PHASES.pop(key, None)
+        self.temp.cleanup()
+
+    def _healthy(self):
+        state = SimpleNamespace(
+            outdir=self.outdir, bundle_root=self.root, admission=MODULE, permit=self.stage_permit,
+            clock=({}, self.clock_raw, MODULE.sha(self.clock_raw)), readiness_baseline=self.baseline,
+        )
+        calls = []
+        factory = lambda **_kwargs: _Client(_HealthyResponse(), calls)
+        with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+            receipt = asyncio.run(CONTROLLER.health_check(state, client_factory=factory))
+        return receipt, calls
+
+    def test_skip_health_cannot_acquire_a_dispatch_phase(self):
+        for phase_name in sorted(MODULE._PHASE_NAMES - {"health"}):
+            with self.subTest(phase=phase_name), self.assertRaisesRegex(
+                    MODULE.AdmissionError, "health-phase-lease-invalid"):
+                MODULE.acquire_phase(self.stage_permit, phase_name, self.outdir, self.clock_raw)
+        self.assertFalse(list(self.lease_root.glob("*.json")))
+
+    def test_caught_failed_health_cannot_acquire_a_dispatch_phase(self):
+        state = SimpleNamespace(
+            outdir=self.outdir, bundle_root=self.root, admission=MODULE, permit=self.stage_permit,
+            clock=({}, self.clock_raw, MODULE.sha(self.clock_raw)), readiness_baseline=self.baseline,
+        )
+        calls = []
+        factory = lambda **_kwargs: _Client(_HealthyResponse(revision="c" * 40), calls)
+        with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+            with self.assertRaisesRegex(ValueError, "health_revision_mismatch"):
+                asyncio.run(CONTROLLER.health_check(state, client_factory=factory))
+        self.assertEqual(calls, ["health"])
+        with self.assertRaisesRegex(MODULE.AdmissionError, "health-receipt-not-successful"):
+            MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, self.clock_raw)
+
+    def test_valid_mocked_health_receipt_unlocks_real_admission_phase(self):
+        receipt, calls = self._healthy()
+        self.assertEqual(calls, ["health"])
+        self.assertEqual(receipt["status"], "healthy")
+        phase = MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, self.clock_raw)
+        self.assertIsNone(MODULE.require_phase(phase, self.clock_raw, self.outdir))
+
+    def test_wrong_clock_is_rejected_before_health_gate_or_lease(self):
+        with self.assertRaisesRegex(MODULE.AdmissionError, "phase-clock-file-binding"):
+            MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, b"different-clock")
+        self.assertFalse(list(self.lease_root.glob("*.json")))
+
+    def test_tampered_receipt_after_phase_mint_blocks_require_phase(self):
+        self._healthy()
+        phase = MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, self.clock_raw)
+        receipt_path = self.outdir / "health.json"
+        receipt = json.loads(receipt_path.read_bytes())
+        receipt["status"] = "incomplete"
+        receipt_path.write_bytes(MODULE.canonical_json(receipt))
+        with self.assertRaisesRegex(MODULE.AdmissionError, "health-receipt-not-successful"):
+            MODULE.require_phase(phase, self.clock_raw, self.outdir)
+
+    def test_changed_baseline_pin_blocks_downstream_phase(self):
+        self._healthy()
+        with mock.patch.object(MODULE, "_load_pinned_readiness_baseline",
+                               side_effect=MODULE.AdmissionError("readiness-baseline-invalid")):
+            with self.assertRaisesRegex(MODULE.AdmissionError, "readiness-baseline-invalid"):
+                MODULE.acquire_phase(self.stage_permit, "answer", self.outdir, self.clock_raw)
+
+    def test_tampered_completion_lease_blocks_downstream_phase(self):
+        self._healthy()
+        completion = self.outdir / "health-completion.json"
+        value = json.loads(completion.read_bytes())
+        value["status"] = "incomplete"
+        completion.write_bytes(MODULE.canonical_json(value))
+        with self.assertRaisesRegex(MODULE.AdmissionError, "health-completion-binding"):
+            MODULE.acquire_phase(self.stage_permit, "answer", self.outdir, self.clock_raw)
 
 if __name__ == "__main__":
     unittest.main()
