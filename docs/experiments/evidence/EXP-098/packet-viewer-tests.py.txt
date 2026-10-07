@@ -1,0 +1,168 @@
+"""Offline packet-viewer tests. Optional actual-source replay uses an env path."""
+import hashlib
+import importlib.machinery
+import json
+import os
+import re
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+V = importlib.machinery.SourceFileLoader("exp094_packet_viewer_test", str(HERE / "packet-viewer.py.txt")).load_module()
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def write(path, raw):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(raw)
+
+
+def tempdir():
+    private_tmp = Path("/private/tmp")
+    return tempfile.TemporaryDirectory(dir=str(private_tmp) if private_tmp.is_dir() else None)
+
+
+def framed_pages(rendered):
+    """Extract bodies by declared byte length; body text is treated as opaque."""
+    pages, cursor = [], 0
+    begin = re.compile(rb"BEGIN_PACKET_PAGE\|schema=exp095-packet-view/1\|index=(\d+)\|count=(\d+)\|bytes=(\d+)\|sha256=([0-9a-f]{64})\n")
+    for _ in range(rendered.count(b"BEGIN_PACKET_PAGE|")):
+        match = begin.match(rendered, cursor)
+        if not match:
+            raise AssertionError("invalid begin frame")
+        index, _count, size = map(int, match.group(1, 2, 3))
+        body_start = match.end()
+        body = rendered[body_start:body_start + size]
+        if len(body) != size or sha(body) != match.group(4).decode("ascii"):
+            raise AssertionError("body frame mismatch")
+        cursor = body_start + size
+        ending = f"\nEND_PACKET_PAGE|index={index}|bytes={size}|sha256={match.group(4).decode('ascii')}\n".encode("ascii")
+        if rendered[cursor:cursor + len(ending)] != ending:
+            raise AssertionError("invalid end frame")
+        cursor += len(ending)
+        pages.append(body)
+    if cursor != len(rendered):
+        raise AssertionError("trailing render bytes")
+    return pages
+
+
+class PacketViewerTests(unittest.TestCase):
+    def test_whole_line_unicode_pages_reconstruct_exact_input(self):
+        obj = {"heading": "naïve 雪", "rows": ["λΩ" + str(i) + "x" * 1900 for i in range(7)],
+               "final": "no extra normalization"}
+        raw = (json.dumps(obj, ensure_ascii=False, indent=0) + "\r\n").encode("utf-8")
+        view = V.build_views(raw)
+        self.assertEqual(b"".join(view["_page_data"]), raw)
+        self.assertGreater(view["page_count"], 2)
+        self.assertTrue(all(0 < len(page) <= V.MAX_PAGE_BYTES for page in view["_page_data"]))
+        self.assertEqual([p["sha256"] for p in view["pages"]], [sha(p) for p in view["_page_data"]])
+        for start in range(0, view["page_count"], 2):
+            indices = list(range(start + 1, min(start + 2, view["page_count"]) + 1))
+            stdout = V.render_from_raw(raw, indices)
+            self.assertLessEqual(len(stdout), V.MAX_RENDER_BYTES)
+            self.assertEqual(framed_pages(stdout), [view["_page_data"][i - 1] for i in indices])
+
+    def test_overlong_physical_line_splits_only_at_utf8_boundaries(self):
+        raw = (json.dumps({"text": "x" * 4094 + "Ω" + "雪" * 5000}, ensure_ascii=False) + "\n").encode()
+        view = V.build_views(raw)
+        self.assertGreater(view["page_count"], 1)
+        self.assertEqual(b"".join(view["_page_data"]), raw)
+        self.assertTrue(all(0 < len(page) <= V.MAX_PAGE_BYTES for page in view["_page_data"]))
+        self.assertTrue(all(page.decode("utf-8") for page in view["_page_data"]))
+        for start in range(0, view["page_count"], 2):
+            indices = list(range(start + 1, min(start + 2, view["page_count"]) + 1))
+            self.assertLessEqual(len(V.render_from_raw(raw, indices)), V.MAX_RENDER_BYTES)
+
+    def test_describe_and_cli_require_expected_hash_without_echoing_path(self):
+        raw = '{\n  "text": "snowman ☃",\n  "n": 3\n}\n'.encode("utf-8")
+        with tempdir() as tmp:
+            path = Path(tmp) / "assigned.json"
+            write(path, raw)
+            description = V.describe(path, sha(raw))
+            self.assertEqual(description["input_sha256"], sha(raw))
+            self.assertEqual(description["input_bytes"], len(raw))
+            self.assertEqual(description["page_count"], 1)
+            self.assertEqual(description["first_page_index"], 1)
+            self.assertEqual(description["last_page_index"], 1)
+            self.assertIn("0 is never valid", description["instructions"])
+            self.assertNotIn("text", json.dumps(description))
+            self.assertNotIn(str(path), json.dumps(description))
+            self.assertEqual(V.render(path, sha(raw), [1]), V.render_from_raw(raw, [1]))
+            self.assertEqual(V.main(["--input", str(path), "--expected-sha", sha(raw), "--describe"]), 0)
+            with self.assertRaisesRegex(V.ViewerError, "input-hash-mismatch"):
+                V.describe(path, "0" * 64)
+
+    def test_invalid_empty_long_line_page_limit_and_bounds_are_distinct(self):
+        for raw, code in ((b"", "empty-input"), (b"\xff", "invalid-utf8"),
+                          (b"{bad", "invalid-json"),
+                          (b"[]", "packet-root-not-object")):
+            with self.subTest(code=code), self.assertRaisesRegex(V.ViewerError, code):
+                V.build_views(raw)
+        raw = b"{\n\"x\":1\n}\n"
+        with self.assertRaisesRegex(V.ViewerError, "page-index-out-of-bounds"):
+            V.render_from_raw(raw, [99])
+        with self.assertRaisesRegex(V.ViewerError, "page-index-out-of-bounds"):
+            V.render_from_raw(raw, [0])
+        with self.assertRaisesRegex(V.ViewerError, "page-request-limit"):
+            V.render_from_raw(raw, [1, 1, 1])
+        with self.assertRaisesRegex(V.ViewerError, "page-index-duplicate"):
+            V.render_from_raw(raw, [1, 1])
+        with mock.patch.object(V, "MAX_RENDER_BYTES", 10):
+            with self.assertRaisesRegex(V.ViewerError, "render-oversize"):
+                V.render_from_raw(raw, [1])
+        with self.assertRaisesRegex(V.ViewerError, "input-oversize"):
+            V.build_views(b" " * (V.MAX_INPUT_BYTES + 1))
+
+    def test_symlinks_and_unsafe_file_types_are_rejected(self):
+        with tempdir() as tmp:
+            directory = Path(tmp)
+            raw = b'{"safe":true}'
+            target = directory / "target.json"
+            write(target, raw)
+            alias = directory / "alias.json"
+            try:
+                alias.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlink creation unavailable")
+            with self.assertRaisesRegex(V.ViewerError, "symlink-input"):
+                V.describe(alias, sha(raw))
+            with self.assertRaisesRegex(V.ViewerError, "unsafe-file-type"):
+                V.describe(directory, sha(raw))
+
+    def test_all_48_assigned_source_inputs_replay_without_loss_when_configured(self):
+        root_text = os.environ.get("EXP098_SOURCE_INPUT_ROOT")
+        if not root_text:
+            self.skipTest("set EXP098_SOURCE_INPUT_ROOT for local frozen-input replay")
+        root = Path(root_text)
+        manifest_path = root / "source-slot-manifest.json"
+        manifest = json.loads(manifest_path.read_bytes())
+        jobs = manifest["active_source_slots"]
+        self.assertEqual(len(jobs), 48)
+        seen = set()
+        for job in jobs:
+            rel = "deterministic-preparation/wire-inputs/" + job["logical_submission"] + ".json"
+            path = root / rel
+            self.assertFalse(path.is_symlink())
+            raw = path.read_bytes()
+            self.assertEqual(sha(raw), job["input_sha256"])
+            self.assertEqual(len(raw), job["input_bytes"])
+            view = V.build_views(raw)
+            self.assertEqual(view["input_sha256"], job["input_sha256"])
+            self.assertEqual(b"".join(view["_page_data"]), raw)
+            self.assertTrue(all(len(x) <= V.MAX_PAGE_BYTES for x in view["_page_data"]))
+            for start in range(0, view["page_count"], 2):
+                indices = list(range(start + 1, min(start + 2, view["page_count"]) + 1))
+                stdout = V.render(path, job["input_sha256"], indices)
+                self.assertLessEqual(len(stdout), V.MAX_RENDER_BYTES)
+                self.assertEqual(framed_pages(stdout), [view["_page_data"][i - 1] for i in indices])
+            seen.add(rel)
+        self.assertEqual(len(seen), 48)
+
+
+if __name__ == "__main__":
+    unittest.main()

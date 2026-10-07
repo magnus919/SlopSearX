@@ -1,0 +1,277 @@
+"""Offline original evidence replay; grants no live or quality authority."""
+import hashlib
+import json
+import sys
+import types
+import copy
+import tempfile
+import re
+from datetime import datetime
+from pathlib import Path
+HERE = Path(__file__).resolve().parent
+HISTORICAL_DEPENDENCY_PINS = {'docs/experiments/evidence/EXP-088/reference-labels.py.txt': 'f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c', 'docs/experiments/evidence/source-use-next-stage/evidence-catalog.py.txt': '0a197e720543c54239f618284bcd9fdbbcf2e7bd65af73bc1632c04c0831958b', 'docs/experiments/evidence/research-usefulness-measurement/hydrate.py.txt': 'b84876282594ab6f5c452a9703e3194be282b0db77cd00514a068e071605e4cf', 'docs/experiments/evidence/research-usefulness-measurement/validate.py.txt': 'd4fe4320ae2ec538506bdea64a937de5c47d185ca190dc2704a4976e05d5d77f', 'docs/experiments/evidence/research-usefulness-measurement/schema.json': 'd2dec068368e50df631b824cdb821127457b5934110d6492c9fb7d6aa24b2e12'}
+CHECKPOINT_PINS_SHA256 = '45af4810cd3f25256b2324b11737180741fb73b5605d98a5960eeb6aa5497d5e'
+
+def strict_json(raw):
+    def pairs(rows):
+        result = {}
+        for key, value in rows:
+            if key in result:
+                raise ValueError('duplicate-json-key')
+            result[key] = value
+        return result
+    def nonfinite(_):
+        raise ValueError('nonfinite-json-value')
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=nonfinite)
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def load(name, path):
+    module = types.ModuleType(name)
+    module.__file__ = str(path)
+    sys.modules[name] = module
+    exec(compile(path.read_bytes(), str(path), 'exec'), module.__dict__)
+    return module
+
+def actor_log_relative(actor):
+    date = actor.get('session_date')
+    name = actor.get('session_log_name')
+    if type(date) is not str or not re.fullmatch(r'[0-9]{4}/[0-9]{2}/[0-9]{2}', date):
+        raise ValueError('actor-session-date')
+    datetime.strptime(date, '%Y/%m/%d')
+    if type(name) is not str or not re.fullmatch(r'[A-Za-z0-9_-][A-Za-z0-9_.-]*\.jsonl', name):
+        raise ValueError('actor-session-log-name')
+    return Path(date) / name
+
+
+def accepted_slots(validations, manifest, terminal):
+    if terminal.get('terminal') is not True or terminal.get('accepted_source_assignments') != 23 or terminal.get('fresh_source_submissions') != 19:
+        raise ValueError('original-terminal-scope')
+    if len(validations) != 19 or [row.get('status') for row in validations] != ['valid'] * 18 + ['invalid']:
+        raise ValueError('original-validation-sequence')
+    if validations[-1].get('error_code') != 'evidence_available requires an ID':
+        raise ValueError('original-rejection-reason')
+    for index, row in enumerate(validations, 6):
+        if row.get('slot') != index or row.get('job') != manifest['active_source_slots'][index - 1]['logical_submission']:
+            raise ValueError('original-validation-slot-sequence')
+    return {row['job'] for row in validations[:-1]}
+
+
+def project_accepted_observations(validations, manifest, terminal, actors, observe):
+    accepted = accepted_slots(validations, manifest, terminal)
+    if len(accepted) != 18:
+        raise ValueError('accepted-slot-identity-coverage')
+    observed = set()
+    for actor in actors:
+        logical = actor.get('logical_submission')
+        if logical in accepted:
+            if logical in observed:
+                raise ValueError('duplicate-accepted-actor')
+            observe(actor)
+            observed.add(logical)
+    if observed != accepted:
+        raise ValueError('accepted-actor-coverage')
+    return accepted
+
+
+def verify_source_checkpoint(checkpoint_root, pins_path, expected_pins_sha256):
+    if expected_pins_sha256 != CHECKPOINT_PINS_SHA256:
+        raise ValueError('unregistered-checkpoint-pin')
+    ROOT = Path(checkpoint_root).resolve()
+    if Path(checkpoint_root).is_symlink() or Path(pins_path).is_symlink():
+        raise ValueError('checkpoint-symlink')
+    pins_path = Path(pins_path)
+    REPO = HERE.parents[3]
+    with tempfile.TemporaryDirectory(prefix='source-observation-replay-') as temporary_profile:
+        return _replay(ROOT, pins_path, expected_pins_sha256, REPO, temporary_profile)
+
+def _replay(ROOT, pins_path, expected_pins_sha256, REPO, temporary_profile):
+    pins_raw = pins_path.read_bytes()
+    if sha(pins_raw) != expected_pins_sha256:
+        raise ValueError('checkpoint-manifest-pin')
+    pins = strict_json(pins_raw)
+    if not (pins.get('accepted_assignments') == 23 and pins.get('fresh_accepted_assignments') == 18 and (pins.get('rejected_fresh_assignments') == 1)):
+        raise ValueError('checkpoint-integrity-check-failed')
+    if not (pins.get('quality_analyzed') is False and pins.get('grade_repaired') is False and (pins.get('prior_time_credit_seconds') == 0)):
+        raise ValueError('checkpoint-integrity-check-failed')
+    for row in pins['files']:
+        relative = Path(row['path'])
+        if not (not relative.is_absolute() and all((part not in {'.', '..'} for part in relative.parts))):
+            raise ValueError('checkpoint-integrity-check-failed')
+    if not len({r['path'] for r in pins['files']}) == len(pins['files']) == pins['file_count']:
+        raise ValueError('checkpoint-integrity-check-failed')
+    if not all((not p.is_symlink() for p in ROOT.rglob('*'))):
+        raise ValueError('checkpoint-integrity-check-failed')
+    observed = {p.relative_to(ROOT).as_posix() for p in ROOT.rglob('*') if p.is_file()}
+    if not observed == {r['path'] for r in pins['files']}:
+        raise ValueError('checkpoint-integrity-check-failed')
+    verified_root = Path(temporary_profile) / 'verified-checkpoint'
+    verified_root.mkdir()
+    for row in pins['files']:
+        relative = Path(row['path'])
+        if relative.as_posix() != row['path']:
+            raise ValueError('noncanonical-checkpoint-path')
+        original = ROOT / relative
+        if original.is_symlink() or not original.resolve().is_relative_to(ROOT):
+            raise ValueError('checkpoint-path-escape')
+        raw = original.read_bytes()
+        if len(raw) != row['bytes'] or sha(raw) != row['sha256']:
+            raise ValueError('checkpoint-file-pin')
+        target = verified_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+    ROOT = verified_root
+    for exp in ['EXP-077', 'EXP-094', 'EXP-097']:
+        for original in (ROOT / 'original-source/docs/experiments/evidence' / exp).rglob('*'):
+            if original.is_file() and '__pycache__' not in original.parts:
+                current = REPO / 'docs/experiments/evidence' / exp / original.relative_to(ROOT / 'original-source/docs/experiments/evidence' / exp)
+                if not (not current.is_symlink() and sha(current.read_bytes()) == sha(original.read_bytes())):
+                    raise ValueError('checkpoint-integrity-check-failed')
+    replay_source = ROOT / 'original-source'
+    for relative, expected in HISTORICAL_DEPENDENCY_PINS.items():
+        dependency = REPO / relative
+        if dependency.is_symlink():
+            raise ValueError('historical-dependency-symlink')
+        raw_dependency = dependency.read_bytes()
+        if sha(raw_dependency) != expected:
+            raise ValueError('historical-dependency-pin')
+        owned_dependency = replay_source / relative
+        owned_dependency.parent.mkdir(parents=True, exist_ok=True)
+        owned_dependency.write_bytes(raw_dependency)
+    B = load('replay_phase', replay_source / 'docs/experiments/evidence/EXP-097/phase-bindings.py.txt')
+    V = load('replay_view', replay_source / 'docs/experiments/evidence/EXP-097/input-view-verifier.py.txt')
+    M = load('replay_packets', replay_source / 'docs/experiments/evidence/EXP-077/model-packets.py.txt')
+    R = load('replay_reader', ROOT / 'original-helpers/exp097-final-log-reader.py')
+    stage = ROOT / 'origin-stage'
+    terminal = strict_json((stage / 'terminal-outcome-private.json').read_bytes())
+    validations = sorted((stage / 'source-reference').glob('validation-*.json'))
+    validation_rows = [strict_json(path.read_bytes()) for path in validations]
+    manifest = strict_json((stage / 'assessment-inputs/source-slot-manifest.json').read_bytes())
+    T = load('observed_transcript', HERE / 'observed-transcript.py.txt')
+    replay_profile = Path(temporary_profile)
+    def observe_actor(a):
+        logical = a['logical_submission']
+        stored = strict_json((ROOT / 'origin-stage/source-reference/views' / (sha(logical.encode())[:20] + '.view.json')).read_bytes())
+        relative = actor_log_relative(a)
+        archived_path = ROOT / 'profile/.codex/sessions' / relative
+        if not archived_path.resolve().is_relative_to((ROOT / 'profile/.codex/sessions').resolve()):
+            raise ValueError('actor-archive-path-escape')
+        archived = archived_path.read_bytes()
+        observed = T.observed_bytes(archived, stored['transcript_log_sha256'])
+        if not sha(observed) == stored['transcript_log_sha256']:
+            raise ValueError('checkpoint-integrity-check-failed')
+        dest = replay_profile / '.codex/sessions' / relative
+        if not dest.resolve().is_relative_to((replay_profile / '.codex/sessions').resolve()):
+            raise ValueError('actor-replay-path-escape')
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists():
+            if not dest.read_bytes() == observed:
+                raise ValueError('checkpoint-integrity-check-failed')
+        else:
+            dest.write_bytes(observed)
+    actors = [strict_json(path.read_bytes()) for path in (stage / 'source-reference/actors').glob('*.json')]
+    project_accepted_observations(validation_rows, manifest, terminal, actors, observe_actor)
+    R.Path = types.SimpleNamespace(home=lambda: replay_profile)
+    A = load('replay_actors', ROOT / 'original-helpers/exp097-actor-bindings.py')
+    stage = ROOT / 'origin-stage'
+    clock = strict_json((stage / 'stage-clock.json').read_bytes())
+    manifest = strict_json((stage / 'assessment-inputs/source-slot-manifest.json').read_bytes())
+    refs = {r['logical_submission']: r for r in manifest['source_input_refs']}
+    relocated = copy.deepcopy(manifest)
+    for ref in relocated['source_input_refs']:
+        ref['input_path'] = str(stage / 'assessment-inputs/deterministic-preparation/wire-inputs' / (ref['logical_submission'] + '.json'))
+    tables = B.load_task_tables(source_slot_manifest=relocated, preparation_root=stage / 'assessment-inputs')
+    original_viewer = manifest['active_source_slots'][0]['input_view_plan']['viewer_path']
+    if not all((j['input_view_plan']['viewer_path'] == original_viewer for j in manifest['active_source_slots'])):
+        raise ValueError('checkpoint-integrity-check-failed')
+    renderer = V._viewer()
+    original_renderer = ROOT / 'original-source/docs/experiments/evidence/EXP-097/packet-viewer.py.txt'
+    if not sha(V.VIEWER_PATH.read_bytes()) == sha(original_renderer.read_bytes()):
+        raise ValueError('checkpoint-integrity-check-failed')
+    V._viewer = lambda: renderer
+    viewer_bytes = original_renderer.read_bytes()
+    class OriginalViewerIdentity(type(Path())):
+        def read_bytes(self):
+            return viewer_bytes
+    V.VIEWER_PATH = OriginalViewerIdentity(original_viewer)
+    rows = []
+    payloads = {}
+    for index in range(5, 23):
+        job = {k: v for k, v in manifest['active_source_slots'][index].items() if k not in {'input_view_plan', 'checkpoint_state'}}
+        logical = job['logical_submission']
+        sr = stage / 'source-reference'
+        validation = strict_json((sr / ('validation-%03d.json' % (index + 1))).read_bytes())
+        if not validation['status'] == 'valid':
+            raise ValueError('checkpoint-integrity-check-failed')
+        dispatchraw = (sr / ('dispatch-%03d.json' % (index + 1))).read_bytes()
+        actorpaths = [p for p in (sr / 'actors').glob('*.json') if strict_json(p.read_bytes()).get('logical_submission') == logical]
+        if not len(actorpaths) == 1:
+            raise ValueError('checkpoint-integrity-check-failed')
+        actorraw = actorpaths[0].read_bytes()
+        actor = strict_json(actorraw)
+        A.read_bound_actor97(sr / 'actors', logical, binding=job, reservation_raw=dispatchraw, clock=clock, receipt_sha256=sha(actorraw), expected_slot=index + 1, dispatch_sha256=sha(dispatchraw))
+        text, calls, meta = R.read_exact_assessor_final(actor['expected_agent_path'], session_date=actor['session_date'], expected_binding=job, expected_agent_id=actor['expected_agent_id'], expected_clock=clock)
+        raw = text.encode()
+        if not sha(raw) == validation['response_sha256']:
+            raise ValueError('checkpoint-integrity-check-failed')
+        finalreceipts = [strict_json(p.read_bytes()) for p in (sr / 'finals').glob('*.txt.json') if strict_json(p.read_bytes()).get('logical_submission') == logical]
+        if not len(finalreceipts) == 1:
+            raise ValueError('checkpoint-integrity-check-failed')
+        fr = finalreceipts[0]
+        if not (sr / 'finals' / fr['path']).read_bytes() == raw:
+            raise ValueError('checkpoint-integrity-check-failed')
+        plan = manifest['active_source_slots'][index]['input_view_plan']
+        inp = (stage / 'assessment-inputs/deterministic-preparation/wire-inputs' / (logical + '.json')).read_bytes()
+        proof = V.verify_tool_transcript(inp, expected_sha256=plan['input_sha256'], input_path=plan['input_path'], viewer_path=plan['viewer_path'], slot_id=logical, source_manifest_sha256=plan['source_manifest_sha256'], calls=calls, transcript_log_sha256=meta['private_log_sha256'])
+        stored = strict_json((sr / 'views' / (sha(logical.encode())[:20] + '.view.json')).read_bytes())
+        if not all((stored.get(k) == v for k, v in proof.items())):
+            raise ValueError((logical, [k for k, v in proof.items() if stored.get(k) != v]))
+        if not stored['final_text_sha256'] == sha(raw):
+            raise ValueError('checkpoint-integrity-check-failed')
+        ref = refs[logical]
+        labelraw = (stage / 'assessment-inputs' / ref['label_binding_path']).read_bytes()
+        if not sha(labelraw) == job['label_binding_sha256']:
+            raise ValueError('checkpoint-integrity-check-failed')
+        decoded = B.decode_source_reference_response(strict_json(labelraw), strict_json(raw), table=tables[job['task_id']])
+        if not B.canonical(decoded) == (sr / (logical + '.decoded.json')).read_bytes():
+            raise ValueError('checkpoint-integrity-check-failed')
+        sourceplan = strict_json((stage / 'assessment-inputs/deterministic-preparation/private/source-plans' / (job['task_id'] + '.json')).read_bytes())
+        chunk = next((c for c in sourceplan['chunks'] if c['assignment_id'] == job['helper_id']))
+        M.verify_source_chunk_coverage(dict(sourceplan, chunks=[chunk], inventory_source_ids=chunk['source_ids'], assessor_ids=[chunk['assessor_id']]), [decoded])
+        payloads[logical] = {'decoded_response': decoded, 'original_input_sha256': sha(inp), 'original_label_binding_sha256': sha(labelraw), 'original_final_sha256': sha(raw), 'original_transcript_sha256': stored['transcript_log_sha256'], 'task_table_sha256': tables[job['task_id']].binding_sha256}
+        rows.append({'logical_submission': logical, 'status': 'original_replay_pass', 'source_count': len(decoded['source_assessments'])})
+    historical = load('replay_historical_five', replay_source / 'docs/experiments/evidence/EXP-097/source-carry.py.txt').verify_source_checkpoint(ROOT / 'historical-five')
+    if not historical['proof']['accepted_assignments'] == 5:
+        raise ValueError('checkpoint-integrity-check-failed')
+    for logical, payload in historical['payloads'].items():
+        if not logical not in payloads:
+            raise ValueError('checkpoint-integrity-check-failed')
+        payloads[logical] = payload
+    if not len(payloads) == 23:
+        raise ValueError('checkpoint-integrity-check-failed')
+    contract = load('carry_scientific_context', HERE / 'citation-contract.py.txt')
+    assignments = []
+    for old_job in manifest['active_source_slots'][:23]:
+        logical = old_job['logical_submission']
+        payload = payloads[logical]
+        original_input = (stage / 'assessment-inputs/deterministic-preparation/wire-inputs' / (logical + '.json')).read_bytes()
+        job_identity = {key: old_job[key] for key in ('logical_submission', 'role', 'task_id', 'assessor_id', 'chunk_index', 'helper_id')}
+        ref = refs[logical]
+        label_bytes = (stage / 'assessment-inputs' / ref['label_binding_path']).read_bytes()
+        if sha(original_input) != old_job['input_sha256'] or sha(label_bytes) != old_job['label_binding_sha256']:
+            raise ValueError('original-preparation-binding')
+        payload.update(logical_submission=logical, slot_identity=job_identity,
+                       scientific_context_sha256=contract.context_fingerprint(strict_json(original_input)),
+                       input_sha256=sha(original_input), task_table_sha256=tables[old_job['task_id']].binding_sha256,
+                       decoded_response_sha256=sha(B.canonical(payload['decoded_response'])))
+        if logical not in historical['payloads']:
+            original_index = next(i for i,j in enumerate(manifest['active_source_slots'],1) if j['logical_submission']==logical)
+            payload['validation_sha256']=sha((stage/'source-reference'/('validation-%03d.json'%original_index)).read_bytes())
+            payload['dispatch_sha256']=sha((stage/'source-reference'/('dispatch-%03d.json'%original_index)).read_bytes())
+            payload['label_binding_sha256']=sha(label_bytes)
+        assignments.append({key:value for key,value in payload.items() if key!='decoded_response'})
+    if len(assignments)!=23:
+        raise ValueError('all-original-assignments-required')
+    return {'proof': {'schema': 'exp098-original-source-replay/1', 'accepted_assignments': 23, 'fresh_assignments': 18, 'historical_assignments': 5, 'rejected_assignments_retained': 1, 'all_originally_valid_assignments_required': True, 'prior_time_credit_seconds': 0, 'quality_analyzed': False, 'grades_repaired': False, 'pins_sha256': expected_pins_sha256, 'assignments': assignments, 'fresh_rows': rows, 'historical_proof': historical['proof']}, 'payloads': payloads}

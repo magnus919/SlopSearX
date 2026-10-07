@@ -1,0 +1,38 @@
+{
+  "scope": "offline mechanics only; no scientific quality or live admission claim",
+  "status": "checked_unqualified",
+  "suites": {
+    "admission": 18,
+    "readiness_baseline": 5,
+    "controller_readiness": 9,
+    "phase_bindings": 8,
+    "input_bridge": 4,
+    "input_view_verifier": 4,
+    "packet_viewer": 6,
+    "citation_contract": 7,
+    "observed_transcript": 9,
+    "carry_adversarial_optimized_python": 18
+  },
+  "source_packets_losslessly_replayed": 48,
+  "carried_source_assignments": 23,
+  "fresh_source_assignments": 25,
+  "actual_preparation_negative_checks": 4,
+  "offline_full_handoff": {
+    "captured_rows": 442,
+    "separate_source_task_closures": 8,
+    "selector_cases": 13,
+    "selector_operations": 21,
+    "mock_selector_calls": 44,
+    "answer_inputs": 16,
+    "answer_assessor_packets": 32,
+    "external_calls": 0,
+    "quality_scored": false
+  },
+  "remaining": [
+    "committed qualified source closure",
+    "actual default and alternate readiness-baseline preflight",
+    "registration review and required CI",
+    "fresh scientific development and untouched confirmation",
+    "supported product implementation and delivery"
+  ]
+}

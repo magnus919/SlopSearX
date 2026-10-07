@@ -1,0 +1,101 @@
+import copy
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+import unittest
+import jsonschema
+
+ROOT = Path(__file__).resolve().parent
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+M = load('packet_contract', ROOT.parent / 'EXP-077/model-packets.py.txt')
+C = load('citation_contract', ROOT / 'citation-contract.py.txt')
+
+
+class CitationContract(unittest.TestCase):
+    def setUp(self):
+        self.schema = C.source_schema(M.SOURCE_CHUNK_SCHEMA)
+        self.facet = dict(facet_id='f', disposition='evidence_available', scope_match='uncertain',
+                          entailment='does_not_entail', applicability='uncertain',
+                          not_assessable_reason='', evidence_ids=['D4E0082'], reason='Bounded observation', limitations=[])
+
+    def packet(self):
+        return dict(task_id='d4', assessor_id='R2', chunk_id='chunk',
+                    source_assessments=[dict(source_id='source', facets=[self.facet])])
+
+    def test_available_negative_judgment_requires_citation(self):
+        jsonschema.validate(self.packet(), self.schema)
+        self.facet['evidence_ids'] = []
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(self.packet(), self.schema)
+
+    def test_available_uncertain_requires_citation(self):
+        self.facet['entailment'] = 'uncertain'
+        jsonschema.validate(self.packet(), self.schema)
+        self.facet['evidence_ids'] = []
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(self.packet(), self.schema)
+
+    def test_not_acquired_cannot_cite(self):
+        self.facet['disposition'] = 'not_acquired'
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(self.packet(), self.schema)
+        self.facet['evidence_ids'] = []
+        jsonschema.validate(self.packet(), self.schema)
+
+    def test_legacy_schema_is_not_modified(self):
+        original = copy.deepcopy(M.SOURCE_CHUNK_SCHEMA)
+        C.source_schema(M.SOURCE_CHUNK_SCHEMA)
+        self.assertEqual(original, M.SOURCE_CHUNK_SCHEMA)
+
+    def test_wire_packet_preserves_context_and_identity(self):
+        base = {'prompt': 'old', 'source_model_input': {'output_schema': M.SOURCE_CHUNK_SCHEMA,
+                'task': {'id': 'd4'}, 'sources': [{'source_id': 'source', 'passages': [{'evidence_id': 'D4E0082', 'text': 'Original bounded evidence.'}]}], 'chunk_id': 'chunk', 'codebook': {'source': ['D4E0082']}}}
+        before = copy.deepcopy(base)
+        result = C.prepare_source_packet(base, 'explicit requirement')
+        self.assertEqual(base, before)
+        self.assertEqual(result['prompt'], 'explicit requirement')
+        for key in ['task', 'sources', 'chunk_id', 'codebook']:
+            self.assertEqual(result['source_model_input'][key], before['source_model_input'][key])
+        self.assertIn('allOf', result['source_model_input']['output_schema']['properties']['source_assessments']['items']['properties']['facets']['items'])
+
+    def test_scientific_fingerprint_only_excludes_prompt_and_schema(self):
+        packet = {'prompt': 'original instruction', 'source_model_input': {
+            'output_schema': M.SOURCE_CHUNK_SCHEMA, 'task': {'id':'d4', 'question':'original question'},
+            'sources':[{'source_id':'source', 'passages':[{'evidence_id':'D4E0082', 'text':'Original passage'}]}],
+            'chunk_id':'chunk'}}
+        changed = C.prepare_source_packet(packet, 'clarified instructions')
+        self.assertEqual(C.context_fingerprint(packet), C.context_fingerprint(changed))
+        changed['source_model_input']['sources'][0]['passages'][0]['text'] = 'Changed passage'
+        self.assertNotEqual(C.context_fingerprint(packet), C.context_fingerprint(changed))
+        changed = copy.deepcopy(packet)
+        changed['source_model_input']['task']['question'] = 'Changed question'
+        self.assertNotEqual(C.context_fingerprint(packet), C.context_fingerprint(changed))
+
+    def test_original_validator_still_rejects_wrong_source_citation(self):
+        self.facet['evidence_ids'] = ['D4E0083']
+        plan = {'inventory_source_ids': ['source', 'source2'], 'chunks': [
+            {'assignment_id': 'chunk', 'task_id': 'd4', 'assessor_id': 'R2',
+             'model_call_required': True, 'facets': ['f'],
+             'source_ids': ['source', 'source2'], 'sources': [
+                 {'source_id': 'source', 'evidence_ids': ['D4E0082']},
+                 {'source_id': 'source2', 'evidence_ids': ['D4E0083']}]}]}
+        packet = self.packet()
+        packet['source_assessments'].append(dict(source_id='source2', facets=[copy.deepcopy(self.facet)]))
+        jsonschema.validate(packet, self.schema)
+        with self.assertRaises(M.PacketError):
+            M.verify_source_chunk_coverage(plan, [packet])
+        packet['source_assessments'][0]['facets'][0]['evidence_ids'] = ['D4E0082']
+        M.verify_source_chunk_coverage(plan, [packet])
+
+
+if __name__ == '__main__':
+    unittest.main()

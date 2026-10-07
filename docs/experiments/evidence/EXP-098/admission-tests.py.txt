@@ -1,0 +1,321 @@
+"""Fail-closed EXP-098 authority tests: legacy/unsealed registration cannot mint a clock."""
+import importlib.machinery
+import asyncio
+import hashlib
+import json
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+MODULE = importlib.machinery.SourceFileLoader(
+    "exp098_admission_authority_tests", str(HERE / "admission.py.txt")).load_module()
+CONTROLLER = importlib.machinery.SourceFileLoader(
+    "exp098_admission_health_gate_tests", str(HERE / "controller.py.txt")).load_module()
+
+
+class _HealthyResponse:
+    def __init__(self, status="ok", model="free", revision="a" * 40):
+        self.body = {"status": status, "runtime": {"model": model, "revision": revision}}
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self.body
+
+
+class _Client:
+    def __init__(self, response, calls):
+        self.response = response
+        self.calls = calls
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_args):
+        return False
+
+    async def get(self, _url):
+        self.calls.append("health")
+        return self.response
+
+
+class AdmissionAuthorityTests(unittest.TestCase):
+    def _call_with_registration(self, registration, qualification=None):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reg_rel = "registration-integrity.json"
+            qual_rel = "qualification-integrity.json"
+            reg_path = root / reg_rel
+            qual_path = root / qual_rel
+            reg_path.write_text(json.dumps(registration))
+            qual_path.write_text(json.dumps(qualification or {"schema": "exp098-qualification/1",
+                                                               "study_id": "EXP-098", "qualified": False,
+                                                               "status": "prospective_unsealed"}))
+            with mock.patch.object(MODULE, "REPO", root), \
+                 mock.patch.object(MODULE, "REG_PATH", reg_rel), \
+                 mock.patch.object(MODULE, "QUAL_PATH", qual_rel), \
+                 mock.patch.object(MODULE, "_git_blob",
+                                   side_effect=lambda _revision, path: (root / path).read_bytes()):
+                out = root / "stage"
+                out.mkdir()
+                with self.assertRaises(MODULE.AdmissionError):
+                    MODULE.create_stage_clock(out, "a" * 40)
+                self.assertFalse((out / "stage-clock.json").exists())
+                self.assertFalse(list(root.glob("*.lease")))
+
+    def test_exp095_registration_cannot_mint_exp098_clock(self):
+        self._call_with_registration({"schema": "exp095-registration/1", "study_id": "EXP-095",
+                                      "status": "registered"})
+
+    def test_exp096_registration_cannot_mint_exp098_clock(self):
+        self._call_with_registration({"schema": "exp096-registration/1", "study_id": "EXP-096",
+                                      "status": "registered", "registered": True})
+
+    def test_prospective_exp098_registration_cannot_mint_clock(self):
+        self._call_with_registration({"schema": "exp098-registration/1", "study_id": "EXP-098",
+                                      "status": "prospective_unsealed", "registered": False})
+
+    def test_registered_status_without_registered_bit_cannot_mint_clock(self):
+        self._call_with_registration({"schema": "exp098-registration/1", "study_id": "EXP-098",
+                                      "status": "registered", "registered": False})
+
+    def test_legacy_qualification_cannot_mint_clock_for_exp098(self):
+        self._call_with_registration({"schema": "exp098-registration/1", "study_id": "EXP-098",
+                                      "status": "registered", "registered": True},
+                                     {"schema": "exp095-qualification/1", "study_id": "EXP-095",
+                                      "qualified": True, "status": "qualified"})
+
+
+class SuccessfulHealthGateTests(unittest.TestCase):
+    clock_raw = b"synthetic-stage-clock"
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.outdir = self.root / "stage"
+        self.outdir.mkdir()
+        self.lease_root = self.root / "leases"
+        self.default_baseline_path = self.root / "default-baseline-is-absent.json"
+        self.baseline_path = self.root / "selected-baseline.json"
+        baseline_raw = MODULE.canonical_json({"schema": "exp098-readiness-baseline/1", "status": "ok",
+            "model_alias": "free", "expected_revision": "a" * 40})
+        self.baseline_path.write_bytes(baseline_raw)
+        self.baseline_path.chmod(0o600)
+        baseline_loader = importlib.machinery.SourceFileLoader(
+            "exp098_admission_test_baseline", str(HERE / "readiness-baseline.py.txt")).load_module()
+        self.baseline = baseline_loader.load_baseline(self.baseline_path, MODULE.sha(baseline_raw))
+        self.baseline_path_text = str(self.baseline_path)
+        self.stage_permit = MODULE._StagePermit("stage-identity", MODULE.sha(self.clock_raw),
+                                                self.baseline.sha256, self.baseline_path_text, self.outdir)
+        MODULE._PERMITS[id(self.stage_permit)] = self.stage_permit
+        MODULE._PERMIT_BASELINE_BINDINGS[id(self.stage_permit)] = (
+            self.baseline_path_text, self.baseline.sha256)
+        self.clock_check = mock.patch.object(
+            MODULE, "_check_clock_permit",
+            side_effect=lambda _out, raw, _identity, expected: (
+                {} if raw == self.clock_raw and MODULE.sha(raw) == expected
+                else (_ for _ in ()).throw(MODULE.AdmissionError("phase-clock-file-binding"))))
+        self.lease_patch = mock.patch.object(MODULE, "LEASE_ROOT", self.lease_root)
+        self.default_path_patch = mock.patch.object(MODULE, "READINESS_BASELINE_PATH", self.default_baseline_path)
+        self.clock_check.start()
+        self.lease_patch.start()
+        self.default_path_patch.start()
+
+    def tearDown(self):
+        self.clock_check.stop()
+        self.lease_patch.stop()
+        self.default_path_patch.stop()
+        MODULE._PERMITS.pop(id(self.stage_permit), None)
+        MODULE._PERMIT_BASELINE_BINDINGS.pop(id(self.stage_permit), None)
+        for key in list(MODULE._PHASES):
+            MODULE._PHASES.pop(key, None)
+            MODULE._PHASE_BASELINE_BINDINGS.pop(key, None)
+        self.temp.cleanup()
+
+    def _healthy(self):
+        state = SimpleNamespace(
+            outdir=self.outdir, bundle_root=self.root, admission=MODULE, permit=self.stage_permit,
+            clock=({}, self.clock_raw, MODULE.sha(self.clock_raw)), readiness_baseline=self.baseline,
+        )
+        calls = []
+        factory = lambda **_kwargs: _Client(_HealthyResponse(), calls)
+        with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+            receipt = asyncio.run(CONTROLLER.health_check(state, client_factory=factory))
+        return receipt, calls
+
+    def test_skip_health_cannot_acquire_a_dispatch_phase(self):
+        for phase_name in sorted(MODULE._PHASE_NAMES - {"health"}):
+            with self.subTest(phase=phase_name), self.assertRaisesRegex(
+                    MODULE.AdmissionError, "health-phase-lease-invalid"):
+                MODULE.acquire_phase(self.stage_permit, phase_name, self.outdir, self.clock_raw)
+        self.assertFalse(list(self.lease_root.glob("*.json")))
+
+    def test_caught_failed_health_cannot_acquire_a_dispatch_phase(self):
+        state = SimpleNamespace(
+            outdir=self.outdir, bundle_root=self.root, admission=MODULE, permit=self.stage_permit,
+            clock=({}, self.clock_raw, MODULE.sha(self.clock_raw)), readiness_baseline=self.baseline,
+        )
+        calls = []
+        factory = lambda **_kwargs: _Client(_HealthyResponse(revision="c" * 40), calls)
+        with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+            with self.assertRaisesRegex(ValueError, "health_revision_mismatch"):
+                asyncio.run(CONTROLLER.health_check(state, client_factory=factory))
+        self.assertEqual(calls, ["health"])
+        with self.assertRaisesRegex(MODULE.AdmissionError, "health-receipt-not-successful"):
+            MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, self.clock_raw)
+
+    def test_valid_mocked_health_receipt_unlocks_real_admission_phase(self):
+        receipt, calls = self._healthy()
+        self.assertEqual(calls, ["health"])
+        self.assertEqual(receipt["status"], "healthy")
+        phase = MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, self.clock_raw)
+        self.assertIsNone(MODULE.require_phase(phase, self.clock_raw, self.outdir))
+
+    def test_wrong_clock_is_rejected_before_health_gate_or_lease(self):
+        with self.assertRaisesRegex(MODULE.AdmissionError, "phase-clock-file-binding"):
+            MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, b"different-clock")
+        self.assertFalse(list(self.lease_root.glob("*.json")))
+
+    def test_tampered_receipt_after_phase_mint_blocks_require_phase(self):
+        self._healthy()
+        phase = MODULE.acquire_phase(self.stage_permit, "selector", self.outdir, self.clock_raw)
+        receipt_path = self.outdir / "health.json"
+        receipt = json.loads(receipt_path.read_bytes())
+        receipt["status"] = "incomplete"
+        receipt_path.write_bytes(MODULE.canonical_json(receipt))
+        with self.assertRaisesRegex(MODULE.AdmissionError, "health-receipt-not-successful"):
+            MODULE.require_phase(phase, self.clock_raw, self.outdir)
+
+    def test_changed_baseline_pin_blocks_downstream_phase(self):
+        self._healthy()
+        changed_raw = MODULE.canonical_json({"schema": "exp098-readiness-baseline/1", "status": "ok",
+            "model_alias": "free", "expected_revision": "c" * 40})
+        self.baseline_path.write_bytes(changed_raw)
+        self.baseline_path.chmod(0o600)
+        with self.assertRaisesRegex(MODULE.AdmissionError, "readiness-baseline-invalid"):
+            MODULE.acquire_phase(self.stage_permit, "answer", self.outdir, self.clock_raw)
+
+    def test_selected_override_succeeds_when_default_path_is_absent(self):
+        receipt, calls = self._healthy()
+        self.assertEqual(calls, ["health"])
+        self.assertFalse(self.default_baseline_path.exists())
+        self.assertEqual(receipt["readiness_baseline_sha256"], self.baseline.sha256)
+        phase = MODULE.acquire_phase(self.stage_permit, "answer", self.outdir, self.clock_raw)
+        self.assertIsNone(MODULE.require_phase(phase, self.clock_raw, self.outdir))
+
+    def test_mutated_override_rejects_before_one_shot_health_request(self):
+        altered = MODULE.canonical_json({"schema": "exp098-readiness-baseline/1", "status": "ok",
+            "model_alias": "free", "expected_revision": "c" * 40})
+        self.baseline_path.write_bytes(altered)
+        self.baseline_path.chmod(0o600)
+        state = SimpleNamespace(outdir=self.outdir, bundle_root=self.root, admission=MODULE,
+            permit=self.stage_permit, clock=({}, self.clock_raw, MODULE.sha(self.clock_raw)),
+            readiness_baseline=self.baseline)
+        calls = []
+        factory = lambda **_kwargs: _Client(_HealthyResponse(), calls)
+        with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+            with self.assertRaisesRegex(MODULE.AdmissionError, "readiness-baseline-invalid"):
+                asyncio.run(CONTROLLER.health_check(state, client_factory=factory))
+        self.assertEqual(calls, [])
+
+    def test_mutated_permit_path_is_rejected_before_phase_use(self):
+        self._healthy()
+        phase = MODULE.acquire_phase(self.stage_permit, "answer", self.outdir, self.clock_raw)
+        phase.readiness_baseline_path = str(self.default_baseline_path)
+        with self.assertRaisesRegex(MODULE.AdmissionError, "readiness-baseline-phase-binding"):
+            MODULE.require_phase(phase, self.clock_raw, self.outdir)
+
+    def test_mutated_stage_permit_path_is_rejected_before_health_phase(self):
+        self.stage_permit.readiness_baseline_path = str(self.default_baseline_path)
+        with self.assertRaisesRegex(MODULE.AdmissionError, "readiness-baseline-permit-binding"):
+            MODULE.acquire_phase(self.stage_permit, "health", self.outdir, self.clock_raw)
+
+    def test_mutated_health_phase_path_is_rejected_before_request(self):
+        phase = MODULE.acquire_phase(self.stage_permit, "health", self.outdir, self.clock_raw)
+        phase.readiness_baseline_path = str(self.default_baseline_path)
+        with self.assertRaisesRegex(MODULE.AdmissionError, "readiness-baseline-phase-binding"):
+            MODULE.require_phase(phase, self.clock_raw, self.outdir)
+
+    def test_live_admission_carries_selected_override_through_capability(self):
+        (self.outdir / "stage-clock.json").write_bytes(self.clock_raw)
+        protocol_sha = MODULE.sha((HERE / "protocol.json").read_bytes())
+        cohorts_sha = MODULE.sha((HERE / "cohorts.json").read_bytes())
+        proof = {"registration_sha256": "c" * 64, "qualification_sha256": "d" * 64,
+                 "input_pins_sha256": "e" * 64, "input_bundle_sha256": "f" * 64,
+                 "runtime_config_receipt_sha256": "1" * 64,
+                 "readiness_baseline_sha256": self.baseline.sha256,
+                 "protocol_sha256": protocol_sha, "cohorts_sha256": cohorts_sha,
+                 "qualified_source_revision": "a" * 40}
+        seen = []
+
+        def verify(_integrity, _qualification, _bundle, readiness_baseline_path):
+            seen.append(readiness_baseline_path)
+            MODULE._load_pinned_readiness_baseline(self.baseline.sha256, readiness_baseline_path)
+            return {**proof, "readiness_baseline_path":
+                    MODULE._normalized_readiness_baseline_path(readiness_baseline_path)}
+
+        with mock.patch.object(MODULE, "verify_closure", side_effect=verify), \
+             mock.patch.object(MODULE, "_active_clock", return_value={"stage": "development"}):
+            capability = MODULE.admit_live(self.outdir, {}, b"qualification", self.root,
+                                           readiness_baseline_path=self.baseline_path)
+        self.assertEqual(seen, [self.baseline_path])
+        self.assertEqual(capability.readiness_baseline_path, self.baseline_path_text)
+        capability.readiness_baseline_path = str(self.default_baseline_path)
+        with self.assertRaisesRegex(MODULE.AdmissionError, "readiness-baseline-capability-binding"):
+            MODULE.consume_capability(capability)
+        capability.readiness_baseline_path = self.baseline_path_text
+        permit = MODULE.consume_capability(capability)
+        self.assertEqual(permit.readiness_baseline_path, self.baseline_path_text)
+        MODULE._PERMITS.pop(id(permit), None)
+        MODULE._PERMIT_BASELINE_BINDINGS.pop(id(permit), None)
+
+    def test_tampered_completion_lease_blocks_downstream_phase(self):
+        self._healthy()
+        completion = self.outdir / "health-completion.json"
+        value = json.loads(completion.read_bytes())
+        value["status"] = "incomplete"
+        completion.write_bytes(MODULE.canonical_json(value))
+        with self.assertRaisesRegex(MODULE.AdmissionError, "health-completion-binding"):
+            MODULE.acquire_phase(self.stage_permit, "answer", self.outdir, self.clock_raw)
+
+
+class CurrentDesignAdmissionUseSiteTests(unittest.TestCase):
+    def reject_mutant(self, mutate, expected_error):
+        # Synthetic committed source view reaches the real verify_closure design
+        # guard with internally rehashed records; no clock or live calls.
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); here=root/'docs/experiments/evidence/EXP-098'
+            here.mkdir(parents=True)
+            names=['protocol.json','cohorts.json','design-contract.py.txt','source-assessor-prompt.txt']
+            for name in names: (here/name).write_bytes((HERE/name).read_bytes())
+            protocol=json.loads((here/'protocol.json').read_bytes()); mutate(protocol)
+            (here/'protocol.json').write_bytes(MODULE.canonical_json(protocol))
+            files={str((here/name).relative_to(root)):MODULE.sha((here/name).read_bytes()) for name in names}
+            reg=json.loads((HERE/'registration-integrity.json').read_bytes())
+            q=json.loads((HERE/'qualification-integrity.json').read_bytes())
+            reg['source_files']=files; reg['registered_source_revision']='a'*40
+            regraw=MODULE.canonical_json(reg)
+            q.update(files=files,qualified_source_revision='a'*40,registration_sha256=MODULE.sha(regraw))
+            qraw=MODULE.canonical_json(q)
+            integrity={'synthetic':False,'study_id':'EXP-098','qualification_sha256':MODULE.sha(qraw),'registration_sha256':MODULE.sha(regraw)}
+            with mock.patch.object(MODULE,'REPO',root), mock.patch.object(MODULE,'HERE',here), \
+                 mock.patch.object(MODULE,'_committed_design',return_value=(reg,regraw,qraw,q)), \
+                 mock.patch.object(MODULE,'_git_blob',side_effect=lambda rev,path:(root/path).read_bytes()):
+                with self.assertRaisesRegex(ValueError,expected_error):
+                    MODULE.verify_closure(integrity,qraw)
+            self.assertFalse(list(root.rglob('stage-clock.json')))
+            self.assertFalse(list(root.rglob('*.lease')))
+    def test_rehashed_stale_acquisition_rejected_before_admission(self):
+        for key,value in [('source_assessments_fresh',43),('source_assessments_carried_unchanged',5),('carried_source_assignments',5),('fresh_grader_submissions_total',75),('historical_grader_submissions_total',28),('planned_grader_submissions_total',103),('planned_all_model_submissions_total',121)]:
+            with self.subTest(key=key):
+                self.reject_mutant(lambda p:p['acquisition'].__setitem__(key,value),'protocol-acquisition-current-accounting')
+    def test_rehashed_stale_prompt_pin_rejected_before_admission(self):
+        self.reject_mutant(lambda p:p['source_citation_aliases'].__setitem__('source_prompt_sha256','0'*64),'current-source-prompt-binding')
+
+if __name__ == "__main__":
+    unittest.main()

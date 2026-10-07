@@ -1,0 +1,89 @@
+"""Offline strictness tests for the private EXP-098 readiness declaration."""
+import hashlib
+import importlib.machinery
+import json
+import os
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+MODULE = importlib.machinery.SourceFileLoader(
+    "exp098_readiness_baseline_tests", str(HERE / "readiness-baseline.py.txt")
+).load_module()
+
+
+class ReadinessBaselineTests(unittest.TestCase):
+    def _write(self, directory, raw):
+        path = Path(directory) / "baseline.json"
+        path.write_bytes(raw)
+        os.chmod(path, 0o600)
+        return path, hashlib.sha256(raw).hexdigest()
+
+    def test_exact_private_shape_accepts_pinned_synthetic_baseline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = json.dumps({"schema": MODULE.SCHEMA, "status": "ok",
+                              "model_alias": "free", "expected_revision": "a" * 40},
+                             sort_keys=True, separators=(",", ":")).encode()
+            path, digest = self._write(tmp, raw)
+            baseline = MODULE.load_baseline(path, digest)
+            self.assertEqual(baseline.model_alias, "free")
+            self.assertEqual(baseline.expected_revision, "a" * 40)
+            self.assertEqual(baseline.sha256, digest)
+
+    def test_missing_malformed_extra_duplicate_and_wrong_hash_fail_closed(self):
+        cases = [
+            b"{",
+            b'{"schema":"exp098-readiness-baseline/1","schema":"exp098-readiness-baseline/1","status":"ok","model_alias":"free","expected_revision":"' + b"a" * 40 + b'"}',
+            json.dumps({"schema": MODULE.SCHEMA, "status": "ok", "model_alias": "free",
+                        "expected_revision": "a" * 40, "extra": 1}).encode(),
+            json.dumps({"schema": MODULE.SCHEMA, "status": "ok", "model_alias": "free",
+                        "expected_revision": "a" * 40}).replace("free", "other").encode(),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            absent = Path(tmp) / "absent.json"
+            with self.assertRaises(MODULE.ReadinessBaselineError):
+                MODULE.load_baseline(absent, "b" * 64)
+            for raw in cases:
+                path, digest = self._write(tmp, raw)
+                with self.assertRaises(MODULE.ReadinessBaselineError):
+                    MODULE.load_baseline(path, digest)
+            path, digest = self._write(tmp, json.dumps({"schema": MODULE.SCHEMA, "status": "ok",
+                "model_alias": "free", "expected_revision": "a" * 40}).encode())
+            with self.assertRaisesRegex(MODULE.ReadinessBaselineError, "pin-mismatch"):
+                MODULE.load_baseline(path, "c" * 64)
+
+    def test_wrong_runtime_status_or_identity_is_rejected(self):
+        for key, value in (("status", "unavailable"), ("model_alias", "other"),
+                           ("expected_revision", True), ("expected_revision", "not-a-revision")):
+            with self.subTest(key=key, value=value), tempfile.TemporaryDirectory() as tmp:
+                item = {"schema": MODULE.SCHEMA, "status": "ok", "model_alias": "free",
+                        "expected_revision": "a" * 40}
+                item[key] = value
+                raw = json.dumps(item).encode()
+                path, digest = self._write(tmp, raw)
+                with self.assertRaises(MODULE.ReadinessBaselineError):
+                    MODULE.load_baseline(path, digest)
+
+    def test_nonprivate_baseline_permissions_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = json.dumps({"schema": MODULE.SCHEMA, "status": "ok", "model_alias": "free",
+                              "expected_revision": "a" * 40}).encode()
+            path, digest = self._write(tmp, raw)
+            os.chmod(path, 0o644)
+            with self.assertRaisesRegex(MODULE.ReadinessBaselineError, "permissions"):
+                MODULE.load_baseline(path, digest)
+
+    def test_baseline_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = json.dumps({"schema": MODULE.SCHEMA, "status": "ok", "model_alias": "free",
+                              "expected_revision": "a" * 40}).encode()
+            path, digest = self._write(tmp, raw)
+            alias = Path(tmp) / "alias.json"
+            alias.symlink_to(path)
+            with self.assertRaises(MODULE.ReadinessBaselineError):
+                MODULE.load_baseline(alias, digest)
+
+
+if __name__ == "__main__":
+    unittest.main()
