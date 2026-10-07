@@ -1,0 +1,46 @@
+{
+  "actor_binding_tests": {
+    "coverage": [
+      "unique_exact_session_metadata",
+      "fixed_parent_path_depth",
+      "slot_clock_match",
+      "correct_model_reservation",
+      "immutable_slot_binding",
+      "one_actor_per_slot",
+      "durable_receipt_tamper_rejected",
+      "missing_or_ambiguous_identity_rejected",
+      "observed_metadata_required_at_bind",
+      "fixed_real_root_and_finite_clock_dates",
+      "exact_dispatch_slot_and_fields",
+      "reservation_hash_pinned_at_dispatch",
+      "actual_metadata_rechecked_at_consumption"
+    ],
+    "failed": 0,
+    "passed": 13
+  },
+  "adoption_eligible": false,
+  "external_calls": 0,
+  "independent_review_scope": "Actor binding and source dispatcher mechanics only; answer dispatcher and scientific quality remain unqualified.",
+  "quality_analysis_performed": false,
+  "schema": "exp095-private-dispatch-preflight/2",
+  "scientific_grades_generated": 0,
+  "source_driver_preflight": {
+    "carried_redispatch_attempts_rejected": 5,
+    "carried_results_seeded": 5,
+    "first_fresh_original_slot": 6,
+    "invalid_indices_and_skipped_next_slot_rejected": true,
+    "phase_authority": "synthetic_offline_only",
+    "private_driver_source_pins_required": true,
+    "real_frozen_inputs": true,
+    "registered_source_slots": 48,
+    "unbound_final_rejected_before_validation": true
+  },
+  "source_pins": {
+    "actor_binding": "046cf24f7baac9c823fa1d41f38f6bad37c087139244de568313b9beb53b4973",
+    "actor_binding_tests": "083e30a7099640566d778d3ab21b953fd5ef481f05755077d8e100485ddc5f5b",
+    "source_driver": "51dcc23180d640936b7bb73af6bd8b5b8dc3b0f58f0128d0b5aee385f7dc264d",
+    "source_driver_preflight": "b515ef6dc4c4dfadb92afa272d6d7f6166b1eea99f9b1995ed8baa9a7e498030"
+  },
+  "status": "offline_passed_independent_review_passed",
+  "supersedes_sha256": "f3cfbdde1638ac85de8692863af8cc37bd5e1c385bf125199e830e346f20b7df"
+}
