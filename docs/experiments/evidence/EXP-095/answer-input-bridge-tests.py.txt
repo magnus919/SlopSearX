@@ -1,0 +1,66 @@
+"""Offline answer-input assembly invariants; synthetic source rows carry no judgments."""
+import hashlib
+import importlib.machinery
+import inspect
+import json
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+B = importlib.machinery.SourceFileLoader(
+    "exp095_answer_input_bridge_tests", str(HERE / "answer-input-bridge.py.txt")).load_module()
+
+
+def _fixture():
+    cases, pools, source_map, captures, orders = [], {}, {}, {}, {}
+    for task_num in range(1, 9):
+        task_id = f"d{task_num}"
+        cases.append({"id": task_id, "kind": "research", "query": "synthetic query",
+            "purpose": "synthetic context projection", "critical_checks": [
+                {"id": f"{task_id}_f1", "check": "Synthetic fixture only."}]})
+        cards, mapping = [], {}
+        for index in range(10):
+            card_id = f"{task_id}-card-{index:02d}"
+            source_index = 0 if index == 1 else index
+            source_id = "u" + hashlib.sha256(f"{task_id}:{source_index}".encode()).hexdigest()
+            cards.append({"id": card_id})
+            mapping[card_id] = source_id
+            captures[source_id] = ({"source_id": source_id, "state": "success",
+                "context": f"Synthetic captured context {task_id}:{source_index}."}
+                if source_index < 7 else {"source_id": source_id, "state": "failed"})
+        pools[task_id] = {"cards": cards}
+        source_map[task_id] = mapping
+        orders[task_id] = {"w0": [row["id"] for row in cards],
+                           "candidate": [row["id"] for row in cards]}
+    acquisition = {"pools": pools, "source_id_by_card_id": source_map}
+    proof = {key: "a" * 64 for key in ("phase_sha256", "capture_sha256", "receipts_sha256", "binding_sha256")}
+    proof["source_count"] = len(captures)
+    return acquisition, cases, captures, proof, orders
+
+
+class AnswerInputBridgeTests(unittest.TestCase):
+    def test_fixed_orders_preserve_openings_and_answerer_bytes_ignore_grades(self):
+        acquisition, cases, captures, proof, orders = _fixture()
+        signature = inspect.signature(B.build_answerer_assignments)
+        self.assertNotIn("source_assessments", signature.parameters)
+        first = B.build_answerer_assignments(acquisition=acquisition, cases=cases,
+            source_rows=captures, capture_proof=proof, fixed_orders=orders)
+        # A deliberately changed synthetic grader object is outside this API boundary.
+        _untrusted_source_judgments = {"d1": {"R1": {"disposition": "changed"}}}
+        second = B.build_answerer_assignments(acquisition=acquisition, cases=cases,
+            source_rows=captures, capture_proof=proof, fixed_orders=orders)
+        self.assertEqual(B._canonical(first["answerer_input_manifest"]),
+                         B._canonical(second["answerer_input_manifest"]))
+        self.assertEqual(len(first["assignments"]), 16)
+        for task_num in range(1, 9):
+            task_id = f"d{task_num}"
+            for arm in ("w0", "candidate"):
+                projection = first["projections"][(task_id, arm)]
+                self.assertEqual(len(projection["opening_outcomes"]), 10)
+                self.assertEqual(len(projection["delivered_sources"]), 5)
+                self.assertEqual(projection["opening_outcomes"][1]["state"], "duplicate")
+                self.assertTrue(any(row["state"] == "failed" for row in projection["opening_outcomes"]))
+
+
+if __name__ == "__main__":
+    unittest.main()
