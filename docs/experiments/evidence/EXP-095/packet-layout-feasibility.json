@@ -1,0 +1,38 @@
+{
+  "generic_sharing": {
+    "adopted": false,
+    "exact_original_byte_reconstructions": 32,
+    "fit": 20,
+    "maximum_delivered_bytes": 400153,
+    "private_proof_sha256": "aeeb392aea48559f069cc21324fa70f14e5c1ff168a3e1d26b3d487b05e26139",
+    "slots": 32
+  },
+  "grouped_literal_evidence_catalog": {
+    "adopted": false,
+    "cap_headroom_bytes": 3699,
+    "exact_canonical_inverses": 32,
+    "fit": 32,
+    "maximum_delivered_bytes": 380301,
+    "original_input_view_plan_unmodified": true,
+    "private_proof_sha256": "d9140623ba9f4e08223c745095e5bd61356141f9bde681a725a2e96a6fa65f13",
+    "prototype_sha256": "59bd9986e8db5ce95a905019af42109715defeea73def5aeacbd080e631af0da",
+    "slots": 32
+  },
+  "limitations": [
+    "Replay combines five actual carried source assessments with synthetic fresh assessments; it is not a scientific quality result.",
+    "Replay size does not guarantee every future legal assessment fits. Runtime cap enforcement must reject oversize inputs without truncation or retry.",
+    "The prototype needs strict schema, hash and duplicate validation, independent review, and prospective registration before dispatch.",
+    "EXP-095 representation is unchanged and remains unadmitted."
+  ],
+  "original_layout": {
+    "actual_carried_d1_r1_raw_bytes": 505412,
+    "cap_bytes": 384000,
+    "fit": 0,
+    "maximum_delivered_bytes": 1470050,
+    "slots": 32
+  },
+  "real_provider_or_assessor_calls": 0,
+  "schema": "exp095-packet-layout-feasibility/1",
+  "scientific_quality_analysis": false,
+  "status": "unadmitted_preflight_only"
+}
