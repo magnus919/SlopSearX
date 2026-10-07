@@ -146,10 +146,10 @@
   },
   "fresh_stage_scope": {
     "EXP_084_stage_clock_credit_seconds": 0,
-    "covers": "fresh runtime health validation, immutable checkpoint verification, carried assignment binding, 43 fresh source references, unchanged selector/answer generation, 32 fresh answer assessments, raw verification and analysis only after complete valid references",
+    "covers": "New admitted runtime health, immutable checkpoint verification, all 23 original reference bindings, 25 fresh source references, unchanged selector/answer generation, 32 fresh answer assessments, complete verification and analysis only after valid reference closure.",
     "covers_seconds": 28800,
     "historical_input_time_credit_seconds": 0,
-    "reuse_does_not_reset_or_extend_clock": "Only the newly admitted EXP-097 stage receives a clock; all prior work receives zero time credit.",
+    "reuse_does_not_reset_or_extend_clock": "Only a separately qualified and admitted EXP-098 stage may receive a new clock. All historical work receives zero time credit. This prototype remains unqualified.",
     "starts_before": "the one health check and first fresh source assessment after new admission"
   },
   "grading_order": [
@@ -217,15 +217,15 @@
         "answer_assessment"
       ]
     },
-    "card_and_source_and_answer_assessors": "The sixteen fully validated EXP-088 card assignments are carried unchanged and never dispatched. Fresh source and answer assessors use independent GPT-6.1 Sol tasks. EXP-084 grader outputs and all prior source/answer grader outputs are not reused.",
+    "card_and_source_and_answer_assessors": "Sixteen validated EXP-088 card assignments and all 23 validated source assignments are retained unchanged after mechanical qualification. All remaining 25 source and 32 answer assessors use GPT-6.1 Sol. The rejected EXP-097 response is retained as failed evidence and never used as a reference.",
     "carried_card_assessments": 16,
     "concurrency_assessments_maximum": 2,
-    "cumulative_development_grader_call_accounting": "Twenty-eight historical submissions plus 75 fresh assessments yield 103 of 112; no refund or reclassification.",
+    "cumulative_development_grader_call_accounting": "47 historical submissions plus 57 fresh assessments yield 104 of 112; failed submissions remain charged.",
     "free_answer_calls_maximum": 18,
-    "fresh_source_and_answer_assessments": 75,
+    "fresh_source_and_answer_assessments": 57,
     "health_model": "free",
-    "historical_grader_submission_accounting_detail": "Twenty-eight prior development grader submissions remain charged, including the six attempts in terminal EXP-094 (five valid source assignments, one rejected spawn with no task). Five valid source assignments are immutable carried references, not regraded calls. Seventy-five fresh Sol assessments (43 source plus 32 answer) produce 103 charged grader submissions of 112. Eighteen answer API calls bring planned total model submissions to 121, below the unchanged 130 ceiling. Failed calls are never refunded.",
-    "historical_grader_submissions_counted": 28,
+    "historical_grader_submission_accounting_detail": "28 prior submissions plus 19 terminal EXP-097 fresh source submissions remain charged, including its rejected nineteenth assessment. Carry all 23 mechanically validated assignments unchanged: five historical plus 18 accepted EXP-097 assignments. Complete 25 fresh source and 32 fresh answer assessments; 104 total charged graders. Eighteen answer API calls yield 122 total model submissions, below the unchanged 130 ceiling. No refunds.",
+    "historical_grader_submissions_counted": 47,
     "input_bytes_per_submission": 384000,
     "jev_calls_maximum": 44,
     "maximum_answer_api_calls_per_stage": 18,
@@ -234,18 +234,18 @@
     "output_bytes_per_submission": 2000000,
     "reported_usage": "retain where exposed; in-app grader billing/tokens may be unobservable, never invent them",
     "retries": 0,
-    "source_assessment_calls_expected": 43,
+    "source_assessment_calls_expected": 25,
     "source_assessment_chunk_sources": 20,
-    "source_assessments_fresh": 43,
+    "source_assessments_fresh": 25,
     "source_chunks_complete_inventory_required": true,
-    "source_assessments_carried_unchanged": 5,
-    "carried_source_assignments": 5,
+    "source_assessments_carried_unchanged": 23,
+    "carried_source_assignments": 23,
     "maximum_total_logical_model_submissions_with_historical": 130,
-    "purpose": "Prospective continuation after EXP-094 expired with five valid source assessments. Carry all five original assignments as immutable, input-bound references and complete the remaining 43 source and 32 answer assessments fresh with GPT-6.1 Sol. No carried response is selected by judgment, repaired, regraded, or quality-analyzed. Frozen candidate, prompts, rubrics, evidence-code transport, data, acceptance gates, limits, and free answerer remain fixed.",
-    "planned_total_logical_model_submissions_including_historical": 121,
-    "planned_fresh_grader_submissions": 75,
+    "purpose": "Prospective citation-contract clarification after terminal EXP-097. Retain every accepted assignment only through strict provenance replay. Explicitly encode the unchanged evidence_available citation rule; never repair or regrade accepted outputs, score partial references, or weaken semantic acceptance. This prototype grants no live authority.",
+    "planned_total_logical_model_submissions_including_historical": 122,
+    "planned_fresh_grader_submissions": 57,
     "planned_fresh_answer_api_calls": 18,
-    "fresh_source_assessments": 43,
+    "fresh_source_assessments": 25,
     "fresh_answer_assessments": 32,
     "answer_output_manifest_schema": "exp095-answer-output-manifest/1",
     "carried_source_reference_calls": 0,
@@ -267,7 +267,7 @@
       "answer-assessment",
       "analysis"
     ],
-    "source-reference": "Freeze all 48 encoded source slots; retain five exact carried assignments and dispatch only the remaining 43 fresh assessments. Exact raw final capture and page transcript verification precede inverse decoding and unchanged validation."
+    "source-reference": "Freeze all 48 encoded slots; bind all 23 original accepted references by scientific context, original lineage and task codebook; dispatch only 25 fresh assessments. Original raw finals, transcript proof and unchanged semantic validation remain mandatory."
   },
   "predecessor": "EXP-097 terminal reference-incomplete",
   "historical_predecessor": {
@@ -346,12 +346,12 @@
   "recovery_runtime": {
     "candidate_identity_unchanged": true,
     "file_or_deployment_edits": false,
-    "health": "One read-only health request after new EXP-097 admission; validate the current runtime only against the separately pinned private EXP-097 readiness baseline; no retries.",
-    "health_request": "One post-admission health request after new EXP-097 admission; accept only HTTP 200, status ok, runtime.model equal to the private baseline model alias, and runtime.revision equal to the private baseline revision. The EXP-084 health identity remains part of the immutable captured corpus and is never used as the current-runtime baseline. Missing, malformed, mismatched, or unpinned baseline fails before clock creation and before HTTP. No retry or source/model activity follows failure.",
+    "health": "One read-only health request after new EXP-098 admission; validate the current runtime only against the separately pinned private EXP-098 readiness baseline; no retries.",
+    "health_request": "One post-admission health request after new EXP-098 admission; accept only HTTP 200, status ok, runtime.model equal to the private baseline model alias, and runtime.revision equal to the private baseline revision. The EXP-084 health identity remains part of the immutable captured corpus and is never used as the current-runtime baseline. Missing, malformed, mismatched, or unpinned baseline fails before clock creation and before HTTP. No retry or source/model activity follows failure.",
     "health_requests_maximum_per_stage": 1,
     "model_identity_unchanged": true,
     "private_binding": "Root-owned private salted configuration receipt binds the exact per-process runtime config. Never place URL, key, user profile, or raw config values in public protocol, source, logs, or receipts.",
-    "purpose": "The preserved EXP-096 source-assessment model-facing packet uses its existing fixed-width code mapping, and answer-assessor inputs use the declared EXP-096 lossless grouped evidence table and canonical compact JSON. Source wire bytes, source text, task data, non-reference identifiers, field/list/catalog ordering after exact inverse, answer rubric, candidate and acceptance criteria stay fixed.",
+    "purpose": "Use the frozen source contexts, task identities and citation mapping. Change only the declared source-assessor instruction/output-schema clarification. Preserve candidate, answerer, answer rubrics, context projection and quality gates. No source or runtime mutation follows from this prototype.",
     "runtime_config_receipt_sha256": "9b235c28265bfd6ef3968d128564f593655d7a914cb618079146b267cf2ec980"
   },
   "schema": "exp098-protocol/1",
@@ -462,9 +462,17 @@
     "preparation_failure": "Packet construction is a one-shot fail-closed operation. The existing 384000-byte cap is checked per full serialized input. Any exception, failed inverse, missing slot, or over-cap delivery terminates preparation; already written partial artifacts are retained for diagnosis, are not eligible for admission or dispatch, and must not be cleaned, retried, or treated as a fresh attempt."
   },
   "preflight_requirements": {
-    "all_48_source_bindings": "Generate and verify 48 strict current source packet bindings before fresh dispatch; all five carried slots must match exact input and task-table identities.",
+    "all_48_source_bindings": "Generate all 48 current source bindings. Verify all 23 carried grades against original raw transcripts, source lineage, task/codebook identities and complete scientific context fingerprints. Only prompt and output-schema instructions may change under the declared citation-contract clarification.",
     "answerer_inputs": "Use only the guarded selector artifact and its frozen base-variant top-10 orders, together with actual frozen capture contexts; generate exactly 16 source-limited answerer inputs and retain full source universes and opening outcomes.",
     "answer_assessor_inputs": "For all eight tasks and two assessors, construct both arm packets using actual answer outputs and the same-assessor closed source references; encode only the answer-assessor view with the strict EXP-096 grouped evidence table, exact-invert to the canonical original coded packet, then serialize canonical JSON and assert all 32 rendered viewer deliveries including framing and reserve fit 384000 bytes without truncation.",
     "offline_replay": "Replay synthetic orders and answers through actual frozen capture contexts, source projection, answerer validation, frozen answer claim/template constructors, fixed codebook encoding/inversion, and exact packet viewer. Include duplicate/failure/success limits, citation inversions and poisoned-hash rejection. No semantic quality analysis."
+  },
+  "live_authority": {
+    "qualified": false,
+    "registered": false,
+    "admitted": false,
+    "calls_permitted": false,
+    "carry_gate": "stopped_pending_explicit_reentry",
+    "remaining_blocker": "Execute historical validators only from the verified source bytes."
   }
 }
