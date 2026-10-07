@@ -1,13 +1,14 @@
 # Copy to .github/workflows only after reviewing the pinned reusable workflow,
 # target-repository policy, and secret exposure. This template is inert as saved.
-name: SlopSearX protected PR review analysis
+name: PR Review Analysis
 
 on:
   pull_request_target:
     branches:
-      - main # Verified target default branch at preparation time.
+      - main
     types:
       - opened
+      - ready_for_review
       - reopened
       - synchronize
 
@@ -25,7 +26,7 @@ jobs:
   analyze:
     # Deliberate hard stop. Remove only in a separately reviewed target-repo change.
     if: false
-    uses: groktopus/codereview/.github/workflows/pr-analysis.yml@7eaddf7c549c8060045578bc1702e394a35dfa2d
+    uses: groktopus/codereview/.github/workflows/pr-analysis.yml@6f67aeabb812e6992bd868280698cf1031a75e46
     permissions:
       contents: read
       checks: read
@@ -33,7 +34,7 @@ jobs:
       actions: read
     with:
       harness_repository: groktopus/codereview
-      harness_sha: 7eaddf7c549c8060045578bc1702e394a35dfa2d
+      harness_sha: 6f67aeabb812e6992bd868280698cf1031a75e46
       target_repository: ${{ github.repository }}
       pull_request_number: ${{ github.event.pull_request.number }}
       base_ref: ${{ github.event.pull_request.base.ref }}
