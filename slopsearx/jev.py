@@ -29,6 +29,10 @@ BROAD_SUPPORT_ENGINES = frozenset({"wikipedia", "stackexchange", "reddit", "hack
 # Production routing cards are deliberately concise. Every registered engine
 # must have a role; every specialist must have a purpose and use_when string.
 ROUTING_CARDS: dict[str, dict[str, str]] = {
+    "europepmc": {
+        "purpose": "biomedical publication and preprint metadata",
+        "use_when": "the query seeks biomedical literature including preprints beyond PubMed",
+    },
     "abuseipdb": {
         "purpose": "IP reputation and abuse reports",
         "use_when": "an IP address or abuse reputation is central",

@@ -223,7 +223,7 @@ for requests from hosted-service IP ranges. Set `ENGINE_REDDIT_API_KEY` to an
 approved OAuth bearer token to use the documented `oauth.reddit.com` API path;
 the adapter does not fall back to browser automation or scraping.
 
-## Built-In Adapters (50)
+## Built-In Adapters (51)
 
 ### General / Web
 
@@ -267,6 +267,7 @@ the adapter does not fall back to browser automation or scraping.
 | ClinicalTrials.gov | `engines/clinicaltrials.py` | api | general, medical, health, science | None |
 | openFDA | `engines/openfda.py` | api | general, medical, health, science, government | None |
 | PubChem | `engines/pubchem.py` | api | general, science, reference, chemistry, medical | None |
+| Europe PMC (EMBL-EBI) | `engines/europepmc.py` | api | science, reference, medical, health | None; opt-in |
 | PubMed | `engines/pubmed.py` | api | general, science, reference, medical, health | None |
 
 ### Security / Threat Intelligence
@@ -327,7 +328,7 @@ the adapter does not fall back to browser automation or scraping.
 
 See `slopsearx/adapter.py` for the base classes (`EngineAdapter`, `ScrapeAdapter`) and the registry functions (`register_engine`, `discover_engines`).
 
-> **Engine count (50).** This table is maintained to match the live adapter
+> **Engine count (51).** This table is maintained to match the live adapter
 > registry. Adding or removing an engine file requires updating this table and
 > the `Engines` table in `README.md`. The MCP capability catalog
 > (`slopsearx_list_capabilities`, `slopsearx://capabilities`) is generated from
