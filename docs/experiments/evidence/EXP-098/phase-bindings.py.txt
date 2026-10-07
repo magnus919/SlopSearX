@@ -28,13 +28,13 @@ ANSWERER_PROMPT_SHA256 = "6b32ce442150ee69531ed5f440619b616ed08187d89dac7d756aca
 ANSWER_ASSESSOR_PROMPT_PATH = HERE / "answer-assessor-prompt.txt"
 ANSWER_ASSESSOR_PROMPT_SHA256 = "58522f899b391a1cc8e472b583f0e46d42766661eda2fafad7b15018bd4f4222"
 SOURCE_PROMPT_PATH = HERE / "source-assessor-prompt.txt"
-SOURCE_PROMPT_SHA256 = "9d1ab655cd88512d8347d3b3fa158d808f8d9e6295264fdd51083c1a7d2b3544"
+SOURCE_PROMPT_SHA256 = "d31ecee90065a3b641686c6884d7c9040f6488c1d798c63eed4ea62ea713c786"
 SOURCE_VIEW_INSTRUCTIONS_PATH = HERE / "source-viewer-instructions.txt"
 SOURCE_VIEW_INSTRUCTIONS_SHA256 = "62c776d0adaecea41e66e75acc63119b99ca43533e1f3012900e60c5c644b3d0"
 CITATION_CODEC_PATH = HERE / "citation-codec.py.txt"
 CITATION_CODEC_SHA256 = "2886c7cc2bd6f4faa1397f663a26fdb98b0a9996dfe5a3ffdb4ed85c5e3f12f2"
 ANSWER_VIEW_INSTRUCTIONS_PATH = HERE / "answer-viewer-instructions.txt"
-ANSWER_VIEW_INSTRUCTIONS_SHA256 = "6033a9a592db7f215a4989a4ccdd2a374c2f74069b09a0f3115e28d50e6eb38f"
+ANSWER_VIEW_INSTRUCTIONS_SHA256 = "634dcd8cc4ddc404a8df0f5fc874e7abeaa4ff072b3d72ce54842ad6afecc8b5"
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
@@ -291,8 +291,11 @@ def load_task_tables(*, source_slot_manifest: dict, preparation_root: Path) -> d
         wire_model = wire_packet.get("source_model_input") if type(wire_packet) is dict else None
         restored_model = codec.rewrite_grouped_rows(wire_model, ("sources",), "source_id",
             (("passages", "*", "evidence_id"),), table, decode=True, restore_alias=True)
-        if restored_model != original_model:
-            raise ValueError("exp095-codebook-wire-input-binding")
+        contract = _load("exp098_wire_citation_contract", HERE / "citation-contract.py.txt")
+        expected_model = json.loads(json.dumps(original_model))
+        expected_model["output_schema"] = contract.source_schema(expected_model["output_schema"])
+        if restored_model != expected_model:
+            raise ValueError("exp098-codebook-wire-input-binding")
     if any(len(values) != 6 for values in observed_by_task.values()):
         raise ValueError("exp095-codebook-six-slot-binding")
     return result
