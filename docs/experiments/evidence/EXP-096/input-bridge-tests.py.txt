@@ -157,7 +157,7 @@ def fixture(tmp):
         rows.append({"path": rel, "bytes": len(raw), "sha256": sha(raw)})
     card_rows = [r for r in rows if r["path"].startswith("exp088-card-reference/")]
     assert len(rows) == B.EXPECTED_TOTAL_FILES and len(card_rows) == B.EXPECTED_CARD_FILES
-    pins = {"schema": "exp095-reused-input-pins/1", "study_id": "EXP-095",
+    pins = {"schema": "exp096-reused-input-pins/1", "study_id": "EXP-096",
             "status": "registered_input_provenance",
             "file_count": len(rows), "total_bytes": sum(r["bytes"] for r in rows),
             "base_file_count": B.EXPECTED_BASE_FILES, "carry_forward_card_file_count": len(card_rows),
@@ -183,7 +183,7 @@ class InputBridgeTests(unittest.TestCase):
             clock = {"schema": "exp078-stage-clock/1", "stage": "development", "new_fixture": True}
             rebased = B.prepare_reused_inputs(root, stage_clock=clock,
                 stage_clock_digest=sha(B.canonical_json(clock)), pins_path=pins)
-            self.assertEqual(rebased["schema"], "exp095-reused-inputs/1")
+            self.assertEqual(rebased["schema"], "exp096-reused-inputs/1")
             self.assertEqual(rebased["effective_acquisition"]["pools"],
                              B.strict_json((root / "original/effective-acquisition.json").read_bytes())["pools"])
             self.assertEqual(rebased["effective_acquisition"]["acquisition_receipt"]["stage_clock_digest"],

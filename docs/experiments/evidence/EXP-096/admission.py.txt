@@ -1,4 +1,4 @@
-"""EXP-095 source-bound stage clock and one-shot live admission.
+"""EXP-096 source-bound stage clock and one-shot live admission.
 
 No provider, model, search or credential I/O is performed here. A successful
 admission yields one opaque in-process permit only after committed source,
@@ -20,10 +20,10 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[3]
-REG_PATH = "docs/experiments/evidence/EXP-095/registration-integrity.json"
-QUAL_PATH = "docs/experiments/evidence/EXP-095/qualification-integrity.json"
+REG_PATH = "docs/experiments/evidence/EXP-096/registration-integrity.json"
+QUAL_PATH = "docs/experiments/evidence/EXP-096/qualification-integrity.json"
 MANIFEST_PATH = HERE / "stage-development-manifest.json"
-LEASE_ROOT = Path.home() / ".local" / "state" / "exp095" / "leases"
+LEASE_ROOT = Path.home() / ".local" / "state" / "exp096" / "leases"
 _DURATION = 8 * 60 * 60
 _CAP_SENTINEL = object()
 _PERMIT_SENTINEL = object()
@@ -88,8 +88,9 @@ def load_registration() -> dict:
         raise AdmissionError("registration-missing")
     raw = path.read_bytes()
     obj = strict_json(raw)
-    if (type(obj) is not dict or obj.get("schema") != "exp095-registration/1"
-            or obj.get("study_id") != "EXP-095" or obj.get("status") != "registered"):
+    if (type(obj) is not dict or obj.get("schema") != "exp096-registration/1"
+            or obj.get("study_id") != "EXP-096" or obj.get("status") != "registered"
+            or obj.get("registered") is not True):
         raise AdmissionError("registration-schema")
     return obj
 
@@ -136,8 +137,9 @@ def _committed_design() -> tuple[dict, bytes, bytes, bytes]:
     if _git_blob("HEAD", REG_PATH) != registration_bytes:
         raise AdmissionError("registration-not-committed-head")
     registration = strict_json(registration_bytes)
-    if (registration.get("schema") != "exp095-registration/1"
-            or registration.get("study_id") != "EXP-095" or registration.get("status") != "registered"):
+    if (registration.get("schema") != "exp096-registration/1"
+            or registration.get("study_id") != "EXP-096" or registration.get("status") != "registered"
+            or registration.get("registered") is not True):
         raise AdmissionError("registration-schema")
     qpath = REPO / QUAL_PATH
     if qpath.is_symlink() or not qpath.is_file():
@@ -145,7 +147,12 @@ def _committed_design() -> tuple[dict, bytes, bytes, bytes]:
     qraw = qpath.read_bytes()
     if _git_blob("HEAD", QUAL_PATH) != qraw:
         raise AdmissionError("qualification-not-committed-head")
-    return registration, registration_bytes, qraw, strict_json(qraw)
+    qualification = strict_json(qraw)
+    if (type(qualification) is not dict or qualification.get("schema") != "exp096-qualification/1"
+            or qualification.get("study_id") != "EXP-096" or qualification.get("qualified") is not True
+            or qualification.get("status") != "qualified"):
+        raise AdmissionError("qualification-schema")
+    return registration, registration_bytes, qraw, qualification
 
 
 def verify_closure(source_integrity: dict, qualification_bytes: bytes,
@@ -158,9 +165,9 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
         raise AdmissionError("qualification-not-committed-head")
     qualification = strict_json(qualification_bytes)
     qsha = sha(qualification_bytes)
-    if (qualification.get("schema") != "exp095-qualification/1"
-            or qualification.get("study_id") != "EXP-095"
-            or source_integrity.get("study_id") != "EXP-095"
+    if (qualification.get("schema") != "exp096-qualification/1"
+            or qualification.get("study_id") != "EXP-096"
+            or source_integrity.get("study_id") != "EXP-096"
             or qualification.get("qualified") is not True
             or source_integrity.get("qualification_sha256") != qsha
             or source_integrity.get("registration_sha256") != sha(registration_bytes)
@@ -168,7 +175,7 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
         raise AdmissionError("qualification-binding")
     revision = qualification.get("qualified_source_revision")
     sources = registration.get("source_files")
-    if (registration.get("study_id") != "EXP-095"
+    if (registration.get("study_id") != "EXP-096"
             or not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision)
             or registration.get("registered_source_revision") != revision
             or qualification.get("files") != sources or type(sources) is not dict or not sources):
@@ -199,12 +206,21 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
         raise AdmissionError("dependency-version-mismatch")
     protocol_sha = sha((HERE / "protocol.json").read_bytes())
     cohorts_sha = sha((HERE / "cohorts.json").read_bytes())
-    pins_sha = sha((HERE / "reuse-input-pins.json").read_bytes())
+    pins_path = HERE / "reuse-input-pins.json"
+    if pins_path.is_symlink() or not pins_path.is_file():
+        raise AdmissionError("input-pins-missing")
+    pins_raw = pins_path.read_bytes()
+    pins_sha = sha(pins_raw)
     manifest_raw = (HERE / "stage-development-manifest.json").read_bytes()
     manifest_obj = strict_json(manifest_raw)
-    pins_obj = strict_json((HERE / "reuse-input-pins.json").read_bytes())
+    pins_obj = strict_json(pins_raw)
+    if (type(pins_obj) is not dict or pins_obj.get("schema") != "exp096-reused-input-pins/1"
+            or pins_obj.get("study_id") != "EXP-096" or pins_obj.get("file_count") != 513
+            or type(pins_obj.get("files")) is not list or len(pins_obj["files"]) != 513):
+        raise AdmissionError("input-pins-schema")
     config_pin = pins_obj.get("runtime_config_receipt_sha256")
-    if (manifest_obj.get("study_id") != "EXP-095"
+    if (manifest_obj.get("schema") != "exp096-stage-manifest/1"
+            or manifest_obj.get("study_id") != "EXP-096"
             or manifest_obj.get("source_files") != sources
             or manifest_obj.get("input_pins_sha256") != pins_sha
             or manifest_obj.get("input_bundle_sha256") != qualification.get("input_bundle_sha256")
@@ -229,7 +245,7 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
         from importlib.machinery import SourceFileLoader
         from importlib.util import module_from_spec, spec_from_loader
         bridge_path = HERE / "input-bridge.py.txt"
-        loader = SourceFileLoader("exp095_admission_input_bridge", str(bridge_path))
+        loader = SourceFileLoader("exp096_admission_input_bridge", str(bridge_path))
         spec = spec_from_loader(loader.name, loader)
         bridge = module_from_spec(spec)
         loader.exec_module(bridge)
@@ -240,7 +256,7 @@ def verify_closure(source_integrity: dict, qualification_bytes: bytes,
                 or qualification.get("input_bundle_sha256") != input_result["input_bundle_sha256"]
                 or qualification.get("runtime_config_receipt_sha256") != input_result["runtime_config_receipt_sha256"]):
             raise AdmissionError("input-pins-binding")
-    return {"study_id": "EXP-095", "registration_sha256": sha(registration_bytes), "qualification_sha256": qsha,
+    return {"study_id": "EXP-096", "registration_sha256": sha(registration_bytes), "qualification_sha256": qsha,
             "qualified_source_revision": revision, "protocol_sha256": protocol_sha,
             "cohorts_sha256": cohorts_sha, "input_pins_sha256": pins_sha,
             "input_bundle_sha256": input_result["input_bundle_sha256"] if input_result else None,
@@ -259,14 +275,22 @@ def create_stage_clock(outdir: Path, source_revision: str) -> tuple[dict, bytes,
     if _git_blob("HEAD", str(MANIFEST_PATH.relative_to(REPO))) != manifest_raw:
         raise AdmissionError("stage-manifest-not-committed")
     manifest = strict_json(manifest_raw)
+    pins_raw = (HERE / "reuse-input-pins.json").read_bytes()
+    pins = strict_json(pins_raw)
+    if (type(pins) is not dict or pins.get("schema") != "exp096-reused-input-pins/1"
+            or pins.get("study_id") != "EXP-096" or pins.get("file_count") != 513
+            or type(pins.get("files")) is not list or len(pins["files"]) != 513
+            or manifest.get("input_pins_sha256") != sha(pins_raw)
+            or qualification.get("input_pins_sha256") != sha(pins_raw)):
+        raise AdmissionError("input-pins-schema-or-binding")
     protocol_raw, cohorts_raw = (HERE / "protocol.json").read_bytes(), (HERE / "cohorts.json").read_bytes()
-    if (manifest.get("schema") != "exp095-stage-manifest/1" or manifest.get("study_id") != "EXP-095"
+    if (manifest.get("schema") != "exp096-stage-manifest/1" or manifest.get("study_id") != "EXP-096"
             or manifest.get("stage") != "development"
             or manifest.get("protocol_sha256") != sha(protocol_raw)
             or manifest.get("cohorts_sha256") != sha(cohorts_raw)
             or manifest.get("ordered_task_ids") != [f"d{i}" for i in range(1, 14)]
             or manifest.get("source_files") != registration.get("source_files")
-            or qualification.get("qualified") is not True
+            or registration.get("registered_source_revision") != source_revision
             or qualification.get("stage_manifest_sha256") != sha(manifest_raw)
             or qualification.get("qualified_source_revision") != source_revision):
         raise AdmissionError("stage-manifest-binding")
@@ -377,8 +401,8 @@ def admit_live(outdir: Path, source_integrity: dict, qualification_bytes: bytes,
                                    "inputs": proof["input_pins_sha256"],
                                    "input_bundle": proof["input_bundle_sha256"],
                                    "runtime_config": proof["runtime_config_receipt_sha256"],
-                                   "study_id": "EXP-095", "stage": clock["stage"]}))
-    lease = {"schema": "exp095-stage-lease/1", "stage": "development", "identity": identity,
+                                   "study_id": "EXP-096", "stage": clock["stage"]}))
+    lease = {"schema": "exp096-stage-lease/1", "stage": "development", "identity": identity,
              "clock_sha256": sha(clock_raw), "qualification_sha256": proof["qualification_sha256"]}
     _write_once(LEASE_ROOT / f"{identity}.json", canonical_json(lease))
     capability = _Capability(identity, sha(clock_raw), out)
@@ -425,7 +449,7 @@ def acquire_phase(stage_permit: _StagePermit, phase: str, outdir: Path,
         raise AdmissionError("stage-permit-required")
     _check_clock_permit(outdir, clock_bytes, stage_permit.identity, stage_permit.clock_digest)
     phase_identity = sha(canonical_json({"stage_identity": stage_permit.identity, "phase": phase}))
-    lease = {"schema": "exp095-phase-lease/1", "stage_identity": stage_permit.identity,
+    lease = {"schema": "exp096-phase-lease/1", "stage_identity": stage_permit.identity,
              "phase": phase, "clock_sha256": stage_permit.clock_digest, "phase_identity": phase_identity}
     _write_once(LEASE_ROOT / f"{phase_identity}.json", canonical_json(lease))
     permit = _PhasePermit(phase_identity, phase, stage_permit.clock_digest, Path(outdir))

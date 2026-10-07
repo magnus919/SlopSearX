@@ -237,7 +237,7 @@ class PhaseBindingTests(unittest.TestCase):
             self.assertEqual(result["view_proof"]["transcript_log_sha256"], "6"*64)
             self.assertNotIn(original_eid.encode(), raw_final)
             codec_receipt = P._table_receipt(table)
-            decode_binding = {"schema": "exp095-slot-citation-binding/1", "task_id": "d1",
+            decode_binding = {"schema": "exp096-slot-citation-binding/1", "task_id": "d1",
                 "source_binding": encoded, "source_binding_sha256": hashlib.sha256(
                     P.canonical(encoded)).hexdigest(), "task_table": codec_receipt["manifest"],
                 "task_table_sha256": table.binding_sha256,

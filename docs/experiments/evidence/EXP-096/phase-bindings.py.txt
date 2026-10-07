@@ -1,7 +1,7 @@
-"""EXP-095 assessment and answer bindings to fresh EXP-095 admission.
+"""EXP-096 assessment and answer bindings to fresh EXP-096 admission.
 
 EXP-077 packet/answer code is consumed only as immutable wire behavior. Prior
-study admissions and terminal receipts grant no EXP-095 authority. Import is inert.
+study admissions and terminal receipts grant no EXP-096 authority. Import is inert.
 """
 from __future__ import annotations
 
@@ -139,7 +139,7 @@ def prepare_answer_assessment_inputs(*, answer_bridge: dict, cases: list[dict],
 
 
 def prepare_assessment_inputs(*, state, cases, outdir=None):
-    """Prepare frozen grader packets under an EXP-095 phase guard; no model calls."""
+    """Prepare frozen grader packets under an EXP-096 phase guard; no model calls."""
     stage_root = Path(state.outdir).resolve()
     output = Path(outdir) if outdir is not None else stage_root / "assessment-inputs"
     output = output.resolve()
@@ -159,7 +159,7 @@ def prepare_assessment_inputs(*, state, cases, outdir=None):
 
 
 async def run_selector(*, state, cases, outdir, offline=False, transport_factory=None):
-    """Run the unchanged EXP-078 selector helper on EXP-095 inputs/admission."""
+    """Run the unchanged EXP-078 selector helper on EXP-096 inputs/admission."""
     selector = _load("exp094_portable_selector_runner",
                      HERE.parent / "EXP-078" / "selector-runner.py.txt")
     return await selector.run_selector(state.effective_acquisition, cases, state.clock[1],
@@ -221,8 +221,8 @@ def _verify_table_receipt(table, *, task_id, manifest=None, entries=None):
 def load_task_tables(*, source_slot_manifest: dict, preparation_root: Path) -> dict:
     """Load codebooks only after the root manifest and slot receipt hashes verify."""
     if (type(source_slot_manifest) is not dict
-            or source_slot_manifest.get("schema") != "exp095-source-slot-manifest/1"
-            or source_slot_manifest.get("study_id") != "EXP-095"):
+            or source_slot_manifest.get("schema") != "exp096-source-slot-manifest/1"
+            or source_slot_manifest.get("study_id") != "EXP-096"):
         raise ValueError("exp095-source-manifest-shape")
     manifests = source_slot_manifest.get("citation_codebooks")
     if (type(manifests) is not list or len(manifests) != 8
@@ -256,7 +256,7 @@ def load_task_tables(*, source_slot_manifest: dict, preparation_root: Path) -> d
             raise ValueError("exp095-codebook-slot-binding-hash")
         binding = json.loads(binding_raw)
         manifest = expected[task_id]
-        if (binding.get("schema") != "exp095-slot-citation-binding/1"
+        if (binding.get("schema") not in {"exp096-slot-citation-binding/1", "exp095-slot-citation-binding/1"}
                 or binding.get("logical_submission") != logical
                 or binding.get("task_id") != task_id
                 or binding.get("task_table") != manifest
@@ -443,7 +443,7 @@ def _read_pinned_assessor_final(*, state, expected_binding: dict, expected_agent
     qualification = admission.strict_json(qualification_bytes)
     external = qualification.get("external_source_pins")
     reader_pin = external.get("final_text_reader") if type(external) is dict else None
-    if (qualification.get("study_id") != "EXP-095" or qualification.get("qualified") is not True
+    if (qualification.get("study_id") != "EXP-096" or qualification.get("qualified") is not True
             or type(reader_pin) is not dict or set(reader_pin) != {"sha256"}
             or type(reader_pin.get("sha256")) is not str
             or not re.fullmatch(r"[0-9a-f]{64}", reader_pin["sha256"])
@@ -563,7 +563,7 @@ def _verify_bundle_table(bundle, table, *, task_id=None):
             expected_binding_sha = sha(canonical(source_binding.get("label_binding")))
             if binding.get("source_binding_sha256") != expected_binding_sha:
                 raise ValueError("exp095-original-label-binding-hash")
-    if bundle.get("schema") == "exp095-slot-citation-binding/1":
+    if bundle.get("schema") in {"exp095-slot-citation-binding/1", "exp096-slot-citation-binding/1"}:
         source_binding = bundle.get("source_binding")
         if (type(source_binding) is not dict
                 or sha(canonical(source_binding)) != bundle.get("source_binding_sha256")):

@@ -1,4 +1,4 @@
-"""EXP-095 bridge for frozen EXP-084 inputs and validated EXP-088 card references.
+"""EXP-096 bridge for frozen EXP-084 inputs and validated EXP-088 card references.
 
 This reuses the complete EXP-088 A/B card reference set as immutable input. It
 checks hashes, exact task/assessor coverage, label decoding, and the unchanged
@@ -96,8 +96,8 @@ def _read(root: Path, name: str) -> bytes:
 def _load_pins(pins_path: Path) -> tuple[dict, bytes]:
     raw = Path(pins_path).read_bytes()
     pins = strict_json(raw)
-    if (type(pins) is not dict or pins.get("schema") != "exp095-reused-input-pins/1"
-            or pins.get("study_id") != "EXP-095"
+    if (type(pins) is not dict or pins.get("schema") != "exp096-reused-input-pins/1"
+            or pins.get("study_id") != "EXP-096"
             or pins.get("status") != "registered_input_provenance"
             or type(pins.get("files")) is not list):
         raise InputError("pins-schema")
@@ -212,7 +212,7 @@ def verify_bundle_inventory(bundle_root: Path, pins_path: Path = PINS_PATH,
 def _load_helpers():
     adapter_path = HERE / "card-reference-id-adapter.py.txt"
     labels_path = HERE / "reference-labels.py.txt"
-    # EXP-095 pins exact EXP-088 helpers; use the same frozen modules via repository sibling.
+    # EXP-096 pins exact EXP-088 helpers; use the same frozen modules via repository sibling.
     adapter_path = HERE.parent / "EXP-088" / "card-reference-id-adapter.py.txt"
     labels_path = HERE.parent / "EXP-088" / "reference-labels.py.txt"
     adapter = importlib.machinery.SourceFileLoader("exp088_card_adapter_for_exp094", str(adapter_path)).load_module()
@@ -415,12 +415,12 @@ def prepare_reused_inputs(bundle_root: Path, *, stage_clock: dict, stage_clock_d
     effective = json.loads(json.dumps(snapshot))
     effective["acquisition_receipt"] = {"stage_clock": stage_clock, "stage_clock_digest": stage_clock_digest}
     effective["recovery_provenance"] = {
-        "study_id": "EXP-095", "source_study_id": "EXP-084",
+        "study_id": "EXP-096", "source_study_id": "EXP-084",
         "source_effective_envelope_sha256": sha(_read(root, "exp084/effective-input-envelope.json")),
         "input_bundle_sha256": result["inventory_integrity"]["input_bundle_sha256"],
         "prior_stage_clock_credit_seconds": 0, "new_searches": 0,
         "old_grader_outputs_used": False, "exp088_card_references_carried_unchanged": True}
-    return {"schema": "exp095-reused-inputs/1", "study_id": "EXP-095",
+    return {"schema": "exp096-reused-inputs/1", "study_id": "EXP-096",
             "effective_acquisition": effective, "input_integrity": result["inventory_integrity"],
             "capture_snapshot": {"root_relative": "exp084/capture", "stage_clock_sha256": sha(old_clock_raw),
                                  "capture_phase_sha256": sha(phase_raw),

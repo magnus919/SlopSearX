@@ -40,7 +40,7 @@
     "tuning_allowed": false
   },
   "capture": {
-    "health": "One read-only health request after new EXP-095 admission; parse status and runtime identity, require the pinned free model/revision, and retain only nonsecret identity fields. Failure is terminal.",
+    "health": "One read-only health request after new EXP-096 admission; parse status and runtime identity, require the pinned free model/revision, and retain only nonsecret identity fields. Failure is terminal.",
     "health_calls_maximum_per_stage": 1,
     "health_timeout_seconds": 8,
     "new_source_http_requests_maximum": 0,
@@ -101,7 +101,16 @@
   },
   "external_source_pins": {
     "final_text_reader": {
-      "sha256": "__EXP095_PRIVATE_FINAL_READER_SHA256__"
+      "sha256": "b0eebdb6594f76f08e692c16683a1bb433beed238802b7e1ff6bfec18d878a5d"
+    },
+    "actor": {
+      "sha256": "b61ec563ba98c9282fa509ce0bf7519d227adc1a5b63aaf9b60f5f5e05eab30d"
+    },
+    "source": {
+      "sha256": "82330aaf095708b6dd144abb465a862019ed8b634758f1f42cd371325050fc84"
+    },
+    "answer": {
+      "sha256": "5490f3fc72d69ee059f83c586a88bf3e9ad2d014cc780b3ce9bfa9f14637e5ba"
     }
   },
   "final_json_carrier": {
@@ -137,13 +146,13 @@
     "covers": "fresh runtime health validation, immutable checkpoint verification, carried assignment binding, 43 fresh source references, unchanged selector/answer generation, 32 fresh answer assessments, raw verification and analysis only after complete valid references",
     "covers_seconds": 28800,
     "historical_input_time_credit_seconds": 0,
-    "reuse_does_not_reset_or_extend_clock": "Only the newly admitted EXP-095 stage receives a clock; all prior work receives zero time credit.",
+    "reuse_does_not_reset_or_extend_clock": "Only the newly admitted EXP-096 stage receives a clock; all prior work receives zero time credit.",
     "starts_before": "the one health check and first fresh source assessment after new admission"
   },
   "grading_order": [
     "verify exact 513-file frozen inputs and validate all five EXP-094 source checkpoints against original slot, input, codebook, transcript, final text, decode and acceptance bindings without exposing content or judgments",
     "bind five carried source assignments to the new complete 48-slot source manifest and verify the remaining 43 are fresh dispatch slots",
-    "create and consume fresh EXP-095 admission and clock; validate the one pinned candidate health response",
+    "create and consume fresh EXP-096 admission and clock; validate the one pinned candidate health response",
     "prepare and bind all 48 source packets and task codebooks; dispatch only the 43 non-carried source slots",
     "complete exact viewer transcript checks and unchanged strict validators for all fresh source assignments; preserve five carried references by identity only",
     "run the unchanged selector comparison and fixed-budget answer generation only after every required source reference is complete and valid",
@@ -153,7 +162,7 @@
   ],
   "input_provenance": {
     "all_bytes_hash_bound": true,
-    "schema": "exp095-reused-input-pins/1",
+    "schema": "exp096-reused-input-pins/1",
     "source": "Exact EXP-088 frozen input bundle inventory; no failed source submission, source grader output, or grade analysis is carried forward.",
     "source_bundle_terminal_private_sha256": "4e5f956ced4ba305f766077bc3cfbb5e40d8c5ebd88d40ecc0e7da5dca39cb9a",
     "source_bundle_terminal_public_sha256": "751d7e20efc58f48076541991fd6a61171fa5c7ee3bcce92c0f1392809c7768a",
@@ -308,7 +317,7 @@
     "purpose": "The source-assessment model-facing packet changes only by fixed-width encoding of evidence-reference tokens using one prebuilt task-wide bijection. Answer-assessor inputs additionally use the declared EXP-096 lossless grouped evidence table and canonical compact JSON. Source wire bytes, source text, task data, non-reference identifiers, field/list/catalog ordering after exact inverse, answer rubric, candidate and acceptance criteria stay fixed.",
     "runtime_config_receipt_sha256": "9b235c28265bfd6ef3968d128564f593655d7a914cb618079146b267cf2ec980"
   },
-  "schema": "exp095-checkpoint-preserving-sol-assessments/1",
+  "schema": "exp096-checkpoint-preserving-sol-assessments/1",
   "source_citation_aliases": {
     "answer_assessor_prompt_sha256": "58522f899b391a1cc8e472b583f0e46d42766661eda2fafad7b15018bd4f4222",
     "answerer_prompt_sha256": "6b32ce442150ee69531ed5f440619b616ed08187d89dac7d756acadedbace425",
@@ -337,7 +346,9 @@
       "array/list order and multiplicity",
       "catalog order"
     ],
-    "validation": "Unknown, malformed, wrong-task or wrong-source codes fail closed. The unchanged EXP-088 decoder and EXP-077 schema/coverage validators run after exact inverse decoding. No fuzzy mapping, repair, regrade, or alias inference."
+    "validation": "Unknown, malformed, wrong-task or wrong-source codes fail closed. The unchanged EXP-088 decoder and EXP-077 schema/coverage validators run after exact inverse decoding. No fuzzy mapping, repair, regrade, or alias inference.",
+    "current_stage_source_manifest_schema": "exp096-source-slot-manifest/1",
+    "current_stage_slot_binding_schema": "exp096-slot-citation-binding/1"
   },
   "source_delivery": {
     "manifest": "Every source slot binds packet SHA/bytes, page count and per-batch output SHA/bytes, full preparation-manifest SHA, total delivered-byte projection, and viewer code hash.",
@@ -349,7 +360,7 @@
   "stages": [
     "development"
   ],
-  "status": "prospective_registered_development",
+  "status": "prospective_unsealed",
   "stop": "Any source/input/config integrity failure, health failure, unregistered request, budget/deadline breach, missing required endpoint, incomplete assessment, invalid raw final text, or unchanged-validator failure stops the stage with retained partial evidence; no retries, searches, rescue, tuning, replacement, imputation, repair, or automatic confirmation.",
   "task_use": {
     "abstention_counts_as_completion": false,
@@ -369,8 +380,8 @@
     "w0_completed_to_candidate_incomplete_allowed": 0
   },
   "wire_types": {
-    "authority_boundary": "Preserve exp078-stage-clock/1 and EXP-078 payload schemas only as portable data types for frozen selector/answer helpers. Mint a new EXP-095 stage ID and bind it to EXP-095 registration, qualification, manifest, inputs, and lease. Never accept any earlier stage clock, capability, permit, or lease as EXP-095 authority.",
-    "card_reference_ids": "The EXP-088 card-reference outputs are immutable, byte- and hash-bound development inputs. Do not re-dispatch or regrade cards in EXP-095.",
+    "authority_boundary": "Preserve exp078-stage-clock/1 and EXP-078 payload schemas only as portable data types for frozen selector/answer helpers. Mint a new EXP-096 stage ID and bind it to EXP-096 registration, qualification, manifest, inputs, and lease. Never accept any earlier stage clock, capability, permit, or lease as EXP-096 authority.",
+    "card_reference_ids": "The EXP-088 card-reference outputs are immutable, byte- and hash-bound development inputs. Do not re-dispatch or regrade cards in EXP-096.",
     "portable_reuse": "EXP-078 effective acquisition, card, selector, and receipt structures are immutable input/wire types only."
   },
   "carry_forward_source_assessments": {

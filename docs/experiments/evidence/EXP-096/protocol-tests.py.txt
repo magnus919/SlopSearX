@@ -43,6 +43,27 @@ class ProtocolTests(unittest.TestCase):
 
     def test_exp096_runtime_authority_and_answer_order_provenance_are_explicit(self):
         protocol = json.loads(CURRENT.read_text())
+        self.assertEqual(protocol["schema"], "exp096-checkpoint-preserving-sol-assessments/1")
+        self.assertEqual(protocol["status"], "prospective_unsealed")
+        self.assertEqual(protocol["input_provenance"]["schema"], "exp096-reused-input-pins/1")
+        pins = json.loads((HERE / "reuse-input-pins.json").read_text())
+        self.assertEqual(pins["schema"], "exp096-reused-input-pins/1")
+        self.assertEqual(pins["study_id"], "EXP-096")
+        self.assertEqual(pins["source_stage"], "EXP-089-frozen-input-bundle")
+        self.assertEqual(pins["file_count"], 513)
+        self.assertEqual(pins["total_bytes"], 20838164)
+        self.assertEqual(protocol["carry_forward_source_assessments"]["source_study"], "EXP-095")
+        self.assertEqual(protocol["external_source_pins"], {
+            "final_text_reader": {"sha256": "b0eebdb6594f76f08e692c16683a1bb433beed238802b7e1ff6bfec18d878a5d"},
+            "actor": {"sha256": "b61ec563ba98c9282fa509ce0bf7519d227adc1a5b63aaf9b60f5f5e05eab30d"},
+            "source": {"sha256": "82330aaf095708b6dd144abb465a862019ed8b634758f1f42cd371325050fc84"},
+            "answer": {"sha256": "5490f3fc72d69ee059f83c586a88bf3e9ad2d014cc780b3ce9bfa9f14637e5ba"},
+        })
+        self.assertEqual(json.loads((HERE / "stage-development-manifest.json").read_text())["study_id"], "EXP-096")
+        self.assertEqual(json.loads((HERE / "registration-integrity.json").read_text())["study_id"], "EXP-096")
+        self.assertEqual(json.loads((HERE / "qualification-integrity.json").read_text())["study_id"], "EXP-096")
+        self.assertFalse(json.loads((HERE / "registration-integrity.json").read_text())["registered"])
+        self.assertFalse(json.loads((HERE / "qualification-integrity.json").read_text())["qualified"])
         self.assertIn("new EXP-096 admission", protocol["recovery_runtime"]["health"])
         self.assertIn("new EXP-096 admission", protocol["recovery_runtime"]["health_request"])
         self.assertIn("EXP-096 lossless grouped evidence table", protocol["recovery_runtime"]["purpose"])
@@ -68,6 +89,9 @@ class ProtocolTests(unittest.TestCase):
     def test_only_source_and_answer_reference_tokens_are_reencoded(self):
         protocol = json.loads(CURRENT.read_text())
         source = protocol["source_citation_aliases"]
+        self.assertEqual(source["schema"], "exp095-task-citation-code/1")
+        self.assertEqual(source["current_stage_source_manifest_schema"], "exp096-source-slot-manifest/1")
+        self.assertEqual(source["current_stage_slot_binding_schema"], "exp096-slot-citation-binding/1")
         self.assertEqual(source["format"], "D<task digit>E<four decimal digits>")
         self.assertIn("before dispatch", source["codebook"])
         self.assertIn("exact inverse decoding", source["validation"])
@@ -110,7 +134,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertTrue(predecessor["rejected_spawn_created_no_task"])
         self.assertIn("EXP-094 expired", protocol["purpose"])
         self.assertEqual(protocol["external_source_pins"]["final_text_reader"]["sha256"],
-                         "__EXP095_PRIVATE_FINAL_READER_SHA256__")
+                         "b0eebdb6594f76f08e692c16683a1bb433beed238802b7e1ff6bfec18d878a5d")
 
     def test_only_fresh_independent_assessments_request_sol(self):
         protocol = json.loads(CURRENT.read_text())

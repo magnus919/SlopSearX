@@ -251,8 +251,8 @@ def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: l
         # This private per-slot receipt binds the old exact packet mapping to
         # the complete task codebook without adding fields to registered rows.
         old_bundle = json.loads(label_raw)
-        slot_binding = {"schema": "exp095-slot-citation-binding/1",
-            "study_id": "EXP-095", "logical_submission": job["logical_submission"],
+        slot_binding = {"schema": "exp096-slot-citation-binding/1",
+            "study_id": "EXP-096", "logical_submission": job["logical_submission"],
             "task_id": job["task_id"], "source_binding": old_bundle,
             "source_binding_sha256": _sha(_canonical(old_bundle)),
             "source_binding_file_sha256": _sha(label_raw),
@@ -332,7 +332,7 @@ def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: l
         raise PrepareError("carried-source-slot-binding-coverage")
     if carry_rows and len(fresh_slots) != 43:
         raise PrepareError("fresh-source-slot-count")
-    slot_manifest = {"schema": "exp095-source-slot-manifest/1", "study_id": "EXP-095",
+    slot_manifest = {"schema": "exp096-source-slot-manifest/1", "study_id": "EXP-096",
                      "requested_assessment_model_id": assessment_model_id,
                      "stage_clock_sha256": stage_clock_sha256,
                      "protocol_sha256": protocol_sha256,
@@ -354,7 +354,7 @@ def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: l
                      "card_reference_dispatch_slots": 0, "model_calls_performed": 0}
     slot_raw = _canonical(slot_manifest)
     _write_once(out / "source-slot-manifest.json", slot_raw, guard)
-    return {"schema": "exp095-source-preparation/1", "status": "prepared",
+    return {"schema": "exp096-source-preparation/1", "status": "prepared",
             "active_source_slot_count": len(slots),
             "carried_source_assignment_count": len(carry_receipts),
             "fresh_dispatch_slot_count": len(fresh_slots),

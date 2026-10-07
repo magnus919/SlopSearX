@@ -1,4 +1,4 @@
-"""EXP-095 one-process controller for the frozen card checkpoint and exact final-text continuation.
+"""EXP-096 one-process controller for the frozen card checkpoint and exact final-text continuation.
 
 Import is inert. No search, source capture, provider, credential-file, or model
 I/O occurs unless the caller explicitly invokes a post-admission operation.
@@ -45,14 +45,14 @@ def load(name: str, filename: str):
 
 
 def preflight(bundle_root, cli_path=None, *, source_checkpoint_root=None):
-    """Verify committed EXP-095 source and the exact frozen input bundle first."""
+    """Verify committed EXP-096 authority and the exact frozen input bundle first."""
     if source_checkpoint_root is None:
         raise ValueError("source-checkpoint-required")
-    admission = load("exp095_admission", "admission.py.txt")
+    admission = load("exp096_admission", "admission.py.txt")
     qraw = (HERE / "qualification-integrity.json").read_bytes()
     q = admission.strict_json(qraw)
     rraw = (HERE / "registration-integrity.json").read_bytes()
-    integrity = {"study_id": "EXP-095", "synthetic": False,
+    integrity = {"study_id": "EXP-096", "synthetic": False,
         "qualification_sha256": admission.sha(qraw), "registration_sha256": admission.sha(rraw),
         "qualified_source_revision": q["qualified_source_revision"],
         "protocol_sha256": admission.sha((HERE / "protocol.json").read_bytes()),
@@ -95,7 +95,7 @@ class State:
 
 
 def begin(outdir, bundle_root, cli_path=None, *, source_checkpoint_root=None):
-    """Verify, mint one new EXP-095 clock/lease, then rebase only clock metadata."""
+    """Verify, mint one new EXP-096 clock/lease, then rebase only clock metadata."""
     admission, integrity, qraw, proof = preflight(bundle_root, cli_path,
         source_checkpoint_root=source_checkpoint_root)
     carried_sources = load("exp095_source_carry", "source-carry.py.txt").verify_source_checkpoint(
@@ -273,7 +273,7 @@ def health_check(state: State, *, client_factory=None):
                 if isinstance(exc, (KeyboardInterrupt, SystemExit)):
                     raise
                 failure_code = "health_exchange_failed" if attempts else "health_client_failed"
-        receipt = {"schema": "exp095-health-receipt/1", "study_id": "EXP-095",
+        receipt = {"schema": "exp096-health-receipt/1", "study_id": "EXP-096",
             "status": safe_status, "model_identity": model, "revision": revision,
             "stage_clock_sha256": clock_sha, "physical_http_calls": attempts,
             "failure_code": failure_code, "quality_credit": False,
