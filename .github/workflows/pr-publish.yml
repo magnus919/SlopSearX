@@ -1,12 +1,11 @@
-# Inert template only. Copying this file does not enable publication.
-# Keep the hard false gate until the repository owner completes the separate
-# source/provenance qualification and approves an activation change.
-name: SlopSearX protected PR review publisher (disabled)
+# Inert same-repository template. Do not remove the literal hard stop as part
+# of staging; activation requires a separately reviewed, concrete target packet.
+name: Protected PR review publisher (Actions token, disabled template)
 
 on:
   workflow_run:
     workflows:
-      - SlopSearX protected PR review analysis
+      - PR Review Analysis
     types:
       - completed
 
@@ -30,19 +29,19 @@ jobs:
     permissions:
       actions: read
       contents: read
-      pull-requests: read
+      pull-requests: write
     steps:
-      - name: Check out only the protected default-branch publisher revision
+      - name: Check out only protected default-branch publisher source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Check out the separately pinned harness outside the clean policy checkout
+      - name: Check out the separately pinned harness
         env:
-          GITHUB_WORKSPACE: ${{ github.workspace }}
           RUNNER_TEMP: ${{ runner.temp }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -52,32 +51,16 @@ jobs:
           import subprocess
           from pathlib import Path
 
-          policy_path = Path(os.environ["GITHUB_WORKSPACE"]) / ".github/pr-review-publisher-policy.json"
-          policy = json.loads(policy_path.read_text(encoding="utf-8"))
+          policy = json.loads((Path(os.environ["GITHUB_WORKSPACE"]) / ".github/pr-review-publisher-policy.json").read_text())
           harness = policy["called_harness"]
-          repository = harness["repository"]
-          revision = harness["sha"]
-          if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+          if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", harness["repository"]):
               raise SystemExit("protected_harness_repository_invalid")
-          if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", revision):
+          if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", harness["sha"]):
               raise SystemExit("protected_harness_revision_invalid")
-          destination = Path(os.environ["RUNNER_TEMP"]) / "trusted-review-harness"
-          subprocess.run(
-              ["git", "clone", "--no-checkout", "--filter=blob:none", f"https://github.com/{repository}.git", str(destination)],
-              check=True,
-              stdin=subprocess.DEVNULL,
-              timeout=120,
-          )
-          subprocess.run(
-              ["git", "-C", str(destination), "checkout", "--detach", revision],
-              check=True,
-              stdin=subprocess.DEVNULL,
-              timeout=30,
-          )
-          actual = subprocess.check_output(
-              ["git", "-C", str(destination), "rev-parse", "HEAD"], text=True, timeout=10
-          ).strip()
-          if actual != revision:
+          dest = Path(os.environ["RUNNER_TEMP"]) / "trusted-review-harness"
+          subprocess.run(["git", "clone", "--no-checkout", "--filter=blob:none", f"https://github.com/{harness['repository']}.git", str(dest)], check=True, stdin=subprocess.DEVNULL, timeout=120)
+          subprocess.run(["git", "-C", str(dest), "checkout", "--detach", harness["sha"]], check=True, stdin=subprocess.DEVNULL, timeout=30)
+          if subprocess.check_output(["git", "-C", str(dest), "rev-parse", "HEAD"], text=True, timeout=10).strip() != harness["sha"]:
               raise SystemExit("protected_harness_revision_mismatch")
           PY
 
@@ -86,17 +69,17 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install the trusted harness's optional GitHub App signer dependency
+      - name: Install the pinned trusted harness
         env:
           RUNNER_TEMP: ${{ runner.temp }}
-        run: python -m pip install "${RUNNER_TEMP}/trusted-review-harness[github-app]"
+        run: python -m pip install "${RUNNER_TEMP}/trusted-review-harness"
 
-      - name: Set up the pinned official artifact bridge runtime
+      - name: Set up the official artifact bridge runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '24'
 
-      - name: Install only the lockfile-pinned official artifact client
+      - name: Install the lockfile-pinned official artifact client
         working-directory: ${{ runner.temp }}/trusted-review-harness/scripts/actions-artifact-uploader
         env:
           ACTIONS_RUNTIME_TOKEN: ''
@@ -107,32 +90,13 @@ jobs:
       - name: Run the protected publication runtime
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          PR_REVIEW_GITHUB_APP_PRIVATE_KEY: ${{ secrets.PR_REVIEW_GITHUB_APP_PRIVATE_KEY }}
           PYTHONPATH: ${{ runner.temp }}/trusted-review-harness/src
         run: python -m pr_review_harness.protected_publication_runtime
 
-# The runtime consumes the committed .github/pr-review-publisher-policy.json.
-# Install this file as `.github/workflows/pr-publish.yml`. Copy
-# templates/protected-publisher-policy.json there only after replacing
-# every placeholder with independently verified repository values. Its
-# `enabled` field must remain false through review and qualification.
-# The harness checkout is separate from the clean target-repository workspace;
-# it is selected only by the committed policy's immutable repository and SHA.
-# The target repository must be able to fetch that exact harness revision
-# without adding target-repository credentials to the clone process.
-# This template is same-repository and target-local. A central review service
-# remains read-only. Target-side LLM/Jev credentials and the App key must be
-# configured in that target repository's reviewed environment; source-repo
-# secrets do not cross this boundary.
-# Configure the named `code-review-publication` environment in the target
-# repository with its protected-default-branch deployment restriction and App
-# private-key secret before considering activation. The environment name alone
-# does not attest that those settings exist.
-# The repository-wide concurrency group serializes all target-repository review
-# effects. Keep queueing enabled and cancellation disabled to avoid overlapping
-# posts or cancelling a run after a remote effect may have started.
-# The runtime binds caller workflow provenance to an independently fetched
-# default-branch tip and keeps the reviewed PR base/head separate. The producer
-# must bind its caller SHA to the protected source revision. The secretless
-# source-context probe records the relevant fields, but does not prove equality
-# or authorize activation.
+# The writer job needs contents:read to check out its protected policy/runtime
+# source. That token remains available to the trusted job's actions and code;
+# the job must never check out or execute the PR head or install target code.
+# Its permissions are declared scope only. They do not attest effective server
+# write access. The central Slop pilot remains read-only; target secrets do not
+# cross repositories. This route uses the target's per-job GITHUB_TOKEN and
+# creates no App key or installation token.

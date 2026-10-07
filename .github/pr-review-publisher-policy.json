@@ -1,5 +1,6 @@
 {
-  "schema": "pr-review-protected-publication-policy.v1",
+  "schema": "pr-review-protected-publication-policy.v2",
+  "authorization_mode": "STANDING_BOUNDED",
   "enabled": false,
   "repository": {
     "name": "magnus919/SlopSearX",
@@ -7,30 +8,29 @@
   },
   "default_branch": "main",
   "publisher_workflow": {
-    "id": "REPLACE_WITH_NUMERIC_PUBLISHER_WORKFLOW_ID",
+    "id": 377341907,
     "path": ".github/workflows/pr-publish.yml",
-    "ref": "magnus919/SlopSearX/.github/workflows/pr-publish.yml@refs/heads/main"
+    "ref": "magnus919/SlopSearX/.github/workflows/pr-publish.yml@refs/heads/main",
+    "sha256": "b726bd68c27edfea5985d9e03f178e44ab6f62952f583f826df40f9c32803bbf"
   },
   "source_workflow": {
-    "id": "REPLACE_WITH_NUMERIC_SOURCE_WORKFLOW_ID",
+    "id": 377341909,
     "path": ".github/workflows/pr-review-analysis.yml",
     "ref": "magnus919/SlopSearX/.github/workflows/pr-review-analysis.yml@refs/heads/main"
   },
   "called_harness": {
     "repository": "groktopus/codereview",
     "path": ".github/workflows/pr-analysis.yml",
-    "sha": "7eaddf7c549c8060045578bc1702e394a35dfa2d"
+    "sha": "6f67aeabb812e6992bd868280698cf1031a75e46"
   },
-  "app": {
-    "id": "REPLACE_WITH_NUMERIC_GITHUB_APP_ID",
-    "installation_id": "REPLACE_WITH_NUMERIC_INSTALLATION_ID",
-    "slug": "REPLACE_WITH_GITHUB_APP_SLUG",
-    "actor_login": "REPLACE_WITH_GITHUB_APP_SLUG[bot]"
+  "credential": {
+    "kind": "ACTIONS_TOKEN",
+    "actor_login": "github-actions[bot]"
   },
   "profile": {
-    "version": "slopsearx-production-v8-static-review-boundaries",
-    "sha256": "cc9c4631882662c27be5fb8534e65abbd352489afefa78e9dd3d3160fe0b1c65",
-    "provider_configuration_identity": "provider-config-sha256:REPLACE_WITH_64_CHARACTER_CONFIG_SHA256"
+    "version": "slopsearx-production-v14-jev-reconciliation-candidate",
+    "sha256": "5e83bc43c615f717df0d3d29722de08dd5990c84c8e69d1705c94f3918d49692",
+    "provider_configuration_identity": "provider-identity-sha256:20692336d9ded3d0c0091ead7d5e9930fa51f0e8aaf319d917881c443e7b1420"
   },
   "publication": {
     "allowed_dispositions": [
@@ -47,6 +47,6 @@
   },
   "artifact_trust_mode": "API_BOUND_SHA256",
   "artifact_redirect_hosts": [
-    "REPLACE_WITH_APPROVED_GITHUB_ARTIFACT_DOWNLOAD_HOST"
+    "productionresultssa5.blob.core.windows.net"
   ]
 }
