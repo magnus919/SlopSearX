@@ -1,7 +1,7 @@
-# EXP-096 registration merge verification
+# Successor merge verification
 
-Registration PR #711 merged as `ddfcc1ccfdafe5c0d78f14b09d018c5ad90a5b0a`, from tested head `15472d2d846bc7680f86c71d0c51e70dffd43308`. Its final PR CI, CodeQL, and Docker checks passed.
+PR #711 merged after its corrected commit passed CI and its blocking cohort-accounting finding was resolved. A read-only preflight on the merge then rejected one protected-file mismatch: the experiment index preserved a concurrent EXP-095 documentation row.
 
-The automatically generated squash body inherited historical workflow-skip directives, suppressing push workflows on that merge. This documentation follow-up provides a normal merge event for post-merge validation. It does not alter the 387 qualified source files, registration, qualification, runtime, input corpus, or assessment budgets.
+The row is retained. This follow-up prospectively qualifies the exact merged source plus the verification note at `d009a5332102d33b895ae7acd609700cb778d076`, with all 387 protected paths rehashed. Only the README digest changes; runtime helpers, protocol, cohort cases, model inputs, citation tables, private runner pins, and acceptance gates remain unchanged.
 
-Scientific qualification remains pending. No stage admission or production quality claim follows from registration or mechanics checks alone.
+Historical `[skip ci]` text in the original squash body suppressed push workflows. This follow-up uses a clean merge body. Live admission remains held until the actual merged checkout passes full preflight and applicable post-merge checks. No experiment clock, health request, search, capture, provider call, or scientific measurement has started.
