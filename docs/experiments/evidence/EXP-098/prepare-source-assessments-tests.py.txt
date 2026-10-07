@@ -15,6 +15,7 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--bundle-root',required=True)
 parser.add_argument('--checkpoint-root',required=True)
 parser.add_argument('--pins-path',required=True)
+parser.add_argument('--artifact-root')
 args=parser.parse_args()
 ROOT=Path(__file__).resolve().parents[4]
 E=ROOT/'docs/experiments/evidence/EXP-097'
@@ -46,6 +47,12 @@ with tempfile.TemporaryDirectory(prefix='exp098-real-preparation-') as tmp:
     manifest=json.loads((out/'source-slot-manifest.json').read_bytes())
     if manifest['carried_source_assignment_count']!=23 or manifest['fresh_dispatch_slot_count']!=25:
         raise ValueError('wrong source carry/fresh counts')
+    if args.artifact_root:
+        import shutil
+        target=Path(args.artifact_root)
+        if target.exists():raise ValueError('artifact-root-must-be-new')
+        shutil.copytree(out,target)
+        target.chmod(0o700)
     print('Actual frozen-corpus successor preparation PASS:48bindings,23carry,25fresh; no model/network calls')
 
 # Actual preparation rejection paths: original provenance is never inferred

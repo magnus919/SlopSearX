@@ -1,0 +1,402 @@
+"""Mocked one-shot current-readiness checks; never contacts the configured host."""
+import asyncio
+import hashlib
+import importlib.machinery
+import json
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+C = importlib.machinery.SourceFileLoader(
+    "exp098_controller_readiness_tests", str(HERE / "controller.py.txt")
+).load_module()
+
+
+class FakeAdmission:
+    def __init__(self):
+        self.health_acquired = False
+        self.writes = []
+        self.completions = []
+
+    def acquire_phase(self, _permit, name, _outdir, _clock_raw):
+        if name != "health" or self.health_acquired:
+            raise ValueError("phase-already-consumed")
+        self.health_acquired = True
+        return object()
+
+    def require_phase(self, _phase, _clock_raw, _outdir):
+        return None
+
+    def canonical_json(self, value):
+        return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+
+    def _write_once(self, path, raw):
+        self.writes.append((path, raw))
+
+    def complete_health_phase(self, phase, clock_raw, outdir):
+        self.completions.append((phase, clock_raw, outdir))
+
+
+class FakeResponse:
+    def __init__(self, model="free", revision="a" * 40):
+        self._body = {"status": "ok", "runtime": {"model": model, "revision": revision}}
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self._body
+
+
+class FakeClient:
+    def __init__(self, calls, response):
+        self.calls = calls
+        self.response = response
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_args):
+        return False
+
+    async def get(self, _url):
+        self.calls.append("one-request")
+        return self.response
+
+
+class ControllerReadinessTests(unittest.TestCase):
+    def _state(self, tmp, model="free", expected_revision="a" * 40):
+        admission = FakeAdmission()
+        state = SimpleNamespace(
+            outdir=Path(tmp), bundle_root=Path(tmp), admission=admission,
+            permit=object(), clock=({}, b"clock", "clock-sha"),
+            readiness_baseline=SimpleNamespace(model_alias=model, expected_revision=expected_revision),
+        )
+        state.readiness_baseline.sha256 = "c" * 64
+        return state, admission
+
+    def _client_factory(self, calls, response):
+        return lambda **_kwargs: FakeClient(calls, response)
+
+    def test_actual_revision_mismatch_is_terminal_before_any_dispatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, admission = self._state(tmp, expected_revision="a" * 40)
+            http_calls, dispatch_calls = [], []
+
+            async def flow():
+                await C.health_check(state, client_factory=self._client_factory(
+                    http_calls, FakeResponse(revision="b" * 40)))
+                dispatch_calls.append("must-not-run")
+
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                with self.assertRaisesRegex(ValueError, "health_revision_mismatch"):
+                    asyncio.run(flow())
+            self.assertEqual(http_calls, ["one-request"])
+            self.assertEqual(dispatch_calls, [])
+            self.assertEqual(len(admission.writes), 1)
+            receipt = json.loads(admission.writes[0][1])
+            self.assertEqual(receipt["physical_http_calls"], 1)
+            self.assertFalse(receipt["quality_credit"])
+
+    def test_current_baseline_can_pass_when_historical_capture_revision_is_different(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, _admission = self._state(tmp, expected_revision="a" * 40)
+            state.historical_capture_revision = "b" * 40
+            http_calls = []
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                receipt = asyncio.run(C.health_check(state, client_factory=self._client_factory(
+                    http_calls, FakeResponse(revision="a" * 40))))
+            self.assertEqual(http_calls, ["one-request"])
+            self.assertEqual(receipt["status"], "healthy")
+            self.assertEqual(receipt["revision"], "a" * 40)
+            self.assertEqual(len(state.admission.completions), 1)
+
+    def test_mutated_historical_bytes_reject_before_a_healthy_runtime_or_dispatch(self):
+        fixture_module = importlib.machinery.SourceFileLoader(
+            "exp098_controller_input_fixture", str(HERE / "input-bridge-tests.py.txt")
+        ).load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins = fixture_module.fixture(tmp)
+            historical_file = root / "original" / "effective-acquisition.json"
+            original = historical_file.read_bytes()
+            historical_file.write_bytes(original[:-1] + bytes([original[-1] ^ 1]))
+            state, _admission = self._state(tmp)
+            http_calls, dispatch_calls = [], []
+
+            async def flow():
+                fixture_module.B.verify_bundle_inventory(root, pins)
+                await C.health_check(state, client_factory=self._client_factory(
+                    http_calls, FakeResponse(revision="a" * 40)))
+                dispatch_calls.append("must-not-run")
+
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                with self.assertRaisesRegex(fixture_module.B.InputError, "bundle-hash-mismatch"):
+                    asyncio.run(flow())
+            self.assertEqual(http_calls, [])
+            self.assertEqual(dispatch_calls, [])
+
+    def test_model_mismatch_is_terminal_and_second_health_attempt_never_sends(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, _admission = self._state(tmp, model="free")
+            http_calls = []
+            factory = self._client_factory(http_calls, FakeResponse(model="other"))
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                with self.assertRaisesRegex(ValueError, "health_identity_invalid"):
+                    asyncio.run(C.health_check(state, client_factory=factory))
+                with self.assertRaisesRegex(ValueError, "phase-already-consumed"):
+                    asyncio.run(C.health_check(state, client_factory=factory))
+            self.assertEqual(http_calls, ["one-request"])
+
+    def test_missing_endpoint_fails_without_http_and_has_one_shot_receipt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, admission = self._state(tmp)
+            http_calls = []
+            with mock.patch.dict(os.environ, {}, clear=True):
+                with self.assertRaisesRegex(ValueError, "endpoint_unavailable"):
+                    asyncio.run(C.health_check(state, client_factory=self._client_factory(
+                        http_calls, FakeResponse())))
+            self.assertEqual(http_calls, [])
+            self.assertEqual(len(admission.writes), 1)
+            self.assertEqual(admission.completions, [])
+
+    def test_missing_pinned_baseline_stops_before_output_configuration_or_clock(self):
+        class Admission:
+            @staticmethod
+            def _normalized_readiness_baseline_path(path):
+                return str(Path(path).absolute())
+
+            def _committed_design(self):
+                return ({}, b"registration", b"qualification", {
+                    "qualified_source_revision": "c" * 40,
+                    "external_source_pins": {"readiness_baseline": {"sha256": "d" * 64}},
+                })
+
+            @staticmethod
+            def sha(raw):
+                import hashlib
+                return hashlib.sha256(raw).hexdigest()
+
+            def verify_closure(self, *_args, **kwargs):
+                return {"verified": True,
+                        "readiness_baseline_path": kwargs.get("readiness_baseline_path") or
+                            (_args[3] if len(_args) > 3 else None)}
+
+            def create_stage_clock(self, *_args):
+                raise AssertionError("clock must not be created")
+
+        baseline = importlib.machinery.SourceFileLoader(
+            "exp098_missing_baseline_fixture", str(HERE / "readiness-baseline.py.txt")
+        ).load_module()
+        admission = Admission()
+
+        def load(name, _filename):
+            if name == "exp098_admission":
+                return admission
+            if name == "exp098_readiness_baseline":
+                return baseline
+            raise AssertionError(name)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "stage"
+            with mock.patch.object(C, "load", side_effect=load), \
+                 mock.patch.object(C, "_read_bound_capture_configuration") as config:
+                with self.assertRaisesRegex(ValueError, "readiness-baseline-unavailable"):
+                    C.begin(output, Path(tmp), source_checkpoint_root=Path(tmp) / "checkpoint", source_checkpoint_pins_path=Path(tmp) / "pins.json",
+                            readiness_baseline_path=Path(tmp) / "missing.json")
+            config.assert_not_called()
+            self.assertFalse(output.exists())
+
+    def test_malformed_symlink_wrong_hash_and_insecure_override_fail_before_clock(self):
+        baseline_module = importlib.machinery.SourceFileLoader(
+            "exp098_bad_override_baseline", str(HERE / "readiness-baseline.py.txt")
+        ).load_module()
+        valid = json.dumps({"schema": "exp098-readiness-baseline/1", "status": "ok",
+                            "model_alias": "free", "expected_revision": "a" * 40},
+                           sort_keys=True, separators=(",", ":")).encode() + b"\n"
+        cases = ("malformed", "symlink", "wrong-hash", "insecure-mode")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                selected = root / "selected.json"
+                if case == "malformed":
+                    selected.write_bytes(b"{\n")
+                    expected = hashlib.sha256(selected.read_bytes()).hexdigest()
+                elif case == "symlink":
+                    target = root / "target.json"
+                    target.write_bytes(valid)
+                    target.chmod(0o600)
+                    selected.symlink_to(target)
+                    expected = hashlib.sha256(valid).hexdigest()
+                else:
+                    selected.write_bytes(valid)
+                    selected.chmod(0o644 if case == "insecure-mode" else 0o600)
+                    expected = "d" * 64 if case == "wrong-hash" else hashlib.sha256(valid).hexdigest()
+
+                class Admission:
+                    def _committed_design(self):
+                        return ({}, b"registration", b"qualification", {
+                            "qualified_source_revision": "c" * 40,
+                            "external_source_pins": {"readiness_baseline": {"sha256": expected}},
+                        })
+
+                    @staticmethod
+                    def sha(raw):
+                        return hashlib.sha256(raw).hexdigest()
+
+                    @staticmethod
+                    def _normalized_readiness_baseline_path(path):
+                        return str(Path(path).absolute())
+
+                    def verify_closure(self, *_args, **kwargs):
+                        return {"readiness_baseline_path": kwargs.get("readiness_baseline_path") or
+                                (_args[3] if len(_args) > 3 else None)}
+
+                    def create_stage_clock(self, *_args):
+                        raise AssertionError("clock must not be created")
+
+                admission = Admission()
+
+                def load(name, _filename):
+                    if name == "exp098_admission":
+                        return admission
+                    if name == "exp098_readiness_baseline":
+                        return baseline_module
+                    raise AssertionError(name)
+
+                output = root / "stage"
+                with mock.patch.object(C, "load", side_effect=load), \
+                     mock.patch.object(C, "_read_bound_capture_configuration") as config:
+                    with self.assertRaises(ValueError):
+                        C.begin(output, root, source_checkpoint_root=root / "checkpoint", source_checkpoint_pins_path=root / "pins.json",
+                                readiness_baseline_path=selected)
+                config.assert_not_called()
+                self.assertFalse(output.exists())
+
+    def test_preflight_passes_selected_override_to_both_closure_checks(self):
+        baseline_module = importlib.machinery.SourceFileLoader(
+            "exp098_positive_override_baseline", str(HERE / "readiness-baseline.py.txt")
+        ).load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            selected = root / "selected-baseline.json"
+            baseline_raw = json.dumps({"schema": "exp098-readiness-baseline/1", "status": "ok",
+                                       "model_alias": "free", "expected_revision": "a" * 40},
+                                      sort_keys=True, separators=(",", ":")).encode() + b"\n"
+            selected.write_bytes(baseline_raw)
+            selected.chmod(0o600)
+            cli = root / "groktocrawl"
+            cli.write_bytes(b"fixture-cli")
+            cli_sha = hashlib.sha256(cli.read_bytes()).hexdigest()
+            baseline_sha = hashlib.sha256(baseline_raw).hexdigest()
+            q = {"qualified_source_revision": "c" * 40,
+                 "external_source_pins": {
+                     "readiness_baseline": {"sha256": baseline_sha},
+                     "groktocrawl_cli": {"sha256": cli_sha, "revision": "c" * 40},
+                 }}
+            requested_paths = []
+
+            class Admission:
+                @staticmethod
+                def _committed_design():
+                    return {}, b"registration", b"qualification", q
+
+                @staticmethod
+                def sha(raw):
+                    return hashlib.sha256(raw).hexdigest()
+
+                @staticmethod
+                def _normalized_readiness_baseline_path(path):
+                    return str(Path(path).absolute())
+
+                def verify_closure(self, *_args, **kwargs):
+                    path = kwargs.get("readiness_baseline_path") or _args[3]
+                    requested_paths.append(path)
+                    return {"readiness_baseline_path": path}
+
+            carry = SimpleNamespace(CHECKPOINT_PINS_SHA256="b" * 64, verify_source_checkpoint=lambda *_args: {"verified": True})
+            admission = Admission()
+
+            def load(name, _filename):
+                if name == "exp098_admission":
+                    return admission
+                if name == "exp098_readiness_baseline":
+                    return baseline_module
+                if name == "exp098_source_carry":
+                    return carry
+                raise AssertionError(name)
+
+            with mock.patch.object(C, "load", side_effect=load):
+                result = C.preflight(root, cli_path=cli, source_checkpoint_root=root / "checkpoint", source_checkpoint_pins_path=root / "pins.json",
+                                     readiness_baseline_path=selected)
+            expected_path = str(selected.absolute())
+            self.assertEqual(requested_paths, [expected_path, expected_path])
+            self.assertEqual(result[3]["readiness_baseline_path"], expected_path)
+            self.assertEqual(result[4].sha256, baseline_sha)
+            self.assertEqual(result[4].expected_revision, "a" * 40)
+
+    def test_begin_passes_selected_override_into_admission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output = root / "stage"
+            selected = root / "selected-baseline.json"
+            selected.write_text("pinned fixture")
+            selected.chmod(0o600)
+            calls = []
+
+            class Admission:
+                @staticmethod
+                def strict_json(_raw):
+                    return {}
+
+                @staticmethod
+                def create_stage_clock(_outdir, _revision):
+                    return {}, b"clock", "clock-sha"
+
+                def admit_live(self, _outdir, _integrity, _qraw, _bundle, **kwargs):
+                    calls.append(kwargs.get("readiness_baseline_path"))
+                    return object()
+
+                @staticmethod
+                def consume_capability(_capability):
+                    return object()
+
+                @staticmethod
+                def canonical_json(value):
+                    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+
+                @staticmethod
+                def _write_once(path, raw):
+                    Path(path).write_bytes(raw)
+
+            admission = Admission()
+            proof = {"readiness_baseline_path": str(selected.absolute())}
+            prepared = {"effective_acquisition": {}, "input_integrity": {},
+                        "carried_card_references": {}}
+            carry = SimpleNamespace(CHECKPOINT_PINS_SHA256="b" * 64, verify_source_checkpoint=lambda *_args: {
+                "proof": {"carried": True}, "payloads": {}})
+            bridge = SimpleNamespace(prepare_reused_inputs=lambda *_args, **_kwargs: prepared)
+
+            def load(name, _filename):
+                if name == "exp098_source_carry":
+                    return carry
+                if name == "exp098_input_bridge":
+                    return bridge
+                raise AssertionError(name)
+
+            with mock.patch.object(C, "preflight", return_value=(admission,
+                    {"qualified_source_revision": "c" * 40}, b"q", proof, object())), \
+                 mock.patch.object(C, "load", side_effect=load), \
+                 mock.patch.object(C, "_read_bound_capture_configuration", return_value={}), \
+                 mock.patch.object(C, "_configure_capture"), \
+                 mock.patch.object(C, "_opaque_card_proof", return_value={"opaque": True}):
+                C.begin(output, root, source_checkpoint_root=root / "checkpoint", source_checkpoint_pins_path=root / "pins.json",
+                        readiness_baseline_path=selected)
+            self.assertEqual(calls, [str(selected.absolute())])
+
+
+if __name__ == "__main__":
+    unittest.main()

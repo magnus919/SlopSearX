@@ -92,7 +92,7 @@ def preflight(bundle_root, cli_path=None, *, source_checkpoint_root=None,
     cli = Path(cli_path) if cli_path is not None else Path.home() / ".local/bin/groktocrawl"
     if cli.is_symlink() or not cli.is_file() or hashlib.sha256(cli.read_bytes()).hexdigest() != pin["sha256"]:
         raise ValueError("pinned-cli-preflight-failed")
-    carry = load("exp095_source_carry", "source-carry.py.txt")
+    carry = load("exp098_source_carry", "source-carry.py.txt")
     carry.verify_source_checkpoint(Path(source_checkpoint_root), Path(source_checkpoint_pins_path), carry.CHECKPOINT_PINS_SHA256)
     return admission, integrity, qraw, proof, readiness_baseline
 
