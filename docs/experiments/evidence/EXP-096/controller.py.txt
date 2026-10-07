@@ -49,20 +49,24 @@ def preflight(bundle_root, cli_path=None, *, source_checkpoint_root=None):
     if source_checkpoint_root is None:
         raise ValueError("source-checkpoint-required")
     admission = load("exp096_admission", "admission.py.txt")
-    qraw = (HERE / "qualification-integrity.json").read_bytes()
-    q = admission.strict_json(qraw)
-    rraw = (HERE / "registration-integrity.json").read_bytes()
+    # Validate the real committed authority before reading any qualification fields.
+    # Prospective or legacy registration fails here, before a clock, lease, or
+    # credential/configuration read can be attempted.
+    _registration, rraw, qraw, q = admission._committed_design()
+    source_revision = q.get("qualified_source_revision")
+    if type(source_revision) is not str or not re.fullmatch(r"[0-9a-f]{40}", source_revision):
+        raise admission.AdmissionError("qualified-source-revision")
     integrity = {"study_id": "EXP-096", "synthetic": False,
         "qualification_sha256": admission.sha(qraw), "registration_sha256": admission.sha(rraw),
-        "qualified_source_revision": q["qualified_source_revision"],
+        "qualified_source_revision": source_revision,
         "protocol_sha256": admission.sha((HERE / "protocol.json").read_bytes()),
         "cohorts_sha256": admission.sha((HERE / "cohorts.json").read_bytes()),
-        "stage_manifest_sha256": q["stage_manifest_sha256"],
+        "stage_manifest_sha256": q.get("stage_manifest_sha256"),
         "input_pins_sha256": admission.sha((HERE / "reuse-input-pins.json").read_bytes()),
-        "input_bundle_sha256": q["input_bundle_sha256"],
-        "runtime_config_receipt_sha256": q["runtime_config_receipt_sha256"],
-        "environment": q["environment"], "dependencies": q["dependencies"],
-        "external_source_pins": q["external_source_pins"]}
+        "input_bundle_sha256": q.get("input_bundle_sha256"),
+        "runtime_config_receipt_sha256": q.get("runtime_config_receipt_sha256"),
+        "environment": q.get("environment"), "dependencies": q.get("dependencies"),
+        "external_source_pins": q.get("external_source_pins")}
     admission.verify_closure(integrity, qraw)  # qualify code before importing the bridge
     proof = admission.verify_closure(integrity, qraw, Path(bundle_root))
     cli_pins = integrity.get("external_source_pins")

@@ -18,6 +18,18 @@ class ControllerCarryTests(unittest.TestCase):
         with mock.patch.object(C,'load') as load:
             with self.assertRaisesRegex(ValueError,'source-checkpoint-required'):C.preflight(Path('unused'))
             load.assert_not_called()
+    def test_real_unsealed_exp096_preflight_rejects_before_revision_or_side_effects(self):
+        registration=json.loads((HERE/'registration-integrity.json').read_text())
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            if registration.get('registered') is True:
+                with self.assertRaises(ValueError):
+                    C.preflight(root,cli_path=root/'must-not-be-read',source_checkpoint_root=root/'checkpoint')
+            else:
+                with self.assertRaisesRegex(ValueError,'registration-schema'):
+                    C.preflight(root,cli_path=root/'must-not-be-read',source_checkpoint_root=root/'checkpoint')
+            self.assertFalse((root/'must-not-be-read').exists())
+            self.assertFalse((root/'stage-clock.json').exists())
     def test_failed_carry_replay_cannot_create_clock_or_read_configuration(self):
         admission=types.SimpleNamespace(create_stage_clock=mock.Mock())
         def reject(*args):raise ValueError('invalid-frozen-checkpoint')
