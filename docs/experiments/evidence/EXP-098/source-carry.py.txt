@@ -9,6 +9,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
+HISTORICAL_DEPENDENCY_PINS = {'docs/experiments/evidence/EXP-088/reference-labels.py.txt': 'f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c', 'docs/experiments/evidence/source-use-next-stage/evidence-catalog.py.txt': '0a197e720543c54239f618284bcd9fdbbcf2e7bd65af73bc1632c04c0831958b', 'docs/experiments/evidence/research-usefulness-measurement/hydrate.py.txt': 'b84876282594ab6f5c452a9703e3194be282b0db77cd00514a068e071605e4cf', 'docs/experiments/evidence/research-usefulness-measurement/validate.py.txt': 'd4fe4320ae2ec538506bdea64a937de5c47d185ca190dc2704a4976e05d5d77f', 'docs/experiments/evidence/research-usefulness-measurement/schema.json': 'd2dec068368e50df631b824cdb821127457b5934110d6492c9fb7d6aa24b2e12'}
 CHECKPOINT_PINS_SHA256 = '45af4810cd3f25256b2324b11737180741fb73b5605d98a5960eeb6aa5497d5e'
 
 def strict_json(raw):
@@ -128,9 +129,20 @@ def _replay(ROOT, pins_path, expected_pins_sha256, REPO, temporary_profile):
                 current = REPO / 'docs/experiments/evidence' / exp / original.relative_to(ROOT / 'original-source/docs/experiments/evidence' / exp)
                 if not (not current.is_symlink() and sha(current.read_bytes()) == sha(original.read_bytes())):
                     raise ValueError('checkpoint-integrity-check-failed')
-    B = load('replay_phase', REPO / 'docs/experiments/evidence/EXP-097/phase-bindings.py.txt')
-    V = load('replay_view', REPO / 'docs/experiments/evidence/EXP-097/input-view-verifier.py.txt')
-    M = load('replay_packets', REPO / 'docs/experiments/evidence/EXP-077/model-packets.py.txt')
+    replay_source = ROOT / 'original-source'
+    for relative, expected in HISTORICAL_DEPENDENCY_PINS.items():
+        dependency = REPO / relative
+        if dependency.is_symlink():
+            raise ValueError('historical-dependency-symlink')
+        raw_dependency = dependency.read_bytes()
+        if sha(raw_dependency) != expected:
+            raise ValueError('historical-dependency-pin')
+        owned_dependency = replay_source / relative
+        owned_dependency.parent.mkdir(parents=True, exist_ok=True)
+        owned_dependency.write_bytes(raw_dependency)
+    B = load('replay_phase', replay_source / 'docs/experiments/evidence/EXP-097/phase-bindings.py.txt')
+    V = load('replay_view', replay_source / 'docs/experiments/evidence/EXP-097/input-view-verifier.py.txt')
+    M = load('replay_packets', replay_source / 'docs/experiments/evidence/EXP-077/model-packets.py.txt')
     R = load('replay_reader', ROOT / 'original-helpers/exp097-final-log-reader.py')
     stage = ROOT / 'origin-stage'
     terminal = strict_json((stage / 'terminal-outcome-private.json').read_bytes())
@@ -179,7 +191,11 @@ def _replay(ROOT, pins_path, expected_pins_sha256, REPO, temporary_profile):
     if not sha(V.VIEWER_PATH.read_bytes()) == sha(original_renderer.read_bytes()):
         raise ValueError('checkpoint-integrity-check-failed')
     V._viewer = lambda: renderer
-    V.VIEWER_PATH = Path(original_viewer)
+    viewer_bytes = original_renderer.read_bytes()
+    class OriginalViewerIdentity(type(Path())):
+        def read_bytes(self):
+            return viewer_bytes
+    V.VIEWER_PATH = OriginalViewerIdentity(original_viewer)
     rows = []
     payloads = {}
     for index in range(5, 23):
@@ -226,7 +242,7 @@ def _replay(ROOT, pins_path, expected_pins_sha256, REPO, temporary_profile):
         M.verify_source_chunk_coverage(dict(sourceplan, chunks=[chunk], inventory_source_ids=chunk['source_ids'], assessor_ids=[chunk['assessor_id']]), [decoded])
         payloads[logical] = {'decoded_response': decoded, 'original_input_sha256': sha(inp), 'original_label_binding_sha256': sha(labelraw), 'original_final_sha256': sha(raw), 'original_transcript_sha256': stored['transcript_log_sha256'], 'task_table_sha256': tables[job['task_id']].binding_sha256}
         rows.append({'logical_submission': logical, 'status': 'original_replay_pass', 'source_count': len(decoded['source_assessments'])})
-    historical = load('replay_historical_five', REPO / 'docs/experiments/evidence/EXP-097/source-carry.py.txt').verify_source_checkpoint(ROOT / 'historical-five')
+    historical = load('replay_historical_five', replay_source / 'docs/experiments/evidence/EXP-097/source-carry.py.txt').verify_source_checkpoint(ROOT / 'historical-five')
     if not historical['proof']['accepted_assignments'] == 5:
         raise ValueError('checkpoint-integrity-check-failed')
     for logical, payload in historical['payloads'].items():

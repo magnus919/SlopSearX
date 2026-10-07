@@ -104,7 +104,44 @@ with tempfile.TemporaryDirectory(prefix='carry-adversarial-') as tmp:
     saved_here = m.HERE
     m.HERE = here
     original = fake_repo / 'docs/experiments/evidence/EXP-097/phase-bindings.py.txt'
-    original.write_bytes(original.read_bytes() + b'\n# changed source\n')
+    original_raw = original.read_bytes()
+    original.write_bytes(original_raw + b'\n# changed source\n')
     reject('changed_replay_validator_source', checkpoint)
+    original.write_bytes(original_raw)
+    for relative in m.HISTORICAL_DEPENDENCY_PINS:
+        destination = fake_repo / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes((saved_here.parents[3] / relative).read_bytes())
+    for helper in ['observed-transcript.py.txt', 'citation-contract.py.txt']:
+        (here / helper).write_bytes((saved_here / helper).read_bytes())
+    actual_load = m.load
+    observed_loads = []
+    def poison_checkout_after_verification(name, path):
+        if name == 'replay_phase':
+            original.write_bytes(original_raw + b'\nraise RuntimeError("mutable checkout executed")\n')
+        if name in {'replay_phase', 'replay_view', 'replay_packets', 'replay_historical_five'}:
+            if Path(path).resolve().is_relative_to(fake_repo.resolve()):
+                raise RuntimeError('historical execution from mutable checkout')
+            observed_loads.append(name)
+        return actual_load(name, path)
+    m.load = poison_checkout_after_verification
+    result = m.verify_source_checkpoint(checkpoint, pins, m.CHECKPOINT_PINS_SHA256)
+    if len(result['payloads']) != 23 or set(observed_loads) != {'replay_phase', 'replay_view', 'replay_packets', 'replay_historical_five'}:
+        raise RuntimeError('verified source snapshot execution failed')
+    passed.append('checkout_poison_after_verification_cannot_execute')
+    original.write_bytes(original_raw)
     m.HERE = saved_here
+    receipt = copied / 'origin-stage/source-reference/validation-006.json'
+    receipt_raw = receipt.read_bytes()
+    def poison_checkpoint_after_verification(name, path):
+        if name == 'replay_phase':
+            receipt.write_bytes(b'{"status":"invalid"}\n')
+        return actual_load(name, path)
+    m.load = poison_checkpoint_after_verification
+    result = m.verify_source_checkpoint(copied, pins, m.CHECKPOINT_PINS_SHA256)
+    if len(result['payloads']) != 23:
+        raise RuntimeError('verified checkpoint snapshot replay failed')
+    passed.append('checkpoint_poison_after_verification_cannot_change_replay')
+    receipt.write_bytes(receipt_raw)
+    m.load = actual_load
 print('Optimized carry adversarial checks PASS:', len(passed), ', '.join(passed))
