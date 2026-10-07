@@ -19,15 +19,36 @@ class ControllerCarryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'source-checkpoint-required'):C.preflight(Path('unused'))
             load.assert_not_called()
     def test_real_unsealed_exp096_preflight_rejects_before_revision_or_side_effects(self):
-        registration=json.loads((HERE/'registration-integrity.json').read_text())
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
-            if registration.get('registered') is True:
-                with self.assertRaises(ValueError):
-                    C.preflight(root,cli_path=root/'must-not-be-read',source_checkpoint_root=root/'checkpoint')
-            else:
-                with self.assertRaisesRegex(ValueError,'registration-schema'):
-                    C.preflight(root,cli_path=root/'must-not-be-read',source_checkpoint_root=root/'checkpoint')
+            evidence=root/'docs/experiments/evidence/EXP-096'
+            evidence.mkdir(parents=True)
+            for filename in ('controller.py.txt','admission.py.txt'):
+                (evidence/filename).write_bytes((HERE/filename).read_bytes())
+            (evidence/'registration-integrity.json').write_text(json.dumps({
+                'schema':'exp096-registration/1','study_id':'EXP-096',
+                'status':'prospective_unsealed','registered':False,
+                'live_stage_started':False}))
+            (evidence/'qualification-integrity.json').write_text(json.dumps({
+                'schema':'exp096-qualification/1','study_id':'EXP-096',
+                'status':'prospective_unsealed','qualified':False,
+                'live_stage_started':False}))
+            import subprocess
+            subprocess.run(['git','init','--quiet',str(root)],check=True)
+            subprocess.run(['git','-C',str(root),'config','user.name','EXP-096 test'],check=True)
+            subprocess.run(['git','-C',str(root),'config','user.email','exp096-test@example.invalid'],check=True)
+            subprocess.run(['git','-C',str(root),'add','docs'],check=True)
+            subprocess.run(['git','-C',str(root),'commit','--quiet','-m','unsealed fixture'],check=True)
+            previous_admission=sys.modules.pop('exp096_admission',None)
+            try:
+                with mock.patch.object(C,'HERE',evidence),mock.patch.object(C,'REPO',root), \
+                     mock.patch.object(C,'_read_bound_capture_configuration') as config:
+                    with self.assertRaisesRegex(ValueError,'registration-schema'):
+                        C.preflight(root,cli_path=root/'must-not-be-read',source_checkpoint_root=root/'checkpoint')
+                    config.assert_not_called()
+            finally:
+                if previous_admission is not None:
+                    sys.modules['exp096_admission']=previous_admission
             self.assertFalse((root/'must-not-be-read').exists())
             self.assertFalse((root/'stage-clock.json').exists())
     def test_failed_carry_replay_cannot_create_clock_or_read_configuration(self):
