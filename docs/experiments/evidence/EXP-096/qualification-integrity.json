@@ -1,5 +1,5 @@
 {
-  "cohorts_sha256": "024ce4495f5127ff817f741b6ca7d0c815c98233734be63beb2687388df6a024",
+  "cohorts_sha256": "8de78d7feddc3fc3a679f03ba3296d952186200ed35f4ff804414700a84ff272",
   "dependencies": {
     "anyio": "4.13.0",
     "fastapi": "0.136.3",
@@ -270,7 +270,7 @@
     "docs/experiments/evidence/EXP-096/answerer-prompt.txt": "6b32ce442150ee69531ed5f440619b616ed08187d89dac7d756acadedbace425",
     "docs/experiments/evidence/EXP-096/citation-codec-tests.py.txt": "d7fe9f33499b693dc6c88ef3f9cdaa6dc9e5f0ce93a126f3dd3ed52c35033da6",
     "docs/experiments/evidence/EXP-096/citation-codec.py.txt": "2886c7cc2bd6f4faa1397f663a26fdb98b0a9996dfe5a3ffdb4ed85c5e3f12f2",
-    "docs/experiments/evidence/EXP-096/cohorts.json": "024ce4495f5127ff817f741b6ca7d0c815c98233734be63beb2687388df6a024",
+    "docs/experiments/evidence/EXP-096/cohorts.json": "8de78d7feddc3fc3a679f03ba3296d952186200ed35f4ff804414700a84ff272",
     "docs/experiments/evidence/EXP-096/controller-carry-tests.py.txt": "6bd936a5d25b3263300e8e1399a633fb96046664915c9b71a82736e3c1452488",
     "docs/experiments/evidence/EXP-096/controller.py.txt": "e66313b8c72eec0b04533f3acf54121be681a94bce02e32939b449b814c8c366",
     "docs/experiments/evidence/EXP-096/exp095-terminal-preflight.json": "716e0cd3616c6f84ce9540fb8d3a400407e40d6f2138dd28ddd0f8189e52f41f",
@@ -289,7 +289,7 @@
     "docs/experiments/evidence/EXP-096/phase-bindings.py.txt": "cec307d68667367ad8e64b4a4be807223d4967c4667ec36971bb58a54667bfc0",
     "docs/experiments/evidence/EXP-096/prepare-source-assessments-tests.py.txt": "637a4e9de048fa6efcc7346b978d2b320ce090b123973fad206ee54055ad4be8",
     "docs/experiments/evidence/EXP-096/prepare-source-assessments.py.txt": "4a95fba5e2216319a89c8e96398dd7b2c2ef0c4086aa0bf3868f2c0bd6144809",
-    "docs/experiments/evidence/EXP-096/protocol-tests.py.txt": "e6440e1b9333b3b00a873cd29084df632635de9c644d1d419b6954a82eaebf21",
+    "docs/experiments/evidence/EXP-096/protocol-tests.py.txt": "2dea699bf8e84466fdb155f7a83359523c152641a760e8adec391310f0e7ab83",
     "docs/experiments/evidence/EXP-096/protocol.json": "6fc4fc1f3a22d43e992a8dd00016ecb6beaefedf404f6023cd4418ffcf7bd754",
     "docs/experiments/evidence/EXP-096/reuse-input-pins.json": "d63978df6f1e702f6ec66e9fa173331bc70d0caa40ec3bade536d5f8b653ae0e",
     "docs/experiments/evidence/EXP-096/source-assessor-prompt.txt": "9d1ab655cd88512d8347d3b3fa158d808f8d9e6295264fdd51083c1a7d2b3544",
@@ -429,17 +429,17 @@
   "protocol_sha256": "6fc4fc1f3a22d43e992a8dd00016ecb6beaefedf404f6023cd4418ffcf7bd754",
   "qualification_scope": "Source/input/runtime mechanics and registration closure only. No EXP-096 stage clock, lease, health check, selector, answer generation, scoring, search, source capture, provider, credential, or model operation occurred. The bounded Luna viewer-mechanics probe validates the reader surface only. This qualification does not establish scientific ranking or answer quality.",
   "qualified": true,
-  "qualified_source_revision": "40e54278576207972411e67a1a8fef6453961ce5",
-  "registration_sha256": "011b6615b8aaa03c487e3614aa934bc5385062d8fa51a09ddde499a2176062d4",
+  "qualified_source_revision": "96bcd37a44514de7d5502467d350a56df23a1c88",
+  "registration_sha256": "052f0cc170b0d50d9aa536d2cd67345da95097468039ba8b51b85178eb76be9d",
   "runtime_config_receipt_sha256": "9b235c28265bfd6ef3968d128564f593655d7a914cb618079146b267cf2ec980",
   "schema": "exp096-qualification/1",
-  "stage_manifest_sha256": "1ad4597592ed3614325c3e4a2e345f2abe000b56caa13c63a708b52597eda341",
+  "stage_manifest_sha256": "beb360ccf4d3ef9d69456454f69ad443140dc818fc768c6a456876e9870dfc4f",
   "status": "qualified",
   "study_id": "EXP-096",
   "tests": [
     {
       "name": "EXP-096 deterministic mechanics tests",
-      "passed": 81,
+      "passed": 82,
       "skipped": 0,
       "status": "passed"
     },
