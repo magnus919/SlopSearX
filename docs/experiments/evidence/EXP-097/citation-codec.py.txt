@@ -1,0 +1,312 @@
+"""Prospective EXP-095 fixed-width aliases for model-facing source citations.
+
+This is an isolated proposal. It does not call a model or alter source content.
+The controller builds one task table from the complete union of source label
+bindings before dispatch, then reuses it unchanged for every role and subset.
+Only caller-declared JSON paths may be rewritten; presentation arrays retain
+their order and arbitrary strings are never searched or substituted.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+import hashlib
+import json
+import re
+from types import MappingProxyType
+from typing import Any, Iterable, Mapping, Sequence
+
+MAX_ENTRIES = 9999
+_CODE = re.compile(r"D([1-8])E([0-9]{4})\Z")
+
+
+class CitationCodeError(ValueError):
+    """Invalid, ambiguous, out-of-scope, or tampered citation reference."""
+
+
+def canonical_bytes(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+@dataclass(frozen=True)
+class TaskTable:
+    task_id: str
+    entries: tuple[tuple[str, str, str, str], ...]
+    # Each entry is (code, group_id, original_id, EXP-088 alias).
+    binding_sha256: str
+    _by_alias: Mapping[tuple[str, str], str]
+    _by_code: Mapping[str, tuple[str, str, str]]
+
+    @property
+    def count(self) -> int:
+        return len(self.entries)
+
+    def code_for(self, group_id: str, alias: str) -> str:
+        try:
+            return self._by_alias[(group_id, alias)]
+        except KeyError as exc:
+            raise CitationCodeError("unknown or cross-scope EXP-088 alias") from exc
+
+    def original_for(self, code: str, group_id: str) -> str:
+        if not isinstance(code, str) or not _CODE.fullmatch(code):
+            raise CitationCodeError("malformed or truncated citation code")
+        if code[:2] != f"D{int(self.task_id[1:])}":
+            raise CitationCodeError("citation code belongs to another task")
+        try:
+            mapped_group, original_id, _alias = self._by_code[code]
+        except KeyError as exc:
+            raise CitationCodeError("unknown citation code") from exc
+        if mapped_group != group_id:
+            raise CitationCodeError("citation code belongs to another source")
+        return original_id
+
+    def alias_for(self, code: str, group_id: str) -> str:
+        """Restore the exact EXP-088 alias for canonical input-byte inversion."""
+        self.original_for(code, group_id)  # validates code, task, and scope
+        return self._by_code[code][2]
+
+
+def build_task_table(task_id: str, binding_objects: Iterable[Mapping[str, Any]],
+                     expected_slots: Sequence[str]) -> TaskTable:
+    """Build a stable bijection from complete task-wide EXP-088 source bindings.
+
+    `binding_objects` are parsed private label-binding documents. The function
+    consumes only `label_binding` metadata and ignores model-input payloads.
+    Repeated rows across chunks collapse only when all identity fields agree.
+    """
+    if not re.fullmatch(r"d[1-8]", task_id):
+        raise CitationCodeError("task id must be d1 through d8")
+    expected = tuple(expected_slots)
+    if len(expected) != 6 or len(set(expected)) != 6 or not all(isinstance(x, str) and x for x in expected):
+        raise CitationCodeError("exactly six distinct expected source-job slots are required")
+    documents = tuple(binding_objects)
+    slots = []
+    for document in documents:
+        model_input = document.get("model_input")
+        slot = model_input.get("chunk_id") if isinstance(model_input, Mapping) else None
+        if not isinstance(slot, str):
+            raise CitationCodeError("source binding has no job slot")
+        slots.append(slot)
+    if len(slots) != 6 or len(set(slots)) != 6 or set(slots) != set(expected):
+        raise CitationCodeError("bindings must cover all six expected source-job slots exactly")
+    canonical: dict[tuple[str, str], str] = {}
+    aliases: dict[tuple[str, str], tuple[str, str]] = {}
+    task_aliases: dict[str, tuple[str, str]] = {}
+    for document in documents:
+        binding = document.get("label_binding")
+        if not isinstance(binding, Mapping):
+            raise CitationCodeError("missing label_binding metadata")
+        if binding.get("schema") != "exp088-reference-label-binding/1" or binding.get("domain") != "source_pool":
+            raise CitationCodeError("unexpected binding schema/domain")
+        if binding.get("task_id") != task_id:
+            raise CitationCodeError("cross-task binding")
+        rows = binding.get("labels")
+        if not isinstance(rows, list):
+            raise CitationCodeError("labels must be a list")
+        for row in rows:
+            if not isinstance(row, Mapping) or row.get("domain") != "source":
+                raise CitationCodeError("unexpected label row")
+            group, original, alias = (row.get("group_id"), row.get("original_id"), row.get("label"))
+            if not all(isinstance(x, str) and x for x in (group, original, alias)):
+                raise CitationCodeError("incomplete identity row")
+            identity = (group, original)
+            prior = canonical.setdefault(identity, alias)
+            if prior != alias:
+                raise CitationCodeError("one original identity has conflicting aliases")
+            alias_key = (group, alias)
+            prior_identity = aliases.setdefault(alias_key, identity)
+            if prior_identity != identity:
+                raise CitationCodeError("alias is ambiguous within source scope")
+            task_identity = task_aliases.setdefault(alias, identity)
+            if task_identity != identity:
+                raise CitationCodeError("EXP-088 alias is ambiguous across task source groups")
+    # EXP-088 catalog keys are lexically ordered by old alias. Sorting that
+    # alias first means replacing keys with fixed-width codes preserves catalog
+    # presentation order under canonical JSON key sorting.
+    ordered = sorted(((group, original, alias) for (group, original), alias in canonical.items()),
+                     key=lambda row: (row[2], row[0], row[1]))
+    if not ordered or len(ordered) > MAX_ENTRIES:
+        raise CitationCodeError("task citation universe is empty or exceeds four-digit capacity")
+    prefix = f"D{int(task_id[1:])}E"
+    entries = tuple((f"{prefix}{i:04d}", group, original, alias)
+                    for i, (group, original, alias) in enumerate(ordered, 1))
+    by_alias = {(group, alias): code for code, group, _original, alias in entries}
+    by_code = {code: (group, original, alias) for code, group, original, alias in entries}
+    digest = hashlib.sha256(canonical_bytes({"task_id": task_id, "entries": entries})).hexdigest()
+    return TaskTable(task_id, entries, digest,
+                     MappingProxyType(by_alias), MappingProxyType(by_code))
+
+
+Path = tuple[str, ...]  # '*' traverses every list element or mapping value.
+
+
+def _rewrite_path(root: Any, path: Sequence[str], transform) -> None:
+    if not path:
+        raise CitationCodeError("empty reference path")
+    head, *tail = path
+    if head == "*":
+        if isinstance(root, list):
+            children = root
+        elif isinstance(root, dict):
+            children = list(root.values())
+        else:
+            raise CitationCodeError("wildcard path is not a collection")
+        if tail:
+            for child in children:
+                _rewrite_path(child, tail, transform)
+        else:
+            raise CitationCodeError("wildcard terminal needs an explicit reference field")
+        return
+    if not isinstance(root, dict) or head not in root:
+        raise CitationCodeError(f"declared reference path missing: {head}")
+    if tail:
+        _rewrite_path(root[head], tail, transform)
+    else:
+        value = root[head]
+        if isinstance(value, list):
+            root[head] = [transform(x) for x in value]
+        elif isinstance(value, str):
+            root[head] = transform(value)
+        else:
+            raise CitationCodeError("reference field must be a string or string list")
+
+
+def rewrite_fields(value: Any, paths: Sequence[Path], transform) -> Any:
+    """Copy JSON value and rewrite only explicit schema paths, preserving order."""
+    cloned = json.loads(canonical_bytes(value))
+    for path in paths:
+        _rewrite_path(cloned, path, transform)
+    return cloned
+
+
+def encode_fields(value: Any, paths: Sequence[Path], table: TaskTable,
+                  group_path: Path) -> Any:
+    """Encode aliases at declared citation fields using each row's source group.
+
+    For heterogeneous source rows, declare paths that include each row's
+    reference field and call `encode_row_fields` with its unchanged group id.
+    This function is for a single-group view/catalog.
+    """
+    groups = _values_at(value, group_path)
+    distinct = set(groups)
+    if len(distinct) != 1 or not isinstance(next(iter(distinct), None), str):
+        raise CitationCodeError("single-group encoder requires exactly one source group")
+    group = next(iter(distinct))
+    return rewrite_fields(value, paths, lambda alias: table.code_for(group, alias))
+
+
+def encode_row_fields(value: Any, paths_by_group: Mapping[str, Sequence[Path]],
+                      table: TaskTable, group_id: str) -> Any:
+    if group_id not in paths_by_group:
+        raise CitationCodeError("source group has no declared reference paths")
+    return rewrite_fields(value, paths_by_group[group_id],
+                          lambda alias: table.code_for(group_id, alias))
+
+
+def rewrite_grouped_rows(value: Any, rows_path: Path, group_field: str,
+                         reference_paths: Sequence[Path], table: TaskTable,
+                         *, decode: bool = False, restore_alias: bool = False) -> Any:
+    """Rewrite reference fields row-by-row, deriving scope from unchanged IDs.
+
+    `rows_path` must resolve to a list; each relative reference path is applied
+    only within one row. This is the source-pool/answerer form. For answer
+    assessor responses, call once per arm packet with that arm's unchanged
+    source group; do not infer scope from citation order or display position.
+    """
+    cloned = json.loads(canonical_bytes(value))
+    rows = _values_at(cloned, rows_path)
+    if len(rows) != 1 or not isinstance(rows[0], list):
+        raise CitationCodeError("rows_path must identify exactly one list")
+    for row in rows[0]:
+        if not isinstance(row, dict) or not isinstance(row.get(group_field), str):
+            raise CitationCodeError("row lacks unchanged source group identity")
+        group = row[group_field]
+        transform = ((lambda x: table.alias_for(x, group) if restore_alias
+                      else table.original_for(x, group)) if decode
+                     else (lambda x: table.code_for(group, x)))
+        for path in reference_paths:
+            _rewrite_path(row, path, transform)
+    return cloned
+
+
+def decode_fields(value: Any, paths: Sequence[Path], table: TaskTable,
+                  group_id: str) -> Any:
+    return rewrite_fields(value, paths,
+                          lambda code: table.original_for(code, group_id))
+
+
+def rewrite_catalog_keys(value: Any, catalog_path: Path, group_id: str,
+                         table: TaskTable, *, decode: bool = False,
+                         restore_alias: bool = False) -> Any:
+    """Rewrite only keys of one declared evidence catalog mapping."""
+    cloned = json.loads(canonical_bytes(value))
+    targets = _values_at(cloned, catalog_path)
+    if len(targets) != 1 or not isinstance(targets[0], dict):
+        raise CitationCodeError("catalog_path must identify exactly one mapping")
+    transform = ((lambda key: table.alias_for(key, group_id) if restore_alias
+                  else table.original_for(key, group_id)) if decode
+                 else (lambda alias: table.code_for(group_id, alias)))
+    catalog = targets[0]
+    mapped = {}
+    for key, item in catalog.items():
+        new_key = transform(key)
+        if new_key in mapped:
+            raise CitationCodeError("catalog key collision after rewrite")
+        mapped[new_key] = item
+    _set_at(cloned, catalog_path, mapped)
+    return cloned
+
+
+def _values_at(value: Any, path: Sequence[str]) -> list[Any]:
+    if not path:
+        return [value]
+    head, *tail = path
+    if head == "*":
+        seq = value.values() if isinstance(value, dict) else value if isinstance(value, list) else ()
+        return [x for child in seq for x in _values_at(child, tail)]
+    if not isinstance(value, dict) or head not in value:
+        raise CitationCodeError("group path missing")
+    return _values_at(value[head], tail)
+
+
+def _set_at(value: Any, path: Sequence[str], replacement: Any) -> None:
+    if not path:
+        raise CitationCodeError("empty catalog path")
+    if not isinstance(value, dict) or path[0] not in value:
+        raise CitationCodeError("catalog path missing")
+    if len(path) == 1:
+        value[path[0]] = replacement
+    else:
+        _set_at(value[path[0]], path[1:], replacement)
+
+
+def manifest(table: TaskTable) -> dict[str, Any]:
+    """Controller-private non-content receipt; never place entries in model input."""
+    return {"schema": "exp095-citation-code-table/1", "task_id": table.task_id,
+            "entry_count": table.count, "binding_sha256": table.binding_sha256,
+            "table_sha256": table.binding_sha256, "format": "D<task digit>E<4-digit ordinal>"}
+
+
+def table_from_entries(task_id: str, rows: Sequence[Sequence[str]], expected_sha256: str) -> TaskTable:
+    """Reconstruct and hash-check a persisted private task table receipt."""
+    if not re.fullmatch(r"d[1-8]", task_id) or not isinstance(rows, (list, tuple)):
+        raise CitationCodeError("invalid persisted task table")
+    entries = tuple(tuple(row) for row in rows)
+    prefix = f"D{int(task_id[1:])}E"
+    if not entries or len(entries) > MAX_ENTRIES:
+        raise CitationCodeError("empty or oversized persisted task table")
+    if any(len(row) != 4 or row[0] != f"{prefix}{i:04d}"
+           or not all(isinstance(value, str) and value for value in row)
+           for i, row in enumerate(entries, 1)):
+        raise CitationCodeError("persisted task table order/shape mismatch")
+    codes, identities, aliases = set(), set(), set()
+    for code, group, original, alias in entries:
+        if code in codes or (group, original) in identities or (group, alias) in aliases:
+            raise CitationCodeError("persisted task table collision")
+        codes.add(code); identities.add((group, original)); aliases.add((group, alias))
+    digest = hashlib.sha256(canonical_bytes({"task_id": task_id, "entries": entries})).hexdigest()
+    if not isinstance(expected_sha256, str) or digest != expected_sha256:
+        raise CitationCodeError("persisted task table digest mismatch")
+    by_alias = {(group, alias): code for code, group, _original, alias in entries}
+    by_code = {code: (group, original, alias) for code, group, original, alias in entries}
+    return TaskTable(task_id, entries, digest, MappingProxyType(by_alias), MappingProxyType(by_code))

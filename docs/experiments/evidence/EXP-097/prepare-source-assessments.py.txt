@@ -1,0 +1,365 @@
+"""EXP-095 source-slot manifest over the pinned EXP-088 preparer.
+
+The EXP-088 helper is used only for deterministic packet construction. Its
+card packets are local preparation artifacts and are never registered,
+receivable, or dispatchable in EXP-095. The manifest keeps all 48 slots while
+exposing only the 43 non-carried source slots for dispatch.
+its 48 active source slots.
+"""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import json
+import os
+import re
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+EXP088 = HERE.parent / "EXP-088"
+EXP094_TERMINAL = HERE.parent / "EXP-094" / "completed" / "interrupted-terminal.json"
+_LABEL_CODEC = EXP088 / "reference-labels.py.txt"
+_LABEL_CODEC_SHA256 = "f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c"
+CODEC_PATH = HERE / "citation-codec.py.txt"
+CODEC_SHA256 = "2886c7cc2bd6f4faa1397f663a26fdb98b0a9996dfe5a3ffdb4ed85c5e3f12f2"
+
+
+class PrepareError(ValueError):
+    pass
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def _submission_json(value) -> bytes:
+    """Keep the frozen source packet's readable line structure for the viewer."""
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2,
+                       allow_nan=False) + "\n").encode("utf-8")
+
+
+
+def _load_label_codec():
+    if (_LABEL_CODEC.is_symlink() or not _LABEL_CODEC.is_file()
+            or _sha(_LABEL_CODEC.read_bytes()) != _LABEL_CODEC_SHA256):
+        raise PrepareError("frozen-label-codec-pin")
+    return importlib.machinery.SourceFileLoader("exp094_source_alias_codec", str(_LABEL_CODEC)).load_module()
+
+
+def _load_code_codec():
+    if CODEC_SHA256.startswith("__") or CODEC_PATH.is_symlink() or not CODEC_PATH.is_file() or _sha(CODEC_PATH.read_bytes()) != CODEC_SHA256:
+        raise PrepareError("fixed-citation-codec-pin")
+    return importlib.machinery.SourceFileLoader("exp094_fixed_citation_code", str(CODEC_PATH)).load_module()
+
+
+def verify_source_alias_binding(input_raw: bytes, label_raw: bytes, task_id: str) -> dict:
+    """Prove the packet's supplied passage IDs are its bound short aliases.
+
+    This validates only representation, task scope, and hashes; it does not
+    read or assess any model response or semantic judgment.
+    """
+    try:
+        packet = json.loads(input_raw)
+        bundle = json.loads(label_raw)
+        codec = _load_label_codec()
+        binding, by_label = codec._verify_bundle(bundle, domains={"source_pool"})
+    except Exception as exc:
+        raise PrepareError("source-alias-binding-invalid") from exc
+    model = packet.get("source_model_input") if type(packet) is dict else None
+    if (type(model) is not dict or model != bundle.get("model_input")
+            or binding.get("task_id") != task_id):
+        raise PrepareError("source-alias-input-binding-mismatch")
+    sources = model.get("sources")
+    if type(sources) is not list:
+        raise PrepareError("source-alias-source-list")
+    pattern = re.compile(r"^L-" + re.escape(task_id.upper()) + r"-S[0-9]{3}-R[0-9a-f]{16}$")
+    count = 0
+    for source in sources:
+        if type(source) is not dict or type(source.get("source_id")) is not str:
+            raise PrepareError("source-alias-source-identity")
+        source_id = source["source_id"]
+        passages = source.get("passages")
+        if type(passages) is not list:
+            raise PrepareError("source-alias-passage-list")
+        for passage in passages:
+            alias = passage.get("evidence_id") if type(passage) is dict else None
+            row = by_label.get(alias) if type(alias) is str else None
+            if (row is None or not pattern.fullmatch(alias) or row.get("domain") != "source"
+                    or row.get("group_id") != source_id or row.get("original_id") == alias):
+                raise PrepareError("source-citation-alias-unbound")
+            count += 1
+    return {"schema": "exp095-source-citation-alias-proof/1", "task_id": task_id,
+            "input_sha256": _sha(input_raw), "label_binding_sha256": _sha(label_raw),
+            "passage_reference_count": count, "encoded_model_input_matches_binding": True,
+            "all_passage_references_are_bound_aliases": True}
+
+
+def _verify_fixed_code_input(input_raw: bytes, original_model: dict, table, task_id: str) -> int:
+    try:
+        packet = json.loads(input_raw)
+        model = packet["source_model_input"]
+        codec = _load_code_codec()
+        restored = codec.rewrite_grouped_rows(model, ("sources",), "source_id",
+            (("passages", "*", "evidence_id"),), table, decode=True, restore_alias=True)
+    except Exception as exc:
+        raise PrepareError("fixed-code-source-input-invalid") from exc
+    if restored != original_model or model.get("task", {}).get("task_id") != task_id:
+        raise PrepareError("fixed-code-source-input-does-not-roundtrip")
+    return sum(len(row.get("passages", [])) for row in model["sources"])
+
+def _write_once(path: Path, raw: bytes, guard) -> None:
+    guard()
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    dfd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+
+def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: list,
+                               guard, source_snapshot_root: Path,
+                               carried_card_references: dict,
+                               carried_source_references: dict | None = None,
+                               carried_source_payloads: dict | None = None,
+                               stage_clock_sha256: str, protocol_sha256: str,
+                               qualified_source_revision: str) -> dict:
+    out = Path(output_root)
+    if out.exists() or out.is_symlink():
+        raise PrepareError("source-preparation-output-must-be-new")
+    if (type(carried_card_references) is not dict
+            or carried_card_references.get("schema") != "exp095-carried-card-reference-proof/1"
+            or carried_card_references.get("card_job_count") != 16
+            or carried_card_references.get("record_count") != 884
+            or carried_card_references.get("card_assessments_carried_unchanged") is not True
+            or carried_card_references.get("exp084_grader_outputs_used") is not False):
+        raise PrepareError("carried-card-proof-required")
+    helper_path = EXP088 / "prepare-assessments.py.txt"
+    if helper_path.is_symlink() or not helper_path.is_file():
+        raise PrepareError("frozen-source-preparer-unavailable")
+    helper = importlib.machinery.SourceFileLoader("exp094_frozen_088_preparer", str(helper_path)).load_module()
+    view_path = HERE / "input-view-verifier.py.txt"
+    if view_path.is_symlink() or not view_path.is_file():
+        raise PrepareError("packet-view-verifier-unavailable")
+    view_verifier = importlib.machinery.SourceFileLoader(
+        "exp094_input_view_verifier_prepare", str(view_path)).load_module()
+    internal = out / "deterministic-preparation"
+    result = helper.prepare(output_root=internal, acquisition=acquisition, cases=cases,
+                            guard=guard, source_snapshot_root=Path(source_snapshot_root))
+    manifest_path = internal / "manifest.json"
+    raw = manifest_path.read_bytes()
+    manifest = json.loads(raw)
+    jobs = manifest.get("jobs")
+    if type(jobs) is not list:
+        raise PrepareError("frozen-source-manifest")
+    active = [row for row in jobs if row.get("role") == "source" and row.get("model_call_required") is True]
+    if len(active) != 48:
+        raise PrepareError("source-active-slot-count")
+    # Construct each codebook once from the complete six-slot EXP-088 binding
+    # universe before any source packet can be dispatched.
+    by_task = {}
+    for job in active:
+        task = job["task_id"]
+        binding_path = internal / job["label_binding_path"]
+        if binding_path.is_symlink() or not binding_path.is_file():
+            raise PrepareError("source-label-binding-missing")
+        by_task.setdefault(task, []).append(json.loads(binding_path.read_bytes()))
+    code_codec = _load_code_codec()
+    tables = {}
+    manifests = []
+    for task, documents in sorted(by_task.items()):
+        slots_for_task = [document["model_input"]["chunk_id"] for document in documents]
+        table = code_codec.build_task_table(task, documents, slots_for_task)
+        tables[task] = table
+        manifests.append(code_codec.manifest(table))
+    codebook_sha256 = {row["task_id"]: row["table_sha256"] for row in manifests}
+    slots = []
+    input_refs = []
+    alias_reference_total = 0
+    carry_proof = carried_source_references
+    carry_payloads = carried_source_payloads
+    if carry_proof is None and carry_payloads is None:
+        carry_proof, carry_payloads = {}, {}
+    if type(carry_proof) is not dict or type(carry_payloads) is not dict:
+        raise PrepareError("carried-source-proof-shape")
+    carry_rows = carry_proof.get("assignments", [])
+    if carry_rows:
+        if (carry_proof.get("schema") != "exp095-source-checkpoint-proof/1"
+                or carry_proof.get("accepted_assignments") != 5
+                or len(carry_rows) != 5):
+            raise PrepareError("carried-source-proof-coverage")
+        if EXP094_TERMINAL.is_symlink() or not EXP094_TERMINAL.is_file():
+            raise PrepareError("exp094-public-terminal-receipt-missing")
+        terminal = json.loads(EXP094_TERMINAL.read_bytes())
+        expected_carry_ids = {row.get("logical_submission") for row in terminal.get("valid_source_receipts", [])
+                              if type(row) is dict}
+        if terminal.get("schema") != "exp094-interrupted-stage/1" or len(expected_carry_ids) != 5:
+            raise PrepareError("exp094-public-terminal-receipt-shape")
+    else:
+        expected_carry_ids = set()
+    carry_by_slot = {}
+    for row in carry_rows:
+        if (type(row) is not dict or type(row.get("logical_submission")) is not str
+                or row["logical_submission"] in carry_by_slot):
+            raise PrepareError("carried-source-proof-slot")
+        carry_by_slot[row["logical_submission"]] = row
+    if carry_rows and set(carry_by_slot) != expected_carry_ids:
+        raise PrepareError("carried-source-not-exact-original-five")
+    if set(carry_by_slot) != set(carry_payloads):
+        raise PrepareError("carried-source-response-coverage")
+    carry_receipts = []
+    fresh_slots = []
+    for job in active:
+        input_path = internal / job["input_path"]
+        label_path = internal / job["label_binding_path"]
+        for path in (input_path, label_path):
+            if path.is_symlink() or not path.is_file():
+                raise PrepareError("source-input-file-missing")
+        input_raw = input_path.read_bytes()
+        label_raw = label_path.read_bytes()
+        if (len(input_raw) != job.get("input_bytes") or _sha(input_raw) != job.get("input_sha256")
+                or len(input_raw) > 384_000
+                or _sha(label_raw) != job.get("label_binding_sha256")):
+            raise PrepareError("source-input-hash-or-size")
+        alias_proof = verify_source_alias_binding(input_raw, label_raw, job["task_id"])
+        original_packet = json.loads(input_raw)
+        original_model = original_packet.get("source_model_input")
+        if original_model != json.loads(label_raw).get("model_input"):
+            raise PrepareError("source-alias-input-binding-mismatch")
+        table = tables[job["task_id"]]
+        code_codec = _load_code_codec()
+        encoded_model = code_codec.rewrite_grouped_rows(original_model, ("sources",), "source_id",
+            (("passages", "*", "evidence_id"),), table)
+        encoded_packet = dict(original_packet)
+        encoded_packet["source_model_input"] = encoded_model
+        encoded_raw = _submission_json(encoded_packet)
+        if len(encoded_raw) > 384_000:
+            raise PrepareError("encoded-source-input-byte-cap")
+        count = _verify_fixed_code_input(encoded_raw, original_model, table, job["task_id"])
+        if count != alias_proof["passage_reference_count"]:
+            raise PrepareError("fixed-code-reference-count-mismatch")
+        alias_reference_total += count
+        # This private per-slot receipt binds the old exact packet mapping to
+        # the complete task codebook without adding fields to registered rows.
+        old_bundle = json.loads(label_raw)
+        slot_binding = {"schema": "exp097-slot-citation-binding/1",
+            "study_id": "EXP-097", "logical_submission": job["logical_submission"],
+            "task_id": job["task_id"], "source_binding": old_bundle,
+            "source_binding_sha256": _sha(_canonical(old_bundle)),
+            "source_binding_file_sha256": _sha(label_raw),
+            "task_table": code_codec.manifest(table), "task_table_sha256": table.binding_sha256,
+            "task_table_entries": [list(entry) for entry in table.entries]}
+        slot_binding_raw = _canonical(slot_binding)
+        carry = carry_by_slot.get(job["logical_submission"])
+        if carry is not None:
+            carry_identity = carry.get("slot_identity")
+            required = {"logical_submission", "input_sha256", "task_table_sha256",
+                        "validation_sha256", "decoded_response_sha256", "slot_identity"}
+            identity_fields = {"logical_submission", "role", "task_id", "assessor_id",
+                               "chunk_index", "helper_id"}
+            if (not required.issubset(carry) or type(carry_identity) is not dict
+                    or set(carry_identity) != identity_fields):
+                raise PrepareError("carried-source-proof-fields")
+            if (carry_identity.get("logical_submission") != job["logical_submission"]
+                    or carry_identity.get("role") != "source"
+                    or carry_identity.get("task_id") != job["task_id"]
+                    or carry_identity.get("assessor_id") != job["assessor_id"]
+                    or carry_identity.get("chunk_index") != job["chunk_index"]
+                    or carry_identity.get("helper_id") != job["helper_id"]):
+                raise PrepareError("carried-source-original-slot-identity")
+            if (carry["input_sha256"] != _sha(encoded_raw)
+                    or carry["task_table_sha256"] != table.binding_sha256):
+                raise PrepareError("carried-source-input-or-codebook-mismatch")
+            payload = carry_payloads[job["logical_submission"]]
+            if (type(payload) is not dict
+                    or payload.get("logical_submission") != job["logical_submission"]
+                    or type(payload.get("decoded_response")) is not dict):
+                raise PrepareError("carried-source-decoded-payload-shape")
+            for name in ("input_sha256", "task_table_sha256", "validation_sha256",
+                         "decoded_response_sha256", "dispatch_sha256", "label_binding_sha256"):
+                if name in carry and payload.get(name) != carry[name]:
+                    raise PrepareError("carried-source-payload-binding-mismatch")
+            if _sha(_canonical(payload["decoded_response"])) != carry["decoded_response_sha256"]:
+                raise PrepareError("carried-source-decoded-response-hash")
+            safe_carry_fields = {"logical_submission", "slot_identity",
+                                 "input_sha256", "task_table_sha256", "validation_sha256",
+                                 "decoded_response_sha256", "decoded_file_sha256", "dispatch_sha256",
+                                 "label_binding_sha256", "transcript_log_sha256", "final_text_sha256",
+                                 "page_count", "source_count", "tool_call_count", "final_text_bytes"}
+            carry_receipts.append({key: carry[key] for key in sorted(safe_carry_fields & set(carry))})
+        else:
+            fresh_slots.append(job["logical_submission"])
+        slot_binding_rel = Path("citation-bindings") / (job["logical_submission"] + ".json")
+        _write_once(internal / slot_binding_rel, slot_binding_raw, guard)
+        wire_path = internal / "wire-inputs" / (job["logical_submission"] + ".json")
+        _write_once(wire_path, encoded_raw, guard)
+        input_ref = str(wire_path.resolve())
+        try:
+            view_plan = view_verifier.input_view_plan(
+                encoded_raw, expected_sha256=_sha(encoded_raw), input_path=input_ref,
+                viewer_path=str((HERE / "packet-viewer.py.txt").resolve()),
+                slot_id=job["logical_submission"], source_manifest_sha256=_sha(raw))
+        except ValueError as exc:
+            raise PrepareError("source-input-view-plan-invalid") from exc
+        slots.append({"logical_submission": job["logical_submission"], "role": "source",
+                      "task_id": job["task_id"], "assessor_id": job["assessor_id"],
+                      "chunk_index": job["chunk_index"], "helper_id": job["helper_id"],
+                      "input_sha256": _sha(encoded_raw), "input_bytes": len(encoded_raw),
+                      "label_binding_sha256": _sha(slot_binding_raw),
+                      "input_view_plan": view_plan,
+                      "stage_clock_sha256": stage_clock_sha256,
+                      "protocol_sha256": protocol_sha256,
+                      "qualified_source_revision": qualified_source_revision,
+                      "checkpoint_state": "carried" if carry is not None else "fresh_dispatch"})
+        input_refs.append({"logical_submission": job["logical_submission"],
+                           "input_path": input_ref,
+                           "label_binding_path": (Path("deterministic-preparation") / slot_binding_rel).as_posix()})
+    slots.sort(key=lambda row: row["logical_submission"])
+    protocol_obj = json.loads((HERE / "protocol.json").read_bytes())
+    assessment_model_id = protocol_obj.get("models", {}).get("assessment_model", {}).get("model_id")
+    if assessment_model_id != "gpt-6.1-sol":
+        raise PrepareError("assessment-model-binding-invalid")
+    if carry_rows and len(carry_receipts) != 5:
+        raise PrepareError("carried-source-slot-binding-coverage")
+    if carry_rows and len(fresh_slots) != 43:
+        raise PrepareError("fresh-source-slot-count")
+    slot_manifest = {"schema": "exp097-source-slot-manifest/1", "study_id": "EXP-097",
+                     "requested_assessment_model_id": assessment_model_id,
+                     "stage_clock_sha256": stage_clock_sha256,
+                     "protocol_sha256": protocol_sha256,
+                     "qualified_source_revision": qualified_source_revision,
+                     "preparation_manifest_sha256": _sha(raw),
+                     "carried_card_proof": carried_card_references,
+                     "citation_codebooks": manifests,
+                     "citation_codebook_set_sha256": _sha(_canonical(manifests)),
+                     "active_source_slot_count": len(slots), "active_source_slots": slots,
+                     "carried_source_assignments": carry_receipts,
+                     "carried_source_assignment_count": len(carry_receipts),
+                     "fresh_dispatch_slots": fresh_slots,
+                     "fresh_dispatch_slot_count": len(fresh_slots),
+                     "citation_alias_integrity": {"schema": "exp095-source-citation-code-summary/1",
+                         "validated_source_slot_count": len(slots),
+                         "validated_passage_reference_count": alias_reference_total,
+                         "all_passage_references_are_bound_codes": True},
+                     "source_input_refs": sorted(input_refs, key=lambda row: row["logical_submission"]),
+                     "card_reference_dispatch_slots": 0, "model_calls_performed": 0}
+    slot_raw = _canonical(slot_manifest)
+    _write_once(out / "source-slot-manifest.json", slot_raw, guard)
+    return {"schema": "exp097-source-preparation/1", "status": "prepared",
+            "active_source_slot_count": len(slots),
+            "carried_source_assignment_count": len(carry_receipts),
+            "fresh_dispatch_slot_count": len(fresh_slots),
+            "source_slot_manifest": "source-slot-manifest.json",
+            "source_slot_manifest_sha256": _sha(slot_raw),
+            "preparation_manifest_sha256": _sha(raw),
+            "carried_card_reference_count": 16,
+            "card_reference_dispatch_slots": 0, "model_calls_performed": 0}

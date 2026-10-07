@@ -1,0 +1,153 @@
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+C = importlib.machinery.SourceFileLoader("exp094_final_json_carrier", str(HERE / "final-json-carrier.py.txt")).load_module()
+
+
+def inventory():
+    source, answer = [], []
+    for task in range(1, 9):
+        for assessor in ("R1", "R2"):
+            for chunk in range(3):
+                source.append({"logical_submission": f"development-d{task}-source-{assessor}-{chunk+1}", "role": "source",
+                               "task_id": f"d{task}", "assessor_id": assessor, "chunk_index": chunk,
+                               "helper_id": f"chunk-{chunk}"})
+            for arm in ("arm1", "arm2"):
+                answer.append({"logical_submission": f"development-d{task}-answer-{assessor}-{arm}", "role": "answer-assessor",
+                               "task_id": f"d{task}", "assessor_id": assessor, "anonymous_arm": arm,
+                               "packet_id": f"packet-d{task}-{arm}"})
+    return source, answer
+
+
+def binding(row, phase="source"):
+    result = {**row, "input_sha256": "1"*64, "input_bytes": 100,
+            "label_binding_sha256": "2"*64, "stage_clock_sha256": "3"*64,
+            "protocol_sha256": "4"*64, "qualified_source_revision": "a"*40}
+    if row["role"] == "answer-assessor":
+        result.update({"grouped_binding_sha256": "7"*64,
+                       "grouped_packet_sha256": "8"*64,
+                       "original_coded_packet_sha256": "9"*64})
+    return result
+
+
+def answer_manifest():
+    return {"schema": "exp095-answer-output-manifest/1", "status": "complete",
+            "answers": [{"task_id": f"d{task}", "arm": arm, "answer_sha256": "5"*64,
+                         "receipt_sha256": "6"*64, "bytes": 123}
+                        for task in range(1, 9) for arm in ("w0", "candidate")]}
+
+
+class ReceiverTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        src, ans = inventory()
+        self.src, self.ans = src, ans
+        self.registry = C.SlotRegistry(src, ans)
+        self.registry.bind_source_inputs([binding(row) for row in src])
+        self.registry.bind_answer_inputs([binding(row, "answer") for row in ans], answer_output_manifest=answer_manifest())
+        self.phase_checks = 0
+        self.receiver = C.FinalTextReceiver(self.registry, self.root / "stage" / "raw",
+            stage_outdir=self.root / "stage", phase_binding={"phase": "source-reference"},
+            require_phase=self.require_phase)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def require_phase(self, binding):
+        self.phase_checks += 1
+
+    def test_exact_final_text_bytes_are_persisted_and_hashed(self):
+        slot = self.src[0]["logical_submission"]
+        expected = self.registry.binding(slot)
+        text = '{ "é": 1 }\n'
+        receipt = self.receiver.receive(slot, expected, text)
+        body = (self.root / "stage" / "raw" / receipt["path"]).read_bytes()
+        self.assertEqual(body, text.encode("utf-8"))
+        self.assertEqual(receipt["sha256"], C.sha(body))
+        self.assertFalse(receipt["parsed_or_repaired"])
+        self.assertEqual(self.phase_checks, 2)
+
+    def test_answer_receipt_binds_frozen_answer_output_manifest(self):
+        slot = self.ans[0]["logical_submission"]
+        binding_row = self.registry.binding(slot)
+        receipt = self.receiver.receive(slot, binding_row, '{"grade":1}')
+        self.assertEqual(receipt["answer_output_manifest_sha256"],
+                         C.sha(C.canonical(answer_manifest())))
+        for key in ("grouped_binding_sha256", "grouped_packet_sha256", "original_coded_packet_sha256"):
+            self.assertEqual(receipt[key], binding_row[key])
+
+    def test_source_binding_does_not_gain_answer_representation_fields(self):
+        slot = self.src[0]["logical_submission"]
+        binding_row = self.registry.binding(slot)
+        self.assertNotIn("grouped_packet_sha256", binding_row)
+
+    def test_wrong_or_mismatched_slots_reject_before_write(self):
+        slot = self.src[0]["logical_submission"]
+        with self.assertRaises(C.CarrierError):
+            self.receiver.receive("not-a-slot", self.registry.binding(slot), "{}")
+        wrong = dict(self.registry.binding(slot)); wrong["input_sha256"] = "f"*64
+        with self.assertRaisesRegex(C.CarrierError, "slot-binding-mismatch"):
+            self.receiver.receive(slot, wrong, "{}")
+        self.assertEqual(list((self.root / "stage" / "raw").iterdir()), [])
+
+    def test_missing_empty_and_oversize_are_terminal_without_repair(self):
+        slot = self.src[0]["logical_submission"]
+        binding = self.registry.binding(slot)
+        with self.assertRaisesRegex(C.CarrierError, "missing-or-empty"):
+            self.receiver.receive(slot, binding, "")
+        receipt = self.receiver.terminal_missing(slot, binding)
+        self.assertEqual(receipt["status"], "missing_final_text")
+        with self.assertRaisesRegex(C.CarrierError, "duplicate"):
+            self.receiver.receive(slot, binding, "{}")
+        slot2 = self.src[1]["logical_submission"]
+        with self.assertRaisesRegex(C.CarrierError, "byte-cap"):
+            self.receiver.receive(slot2, self.registry.binding(slot2), "x"*(C.MAX_OUTPUT_BYTES+1))
+
+    def test_duplicate_and_fenced_text_preserved_not_repaired(self):
+        slot = self.src[1]["logical_submission"]
+        binding = self.registry.binding(slot)
+        text = "```json\n{\"x\":1}\n```"
+        receipt = self.receiver.receive(slot, binding, text)
+        raw = (self.root / "stage" / "raw" / receipt["path"]).read_bytes()
+        self.assertEqual(raw, text.encode())
+        with self.assertRaises(Exception):
+            json.loads(raw)
+        with self.assertRaisesRegex(C.CarrierError, "duplicate"):
+            self.receiver.receive(slot, binding, "{}")
+
+    def test_answer_hashes_cannot_be_bound_until_after_source_phase_and_only_once(self):
+        src, ans = inventory()
+        registry = C.SlotRegistry(src, ans)
+        with self.assertRaisesRegex(C.CarrierError, "answer-bind-phase"):
+            registry.bind_answer_inputs([binding(row) for row in ans], answer_output_manifest=answer_manifest())
+        registry.bind_source_inputs([binding(row) for row in src])
+        registry.bind_answer_inputs([binding(row) for row in ans], answer_output_manifest=answer_manifest())
+        with self.assertRaisesRegex(C.CarrierError, "answer-bind-phase"):
+            registry.bind_answer_inputs([binding(row) for row in ans], answer_output_manifest=answer_manifest())
+
+    def test_answer_slot_binding_requires_complete_actual_output_manifest(self):
+        src, ans = inventory()
+        registry = C.SlotRegistry(src, ans)
+        registry.bind_source_inputs([binding(row) for row in src])
+        with self.assertRaisesRegex(C.CarrierError, "answer-output-manifest"):
+            registry.bind_answer_inputs([binding(row, "answer") for row in ans])
+        invalid = answer_manifest()
+        invalid["answers"].pop()
+        with self.assertRaisesRegex(C.CarrierError, "answer-output-manifest"):
+            registry.bind_answer_inputs([binding(row, "answer") for row in ans], answer_output_manifest=invalid)
+        registry.bind_answer_inputs([binding(row, "answer") for row in ans], answer_output_manifest=answer_manifest())
+
+    def test_source_and_answer_binding_coverage_is_exact(self):
+        src, ans = inventory()
+        registry = C.SlotRegistry(src, ans)
+        with self.assertRaisesRegex(C.CarrierError, "source-binding-coverage"):
+            registry.bind_source_inputs([binding(row) for row in src[:-1]])
+
+
+if __name__ == "__main__":
+    unittest.main()

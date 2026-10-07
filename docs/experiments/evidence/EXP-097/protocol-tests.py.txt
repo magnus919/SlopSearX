@@ -1,0 +1,296 @@
+import hashlib
+import json
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+PREDECESSOR_PROTOCOL = HERE.parent / "EXP-094" / "protocol.json"
+CURRENT = HERE / "protocol.json"
+
+
+class ProtocolTests(unittest.TestCase):
+    def test_answer_grouped_representation_is_explicit_and_source_wire_is_frozen(self):
+        protocol = json.loads(CURRENT.read_text())
+        representation = protocol["answer_assessment_packets"]["representation"]
+        self.assertEqual(representation["schema"], "exp096-grouped-evidence-catalog/1")
+        self.assertEqual(representation["scope"], "answer_assessor_model_input_only")
+        self.assertTrue(representation["source_inputs_unchanged"])
+        self.assertTrue(representation["answer_rubric_unchanged"])
+        self.assertFalse(representation["opaque_compression_or_text_chunking"])
+        self.assertIn("evidence_sources[source_id].passages[evidence_code]", representation["lookup"])
+        self.assertEqual(representation["claim_identity"]["authoritative_inventory"],
+                         "facet_claims supplies frozen claim IDs and exact text by facet")
+        self.assertEqual(representation["claim_identity"]["answer_content"],
+                         "answer_facets retains raw answer content")
+        failure = protocol["answer_assessment_packets"]["preparation_failure"]
+        self.assertIn("one-shot fail-closed", failure)
+        self.assertIn("partial artifacts are retained", failure)
+        self.assertIn("must not be cleaned, retried", failure)
+        self.assertEqual(hashlib.sha256((HERE / "grouped-evidence-catalog.py.txt").read_bytes()).hexdigest(),
+                         protocol["answer_assessment_packets"]["representation"]["codec_sha256"])
+
+    def test_exp095_size_failure_is_terminal_and_has_no_qualification_credit(self):
+        protocol = json.loads(CURRENT.read_text())
+        receipt = json.loads((HERE / "exp095-terminal-preflight.json").read_text())
+        self.assertEqual(receipt["status"], "blocked-before-answer-assessor-submission")
+        self.assertEqual(receipt["input_bytes"], 505412)
+        self.assertEqual(receipt["viewer_delivery_bytes_including_reserve"], 551306)
+        self.assertEqual(receipt["unchanged_total_delivery_cap_bytes"], 384000)
+        self.assertEqual(receipt["provider_calls"], 0)
+        self.assertFalse(receipt["sparse_fixture_qualification_credit"])
+        self.assertIn("EXP-097", receipt["prospective_successor"])
+        self.assertIn("supplied to the grader", protocol["answer_assessment_packets"]["delivery"])
+
+    def test_exp097_readiness_authority_and_answer_order_provenance_are_explicit(self):
+        protocol = json.loads(CURRENT.read_text())
+        self.assertEqual(protocol["schema"], "exp097-readiness-separated-checkpoint-replay/1")
+        self.assertEqual(protocol["status"], "prospective_unsealed")
+        self.assertEqual(protocol["predecessor"]["id"], "EXP-096")
+        self.assertEqual(protocol["predecessor"]["scientific_calls"], 0)
+        self.assertFalse(protocol["predecessor"]["qualification_credit"])
+        readiness = protocol["runtime_readiness_baseline"]
+        self.assertEqual(readiness["schema"], "exp097-readiness-baseline/1")
+        self.assertEqual(readiness["external_pin"], "external_source_pins.readiness_baseline.sha256")
+        self.assertTrue(readiness["private_values"])
+        self.assertEqual(readiness["private_file_mode"], "0600")
+        self.assertIn("every phase guard", readiness["selected_path_binding"])
+        self.assertIn("no process-global path override", readiness["selected_path_binding"])
+        self.assertTrue(readiness["exactly_one_current_health_request"])
+        self.assertEqual(set(readiness["successful_health_required_before"]), {
+            "assessment-preparation", "carried-card-validation", "source-reference", "selector",
+            "answer", "answer-assessment", "analysis"})
+        self.assertIn("every subsequent phase revalidates", readiness["downstream_gate"])
+        self.assertIn("never a current runtime readiness baseline", readiness["distinct_from"])
+        self.assertIn("configuration read", readiness["mismatch_or_missing"])
+        self.assertEqual(protocol["input_provenance"]["schema"], "exp097-reused-input-pins/1")
+        pins = json.loads((HERE / "reuse-input-pins.json").read_text())
+        self.assertEqual(pins["schema"], "exp097-reused-input-pins/1")
+        self.assertEqual(pins["study_id"], "EXP-097")
+        self.assertEqual(pins["source_stage"], "EXP-089-frozen-input-bundle")
+        self.assertEqual(pins["file_count"], 513)
+        self.assertEqual(pins["total_bytes"], 20838164)
+        self.assertEqual(protocol["carry_forward_source_assessments"]["source_study"], "EXP-095")
+        self.assertEqual(protocol["external_source_pins"]["readiness_baseline"], {
+            "sha256": "59a8fa8284a3e88cc4508fd9f3cf6aca16d88f5dee786bcb5f537ee8a127ef99"})
+        self.assertEqual(set(protocol["external_source_pins"]), {
+            "readiness_baseline", "final_text_reader", "actor_binding",
+            "source_coordinator", "answer_coordinator"})
+        self.assertEqual(protocol["external_source_pins"]["actor_binding"]["sha256"],
+                         "c1e292b5e5d90c0e94c05f91784b0db6ee5955da0a66b380184bf92f0d604a18")
+        self.assertEqual(protocol["external_source_pins"]["source_coordinator"]["sha256"],
+                         "ee1d6d9b3ea65bc20f88ce7c5bc8b850a13ce582eb8b5bde288d390d1ba7ea6c")
+        self.assertEqual(protocol["external_source_pins"]["answer_coordinator"]["sha256"],
+                         "d3629bb21ae88935b92d2fab8affa2fb851415f7037476c326fc4971a320f765")
+        self.assertEqual(json.loads((HERE / "stage-development-manifest.json").read_text())["study_id"], "EXP-097")
+        self.assertEqual(json.loads((HERE / "registration-integrity.json").read_text())["study_id"], "EXP-097")
+        self.assertEqual(json.loads((HERE / "qualification-integrity.json").read_text())["study_id"], "EXP-097")
+        registration = json.loads((HERE / "registration-integrity.json").read_text())
+        qualification = json.loads((HERE / "qualification-integrity.json").read_text())
+        self.assertEqual(registration["schema"], "exp097-registration/1")
+        self.assertEqual(registration["study_id"], "EXP-097")
+        self.assertEqual(qualification["schema"], "exp097-qualification/1")
+        self.assertEqual(qualification["study_id"], "EXP-097")
+        self.assertIsInstance(registration["registered"], bool)
+        self.assertIsInstance(qualification["qualified"], bool)
+        self.assertIn(
+            (registration["status"], registration["registered"],
+             qualification["status"], qualification["qualified"]),
+            {("prospective_unsealed", False, "prospective_unsealed", False),
+             ("registered", True, "qualified", True)},
+        )
+        if registration["registered"]:
+            self.assertRegex(registration["registered_source_revision"], r"^[0-9a-f]{40}$")
+            self.assertEqual(registration["registered_source_revision"],
+                             qualification["qualified_source_revision"])
+            self.assertEqual(registration["source_files"], qualification["files"])
+            self.assertEqual(qualification["registration_sha256"], hashlib.sha256(
+                (HERE / "registration-integrity.json").read_bytes()).hexdigest())
+            self.assertEqual(qualification["stage_manifest_sha256"], hashlib.sha256(
+                (HERE / "stage-development-manifest.json").read_bytes()).hexdigest())
+        self.assertIs(registration["live_stage_started"], False)
+        self.assertIs(qualification["live_stage_started"], False)
+        self.assertIn("new EXP-097 admission", protocol["recovery_runtime"]["health"])
+        self.assertIn("private baseline revision", protocol["recovery_runtime"]["health_request"])
+        self.assertIn("never used as the current-runtime baseline", protocol["recovery_runtime"]["health_request"])
+        self.assertEqual(json.loads((HERE / "exp095-terminal-preflight.json").read_text())["provider_calls"], 0)
+        self.assertIn("EXP-096 lossless grouped evidence table", protocol["recovery_runtime"]["purpose"])
+        self.assertIn("guarded selector artifact", protocol["preflight_requirements"]["answerer_inputs"])
+        self.assertIn("base-variant top-10 orders", protocol["preflight_requirements"]["answerer_inputs"])
+
+    def test_fixed_candidate_and_all_frozen_numerical_gates(self):
+        new = json.loads(CURRENT.read_text())
+        old = json.loads(PREDECESSOR_PROTOCOL.read_text())
+        for field in ("candidate", "quality", "task_use", "consumer", "jev_invocation"):
+            self.assertEqual(new[field], old[field], field)
+        quality = new["quality"]
+        self.assertEqual(quality["independent_references"], ["A", "B"])
+        self.assertEqual(quality["mean_ndcg10_gain_minimum"], 0.02)
+        self.assertEqual(quality["bootstrap_draws"], 10000)
+        self.assertEqual(quality["bootstrap_seed"], 7701)
+        self.assertEqual(quality["per_case_delta_minimum"], -0.03)
+        self.assertEqual(quality["top10_overlap_minimum"], 0.8)
+        self.assertEqual(quality["incumbent_identity_displacement"], "diagnostic_only")
+        self.assertEqual(quality["exact_navigation_targets_per_stage"], 5)
+        self.assertTrue(quality["all_targets_acquired_and_top1_required"])
+
+    def test_only_source_and_answer_reference_tokens_are_reencoded(self):
+        protocol = json.loads(CURRENT.read_text())
+        source = protocol["source_citation_aliases"]
+        self.assertEqual(source["schema"], "exp095-task-citation-code/1")
+        self.assertEqual(source["current_stage_source_manifest_schema"], "exp097-source-slot-manifest/1")
+        self.assertEqual(source["current_stage_slot_binding_schema"], "exp097-slot-citation-binding/1")
+        self.assertEqual(source["format"], "D<task digit>E<four decimal digits>")
+        self.assertIn("before dispatch", source["codebook"])
+        self.assertIn("exact inverse decoding", source["validation"])
+        self.assertIn("before dispatch", source["codebook"])
+        self.assertEqual(source["unchanged"], [
+            "source_id", "task_id", "claim/facet/task/packet/arm identities",
+            "source text and context", "all non-reference values",
+            "array/list order and multiplicity", "catalog order"])
+        self.assertEqual(source["codec_sha256"], hashlib.sha256(
+            (HERE / "citation-codec.py.txt").read_bytes()).hexdigest())
+        predecessor = HERE.parent / "EXP-094"
+        for key, filename in (("source_prompt_sha256", "source-assessor-prompt.txt"),
+                              ("answerer_prompt_sha256", "answerer-prompt.txt"),
+                              ("answer_assessor_prompt_sha256", "answer-assessor-prompt.txt")):
+            current = (HERE / filename).read_bytes()
+            self.assertEqual(source[key], hashlib.sha256(current).hexdigest())
+            self.assertEqual(current, (predecessor / filename).read_bytes())
+
+    def test_fresh_slots_and_cumulative_budget_are_explicit(self):
+        protocol = json.loads(CURRENT.read_text())
+        models = protocol["models"]
+        self.assertEqual(models["source_assessment_calls_expected"], 43)
+        self.assertEqual(models["answer_assessment_calls_expected"], 32)
+        self.assertEqual(models["historical_grader_submissions_counted"], 28)
+        self.assertEqual(models["maximum_logical_grader_submissions_per_stage"], 112)
+        self.assertIn("103 of 112", models["cumulative_development_grader_call_accounting"])
+        self.assertEqual(protocol["confirmation_scope"]["not_run"], True)
+        self.assertIn("entirely new tasks and pools", protocol["confirmation_scope"]["future_requirement"])
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_assignments"], 16)
+        self.assertEqual(protocol["acquisition"]["carry_forward_card_records"], 884)
+        self.assertFalse(protocol["acquisition"]["failed_source_submission_reused"])
+
+    def test_cohort_assessment_accounting_matches_registered_protocol(self):
+        protocol = json.loads(CURRENT.read_text())
+        cohorts = json.loads((HERE / "cohorts.json").read_text())
+        protocol_acquisition = protocol["acquisition"]
+        models = protocol["models"]
+        cohort_acquisition = cohorts["acquisition"]
+
+        self.assertEqual(cohorts["fresh_source_assessments"], 43)
+        self.assertEqual(cohort_acquisition["fresh_source_assessments"], 43)
+        self.assertEqual(cohorts["fresh_source_assessments"],
+                         protocol_acquisition["source_assessments_fresh"])
+        self.assertEqual(cohort_acquisition["fresh_source_assessments"],
+                         protocol_acquisition["source_assessments_fresh"])
+        self.assertEqual(cohorts["fresh_answer_assessments"],
+                         protocol_acquisition["fresh_answer_assessments"])
+        for section in (cohorts, cohort_acquisition):
+            self.assertEqual(section["source_assessments_carried_unchanged"], 5)
+            self.assertEqual(section["source_assessments_total_required"], 48)
+            self.assertEqual(section["fresh_source_assessments"] +
+                             section["source_assessments_carried_unchanged"],
+                             section["source_assessments_total_required"])
+            self.assertEqual(section["source_assessments_carried_unchanged"],
+                             protocol_acquisition["source_assessments_carried_unchanged"])
+            self.assertEqual(section["source_assessments_total_required"],
+                             protocol_acquisition["source_assessments_total_required"])
+        self.assertEqual(cohort_acquisition["fresh_answer_assessments"], 32)
+        self.assertEqual(cohorts["fresh_answer_assessments"], 32)
+        self.assertEqual(cohorts["fresh_answer_assessments"], models["answer_assessment_calls_expected"])
+        self.assertEqual(cohorts["fresh_grader_submissions_total"], 75)
+        self.assertEqual(cohorts["fresh_grader_submissions_total"],
+                         protocol_acquisition["fresh_grader_submissions_total"])
+        self.assertEqual(cohorts["fresh_source_assessments"] +
+                         cohorts["fresh_answer_assessments"],
+                         cohorts["fresh_grader_submissions_total"])
+        self.assertEqual(cohorts["historical_grader_submissions_total"], 28)
+        self.assertEqual(cohorts["historical_grader_submissions_total"],
+                         protocol_acquisition["historical_grader_submissions_total"])
+        self.assertEqual(cohorts["planned_grader_submissions_total"], 103)
+        self.assertEqual(cohorts["fresh_grader_submissions_total"] +
+                         cohorts["historical_grader_submissions_total"],
+                         cohorts["planned_grader_submissions_total"])
+        self.assertEqual(cohorts["planned_grader_submissions_total"],
+                         protocol_acquisition["planned_grader_submissions_total"])
+        self.assertEqual(cohorts["maximum_logical_grader_submissions_per_stage"],
+                         models["maximum_logical_grader_submissions_per_stage"])
+        self.assertLessEqual(cohorts["planned_grader_submissions_total"],
+                             cohorts["maximum_logical_grader_submissions_per_stage"])
+        self.assertEqual(cohorts["planned_answer_api_calls"], 18)
+        self.assertEqual(cohorts["planned_answer_api_calls"], models["planned_fresh_answer_api_calls"])
+        self.assertEqual(cohorts["planned_answer_api_calls"],
+                         protocol_acquisition["planned_answer_api_calls"])
+        self.assertEqual(cohorts["planned_all_model_submissions_total"], 121)
+        self.assertEqual(cohorts["planned_grader_submissions_total"] +
+                         cohorts["planned_answer_api_calls"],
+                         cohorts["planned_all_model_submissions_total"])
+        self.assertEqual(cohorts["planned_all_model_submissions_total"],
+                         protocol_acquisition["planned_all_model_submissions_total"])
+        self.assertEqual(cohorts["maximum_total_logical_model_submissions_per_stage"],
+                         models["maximum_total_logical_model_submissions_per_stage"])
+        self.assertLessEqual(cohorts["planned_all_model_submissions_total"],
+                             cohorts["maximum_total_logical_model_submissions_per_stage"])
+        basis = cohorts["request_count_basis"]
+        for phrase in ("5 carried unchanged plus 43 fresh = 48 source slots",
+                       "43 source plus 32 answer = 75",
+                       "28 historical grader submissions",
+                       "103 of the 112 maximum",
+                       "18 free answer API calls",
+                       "121 of 130 planned total model submissions",
+                       "unchanged Jev limit is 44 calls"):
+            self.assertIn(phrase, basis)
+
+    def test_exp096_is_terminal_and_exp094_carry_provenance_is_preserved(self):
+        protocol = json.loads(CURRENT.read_text())
+        predecessor = protocol["predecessor"]
+        self.assertEqual(predecessor["id"], "EXP-096")
+        self.assertIn("before scientific calls", predecessor["terminal_status"])
+        self.assertEqual(predecessor["scientific_calls"], 0)
+        historical = protocol["historical_predecessor"]
+        self.assertEqual(historical["id"], "EXP-094")
+        self.assertEqual(historical["terminal_status"], "interrupted/deadline-expired")
+        self.assertFalse(historical["mutate_or_reclassify"])
+        self.assertEqual(historical["valid_source_assignments_carried"], 5)
+        self.assertTrue(historical["rejected_spawn_created_no_task"])
+        self.assertIn("terminal EXP-096 setup outcome", protocol["purpose"])
+        self.assertEqual(protocol["external_source_pins"]["final_text_reader"]["sha256"],
+                         "2354f83197bf7fe9eddcfd7cd07c17c3bd4b8190eb720c79d020d66c3ca7a54d")
+
+    def test_only_fresh_independent_assessments_request_sol(self):
+        protocol = json.loads(CURRENT.read_text())
+        models = protocol["models"]
+        self.assertEqual(models["assessment_model"]["model_id"], "gpt-6.1-sol")
+        self.assertEqual(set(models["assessment_model"]["scope"]),
+                         {"source_assessment", "answer_assessment"})
+        self.assertEqual(models["answerer_model"], "free")
+        self.assertEqual(models["health_model"], "free")
+        self.assertEqual(models["source_assessment_calls_expected"], 43)
+        self.assertEqual(models["answer_assessment_calls_expected"], 32)
+        self.assertEqual(models["historical_grader_submissions_counted"] +
+                         models["fresh_source_and_answer_assessments"], 103)
+        self.assertEqual(models["maximum_logical_grader_submissions_per_stage"], 112)
+        self.assertEqual(models["maximum_total_logical_model_submissions_per_stage"], 130)
+        self.assertIn("requested model in each dispatch receipt",
+                      models["assessment_model"]["assignment"])
+
+    def test_source_manifest_binds_assessment_model_without_changing_slot_rows(self):
+        preparer = (HERE / "prepare-source-assessments.py.txt").read_text()
+        self.assertIn("requested_assessment_model_id", preparer)
+        self.assertIn('"gpt-6.1-sol"', preparer)
+        carrier = (HERE / "final-json-carrier.py.txt").read_text()
+        self.assertIn('"protocol_sha256", "qualified_source_revision"', carrier)
+        self.assertNotIn('"requested_assessment_model_id"', carrier)
+
+    def test_no_card_calls_or_output_repairs(self):
+        protocol = json.loads(CURRENT.read_text())
+        self.assertNotIn("card-reference", protocol["phase_plan"]["ordered_phases"])
+        self.assertFalse(protocol["phase_plan"]["card_reference_phase_permitted"])
+        self.assertIn("no retries", protocol["stop"])
+        self.assertEqual(protocol["acquisition"]["new_searches"], 0)
+        self.assertEqual(protocol["acquisition"]["new_source_fetches"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
