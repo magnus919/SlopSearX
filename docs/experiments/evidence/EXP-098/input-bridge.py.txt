@@ -1,0 +1,429 @@
+"""EXP-098 bridge for frozen EXP-084 inputs and validated EXP-088 card references.
+
+This reuses the complete EXP-088 A/B card reference set as immutable input. It
+checks hashes, exact task/assessor coverage, label decoding, and the unchanged
+EXP-087 card adapter verifier. It exposes only opaque paths, hashes, and counts;
+semantic response content stays in the frozen private bundle. No network calls.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import json
+import os
+import re
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+PINS_PATH = HERE / "reuse-input-pins.json"
+EXP088_PINS_PATH = HERE.parent / "EXP-088" / "reuse-input-pins.json"
+TASK_IDS = [f"d{i}" for i in range(1, 9)]
+ASSESSORS = ("A", "B")
+EXPECTED_JOBS = {(task, assessor) for task in TASK_IDS for assessor in ASSESSORS}
+EXPECTED_TOTAL_FILES = 513
+EXPECTED_BASE_FILES = 381
+EXPECTED_CARD_FILES = 132
+EXP088_HELPERS = {
+    "assignment_plan_sha256": ("docs/experiments/evidence/EXP-077/assignment-plan.json", "487c655ab2c8d69c3b2acc9f0be46844df601abf0efe6ab31e79d7861907a9cd"),
+    "card_prompt_sha256": ("docs/experiments/evidence/EXP-088/card-assessor-prompt.txt", "749e0be185292935354afe6158d29dc952274b159781b69c26e0e8d498e2b78a"),
+    "card_reference_adapter_sha256": ("docs/experiments/evidence/EXP-088/card-reference-id-adapter.py.txt", "0eeeff86263fa37fd6c016a9e83c8ed8cfaa06f8358cc5efccfdf1035788c12f"),
+    "model_packets_sha256": ("docs/experiments/evidence/EXP-077/model-packets.py.txt", "92bc5ba825b76c2967a477da1d4481ee8ae9b696cd1eaf0956f552611c9912c7"),
+    "reference_labels_sha256": ("docs/experiments/evidence/EXP-088/reference-labels.py.txt", "f88def629293c87abd890cc42a748337c5225408e48be079832363d0b07ccf5c"),
+    "source_assessment_adapter_sha256": ("docs/experiments/evidence/EXP-077/source-assessment-adapter.py.txt", "89d6e5285c3f9cff36e71a7f33ed733acdc8171c17bf5069d0862b5e326fb862"),
+    "source_projector_sha256": ("docs/experiments/evidence/EXP-078/prepare.py.txt", "c5e3e3d65a5f1beaeb2419521b3a97bec9a612446fa1bd271e4813814735adfa"),
+    "source_prompt_sha256": ("docs/experiments/evidence/EXP-088/source-assessor-prompt.txt", "a198b754785485a1502d93a4796c78dc8122574775b424ebc3208575bdde5ce7"),
+}
+
+class InputError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise InputError("duplicate-json-key")
+            result[key] = value
+        return result
+    def constant(_value):
+        raise InputError("non-finite-json")
+    try:
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise InputError("invalid-json") from exc
+
+
+def _safe_path(name: str) -> PurePosixPath:
+    if type(name) is not str:
+        raise InputError("unsafe-input-path")
+    rel = PurePosixPath(name)
+    if rel.is_absolute() or not rel.parts or any(x in {"", ".", ".."} for x in rel.parts):
+        raise InputError("unsafe-input-path")
+    if rel.parts[0] not in {"original", "exp084", "exp088-card-reference"}:
+        raise InputError("input-root")
+    forbidden = {"source-assessments", "answer-assessments", "answerer", "selector", "analysis", "grades"}
+    if any(part in forbidden for part in rel.parts):
+        raise InputError("grader-output-is-not-input")
+    if rel.parts[0] == "exp088-card-reference":
+        if len(rel.parts) < 2 or rel.parts[1] not in {"assessment-inputs", "responses", "receipts", "provenance"}:
+            raise InputError("unexpected-card-reference-path")
+    return rel
+
+
+def _read(root: Path, name: str) -> bytes:
+    rel = _safe_path(name)
+    path, cursor = root.joinpath(*rel.parts), root
+    for part in rel.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise InputError("symlink-input")
+    if not path.is_file():
+        raise InputError("missing-input")
+    return path.read_bytes()
+
+
+def _load_pins(pins_path: Path) -> tuple[dict, bytes]:
+    raw = Path(pins_path).read_bytes()
+    pins = strict_json(raw)
+    if (type(pins) is not dict or pins.get("schema") != "exp098-reused-input-pins/1"
+            or pins.get("study_id") != "EXP-098"
+            or pins.get("status") != "registered_input_provenance"
+            or type(pins.get("files")) is not list):
+        raise InputError("pins-schema")
+    rows = pins["files"]
+    names = [r.get("path") for r in rows if type(r) is dict]
+    if len(names) != len(rows) or len(names) != len(set(names)):
+        raise InputError("pins-membership")
+    for name in names:
+        _safe_path(name)
+    base = [n for n in names if not n.startswith("exp088-card-reference/")]
+    card = [n for n in names if n.startswith("exp088-card-reference/")]
+    if (len(rows) != EXPECTED_TOTAL_FILES or len(base) != EXPECTED_BASE_FILES
+            or len(card) != EXPECTED_CARD_FILES or pins.get("file_count") != len(rows)
+            or pins.get("total_bytes") != sum(r.get("bytes", -1) for r in rows)):
+        raise InputError("pins-count")
+    carried = pins.get("carry_forward_card_files")
+    if (type(carried) is not list or len(carried) != EXPECTED_CARD_FILES
+            or sorted(carried, key=lambda x: x.get("path", "")) !=
+               sorted([r for r in rows if r["path"].startswith("exp088-card-reference/")], key=lambda x: x["path"])
+            or pins.get("base_file_count") != EXPECTED_BASE_FILES
+            or pins.get("carry_forward_card_file_count") != EXPECTED_CARD_FILES
+            or pins.get("new_searches") != 0 or pins.get("preparation_model_calls") != 0
+            or pins.get("exp084_grader_outputs_reused") is not False
+            or pins.get("exp088_card_references_carried_unchanged") is not True):
+        raise InputError("carry-forward-pin-membership")
+    if set(pins.get("lineage_helper_pins", {})) != set(EXP088_HELPERS):
+        raise InputError("helper-pin-membership")
+    for key, (_path, expected) in EXP088_HELPERS.items():
+        if pins["lineage_helper_pins"].get(key) != expected:
+            raise InputError("helper-pin-value")
+    expected_card = _expected_card_paths()
+    if set(card) != expected_card:
+        raise InputError("card-file-coverage")
+    for row in rows:
+        digest, size = row.get("sha256"), row.get("bytes")
+        if (type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)
+                or type(size) is not int or size < 0):
+            raise InputError("pins-entry")
+    runtime_sha = pins.get("runtime_config_receipt_sha256")
+    config = next((r for r in rows if r["path"] == "original/configuration-binding.json"), None)
+    if not config or runtime_sha != config["sha256"]:
+        raise InputError("runtime-config-pin")
+    return pins, raw
+
+
+def _expected_card_paths() -> set[str]:
+    paths = {"exp088-card-reference/provenance/assessment-manifest.json",
+             "exp088-card-reference/provenance/development-terminal.json",
+             "exp088-card-reference/provenance/health.json",
+             "exp088-card-reference/provenance/stage-clock.json"}
+    for task in TASK_IDS:
+        for assessor in ASSESSORS:
+            logical = f"development-{task}-card-{assessor}"
+            base = "exp088-card-reference/assessment-inputs/"
+            paths.update({base + f"card-inputs/{logical}.json",
+                          base + f"private/card-assignments/{logical}.json",
+                          base + f"private/label-bindings/{logical}.json"})
+            paths.update(f"exp088-card-reference/responses/{logical}.{suffix}.json"
+                         for suffix in ("raw", "decoded", "verified"))
+    paths.update(f"exp088-card-reference/receipts/{kind}-{slot:03d}.json"
+                 for kind in ("dispatch", "validation") for slot in range(1, 17))
+    return paths
+
+
+def verify_bundle_inventory(bundle_root: Path, pins_path: Path = PINS_PATH,
+                           base_pins_path: Path = EXP088_PINS_PATH) -> dict:
+    """Verify exact 513-file inventory, path safety, byte lengths, and SHA-256s."""
+    root = Path(bundle_root)
+    if root.is_symlink() or not root.is_dir():
+        raise InputError("bundle-root")
+    pins, pins_raw = _load_pins(pins_path)
+    if Path(pins_path) == PINS_PATH:
+        base_raw = Path(base_pins_path).read_bytes()
+        if sha(base_raw) != pins.get("base_input_pins_sha256"):
+            raise InputError("base-pins-lineage-mismatch")
+        old = strict_json(base_raw)
+        old_rows = {row["path"]: row for row in old.get("files", [])}
+        new_base = {row["path"]: row for row in pins["files"]
+                    if not row["path"].startswith("exp088-card-reference/")}
+        if (old.get("file_count") != EXPECTED_BASE_FILES or set(old_rows) != set(new_base)
+                or any((old_rows[name].get("sha256"), old_rows[name].get("bytes")) !=
+                       (row.get("sha256"), row.get("bytes")) for name, row in new_base.items())):
+            raise InputError("base-pins-lineage-shape")
+    expected = {r["path"] for r in pins["files"]}
+    actual = set()
+    for base, dirs, files in os.walk(root, followlinks=False):
+        if any((Path(base) / n).is_symlink() for n in dirs):
+            raise InputError("bundle-symlink-directory")
+        for filename in files:
+            path = Path(base) / filename
+            rel = path.relative_to(root).as_posix()
+            _safe_path(rel)
+            if path.is_symlink() or not path.is_file():
+                raise InputError("bundle-nonregular-file")
+            actual.add(rel)
+    if actual != expected:
+        raise InputError("bundle-inventory-mismatch")
+    total = 0
+    for row in sorted(pins["files"], key=lambda r: r["path"]):
+        raw = _read(root, row["path"])
+        if len(raw) != row["bytes"] or sha(raw) != row["sha256"]:
+            raise InputError("bundle-hash-mismatch")
+        total += len(raw)
+    if total != pins["total_bytes"]:
+        raise InputError("bundle-total-bytes")
+    inventory = {"schema": "exp095-input-bundle/1", "files": sorted(pins["files"], key=lambda r: r["path"])}
+    return {"input_pins_sha256": sha(pins_raw), "input_bundle_sha256": sha(canonical_json(inventory)),
+            "runtime_config_receipt_sha256": pins["runtime_config_receipt_sha256"],
+            "file_count": len(expected), "total_bytes": total}
+
+
+def _load_helpers():
+    adapter_path = HERE / "card-reference-id-adapter.py.txt"
+    labels_path = HERE / "reference-labels.py.txt"
+    # EXP-098 pins exact EXP-088 helpers; use the same frozen modules via repository sibling.
+    adapter_path = HERE.parent / "EXP-088" / "card-reference-id-adapter.py.txt"
+    labels_path = HERE.parent / "EXP-088" / "reference-labels.py.txt"
+    adapter = importlib.machinery.SourceFileLoader("exp088_card_adapter_for_exp094", str(adapter_path)).load_module()
+    labels = importlib.machinery.SourceFileLoader("exp088_labels_for_exp094", str(labels_path)).load_module()
+    return adapter, labels
+
+
+def verify_carried_card_references(bundle_root: Path, pins_path: Path = PINS_PATH,
+                                  base_pins_path: Path = EXP088_PINS_PATH) -> dict:
+    """Validate all 16 frozen card assignments and return nonsemantic proof handles."""
+    root = Path(bundle_root)
+    integrity = verify_bundle_inventory(root, pins_path, base_pins_path)
+    pins, _ = _load_pins(pins_path)
+    base = {r["path"]: r for r in pins["files"]}
+    manifest = strict_json(_read(root, "exp088-card-reference/provenance/assessment-manifest.json"))
+    if (manifest.get("schema") != "exp088-private-assessment-inputs/1"
+            or manifest.get("study_id") != "EXP-088"
+            or manifest.get("card_jobs") != 16):
+        raise InputError("card-manifest-schema-or-count")
+    card_jobs = [row for row in manifest.get("jobs", []) if row.get("role") == "card"]
+    observed = {(row.get("task_id"), row.get("assessor_id")) for row in card_jobs}
+    if len(card_jobs) != 16 or observed != EXPECTED_JOBS:
+        raise InputError("card-job-coverage")
+    manifest_files = {row.get("path"): row for row in manifest.get("files", []) if type(row) is dict}
+    if len(manifest_files) != len(manifest.get("files", [])):
+        raise InputError("card-manifest-file-duplicates")
+    adapter, labels = _load_helpers()
+    helper_pins = manifest.get("helper_pins")
+    if type(helper_pins) is not dict:
+        raise InputError("card-helper-pins-missing")
+    for key, (rel, expected) in EXP088_HELPERS.items():
+        if helper_pins.get(key) != expected or sha((HERE.parents[3] / rel).read_bytes()) != expected:
+            raise InputError("card-helper-pin-mismatch")
+    card_prompt = (HERE.parent / "EXP-088" / "card-assessor-prompt.txt").read_bytes()
+    if sha(card_prompt) != helper_pins["card_prompt_sha256"]:
+        raise InputError("card-prompt-pin-mismatch")
+    proof_records = []
+    total_records = 0
+    used_slots = set()
+    expected_manifest_names = set()
+    for row in card_jobs:
+        task, assessor, logical = row["task_id"], row["assessor_id"], row["logical_submission"]
+        expected_logical = f"development-{task}-card-{assessor}"
+        if logical != expected_logical:
+            raise InputError("card-logical-submission")
+        paths = {
+            "input": "exp088-card-reference/assessment-inputs/" + row["input_path"],
+            "assignment": "exp088-card-reference/assessment-inputs/" + row["private_plan_path"],
+            "label_binding": "exp088-card-reference/assessment-inputs/" + row["label_binding_path"],
+            "raw": f"exp088-card-reference/responses/{logical}.raw.json",
+            "decoded": f"exp088-card-reference/responses/{logical}.decoded.json",
+            "verified": f"exp088-card-reference/responses/{logical}.verified.json",
+        }
+        for k in ("input", "assignment", "label_binding"):
+            rel = paths[k].removeprefix("exp088-card-reference/assessment-inputs/")
+            expected_manifest_names.add(rel)
+            mr = manifest_files.get(rel)
+            pin = base.get(paths[k])
+            if (not mr or not pin or mr.get("sha256") != pin["sha256"] or mr.get("bytes") != pin["bytes"]):
+                raise InputError("card-manifest-artifact-mismatch")
+        built = strict_json(_read(root, paths["assignment"]))
+        label_bundle = strict_json(_read(root, paths["label_binding"]))
+        public = strict_json(_read(root, paths["input"]))
+        if (type(built) is not dict or set(built) != {"assignment", "model_input", "reference_catalogs"}
+                or type(built.get("assignment")) is not dict):
+            raise InputError("card-plan-shape")
+        snapshot = strict_json(_read(root, "exp084/effective-input-envelope.json"))
+        pool_cards = snapshot.get("pools", {}).get(task, {}).get("cards")
+        global_ids = built.get("assignment", {}).get("global_id_by_sha")
+        if type(pool_cards) is not list or type(global_ids) is not dict:
+            raise InputError("card-pool-source-binding")
+        pool_by_id = {c.get("id"): c for c in pool_cards if type(c) is dict}
+        expected_cards = []
+        for card in built["assignment"].get("cards", []):
+            gid = global_ids.get(card.get("card_sha256"))
+            original = pool_by_id.get(gid)
+            if (type(original) is not dict or any(card.get(k) != original.get(k)
+                                                  for k in ("title", "url", "snippet"))):
+                raise InputError("card-pool-projection-mismatch")
+            expected_cards.append(gid)
+        if expected_cards != [c.get("id") for c in pool_cards]:
+            raise InputError("card-pool-order-or-coverage")
+        regenerated = labels.encode_card_assignment(task, built)
+        if (built["assignment"].get("task_id") != task or built["assignment"].get("assessor_id") != assessor
+                or regenerated != label_bundle
+                or label_bundle.get("model_input") != public.get("card_model_input")
+                or label_bundle.get("label_binding", {}).get("task_id") != task
+                or label_bundle.get("label_binding", {}).get("domain") != "card"):
+            raise InputError("card-plan-input-binding")
+        expected_input = {"prompt": card_prompt.decode("utf-8"),
+                          "task": public.get("task"), "card_model_input": label_bundle["model_input"]}
+        if (public != expected_input or public.get("task", {}).get("task_id") != task
+                or public.get("task", {}).get("critical_checks") is None
+                or [x.get("id") for x in public["task"]["critical_checks"]] != built["assignment"].get("facets")
+                or row.get("input_sha256") != sha(_read(root, paths["input"]))
+                or row.get("input_bytes") != len(_read(root, paths["input"]))
+                or row.get("private_plan_sha256") != sha(_read(root, paths["assignment"]))
+                or row.get("label_binding_sha256") != sha(_read(root, paths["label_binding"]))):
+            raise InputError("card-public-input-projection")
+        for k in ("raw", "decoded", "verified"):
+            if paths[k] not in base:
+                raise InputError("card-response-pin-missing")
+        raw_response = strict_json(_read(root, paths["raw"]))
+        decoded_saved = strict_json(_read(root, paths["decoded"]))
+        verified_saved = strict_json(_read(root, paths["verified"]))
+        decoded = labels.decode_card_response(label_bundle, raw_response)
+        if decoded != decoded_saved:
+            raise InputError("card-decoded-response-mismatch")
+        result = adapter.expand_and_verify(built, decoded)
+        if verified_saved != result:
+            raise InputError("card-legacy-verifier-mismatch")
+        record_count = len(result["expanded_response"]["records"])
+        if record_count <= 0 or result["verification"].get("records") != record_count:
+            raise InputError("card-record-count")
+        slot = next((i for i in range(1, 17)
+                     if strict_json(_read(root, f"exp088-card-reference/receipts/dispatch-{i:03d}.json")).get("job", {}).get("logical_submission") == logical), None)
+        if slot is None:
+            raise InputError("card-dispatch-receipt-missing")
+        if slot in used_slots:
+            raise InputError("card-dispatch-slot-duplicate")
+        used_slots.add(slot)
+        dispatch = strict_json(_read(root, f"exp088-card-reference/receipts/dispatch-{slot:03d}.json"))
+        validation = strict_json(_read(root, f"exp088-card-reference/receipts/validation-{slot:03d}.json"))
+        raw_bytes = _read(root, paths["raw"])
+        if (dispatch.get("job") != row or dispatch.get("response_file") != f"{logical}.raw.json"
+                or dispatch.get("stage_clock_sha256") != sha(_read(root, "exp088-card-reference/provenance/stage-clock.json"))
+                or validation.get("job") != logical or validation.get("status") != "valid"
+                or validation.get("response_sha256") != sha(raw_bytes)
+                or validation.get("response_bytes") != len(raw_bytes)
+                or validation.get("record_count") != record_count):
+            raise InputError("card-dispatch-validation-receipt")
+        dispatch_path = f"exp088-card-reference/receipts/dispatch-{slot:03d}.json"
+        validation_path = f"exp088-card-reference/receipts/validation-{slot:03d}.json"
+        for receipt_path in (dispatch_path, validation_path):
+            if receipt_path not in base:
+                raise InputError("card-receipt-pin-missing")
+        total_records += record_count
+        proof_records.append({"logical_submission": logical, "task_id": task, "assessor_id": assessor,
+                              "helper_id": row.get("helper_id"), "record_count": record_count,
+                              "input_path": paths["input"], "input_sha256": base[paths["input"]]["sha256"],
+                              "assignment_path": paths["assignment"], "assignment_sha256": base[paths["assignment"]]["sha256"],
+                              "label_binding_path": paths["label_binding"], "label_binding_sha256": base[paths["label_binding"]]["sha256"],
+                              "raw_response_path": paths["raw"], "raw_response_sha256": base[paths["raw"]]["sha256"],
+                              "decoded_response_path": paths["decoded"], "decoded_response_sha256": base[paths["decoded"]]["sha256"],
+                              "verified_response_path": paths["verified"], "verified_response_sha256": base[paths["verified"]]["sha256"],
+                              "dispatch_receipt_path": dispatch_path, "dispatch_receipt_sha256": base[dispatch_path]["sha256"],
+                              "validation_receipt_path": validation_path, "validation_receipt_sha256": base[validation_path]["sha256"]})
+    if total_records != 884:
+        raise InputError("card-total-record-coverage")
+    if len({r["logical_submission"] for r in proof_records}) != 16:
+        raise InputError("card-logical-duplicate")
+    card_manifest_names = {name for name in manifest_files
+                           if name.startswith(("card-inputs/", "private/card-assignments/"))
+                           or (name.startswith("private/label-bindings/") and "-card-" in name)}
+    if (card_manifest_names != expected_manifest_names or len(card_manifest_names) != 48
+            or used_slots != set(range(1, 17))):
+        raise InputError("card-manifest-or-receipt-coverage")
+    proof = {"schema": "exp095-carried-card-reference-proof/1", "source_study_id": "EXP-088",
+             "exp084_grader_outputs_used": False, "card_assessments_carried_unchanged": True,
+             "card_job_count": 16, "record_count": total_records,
+             "assessment_manifest_path": "exp088-card-reference/provenance/assessment-manifest.json",
+             "assessment_manifest_sha256": base["exp088-card-reference/provenance/assessment-manifest.json"]["sha256"],
+             "records": sorted(proof_records, key=lambda r: (r["task_id"], r["assessor_id"]))}
+    return {"card_reuse_proof": proof, "inventory_integrity": integrity}
+
+
+def prepare_reused_inputs(bundle_root: Path, *, stage_clock: dict, stage_clock_digest: str,
+                          pins_path: Path = PINS_PATH, base_pins_path: Path = EXP088_PINS_PATH) -> dict:
+    """Rebase only stage metadata; retain original evidence and verified card inputs."""
+    root = Path(bundle_root)
+    result = verify_carried_card_references(root, pins_path, base_pins_path)
+    pins, _ = _load_pins(pins_path)
+    old_bridge_path = HERE.parent / "EXP-088" / "input-bridge.py.txt"
+    old_bridge = importlib.machinery.SourceFileLoader("exp088_input_bridge_for_exp094", str(old_bridge_path)).load_module()
+    original = strict_json(_read(root, "original/effective-acquisition.json"))
+    snapshot = strict_json(_read(root, "exp084/effective-input-envelope.json"))
+    old_bridge._validate_effective(original, snapshot)
+    if (type(stage_clock) is not dict or stage_clock.get("schema") != "exp078-stage-clock/1"
+            or stage_clock.get("stage") != "development" or type(stage_clock_digest) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", stage_clock_digest)
+            or sha(canonical_json(stage_clock)) != stage_clock_digest):
+        raise InputError("new-stage-clock-required")
+    old_provenance = snapshot.get("recovery_provenance")
+    if (type(old_provenance) is not dict or old_provenance.get("study_id") != "EXP-084"
+            or old_provenance.get("prior_study_credit") is not False
+            or old_provenance.get("new_searches") != 0):
+        raise InputError("old-stage-has-no-credit")
+    old_clock_raw = _read(root, "exp084/stage-clock.json")
+    old_clock = strict_json(old_clock_raw)
+    if (old_clock.get("schema") != "exp078-stage-clock/1"
+            or sha(old_clock_raw) != snapshot.get("acquisition_receipt", {}).get("stage_clock_digest")):
+        raise InputError("old-clock-provenance-binding")
+    phase_raw = _read(root, "exp084/capture/capture-phase.json")
+    binding_raw = _read(root, "exp084/capture/card-source-binding.json")
+    phase = strict_json(phase_raw)
+    if (phase.get("schema") != "exp078-capture-phase/1" or phase.get("status") != "complete"
+            or phase.get("stage_clock_sha256") != sha(old_clock_raw)
+            or phase.get("card_source_binding_sha256") != sha(binding_raw)):
+        raise InputError("capture-snapshot-binding")
+    effective = json.loads(json.dumps(snapshot))
+    effective["acquisition_receipt"] = {"stage_clock": stage_clock, "stage_clock_digest": stage_clock_digest}
+    effective["recovery_provenance"] = {
+        "study_id": "EXP-098", "source_study_id": "EXP-084",
+        "source_effective_envelope_sha256": sha(_read(root, "exp084/effective-input-envelope.json")),
+        "input_bundle_sha256": result["inventory_integrity"]["input_bundle_sha256"],
+        "prior_stage_clock_credit_seconds": 0, "new_searches": 0,
+        "old_grader_outputs_used": False, "exp088_card_references_carried_unchanged": True}
+    return {"schema": "exp098-reused-inputs/1", "study_id": "EXP-098",
+            "effective_acquisition": effective, "input_integrity": result["inventory_integrity"],
+            "capture_snapshot": {"root_relative": "exp084/capture", "stage_clock_sha256": sha(old_clock_raw),
+                                 "capture_phase_sha256": sha(phase_raw),
+                                 "card_source_binding_sha256": sha(binding_raw),
+                                 "old_grader_outputs_used": False},
+            "carried_card_references": result["card_reuse_proof"]}

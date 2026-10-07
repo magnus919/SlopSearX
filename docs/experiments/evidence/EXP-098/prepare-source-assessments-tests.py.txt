@@ -1,0 +1,69 @@
+"""Offline EXP-097 full handoff test with unchanged runtime caps.
+Uses real frozen capture/carry and mock selector/answerer transports. Every
+actual generated answer packet must pass the original guards; a size rejection
+fails this test without retries, trimming, or a diagnostic cap override.
+Synthetic assessment responses prove transport mechanics only, never quality.
+"""
+import asyncio, copy, hashlib, importlib.machinery, json, re, tempfile
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from types import SimpleNamespace
+import httpx
+
+import argparse
+parser=argparse.ArgumentParser()
+parser.add_argument('--bundle-root',required=True)
+parser.add_argument('--checkpoint-root',required=True)
+parser.add_argument('--pins-path',required=True)
+args=parser.parse_args()
+ROOT=Path(__file__).resolve().parents[4]
+E=ROOT/'docs/experiments/evidence/EXP-097'
+BUNDLE=Path(args.bundle_root)
+CHECKPOINT=Path(args.checkpoint_root)
+
+def load(n,p): return importlib.machinery.SourceFileLoader(n,str(p)).load_module()
+def sha(b): return hashlib.sha256(b).hexdigest()
+def canonical(v): return (json.dumps(v,ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()
+P=load('exp097_answer_driver_test_phase',E/'phase-bindings.py.txt')
+I=load('exp097_answer_driver_test_inputs',E/'input-bridge.py.txt')
+S=load('exp098_actual_prep',E.parent/'EXP-098/prepare-source-assessments.py.txt')
+C=load('exp098_actual_carry',E.parent/'EXP-098/source-carry.py.txt')
+V=load('exp097_answer_driver_test_view',E/'input-view-verifier.py.txt')
+clock_start=datetime.now(timezone.utc).replace(microsecond=0)
+clock={'schema':'exp078-stage-clock/1','stage':'development','stage_id':'00000000-0000-4000-8000-000000000096','stage_started_utc':clock_start.isoformat().replace('+00:00','Z'),'stage_deadline_utc':(clock_start+timedelta(hours=8)).isoformat().replace('+00:00','Z'),'stage_clock_digest':'a'*64}
+clock_raw=I.canonical_json(clock);clock_sha=sha(clock_raw)
+reused=I.prepare_reused_inputs(BUNDLE,stage_clock=clock,stage_clock_digest=clock_sha)
+carry=C.verify_source_checkpoint(CHECKPOINT,Path(args.pins_path),C.CHECKPOINT_PINS_SHA256)
+cohorts=json.loads((E/'cohorts.json').read_bytes())
+cases=[r for r in cohorts['cohorts']['development'] if r.get('kind')=='research']
+
+with tempfile.TemporaryDirectory(prefix='exp098-real-preparation-') as tmp:
+    out=Path(tmp)/'assessment-inputs'
+    prep=S.prepare_source_assessments(output_root=out,acquisition=reused['effective_acquisition'],cases=cases,
+        guard=lambda:None,source_snapshot_root=BUNDLE/'exp084',carried_card_references=reused['carried_card_references'],
+        carried_source_references=carry['proof'],carried_source_payloads=carry['payloads'],stage_clock_sha256=clock_sha,
+        protocol_sha256=sha((E.parent/'EXP-098/protocol.json').read_bytes()),qualified_source_revision='0'*40)
+    manifest=json.loads((out/'source-slot-manifest.json').read_bytes())
+    if manifest['carried_source_assignment_count']!=23 or manifest['fresh_dispatch_slot_count']!=25:
+        raise ValueError('wrong source carry/fresh counts')
+    print('Actual frozen-corpus successor preparation PASS:48bindings,23carry,25fresh; no model/network calls')
+
+# Actual preparation rejection paths: original provenance is never inferred
+# from a subset, caller-selected context signature, or modified grade bytes.
+base=dict(acquisition=reused['effective_acquisition'],cases=cases,guard=lambda:None,
+    source_snapshot_root=BUNDLE/'exp084',carried_card_references=reused['carried_card_references'],
+    stage_clock_sha256=clock_sha,protocol_sha256=sha((E.parent/'EXP-098/protocol.json').read_bytes()),
+    qualified_source_revision='0'*40)
+checks=[]
+for name,change in [
+ ('missing_carry',lambda proof,payloads:(None,None)),
+ ('subset_carry',lambda proof,payloads:(dict(proof,assignments=proof['assignments'][:-1]),payloads)),
+ ('changed_scientific_context',lambda proof,payloads:([row.update(scientific_context_sha256='0'*64) for row in proof['assignments'][:1]] and proof,payloads)),
+ ('changed_grade',lambda proof,payloads:([payloads[next(iter(payloads))]['decoded_response']['source_assessments'][0]['facets'][0].update(reason='changed') ] and proof,payloads)),
+]:
+ proof,payloads=change(copy.deepcopy(carry['proof']),copy.deepcopy(carry['payloads']))
+ with tempfile.TemporaryDirectory(prefix='exp098-prepare-negative-') as tmp:
+  try:S.prepare_source_assessments(output_root=Path(tmp)/'out',carried_source_references=proof,carried_source_payloads=payloads,**base)
+  except S.PrepareError:checks.append(name)
+  else:raise ValueError(name+' accepted')
+print('Actual preparation rejection checks PASS',len(checks),checks)

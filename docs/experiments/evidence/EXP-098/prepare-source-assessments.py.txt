@@ -107,7 +107,10 @@ def _verify_fixed_code_input(input_raw: bytes, original_model: dict, table, task
             (("passages", "*", "evidence_id"),), table, decode=True, restore_alias=True)
     except Exception as exc:
         raise PrepareError("fixed-code-source-input-invalid") from exc
-    if restored != original_model or model.get("task", {}).get("task_id") != task_id:
+    contract = importlib.machinery.SourceFileLoader("exp098_inverse_citation_contract", str(HERE / "citation-contract.py.txt")).load_module()
+    expected = json.loads(json.dumps(original_model))
+    expected["output_schema"] = contract.source_schema(expected["output_schema"])
+    if restored != expected or model.get("task", {}).get("task_id") != task_id:
         raise PrepareError("fixed-code-source-input-does-not-roundtrip")
     return sum(len(row.get("passages", [])) for row in model["sources"])
 
@@ -133,6 +136,13 @@ def prepare_source_assessments(*, output_root: Path, acquisition: dict, cases: l
                                carried_source_payloads: dict | None = None,
                                stage_clock_sha256: str, protocol_sha256: str,
                                qualified_source_revision: str) -> dict:
+    if (type(carried_source_references) is not dict
+            or carried_source_references.get("schema") != "exp098-original-source-replay/1"
+            or carried_source_references.get("accepted_assignments") != 23
+            or type(carried_source_references.get("assignments")) is not list
+            or len(carried_source_references["assignments"]) != 23
+            or type(carried_source_payloads) is not dict or len(carried_source_payloads) != 23):
+        raise PrepareError("all-23-original-source-references-required")
     out = Path(output_root)
     if out.exists() or out.is_symlink():
         raise PrepareError("source-preparation-output-must-be-new")
