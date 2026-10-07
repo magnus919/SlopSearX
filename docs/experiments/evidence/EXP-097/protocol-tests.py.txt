@@ -88,10 +88,23 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(registration["study_id"], "EXP-097")
         self.assertEqual(qualification["schema"], "exp097-qualification/1")
         self.assertEqual(qualification["study_id"], "EXP-097")
-        self.assertEqual(registration["status"], "prospective_unsealed")
-        self.assertIs(registration["registered"], False)
-        self.assertEqual(qualification["status"], "prospective_unsealed")
-        self.assertIs(qualification["qualified"], False)
+        self.assertIsInstance(registration["registered"], bool)
+        self.assertIsInstance(qualification["qualified"], bool)
+        self.assertIn(
+            (registration["status"], registration["registered"],
+             qualification["status"], qualification["qualified"]),
+            {("prospective_unsealed", False, "prospective_unsealed", False),
+             ("registered", True, "qualified", True)},
+        )
+        if registration["registered"]:
+            self.assertRegex(registration["registered_source_revision"], r"^[0-9a-f]{40}$")
+            self.assertEqual(registration["registered_source_revision"],
+                             qualification["qualified_source_revision"])
+            self.assertEqual(registration["source_files"], qualification["files"])
+            self.assertEqual(qualification["registration_sha256"], hashlib.sha256(
+                (HERE / "registration-integrity.json").read_bytes()).hexdigest())
+            self.assertEqual(qualification["stage_manifest_sha256"], hashlib.sha256(
+                (HERE / "stage-development-manifest.json").read_bytes()).hexdigest())
         self.assertIs(registration["live_stage_started"], False)
         self.assertIs(qualification["live_stage_started"], False)
         self.assertIn("new EXP-097 admission", protocol["recovery_runtime"]["health"])
