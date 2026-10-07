@@ -163,5 +163,5 @@ async def test_compact_mcp_retains_attribution_and_preprint_notice():
     await adapter.shutdown()
     snippet = _result_to_dict(response.results[0])["snippet"]
     assert "Europe PMC / EMBL-EBI" in snippet
-    assert "https://europepmc.org" in snippet
+    assert snippet.startswith("Source: Europe PMC / EMBL-EBI (https://europepmc.org)")
     assert "Preprint (not peer reviewed)" in snippet
