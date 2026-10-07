@@ -1,0 +1,36 @@
+"""Reject internally inconsistent current-study design before live admission."""
+
+def validate(protocol, cohorts, registration, qualification):
+    for obj, schema in [(protocol,'exp098-protocol/1'),(cohorts,'exp098-cohorts/1'),
+                        (registration,'exp098-registration/1'),(qualification,'exp098-qualification/1')]:
+        if obj.get('schema') != schema or obj.get('status') not in {'registered','qualified'}:
+            raise ValueError('current-design-schema-or-status')
+    for obj in [cohorts,registration,qualification]:
+        if obj.get('study_id') != 'EXP-098':
+            raise ValueError('current-study-identity')
+    if protocol.get('predecessor') != 'EXP-097' or registration.get('predecessor') != 'EXP-097':
+        raise ValueError('current-lineage')
+    expected = {'source_assessments_carried_unchanged':23,'fresh_source_assessments':25,
+                'fresh_answer_assessments':32,'historical_grader_submissions_total':47,
+                'fresh_grader_submissions_total':57,'planned_grader_submissions_total':104,
+                'planned_all_model_submissions_total':122}
+    if any(cohorts.get(k)!=v for k,v in expected.items()):
+        raise ValueError('cohort-current-accounting')
+    if cohorts['acquisition'].get('fresh_source_assessments') != 25 or cohorts['acquisition'].get('source_assessments_carried_unchanged') != 23:
+        raise ValueError('acquisition-current-accounting')
+    models=protocol['models']
+    for key,value in {'historical_grader_submissions_counted':47,'fresh_source_assessments':25,
+                      'fresh_answer_assessments':32,'planned_fresh_grader_submissions':57,
+                      'source_assessments_carried_unchanged':23,
+                      'planned_total_logical_model_submissions_including_historical':122}.items():
+        if models.get(key)!=value:
+            raise ValueError('protocol-current-accounting')
+    if protocol.get('external_source_pins') != qualification.get('external_source_pins'):
+        raise ValueError('current-external-helper-pins')
+    if protocol['runtime_readiness_baseline'].get('schema')!='exp098-readiness-baseline/1' or protocol['input_provenance'].get('schema')!='exp098-reused-input-pins/1':
+        raise ValueError('current-readiness-or-input-schema')
+    if models['assessment_model'].get('model_id')!='gpt-6.1-sol' or models.get('answerer_alias')!='free':
+        raise ValueError('current-model-policy')
+    if 47+25+32!=104 or 104+18!=122 or models.get('maximum_logical_grader_submissions_per_stage')!=112 or models.get('maximum_total_logical_model_submissions_per_stage')!=130:
+        raise ValueError('current-budget-limits')
+    return {'study_id':'EXP-098','internally_consistent':True,'quality_claim':False}

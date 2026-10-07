@@ -1,0 +1,45 @@
+import copy
+import importlib.machinery
+import json
+import unittest
+from pathlib import Path
+H=Path(__file__).resolve().parent
+D=importlib.machinery.SourceFileLoader('design_contract',str(H/'design-contract.py.txt')).load_module()
+
+class CurrentDesign(unittest.TestCase):
+    def setUp(self):
+        self.args=[json.loads((H/name).read_bytes()) for name in ['protocol.json','cohorts.json','registration-integrity.json','qualification-integrity.json']]
+        self.args[2]['predecessor']='EXP-097'  # Expected prospective lineage for regenerated seal.
+    def test_current_consistent_design(self):
+        self.assertTrue(D.validate(*self.args)['internally_consistent'])
+    def reject_change(self,index,path,value):
+        args=copy.deepcopy(self.args);obj=args[index]
+        for key in path[:-1]:obj=obj[key]
+        obj[path[-1]]=value
+        with self.assertRaises(ValueError):D.validate(*args)
+    def test_old_counts_rejected(self):
+        for key,value in [('fresh_source_assessments',43),('source_assessments_carried_unchanged',5),('historical_grader_submissions_total',28),('planned_grader_submissions_total',103),('planned_all_model_submissions_total',121)]:
+            with self.subTest(key=key):self.reject_change(1,[key],value)
+    def test_protocol_count_disagreement_rejected(self):
+        self.reject_change(0,['models','fresh_source_assessments'],43)
+    def test_acquisition_count_disagreement_rejected(self):
+        self.reject_change(1,['acquisition','source_assessments_carried_unchanged'],5)
+    def test_old_study_and_schema_rejected(self):
+        self.reject_change(1,['study_id'],'EXP-097')
+        self.reject_change(1,['schema'],'exp097-cohorts/1')
+    def test_stale_readiness_schema_rejected(self):
+        self.reject_change(0,['runtime_readiness_baseline','schema'],'exp097-readiness-baseline/1')
+    def test_external_pin_disagreement_rejected(self):
+        self.reject_change(0,['external_source_pins','source_coordinator','sha256'],'0'*64)
+    def test_lineage_disagreement_rejected(self):
+        self.reject_change(2,['predecessor'],'EXP-096')
+    def test_unqualified_status_rejected(self):
+        self.reject_change(0,['status'],'prototype_unqualified')
+    def test_frozen_semantic_sections_and_tasks_unchanged(self):
+        old=json.loads((H.parent/'EXP-097/protocol.json').read_bytes())
+        for key in ['quality','candidate','consumer','confirmation_scope','confirmation_requires_development_pass']:
+            self.assertEqual(self.args[0][key],old[key])
+        oldcases=json.loads((H.parent/'EXP-097/cohorts.json').read_bytes())
+        self.assertEqual(self.args[1]['cohorts'],oldcases['cohorts'])
+
+if __name__=='__main__':unittest.main()

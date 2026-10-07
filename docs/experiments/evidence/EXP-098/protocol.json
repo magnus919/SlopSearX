@@ -14,7 +14,7 @@
     "source_assessments_fresh": 43,
     "source_assessments_carried_unchanged": 5,
     "carried_source_assignments": 5,
-    "source_checkpoint": "The five valid EXP-094 source assignments only, validated against exact original final text, transcript, prepared input, codebook, decoder and original acceptance receipt. No content or judgments are surfaced for selection; no repair, regrade, or quality analysis.",
+    "source_checkpoint": "All23 originally accepted assignments:5historical plus18EXP097, validated by original transcript/raw-final/citation/coverage replay. Rejected EXP097 assignment retained and excluded.",
     "source_assessments_total_required": 48,
     "fresh_answer_assessments": 32,
     "fresh_grader_submissions_total": 75,
@@ -40,7 +40,7 @@
     "tuning_allowed": false
   },
   "capture": {
-    "health": "One read-only health request after new EXP-097 admission; compare only with the separately pinned private current-readiness baseline, never with the historical EXP-084 capture identity. Retain only nonsecret identity fields. Failure is terminal.",
+    "health": "One read-only health request after new EXP-098 admission; compare only with the separately pinned private current-readiness baseline, never with the historical EXP-084 capture identity. Retain only nonsecret identity fields. Failure is terminal.",
     "health_calls_maximum_per_stage": 1,
     "health_timeout_seconds": 8,
     "new_source_http_requests_maximum": 0,
@@ -100,20 +100,24 @@
     ]
   },
   "external_source_pins": {
-    "readiness_baseline": {
-      "sha256": "59a8fa8284a3e88cc4508fd9f3cf6aca16d88f5dee786bcb5f537ee8a127ef99"
-    },
-    "final_text_reader": {
-      "sha256": "2354f83197bf7fe9eddcfd7cd07c17c3bd4b8190eb720c79d020d66c3ca7a54d"
-    },
     "actor_binding": {
-      "sha256": "c1e292b5e5d90c0e94c05f91784b0db6ee5955da0a66b380184bf92f0d604a18"
-    },
-    "source_coordinator": {
-      "sha256": "ee1d6d9b3ea65bc20f88ce7c5bc8b850a13ce582eb8b5bde288d390d1ba7ea6c"
+      "sha256": "1eb5e10e5a35e9eedf754e974ed508ffad1aca396bc78900822fbcdcbf52f3a6"
     },
     "answer_coordinator": {
-      "sha256": "d3629bb21ae88935b92d2fab8affa2fb851415f7037476c326fc4971a320f765"
+      "sha256": "75a77db3c787f80ee26d8d87752036c7de8090b9caca8ed642492e4ef5de2b85"
+    },
+    "final_text_reader": {
+      "sha256": "faa951647cca9188dbe21120857a963a4c183424ab2ed791e169c2b73cd8a89d"
+    },
+    "groktocrawl_cli": {
+      "revision": "95e68cfd3df9c7099e5978184bcf0976c2b0f3d0",
+      "sha256": "c954eebc4e25a4bca2d12e1a670cdac492ca63a741ba242244c0d95a2b25bb99"
+    },
+    "readiness_baseline": {
+      "sha256": "f9471de93e5ffbfd18ca42aa7faf5a1ac62b04013223f43f0d09c104f1fd7f72"
+    },
+    "source_coordinator": {
+      "sha256": "86acc8e7b692985fef9e3e00aa2f727b86b4d666038f02c8a05c7c79b7d40f21"
     }
   },
   "final_json_carrier": {
@@ -141,32 +145,31 @@
     "purpose": "Replace only final-response capture. The receiver obtains the exact current agent final text and persists its UTF-8 bytes without parsing, repair, normalization, fence removal, or reconstruction; the existing frozen parser and validators consume the retained bytes afterward.",
     "raw_final_text_is_authoritative": true,
     "receipt": "Receipt binds slot, role, exact raw final-text SHA-256 and byte count, frozen input and label-binding hashes; output storage uses exclusive create plus file and parent-directory fsync.",
-    "slot_plan": "Preserve all 48 original source slot identities and bindings. Carry the five exact valid EXP-094 source slots as immutable references; create fresh Sol tasks only for the other 43. Predeclare the 32 answer-assessor identities, then bind exact packet hashes only after all 16 answer outputs and all 32 assessor inputs are frozen.",
-    "source_slot_bindings": "All 48 source input/codebook bindings freeze before any fresh source-assessor dispatch. The five carry slots must match their exact EXP-094 input and codebook hashes and original acceptance receipt."
+    "slot_plan": "Bind48source slots, retain23original validated assignments and dispatch25freshSol tasks; predeclare32answer-assessor identities. Failed original assignment is excluded from carry.",
+    "source_slot_bindings": "Require all23 original provenance/codebook/scientific context fingerprints before fresh dispatch; only declared prompt/schema clarification differs."
   },
   "fresh_stage_scope": {
     "EXP_084_stage_clock_credit_seconds": 0,
     "covers": "New admitted runtime health, immutable checkpoint verification, all 23 original reference bindings, 25 fresh source references, unchanged selector/answer generation, 32 fresh answer assessments, complete verification and analysis only after valid reference closure.",
     "covers_seconds": 28800,
     "historical_input_time_credit_seconds": 0,
-    "reuse_does_not_reset_or_extend_clock": "Only a separately qualified and admitted EXP-098 stage may receive a new clock. All historical work receives zero time credit. This prototype remains unqualified.",
+    "reuse_does_not_reset_or_extend_clock": "Only qualified and separately admitted EXP-098 receives a clock; historical work receives zero time credit.",
     "starts_before": "the one health check and first fresh source assessment after new admission"
   },
   "grading_order": [
-    "verify exact 513-file frozen inputs and validate all five EXP-094 source checkpoints against original slot, input, codebook, transcript, final text, decode and acceptance bindings without exposing content or judgments",
-    "bind five carried source assignments to the new complete 48-slot source manifest and verify the remaining 43 are fresh dispatch slots",
-    "create and consume fresh EXP-097 admission and clock; validate the one pinned current-readiness response",
-    "prepare and bind all 48 source packets and task codebooks; dispatch only the 43 non-carried source slots",
-    "complete exact viewer transcript checks and unchanged strict validators for all fresh source assignments; preserve five carried references by identity only",
-    "run the unchanged selector comparison and fixed-budget answer generation only after every required source reference is complete and valid",
-    "derive all 16 answerer packets from fixed orders and verified EXP-084 capture outcomes; preserve all ten opening states and the full source universe",
-    "freeze exact answer outputs and all 32 anonymous answer-assessment packets, then collect 32 fresh Sol assessments",
-    "verify receipts and compute unchanged endpoints only after all source and answer references are complete"
+    "verify513frozen input files and all23 original accepted reference lineages without quality analysis",
+    "create fresh EXP-098 clock/admission and complete the single successful health gate",
+    "prepare48source bindings, bind23carry and declare25fresh slots",
+    "complete25fresh source assessments with original raw-final/view/citation/coverage validation",
+    "close independent source references for all8research tasks without joining assessors",
+    "run frozen13case21operation selector schedule within44Jev calls",
+    "produce16task/arm answers plus2neutral checks using free",
+    "prepare and grade all32answer-assessor packets before final quality analysis"
   ],
   "input_provenance": {
     "all_bytes_hash_bound": true,
-    "schema": "exp097-reused-input-pins/1",
-    "source": "Exact EXP-088 frozen input bundle inventory; no failed source submission, source grader output, or grade analysis is carried forward.",
+    "schema": "exp098-reused-input-pins/1",
+    "source": "Same513frozen input files and16carried card assignments; all23valid source references retained only by original provenance, no rejected response or quality selection.",
     "source_bundle_terminal_private_sha256": "4e5f956ced4ba305f766077bc3cfbb5e40d8c5ebd88d40ecc0e7da5dca39cb9a",
     "source_bundle_terminal_public_sha256": "751d7e20efc58f48076541991fd6a61171fa5c7ee3bcce92c0f1392809c7768a",
     "source_bundle_terminal_study": "EXP-088"
@@ -241,7 +244,7 @@
     "source_assessments_carried_unchanged": 23,
     "carried_source_assignments": 23,
     "maximum_total_logical_model_submissions_with_historical": 130,
-    "purpose": "Prospective citation-contract clarification after terminal EXP-097. Retain every accepted assignment only through strict provenance replay. Explicitly encode the unchanged evidence_available citation rule; never repair or regrade accepted outputs, score partial references, or weaken semantic acceptance. This prototype grants no live authority.",
+    "purpose": "Prospective citation-contract clarification after terminal EXP-097. Retain every accepted assignment only through strict provenance replay. Explicitly encode the unchanged evidence_available citation rule; never repair or regrade accepted outputs, score partial references, or weaken semantic acceptance. Delivery, qualified admission and the single successful health gate are mandatory before dispatch; registration establishes no scientific quality or adoption credit.",
     "planned_total_logical_model_submissions_including_historical": 122,
     "planned_fresh_grader_submissions": 57,
     "planned_fresh_answer_api_calls": 18,
@@ -269,7 +272,7 @@
     ],
     "source-reference": "Freeze all 48 encoded slots; bind all 23 original accepted references by scientific context, original lineage and task codebook; dispatch only 25 fresh assessments. Original raw finals, transcript proof and unchanged semantic validation remain mandatory."
   },
-  "predecessor": "EXP-097 terminal reference-incomplete",
+  "predecessor": "EXP-097",
   "historical_predecessor": {
     "id": "EXP-094",
     "terminal_status": "interrupted/deadline-expired",
@@ -277,8 +280,8 @@
     "valid_source_assignments_carried": 5,
     "rejected_spawn_created_no_task": true
   },
-  "protocol_intervention": "Preserve the EXP-096 grouped answer representation and all frozen input/model-facing bytes. EXP-096 terminated before scientific calls after one current-health revision mismatch; it receives no quality or admission credit. EXP-097 is a new inert successor that separates immutable EXP-084 capture identity from one typed, externally pinned private current-readiness baseline before any clock or health request. It does not recapture sources, change prompts, alter budgets, or revise scientific gates.",
-  "purpose": "Prospective readiness-separated successor to the terminal EXP-096 setup outcome. The five valid EXP-095 source assignments remain immutable inputs; the remaining 43 source and 32 answer assessments would be fresh GPT-6.1 Sol work only after separate admission. No carried response is selected by judgment, repaired, regraded, or quality-analyzed. Frozen candidate, prompts, rubrics, evidence-code transport, data, acceptance gates, limits, and free answerer remain fixed.",
+  "protocol_intervention": "Clarify only the existing source-assessor citation condition in prompt/output schema; replay all23 original valid references with immutable historical source execution. No repair or partial quality analysis.",
+  "purpose": "Prospective citation-contract continuation after terminal EXP-097: require all23 valid original references,25fresh source and32fresh answer assessments. Exact semantic gates and untouched confirmation remain mandatory.",
   "quality": {
     "all_targets_acquired_and_top1_required": true,
     "bootstrap95_lower_bound_strictly_positive": true,
@@ -311,7 +314,7 @@
     ]
   },
   "runtime_readiness_baseline": {
-    "schema": "exp097-readiness-baseline/1",
+    "schema": "exp098-readiness-baseline/1",
     "fields": [
       "schema",
       "status",
@@ -384,20 +387,20 @@
       "catalog order"
     ],
     "validation": "Unknown, malformed, wrong-task or wrong-source codes fail closed. The unchanged EXP-088 decoder and EXP-077 schema/coverage validators run after exact inverse decoding. No fuzzy mapping, repair, regrade, or alias inference.",
-    "current_stage_source_manifest_schema": "exp097-source-slot-manifest/1",
-    "current_stage_slot_binding_schema": "exp097-slot-citation-binding/1"
+    "current_stage_source_manifest_schema": "exp098-source-slot-manifest/1",
+    "current_stage_slot_binding_schema": "exp098-slot-citation-binding/1"
   },
   "source_delivery": {
     "manifest": "Every source slot binds packet SHA/bytes, page count and per-batch output SHA/bytes, full preparation-manifest SHA, total delivered-byte projection, and viewer code hash.",
     "observed_transcript": "A trusted stage verifier derives coverage from the current agent task log and compares exact stdout bytes; grader-authored view claims do not count.",
-    "source_prompt": "Use the pinned EXP-095 source-assessor prompt and viewer instructions. Copy each supplied passage evidence_id unchanged into the output evidence_ids; do not invent, transform, or reconstruct labels. Use the exact supplied one-based page schedule and submit only after all pages are returned.",
+    "source_prompt": "Use pinned EXP-098 source-assessor prompt/schema: evidence_available always requires a nonempty exact same-source citation, including negative/uncertain judgments. Exact one-based complete page delivery remains mandatory.",
     "transcript_gate": "Before accepting a source grader response, a trusted verifier derives tool calls from the current agent task log, validates exactly one describe call and exactly the scheduled one-based page batches, requires successful explicit exit-code blocks, compares each entire combined output block byte-for-byte with expected rendering, binds actual log SHA and final message SHA, and rejects any omission, duplicate, reordering, index 0, extra call, or mismatch. A self-reported view receipt is insufficient."
   },
   "stage_wall_seconds_maximum": 28800,
   "stages": [
     "development"
   ],
-  "status": "prototype_unqualified_no_live_authority",
+  "status": "registered",
   "stop": "Any source/input/config integrity failure, health failure, unregistered request, budget/deadline breach, missing required endpoint, incomplete assessment, invalid raw final text, or unchanged-validator failure stops the stage with retained partial evidence; no retries, searches, rescue, tuning, replacement, imputation, repair, or automatic confirmation.",
   "task_use": {
     "abstention_counts_as_completion": false,
@@ -417,8 +420,8 @@
     "w0_completed_to_candidate_incomplete_allowed": 0
   },
   "wire_types": {
-    "authority_boundary": "Preserve exp078-stage-clock/1 and EXP-078 payload schemas only as portable data types for frozen selector/answer helpers. Mint a new EXP-097 stage ID and bind it to independent EXP-097 registration, qualification, manifest, inputs, readiness baseline, and lease. Never accept an earlier stage clock, capability, permit, lease, or EXP-096 registration as EXP-097 authority.",
-    "card_reference_ids": "The EXP-088 card-reference outputs are immutable, byte- and hash-bound development inputs. Do not re-dispatch or regrade cards in EXP-097.",
+    "authority_boundary": "Preserve exp078-stage-clock/1 and EXP-078 payload schemas only as portable data types for frozen selector/answer helpers. Mint a new EXP-098 stage ID and bind it to independent EXP-098 registration, qualification, manifest, inputs, readiness baseline, and lease. Never accept an earlier stage clock, capability, permit, lease, or EXP-096 registration as EXP-098 authority.",
+    "card_reference_ids": "The EXP-088 card-reference outputs are immutable, byte- and hash-bound development inputs. Do not re-dispatch or regrade cards in EXP-098.",
     "portable_reuse": "EXP-078 effective acquisition, card, selector, and receipt structures are immutable input/wire types only."
   },
   "carry_forward_source_assessments": {
@@ -468,11 +471,11 @@
     "offline_replay": "Replay synthetic orders and answers through actual frozen capture contexts, source projection, answerer validation, frozen answer claim/template constructors, fixed codebook encoding/inversion, and exact packet viewer. Include duplicate/failure/success limits, citation inversions and poisoned-hash rejection. No semantic quality analysis."
   },
   "live_authority": {
-    "qualified": false,
-    "registered": false,
+    "qualified": true,
+    "registered": true,
     "admitted": false,
     "calls_permitted": false,
-    "carry_gate": "approved_bounded_review_passed",
-    "remaining_blocker": "Complete preparation/controller wiring, protected source closure, registration and qualification before admission."
+    "carry_gate": "mechanics_review_passed",
+    "remaining_blocker": "Delivery review/CI/merge and actual current-health gate before scientific dispatch."
   }
 }
