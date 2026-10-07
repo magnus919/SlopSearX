@@ -1,0 +1,37 @@
+"""Finite public fixture replay; no network, admission or historical writes."""
+import hashlib, importlib.machinery, inspect, json, tempfile, sys
+from pathlib import Path
+root=Path.cwd(); old=root/'docs/experiments/evidence/EXP-094'
+T=importlib.machinery.SourceFileLoader('exp095_fixture',str(old/'phase-bindings-tests.py.txt')).load_module()
+P=T.P; packets=T.PACKETS
+source=inspect.getsource(P.encode_answer_assessor_packet)
+mode=sys.argv[1]; out=Path(sys.argv[2])
+if mode=='candidate':
+    changed=source.replace('    _replace_task_codes(coded, table, to_codes=True)','    coded = _replace_task_codes(coded, table, to_codes=True)')
+    assert changed!=source
+    exec(compile(changed,'exp095-candidate','exec'),P.__dict__)
+rows=[]
+for index,context in enumerate(['Captured fact.','Captured Ω passage.','Captured first line.\nSecond line.']):
+    task={'id':'d1','kind':'research','query':'q','purpose':'p','critical_checks':[{'id':'d1_f1','check':'Check captured fact.'}]}
+    sid='u'+hashlib.sha256(f'exp095-source-{index}'.encode()).hexdigest()
+    projection=packets.answer_projection(['card'],[{'card_id':'card','state':'success','source_id':sid,'context':context}],arm_id='w0')
+    eid=projection['delivered_sources'][0]['evidence_ids'][0]
+    table=T._citation_table('d1',sid,eid)
+    own={'packet_kind':'source','assessor_id':'R1','tasks':[{'task_id':'d1','arms':[{'arm_id':'source','facet_assessments':[{'evidence_dispositions':[{'source_id':sid,'evidence_ids':[eid]}]}]}]}]}
+    claims={'d1_f1':[{'claim_id':'d1_f1:C001','text':'Preserved claim.'}]}
+    template=packets.answer_assessor_template('packet','R1','d1','w0',['d1_f1'],claims,[sid],projection,[{'facet_id':'d1_f1','conclusion':'Fixture.','claims':[{'claim_id':'d1_f1:C001','text':'Preserved claim.','evidence_ids':[eid]}]}],own)
+    before=json.dumps(template,sort_keys=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        encoded=P.encode_answer_assessor_packet(task_id='d1',packet_input=template,source_catalog=projection['catalog'],answer_catalog=projection['catalog'],source_ids=[sid],table=table,outdir=Path(tmp)/'binding')
+        labeled=encoded['label_binding_bundle']['source_binding']['model_input']
+        expected=P._replace_task_codes(labeled,table,to_codes=True)
+        complete=encoded['model_input']==expected and expected!=labeled
+        inverse=False
+        if complete: inverse=P._replace_task_codes(encoded['model_input'],table,to_codes=False)==labeled
+        try:
+            P._replace_task_codes({'delivered_sources':[{'source_id':sid,'passages':[{'evidence_id':'UNKNOWN'}]}]},table,to_codes=False)
+            reject=False
+        except ValueError: reject=True
+        rows.append({'case':index,'context':context,'complete_conversion':complete,'inverse_exact':inverse,'unknown_code_rejected':reject,'input_unchanged':before==json.dumps(template,sort_keys=True),'model_input':encoded['model_input'],'expected_model_input':expected})
+out.write_text(json.dumps({'mode':mode,'rows':rows,'complete_count':sum(r['complete_conversion'] for r in rows),'provider_calls':0},ensure_ascii=False,indent=2)+'\n')
+print(json.dumps({'mode':mode,'complete_count':sum(r['complete_conversion'] for r in rows),'guards':[{k:r[k] for k in ['inverse_exact','unknown_code_rejected','input_unchanged']} for r in rows]}))

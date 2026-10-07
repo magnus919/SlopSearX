@@ -41,3 +41,35 @@ Latest seven completed studies reviewed: EXP-088 through EXP-094. EXP-094 retain
 five valid assignments but expired after a thread-capacity rejection. Others failed
 assessment/admission, no accepted quality contrast. No unchanged live retry. Earlier
 EXP-079/080 capability delivered in #685 (`f244683`), not a default planner.
+
+## Readout — supported measurement prerequisite
+
+Registration `6cfbeb5`; baseline `2abbf49`. Actual encoder replay: **0/3 → 3/3**
+complete short-code packets (+3), meeting the fixed threshold. Each corrected
+packet's inverse exactly equals the original labeled packet. All three inputs
+remain unchanged and unknown codes remain rejected. Nine existing codec tests
+passed; historical EXP-094 source matches its committed bytes. No exclusions,
+failed candidate trial, retry, threshold tuning or private-data access. Baseline
+failures remain in raw evidence.
+
+[Evidence and commands](evidence/EXP-095/README.md), raw before/after JSON, an
+inert one-line successor patch and checksums preserve reproduction. The candidate
+was applied only in memory; no active helper or product code changed. Documentation
+persistence is therefore documentation/inert-evidence only with DCO [skip ci];
+no product CI, pre-commit or review is requested.
+
+This closes a finite encoder defect demonstrated through the actual experimental
+packet-preparation function on synthetic public inputs. It is a **measurement
+prerequisite**, not product-quality uplift, private frozen-corpus validation or
+qualification of a successor/live study. It did not cause the original thread
+capacity interruption. EXP-094 remains terminal; its five valid assignments and
+all historical artifacts are preserved unchanged. A successor must adopt and
+qualify the correction with real frozen-capture handoff and new closure/review/
+admission before any of the 75 remaining assessments or answer calls. No stage
+clock/lease was minted and no call budget was consumed here.
+
+Earlier supported query-planning capability delivery was independently refreshed:
+PR #685 merged as `f244683716c74ccc25869fa94019ce2d36628351` on
+2026-10-06T15:01:07Z. No new supported runtime candidate awaits this cycle's merge.
+No release or production status inferred. Actual elapsed/accounting is retained
+in accounting.json; zero provider/paid calls; subscription usage unknown.
