@@ -1,26 +1,43 @@
 {
   "cohorts_sha256": "a734a15b59f281528f03fe4c81fd55f2df23d553c64f0b9f8ced7c7c68dda482",
-  "input_bundle_sha256": "0274f3f1cbc8a8b6bc809d9743d5c2956bdfdd921201f2b44116597af7dd9ec3",
-  "input_pins_sha256": "6cd49ae935a1caa2f133f1759d9d388a665a0a43fabf548783d68410e974f426",
-  "ordered_task_ids": [
-    "d1",
-    "d2",
-    "d3",
-    "d4",
-    "d5",
-    "d6",
-    "d7",
-    "d8",
-    "d9",
-    "d10",
-    "d11",
-    "d12",
-    "d13"
-  ],
-  "protocol_sha256": "aca46cbbce67c8bf92bb8ae281985757cc9a38ff00e4557ac6173704efa8250e",
-  "runtime_config_receipt_sha256": "9b235c28265bfd6ef3968d128564f593655d7a914cb618079146b267cf2ec980",
-  "schema": "exp098-stage-manifest/1",
-  "source_files": {
+  "dependencies": {
+    "anyio": "4.13.0",
+    "fastapi": "0.136.3",
+    "httpcore": "1.0.9",
+    "httpx": "0.28.1",
+    "jsonschema": "4.26.0",
+    "lxml": "6.1.1",
+    "pydantic": "2.13.4",
+    "requests": "2.34.2",
+    "starlette": "1.2.1",
+    "structlog": "26.1.0"
+  },
+  "environment": {
+    "python_implementation": "CPython",
+    "python_version": "3.12.11"
+  },
+  "external_source_pins": {
+    "actor_binding": {
+      "sha256": "1eb5e10e5a35e9eedf754e974ed508ffad1aca396bc78900822fbcdcbf52f3a6"
+    },
+    "answer_coordinator": {
+      "sha256": "75a77db3c787f80ee26d8d87752036c7de8090b9caca8ed642492e4ef5de2b85"
+    },
+    "final_text_reader": {
+      "sha256": "faa951647cca9188dbe21120857a963a4c183424ab2ed791e169c2b73cd8a89d"
+    },
+    "groktocrawl_cli": {
+      "revision": "95e68cfd3df9c7099e5978184bcf0976c2b0f3d0",
+      "sha256": "c954eebc4e25a4bca2d12e1a670cdac492ca63a741ba242244c0d95a2b25bb99"
+    },
+    "readiness_baseline": {
+      "sha256": "f9471de93e5ffbfd18ca42aa7faf5a1ac62b04013223f43f0d09c104f1fd7f72"
+    },
+    "source_coordinator": {
+      "sha256": "86acc8e7b692985fef9e3e00aa2f727b86b4d666038f02c8a05c7c79b7d40f21"
+    }
+  },
+  "files": {
     "docs/experiments/EXP-088-short-evidence-labels.md": "1804472799356b0470e3175c0c0fefa418880607281e5ecb3f3824a62ea1c8f6",
     "docs/experiments/EXP-089-final-json-checkpoint-continuation.md": "9f334bd8e7c969ddf1f1268bf789a1274125ed205dc6a13d58e14b41e959a212",
     "docs/experiments/EXP-090-bounded-complete-input-views.md": "aa2bb50744551e857542d985e3ebe0554ce34695ad3ed622d84d77fdb0dae871",
@@ -450,7 +467,17 @@
     "slopsearx/workflow_console.py": "565c82cc91e3832e7edcba36423e5629b81fa3340a0cb3c75f8b226d14caed68",
     "slopsearx/workflow_portal.py": "6745b20350fa2c109228bcf64dcf8c07c5ed958e110ec0f41fe839b8ff2bf75b"
   },
-  "stage": "development",
-  "status": "registered",
+  "input_bundle_sha256": "0274f3f1cbc8a8b6bc809d9743d5c2956bdfdd921201f2b44116597af7dd9ec3",
+  "input_pins_sha256": "6cd49ae935a1caa2f133f1759d9d388a665a0a43fabf548783d68410e974f426",
+  "live_stage_started": false,
+  "protocol_sha256": "aca46cbbce67c8bf92bb8ae281985757cc9a38ff00e4557ac6173704efa8250e",
+  "qualification_scope": "Offline mechanics only: all23 original replay,48encoded source bindings/views, strict tamper rejection, actual frozen-corpus mocked full handoff and admission/readiness tests. No quality/adoption conclusion or live stage follows from source records alone.",
+  "qualified": true,
+  "qualified_source_revision": "1bb211f5c072812fbb50bc8ce10cd58b8d4651f1",
+  "registration_sha256": "0aac2174d255d0e6e031b9b07669b5a13dff6f188007aca1330389730f4541a2",
+  "runtime_config_receipt_sha256": "9b235c28265bfd6ef3968d128564f593655d7a914cb618079146b267cf2ec980",
+  "schema": "exp098-qualification/1",
+  "stage_manifest_sha256": "e1ef54d6a18406866dffcd85a5ce9e3cfce0745be228182b8b8de6801fc16aa8",
+  "status": "qualified",
   "study_id": "EXP-098"
 }
