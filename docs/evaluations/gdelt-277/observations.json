@@ -1,0 +1,54 @@
+{
+  "date_utc": "2026-10-07",
+  "baseline_sha": "e4c4a60906485d97a85826ef0c474fe13acc6bdf",
+  "endpoint": "https://api.gdeltproject.org/api/v2/doc/doc",
+  "parameters": {
+    "mode": "artlist",
+    "format": "json",
+    "timespan": "1week",
+    "maxrecords": 10,
+    "sort": "hybridrel"
+  },
+  "timeout_seconds": 25,
+  "spacing_after_completion_seconds": 5,
+  "automatic_retries": 0,
+  "observations": [
+    {
+      "query": "climate change",
+      "status": 429,
+      "elapsed_seconds": 10.17,
+      "results": 0
+    },
+    {
+      "query": "semiconductor",
+      "status": 200,
+      "elapsed_seconds": 15.19,
+      "results": 10
+    },
+    {
+      "query": "elections",
+      "status": 429,
+      "elapsed_seconds": 10.19,
+      "results": 0
+    }
+  ],
+  "confirmation": [
+    {
+      "url": "https://api.gdeltproject.org/api/v2/doc/doc?query=semiconductor&mode=artlist&format=json&timespan=24h&maxrecords=5",
+      "outcome": "TimeoutError",
+      "message": "The read operation timed out",
+      "latency_seconds": 17.565
+    }
+  ],
+  "comparison": {
+    "endpoint": "https://hn.algolia.com/api/v1/search",
+    "query": "semiconductor",
+    "tags": "story",
+    "hitsPerPage": 10,
+    "numericFilters": "created_at_i greater than request UTC minus seven days",
+    "status": 200,
+    "elapsed_seconds": 0.35,
+    "results": 2
+  },
+  "timestamp_limitation": "Exact per-request timestamps were not logged; all calls were made during this 2026-10-07 evaluation. Timing is monotonic elapsed, not server processing time."
+}
