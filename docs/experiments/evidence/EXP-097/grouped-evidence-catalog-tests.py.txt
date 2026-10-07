@@ -1,0 +1,134 @@
+"""Strict mechanics tests for the prospective EXP-096 grouped table."""
+from __future__ import annotations
+
+import copy
+import hashlib
+import importlib.machinery
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+codec = importlib.machinery.SourceFileLoader(
+    "exp096_grouped_catalog_tests", str(HERE / "grouped-evidence-catalog.py.txt")
+).load_module()
+
+
+def sha(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def packet() -> dict:
+    context = "Alpha βeta. Second passage."
+    first, second = "Alpha βeta.", " Second passage."
+    a, b = context.index(first), context.index(second)
+    d1, d2 = sha(first), sha(second)
+    digest = sha(context)
+    passage_rows = {
+        "D1E0001": {"context_sha256": digest, "end": a + len(first),
+            "passage_sha256": d1, "source_id": "src-A", "start": a, "text": first},
+        "D1E0002": {"context_sha256": digest, "end": b + len(second),
+            "passage_sha256": d2, "source_id": "src-A", "start": b, "text": second},
+    }
+    return {
+        "schema": "research-usefulness-assessment/1", "packet_id": "dev-d1-R1-arm1",
+        "assessor_id": "R1", "packet_kind": "answer", "task_id": "d1", "arm_id": "arm1",
+        "catalog_kind": "answer_arm", "facet_claims": {"facet-1": []},
+        "pool_source_ids": ["src-A"], "delivered_source_ids": ["src-A"],
+        "opening_outcomes": [],
+        "delivered_sources": [{"characters": len(context), "context": context,
+            "context_sha256": digest, "evidence_ids": ["D1E0001", "D1E0002"],
+            "original_characters": len(context), "source_id": "src-A", "truncated": False}],
+        "catalog": {"version": 1, "sources": {"src-A": {
+            "characters": len(context), "context_sha256": digest}}, "passages": passage_rows},
+        "catalog_sha256": "0" * 64, "answer_facets": [],
+        "own_source_assessment": {"packet_kind": "source", "assessor_id": "R1", "tasks": [{
+            "task_id": "d1", "arms": [{"arm_id": "arm1", "facet_assessments": [{
+                "facet_id": "facet-1", "limitations": [], "evidence_dispositions": [{
+                    "applicability": "applicable", "disposition": "supports",
+                    "entailment": "supported", "not_assessable_reason": "",
+                    "reason": "fixture", "references": [
+                        {"context_sha256": digest, "end": a + len(first), "evidence_id": "D1E0001",
+                         "quote": first, "source_id": "src-A", "start": a},
+                        {"context_sha256": digest, "end": b + len(second), "evidence_id": "D1E0002",
+                         "quote": second, "source_id": "src-A", "start": b}],
+                    "scope_match": "matched", "source_id": "src-A"}],
+            }]}]}]},
+        "output_schema": {"required": ["facets"]},
+    }
+
+
+class GroupedCatalogTests(unittest.TestCase):
+    def test_roundtrip_preserves_exact_order_and_unicode(self):
+        original = packet()
+        raw = codec.canonical_bytes(original)
+        compact = codec.compact_packet(original, task_id="d1")
+        restored = codec.expand_packet(compact, expected_task_id="d1",
+                                       expected_original_sha256=hashlib.sha256(raw).hexdigest())
+        self.assertEqual(codec.canonical_bytes(restored), raw)
+        self.assertEqual(compact["own_source_assessment"]["tasks"][0]["arms"][0]
+                         ["facet_assessments"][0]["evidence_dispositions"][0]["references"],
+                         ["D1E0001", "D1E0002"])
+        self.assertEqual(compact["evidence_sources"]["src-A"]["passages"]["D1E0001"]["text"], "Alpha βeta.")
+
+    def test_same_source_keeps_distinct_context_variants(self):
+        original = packet()
+        quote = "pool-only"
+        digest = sha("unavailable larger source context")
+        ref = {"context_sha256": digest, "end": len(quote), "evidence_id": "D1E0003",
+               "quote": quote, "source_id": "src-A", "start": 0}
+        original["own_source_assessment"]["tasks"][0]["arms"][0]["facet_assessments"][0]["evidence_dispositions"][0]["references"].append(ref)
+        compact = codec.compact_packet(original, task_id="d1")
+        group = compact["evidence_sources"]["src-A"]
+        self.assertEqual(len(group["contexts"]), 2)
+        self.assertNotEqual(group["passages"]["D1E0001"]["context_index"],
+                            group["passages"]["D1E0003"]["context_index"])
+        self.assertEqual(codec.canonical_bytes(codec.expand_packet(compact,
+                         expected_original_sha256=hashlib.sha256(codec.canonical_bytes(original)).hexdigest())),
+                         codec.canonical_bytes(original))
+
+    def test_rejects_unknown_catalog_field_and_corrupt_literal(self):
+        compact = codec.compact_packet(packet(), task_id="d1")
+        extra = copy.deepcopy(compact)
+        extra["catalog"]["ignored"] = True
+        with self.assertRaises(codec.GroupedCatalogError):
+            codec.expand_packet(extra, expected_original_sha256=hashlib.sha256(
+                codec.canonical_bytes(packet())).hexdigest())
+        corrupt = copy.deepcopy(compact)
+        corrupt["evidence_sources"]["src-A"]["passages"]["D1E0001"]["text"] = "changed text"
+        with self.assertRaises(codec.GroupedCatalogError):
+            codec.expand_packet(corrupt, expected_original_sha256=hashlib.sha256(
+                codec.canonical_bytes(packet())).hexdigest())
+
+    def test_rejects_bad_offsets_unknown_codes_and_duplicate_json_keys(self):
+        compact = codec.compact_packet(packet(), task_id="d1")
+        bool_offset = copy.deepcopy(compact)
+        bool_offset["evidence_sources"]["src-A"]["passages"]["D1E0001"]["span"][0] = True
+        with self.assertRaises(codec.GroupedCatalogError):
+            codec.expand_packet(bool_offset, expected_original_sha256=hashlib.sha256(
+                codec.canonical_bytes(packet())).hexdigest())
+        unknown = copy.deepcopy(compact)
+        unknown["own_source_assessment"]["tasks"][0]["arms"][0]["facet_assessments"][0]["evidence_dispositions"][0]["references"][0] = "D1E9999"
+        with self.assertRaises(codec.GroupedCatalogError):
+            codec.expand_packet(unknown, expected_original_sha256=hashlib.sha256(
+                codec.canonical_bytes(packet())).hexdigest())
+        with self.assertRaises(codec.GroupedCatalogError):
+            codec.parse_compact_json(b'{"schema":"x","schema":"y"}')
+
+    def test_rejects_orphan_passage_and_requires_independent_original_hash(self):
+        original = packet()
+        compact = codec.compact_packet(original, task_id="d1")
+        orphan = copy.deepcopy(compact)
+        orphan["pool_source_ids"].append("src-fullpool")
+        orphan["evidence_sources"]["src-fullpool"] = {"contexts": [{
+            "context_sha256": sha("undelivered full-pool context")}], "passages": {"D1E0003": {
+            "context_index": 0, "span": [0, 6], "text": "orphan"}
+        }}
+        expected = hashlib.sha256(codec.canonical_bytes(original)).hexdigest()
+        with self.assertRaisesRegex(codec.GroupedCatalogError, "compact-evidence-code-coverage"):
+            codec.expand_packet(orphan, expected_original_sha256=expected)
+        with self.assertRaisesRegex(codec.GroupedCatalogError, "independent-original-digest-required"):
+            codec.expand_packet(compact)
+
+
+if __name__ == "__main__":
+    unittest.main()

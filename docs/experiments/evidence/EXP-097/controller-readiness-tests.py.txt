@@ -1,0 +1,201 @@
+"""Mocked one-shot current-readiness checks; never contacts the configured host."""
+import asyncio
+import importlib.machinery
+import json
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+C = importlib.machinery.SourceFileLoader(
+    "exp097_controller_readiness_tests", str(HERE / "controller.py.txt")
+).load_module()
+
+
+class FakeAdmission:
+    def __init__(self):
+        self.health_acquired = False
+        self.writes = []
+
+    def acquire_phase(self, _permit, name, _outdir, _clock_raw):
+        if name != "health" or self.health_acquired:
+            raise ValueError("phase-already-consumed")
+        self.health_acquired = True
+        return object()
+
+    def require_phase(self, _phase, _clock_raw, _outdir):
+        return None
+
+    def canonical_json(self, value):
+        return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+
+    def _write_once(self, path, raw):
+        self.writes.append((path, raw))
+
+
+class FakeResponse:
+    def __init__(self, model="free", revision="a" * 40):
+        self._body = {"status": "ok", "runtime": {"model": model, "revision": revision}}
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self._body
+
+
+class FakeClient:
+    def __init__(self, calls, response):
+        self.calls = calls
+        self.response = response
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_args):
+        return False
+
+    async def get(self, _url):
+        self.calls.append("one-request")
+        return self.response
+
+
+class ControllerReadinessTests(unittest.TestCase):
+    def _state(self, tmp, model="free", expected_revision="a" * 40):
+        admission = FakeAdmission()
+        state = SimpleNamespace(
+            outdir=Path(tmp), bundle_root=Path(tmp), admission=admission,
+            permit=object(), clock=({}, b"clock", "clock-sha"),
+            readiness_baseline=SimpleNamespace(model_alias=model, expected_revision=expected_revision),
+        )
+        return state, admission
+
+    def _client_factory(self, calls, response):
+        return lambda **_kwargs: FakeClient(calls, response)
+
+    def test_actual_revision_mismatch_is_terminal_before_any_dispatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, admission = self._state(tmp, expected_revision="a" * 40)
+            http_calls, dispatch_calls = [], []
+
+            async def flow():
+                await C.health_check(state, client_factory=self._client_factory(
+                    http_calls, FakeResponse(revision="b" * 40)))
+                dispatch_calls.append("must-not-run")
+
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                with self.assertRaisesRegex(ValueError, "health_revision_mismatch"):
+                    asyncio.run(flow())
+            self.assertEqual(http_calls, ["one-request"])
+            self.assertEqual(dispatch_calls, [])
+            self.assertEqual(len(admission.writes), 1)
+            receipt = json.loads(admission.writes[0][1])
+            self.assertEqual(receipt["physical_http_calls"], 1)
+            self.assertFalse(receipt["quality_credit"])
+
+    def test_current_baseline_can_pass_when_historical_capture_revision_is_different(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, _admission = self._state(tmp, expected_revision="a" * 40)
+            state.historical_capture_revision = "b" * 40
+            http_calls = []
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                receipt = asyncio.run(C.health_check(state, client_factory=self._client_factory(
+                    http_calls, FakeResponse(revision="a" * 40))))
+            self.assertEqual(http_calls, ["one-request"])
+            self.assertEqual(receipt["status"], "healthy")
+            self.assertEqual(receipt["revision"], "a" * 40)
+
+    def test_mutated_historical_bytes_reject_before_a_healthy_runtime_or_dispatch(self):
+        fixture_module = importlib.machinery.SourceFileLoader(
+            "exp097_controller_input_fixture", str(HERE / "input-bridge-tests.py.txt")
+        ).load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root, pins = fixture_module.fixture(tmp)
+            historical_file = root / "original" / "effective-acquisition.json"
+            original = historical_file.read_bytes()
+            historical_file.write_bytes(original[:-1] + bytes([original[-1] ^ 1]))
+            state, _admission = self._state(tmp)
+            http_calls, dispatch_calls = [], []
+
+            async def flow():
+                fixture_module.B.verify_bundle_inventory(root, pins)
+                await C.health_check(state, client_factory=self._client_factory(
+                    http_calls, FakeResponse(revision="a" * 40)))
+                dispatch_calls.append("must-not-run")
+
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                with self.assertRaisesRegex(fixture_module.B.InputError, "bundle-hash-mismatch"):
+                    asyncio.run(flow())
+            self.assertEqual(http_calls, [])
+            self.assertEqual(dispatch_calls, [])
+
+    def test_model_mismatch_is_terminal_and_second_health_attempt_never_sends(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, _admission = self._state(tmp, model="free")
+            http_calls = []
+            factory = self._client_factory(http_calls, FakeResponse(model="other"))
+            with mock.patch.dict(os.environ, {"GROKTOCRAWL_API_URL": "https://fixture.invalid"}):
+                with self.assertRaisesRegex(ValueError, "health_identity_invalid"):
+                    asyncio.run(C.health_check(state, client_factory=factory))
+                with self.assertRaisesRegex(ValueError, "phase-already-consumed"):
+                    asyncio.run(C.health_check(state, client_factory=factory))
+            self.assertEqual(http_calls, ["one-request"])
+
+    def test_missing_endpoint_fails_without_http_and_has_one_shot_receipt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state, admission = self._state(tmp)
+            http_calls = []
+            with mock.patch.dict(os.environ, {}, clear=True):
+                with self.assertRaisesRegex(ValueError, "endpoint_unavailable"):
+                    asyncio.run(C.health_check(state, client_factory=self._client_factory(
+                        http_calls, FakeResponse())))
+            self.assertEqual(http_calls, [])
+            self.assertEqual(len(admission.writes), 1)
+
+    def test_missing_pinned_baseline_stops_before_output_configuration_or_clock(self):
+        class Admission:
+            def _committed_design(self):
+                return ({}, b"registration", b"qualification", {
+                    "qualified_source_revision": "c" * 40,
+                    "external_source_pins": {"readiness_baseline": {"sha256": "d" * 64}},
+                })
+
+            @staticmethod
+            def sha(raw):
+                import hashlib
+                return hashlib.sha256(raw).hexdigest()
+
+            def verify_closure(self, *_args):
+                return {"verified": True}
+
+            def create_stage_clock(self, *_args):
+                raise AssertionError("clock must not be created")
+
+        baseline = importlib.machinery.SourceFileLoader(
+            "exp097_missing_baseline_fixture", str(HERE / "readiness-baseline.py.txt")
+        ).load_module()
+        admission = Admission()
+
+        def load(name, _filename):
+            if name == "exp097_admission":
+                return admission
+            if name == "exp097_readiness_baseline":
+                return baseline
+            raise AssertionError(name)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "stage"
+            with mock.patch.object(C, "load", side_effect=load), \
+                 mock.patch.object(C, "_read_bound_capture_configuration") as config:
+                with self.assertRaisesRegex(ValueError, "readiness-baseline-unavailable"):
+                    C.begin(output, Path(tmp), source_checkpoint_root=Path(tmp) / "checkpoint",
+                            readiness_baseline_path=Path(tmp) / "missing.json")
+            config.assert_not_called()
+            self.assertFalse(output.exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

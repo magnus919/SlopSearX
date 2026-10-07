@@ -1,0 +1,62 @@
+"""Fail-closed EXP-097 authority tests: legacy/unsealed registration cannot mint a clock."""
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+MODULE = importlib.machinery.SourceFileLoader(
+    "exp097_admission_authority_tests", str(HERE / "admission.py.txt")).load_module()
+
+
+class AdmissionAuthorityTests(unittest.TestCase):
+    def _call_with_registration(self, registration, qualification=None):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reg_rel = "registration-integrity.json"
+            qual_rel = "qualification-integrity.json"
+            reg_path = root / reg_rel
+            qual_path = root / qual_rel
+            reg_path.write_text(json.dumps(registration))
+            qual_path.write_text(json.dumps(qualification or {"schema": "exp097-qualification/1",
+                                                               "study_id": "EXP-097", "qualified": False,
+                                                               "status": "prospective_unsealed"}))
+            with mock.patch.object(MODULE, "REPO", root), \
+                 mock.patch.object(MODULE, "REG_PATH", reg_rel), \
+                 mock.patch.object(MODULE, "QUAL_PATH", qual_rel), \
+                 mock.patch.object(MODULE, "_git_blob",
+                                   side_effect=lambda _revision, path: (root / path).read_bytes()):
+                out = root / "stage"
+                out.mkdir()
+                with self.assertRaises(MODULE.AdmissionError):
+                    MODULE.create_stage_clock(out, "a" * 40)
+                self.assertFalse((out / "stage-clock.json").exists())
+                self.assertFalse(list(root.glob("*.lease")))
+
+    def test_exp095_registration_cannot_mint_exp097_clock(self):
+        self._call_with_registration({"schema": "exp095-registration/1", "study_id": "EXP-095",
+                                      "status": "registered"})
+
+    def test_exp096_registration_cannot_mint_exp097_clock(self):
+        self._call_with_registration({"schema": "exp096-registration/1", "study_id": "EXP-096",
+                                      "status": "registered", "registered": True})
+
+    def test_prospective_exp097_registration_cannot_mint_clock(self):
+        self._call_with_registration({"schema": "exp097-registration/1", "study_id": "EXP-097",
+                                      "status": "prospective_unsealed", "registered": False})
+
+    def test_registered_status_without_registered_bit_cannot_mint_clock(self):
+        self._call_with_registration({"schema": "exp097-registration/1", "study_id": "EXP-097",
+                                      "status": "registered", "registered": False})
+
+    def test_legacy_qualification_cannot_mint_clock_for_exp097(self):
+        self._call_with_registration({"schema": "exp097-registration/1", "study_id": "EXP-097",
+                                      "status": "registered", "registered": True},
+                                     {"schema": "exp095-qualification/1", "study_id": "EXP-095",
+                                      "qualified": True, "status": "qualified"})
+
+
+if __name__ == "__main__":
+    unittest.main()

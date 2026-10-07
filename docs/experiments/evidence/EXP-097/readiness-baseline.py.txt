@@ -1,0 +1,85 @@
+"""Strict private EXP-097 runtime-readiness baseline loader.
+
+The baseline is a private declaration of the expected current runtime identity.
+It is deliberately separate from the immutable EXP-084 capture identity. This
+module performs no I/O except reading the explicitly supplied local baseline.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import stat
+from dataclasses import dataclass
+from pathlib import Path
+
+SCHEMA = "exp097-readiness-baseline/1"
+_FIELDS = {"schema", "status", "model_alias", "expected_revision"}
+
+
+class ReadinessBaselineError(ValueError):
+    pass
+
+
+@dataclass(frozen=True)
+class ReadinessBaseline:
+    model_alias: str
+    expected_revision: str
+    sha256: str
+
+
+def _strict_json(raw: bytes) -> object:
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ReadinessBaselineError("readiness-baseline-duplicate-key")
+            result[key] = value
+        return result
+
+    def constant(_value):
+        raise ReadinessBaselineError("readiness-baseline-invalid-json")
+
+    try:
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ReadinessBaselineError("readiness-baseline-invalid-json") from exc
+
+
+def load_baseline(path: Path, expected_sha256: str) -> ReadinessBaseline:
+    """Read one exact private baseline, requiring its independently pinned digest."""
+    if type(expected_sha256) is not str or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+        raise ReadinessBaselineError("readiness-baseline-pin-invalid")
+    path = Path(path)
+    flags = os.O_RDONLY
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        fd = os.open(path, flags)
+    except OSError as exc:
+        raise ReadinessBaselineError("readiness-baseline-unavailable") from exc
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise ReadinessBaselineError("readiness-baseline-unavailable")
+        if stat.S_IMODE(info.st_mode) != 0o600:
+            raise ReadinessBaselineError("readiness-baseline-permissions")
+        with os.fdopen(fd, "rb") as source:
+            fd = -1
+            raw = source.read()
+    finally:
+        if fd >= 0:
+            os.close(fd)
+    digest = hashlib.sha256(raw).hexdigest()
+    if digest != expected_sha256:
+        raise ReadinessBaselineError("readiness-baseline-pin-mismatch")
+    value = _strict_json(raw)
+    if type(value) is not dict or set(value) != _FIELDS:
+        raise ReadinessBaselineError("readiness-baseline-shape")
+    revision = value.get("expected_revision")
+    if (value.get("schema") != SCHEMA or value.get("status") != "ok"
+            or value.get("model_alias") != "free"
+            or type(revision) is not str or not re.fullmatch(r"[0-9a-f]{40,64}", revision)):
+        raise ReadinessBaselineError("readiness-baseline-identity")
+    return ReadinessBaseline("free", revision, digest)
