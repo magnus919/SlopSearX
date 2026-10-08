@@ -1,0 +1,206 @@
+"""Synthetic fail-closed tests for the EXP-102 qualification preflight."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader(
+    "exp102_qualification_under_test", str(HERE / "qualification-preflight.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+qualification = importlib.util.module_from_spec(spec)
+loader.exec_module(qualification)
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+
+class QualificationFixture:
+    def __init__(self, *, qualified=True):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.here = self.root / "docs/experiments/evidence/EXP-102"
+        self.here.mkdir(parents=True)
+        (self.here.parent / "EXP-101").mkdir()
+        self.files = {}
+        self.head = {}
+        self.rev = "a" * 40
+        self.old_rev = "b" * 40
+        old_bytes = b"synthetic reused source\n"
+        current_bytes = b"synthetic current source\n"
+        source_name, old_name = "synthetic/current.py", "synthetic/reused.py"
+        for name, raw in ((source_name, current_bytes), (old_name, old_bytes)):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+            self.files[(self.rev, name)] = raw
+            if name == old_name:
+                self.files[(self.old_rev, name)] = raw
+        old_q = {"qualified_source_revision": self.old_rev,
+                 "source_files": {old_name: sha(old_bytes)}}
+        old_q_path = self.here.parent / "EXP-101/qualification.json"
+        old_q_path.write_bytes(canonical(old_q))
+        old_q_source = (self.here.parent / "EXP-101/qualification-preflight.py.txt")
+        marker = self.root / "old-verifier-called"
+        old_q_source.write_text(
+            "from pathlib import Path\n"
+            f"def verify(**kwargs): Path({str(marker)!r}).write_text('called'); return {{'status':'qualified'}}\n")
+        (self.here / "continuation-authority.py.txt").write_bytes(
+            (HERE / "continuation-authority.py.txt").read_bytes())
+        (self.here / "protocol.json").write_bytes((HERE / "protocol.json").read_bytes())
+        (self.here.parent / "EXP-101/protocol.json").write_bytes(
+            (HERE.parent / "EXP-101/protocol.json").read_bytes())
+        scheduler = self.root / "private-scheduler.py"
+        scheduler.write_bytes(b"synthetic approved scheduler\n")
+        self.scheduler = scheduler
+        lineage_values = {
+            "clock": {"schema": "exp101-grading-clock/1", "stage_id": "old"},
+            "health_attempt": {"schema": "exp101-health-attempt/1", "status": "reserved"},
+            "terminal_audit": {"status": "terminal-before-grading", "grader_reservations": 0,
+                "grader_calls": 0, "health_request_completed": False,
+                "clock_reuse_permitted": False, "process_exit_confirmed": True},
+        }
+        self.lineage = {}
+        for name, item in lineage_values.items():
+            path = self.root / (name + ".json")
+            raw = canonical(item)
+            path.write_bytes(raw)
+            self.lineage[name] = (path, sha(raw))
+        clock_sha = self.lineage["clock"][1]
+        health_path = self.lineage["health_attempt"][0]
+        health_path.write_bytes(canonical({"schema": "exp101-health-attempt/1",
+                                           "status": "reserved", "clock_sha256": clock_sha}))
+        health_sha = sha(health_path.read_bytes())
+        self.lineage["health_attempt"] = (health_path, health_sha)
+        audit_path = self.lineage["terminal_audit"][0]
+        audit_path.write_bytes(canonical({"status": "terminal-before-grading",
+            "grader_reservations": 0, "grader_calls": 0,
+            "health_request_completed": False, "clock_reuse_permitted": False,
+            "process_exit_confirmed": True, "health_slot_claimed": True,
+            "clock_sha256": clock_sha, "health_attempt_sha256": health_sha}))
+        self.lineage["terminal_audit"] = (audit_path, sha(audit_path.read_bytes()))
+        required_paths = (
+            "docs/experiments/evidence/EXP-102/qualification-preflight.py.txt",
+            "docs/experiments/evidence/EXP-102/continuation-authority.py.txt",
+            "docs/experiments/evidence/EXP-102/protocol.json",
+            "docs/experiments/evidence/EXP-101/qualification.json",
+            "docs/experiments/evidence/EXP-101/registration-integrity.json")
+        required_data = {
+            required_paths[0]: (HERE / "qualification-preflight.py.txt").read_bytes(),
+            required_paths[1]: (HERE / "continuation-authority.py.txt").read_bytes(),
+            required_paths[2]: (HERE / "protocol.json").read_bytes(),
+            required_paths[3]: old_q_path.read_bytes(),
+            required_paths[4]: b"synthetic registration integrity\n"}
+        for name, data in required_data.items():
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            self.files[(self.rev, name)] = data
+            self.head[name] = data
+        source_inventory = {source_name: sha(current_bytes), old_name: sha(old_bytes)}
+        source_inventory.update({name: sha(data) for name, data in required_data.items()})
+        self.q = {"schema": "exp102-network-qualification/1", "study_id": "EXP-102",
+            "qualified": qualified, "independent_review_complete": True,
+            "qualified_source_revision": self.rev,
+            "reused_source_revision": self.old_rev,
+            "source_files": source_inventory,
+            "operator_scheduler_sha256": sha(scheduler.read_bytes()),
+            "failed_run_pins": {name: digest for name, (_, digest) in self.lineage.items()}}
+        self.q_path = self.here / "qualification.json"
+        self.q_raw = canonical(self.q)
+        self.q_path.write_bytes(self.q_raw)
+        rel = self.q_path.relative_to(self.root).as_posix()
+        self.head[rel] = self.q_raw
+        self.head[source_name] = current_bytes
+        self.head[old_name] = old_bytes
+        self.marker = marker
+        self.blob_calls = []
+
+    def fake_blob(self, ref, path):
+        self.blob_calls.append((ref, str(path)))
+        if ref == "HEAD": return self.head[str(path)]
+        return self.files[(ref, str(path))]
+
+    def verify(self, *, entrypoints=None, scheduler=None, lineage=None):
+        qualification.HERE = self.here
+        qualification.REPO = self.root
+        qualification.blob = self.fake_blob
+        return qualification.verify(
+            original_entrypoints=entrypoints or {"old": self.root / "old"},
+            continuation_entrypoint=scheduler or self.scheduler,
+            failed_run_files=lineage or {name: path for name, (path, _) in self.lineage.items()})
+
+    def cleanup(self): self.tmp.cleanup()
+
+class QualificationPreflightTests(unittest.TestCase):
+    def setUp(self):
+        self.fx = QualificationFixture()
+        self.addCleanup(self.fx.cleanup)
+
+    def test_missing_qualification_fails_before_git_or_private_validation(self):
+        self.fx.q_path.unlink()
+        with self.assertRaisesRegex(ValueError, "continuation-qualification-missing"):
+            self.fx.verify()
+        self.assertEqual(self.fx.blob_calls, [])
+        self.assertFalse(self.fx.marker.exists())
+
+    def test_unqualified_source_fails_before_old_qualification_or_private_config(self):
+        self.fx.q["qualified"] = False
+        self.fx.q_raw = canonical(self.fx.q)
+        self.fx.q_path.write_bytes(self.fx.q_raw)
+        self.fx.head[self.fx.q_path.relative_to(self.fx.root).as_posix()] = self.fx.q_raw
+        with self.assertRaisesRegex(ValueError, "continuation-not-qualified"):
+            self.fx.verify()
+        self.assertFalse(self.fx.marker.exists())
+        self.assertEqual([ref for ref, _ in self.fx.blob_calls], ["HEAD"])
+
+    def test_current_source_hash_scheduler_pin_and_failed_lineage_are_all_bound(self):
+        bad_source = dict(self.fx.head)
+        bad_source["synthetic/current.py"] = b"changed source\n"
+        self.fx.head = bad_source
+        with self.assertRaisesRegex(ValueError, "continuation-source-changed"):
+            self.fx.verify()
+
+        self.fx = QualificationFixture(); self.addCleanup(self.fx.cleanup)
+        changed_scheduler = self.fx.root / "wrong-scheduler.py"
+        changed_scheduler.write_bytes(b"wrong scheduler")
+        with self.assertRaisesRegex(ValueError, "continuation-scheduler-changed"):
+            self.fx.verify(scheduler=changed_scheduler)
+
+        self.fx = QualificationFixture(); self.addCleanup(self.fx.cleanup)
+        self.fx.lineage["clock"][0].write_bytes(b"changed clock evidence")
+        with self.assertRaisesRegex(ValueError, "continuation-failed-lineage-changed"):
+            self.fx.verify()
+
+    def test_failed_lineage_must_describe_terminal_pregrading_exit(self):
+        self.fx.lineage["terminal_audit"][0].write_bytes(canonical({
+            "status": "terminal-before-grading", "grader_reservations": 1,
+            "grader_calls": 0, "health_request_completed": False,
+            "clock_reuse_permitted": False, "process_exit_confirmed": True,
+            "health_slot_claimed": True,
+            "clock_sha256": self.fx.lineage["clock"][1],
+            "health_attempt_sha256": self.fx.lineage["health_attempt"][1]}))
+        new_digest = sha(self.fx.lineage["terminal_audit"][0].read_bytes())
+        self.fx.q["failed_run_pins"]["terminal_audit"] = new_digest
+        self.fx.q_raw = canonical(self.fx.q)
+        self.fx.q_path.write_bytes(self.fx.q_raw)
+        self.fx.head[self.fx.q_path.relative_to(self.fx.root).as_posix()] = self.fx.q_raw
+        with self.assertRaisesRegex(ValueError, "continuation-failed-lineage-not-terminal"):
+            self.fx.verify()
+        self.assertTrue(self.fx.marker.exists())
+
+    def test_valid_synthetic_qualification_only_passes_after_old_source_checks(self):
+        result = self.fx.verify()
+        self.assertEqual(result["status"], "qualified")
+        self.assertEqual(result["study_id"], "EXP-102")
+        self.assertTrue(self.fx.marker.exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
