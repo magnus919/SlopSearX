@@ -148,10 +148,13 @@ async def run_selector(*, state, cases, outdir, offline=False, transport_factory
     """Run the unchanged EXP-078 selector helper on EXP-099 inputs/admission."""
     selector = _load("exp094_portable_selector_runner",
                      HERE / "selector-runner.py.txt")
-    return await selector.run_selector(state.effective_acquisition, cases, state.clock[1],
+    result = await selector.run_selector(state.effective_acquisition, cases, state.clock[1],
         state.outdir, Path(outdir), offline=offline, stage_permit=None if offline else state.permit,
         admission_module=None if offline else state.admission,
         transport_factory=transport_factory, source_integrity=state.integrity)
+    if not offline and result.get("status") == "complete":
+        state.admission.complete_issued_phase(state.permit, "selector", state.clock[1], state.outdir)
+    return result
 
 
 def claim_assessment_phase(*, admission, stage_permit, phase, stage_outdir, phase_outdir,
@@ -1086,6 +1089,8 @@ def run_answers(*, assignments: list[dict], cases: list[dict], prompt: str, sche
               "answer_output_manifest_path": answer_manifest["manifest_path"],
               "private_label_bindings": label_refs}
     ref = write_once(outdir / "answer-phase.json", result)
+    if not offline:
+        admission.complete_phase(phase_permit, clock_bytes, Path(stage_outdir).resolve())
     result["receipt"] = ref
     return result
 

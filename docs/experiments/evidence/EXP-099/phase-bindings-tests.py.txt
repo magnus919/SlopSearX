@@ -1,5 +1,8 @@
 """Offline phase tests for EXP-099; no provider or source requests."""
 import importlib.machinery
+import asyncio
+from types import SimpleNamespace
+from unittest import mock
 import tempfile
 import unittest
 from pathlib import Path
@@ -23,6 +26,37 @@ class Admission:
 
 
 class PhaseBindingTests(unittest.TestCase):
+    def test_selector_completion_is_recorded_only_for_successful_live_run(self):
+        for offline, status, expected in ((False, "complete", 1),
+                                           (False, "incomplete", 0),
+                                           (True, "complete", 0)):
+            with self.subTest(offline=offline, status=status), tempfile.TemporaryDirectory() as tmp:
+                admission = SimpleNamespace(complete_issued_phase=mock.Mock())
+                state = SimpleNamespace(effective_acquisition={}, clock=({}, b"clock", "digest"),
+                    outdir=Path(tmp), permit=object(), admission=admission, integrity={})
+                async def run(*_args, **_kwargs):
+                    return {"status": status}
+                with mock.patch.object(P, "_load", return_value=SimpleNamespace(run_selector=run)):
+                    result = asyncio.run(P.run_selector(state=state, cases=[],
+                        outdir=Path(tmp) / "selector", offline=offline))
+                self.assertEqual(result["status"], status)
+                self.assertEqual(admission.complete_issued_phase.call_count, expected)
+                if expected:
+                    admission.complete_issued_phase.assert_called_once_with(
+                        state.permit, "selector", b"clock", state.outdir)
+
+    def test_selector_completion_validation_failure_is_not_swallowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            admission = SimpleNamespace(complete_issued_phase=mock.Mock(
+                side_effect=ValueError("invalid-selector-completion")))
+            state = SimpleNamespace(effective_acquisition={}, clock=({}, b"clock", "digest"),
+                outdir=Path(tmp), permit=object(), admission=admission, integrity={})
+            async def run(*_args, **_kwargs):
+                return {"status": "complete"}
+            with mock.patch.object(P, "_load", return_value=SimpleNamespace(run_selector=run)):
+                with self.assertRaisesRegex(ValueError, "invalid-selector-completion"):
+                    asyncio.run(P.run_selector(state=state, cases=[], outdir=Path(tmp) / "selector"))
+
     def test_source_assessor_phase_cannot_be_claimed(self):
         with tempfile.TemporaryDirectory() as tmp:
             admission = Admission()
