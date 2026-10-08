@@ -1,0 +1,78 @@
+"""Read-only qualification checks; never creates clocks or reads credentials."""
+from __future__ import annotations
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def blob(revision, relative):
+    return subprocess.run(["git", "show", f"{revision}:{relative}"], cwd=REPO,
+                          check=True, stdout=subprocess.PIPE,
+                          stderr=subprocess.DEVNULL).stdout
+
+def regular(relative):
+    path = REPO / relative
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("qualification-regular-source")
+    for parent in path.parents:
+        if parent == REPO:
+            break
+        if parent.is_symlink():
+            raise ValueError("qualification-symlink-parent")
+    if not path.resolve().is_relative_to(REPO.resolve()):
+        raise ValueError("qualification-source-scope")
+    return path.read_bytes()
+
+def verify():
+    relative = "docs/experiments/evidence/EXP-101/qualification.json"
+    raw = regular(relative)
+    if blob("HEAD", relative) != raw:
+        raise ValueError("qualification-uncommitted")
+    q = json.loads(raw)
+    revision = q.get("qualified_source_revision")
+    if (q.get("schema") != "exp101-grading-qualification/1"
+            or q.get("qualified") is not True
+            or type(revision) is not str or not re.fullmatch(r"[0-9a-f]{40}", revision)
+            or q.get("independent_review_complete") is not True):
+        raise ValueError("qualification-not-approved")
+    files = q.get("source_files")
+    if type(files) is not dict or not files:
+        raise ValueError("qualification-source-inventory")
+    required = {"docs/experiments/evidence/EXP-101/" + name for name in (
+        "qualification-preflight.py.txt", "protocol.json", "completed-output-carry.py.txt",
+        "grading-driver.py.txt", "origin-transport.py.txt", "grading-authority.py.txt")}
+    if not required.issubset(files):
+        raise ValueError("qualification-required-sources")
+    for name, digest in files.items():
+        if (type(name) is not str or Path(name).is_absolute() or ".." in Path(name).parts
+                or type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            raise ValueError("qualification-source-entry")
+        original = blob(revision, name)
+        if sha(original) != digest or blob("HEAD", name) != original or regular(name) != original:
+            raise ValueError("qualification-source-changed")
+    origin = q.get("origin_source_revision")
+    if origin != "69b9ab7f9e11070c91308cd7fabf784a582a78f7":
+        raise ValueError("qualification-origin-source")
+    origin_registration = regular("docs/experiments/evidence/EXP-100/registration-integrity.json")
+    if sha(origin_registration) != "425125472bef36eb3270fda40e2acaeca47a11fdf18f9e993a016f4312e0b49d":
+        raise ValueError("qualification-origin-registration")
+    if q.get("origin_source_files") != json.loads(origin_registration).get("source_files"):
+        raise ValueError("qualification-origin-complete-inventory")
+    for name, digest in q.get("origin_source_files", {}).items():
+        if name not in files or files[name] != digest or sha(blob(origin, name)) != digest:
+            raise ValueError("qualification-origin-changed")
+    origin_required = {"docs/experiments/evidence/EXP-100/" + name for name in (
+        "packet-viewer.py.txt", "input-view-verifier.py.txt", "phase-bindings.py.txt",
+        "answer-assessor-prompt.txt", "answer-viewer-instructions.txt",
+        "grouped-evidence-catalog.py.txt", "citation-codec.py.txt", "admission.py.txt")}
+    if not origin_required.issubset(q.get("origin_source_files", {})):
+        raise ValueError("qualification-origin-inventory")
+    return {"status": "qualified", "qualified_source_revision": revision,
+            "qualification_sha256": sha(raw), "source_files": len(files)}
