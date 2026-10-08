@@ -276,6 +276,49 @@ class PhaseOrderTests(unittest.TestCase):
         with self.assertRaisesRegex(A.AdmissionError, "answer-assessment-input-manifest-coverage"):
             A.complete_phase(assess, self.clock, self.root)
 
+    def test_fabricated_closed_32_slots_cannot_complete_or_unlock_analysis(self):
+        for after_analysis_grant in (False, True):
+            with self.subTest(after_analysis_grant=after_analysis_grant):
+                if after_analysis_grant:
+                    self.tearDown()
+                    self.setUp()
+                assess, _entries, rows = self._run_to_assessment()
+                analysis = None
+                if after_analysis_grant:
+                    A.complete_phase(assess, self.clock, self.root)
+                    analysis = A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+                    A.require_phase(analysis, self.clock, self.root)
+                manifest_path = self.root / "answer-handoff/answer-assessments/answer-assessor-input-manifest.json"
+                bindings_path = self.root / "answer-handoff/answer-assessor-input-bindings.json"
+                manifest_raw, bindings_raw = manifest_path.read_bytes(), bindings_path.read_bytes()
+                closed = self.root / "answer-handoff/answer-assessments/closed"
+                for path in closed.glob("*.json"):
+                    path.unlink()
+                fabricated = {}
+                for index, original in enumerate(rows.values()):
+                    logical = f"slot-{index:02d}"
+                    row = {**original, "logical_submission": logical}
+                    fabricated[logical] = row
+                    self._write(f"answer-handoff/answer-assessments/closed/{logical}.json", row)
+                closure_path = closed.parent / "closure.json"
+                closure = json.loads(closure_path.read_bytes())
+                closure["closure_sha256"] = hashlib.sha256(canonical(fabricated)).hexdigest()
+                closure_path.write_bytes(canonical(closure))
+                self.assertEqual(len(list(closed.glob("*.json"))), 32)
+                self.assertEqual(manifest_path.read_bytes(), manifest_raw)
+                self.assertEqual(bindings_path.read_bytes(), bindings_raw)
+                # The actual registered input/answer binding validator still succeeds.
+                self.assertEqual(len(A._validate_answer_assessor_bindings(self.root, self.clock_sha)), 32)
+                with self.assertRaisesRegex(A.AdmissionError, "answer-assessment-registered-slot-coverage"):
+                    if analysis is None:
+                        A.complete_phase(assess, self.clock, self.root)
+                    else:
+                        A.require_phase(analysis, self.clock, self.root)
+                if analysis is None:
+                    self.assertFalse((self.root / "phase-completions/answer-assessment.json").exists())
+                    with self.assertRaisesRegex(A.AdmissionError, "phase-completion-invalid"):
+                        A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+
     def test_wrong_task_assessor_or_arm_rejected(self):
         for field, value in (("task_id", "d8"), ("assessor_id", "R2"), ("anonymous_arm", "arm2")):
             with self.subTest(field=field):
