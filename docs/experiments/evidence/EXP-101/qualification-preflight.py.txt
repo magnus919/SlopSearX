@@ -106,6 +106,18 @@ def verify(*, private_entrypoints):
                 "new_searches", "new_jev_calls", "new_source_assessments", "new_answerer_calls",
                 "new_answerer_readiness_calls", "refunded_charges", "prior_elapsed_time_credit_seconds"))):
         raise ValueError("qualification-grading-only-budget")
+    order = new_protocol.get("operative_execution_order")
+    if (type(order) is not dict
+            or order.get("precedence") != "This EXP-101 order governs execution; immutable_science.grading_order is retained EXP-100 provenance only and cannot authorize selector or answerer dispatch."
+            or order.get("preclock") != ["verify qualified source and immutable completed-output carry",
+                                         "replay all32 full formatted packet handoffs"]
+            or order.get("postclock") != ["claim one health slot atomically and await one current-health request",
+                "carry completed EXP-100 selector outputs and all16 answers byte-identically without dispatch",
+                "grade32 preserved answer packets serially with fresh independent actors",
+                "require all32 strict structural closures before frozen analysis"]
+            or any(order.get(key) != 0 for key in ("selector_dispatches", "answerer_dispatches",
+                    "answerer_readiness_dispatches", "source_grader_dispatches"))):
+        raise ValueError("qualification-operative-grading-order")
     pins = q.get("external_source_pins")
     expected_names = {"final_text_reader", "strict_hydrator", "live_health", "operator_scheduler"}
     if (type(pins) is not dict or set(pins) != expected_names

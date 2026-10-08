@@ -18,6 +18,9 @@ def verify_all(*, manifest_raw, phase_bindings, driver, verifier, viewer):
     maximum = 0
     for row in slots:
         plan = row["input_view_plan"]
+        if (type(plan.get("input_path")) is not str
+                or row["input_path"] != plan["input_path"]):
+            raise ValueError("preflight-physical-path-mismatch")
         path = Path(row["input_path"])
         if path.is_symlink() or not path.is_file():
             raise ValueError("preflight-input-regular")

@@ -235,6 +235,23 @@
       "portable_reuse": "EXP-078 effective acquisition, card, selector, and receipt structures are immutable input/wire types only."
     }
   },
+  "operative_execution_order": {
+    "answerer_dispatches": 0,
+    "answerer_readiness_dispatches": 0,
+    "postclock": [
+      "claim one health slot atomically and await one current-health request",
+      "carry completed EXP-100 selector outputs and all16 answers byte-identically without dispatch",
+      "grade32 preserved answer packets serially with fresh independent actors",
+      "require all32 strict structural closures before frozen analysis"
+    ],
+    "precedence": "This EXP-101 order governs execution; immutable_science.grading_order is retained EXP-100 provenance only and cannot authorize selector or answerer dispatch.",
+    "preclock": [
+      "verify qualified source and immutable completed-output carry",
+      "replay all32 full formatted packet handoffs"
+    ],
+    "selector_dispatches": 0,
+    "source_grader_dispatches": 0
+  },
   "origin_protocol_sha256": "d376afbe93814f756d8c3ba3b021973f41139898053e04d2d340dd49ab3758d6",
   "schema": "exp101-grading-continuation-protocol/1",
   "status": "prospective-not-qualified",

@@ -88,6 +88,11 @@ class Controller:
         if self._terminal or self._clock is None or (self._root / "health-completion.json").exists():
             raise ValueError("controller-one-health-after-clock")
         try:
+            # O_EXCL claims the charge before any request can be dispatched.
+            # A failed exchange leaves this durable reservation in place.
+            write_once(self._root / "health-attempt.json", canonical({
+                "schema": "exp101-health-attempt/1", "clock_sha256": sha(self._clock[1]),
+                "status": "reserved"}))
             self._qualify()
             pending = awaited_request()
             if not inspect.isawaitable(pending):
