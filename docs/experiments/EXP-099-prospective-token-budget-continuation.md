@@ -1,6 +1,6 @@
 # EXP-099 — Prospective input-budget continuation
 
-Status: preparation only; not qualified, admitted, or run.
+Status: mechanically qualified preparation; delivery pending; not admitted or run.
 
 EXP-098 completed its 48 source-reference assignments, then stopped when a complete Jev HTTP 200 response reported 64,015 input tokens against the frozen 64,000 per-call cap. That run remains terminal, with no answer-quality or adoption credit. Its terminal outcome is reported separately. This registration does not reinterpret that response or resume the old clock.
 
