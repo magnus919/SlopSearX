@@ -1,0 +1,190 @@
+"""Synthetic regression tests for the EXP-104 carry / EXP-101 admission contract."""
+from __future__ import annotations
+from datetime import datetime, timedelta, timezone
+import hashlib
+import importlib.machinery
+import importlib.util
+import ast
+import os
+import json
+from pathlib import Path
+import tempfile
+import unittest
+import uuid
+
+HERE=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[4]
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+CONTRACT=load("exp105_carry_contract_test",HERE/"carry-contract.py.txt")
+RUN=load("exp101_unchanged_run_admission_test",ROOT/"docs/experiments/evidence/EXP-101/run-admission.py.txt")
+
+class AdmissionFixture:
+    """Synthetic bytes and callbacks only; no wall-clock or provider access."""
+    def __init__(self):
+        self.temp=tempfile.TemporaryDirectory(prefix="exp105-admission-")
+        self.root=Path(self.temp.name)
+        self.started=datetime(2026,10,8,12,tzinfo=timezone.utc)
+        self.now=self.started+timedelta(hours=1)
+        self.revision="a"*40;self.protocol_sha="1"*64;self.origin_clock_sha="2"*64
+        clock={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+            "stage_started_utc":self.started.isoformat().replace("+00:00","Z"),
+            "stage_deadline_utc":(self.started+timedelta(hours=8)).isoformat().replace("+00:00","Z"),
+            "source_revision":self.revision,"protocol_sha256":self.protocol_sha,
+            "origin_clock_sha256":self.origin_clock_sha}
+        self.clock_path,self.clock_sha=self.write("clock.json",clock)
+        baseline={"expected_revision":self.revision,"model_alias":"free"}
+        self.baseline_path,self.baseline_sha=self.write("baseline.json",baseline)
+        health={"schema":"exp101-awaited-health-completion/1","status":"healthy","http_status":200,
+            "request_completed":True,"clock_sha256":self.clock_sha,"baseline_sha256":self.baseline_sha,
+            "runtime_revision":self.revision,"model":"free",
+            "observed_utc":(self.started+timedelta(minutes=1)).isoformat().replace("+00:00","Z")}
+        self.health_path,self.health_sha=self.write("health.json",health)
+        self.qualified={"status":"qualified","qualified_source_revision":self.revision}
+        self.old={"status":"verified","quality_analyzed":False}
+        self.accepted={"schema":"exp104-accepted-assessment-carry/1",
+            "accepted_closures":{slot:sha(slot.encode()) for slot in CONTRACT.ACCEPTED},
+            "missing_slots":list(CONTRACT.MISSING),"quality_analyzed":False,
+            "fresh_execution_authorized":False}
+        self.verifier_calls={"old":0,"accepted":0}
+
+    def write(self,name,value):
+        raw=RUN.canonical(value);path=self.root/name;path.write_bytes(raw)
+        return path,sha(raw)
+    def old_carry(self):
+        self.verifier_calls["old"]+=1
+        return self.old
+    def verify_accepted(self):
+        self.verifier_calls["accepted"]+=1
+        return self.accepted
+    def carry_summary(self):
+        return CONTRACT.verified_summary(self.old_carry,self.verify_accepted)
+    def admission(self,carry_check):
+        return RUN.RunAdmission(qualification_check=lambda:self.qualified,carry_check=carry_check,
+            clock_path=self.clock_path,clock_sha256=self.clock_sha,
+            health_path=self.health_path,health_sha256=self.health_sha,
+            baseline_path=self.baseline_path,baseline_sha256=self.baseline_sha,
+            protocol_sha256=self.protocol_sha,source_revision=self.revision,
+            origin_clock_sha256=self.origin_clock_sha,now=lambda:self.now)
+    def close(self):self.temp.cleanup()
+
+class CarryContractTests(unittest.TestCase):
+    def setUp(self):self.fx=AdmissionFixture()
+    def tearDown(self):self.fx.close()
+
+    def test_old_summary_without_quality_field_still_fails_original_admission(self):
+        old_summary={"status":"verified"}
+        admission=self.fx.admission(lambda:old_summary)
+        with self.assertRaisesRegex(ValueError,"admission-carry"):
+            admission.revalidate()
+        with self.assertRaisesRegex(ValueError,"admission-terminal-no-resume"):
+            admission.revalidate()
+
+    def test_verified_two_receipt_summary_satisfies_unchanged_original_admission(self):
+        result=self.fx.carry_summary()
+        self.assertEqual(result,{"status":"verified","quality_analyzed":False,
+            "accepted_closures":28,"missing_assessments":4})
+        admitted=self.fx.admission(self.fx.carry_summary).revalidate()
+        self.assertEqual(admitted,{"status":"admitted","clock_sha256":self.fx.clock_sha,
+            "fresh_health_complete":True,"carry_verified":True,"qualified_source_verified":True})
+        self.assertEqual(self.fx.verifier_calls,{"old":2,"accepted":2})
+
+    def test_invalid_original_or_accepted_receipts_fail_before_admission(self):
+        invalid_original=(
+            ({"status":"failed","quality_analyzed":False},"original-carry-not-verified"),
+            ({"status":"verified","quality_analyzed":True},"original-carry-not-verified"),
+        )
+        for old,reason in invalid_original:
+            with self.subTest(old=old):
+                fx=AdmissionFixture();fx.old=old
+                with self.assertRaisesRegex(ValueError,reason):fx.carry_summary()
+                fx.close()
+
+        invalid_receipts=[]
+        wrong_schema=dict(self.fx.accepted,schema="wrong");invalid_receipts.append((wrong_schema,"accepted-carry-not-verified"))
+        quality_true=dict(self.fx.accepted,quality_analyzed=True);invalid_receipts.append((quality_true,"accepted-carry-not-verified"))
+        authority_true=dict(self.fx.accepted,fresh_execution_authorized=True);invalid_receipts.append((authority_true,"accepted-carry-not-verified"))
+        missing=dict(self.fx.accepted,accepted_closures=dict(self.fx.accepted["accepted_closures"]))
+        missing["accepted_closures"].pop(CONTRACT.ACCEPTED[0]);invalid_receipts.append((missing,"accepted-carry-not-verified"))
+        extra=dict(self.fx.accepted,accepted_closures=dict(self.fx.accepted["accepted_closures"]))
+        extra["accepted_closures"]["unexpected"]="a"*64;invalid_receipts.append((extra,"accepted-carry-not-verified"))
+        bad_digest=dict(self.fx.accepted,accepted_closures=dict(self.fx.accepted["accepted_closures"]))
+        bad_digest["accepted_closures"][CONTRACT.ACCEPTED[0]]="not-a-sha";invalid_receipts.append((bad_digest,"accepted-carry-not-verified"))
+        wrong_missing=dict(self.fx.accepted,missing_slots=list(self.fx.accepted["missing_slots"][:-1]))
+        invalid_receipts.append((wrong_missing,"accepted-carry-not-verified"))
+        for receipt,reason in invalid_receipts:
+            with self.subTest(receipt=receipt.get("schema")):
+                self.fx.accepted=receipt
+                with self.assertRaisesRegex(ValueError,reason):self.fx.carry_summary()
+
+    def test_non_mapping_accepted_callback_results_raise_value_error(self):
+        for result in (None, []):
+            with self.subTest(result_type=type(result).__name__):
+                with self.assertRaisesRegex(ValueError, "accepted-carry-not-verified"):
+                    CONTRACT.verified_summary(self.fx.old_carry, lambda: result)
+
+    def test_failed_verifier_callbacks_cannot_be_converted_to_verified_summary(self):
+        def failed_old():raise ValueError("synthetic old verifier failure")
+        with self.assertRaisesRegex(ValueError,"synthetic old verifier failure"):
+            CONTRACT.verified_summary(failed_old,self.fx.verify_accepted)
+        def failed_new():raise ValueError("synthetic accepted verifier failure")
+        with self.assertRaisesRegex(ValueError,"synthetic accepted verifier failure"):
+            CONTRACT.verified_summary(self.fx.old_carry,failed_new)
+
+    def test_private_prepare_wires_verified_summary_callback_without_execution(self):
+        # Parse only: the private operator module is never imported or executed, and
+        # no preparation, artifact access, clock, or provider operation occurs.
+        source_path = os.environ.get("EXP105_OPERATOR_SOURCE")
+        if not source_path:
+            self.skipTest("private operator wiring check requires EXP105_OPERATOR_SOURCE")
+        source_path = Path(source_path)
+        self.assertTrue(source_path.is_file(), "configured operator source is unavailable")
+        tree = ast.parse(source_path.read_text(encoding="utf-8"))
+        prepare = next((node for node in tree.body
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                        and node.name == "prepare"), None)
+        self.assertIsNotNone(prepare)
+
+        def named(node, name):
+            return isinstance(node, ast.Name) and node.id == name
+
+        verify_carry = next((node for node in ast.walk(prepare)
+                             if isinstance(node, ast.FunctionDef)
+                             and node.name == "verify_carry"), None)
+        self.assertIsNotNone(verify_carry)
+        returns = [node for node in ast.walk(verify_carry)
+                   if isinstance(node, ast.Return) and isinstance(node.value, ast.Call)]
+        self.assertTrue(any(
+            isinstance(call.func, ast.Attribute)
+            and named(call.func.value, "contract")
+            and call.func.attr == "verified_summary"
+            and len(call.args) == 2
+            and named(call.args[0], "old_carry")
+            and named(call.args[1], "verify_accepted_carry")
+            for ret in returns for call in (ret.value,)
+        ))
+
+        def is_contract_path(node):
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+                return isinstance(node.right, ast.Constant) and node.right.value == "carry-contract.py.txt"
+            return False
+
+        self.assertTrue(any(is_contract_path(node) for node in ast.walk(prepare)))
+        controller_calls = [node for node in ast.walk(prepare)
+                            if isinstance(node, ast.Call)
+                            and isinstance(node.func, ast.Attribute)
+                            and node.func.attr == "Controller"]
+        self.assertTrue(any(any(keyword.arg == "verify_carry"
+                                and named(keyword.value, "verify_carry")
+                                for keyword in call.keywords)
+                            for call in controller_calls))
+
+if __name__=="__main__":unittest.main(verbosity=2)
