@@ -1,0 +1,121 @@
+"""Synthetic artifact tests for the EXP-105 retained terminal attempt."""
+from __future__ import annotations
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+HERE=Path(__file__).resolve().parent
+RECORD=importlib.machinery.SourceFileLoader(
+    "exp105_terminal_record_test",str(HERE/"terminal-record.py.txt")).load_module()
+
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,separators=(",",":"),ensure_ascii=False,
+                       allow_nan=False)+"\n").encode()
+
+class TerminalFixture:
+    NAMES=("stage-clock.json","current-authority.json","health-attempt.json",
+           "health-completion.json","terminal-initialization-audit-private.json")
+    def __init__(self):
+        self.temp=tempfile.TemporaryDirectory(prefix="exp105-terminal-record-")
+        self.root=Path(self.temp.name)
+        self.clock=canonical({"schema":"exp101-grading-clock/1","stage_id":"synthetic-stage"})
+        import hashlib
+        clock_sha=hashlib.sha256(self.clock).hexdigest()
+        self.values={
+            "stage-clock.json":self.clock,
+            "current-authority.json":canonical({"study_id":"EXP-104","current_clock_sha256":clock_sha}),
+            "health-attempt.json":canonical({"status":"completed","clock_sha256":clock_sha}),
+            "health-completion.json":canonical({"status":"healthy","http_status":200,
+                "request_completed":True,"model":"free","clock_sha256":clock_sha}),
+            "terminal-initialization-audit-private.json":canonical({"study_id":"EXP-104",
+                "terminal":True,"initialization_error":"admission-carry","health_probe":"healthy",
+                "fresh_grader_calls":0,"accepted_carried_closures":28,"historical_grader_charges":103,
+                "combined_charges":121,"quality_analyzed":False,"clock_reusable":False,
+                "offline_reproduction_passed":True,"process_exit_code":0})}
+        self.pins=self.root/"pins.json"
+        self.repin()
+    def repin(self, names=None):
+        import hashlib
+        names=self.NAMES if names is None else names
+        entries={}
+        for name in names:
+            raw=self.values[name]
+            (self.root/name).write_bytes(raw)
+            entries[name]={"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest()}
+        self.pins.write_bytes(canonical({"files":entries}))
+    def close(self):self.temp.cleanup()
+
+class TerminalRecordTests(unittest.TestCase):
+    def setUp(self):self.fx=TerminalFixture()
+    def tearDown(self):self.fx.close()
+
+    def test_verified_terminal_healthy_zero_call_receipt(self):
+        receipt=RECORD.verify(self.fx.pins)
+        self.assertEqual(receipt,{"status":"verified","terminal":True,"fresh_grader_calls":0,
+            "quality_analyzed":False,"clock_reusable":False})
+
+    def test_changed_artifact_bytes_rejected(self):
+        path=self.fx.root/"health-completion.json"
+        path.write_bytes(path.read_bytes()+b"tampered")
+        with self.assertRaisesRegex(ValueError,"terminal-artifact-changed"):
+            RECORD.verify(self.fx.pins)
+
+    def test_missing_and_extra_inventory_entries_rejected(self):
+        self.fx.repin(self.fx.NAMES[:-1])
+        with self.assertRaisesRegex(ValueError,"terminal-inventory"):
+            RECORD.verify(self.fx.pins)
+        self.fx.repin()
+        raw=json.loads(self.fx.pins.read_bytes());raw["files"]["unexpected.json"]={"bytes":0,"sha256":"0"*64}
+        self.fx.pins.write_bytes(canonical(raw))
+        with self.assertRaisesRegex(ValueError,"terminal-inventory"):
+            RECORD.verify(self.fx.pins)
+
+    def test_malformed_inventory_record_rejected(self):
+        raw=json.loads(self.fx.pins.read_bytes())
+        raw["files"]["stage-clock.json"]={"bytes":len(self.fx.clock),"sha256":"0"*64}
+        self.fx.pins.write_bytes(canonical(raw))
+        with self.assertRaisesRegex(ValueError,"terminal-artifact-changed"):
+            RECORD.verify(self.fx.pins)
+
+    def test_symlinked_pins_or_artifact_rejected(self):
+        link=self.fx.root/"pins-link.json"
+        link.symlink_to(self.fx.pins)
+        with self.assertRaisesRegex(ValueError,"terminal-pins-regular-file"):
+            RECORD.verify(link)
+        artifact=self.fx.root/"stage-clock.json"
+        artifact.unlink();artifact.symlink_to(self.fx.root/"health-attempt.json")
+        with self.assertRaisesRegex(ValueError,"terminal-artifact-regular-file"):
+            RECORD.verify(self.fx.pins)
+
+    def test_terminal_audit_claims_are_checked(self):
+        for field,value in (("study_id","EXP-105"),("terminal",False),
+                            ("initialization_error","other"),("health_probe","failed"),
+                            ("fresh_grader_calls",1),("quality_analyzed",True),
+                            ("clock_reusable",True),("process_exit_code",1)):
+            with self.subTest(field=field):
+                self.fx.close();self.fx=TerminalFixture()
+                record=json.loads(self.fx.values["terminal-initialization-audit-private.json"])
+                record[field]=value
+                self.fx.values["terminal-initialization-audit-private.json"]=canonical(record)
+                self.fx.repin()
+                with self.assertRaisesRegex(ValueError,"terminal-outcome-binding"):
+                    RECORD.verify(self.fx.pins)
+
+    def test_health_outcome_and_clock_bindings_are_checked(self):
+        cases=(("health-completion.json","status","unhealthy"),
+               ("health-completion.json","request_completed",False),
+               ("health-completion.json","model","other"),
+               ("health-completion.json","clock_sha256","0"*64),
+               ("current-authority.json","current_clock_sha256","0"*64))
+        for name,field,value in cases:
+            with self.subTest(name=name,field=field):
+                self.fx.close();self.fx=TerminalFixture()
+                record=json.loads(self.fx.values[name]);record[field]=value
+                self.fx.values[name]=canonical(record);self.fx.repin()
+                with self.assertRaisesRegex(ValueError,"terminal-outcome-binding"):
+                    RECORD.verify(self.fx.pins)
+
+if __name__=="__main__":unittest.main(verbosity=2)

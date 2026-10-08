@@ -1,0 +1,43 @@
+"""Translate verified immutable carry receipts into the original admission contract."""
+from __future__ import annotations
+
+ACCEPTED = tuple(
+    f"development-d{task}-answer-{assessor}-{arm}"
+    for task in range(1, 8)
+    for assessor in ("R1", "R2")
+    for arm in ("arm1", "arm2")
+)
+MISSING = tuple(
+    f"development-d8-answer-{assessor}-{arm}"
+    for assessor in ("R1", "R2")
+    for arm in ("arm1", "arm2")
+)
+
+
+def verified_summary(old_carry, verify_accepted_carry):
+    """Return only the validated status fields required by unchanged RunAdmission.
+
+    Both callbacks are verification-only. This adapter does not authorize health,
+    clock, grading, analysis, or quality interpretation.
+    """
+    if not callable(old_carry) or not callable(verify_accepted_carry):
+        raise ValueError("carry-verifiers-required")
+    original = old_carry()
+    if (type(original) is not dict or original.get("status") != "verified"
+            or original.get("quality_analyzed") is not False):
+        raise ValueError("original-carry-not-verified")
+    accepted = verify_accepted_carry()
+    if type(accepted) is not dict:
+        raise ValueError("accepted-carry-not-verified")
+    closures = accepted.get("accepted_closures")
+    if (accepted.get("schema") != "exp104-accepted-assessment-carry/1"
+            or accepted.get("quality_analyzed") is not False
+            or accepted.get("fresh_execution_authorized") is not False
+            or type(closures) is not dict or set(closures) != set(ACCEPTED)
+            or any(type(digest) is not str or len(digest) != 64
+                   or any(char not in "0123456789abcdef" for char in digest)
+                   for digest in closures.values())
+            or accepted.get("missing_slots") != list(MISSING)):
+        raise ValueError("accepted-carry-not-verified")
+    return {"status": "verified", "quality_analyzed": False,
+            "accepted_closures": len(closures), "missing_assessments": len(MISSING)}

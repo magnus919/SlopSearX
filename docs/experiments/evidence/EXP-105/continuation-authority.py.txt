@@ -1,0 +1,75 @@
+"""Fresh authority for four assessments after immutable accepted-result carry."""
+from __future__ import annotations
+import hashlib
+import json
+import re
+
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def validate_protocol(current, original):
+    mutable = {"schema", "study_id", "status", "continuation", "operative_execution_order", "execution"}
+    if (current.get("schema") != "exp105-accepted-carry-protocol/1"
+            or current.get("study_id") != "EXP-105"
+            or {k: v for k, v in current.items() if k not in mutable}
+            != {k: v for k, v in original.items() if k not in mutable}):
+        raise ValueError("continuation-science-or-transport-drift")
+    execution = dict(original["execution"])
+    execution.update(fresh_answer_assessments=4, historical_conservative_grader_charges=103,
+                     planned_grader_charges=107, planned_combined_charges=125)
+    if current.get("execution") != execution:
+        raise ValueError("continuation-execution-budget-drift")
+    lineage = current.get("continuation")
+    expected = {"completed_output_origin": "EXP-100", "carried_assessment_origin": "EXP-103",
+                "terminal_execution_origin": "EXP-104", "accepted_assessments_carried": 28,
+                "failed_grader_calls_retained": 1, "unstarted_original_slots": 3,
+                "fresh_assessments": 4, "grader_charges_historical": 103,
+                "grader_charges_planned": 107, "combined_charges_planned": 125,
+                "elapsed_time_credit": 0, "clock_wire_schema_reused": "exp101-grading-clock/1",
+                "physical_actor_namespace": "/root/exp105_d8_r<1-2>_answer_arm<1-2>",
+                "health_slots_historical_failed": 1, "health_slots_historical_successful": 3,
+                "health_slots_fresh": 1,
+                "dispatch": "Use the complete reserved original full prompt verbatim; do not reconstruct or replace individual statements."}
+    if lineage != expected:
+        raise ValueError("continuation-accepted-lineage-drift")
+    order = current.get("operative_execution_order")
+    expected_order = {
+        "precedence": "EXP-105 authority and this order govern execution; earlier clocks cannot authorize new calls.",
+        "preclock": ["verify newly qualified source and immutable original completed outputs",
+                     "verify all28 accepted closures against the complete original32slot plan and original decoder",
+                     "replay all32 full formatted packet handoffs without quality analysis"],
+        "postclock": ["claim one health slot atomically and await one current-health request",
+                      "carry28 accepted closures without redispatch or grade repair",
+                      "grade only the four missing d8 answer packets serially with fresh independent actors",
+                      "require all32 strict structural closures before unchanged frozen analysis"],
+        "selector_dispatches": 0, "source_grader_dispatches": 0,
+        "answerer_dispatches": 0, "answerer_readiness_dispatches": 0}
+    if order != expected_order:
+        raise ValueError("continuation-operative-dispatch-drift")
+
+
+def bind_clock(*, clock_raw, terminal_clock_raw, protocol_raw,
+               qualified_source_revision, accepted_carry_sha256):
+    if (not re.fullmatch(r"[0-9a-f]{40}", qualified_source_revision)
+            or not re.fullmatch(r"[0-9a-f]{64}", accepted_carry_sha256)):
+        raise ValueError("continuation-source-or-carry-identity")
+    current = json.loads(clock_raw)
+    terminal = json.loads(terminal_clock_raw)
+    if (clock_raw != canonical(current) or current.get("schema") != "exp101-grading-clock/1"
+            or sha(clock_raw) == sha(terminal_clock_raw)
+            or current.get("stage_id") == terminal.get("stage_id")
+            or current.get("source_revision") != qualified_source_revision
+            or current.get("protocol_sha256") != sha(protocol_raw)):
+        raise ValueError("continuation-fresh-clock-required")
+    return {"schema": "exp105-current-clock-authority/1", "study_id": "EXP-105",
+            "current_clock_sha256": sha(clock_raw), "terminal_exp104_clock_sha256": sha(terminal_clock_raw),
+            "qualified_source_revision": qualified_source_revision, "protocol_sha256": sha(protocol_raw),
+            "accepted_carry_sha256": accepted_carry_sha256,
+            "clock_wire_schema_reused": "exp101-grading-clock/1", "elapsed_time_credit_seconds": 0}

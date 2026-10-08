@@ -1,0 +1,33 @@
+"""Fresh d8 namespace using the unchanged complete original transcript parser."""
+from __future__ import annotations
+import hashlib
+import json
+
+
+def expected_path(binding, original_reader):
+    old = original_reader.expected_path(binding)
+    if binding.get("role") != "answer-assessor" or not old.startswith("/root/exp100_d8_"):
+        raise ValueError("exp105-missing-d8-assessor-required")
+    return "/root/exp105_" + old[len("/root/exp100_"):]
+
+
+def make_reader(original_reader):
+    def read_exact_assessor_final(agent_path, session_date=None, *, expected_binding,
+                                  expected_agent_id, expected_clock, expected_transport):
+        if agent_path != expected_path(expected_binding, original_reader):
+            raise ValueError("assessor-slot-path-mismatch")
+        if (type(expected_clock) is not dict or expected_clock.get("schema") != "exp101-grading-clock/1"
+                or type(expected_transport) is not dict
+                or expected_transport.get("schema") != "exp101-original-packet-transport/1"
+                or expected_transport.get("logical_submission") != expected_binding.get("logical_submission")
+                or expected_transport.get("original_input_sha256") != expected_binding.get("input_sha256")
+                or expected_transport.get("original_registry_packet_id") != expected_binding.get("packet_id")
+                or expected_transport.get("original_clock_sha256") != expected_binding.get("stage_clock_sha256")):
+            raise ValueError("assessor-original-transport-binding")
+        raw = (json.dumps(expected_clock, sort_keys=True, ensure_ascii=False,
+                          separators=(",", ":"), allow_nan=False) + "\n").encode()
+        if hashlib.sha256(raw).hexdigest() != expected_transport.get("current_clock_sha256"):
+            raise ValueError("assessor-fresh-clock-binding")
+        return original_reader._read(agent_path, expected_agent_id, original_reader.SOL_MODEL,
+                                     session_date, expected_clock)
+    return read_exact_assessor_final

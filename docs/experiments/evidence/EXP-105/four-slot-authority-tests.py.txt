@@ -1,0 +1,224 @@
+"""Synthetic tests for the four unstarted EXP-104 answer-assessment slots."""
+from __future__ import annotations
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import sys
+import unittest
+import uuid
+
+HERE=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[4]
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec)
+    sys.modules[name]=module
+    loader.exec_module(module)
+    return module
+
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(",",":"),
+                        allow_nan=False)+"\n").encode()
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+ORIGINAL=load("exp101_original_grading_authority_test",
+    ROOT/"docs/experiments/evidence/EXP-101/grading-authority.py.txt")
+CARRY_MODULE=load("exp104_accepted_carry_test_for_authority",
+    HERE/"accepted-assessment-carry.py.txt")
+ADAPTER=load("exp104_four_slot_authority_test",HERE/"four-slot-authority.py.txt")
+
+class AuthorityFixture:
+    def __init__(self):
+        self.clock=sha(b"synthetic fresh EXP-104 clock")
+        self.old_clock=sha(b"synthetic failed EXP-103 clock")
+        self.parent=str(uuid.uuid4())
+        self.original_actor_ids=[str(uuid.uuid4()) for _ in range(48)]
+        self.excluded_actor_ids=[str(uuid.uuid4()) for _ in range(29)]
+        self.carry={"schema":"exp104-accepted-assessment-carry/1",
+            "accepted_closures":{logical:sha(logical.encode()) for logical in CARRY_MODULE.ACCEPTED},
+            "missing_slots":list(CARRY_MODULE.MISSING),
+            "excluded_actor_ids":self.excluded_actor_ids,
+            "original_clock_sha256":self.old_clock,
+            "historical_grader_charges":103,"planned_grader_charges":107,
+            "planned_combined_charges":125,"elapsed_time_credit_seconds":0,
+            "quality_analyzed":False,"fresh_execution_authorized":False}
+        self.slots={logical:{"original_input_sha256":sha((logical+" input").encode()),
+            "full_prompt_sha256":sha((logical+" prompt").encode())} for logical in ORIGINAL.SLOTS}
+        self.carry["original_slot_bindings"]=copy.deepcopy(self.slots)
+        self.carry_sha=sha(canonical(self.carry))
+        self.reservations=[];self.closures=[];self.revalidations=0
+        self.authority_type=ADAPTER.make_authority(ORIGINAL,CARRY_MODULE)
+        self.authority=self.new_authority()
+
+    def verify_carry(self):return copy.deepcopy(self.carry)
+    def revalidate(self):
+        self.revalidations+=1
+        return {"status":"admitted","clock_sha256":self.clock,
+            "fresh_health_complete":True,"carry_verified":True,"qualified_source_verified":True}
+    def reserve_once(self,lease):self.reservations.append(lease.logical_submission)
+    def close_once(self,lease,actor_id,receipt):
+        self.closures.append((lease.logical_submission,actor_id,dict(receipt)))
+    def new_authority(self,clock=None):
+        return self.authority_type(verify_carry=self.verify_carry,
+            expected_carry_sha256=self.carry_sha,clock_sha256=clock or self.clock,
+            slots=self.slots,original_actor_ids=self.original_actor_ids,parent_id=self.parent,
+            revalidate=self.revalidate,reserve_once=self.reserve_once,close_once=self.close_once)
+    def transition(self,logical,actor_id=None):
+        lease=self.authority.reserve(logical)
+        actor_id=actor_id or str(uuid.uuid4())
+        self.authority.bind_actor(lease,actor_id=actor_id,parent_id=self.parent,model="gpt-6.1-sol")
+        self.authority.close(lease,actor_id=actor_id,strict_close={
+            "logical_submission":logical,"input_sha256":lease.original_input_sha256,
+            "structurally_valid":True,"semantic_completion":"not_claimed","metric_computed":False})
+        return lease,actor_id
+
+class FourSlotAuthorityTests(unittest.TestCase):
+    def setUp(self):self.fx=AuthorityFixture()
+
+    def test_28_carried_prefix_does_not_claim_complete_and_four_missing_slots_are_exact(self):
+        self.assertEqual(set(self.fx.authority._closed),set(CARRY_MODULE.ACCEPTED))
+        self.assertEqual(self.fx.authority._next,28)
+        self.assertEqual(tuple(ORIGINAL.SLOTS[28:]),CARRY_MODULE.MISSING)
+        with self.assertRaisesRegex(ValueError,"authority-all-32-closures-required"):
+            self.fx.authority.require_complete()
+        self.assertEqual(self.fx.reservations,[])
+        self.assertEqual(self.fx.closures,[])
+
+    def test_only_four_d8_slots_can_be_serially_reserved_and_strictly_closed(self):
+        fresh_actors=[]
+        for logical in CARRY_MODULE.MISSING:
+            _,actor=self.fx.transition(logical)
+            fresh_actors.append(actor)
+        self.assertEqual(self.fx.reservations,list(CARRY_MODULE.MISSING))
+        self.assertEqual([r[0] for r in self.fx.closures],list(CARRY_MODULE.MISSING))
+        self.assertEqual(len(set(fresh_actors)),4)
+        self.assertFalse(set(fresh_actors)&set(self.fx.original_actor_ids))
+        self.assertFalse(set(fresh_actors)&set(self.fx.excluded_actor_ids))
+        result=self.fx.authority.require_complete()
+        self.assertEqual(result["status"],"structurally_closed")
+        self.assertEqual(result["count"],32)
+        self.assertEqual(result["carried_closures"],28)
+        self.assertEqual(result["fresh_closures"],4)
+        self.assertEqual(result["carry_sha256"],self.fx.carry_sha)
+        self.assertEqual(result["semantic_completion"],"not_claimed")
+        self.assertIs(result["metric_computed"],False)
+
+    def test_terminal_exp103_clock_cannot_be_reused(self):
+        with self.assertRaisesRegex(ValueError,"four-slot-terminal-clock-reuse"):
+            self.fx.new_authority(clock=self.fx.old_clock)
+
+    def test_excluded_prior_actor_cannot_be_rebound_as_a_fresh_actor(self):
+        lease=self.fx.authority.reserve(CARRY_MODULE.MISSING[0])
+        with self.assertRaisesRegex(ValueError,"fresh-independent-actor"):
+            self.fx.authority.bind_actor(lease,actor_id=self.fx.excluded_actor_ids[0],
+                parent_id=self.fx.parent,model="gpt-6.1-sol")
+        with self.assertRaisesRegex(ValueError,"terminal-no-resume"):
+            self.fx.authority.reserve(CARRY_MODULE.MISSING[0])
+        self.assertEqual(self.fx.reservations,[CARRY_MODULE.MISSING[0]])
+
+    def test_prior_48_source_actors_remain_excluded(self):
+        lease=self.fx.authority.reserve(CARRY_MODULE.MISSING[0])
+        with self.assertRaisesRegex(ValueError,"fresh-independent-actor"):
+            self.fx.authority.bind_actor(lease,actor_id=self.fx.original_actor_ids[0],
+                parent_id=self.fx.parent,model="gpt-6.1-sol")
+
+    def test_wrong_order_duplicate_reserve_and_reserve_failure_are_terminal(self):
+        with self.assertRaisesRegex(ValueError,"one-shot-serial-order"):
+            self.fx.authority.reserve(ORIGINAL.SLOTS[27])
+        with self.assertRaisesRegex(ValueError,"terminal-no-resume"):
+            self.fx.authority.reserve(CARRY_MODULE.MISSING[0])
+
+        fx=AuthorityFixture()
+        fx.authority.reserve(CARRY_MODULE.MISSING[0])
+        with self.assertRaisesRegex(ValueError,"one-shot-serial-order"):
+            fx.authority.reserve(CARRY_MODULE.MISSING[1])
+        with self.assertRaisesRegex(ValueError,"terminal-no-resume"):
+            fx.authority.reserve(CARRY_MODULE.MISSING[0])
+
+        fx=AuthorityFixture()
+        fx.authority._reserve_once=lambda _lease:(_ for _ in ()).throw(RuntimeError("synthetic reserve failure"))
+        with self.assertRaisesRegex(RuntimeError,"synthetic reserve failure"):
+            fx.authority.reserve(CARRY_MODULE.MISSING[0])
+        with self.assertRaisesRegex(ValueError,"terminal-no-resume"):
+            fx.authority.reserve(CARRY_MODULE.MISSING[0])
+
+    def test_changed_carry_receipt_is_terminal_at_each_transition(self):
+        # Receipt revalidation is required before reserve, actor bind, and close.
+        for transition in ("reserve","bind","close"):
+            with self.subTest(transition=transition):
+                fx=AuthorityFixture()
+                lease=None;actor=None
+                if transition in ("bind","close"):
+                    lease=fx.authority.reserve(CARRY_MODULE.MISSING[0])
+                if transition=="close":
+                    actor=str(uuid.uuid4())
+                    fx.authority.bind_actor(lease,actor_id=actor,parent_id=fx.parent,model="gpt-6.1-sol")
+                fx.carry["planned_grader_charges"]+=1
+                with self.assertRaisesRegex(ValueError,"four-slot-carry-receipt-binding"):
+                    if transition=="reserve":
+                        fx.authority.reserve(CARRY_MODULE.MISSING[0])
+                    elif transition=="bind":
+                        fx.authority.bind_actor(lease,actor_id=str(uuid.uuid4()),
+                            parent_id=fx.parent,model="gpt-6.1-sol")
+                    else:
+                        fx.authority.close(lease,actor_id=actor,strict_close={
+                            "logical_submission":lease.logical_submission,
+                            "input_sha256":lease.original_input_sha256,"structurally_valid":True,
+                            "semantic_completion":"not_claimed","metric_computed":False})
+                fx.carry["planned_grader_charges"]-=1
+                with self.assertRaisesRegex(ValueError,"terminal-no-resume"):
+                    fx.authority.reserve(CARRY_MODULE.MISSING[0])
+                self.assertEqual(fx.closures,[])
+
+    def test_carry_identity_and_original_32_slot_or_48_actor_counts_are_required(self):
+        with self.assertRaisesRegex(ValueError,"four-slot-carry-receipt-binding"):
+            self.fx.carry["accepted_closures"].pop(CARRY_MODULE.ACCEPTED[0])
+            self.fx.authority._carry()
+        fx=AuthorityFixture()
+        with self.assertRaisesRegex(ValueError,"four-slot-original-source-plan-binding"):
+            fx.authority_type(verify_carry=fx.verify_carry,
+                expected_carry_sha256=fx.carry_sha,clock_sha256=fx.clock,
+                slots={"wrong":{}},original_actor_ids=fx.original_actor_ids,
+                parent_id=fx.parent,revalidate=fx.revalidate,
+                reserve_once=fx.reserve_once,close_once=fx.close_once)
+
+    def test_receipt_pins_every_original_slot_and_rejects_d8_plan_drift(self):
+        fx=AuthorityFixture()
+        d8=CARRY_MODULE.MISSING[0]
+        self.assertEqual(set(fx.carry["original_slot_bindings"]),set(ORIGINAL.SLOTS))
+        fx.slots[d8]["original_input_sha256"]="f"*64
+        with self.assertRaisesRegex(ValueError,"four-slot-original-source-plan-binding"):
+            fx.new_authority()
+
+        for mutation,pattern in (("missing","four-slot-carry-receipt-binding"),
+                                 ("extra","four-slot-carry-receipt-binding"),
+                                 ("drift","four-slot-original-source-plan-binding")):
+            with self.subTest(mutation=mutation):
+                fx=AuthorityFixture()
+                if mutation=="missing":
+                    fx.carry["original_slot_bindings"].pop(d8)
+                elif mutation=="extra":
+                    fx.carry["original_slot_bindings"]["development-d9-answer-R1-arm1"]={
+                        "original_input_sha256":"a"*64,"full_prompt_sha256":"b"*64}
+                else:
+                    fx.carry["original_slot_bindings"][d8]["full_prompt_sha256"]="f"*64
+                # Simulate a self-consistent candidate receipt; the runtime slot plan
+                # must still equal the independently pinned 32-slot carry mapping.
+                fx.carry_sha=sha(canonical(fx.carry))
+                with self.assertRaisesRegex(ValueError,pattern):
+                    fx.new_authority()
+        fx=AuthorityFixture()
+        with self.assertRaisesRegex(ValueError,"authority-original-actor-coverage"):
+            fx.authority_type(verify_carry=fx.verify_carry,
+                expected_carry_sha256=fx.carry_sha,clock_sha256=fx.clock,
+                slots=fx.slots,original_actor_ids=fx.original_actor_ids[:-1],
+                parent_id=fx.parent,revalidate=fx.revalidate,
+                reserve_once=fx.reserve_once,close_once=fx.close_once)
+
+if __name__=="__main__":unittest.main(verbosity=2)

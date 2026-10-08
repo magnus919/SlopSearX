@@ -1,0 +1,111 @@
+"""Synthetic EXP-105 d8 reader transport tests over an unchanged reader stub."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+import uuid
+
+HERE=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[4]
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(",",":"),
+                        allow_nan=False)+"\n").encode()
+
+TRANSPORT=load("exp105_reader_transport_test",HERE/"reader-transport.py.txt")
+
+class OriginalReaderStub:
+    SOL_MODEL="gpt-6.1-sol"
+    def __init__(self):self.calls=[]
+    @staticmethod
+    def expected_path(binding):
+        return "/root/exp100_%s_%s_answer_%s"%(binding["task_id"],
+            binding["assessor_id"],binding["anonymous_arm"])
+    def _read(self,*args):
+        self.calls.append(args)
+        # Opaque synthetic sentinel makes any filtering or response reconstruction visible.
+        return "opaque original return",[{"transcript":"unchanged synthetic record"}],{"metadata":"preserved"}
+
+class ReaderTransportTests(unittest.TestCase):
+    def setUp(self):
+        self.original=OriginalReaderStub()
+        self.read=TRANSPORT.make_reader(self.original)
+        self.binding={"logical_submission":"development-d8-answer-R1-arm1",
+            "role":"answer-assessor","task_id":"d8","assessor_id":"R1",
+            "anonymous_arm":"arm1","input_sha256":"a"*64,
+            "packet_id":"opaque-original-registry-packet","stage_clock_sha256":"b"*64}
+        self.clock={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+            "stage_started_utc":"synthetic-start","stage_deadline_utc":"synthetic-deadline"}
+        self.current_clock_sha=sha(canonical(self.clock))
+        self.transport={"schema":"exp101-original-packet-transport/1",
+            "logical_submission":self.binding["logical_submission"],
+            "original_input_sha256":self.binding["input_sha256"],
+            "original_registry_packet_id":self.binding["packet_id"],
+            "original_clock_sha256":self.binding["stage_clock_sha256"],
+            "current_clock_sha256":self.current_clock_sha}
+        self.agent_id=str(uuid.uuid4())
+        self.new_path="/root/exp105_d8_R1_answer_arm1"
+
+    def invoke(self,path=None,*,binding=None,clock=None,transport=None):
+        return self.read(path or self.new_path,session_date="synthetic-date",
+            expected_binding=binding or self.binding,expected_agent_id=self.agent_id,
+            expected_clock=clock or self.clock,expected_transport=transport or self.transport)
+
+    def test_only_d8_answer_assessment_namespace_is_created(self):
+        self.assertEqual(TRANSPORT.expected_path(self.binding,self.original),self.new_path)
+        self.assertNotIn("exp100_",TRANSPORT.expected_path(self.binding,self.original))
+        self.assertEqual(TRANSPORT.expected_path(dict(self.binding,anonymous_arm="arm2"),self.original),
+                         "/root/exp105_d8_R1_answer_arm2")
+        for task,arm in (("d7","arm1"),("d1","arm1")):
+            binding=dict(self.binding,task_id=task,logical_submission=f"development-{task}-answer-R1-{arm}",
+                         anonymous_arm=arm)
+            with self.subTest(task=task,arm=arm),self.assertRaisesRegex(ValueError,"d8-assessor-required"):
+                TRANSPORT.expected_path(binding,self.original)
+        with self.assertRaisesRegex(ValueError,"d8-assessor-required"):
+            TRANSPORT.expected_path(dict(self.binding,role="source-assessor"),self.original)
+
+    def test_matching_origin_and_new_clock_joins_delegate_exactly_once_without_filtering(self):
+        result=self.invoke()
+        self.assertEqual(result,("opaque original return",
+            [{"transcript":"unchanged synthetic record"}],{"metadata":"preserved"}))
+        self.assertEqual(self.original.calls,[(self.new_path,self.agent_id,
+            self.original.SOL_MODEL,"synthetic-date",self.clock)])
+
+    def test_path_role_task_input_packet_origin_clock_or_current_clock_mismatch_never_delegates(self):
+        old_path="/root/exp100_d8_R1_answer_arm1"
+        with self.assertRaisesRegex(ValueError,"assessor-slot-path-mismatch"):
+            self.invoke(path=old_path)
+        cases=(
+            ("role",dict(self.binding,role="source-assessor"),self.clock,self.transport,"d8-assessor-required"),
+            ("task",dict(self.binding,task_id="d7",logical_submission="development-d7-answer-R1-arm1"),
+                self.clock,self.transport,"d8-assessor-required"),
+            ("input",self.binding,self.clock,dict(self.transport,original_input_sha256="c"*64),
+                "assessor-original-transport-binding"),
+            ("packet",self.binding,self.clock,dict(self.transport,original_registry_packet_id="changed"),
+                "assessor-original-transport-binding"),
+            ("oldclock",self.binding,self.clock,dict(self.transport,original_clock_sha256="d"*64),
+                "assessor-original-transport-binding"),
+            ("transport_slot",self.binding,self.clock,dict(self.transport,
+                logical_submission="development-d8-answer-R2-arm2"),"assessor-original-transport-binding"),
+            ("newclock",self.binding,self.clock,dict(self.transport,current_clock_sha256="e"*64),
+                "assessor-fresh-clock-binding"),
+            ("clock_schema",self.binding,dict(self.clock,schema="old-clock"),self.transport,
+                "assessor-original-transport-binding"),
+        )
+        for name,binding,clock,transport,pattern in cases:
+            with self.subTest(mismatch=name),self.assertRaisesRegex(ValueError,pattern):
+                self.invoke(binding=binding,clock=clock,transport=transport)
+        self.assertEqual(self.original.calls,[])
+
+if __name__=="__main__":unittest.main(verbosity=2)

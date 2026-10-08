@@ -1,0 +1,45 @@
+"""Verify the retained setup-only terminal attempt without minting authority."""
+import hashlib
+import json
+from pathlib import Path
+
+NAMES = {'stage-clock.json', 'current-authority.json', 'health-attempt.json',
+         'health-completion.json', 'terminal-initialization-audit-private.json'}
+
+def verify(pins_path):
+    pins_path = Path(pins_path)
+    if pins_path.is_symlink() or not pins_path.is_file():
+        raise ValueError('terminal-pins-regular-file')
+    pins = json.loads(pins_path.read_bytes())
+    if set(pins.get('files', {})) != NAMES:
+        raise ValueError('terminal-inventory')
+    for name, record in pins['files'].items():
+        path = pins_path.parent/name
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('terminal-artifact-regular-file')
+        raw = path.read_bytes()
+        if len(raw) != record.get('bytes') or hashlib.sha256(raw).hexdigest() != record.get('sha256'):
+            raise ValueError('terminal-artifact-changed')
+    audit = json.loads((pins_path.parent/'terminal-initialization-audit-private.json').read_bytes())
+    health = json.loads((pins_path.parent/'health-completion.json').read_bytes())
+    clock_raw = (pins_path.parent/'stage-clock.json').read_bytes()
+    authority = json.loads((pins_path.parent/'current-authority.json').read_bytes())
+    if (audit.get('study_id') != 'EXP-104' or audit.get('terminal') is not True
+            or audit.get('initialization_error') != 'admission-carry'
+            or audit.get('health_probe') != 'healthy'
+            or audit.get('fresh_grader_calls') != 0
+            or audit.get('accepted_carried_closures') != 28
+            or audit.get('historical_grader_charges') != 103
+            or audit.get('combined_charges') != 121
+            or audit.get('quality_analyzed') is not False
+            or audit.get('clock_reusable') is not False
+            or audit.get('offline_reproduction_passed') is not True
+            or audit.get('process_exit_code') != 0
+            or health.get('status') != 'healthy' or health.get('http_status') != 200
+            or health.get('request_completed') is not True or health.get('model') != 'free'
+            or health.get('clock_sha256') != hashlib.sha256(clock_raw).hexdigest()
+            or authority.get('study_id') != 'EXP-104'
+            or authority.get('current_clock_sha256') != hashlib.sha256(clock_raw).hexdigest()):
+        raise ValueError('terminal-outcome-binding')
+    return {'status':'verified', 'terminal':True, 'fresh_grader_calls':0,
+            'quality_analyzed':False, 'clock_reusable':False}
