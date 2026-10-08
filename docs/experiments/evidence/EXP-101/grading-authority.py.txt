@@ -1,0 +1,124 @@
+"""One-process, grading-only leases over separately qualified admission.
+
+Import is inert. This module cannot create a qualified source or health receipt.
+The admission adapter must supply revalidation on every transition, including
+current clock, qualification, immutable carry and fresh health bindings.
+"""
+from __future__ import annotations
+from dataclasses import dataclass
+import re
+import uuid
+
+SLOTS = tuple(f"development-d{i}-answer-{assessor}-{arm}"
+              for i in range(1, 9) for assessor in ("R1", "R2")
+              for arm in ("arm1", "arm2"))
+_UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
+
+@dataclass(frozen=True)
+class GradingLease:
+    nonce: str
+    logical_submission: str
+    current_clock_sha256: str
+    original_input_sha256: str
+    full_prompt_sha256: str
+
+class GradingAuthority:
+    def __init__(self, *, revalidate, reserve_once, close_once, clock_sha256,
+                 slots, original_actor_ids, parent_id):
+        if not all(callable(x) for x in (revalidate, reserve_once, close_once)):
+            raise ValueError("authority-adapter-required")
+        if set(slots) != set(SLOTS) or len(slots) != 32:
+            raise ValueError("authority-exact-slot-coverage")
+        if (type(clock_sha256) is not str or not re.fullmatch(r"[0-9a-f]{64}", clock_sha256)
+                or type(parent_id) is not str or not _UUID.fullmatch(parent_id)):
+            raise ValueError("authority-identity")
+        if len(original_actor_ids) != 48 or len(set(original_actor_ids)) != 48:
+            raise ValueError("authority-original-actor-coverage")
+        self._revalidate = revalidate
+        self._reserve_once = reserve_once
+        self._close_once = close_once
+        self._clock = clock_sha256
+        self._slots = dict(slots)
+        self._actors = set(original_actor_ids)
+        self._parent = parent_id
+        self._next = 0
+        self._active = None
+        self._actor = None
+        self._terminal = False
+        self._closed = set()
+        self._check()
+
+    def _check(self):
+        if self._terminal:
+            raise ValueError("authority-terminal-no-resume")
+        try:
+            result = self._revalidate()
+            if (type(result) is not dict or result.get("status") != "admitted"
+                    or result.get("clock_sha256") != self._clock
+                    or result.get("fresh_health_complete") is not True
+                    or result.get("carry_verified") is not True
+                    or result.get("qualified_source_verified") is not True):
+                raise ValueError("authority-admission-invalid")
+        except BaseException:
+            self._terminal = True
+            raise
+
+    def reserve(self, logical):
+        self._check()
+        if self._active is not None or self._next >= 32 or logical != SLOTS[self._next]:
+            self._terminal = True
+            raise ValueError("authority-one-shot-serial-order")
+        row = self._slots[logical]
+        for key in ("original_input_sha256", "full_prompt_sha256"):
+            if type(row.get(key)) is not str or not re.fullmatch(r"[0-9a-f]{64}", row[key]):
+                self._terminal = True
+                raise ValueError("authority-slot-binding")
+        lease = GradingLease(str(uuid.uuid4()), logical, self._clock,
+                             row["original_input_sha256"], row["full_prompt_sha256"])
+        # Advance and retain the charge before returning authority to spawn.
+        self._next += 1
+        self._active = lease
+        try:
+            self._reserve_once(lease)
+        except BaseException:
+            self._terminal = True
+            raise
+        return lease
+
+    def bind_actor(self, lease, *, actor_id, parent_id, model):
+        self._check()
+        if (lease is not self._active or self._actor is not None
+                or type(actor_id) is not str or not _UUID.fullmatch(actor_id)
+                or actor_id in self._actors or parent_id != self._parent
+                or model != "gpt-6.1-sol"):
+            self._terminal = True
+            raise ValueError("authority-fresh-independent-actor")
+        self._actors.add(actor_id)
+        self._actor = actor_id
+
+    def close(self, lease, *, actor_id, strict_close):
+        self._check()
+        if (lease is not self._active or self._actor != actor_id
+                or type(strict_close) is not dict
+                or strict_close.get("structurally_valid") is not True
+                or strict_close.get("logical_submission") != lease.logical_submission
+                or strict_close.get("input_sha256") != lease.original_input_sha256
+                or strict_close.get("semantic_completion") != "not_claimed"
+                or strict_close.get("metric_computed") is not False):
+            self._terminal = True
+            raise ValueError("authority-strict-close-required")
+        try:
+            self._close_once(lease, actor_id, strict_close)
+        except BaseException:
+            self._terminal = True
+            raise
+        self._closed.add(lease.logical_submission)
+        self._active = None
+        self._actor = None
+
+    def require_complete(self):
+        self._check()
+        if self._active is not None or self._closed != set(SLOTS) or self._next != 32:
+            raise ValueError("authority-all-32-closures-required")
+        return {"status": "structurally_closed", "count": 32,
+                "semantic_completion": "not_claimed", "metric_computed": False}
