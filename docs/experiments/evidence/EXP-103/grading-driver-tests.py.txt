@@ -1,4 +1,4 @@
-"""EXP-103 prompt and reader transport tests using frozen inputs, no grades."""
+"""Self-contained synthetic EXP-103 prompt and reader transport tests."""
 from __future__ import annotations
 import hashlib
 import importlib.machinery
@@ -7,14 +7,14 @@ import json
 from pathlib import Path
 import re
 import shlex
+import tempfile
 import unittest
 import uuid
 
 ROOT = Path(__file__).resolve().parents[4]
 EXP103 = Path(__file__).resolve().parent
-EXP100 = Path("/private/tmp/exp100-merged-runner/docs/experiments/evidence/EXP-100")
+EXP100 = ROOT / "docs/experiments/evidence/EXP-100"
 EXP101 = ROOT / "docs/experiments/evidence/EXP-101"
-STAGE100 = Path("/private/tmp/exp100-development-live-20261008")
 
 def load_helper(name, path):
     loader = importlib.machinery.SourceFileLoader(name, str(path))
@@ -46,10 +46,30 @@ def transcript_call(source, stdout):
 class FrozenPromptAndViewerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        manifest_path = STAGE100 / "answer-handoff/answer-assessments/answer-assessor-input-manifest.json"
-        cls.manifest_raw = manifest_path.read_bytes()
-        cls.manifest = json.loads(cls.manifest_raw)
-        cls.rows = {row["logical_submission"]: row for row in cls.manifest["slots"]}
+        # No actual assignment, packet, or grade artifacts are loaded here.
+        # These 32 deterministic packets exercise the frozen original viewer.
+        cls.temp = tempfile.TemporaryDirectory(prefix="exp103-synthetic-view-")
+        cls.rows = {}
+        cls.raws = {}
+        cls.input_viewer_path = str(VIEWS.VIEWER_PATH)
+        source_manifest_sha = "d" * 64
+        for task in range(1, 9):
+            for assessor in ("R1", "R2"):
+                for arm in ("arm1", "arm2"):
+                    logical = f"development-d{task}-answer-{assessor}-{arm}"
+                    raw = (json.dumps({"schema":"synthetic-exp103-view-fixture/1",
+                        "logical_submission":logical,
+                        "synthetic_payload":"fixture-only-" + logical + "-" + "x" * 5000},
+                        sort_keys=True,separators=(",",":"),ensure_ascii=False) + "\n").encode()
+                    input_path = Path(cls.temp.name) / (logical + ".json")
+                    input_path.write_bytes(raw)
+                    plan = VIEWS.input_view_plan(raw, expected_sha256=sha(raw),
+                        input_path=str(input_path), viewer_path=cls.input_viewer_path,
+                        slot_id=logical, source_manifest_sha256=source_manifest_sha)
+                    cls.rows[logical] = {"logical_submission":logical,
+                        "input_path":str(input_path),"input_sha256":sha(raw),
+                        "input_bytes":len(raw),"input_view_plan":plan}
+                    cls.raws[logical] = raw
 
     def test_all32_full_prompts_keep_exact_original_prefix_and_replay_frozen_view_schedules(self):
         self.assertEqual(len(self.rows), 32)
@@ -71,7 +91,7 @@ class FrozenPromptAndViewerTests(unittest.TestCase):
                 self.assertIn("python3", wrappers[0])
                 self.assertIn("exactly", formatted)
 
-                raw = Path(row["input_path"]).read_bytes()
+                raw = self.raws[logical]
                 self.assertEqual(sha(raw), row["input_sha256"])
                 self.assertEqual(len(raw), row["input_bytes"])
                 describe = ORIGINAL_VIEWER.describe_from_raw(raw, row["input_sha256"])
