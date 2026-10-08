@@ -48,7 +48,7 @@ def verify():
     required = {"docs/experiments/evidence/EXP-101/" + name for name in (
         "qualification-preflight.py.txt", "protocol.json", "completed-output-carry.py.txt",
         "grading-driver.py.txt", "origin-transport.py.txt", "grading-authority.py.txt",
-        "run-admission.py.txt")}
+        "run-admission.py.txt", "controller.py.txt")}
     if not required.issubset(files):
         raise ValueError("qualification-required-sources")
     for name, digest in files.items():
