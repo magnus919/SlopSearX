@@ -172,12 +172,32 @@ class CarryContractTests(unittest.TestCase):
             for ret in returns for call in (ret.value,)
         ))
 
-        def is_contract_path(node):
-            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
-                return isinstance(node.right, ast.Constant) and node.right.value == "carry-contract.py.txt"
-            return False
+        def contract_path_is_module_anchored(module_tree):
+            module_bindings = {
+                target.id
+                for statement in module_tree.body
+                if isinstance(statement, (ast.Assign, ast.AnnAssign))
+                for target in (statement.targets if isinstance(statement, ast.Assign)
+                               else [statement.target])
+                if isinstance(target, ast.Name)
+            }
+            candidates = [node for node in ast.walk(prepare)
+                          if isinstance(node, ast.BinOp)
+                          and isinstance(node.op, ast.Div)
+                          and isinstance(node.right, ast.Constant)
+                          and node.right.value == "carry-contract.py.txt"]
+            return any(isinstance(node.left, ast.Name)
+                       and node.left.id in module_bindings for node in candidates), candidates
 
-        self.assertTrue(any(is_contract_path(node) for node in ast.walk(prepare)))
+        anchored, path_nodes = contract_path_is_module_anchored(tree)
+        self.assertTrue(anchored, "contract path must use a module-defined directory anchor")
+        self.assertTrue(path_nodes)
+        # A path that points at the wrong namespace must be rejected even if the
+        # filename suffix still looks correct.
+        original_anchor = path_nodes[0].left.id
+        path_nodes[0].left.id = "UNBOUND_EXP105_TEST_ANCHOR"
+        self.assertFalse(contract_path_is_module_anchored(tree)[0])
+        path_nodes[0].left.id = original_anchor
         controller_calls = [node for node in ast.walk(prepare)
                             if isinstance(node, ast.Call)
                             and isinstance(node.func, ast.Attribute)
