@@ -26,6 +26,7 @@ def canonical(value):
 
 AUTH = load("exp103_authority_test", HERE / "continuation-authority.py.txt")
 QUAL = load("exp103_qualification_test", HERE / "qualification-preflight.py.txt")
+REAL_SOURCE_FILE_LOADER = importlib.machinery.SourceFileLoader
 
 class QualificationFixture:
     """All files and git-blob responses are local synthetic bytes."""
@@ -161,6 +162,43 @@ class QualificationAndAuthorityTests(unittest.TestCase):
         self.assertEqual(result["status"],"qualified")
         self.assertEqual(result["study_id"],"EXP-103")
         self.assertEqual(result["failed_exp102_clock_sha256"],sha(self.fx.lineage_paths["clock"].read_bytes()))
+
+    def test_nested_real_sourcefileloader_keeps_exp102_module_context(self):
+        """EXP-103's loader name must not collide with EXP-102's nested EXP-101 load."""
+        q102=self.fx.exp102/"qualification-preflight.py.txt"
+        q101dir=self.fx.repo/"docs/experiments/evidence/EXP-101"
+        q101dir.mkdir(parents=True)
+        q101dir.joinpath("qualification-preflight.py.txt").write_text(
+            "from pathlib import Path\nHERE = Path(__file__).resolve().parent\n",encoding="utf-8")
+        q102.write_text(
+            "from pathlib import Path\nimport importlib.machinery\n"
+            "HERE = Path(__file__).resolve().parent\n"
+            "def verify(**kwargs):\n"
+            "    importlib.machinery.SourceFileLoader('exp102_original_qualification', "
+            "str(HERE.parent / 'EXP-101/qualification-preflight.py.txt')).load_module()\n"
+            "    return {'status': 'qualified'}\n",encoding="utf-8")
+        previous=QUAL.importlib.machinery.SourceFileLoader
+        real_loader=REAL_SOURCE_FILE_LOADER
+        captured=[]
+        class NestedLoader:
+            def __init__(self,name,path): self.name,self.path=name,str(path)
+            def load_module(self):
+                if self.path.endswith("EXP-102/qualification-preflight.py.txt"):
+                    self.assert_unique_name()
+                    module=real_loader(self.name,self.path).load_module();captured.append(module)
+                    return module
+                if self.path.endswith("continuation-authority.py.txt"): return AUTH
+                return real_loader(self.name,self.path).load_module()
+            def assert_unique_name(self):
+                if self.name!="exp103_previous_qualification":
+                    raise AssertionError("EXP-103 must use a distinct module name for EXP-102")
+        QUAL.importlib.machinery.SourceFileLoader=NestedLoader
+        try:
+            self.fx.verify()
+            self.assertEqual(len(captured),1)
+            self.assertEqual(captured[0].HERE.resolve(),self.fx.exp102.resolve())
+        finally:
+            QUAL.importlib.machinery.SourceFileLoader=previous
 
     def test_missing_unqualified_registration_trim_and_private_pin_drift_fail_closed(self):
         qpath=self.fx.exp103/"qualification.json"
