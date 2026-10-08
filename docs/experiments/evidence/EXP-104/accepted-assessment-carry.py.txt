@@ -1,0 +1,162 @@
+"""Verify immutable accepted assessments; does not grant fresh execution authority."""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+
+ACCEPTED = tuple(
+    f"development-d{task}-answer-{assessor}-{arm}"
+    for task in range(1, 8)
+    for assessor in ("R1", "R2")
+    for arm in ("arm1", "arm2")
+)
+MISSING = tuple(
+    f"development-d8-answer-{assessor}-{arm}"
+    for assessor in ("R1", "R2")
+    for arm in ("arm1", "arm2")
+)
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def strict_json(raw):
+    def pairs(rows):
+        result = {}
+        for key, value in rows:
+            if key in result:
+                raise ValueError("carry-duplicate-json-key")
+            result[key] = value
+        return result
+
+    def nonfinite(_value):
+        raise ValueError("carry-nonfinite-json")
+
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=nonfinite)
+
+
+def verify(root, *, pins_raw, expected_pins_sha256, expected_clock_sha256,
+           expected_protocol_sha256, expected_source_revision, expected_parent_id,
+           decode_validate):
+    """Bind all 28 prior closures before any new clock or quality interpretation.
+
+    decode_validate must be the independently pinned, unchanged original decoder
+    and structural validator. It returns canonical decoded bytes. The resulting
+    bytes must equal the already persisted accepted result, not repair it.
+    """
+    root = Path(root)
+    if root.is_symlink() or not root.is_dir() or sha(pins_raw) != expected_pins_sha256:
+        raise ValueError("carry-snapshot-identity")
+    pins = strict_json(pins_raw)
+    files = pins.get("files")
+    if (pins.get("schema") != "exp103-terminal-carry-snapshot/1"
+            or pins.get("accepted_log_count") != 28
+            or pins.get("quality_analyzed") is not False
+            or not isinstance(files, dict) or pins.get("file_count") != len(files)):
+        raise ValueError("carry-snapshot-manifest")
+    actual = {}
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("carry-symlink")
+        if path.is_file():
+            actual[path.relative_to(root).as_posix()] = path
+    if set(actual) != set(files):
+        raise ValueError("carry-file-coverage")
+    for relative, pin in files.items():
+        path = actual[relative]
+        if (Path(relative).is_absolute() or ".." in Path(relative).parts
+                or not isinstance(pin, dict)
+                or set(pin) != {"bytes", "sha256"}
+                or type(pin["bytes"]) is not int or pin["bytes"] < 0
+                or path.stat().st_size != pin["bytes"]
+                or sha(path.read_bytes()) != pin["sha256"]):
+            raise ValueError("carry-file-pin")
+
+    def raw(relative):
+        if relative not in actual:
+            raise ValueError("carry-required-file")
+        return actual[relative].read_bytes()
+
+    def data(relative):
+        return strict_json(raw(relative))
+
+    clock_raw = raw("stage-clock.json")
+    clock = strict_json(clock_raw)
+    if (sha(clock_raw) != expected_clock_sha256
+            or clock.get("source_revision") != expected_source_revision
+            or clock.get("protocol_sha256") != expected_protocol_sha256):
+        raise ValueError("carry-original-clock-binding")
+    audit = data("terminal-grading-audit-private.json")
+    if (audit.get("schema") != "exp103-terminal-grading-audit/1"
+            or audit.get("status") != "terminal-spawn-prompt-deviation"
+            or audit.get("clock_sha256") != expected_clock_sha256
+            or audit.get("strict_closures") != 28
+            or audit.get("accepted_grader_results") != 28
+            or audit.get("grader_reservations") != 29
+            or audit.get("grader_calls") != 29
+            or audit.get("historical_grader_charges_including_this_run") != 103
+            or audit.get("combined_calls_including_carried_answerer") != 121
+            or audit.get("quality_analyzed") is not False
+            or audit.get("clock_reuse_permitted") is not False
+            or audit.get("process_exit_confirmed") is not True
+            or audit.get("process_exit_code") != 0
+            or any(audit.get(field) != 0 for field in (
+                "new_search_calls", "new_jev_calls", "new_source_calls", "new_answerer_calls"))):
+        raise ValueError("carry-terminal-accounting")
+    if "closure.json" in actual:
+        raise ValueError("carry-terminal-not-complete")
+    if {p.removesuffix(".closed.json") for p in actual if p.endswith(".closed.json")} != set(ACCEPTED):
+        raise ValueError("carry-accepted-slot-coverage")
+    expected_reserved = set(ACCEPTED) | {MISSING[0]}
+    for suffix in (".reservation.json", ".actor.json"):
+        if {p.removesuffix(suffix) for p in actual if p.endswith(suffix)} != expected_reserved:
+            raise ValueError("carry-charged-slot-coverage")
+
+    actor_ids = set()
+    closure_hashes = {}
+    for logical in ACCEPTED:
+        key = sha(logical.encode())[:20]
+        close = data(logical + ".closed.json")
+        actor = data(logical + ".actor.json")
+        proof = data(f"views/{key}.view.json")
+        receipt = data(f"finals/{key}.final.txt.json")
+        final_raw = raw(f"finals/{key}.final.txt")
+        decoded_raw = raw(logical + ".decoded.json")
+        if (close.get("schema") != "exp100-answer-structural-close/1"
+                or close.get("logical_submission") != logical
+                or close.get("structurally_valid") is not True
+                or close.get("metric_computed") is not False
+                or close.get("semantic_completion") != "not_claimed"
+                or actor.get("parent_id") != expected_parent_id
+                or actor.get("model") != "gpt-6.1-sol"
+                or not actor.get("actor_id") or actor["actor_id"] in actor_ids
+                or proof.get("logical_submission") != logical
+                or proof.get("input_sha256") != close.get("input_sha256")
+                or proof.get("final_text_sha256") != sha(final_raw)
+                or proof.get("transcript_log_sha256") != sha(raw(f"accepted-raw-logs/{logical}.jsonl"))
+                or receipt.get("logical_submission") != logical
+                or receipt.get("input_sha256") != close.get("input_sha256")
+                or receipt.get("sha256") != sha(final_raw)
+                or close.get("raw_final_sha256") != sha(final_raw)
+                or close.get("decoded_response_sha256") != sha(decoded_raw)):
+            raise ValueError("carry-accepted-result-binding")
+        if decode_validate(logical, final_raw) != decoded_raw:
+            raise ValueError("carry-original-decoder-mismatch")
+        actor_ids.add(actor["actor_id"])
+        closure_hashes[logical] = sha(raw(logical + ".closed.json"))
+    failed_actor = data(MISSING[0] + ".actor.json").get("actor_id")
+    if not failed_actor or failed_actor in actor_ids:
+        raise ValueError("carry-failed-actor-identity")
+    return {"schema": "exp104-accepted-assessment-carry/1",
+            "snapshot_pins_sha256": expected_pins_sha256,
+            "original_clock_sha256": expected_clock_sha256,
+            "original_protocol_sha256": expected_protocol_sha256,
+            "original_source_revision": expected_source_revision,
+            "accepted_closures": closure_hashes, "missing_slots": list(MISSING),
+            "excluded_actor_ids": sorted(actor_ids | {failed_actor}),
+            "historical_grader_charges": 103, "planned_grader_charges": 107,
+            "planned_combined_charges": 125, "elapsed_time_credit_seconds": 0,
+            "quality_analyzed": False, "fresh_execution_authorized": False}

@@ -1,0 +1,75 @@
+"""Four fresh leases after qualified carry; original serial authority is unchanged."""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+
+
+def canonical(data):
+    return (json.dumps(data, sort_keys=True, ensure_ascii=False,
+                       separators=(",", ":"), allow_nan=False) + "\n").encode()
+
+
+def make_authority(original, carry_module):
+    """Return an adapter requiring the verified carry on every transition.
+
+    The original check, reservation order, actor binding, result closure and
+    all-32 completion logic remain in the original class. The qualified carry
+    seeds only the already accepted prefix and excludes its physical actors.
+    """
+    class FourSlotAuthority(original.GradingAuthority):
+        def __init__(self, *, verify_carry, expected_carry_sha256, **kwargs):
+            if (not callable(verify_carry)
+                    or type(expected_carry_sha256) is not str
+                    or not re.fullmatch(r"[0-9a-f]{64}", expected_carry_sha256)):
+                raise ValueError("four-slot-qualified-carry-required")
+            self._verify_accepted_carry = verify_carry
+            self._expected_accepted_carry_sha = expected_carry_sha256
+            carry = self._carry()
+            if kwargs.get("clock_sha256") == carry["original_clock_sha256"]:
+                raise ValueError("four-slot-terminal-clock-reuse")
+            super().__init__(**kwargs)
+            excluded = set(carry["excluded_actor_ids"])
+            if excluded & self._actors:
+                raise ValueError("four-slot-actor-provenance-overlap")
+            self._actors.update(excluded)
+            self._next = len(carry_module.ACCEPTED)
+            self._closed = set(carry_module.ACCEPTED)
+
+        def _carry(self):
+            carry = self._verify_accepted_carry()
+            if (type(carry) is not dict
+                    or hashlib.sha256(canonical(carry)).hexdigest() != self._expected_accepted_carry_sha
+                    or carry.get("schema") != "exp104-accepted-assessment-carry/1"
+                    or set(carry.get("accepted_closures", {})) != set(carry_module.ACCEPTED)
+                    or carry.get("missing_slots") != list(carry_module.MISSING)
+                    or carry.get("historical_grader_charges") != 103
+                    or carry.get("planned_grader_charges") != 107
+                    or carry.get("planned_combined_charges") != 125
+                    or carry.get("elapsed_time_credit_seconds") != 0
+                    or carry.get("quality_analyzed") is not False
+                    or carry.get("fresh_execution_authorized") is not False
+                    or len(carry.get("excluded_actor_ids", [])) != 29
+                    or len(set(carry["excluded_actor_ids"])) != 29
+                    or not all(re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", actor)
+                               for actor in carry["excluded_actor_ids"])):
+                raise ValueError("four-slot-carry-receipt-binding")
+            return carry
+
+        def _check(self):
+            if self._terminal:
+                raise ValueError("authority-terminal-no-resume")
+            try:
+                self._carry()
+                return super()._check()
+            except BaseException:
+                self._terminal = True
+                raise
+
+        def require_complete(self):
+            result = super().require_complete()
+            return {**result, "carried_closures": 28, "fresh_closures": 4,
+                    "carry_sha256": self._expected_accepted_carry_sha}
+
+    return FourSlotAuthority

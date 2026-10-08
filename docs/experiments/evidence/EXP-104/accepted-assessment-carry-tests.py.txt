@@ -1,0 +1,215 @@
+"""Synthetic adversarial tests for the EXP-104 accepted-output carry verifier."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+HERE = Path(__file__).resolve().parent
+
+def load_helper(name, path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,separators=(",",":"),ensure_ascii=False,
+                        allow_nan=False)+"\n").encode()
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+
+CARRY=load_helper("exp104_accepted_carry_test",HERE/"accepted-assessment-carry.py.txt")
+
+class SyntheticCarry:
+    """Create complete structural receipts from deterministic, non-grade bytes."""
+    def __init__(self):
+        self.temp=tempfile.TemporaryDirectory(prefix="exp104-synthetic-carry-")
+        self.root=Path(self.temp.name)/"accepted-carry"
+        self.root.mkdir()
+        self.clock_sha="1"*64
+        self.protocol_sha="2"*64
+        self.source_revision="a"*40
+        self.parent_id="synthetic-exp103-parent"
+        self.files={}
+        self.decoded={}
+        self.write("stage-clock.json",canonical({"schema":"exp101-grading-clock/1",
+            "source_revision":self.source_revision,"protocol_sha256":self.protocol_sha,
+            "fixture":"synthetic"}))
+        # The helper compares the clock's hash to this expected value. Bind it after bytes exist.
+        self.clock_sha=sha((self.root/"stage-clock.json").read_bytes())
+        self.write("terminal-grading-audit-private.json",canonical({
+            "schema":"exp103-terminal-grading-audit/1","status":"terminal-spawn-prompt-deviation",
+            "clock_sha256":self.clock_sha,"strict_closures":28,"accepted_grader_results":28,
+            "grader_reservations":29,"grader_calls":29,
+            "historical_grader_charges_including_this_run":103,
+            "combined_calls_including_carried_answerer":121,"quality_analyzed":False,
+            "clock_reuse_permitted":False,"process_exit_confirmed":True,"process_exit_code":0,
+            "new_search_calls":0,"new_jev_calls":0,"new_source_calls":0,"new_answerer_calls":0}))
+        for index,logical in enumerate(CARRY.ACCEPTED):
+            self._accepted(logical,index)
+        missing=CARRY.MISSING[0]
+        self.write(missing+".reservation.json",canonical({"logical_submission":missing,"status":"charged"}))
+        self.write(missing+".actor.json",canonical({"logical_submission":missing,
+            "parent_id":self.parent_id,"model":"gpt-6.1-sol","actor_id":"failed-actor-29"}))
+        self.refresh_pins()
+
+    def write(self,relative,raw):
+        path=self.root/relative
+        path.parent.mkdir(parents=True,exist_ok=True)
+        path.write_bytes(raw)
+        return path
+
+    def _accepted(self,logical,index):
+        key=sha(logical.encode())[:20]
+        raw_final=("synthetic-final:"+logical).encode()
+        decoded=canonical({"fixture":"synthetic-decoder-result","slot":logical})
+        input_sha=sha(("synthetic-input:"+logical).encode())
+        raw_log=("synthetic-log:"+logical).encode()
+        actor_id=f"synthetic-actor-{index:02d}"
+        self.decoded[logical]=decoded
+        self.write(logical+".closed.json",canonical({"schema":"exp100-answer-structural-close/1",
+            "logical_submission":logical,"input_sha256":input_sha,
+            "raw_final_sha256":sha(raw_final),"decoded_response_sha256":sha(decoded),
+            "structurally_valid":True,"metric_computed":False,"semantic_completion":"not_claimed"}))
+        self.write(logical+".reservation.json",canonical({"logical_submission":logical,"status":"charged"}))
+        self.write(logical+".actor.json",canonical({"logical_submission":logical,
+            "parent_id":self.parent_id,"model":"gpt-6.1-sol","actor_id":actor_id}))
+        self.write(f"views/{key}.view.json",canonical({"logical_submission":logical,
+            "input_sha256":input_sha,"final_text_sha256":sha(raw_final),
+            "transcript_log_sha256":sha(raw_log)}))
+        self.write(f"finals/{key}.final.txt",raw_final)
+        self.write(f"finals/{key}.final.txt.json",canonical({"logical_submission":logical,
+            "input_sha256":input_sha,"sha256":sha(raw_final)}))
+        self.write(logical+".decoded.json",decoded)
+        self.write(f"accepted-raw-logs/{logical}.jsonl",raw_log)
+
+    def refresh_pins(self):
+        entries={}
+        for path in sorted(self.root.rglob("*")):
+            if path.is_file():
+                raw=path.read_bytes()
+                entries[path.relative_to(self.root).as_posix()]={"bytes":len(raw),"sha256":sha(raw)}
+        self.pins_raw=canonical({"schema":"exp103-terminal-carry-snapshot/1",
+            "accepted_log_count":28,"quality_analyzed":False,"file_count":len(entries),"files":entries})
+        self.pins_sha=sha(self.pins_raw)
+
+    def verify(self,decode_validate=None):
+        self.refresh_pins()
+        if decode_validate is None:
+            decode_validate=lambda logical,raw:self.decoded[logical]
+        return CARRY.verify(self.root,pins_raw=self.pins_raw,
+            expected_pins_sha256=self.pins_sha,expected_clock_sha256=self.clock_sha,
+            expected_protocol_sha256=self.protocol_sha,expected_source_revision=self.source_revision,
+            expected_parent_id=self.parent_id,decode_validate=decode_validate)
+
+    def close(self): self.temp.cleanup()
+
+class AcceptedAssessmentCarryTests(unittest.TestCase):
+    def setUp(self): self.fx=SyntheticCarry()
+    def tearDown(self): self.fx.close()
+
+    def test_exact_28_accepted_results_and_four_d8_slots_are_missing_without_authority(self):
+        receipt=self.fx.verify()
+        self.assertEqual(set(receipt["accepted_closures"]),set(CARRY.ACCEPTED))
+        self.assertEqual(len(receipt["accepted_closures"]),28)
+        self.assertEqual(receipt["missing_slots"],list(CARRY.MISSING))
+        self.assertEqual(receipt["historical_grader_charges"],103)
+        self.assertEqual(receipt["planned_grader_charges"],107)
+        self.assertEqual(receipt["planned_combined_charges"],125)
+        self.assertEqual(receipt["elapsed_time_credit_seconds"],0)
+        self.assertIs(receipt["quality_analyzed"],False)
+        self.assertIs(receipt["fresh_execution_authorized"],False)
+        self.assertFalse(any(name.startswith("development-d8-") for name in receipt["accepted_closures"]))
+        self.assertEqual(set(receipt["excluded_actor_ids"]),
+            {f"synthetic-actor-{i:02d}" for i in range(28)}|{"failed-actor-29"})
+
+    def test_snapshot_clock_source_protocol_and_accounting_are_bound(self):
+        kwargs={"pins_raw":self.fx.pins_raw,"expected_pins_sha256":self.fx.pins_sha,
+            "expected_clock_sha256":self.fx.clock_sha,"expected_protocol_sha256":self.fx.protocol_sha,
+            "expected_source_revision":self.fx.source_revision,"expected_parent_id":self.fx.parent_id,
+            "decode_validate":lambda logical,raw:self.fx.decoded[logical]}
+        for field,value,pattern in (("expected_clock_sha256","f"*64,"original-clock-binding"),
+                ("expected_protocol_sha256","f"*64,"original-clock-binding"),
+                ("expected_source_revision","b"*40,"original-clock-binding"),
+                ("expected_parent_id","wrong-parent","accepted-result-binding")):
+            changed=dict(kwargs);changed[field]=value
+            with self.subTest(field=field),self.assertRaisesRegex(ValueError,pattern):
+                CARRY.verify(self.fx.root,**changed)
+        changed=dict(kwargs);changed["expected_pins_sha256"]="0"*64
+        with self.assertRaisesRegex(ValueError,"snapshot-identity"):
+            CARRY.verify(self.fx.root,**changed)
+
+    def test_byte_pins_and_raw_log_final_and_decoded_hash_joins_are_enforced(self):
+        # Unrefreshed mutation fails the inventory's byte pin before any join.
+        final=next(self.fx.root.glob("finals/*.final.txt"))
+        original=final.read_bytes();final.write_bytes(original+b"changed")
+        with self.assertRaisesRegex(ValueError,"file-pin"):
+            CARRY.verify(self.fx.root,pins_raw=self.fx.pins_raw,
+                expected_pins_sha256=self.fx.pins_sha,expected_clock_sha256=self.fx.clock_sha,
+                expected_protocol_sha256=self.fx.protocol_sha,expected_source_revision=self.fx.source_revision,
+                expected_parent_id=self.fx.parent_id,decode_validate=lambda _l,_r:b"")
+        final.write_bytes(original)
+
+        # Re-pin independent byte changes to prove the cross-artifact joins reject them.
+        logical=CARRY.ACCEPTED[0];key=sha(logical.encode())[:20]
+        log=self.fx.root/f"accepted-raw-logs/{logical}.jsonl"
+        log.write_bytes(log.read_bytes()+b"tampered")
+        with self.assertRaisesRegex(ValueError,"accepted-result-binding"):
+            self.fx.verify()
+        self.fx._accepted(logical,0)
+        self.fx.refresh_pins()
+
+        final= self.fx.root/f"finals/{key}.final.txt"
+        final.write_bytes(final.read_bytes()+b"tampered")
+        with self.assertRaisesRegex(ValueError,"accepted-result-binding"):
+            self.fx.verify()
+        self.fx._accepted(logical,0)
+        self.fx.refresh_pins()
+        decoded=self.fx.root/(logical+".decoded.json")
+        decoded.write_bytes(decoded.read_bytes()+b" ")
+        with self.assertRaisesRegex(ValueError,"accepted-result-binding"):
+            self.fx.verify()
+
+    def test_unchanged_original_decoder_must_reproduce_persisted_bytes(self):
+        with self.assertRaisesRegex(ValueError,"original-decoder-mismatch"):
+            self.fx.verify(decode_validate=lambda _logical,_raw:b"different canonical decoded bytes")
+
+    def test_missing_or_extra_accepted_closures_and_failed_actor_reuse_are_rejected(self):
+        logical=CARRY.ACCEPTED[-1]
+        (self.fx.root/(logical+".closed.json")).unlink()
+        with self.assertRaisesRegex(ValueError,"carry-accepted-slot-coverage"):
+            self.fx.verify()
+        self.fx.close();self.fx= SyntheticCarry()
+        unexpected=CARRY.MISSING[0]+".closed.json"
+        self.fx.write(unexpected,canonical({"unexpected":"synthetic"}))
+        with self.assertRaisesRegex(ValueError,"carry-accepted-slot-coverage"):
+            self.fx.verify()
+        self.fx.close();self.fx=SyntheticCarry()
+        failed=self.fx.root/(CARRY.MISSING[0]+".actor.json")
+        failed.write_bytes(canonical({"parent_id":self.fx.parent_id,"model":"gpt-6.1-sol",
+            "actor_id":"synthetic-actor-00"}))
+        with self.assertRaisesRegex(ValueError,"carry-failed-actor-identity"):
+            self.fx.verify()
+
+    def test_resealed_nonconforming_terminal_accounting_is_rejected(self):
+        audit_path=self.fx.root/"terminal-grading-audit-private.json"
+        audit=json.loads(audit_path.read_bytes())
+        audit["grader_reservations"]=28
+        audit_path.write_bytes(canonical(audit))
+        with self.assertRaisesRegex(ValueError,"carry-terminal-accounting"):
+            self.fx.verify()
+
+    def test_duplicate_actor_identity_is_rejected(self):
+        second=CARRY.ACCEPTED[1]
+        actor=self.fx.root/(second+".actor.json")
+        value=json.loads(actor.read_bytes());value["actor_id"]="synthetic-actor-00"
+        actor.write_bytes(canonical(value))
+        with self.assertRaisesRegex(ValueError,"carry-accepted-result-binding"):
+            self.fx.verify()
+
+if __name__=="__main__": unittest.main(verbosity=2)
