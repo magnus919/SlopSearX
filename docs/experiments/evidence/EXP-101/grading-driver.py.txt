@@ -1,0 +1,102 @@
+"""Frozen, deterministic tool-driver augmentation for EXP-100 answer packets."""
+from __future__ import annotations
+
+import json
+import re
+import shlex
+from typing import Any
+
+MAX_DRIVER_RESERVE_BYTES = 12_000
+MAX_RENDERED_VIEW_BYTES = 384_000
+_SHA = re.compile(r"^[0-9a-f]{64}$")
+
+
+class DriverFormatError(ValueError):
+    pass
+
+
+def _view_schedule(view_plan: dict) -> tuple[list[list[int]], int]:
+    if type(view_plan) is not dict or view_plan.get("schema") != "exp095-input-view-plan/1":
+        raise DriverFormatError("input-view-plan-required")
+    viewer = view_plan.get("viewer_path")
+    input_path = view_plan.get("input_path")
+    digest = view_plan.get("input_sha256")
+    page_count = view_plan.get("page_count")
+    batches = view_plan.get("batches")
+    if (type(viewer) is not str or not viewer or any(ch in viewer for ch in "\r\n\x00")
+            or type(input_path) is not str or not input_path or any(ch in input_path for ch in "\r\n\x00")
+            or type(digest) is not str or not _SHA.fullmatch(digest)
+            or type(page_count) is not int or page_count < 1 or type(batches) is not list):
+        raise DriverFormatError("input-view-plan-identity")
+    expected = [list(range(start, min(start + 2, page_count + 1)))
+                for start in range(1, page_count + 1, 2)]
+    if len(batches) != len(expected):
+        raise DriverFormatError("input-view-page-batch-count")
+    total_pages = []
+    rendered = view_plan.get("describe_bytes")
+    if type(rendered) is not int or rendered < 1:
+        raise DriverFormatError("input-view-describe-size")
+    for row, page_set in zip(batches, expected):
+        if (type(row) is not dict or row.get("indices") != page_set
+                or type(row.get("bytes")) is not int or row["bytes"] < 1
+                or type(row.get("sha256")) is not str or not _SHA.fullmatch(row["sha256"])):
+            raise DriverFormatError("input-view-page-batch-invalid")
+        total_pages.extend(page_set)
+        rendered += row["bytes"]
+    if total_pages != list(range(1, page_count + 1)):
+        raise DriverFormatError("input-view-page-coverage")
+    reserve = view_plan.get("driver_reserve_bytes")
+    delivery = view_plan.get("total_delivered_bytes_with_reserve")
+    if (reserve != MAX_DRIVER_RESERVE_BYTES or type(delivery) is not int
+            or delivery != rendered + MAX_DRIVER_RESERVE_BYTES
+            or delivery > MAX_RENDERED_VIEW_BYTES):
+        raise DriverFormatError("input-view-delivery-budget")
+    return expected, rendered
+
+
+def _command(viewer: str, input_path: str, digest: str, pages: list[int] | None) -> str:
+    parts = ["python3", shlex.quote(viewer), "--input", shlex.quote(input_path),
+             "--expected-sha", digest]
+    if pages is None:
+        parts.append("--describe")
+    else:
+        parts.extend(("--pages", ",".join(str(index) for index in pages)))
+    return " ".join(parts)
+
+
+def _exec_source(command: str) -> str:
+    # JSON string encoding is also a valid JavaScript string literal for the
+    # paths accepted by this formatter and matches the original strict parser.
+    encoded = json.dumps(command, ensure_ascii=True)
+    return (f'const r = await tools.exec_command({{cmd: {encoded}, max_output_tokens: 10000}}); '
+            'text(r.exit_code); text(r.output);')
+
+
+def format_answer_assessor_driver(phase_bindings: Any, view_plan: dict) -> str:
+    """Append the fixed viewer command grammar to the untouched EXP-100 prompt."""
+    prompt_builder = getattr(phase_bindings, "answer_assessor_viewer_prompt", None)
+    if not callable(prompt_builder):
+        raise DriverFormatError("original-answer-viewer-prompt-required")
+    # Preserve the original rubric and byte-view instructions exactly as the
+    # pinned EXP-100 helper emits them.
+    original = prompt_builder(view_plan)
+    if type(original) is not str or not original:
+        raise DriverFormatError("original-answer-viewer-prompt-invalid")
+    schedule, _rendered_bytes = _view_schedule(view_plan)
+    viewer, packet, digest = (view_plan["viewer_path"], view_plan["input_path"],
+                              view_plan["input_sha256"])
+    commands = [_command(viewer, packet, digest, None)]
+    commands.extend(_command(viewer, packet, digest, pages) for pages in schedule)
+    wrappers = "\n".join(_exec_source(command) for command in commands)
+    driver = (
+        "\n\nFrozen tool-driver grammar (required):\n"
+        f"Make exactly {len(commands)} functions.exec calls, in the listed order, one per command below. "
+        "Each call must contain only the exact JavaScript statement shown. Do not make any other tool, "
+        "source, help, environment, or discovery calls. Do not add shell commands, flags, or retries. "
+        "The first command describes the assigned packet. Then run every assigned page batch exactly once, "
+        "in ascending order. Preserve all output bytes as returned; do not summarize or transform them.\n"
+        "\n```javascript\n" + wrappers + "\n```\n"
+    )
+    if len(driver.encode("utf-8")) > MAX_DRIVER_RESERVE_BYTES:
+        raise DriverFormatError("driver-instructions-over-reserve")
+    return original + driver

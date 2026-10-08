@@ -1,0 +1,121 @@
+"""Deterministic prompt/command round-trip tests for the EXP-101 driver."""
+import hashlib
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+EXP100 = HERE.parent / "EXP-100"
+DRIVER = importlib.machinery.SourceFileLoader(
+    "exp101_grading_driver_tests", str(HERE / "grading-driver.py.txt")).load_module()
+PHASE = importlib.machinery.SourceFileLoader(
+    "exp101_original_phase_bindings", str(EXP100 / "phase-bindings.py.txt")).load_module()
+VIEWS = importlib.machinery.SourceFileLoader(
+    "exp101_original_input_view_verifier", str(EXP100 / "input-view-verifier.py.txt")).load_module()
+VIEWER = importlib.machinery.SourceFileLoader(
+    "exp101_original_packet_viewer", str(EXP100 / "packet-viewer.py.txt")).load_module()
+
+
+class GradingDriverTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="assigned packet ")
+        self.root = Path(self.temp.name)
+        self.packet = self.root / "answer packet.json"
+        self.raw = (json.dumps({"schema": "fixture", "content": "x" * 11_000},
+                               separators=(",", ":")) + "\n").encode()
+        self.packet.write_bytes(self.raw)
+        self.digest = hashlib.sha256(self.raw).hexdigest()
+        self.source_sha = "a" * 64
+        self.viewer_path = str((EXP100 / "packet-viewer.py.txt").resolve())
+        self.plan = VIEWS.input_view_plan(self.raw, expected_sha256=self.digest,
+            input_path=str(self.packet.resolve()), viewer_path=self.viewer_path,
+            slot_id="development-d1-answer-R1-arm1", source_manifest_sha256=self.source_sha)
+        self.original_prompt = PHASE.answer_assessor_viewer_prompt(self.plan)
+        self.prompt = DRIVER.format_answer_assessor_driver(PHASE, self.plan)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def _sources(self, prompt=None):
+        text = self.prompt if prompt is None else prompt
+        marker = "```javascript\n"
+        start = text.rfind(marker)
+        self.assertGreaterEqual(start, 0)
+        end = text.find("\n```", start + len(marker))
+        self.assertGreater(end, start)
+        body = text[start + len(marker):end]
+        return body.splitlines()
+
+    def _calls(self, sources=None):
+        sources = self._sources() if sources is None else sources
+        calls = []
+        page_data = VIEWER.build_views(self.raw)["_page_data"]
+        expected_stdout = [
+            (json.dumps(VIEWER.describe_from_raw(self.raw, self.digest), ensure_ascii=False,
+                        sort_keys=True, separators=(",", ":")) + "\n").encode()]
+        for batch in self.plan["batches"]:
+            expected_stdout.append(VIEWER.render_from_raw(self.raw, batch["indices"]))
+        self.assertEqual(len(sources), len(expected_stdout))
+        self.assertEqual(b"".join(page_data), self.raw)
+        for source, stdout in zip(sources, expected_stdout):
+            calls.append({"name": "exec", "input": source,
+                "output_text_blocks": ["Script completed\nWall time 0.01 seconds\nOutput:\n",
+                                       "0", stdout.decode("utf-8")]})
+        return calls
+
+    def test_formatted_commands_round_trip_original_strict_verifier(self):
+        self.assertTrue(self.prompt.startswith(self.original_prompt))
+        result = VIEWS.verify_tool_transcript(self.raw, expected_sha256=self.digest,
+            input_path=str(self.packet.resolve()), viewer_path=self.viewer_path,
+            slot_id=self.plan["logical_submission"], source_manifest_sha256=self.source_sha,
+            calls=self._calls(), transcript_log_sha256="b" * 64)
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["pages_covered"], list(range(1, self.plan["page_count"] + 1)))
+        self.assertEqual(result["rendered_bytes"] + self.plan["driver_reserve_bytes"],
+                         self.plan["total_delivered_bytes_with_reserve"])
+        self.assertLessEqual(self.plan["total_delivered_bytes_with_reserve"], 384_000)
+        self.assertLessEqual(len((self.prompt[len(self.original_prompt):]).encode()), 12_000)
+
+    def test_extra_tool_call_is_rejected(self):
+        calls = self._calls()
+        calls.append(dict(calls[-1]))
+        with self.assertRaisesRegex(VIEWS.ViewError, "transcript-call-count"):
+            VIEWS.verify_tool_transcript(self.raw, expected_sha256=self.digest,
+                input_path=str(self.packet.resolve()), viewer_path=self.viewer_path,
+                slot_id=self.plan["logical_submission"], source_manifest_sha256=self.source_sha,
+                calls=calls, transcript_log_sha256="b" * 64)
+
+    def test_wrong_runtime_is_rejected(self):
+        calls = self._calls()
+        calls[0]["input"] = calls[0]["input"].replace('cmd: "python3 ', 'cmd: "python ', 1)
+        with self.assertRaisesRegex(VIEWS.ViewError, "transcript-command-arguments"):
+            VIEWS.verify_tool_transcript(self.raw, expected_sha256=self.digest,
+                input_path=str(self.packet.resolve()), viewer_path=self.viewer_path,
+                slot_id=self.plan["logical_submission"], source_manifest_sha256=self.source_sha,
+                calls=calls, transcript_log_sha256="b" * 64)
+
+    def test_discovery_call_is_rejected(self):
+        calls = self._calls()
+        calls[0]["input"] = ('const r = await tools.exec_command({cmd: "python3 --help", '
+                              'max_output_tokens: 10000}); text(r.exit_code); text(r.output);')
+        with self.assertRaisesRegex(VIEWS.ViewError, "transcript-command-arguments"):
+            VIEWS.verify_tool_transcript(self.raw, expected_sha256=self.digest,
+                input_path=str(self.packet.resolve()), viewer_path=self.viewer_path,
+                slot_id=self.plan["logical_submission"], source_manifest_sha256=self.source_sha,
+                calls=calls, transcript_log_sha256="b" * 64)
+
+    def test_driver_refuses_plan_over_reserve_or_incomplete_schedule(self):
+        oversized = dict(self.plan)
+        oversized["driver_reserve_bytes"] = 12_001
+        with self.assertRaisesRegex(DRIVER.DriverFormatError, "input-view-delivery-budget"):
+            DRIVER.format_answer_assessor_driver(PHASE, oversized)
+        missing_batch = dict(self.plan)
+        missing_batch["batches"] = self.plan["batches"][:-1]
+        with self.assertRaisesRegex(DRIVER.DriverFormatError, "input-view-page-batch-count"):
+            DRIVER.format_answer_assessor_driver(PHASE, missing_batch)
+
+
+if __name__ == "__main__":
+    unittest.main()
