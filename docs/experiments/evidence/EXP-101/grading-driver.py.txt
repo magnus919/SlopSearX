@@ -85,18 +85,28 @@ def format_answer_assessor_driver(phase_bindings: Any, view_plan: dict) -> str:
     schedule, _rendered_bytes = _view_schedule(view_plan)
     viewer, packet, digest = (view_plan["viewer_path"], view_plan["input_path"],
                               view_plan["input_sha256"])
-    commands = [_command(viewer, packet, digest, None)]
-    commands.extend(_command(viewer, packet, digest, pages) for pages in schedule)
-    wrappers = "\n".join(_exec_source(command) for command in commands)
+    describe_wrapper = _exec_source(_command(viewer, packet, digest, None))
+    first_batch = schedule[0]
+    page_template = _exec_source(_command(viewer, packet, digest, first_batch))
+    call_count = 1 + len(schedule)
     driver = (
         "\n\nFrozen tool-driver grammar (required):\n"
-        f"Make exactly {len(commands)} functions.exec calls, in the listed order, one per command below. "
-        "Each call must contain only the exact JavaScript statement shown. Do not make any other tool, "
-        "source, help, environment, or discovery calls. Do not add shell commands, flags, or retries. "
-        "The first command describes the assigned packet. Then run every assigned page batch exactly once, "
-        "in ascending order. Preserve all output bytes as returned; do not summarize or transform them.\n"
-        "\n```javascript\n" + wrappers + "\n```\n"
+        f"Make exactly {call_count} functions.exec calls, in order. Use the describe statement once, "
+        "then use the page statement once per batch in the frozen page_request_schedule above, "
+        "ascending and with every batch exactly once. For each page call, copy the page statement and "
+        "replace only its comma-separated page indices with the current scheduled batch. Each call must "
+        "contain only the shown JavaScript statement. Do not make any other tool, source, help, environment, "
+        "or discovery calls. Do not add shell commands, flags, or retries.\n"
+        "Each successful call returns three output blocks, in order: completion metadata, exit code `0`, "
+        "and viewer stdout. Preserve the exit code and output exactly. If the exit code is not `0`, stop "
+        "without retrying or calling another tool. Do not summarize or transform viewer output.\n"
+        "\nDescribe statement:\n```javascript\n" + describe_wrapper + "\n```\n"
+        "Page statement template (substitute only the scheduled indices):\n```javascript\n" +
+        page_template + "\n```\n"
     )
     if len(driver.encode("utf-8")) > MAX_DRIVER_RESERVE_BYTES:
         raise DriverFormatError("driver-instructions-over-reserve")
-    return original + driver
+    result = original + driver
+    if len(result.encode("utf-8")) > MAX_DRIVER_RESERVE_BYTES:
+        raise DriverFormatError("complete-driver-over-reserve")
+    return result

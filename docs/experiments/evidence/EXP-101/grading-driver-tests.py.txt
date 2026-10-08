@@ -40,13 +40,19 @@ class GradingDriverTests(unittest.TestCase):
 
     def _sources(self, prompt=None):
         text = self.prompt if prompt is None else prompt
+        sources = []
+        cursor = 0
         marker = "```javascript\n"
-        start = text.rfind(marker)
-        self.assertGreaterEqual(start, 0)
-        end = text.find("\n```", start + len(marker))
-        self.assertGreater(end, start)
-        body = text[start + len(marker):end]
-        return body.splitlines()
+        while True:
+            start = text.find(marker, cursor)
+            if start < 0:
+                break
+            end = text.find("\n```", start + len(marker))
+            self.assertGreater(end, start)
+            sources.append(text[start + len(marker):end])
+            cursor = end + 4
+        self.assertEqual(len(sources), 2)
+        return sources
 
     def _calls(self, sources=None):
         sources = self._sources() if sources is None else sources
@@ -57,6 +63,12 @@ class GradingDriverTests(unittest.TestCase):
                         sort_keys=True, separators=(",", ":")) + "\n").encode()]
         for batch in self.plan["batches"]:
             expected_stdout.append(VIEWER.render_from_raw(self.raw, batch["indices"]))
+        page_template = sources[1]
+        first_flag = "--pages " + ",".join(str(index) for index in self.plan["batches"][0]["indices"])
+        page_sources = [page_template.replace(first_flag,
+            "--pages " + ",".join(str(index) for index in batch["indices"]), 1)
+            for batch in self.plan["batches"]]
+        sources = [sources[0], *page_sources]
         self.assertEqual(len(sources), len(expected_stdout))
         self.assertEqual(b"".join(page_data), self.raw)
         for source, stdout in zip(sources, expected_stdout):
@@ -76,7 +88,8 @@ class GradingDriverTests(unittest.TestCase):
         self.assertEqual(result["rendered_bytes"] + self.plan["driver_reserve_bytes"],
                          self.plan["total_delivered_bytes_with_reserve"])
         self.assertLessEqual(self.plan["total_delivered_bytes_with_reserve"], 384_000)
-        self.assertLessEqual(len((self.prompt[len(self.original_prompt):]).encode()), 12_000)
+        self.assertLessEqual(len(self.prompt.encode()), 12_000)
+        self.assertIn("three output blocks", self.prompt)
 
     def test_extra_tool_call_is_rejected(self):
         calls = self._calls()
@@ -115,6 +128,25 @@ class GradingDriverTests(unittest.TestCase):
         missing_batch["batches"] = self.plan["batches"][:-1]
         with self.assertRaisesRegex(DRIVER.DriverFormatError, "input-view-page-batch-count"):
             DRIVER.format_answer_assessor_driver(PHASE, missing_batch)
+
+    def test_all_32_originally_generated_view_plans_fit_complete_driver_reserve(self):
+        for index in range(32):
+            with self.subTest(index=index):
+                raw = (json.dumps({"slot": index, "content": "z" * (index * 137)},
+                                  separators=(",", ":")) + "\n").encode()
+                packet = self.root / f"slot-{index:02d}.json"
+                packet.write_bytes(raw)
+                digest = hashlib.sha256(raw).hexdigest()
+                plan = VIEWS.input_view_plan(raw, expected_sha256=digest,
+                    input_path=str(packet.resolve()), viewer_path=self.viewer_path,
+                    slot_id=f"development-d{index // 4 + 1}-answer-R1-arm1",
+                    source_manifest_sha256=self.source_sha)
+                original = PHASE.answer_assessor_viewer_prompt(plan)
+                formatted = DRIVER.format_answer_assessor_driver(PHASE, plan)
+                self.assertTrue(formatted.startswith(original))
+                self.assertLessEqual(len(formatted.encode("utf-8")), 12_000)
+                self.assertLessEqual(plan["total_delivered_bytes_with_reserve"], 384_000)
+                self.assertEqual(plan["driver_reserve_bytes"], 12_000)
 
 
 if __name__ == "__main__":
