@@ -115,7 +115,10 @@ class QualificationFixture:
         self.registration_path = self.here / "registration-integrity.json"
         self.registration = {"schema": "exp102-network-registration/1", "study_id": "EXP-102",
             "source_revision_binding": "qualification.qualified_source_revision",
-            "source_files": dict(source_inventory)}
+            "source_files": dict(source_inventory),
+            "reused_source_revision": self.old_rev,
+            "operator_scheduler_sha256": sha(scheduler.read_bytes()),
+            "failed_run_pins": {name: digest for name, (_, digest) in self.lineage.items()}}
         registration_raw = canonical(self.registration)
         self.registration_path.write_bytes(registration_raw)
         registration_name = self.registration_path.relative_to(self.root).as_posix()
@@ -197,6 +200,12 @@ class QualificationPreflightTests(unittest.TestCase):
             "health_attempt_sha256": self.fx.lineage["health_attempt"][1]}))
         new_digest = sha(self.fx.lineage["terminal_audit"][0].read_bytes())
         self.fx.q["failed_run_pins"]["terminal_audit"] = new_digest
+        self.fx.registration["failed_run_pins"]["terminal_audit"] = new_digest
+        registered_raw = canonical(self.fx.registration)
+        self.fx.registration_path.write_bytes(registered_raw)
+        registered_name = self.fx.registration_path.relative_to(self.fx.root).as_posix()
+        self.fx.files[(self.fx.rev, registered_name)] = registered_raw
+        self.fx.head[registered_name] = registered_raw
         self.fx.q_raw = canonical(self.fx.q)
         self.fx.q_path.write_bytes(self.fx.q_raw)
         self.fx.head[self.fx.q_path.relative_to(self.fx.root).as_posix()] = self.fx.q_raw
@@ -231,6 +240,15 @@ class QualificationPreflightTests(unittest.TestCase):
     def test_uncommitted_registration_is_denied_before_private_validation(self):
         self.fx.registration_path.write_bytes(b"uncommitted registration\n")
         with self.assertRaisesRegex(ValueError, "continuation-registration-changed"):
+            self.fx.verify()
+        self.assertFalse(self.fx.marker.exists())
+
+    def test_qualification_cannot_repin_source_registered_private_authority(self):
+        self.fx.q["operator_scheduler_sha256"] = "c" * 64
+        self.fx.q_raw = canonical(self.fx.q)
+        self.fx.q_path.write_bytes(self.fx.q_raw)
+        self.fx.head[self.fx.q_path.relative_to(self.fx.root).as_posix()] = self.fx.q_raw
+        with self.assertRaisesRegex(ValueError, "continuation-registration-binding"):
             self.fx.verify()
         self.assertFalse(self.fx.marker.exists())
 

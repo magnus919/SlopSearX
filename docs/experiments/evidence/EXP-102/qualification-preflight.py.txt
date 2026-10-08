@@ -41,6 +41,9 @@ def verify(*, original_entrypoints, continuation_entrypoint, failed_run_files):
             or registration.get('source_revision_binding')!='qualification.qualified_source_revision'
             or type(files) is not dict or files!=registration.get('source_files')):
         raise ValueError('continuation-source-inventory')
+    if any(q.get(key)!=registration.get(key) for key in (
+            'reused_source_revision','operator_scheduler_sha256','failed_run_pins')):
+        raise ValueError('continuation-registration-binding')
     required={"docs/experiments/evidence/EXP-102/"+name for name in (
         "qualification-preflight.py.txt","continuation-authority.py.txt","protocol.json")}
     required.update({"docs/experiments/evidence/EXP-101/qualification.json",
