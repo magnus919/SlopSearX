@@ -1,0 +1,64 @@
+"""Fresh EXP-102 qualification layered over unchanged qualified EXP-101 code."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import json
+from pathlib import Path
+import re
+import subprocess
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+def blob(ref,path):
+    return subprocess.run(["git","show",ref+":"+path],cwd=REPO,check=True,
+                          stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
+
+def verify(*, original_entrypoints, continuation_entrypoint, failed_run_files):
+    path=HERE/'qualification.json'
+    if path.is_symlink() or not path.is_file():raise ValueError('continuation-qualification-missing')
+    raw=path.read_bytes()
+    if raw!=blob('HEAD',path.relative_to(REPO).as_posix()):raise ValueError('continuation-qualification-uncommitted')
+    q=json.loads(raw);rev=q.get('qualified_source_revision')
+    if (q.get('schema')!='exp102-network-qualification/1' or q.get('study_id')!='EXP-102'
+            or q.get('qualified') is not True or q.get('independent_review_complete') is not True
+            or type(rev) is not str or not re.fullmatch(r'[0-9a-f]{40}',rev)):
+        raise ValueError('continuation-not-qualified')
+    files=q.get('source_files')
+    if type(files) is not dict or not files:raise ValueError('continuation-source-inventory')
+    for name,digest in files.items():
+        rel=Path(name);disk=REPO/rel
+        if rel.is_absolute() or '..' in rel.parts or disk.is_symlink() or not disk.is_file():
+            raise ValueError('continuation-source-path')
+        original=blob(rev,name)
+        if sha(original)!=digest or blob('HEAD',name)!=original or disk.read_bytes()!=original:
+            raise ValueError('continuation-source-changed')
+    reused_q=json.loads((HERE.parent/'EXP-101/qualification.json').read_bytes())
+    if (q.get('reused_source_revision')!=reused_q['qualified_source_revision']
+            or any(files.get(name)!=digest for name,digest in reused_q['source_files'].items())):
+        raise ValueError('continuation-reused-source-changed')
+    old=importlib.machinery.SourceFileLoader('exp102_original_qualification',str(HERE.parent/'EXP-101/qualification-preflight.py.txt')).load_module()
+    old.verify(private_entrypoints=original_entrypoints)
+    scheduler=Path(continuation_entrypoint)
+    if scheduler.is_symlink() or sha(scheduler.read_bytes())!=q.get('operator_scheduler_sha256'):
+        raise ValueError('continuation-scheduler-changed')
+    lineage=q.get('failed_run_pins')
+    if type(lineage) is not dict or set(lineage)!={'clock','health_attempt','terminal_audit'} or set(failed_run_files)!=set(lineage):
+        raise ValueError('continuation-failed-lineage-inventory')
+    values={}
+    for name,digest in lineage.items():
+        source=Path(failed_run_files[name])
+        if source.is_symlink() or not source.is_file() or sha(source.read_bytes())!=digest:
+            raise ValueError('continuation-failed-lineage-changed')
+        values[name]=json.loads(source.read_bytes())
+    audit=values['terminal_audit']
+    if (audit.get('status')!='terminal-before-grading' or audit.get('grader_reservations')!=0
+            or audit.get('grader_calls')!=0 or audit.get('health_request_completed') is not False
+            or audit.get('clock_reuse_permitted') is not False or audit.get('process_exit_confirmed') is not True):
+        raise ValueError('continuation-failed-lineage-not-terminal')
+    authority=importlib.machinery.SourceFileLoader('exp102_continuation_authority',str(HERE/'continuation-authority.py.txt')).load_module()
+    authority.validate_protocol(json.loads((HERE/'protocol.json').read_bytes()),json.loads((HERE.parent/'EXP-101/protocol.json').read_bytes()))
+    return {'status':'qualified','qualified_source_revision':rev,'qualification_sha256':sha(raw),
+            'study_id':'EXP-102','failed_exp101_clock_sha256':lineage['clock'],'source_files':len(files)}
