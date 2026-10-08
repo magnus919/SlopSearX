@@ -1,6 +1,8 @@
 """Read-only qualification checks; never creates clocks or reads credentials."""
 from __future__ import annotations
 import hashlib
+import importlib.metadata
+import platform
 import json
 from pathlib import Path
 import re
@@ -76,6 +78,34 @@ def verify(*, private_entrypoints):
         "grouped-evidence-catalog.py.txt", "citation-codec.py.txt", "admission.py.txt")}
     if not origin_required.issubset(q.get("origin_source_files", {})):
         raise ValueError("qualification-origin-inventory")
+    original_q = json.loads(regular("docs/experiments/evidence/EXP-100/qualification-integrity.json"))
+    environment = {"python_implementation": platform.python_implementation(),
+                   "python_version": platform.python_version()}
+    dependencies = original_q["dependencies"]
+    if (q.get("environment") != original_q["environment"]
+            or environment != original_q["environment"]
+            or q.get("dependencies") != dependencies
+            or {name: importlib.metadata.version(name) for name in dependencies} != dependencies):
+        raise ValueError("qualification-runtime-environment")
+    old_protocol = json.loads(regular("docs/experiments/evidence/EXP-100/protocol.json"))
+    new_protocol = json.loads(regular("docs/experiments/evidence/EXP-101/protocol.json"))
+    immutable = new_protocol.get("immutable_science")
+    expected_science = {key: old_protocol[key] for key in (
+        "adoption", "answer_assessment_packets", "candidate", "confirmation_requires_development_pass",
+        "confirmation_scope", "consumer", "duplicate_reference_policy", "final_json_carrier",
+        "grading_order", "input_view", "quality", "source_citation_aliases", "task_use",
+        "wire_types", "stage_wall_seconds_maximum")}
+    if immutable != expected_science:
+        raise ValueError("qualification-science-drift")
+    execution = new_protocol.get("execution")
+    if (type(execution) is not dict or execution.get("historical_conservative_grader_charges") != 73
+            or execution.get("fresh_answer_assessments") != 32
+            or execution.get("planned_grader_charges") != 105
+            or execution.get("planned_combined_charges") != 123
+            or any(execution.get(key) != 0 for key in (
+                "new_searches", "new_jev_calls", "new_source_assessments", "new_answerer_calls",
+                "new_answerer_readiness_calls", "refunded_charges", "prior_elapsed_time_credit_seconds"))):
+        raise ValueError("qualification-grading-only-budget")
     pins = q.get("external_source_pins")
     expected_names = {"final_text_reader", "strict_hydrator", "live_health", "operator_scheduler"}
     if (type(pins) is not dict or set(pins) != expected_names
