@@ -1,0 +1,166 @@
+"""Offline lifecycle and terminality tests for EXP-101 grading authority."""
+import importlib.machinery
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+G = importlib.machinery.SourceFileLoader(
+    "exp101_grading_authority_tests", str(HERE / "grading-authority.py.txt")).load_module()
+
+PARENT = "00000000-0000-4000-8000-000000000001"
+ACTORS = [f"10000000-0000-4000-8000-{i:012x}" for i in range(1, 49)]
+FRESH_ACTOR = "20000000-0000-4000-8000-000000000001"
+
+
+def slot_bindings():
+    return {logical: {"original_input_sha256": f"{index + 1:064x}",
+                      "full_prompt_sha256": f"{index + 101:064x}"}
+            for index, logical in enumerate(G.SLOTS)}
+
+
+def admitted():
+    return {"status": "admitted", "clock_sha256": "a" * 64,
+            "fresh_health_complete": True, "carry_verified": True,
+            "qualified_source_verified": True}
+
+
+def make_authority(*, admission=None, reserve=None, close=None):
+    state = {"current": admitted(), "reserve_calls": [], "close_calls": []}
+    if admission is not None:
+        state["current"] = admission
+    def revalidate():
+        return state["current"]
+    def reserve_once(lease):
+        state["reserve_calls"].append(lease)
+        if reserve:
+            reserve(lease)
+    def close_once(lease, actor_id, closure):
+        state["close_calls"].append((lease, actor_id, closure))
+        if close:
+            close(lease, actor_id, closure)
+    authority = G.GradingAuthority(revalidate=revalidate, reserve_once=reserve_once,
+        close_once=close_once, clock_sha256="a" * 64, slots=slot_bindings(),
+        original_actor_ids=ACTORS, parent_id=PARENT)
+    return authority, state
+
+
+def strict_close(lease):
+    return {"structurally_valid": True, "logical_submission": lease.logical_submission,
+            "input_sha256": lease.original_input_sha256,
+            "semantic_completion": "not_claimed", "metric_computed": False}
+
+
+class GradingAuthorityTests(unittest.TestCase):
+    def _close_one(self, authority, logical, actor=FRESH_ACTOR):
+        lease = authority.reserve(logical)
+        authority.bind_actor(lease, actor_id=actor, parent_id=PARENT, model="gpt-6.1-sol")
+        authority.close(lease, actor_id=actor, strict_close=strict_close(lease))
+        return lease
+
+    def test_full_32_serial_close_and_reserve_precedes_spawn_authority(self):
+        observed = []
+        holder = {}
+        def reserve_before_spawn(lease):
+            authority = holder["authority"]
+            observed.append((authority._next, authority._active is lease, lease.logical_submission))
+        authority, state = make_authority(reserve=reserve_before_spawn)
+        holder["authority"] = authority
+        for index, logical in enumerate(G.SLOTS):
+            actor = f"20000000-0000-4000-8000-{index + 1:012x}"
+            self._close_one(authority, logical, actor)
+        receipt = authority.require_complete()
+        self.assertEqual(receipt, {"status": "structurally_closed", "count": 32,
+                                   "semantic_completion": "not_claimed", "metric_computed": False})
+        self.assertEqual(len(state["reserve_calls"]), 32)
+        self.assertEqual(len(state["close_calls"]), 32)
+        self.assertEqual(observed, [(index + 1, True, logical)
+                                    for index, logical in enumerate(G.SLOTS)])
+
+    def test_wrong_order_and_double_reserve_are_terminal(self):
+        for action in ("wrong-order", "double-reserve"):
+            with self.subTest(action=action):
+                authority, _state = make_authority()
+                if action == "wrong-order":
+                    logical = G.SLOTS[1]
+                    with self.assertRaisesRegex(ValueError, "authority-one-shot-serial-order"):
+                        authority.reserve(logical)
+                else:
+                    authority.reserve(G.SLOTS[0])
+                    with self.assertRaisesRegex(ValueError, "authority-one-shot-serial-order"):
+                        authority.reserve(G.SLOTS[1])
+                with self.assertRaisesRegex(ValueError, "authority-terminal-no-resume"):
+                    authority.reserve(G.SLOTS[0])
+
+    def test_reused_actor_wrong_parent_and_wrong_model_are_terminal(self):
+        attempts = [
+            ("reused", {"actor_id": ACTORS[0], "parent_id": PARENT, "model": "gpt-6.1-sol"}),
+            ("parent", {"actor_id": FRESH_ACTOR, "parent_id": "30000000-0000-4000-8000-000000000001",
+                        "model": "gpt-6.1-sol"}),
+            ("model", {"actor_id": FRESH_ACTOR, "parent_id": PARENT, "model": "other-model"}),
+        ]
+        for label, values in attempts:
+            with self.subTest(label=label):
+                authority, _state = make_authority()
+                lease = authority.reserve(G.SLOTS[0])
+                with self.assertRaisesRegex(ValueError, "authority-fresh-independent-actor"):
+                    authority.bind_actor(lease, **values)
+                with self.assertRaisesRegex(ValueError, "authority-terminal-no-resume"):
+                    authority.close(lease, actor_id=values["actor_id"], strict_close=strict_close(lease))
+
+    def test_admission_mutation_or_expiry_at_each_transition_is_terminal(self):
+        # Admission is rechecked at reserve, actor binding, close and final use.
+        invalid_rows = [
+            ("reserve", lambda row: row.update(fresh_health_complete=False)),
+            ("bind", lambda row: row.update(carry_verified=False)),
+            ("close", lambda row: row.update(qualified_source_verified=False)),
+            ("complete", lambda row: row.update(status="expired")),
+        ]
+        for transition, invalidate in invalid_rows:
+            with self.subTest(transition=transition):
+                authority, state = make_authority()
+                lease = None
+                actor = FRESH_ACTOR
+                if transition == "bind":
+                    lease = authority.reserve(G.SLOTS[0])
+                elif transition in {"close", "complete"}:
+                    lease = authority.reserve(G.SLOTS[0])
+                    authority.bind_actor(lease, actor_id=actor, parent_id=PARENT, model="gpt-6.1-sol")
+                if transition == "complete":
+                    authority.close(lease, actor_id=actor, strict_close=strict_close(lease))
+                changed = dict(state["current"])
+                invalidate(changed)
+                state["current"] = changed
+                with self.assertRaisesRegex(ValueError, "authority-admission-invalid"):
+                    if transition == "reserve":
+                        authority.reserve(G.SLOTS[0])
+                    elif transition == "bind":
+                        authority.bind_actor(lease, actor_id=actor, parent_id=PARENT, model="gpt-6.1-sol")
+                    elif transition == "close":
+                        authority.close(lease, actor_id=actor, strict_close=strict_close(lease))
+                    else:
+                        authority.require_complete()
+                with self.assertRaisesRegex(ValueError, "authority-terminal-no-resume"):
+                    authority.require_complete()
+
+    def test_invalid_strict_close_is_terminal_and_not_persisted(self):
+        authority, state = make_authority()
+        lease = authority.reserve(G.SLOTS[0])
+        authority.bind_actor(lease, actor_id=FRESH_ACTOR, parent_id=PARENT, model="gpt-6.1-sol")
+        invalid = strict_close(lease)
+        invalid["input_sha256"] = "f" * 64
+        with self.assertRaisesRegex(ValueError, "authority-strict-close-required"):
+            authority.close(lease, actor_id=FRESH_ACTOR, strict_close=invalid)
+        self.assertEqual(state["close_calls"], [])
+        with self.assertRaisesRegex(ValueError, "authority-terminal-no-resume"):
+            authority.require_complete()
+
+    def test_partial_completion_is_rejected_without_false_close_receipt(self):
+        authority, state = make_authority()
+        self._close_one(authority, G.SLOTS[0])
+        with self.assertRaisesRegex(ValueError, "authority-all-32-closures-required"):
+            authority.require_complete()
+        self.assertEqual(len(state["close_calls"]), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

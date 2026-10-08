@@ -1,0 +1,61 @@
+"""Self-contained early-rejection tests for packet preflight path binding."""
+from __future__ import annotations
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader(
+    "exp101_preflight_under_test", str(HERE / "full-packet-preflight.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+preflight = importlib.util.module_from_spec(spec)
+loader.exec_module(preflight)
+
+
+class FormatterSpy:
+    def __init__(self): self.calls = 0
+    def format_answer_assessor_driver(self, phase_bindings, plan):
+        self.calls += 1
+        return "synthetic prompt"
+
+class VerifierSpy:
+    def __init__(self): self.calls = 0
+    def verify_tool_transcript(self, *args, **kwargs):
+        self.calls += 1
+        return {"status": "complete"}
+
+class ViewerSpy:
+    def __init__(self): self.calls = 0
+    def describe_from_raw(self, *args, **kwargs):
+        self.calls += 1
+        return {}
+    def render_from_raw(self, *args, **kwargs):
+        self.calls += 1
+        return b""
+
+class PreflightPathBindingTests(unittest.TestCase):
+    def test_mismatched_physical_path_rejects_before_formatter_or_viewer(self):
+        slots = []
+        for task in range(1, 9):
+            for assessor in ("R1", "R2"):
+                for arm in ("arm1", "arm2"):
+                    logical = f"development-d{task}-answer-{assessor}-{arm}"
+                    plan_path = f"/synthetic/registered/{logical}.json"
+                    row_path = plan_path if len(slots) else "/synthetic/unregistered/missing.json"
+                    slots.append({"logical_submission": logical,
+                                  "input_path": row_path,
+                                  "input_view_plan": {"input_path": plan_path}})
+        manifest = {"status": "complete", "slots": slots}
+        formatter, verifier, viewer = FormatterSpy(), VerifierSpy(), ViewerSpy()
+        with self.assertRaisesRegex(ValueError, "preflight-physical-path-mismatch"):
+            preflight.verify_all(manifest_raw=json.dumps(manifest).encode(),
+                phase_bindings=formatter, driver=formatter, verifier=verifier, viewer=viewer)
+        self.assertEqual(formatter.calls, 0)
+        self.assertEqual(verifier.calls, 0)
+        self.assertEqual(viewer.calls, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,140 @@
+"""Synthetic tests for exact origin-transport and final receipt ordering."""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+import uuid
+
+
+HERE = Path(__file__).resolve().parent
+
+def load_text_module(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+RECEIVER = load_text_module("exp101_result_receiver", HERE / "result-receiver.py.txt")
+
+
+class ResultReceiverTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.logical = "development-d1-answer-R1-arm1"
+        self.actor = str(uuid.uuid4())
+        self.input_raw = b"synthetic immutable packet input\n"
+        self.input_path = self.root / "input.bin"
+        self.input_path.write_bytes(self.input_raw)
+        self.input_sha = hashlib.sha256(self.input_raw).hexdigest()
+        self.binding = {"logical_submission": self.logical, "input_sha256": self.input_sha}
+        self.slot = {"input_sha256": self.input_sha, "input_path": str(self.input_path),
+                     "input_view_plan": {"synthetic": True}}
+        self.clock = {"schema": "exp101-grading-clock/1", "stage_id": str(uuid.uuid4()),
+                      "stage_started_utc": "2026-10-08T12:00:00Z",
+                      "stage_deadline_utc": "2026-10-08T20:00:00Z"}
+        self.current_clock_sha = hashlib.sha256(
+            (json.dumps(self.clock, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+                        allow_nan=False) + "\n").encode()).hexdigest()
+        self.transport = {"schema": "exp101-original-packet-transport/1",
+                          "logical_submission": self.logical,
+                          "original_input_sha256": self.input_sha,
+                          "original_registry_packet_id": "registry-packet-id",
+                          "original_clock_sha256": "b" * 64,
+                          "current_clock_sha256": self.current_clock_sha}
+
+    def make_reader_file(self, *, text="synthetic exact final", fail=False):
+        path = self.root / "reader.py.txt"
+        source = '''\ndef read_exact_assessor_final(*, agent_path, expected_binding, expected_agent_id, expected_clock, expected_transport):
+    return %r, [], {"delivery_source": "synthetic"}
+''' % text
+        path.write_text(source)
+        return path, hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def make_receiver(self, *, phase_error=False, closure=None, actor=None):
+        path, reader_sha = self.make_reader_file()
+        lease = type("Lease", (), {"logical_submission": self.logical,
+                                    "original_input_sha256": self.input_sha})()
+        calls = {"persist_proof": 0, "decode": 0, "persist_close": 0, "authority_close": 0}
+        authority = type("Authority", (), {})()
+        authority._active = lease
+        authority._actor = actor or self.actor
+        authority._terminal = False
+        authority._check = lambda: None
+        def close(got_lease, *, actor_id, strict_close):
+            calls["authority_close"] += 1
+            self.assertIs(got_lease, lease)
+            self.assertEqual(actor_id, self.actor)
+        authority.close = close
+        class Phase:
+            def _persist_then_verify_assessor_final(inner, **kwargs):
+                calls["persist_proof"] += 1
+                if phase_error:
+                    raise ValueError("synthetic transcript proof rejected")
+                return {"proof": "synthetic"}
+        phase = Phase()
+        strict = closure or {"structurally_valid": True, "logical_submission": self.logical,
+                             "input_sha256": self.input_sha,
+                             "semantic_completion": "not_claimed", "metric_computed": False}
+        def decode(slot, raw):
+            calls["decode"] += 1
+            self.assertEqual(raw, b"synthetic exact final")
+            return strict
+        def persist(logical, got_closure, proof):
+            calls["persist_close"] += 1
+        receiver = RECEIVER.ResultReceiver(
+            authority=authority, original_phase=phase, original_receiver=object(),
+            reader_path=path, reader_sha256=reader_sha, current_clock=self.clock,
+            proof_directory=self.root / "proofs", original_bindings={self.logical: self.binding},
+            original_slots={self.logical: self.slot}, transport_bindings={self.logical: self.transport},
+            decode_and_validate=decode, persist_close=persist)
+        return receiver, lease, authority, calls
+
+    def test_actual_lease_actor_and_original_input_are_checked_before_proof(self):
+        receiver, lease, _, calls = self.make_receiver()
+        with self.assertRaisesRegex(ValueError, "receiver-current-lease-actor"):
+            receiver.finish(lease, actor_id=str(uuid.uuid4()), agent_path="synthetic")
+        self.assertEqual(calls["persist_proof"], 0)
+        self.assertEqual(calls["decode"], 0)
+
+    def test_proof_failure_prevents_decoder_and_makes_receiver_terminal(self):
+        receiver, lease, authority, calls = self.make_receiver(phase_error=True)
+        with self.assertRaisesRegex(ValueError, "synthetic transcript proof rejected"):
+            receiver.finish(lease, actor_id=self.actor, agent_path="synthetic")
+        self.assertEqual(calls["persist_proof"], 1)
+        self.assertEqual(calls["decode"], 0)
+        self.assertEqual(calls["authority_close"], 0)
+        self.assertTrue(authority._terminal)
+        with self.assertRaisesRegex(ValueError, "receiver-terminal-no-resume"):
+            receiver.finish(lease, actor_id=self.actor, agent_path="synthetic")
+
+    def test_invalid_strict_decode_never_closes_lease_and_is_terminal(self):
+        bad = {"structurally_valid": False, "logical_submission": self.logical,
+               "input_sha256": self.input_sha, "semantic_completion": "not_claimed",
+               "metric_computed": False}
+        receiver, lease, authority, calls = self.make_receiver(closure=bad)
+        with self.assertRaisesRegex(ValueError, "receiver-strict-hydration"):
+            receiver.finish(lease, actor_id=self.actor, agent_path="synthetic")
+        self.assertEqual(calls["persist_proof"], 1)
+        self.assertEqual(calls["decode"], 1)
+        self.assertEqual(calls["persist_close"], 0)
+        self.assertEqual(calls["authority_close"], 0)
+        self.assertTrue(authority._terminal)
+
+    def test_success_persists_verified_proof_before_decode_then_closes_once(self):
+        receiver, lease, _, calls = self.make_receiver()
+        result = receiver.finish(lease, actor_id=self.actor, agent_path="synthetic")
+        self.assertEqual(result["status"], "structurally_closed")
+        self.assertEqual(calls, {"persist_proof": 1, "decode": 1,
+                                 "persist_close": 1, "authority_close": 1})
+
+
+if __name__ == "__main__":
+    unittest.main()

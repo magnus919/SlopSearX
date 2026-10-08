@@ -1,0 +1,64 @@
+"""Replay complete formatted handoffs without model calls or quality analysis."""
+from __future__ import annotations
+import hashlib
+import json
+from pathlib import Path
+import re
+
+def verify_all(*, manifest_raw, phase_bindings, driver, verifier, viewer):
+    manifest = json.loads(manifest_raw)
+    slots = manifest.get("slots")
+    expected = {f"development-d{i}-answer-{assessor}-{arm}"
+                for i in range(1, 9) for assessor in ("R1", "R2")
+                for arm in ("arm1", "arm2")}
+    if (manifest.get("status") != "complete" or type(slots) is not list
+            or len(slots) != 32
+            or {row.get("logical_submission") for row in slots} != expected):
+        raise ValueError("preflight-all-32-slots")
+    maximum = 0
+    for row in slots:
+        plan = row["input_view_plan"]
+        if (type(plan.get("input_path")) is not str
+                or row["input_path"] != plan["input_path"]):
+            raise ValueError("preflight-physical-path-mismatch")
+        path = Path(row["input_path"])
+        if path.is_symlink() or not path.is_file():
+            raise ValueError("preflight-input-regular")
+        raw = path.read_bytes()
+        if (hashlib.sha256(raw).hexdigest() != row["input_sha256"]
+                or len(raw) != row["input_bytes"]):
+            raise ValueError("preflight-input-changed")
+        prompt = driver.format_answer_assessor_driver(phase_bindings, plan)
+        if not prompt.startswith(phase_bindings.answer_assessor_viewer_prompt(plan)):
+            raise ValueError("preflight-rubric-prefix")
+        if len(prompt.encode()) > 12000:
+            raise ValueError("preflight-full-driver-budget")
+        wrappers = re.findall(r"```javascript\n(.*?)\n```", prompt, re.S)
+        if len(wrappers) != 2:
+            raise ValueError("preflight-wrapper-template")
+        describe, template = wrappers
+        calls = []
+        def call(source, stdout):
+            return {"name": "exec", "input": source,
+                    "output_text_blocks": ["Script completed\nWall time 0.1 seconds\nOutput:\n",
+                                           "0", stdout.decode()]}
+        stdout = (json.dumps(viewer.describe_from_raw(raw, row["input_sha256"]),
+                             ensure_ascii=False, sort_keys=True,
+                             separators=(",", ":")) + "\n").encode()
+        calls.append(call(describe, stdout))
+        initial = ",".join(map(str, plan["batches"][0]["indices"]))
+        for batch in plan["batches"]:
+            indices = ",".join(map(str, batch["indices"]))
+            source = template.replace("--pages " + initial, "--pages " + indices)
+            calls.append(call(source, viewer.render_from_raw(raw, batch["indices"])))
+        result = verifier.verify_tool_transcript(raw,
+            expected_sha256=row["input_sha256"], input_path=plan["input_path"],
+            viewer_path=plan["viewer_path"], slot_id=row["logical_submission"],
+            source_manifest_sha256=plan["source_manifest_sha256"], calls=calls,
+            transcript_log_sha256="a" * 64)
+        if result.get("status") != "complete":
+            raise ValueError("preflight-strict-view")
+        maximum = max(maximum, len(prompt.encode()))
+    return {"status": "complete", "packets": 32, "max_full_prompt_bytes": maximum,
+            "actual_grader_calls": 0, "quality_analyzed": False,
+            "transcript_kind": "synthetic-offline-replay"}

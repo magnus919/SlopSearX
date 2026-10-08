@@ -1,0 +1,119 @@
+"""Qualified grading-only lifecycle; no search, selector or answerer operations."""
+from __future__ import annotations
+import asyncio
+from datetime import datetime, timedelta, timezone
+import hashlib
+import inspect
+import json
+import os
+from pathlib import Path
+import uuid
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def write_once(path, raw):
+    path = Path(path)
+    if path.parent.is_symlink() or not path.parent.is_dir():
+        raise ValueError("controller-output-directory")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    fd = os.open(path.parent, os.O_RDONLY)
+    try: os.fsync(fd)
+    finally: os.close(fd)
+    return sha(raw)
+
+class Controller:
+    def __init__(self, *, qualify, verify_carry, full_packet_preflight,
+                 protocol_raw, baseline_raw, origin_clock_raw):
+        self._qualify = qualify
+        self._carry = verify_carry
+        self._preflight = full_packet_preflight
+        self._protocol = protocol_raw
+        self._baseline = baseline_raw
+        self._origin = origin_clock_raw
+        self._started = False
+        self._terminal = False
+        self._clock = None
+        self._root = None
+        # No credentials or runtime I/O. Fail before creating any run clock.
+        self._check_preflight()
+
+    def _check_preflight(self):
+        qualified = self._qualify()
+        carry = self._carry()
+        packets = self._preflight()
+        if (qualified.get("status") != "qualified"
+                or carry.get("status") != "verified"
+                or packets.get("status") != "complete"
+                or packets.get("packets") != 32
+                or packets.get("actual_grader_calls") != 0
+                or packets.get("quality_analyzed") is not False):
+            raise ValueError("controller-preclock-proof")
+        return qualified
+
+    def begin(self, outdir):
+        if self._started or self._terminal:
+            raise ValueError("controller-no-restart")
+        self._started = True
+        try:
+            qualified = self._check_preflight()
+            root = Path(outdir)
+            if root.is_symlink():
+                raise ValueError("controller-stage-symlink")
+            root.mkdir(mode=0o700, exist_ok=False)
+            started = datetime.now(timezone.utc)
+            clock = {"schema": "exp101-grading-clock/1", "stage_id": str(uuid.uuid4()),
+                     "stage_started_utc": started.isoformat().replace("+00:00", "Z"),
+                     "stage_deadline_utc": (started + timedelta(seconds=28800)).isoformat().replace("+00:00", "Z"),
+                     "source_revision": qualified["qualified_source_revision"],
+                     "protocol_sha256": sha(self._protocol),
+                     "origin_clock_sha256": sha(self._origin)}
+            raw = canonical(clock)
+            write_once(root / "stage-clock.json", raw)
+            self._root, self._clock = root, (clock, raw)
+            return clock
+        except BaseException:
+            self._terminal = True
+            raise
+
+    def health(self, awaited_request):
+        if self._terminal or self._clock is None or (self._root / "health-completion.json").exists():
+            raise ValueError("controller-one-health-after-clock")
+        try:
+            # O_EXCL claims the charge before any request can be dispatched.
+            # A failed exchange leaves this durable reservation in place.
+            write_once(self._root / "health-attempt.json", canonical({
+                "schema": "exp101-health-attempt/1", "clock_sha256": sha(self._clock[1]),
+                "status": "reserved"}))
+            self._qualify()
+            pending = awaited_request()
+            if not inspect.isawaitable(pending):
+                raise ValueError("controller-health-awaitable-required")
+            result = asyncio.run(pending)
+            baseline = json.loads(self._baseline)
+            observed = datetime.now(timezone.utc)
+            end = datetime.fromisoformat(self._clock[0]["stage_deadline_utc"].replace("Z", "+00:00"))
+            if (type(result) is not dict
+                    or set(result) != {"http_status", "status", "runtime_revision", "model"}
+                    or result.get("http_status") != 200
+                    or result.get("status") != "healthy"
+                    or result.get("runtime_revision") != baseline.get("expected_revision")
+                    or result.get("model") != "free" or baseline.get("model_alias") != "free"
+                    or observed >= end):
+                raise ValueError("controller-health-failed")
+            receipt = {"schema": "exp101-awaited-health-completion/1", **result,
+                       "request_completed": True, "observed_utc": observed.isoformat().replace("+00:00", "Z"),
+                       "clock_sha256": sha(self._clock[1]), "baseline_sha256": sha(self._baseline)}
+            write_once(self._root / "health-completion.json", canonical(receipt))
+            return receipt
+        except BaseException:
+            self._terminal = True
+            raise

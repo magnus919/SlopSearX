@@ -1,0 +1,80 @@
+"""Receive exact fresh-actor finals with the original EXP-100 view verifier.
+
+The qualified private adapter supplies original decoder/hydration functions.
+No input packet, rubric, citation table or returned grade is repaired here.
+"""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+from pathlib import Path
+import sys
+
+class ResultReceiver:
+    def __init__(self, *, authority, original_phase, original_receiver,
+                 reader_path, reader_sha256, current_clock, proof_directory,
+                 original_bindings, original_slots, transport_bindings, decode_and_validate, persist_close):
+        self._authority = authority
+        self._phase = original_phase
+        self._receiver = original_receiver
+        self._reader_path = Path(reader_path)
+        self._reader_sha = reader_sha256
+        self._clock = current_clock
+        self._proofs = Path(proof_directory)
+        self._bindings = dict(original_bindings)
+        self._slots = dict(original_slots)
+        self._transports = dict(transport_bindings)
+        self._decode = decode_and_validate
+        self._persist = persist_close
+        self._terminal = False
+
+    def finish(self, lease, *, actor_id, agent_path):
+        if self._terminal:
+            raise ValueError("receiver-terminal-no-resume")
+        try:
+            self._authority._check()
+            if lease is not self._authority._active or actor_id != self._authority._actor:
+                raise ValueError("receiver-current-lease-actor")
+            logical = lease.logical_submission
+            slot, binding = self._slots[logical], self._bindings[logical]
+            if (slot["input_sha256"] != lease.original_input_sha256
+                    or binding["input_sha256"] != lease.original_input_sha256):
+                raise ValueError("receiver-original-binding")
+            reader_raw = self._reader_path.read_bytes()
+            if (self._reader_path.is_symlink()
+                    or hashlib.sha256(reader_raw).hexdigest() != self._reader_sha):
+                raise ValueError("receiver-reader-pin")
+            name = "exp101_original_pinned_final_reader"
+            loader = importlib.machinery.SourceFileLoader(name, str(self._reader_path))
+            spec = importlib.util.spec_from_loader(name, loader)
+            reader = importlib.util.module_from_spec(spec)
+            sys.modules[name] = reader
+            loader.exec_module(reader)
+            text, calls, metadata = reader.read_exact_assessor_final(
+                agent_path=agent_path, expected_binding=binding,
+                expected_agent_id=actor_id, expected_clock=self._clock,
+                expected_transport=self._transports[logical])
+            raw = Path(slot["input_path"]).read_bytes()
+            if hashlib.sha256(raw).hexdigest() != lease.original_input_sha256:
+                raise ValueError("receiver-original-input-changed")
+            proof = self._phase._persist_then_verify_assessor_final(
+                receiver=self._receiver, slot_id=logical, expected_binding=binding,
+                final_text=text, input_raw=raw, view_plan=slot["input_view_plan"],
+                calls=calls, private_delivery_meta=metadata, proof_directory=self._proofs)
+            # Only after exact final persistence and complete original transcript
+            # verification may decoding or strict rubric hydration begin.
+            closure = self._decode(slot, text.encode("utf-8"))
+            if (type(closure) is not dict or closure.get("structurally_valid") is not True
+                    or closure.get("logical_submission") != logical
+                    or closure.get("input_sha256") != lease.original_input_sha256
+                    or closure.get("semantic_completion") != "not_claimed"
+                    or closure.get("metric_computed") is not False):
+                raise ValueError("receiver-strict-hydration")
+            self._persist(logical, closure, proof)
+            self._authority.close(lease, actor_id=actor_id, strict_close=closure)
+            return {"status": "structurally_closed", "logical_submission": logical,
+                    "semantic_completion": "not_claimed", "metric_computed": False}
+        except BaseException:
+            self._terminal = True
+            self._authority._terminal = True
+            raise

@@ -1,0 +1,60 @@
+"""Offline inventory tests; no model, search, or semantic grading calls."""
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+HERE = Path(__file__).resolve().parent
+loader = importlib.machinery.SourceFileLoader("carry101_test", str(HERE / "completed-output-carry.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+carry = importlib.util.module_from_spec(spec)
+loader.exec_module(carry)
+
+class CarryTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name) / "snapshot"
+        self.root.mkdir()
+        (self.root / "artifact").write_bytes(b"frozen-output")
+        self.pins = Path(self.tmp.name) / "pins.json"
+        value = {"schema": "exp101-completed-output-snapshot-pins/1",
+                 "origin_stage": "EXP-100", "actual_answer_grader_calls": 0,
+                 "actual_source_grader_calls": 0, "conservative_reserved_grader_charge": 1,
+                 "historical_grader_charges_before_100": 72, "prior_time_credit_seconds": 0,
+                 "quality_analyzed": False, "file_count": 1, "total_bytes": 13,
+                 "files": [{"path": "artifact", "bytes": 13,
+                            "sha256": hashlib.sha256(b"frozen-output").hexdigest()}]}
+        self.pins.write_text(json.dumps(value))
+        old = carry.EXPECTED_PINS_SHA
+        carry.EXPECTED_PINS_SHA = hashlib.sha256(self.pins.read_bytes()).hexdigest()
+        self.addCleanup(setattr, carry, "EXPECTED_PINS_SHA", old)
+
+    def test_exact_inventory(self):
+        self.assertEqual(carry.verify(self.root, self.pins)["files"], 1)
+
+    def test_extra_file(self):
+        (self.root / "extra").write_bytes(b"x")
+        with self.assertRaisesRegex(ValueError, "carry-inventory"):
+            carry.verify(self.root, self.pins)
+
+    def test_changed_bytes(self):
+        (self.root / "artifact").write_bytes(b"changed")
+        with self.assertRaisesRegex(ValueError, "carry-file-hash"):
+            carry.verify(self.root, self.pins)
+
+    def test_symlink(self):
+        (self.root / "link").symlink_to(self.root / "artifact")
+        with self.assertRaisesRegex(ValueError, "carry-symlink"):
+            carry.verify(self.root, self.pins)
+
+    def test_changed_pin(self):
+        self.pins.write_bytes(self.pins.read_bytes() + b" ")
+        with self.assertRaisesRegex(ValueError, "carry-pins-hash"):
+            carry.verify(self.root, self.pins)
+
+if __name__ == "__main__":
+    unittest.main()

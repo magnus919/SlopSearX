@@ -1,0 +1,97 @@
+"""Offline identity and clock-join tests for origin packet transport."""
+import hashlib
+import importlib.machinery
+import json
+import unittest
+
+HERE = __import__("pathlib").Path(__file__).resolve().parent
+T = importlib.machinery.SourceFileLoader(
+    "exp101_origin_transport_tests", str(HERE / "origin-transport.py.txt")).load_module()
+
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+
+class OriginTransportTests(unittest.TestCase):
+    def fixture(self):
+        logical = "development-d3-answer-R2-arm1"
+        original_clock = {"schema": "old-clock", "stage_id": "old-stage-opaque"}
+        current_clock = {"schema": "new-clock", "stage_id": "new-stage-prospective"}
+        original_input = canonical({"packet_id": "semantic-model-packet-77",
+                                    "facets": [{"claim_id": "fixture-claim"}]})
+        view_plan = {"schema": "exp095-input-view-plan/1", "input_path": "/fixture/packet.json",
+                     "input_sha256": hashlib.sha256(original_input).hexdigest(),
+                     "page_count": 1}
+        slot = {"logical_submission": logical, "input_sha256": hashlib.sha256(original_input).hexdigest(),
+                "input_path": view_plan["input_path"], "input_view_plan": view_plan}
+        identity = {"logical_submission": logical,
+                    "packet_id": T.sha(canonical([original_clock["stage_id"], logical]))}
+        return {"original_clock": original_clock, "current_clock": current_clock,
+                "original_clock_sha": T.sha(canonical(original_clock)),
+                "current_clock_sha": T.sha(canonical(current_clock)),
+                "qualified_source_sha": "a" * 40, "original_slot": slot,
+                "original_input": original_input, "original_view_plan": view_plan,
+                "original_registry_identity": identity}
+
+    def bind(self, **changes):
+        values = self.fixture()
+        values.update(changes)
+        return T.bind_origin(**values)
+
+    def test_valid_join_preserves_distinct_registry_and_model_packet_ids(self):
+        result = self.bind()
+        self.assertEqual(result["schema"], "exp101-original-packet-transport/1")
+        self.assertEqual(result["original_registry_packet_id"],
+                         self.fixture()["original_registry_identity"]["packet_id"])
+        self.assertEqual(result["original_model_packet_id"], "semantic-model-packet-77")
+        self.assertNotEqual(result["original_registry_packet_id"], result["original_model_packet_id"])
+        self.assertEqual(result["historical_elapsed_time_credit_seconds"], 0)
+        self.assertEqual(result["dispatch_authority"], "not_granted")
+        self.assertEqual(result["current_clock_sha256"], self.fixture()["current_clock_sha"])
+
+    def test_same_clock_is_rejected(self):
+        values = self.fixture()
+        values["current_clock"] = values["original_clock"]
+        values["current_clock_sha"] = values["original_clock_sha"]
+        with self.assertRaisesRegex(ValueError, "transport-new-clock-required"):
+            T.bind_origin(**values)
+
+    def test_tampered_input_is_rejected(self):
+        values = self.fixture()
+        values["original_input"] += b" "
+        with self.assertRaisesRegex(ValueError, "transport-original-input"):
+            T.bind_origin(**values)
+
+    def test_modified_view_plan_is_rejected(self):
+        values = self.fixture()
+        values["original_view_plan"] = dict(values["original_view_plan"], page_count=2)
+        with self.assertRaisesRegex(ValueError, "transport-original-view"):
+            T.bind_origin(**values)
+
+    def test_wrong_registry_packet_id_is_rejected(self):
+        values = self.fixture()
+        values["original_registry_identity"] = dict(
+            values["original_registry_identity"], packet_id="f" * 64)
+        with self.assertRaisesRegex(ValueError, "transport-original-identity"):
+            T.bind_origin(**values)
+
+    def test_malformed_slot_and_hash_are_rejected(self):
+        values = self.fixture()
+        values["original_slot"] = dict(values["original_slot"],
+                                       logical_submission="development-d9-answer-R2-arm1")
+        with self.assertRaisesRegex(ValueError, "transport-registered-slot"):
+            T.bind_origin(**values)
+        values = self.fixture()
+        values["qualified_source_sha"] = "z" * 40
+        with self.assertRaisesRegex(ValueError, "transport-source-revision"):
+            T.bind_origin(**values)
+        values = self.fixture()
+        values["current_clock_sha"] = "z" * 64
+        with self.assertRaisesRegex(ValueError, "transport-digest"):
+            T.bind_origin(**values)
+
+
+if __name__ == "__main__":
+    unittest.main()

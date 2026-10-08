@@ -1,0 +1,25 @@
+"""Verify the declared continuation does not reactivate inherited dispatch."""
+import json
+from pathlib import Path
+import unittest
+
+HERE=Path(__file__).resolve().parent
+class ProtocolTests(unittest.TestCase):
+    def test_operative_order_overrides_historical_order(self):
+        current=json.loads((HERE/'protocol.json').read_bytes())
+        original=json.loads((HERE.parent/'EXP-100/protocol.json').read_bytes())
+        self.assertEqual(current['immutable_science']['grading_order'],original['grading_order'])
+        order=current['operative_execution_order']
+        self.assertIn('provenance only',order['precedence'])
+        self.assertIn('cannot authorize selector or answerer dispatch',order['precedence'])
+        self.assertEqual(len(order['preclock']),2)
+        self.assertTrue(order['postclock'][0].startswith('claim one health slot atomically'))
+        self.assertIn('without dispatch',order['postclock'][1])
+        self.assertTrue(order['postclock'][2].startswith('grade32 preserved answer packets serially'))
+        self.assertTrue(order['postclock'][3].startswith('require all32 strict structural closures'))
+        for key in ('selector_dispatches','answerer_dispatches','answerer_readiness_dispatches','source_grader_dispatches'):
+            self.assertEqual(order[key],0)
+        for key in ('new_searches','new_jev_calls','new_source_assessments','new_answerer_calls','new_answerer_readiness_calls'):
+            self.assertEqual(current['execution'][key],0)
+
+if __name__=='__main__':unittest.main()

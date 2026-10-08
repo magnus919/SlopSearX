@@ -1,0 +1,53 @@
+"""Verify completed-output snapshot bytes without reading semantic values."""
+import hashlib
+import json
+from pathlib import Path
+
+EXPECTED_PINS_SHA = "99d1ee4e988eb8d9a4975e746ffd4348de62644b8e063570e8439d8c38508c0f"
+
+def verify(snapshot, pins_path):
+    root = Path(snapshot)
+    pins_file = Path(pins_path)
+    if root.is_symlink() or pins_file.is_symlink():
+        raise ValueError("carry-symlink")
+    raw = pins_file.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != EXPECTED_PINS_SHA:
+        raise ValueError("carry-pins-hash")
+    pins = json.loads(raw)
+    if pins.get("schema") != "exp101-completed-output-snapshot-pins/1":
+        raise ValueError("carry-pins-schema")
+    if (pins.get("origin_stage") != "EXP-100"
+            or pins.get("actual_answer_grader_calls") != 0
+            or pins.get("actual_source_grader_calls") != 0
+            or pins.get("conservative_reserved_grader_charge") != 1
+            or pins.get("historical_grader_charges_before_100") != 72
+            or pins.get("prior_time_credit_seconds") != 0
+            or pins.get("quality_analyzed") is not False):
+        raise ValueError("carry-authority-boundary")
+    rows = pins["files"]
+    expected = {row["path"] for row in rows}
+    if len(expected) != len(rows):
+        raise ValueError("carry-duplicate-path")
+    observed = set()
+    total = 0
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("carry-symlink")
+        if path.is_file():
+            observed.add(path.relative_to(root).as_posix())
+    if observed != expected:
+        raise ValueError("carry-inventory")
+    for row in rows:
+        rel = Path(row["path"])
+        if rel.is_absolute() or ".." in rel.parts:
+            raise ValueError("carry-path")
+        path = root / rel
+        raw = path.read_bytes()
+        if len(raw) != row["bytes"] or hashlib.sha256(raw).hexdigest() != row["sha256"]:
+            raise ValueError("carry-file-hash")
+        total += len(raw)
+    if len(rows) != pins["file_count"] or total != pins["total_bytes"]:
+        raise ValueError("carry-count")
+    return {"status": "verified", "files": len(rows), "bytes": total,
+            "quality_analyzed": False, "new_model_calls": 0,
+            "conservative_reserved_grader_charge": 1}
