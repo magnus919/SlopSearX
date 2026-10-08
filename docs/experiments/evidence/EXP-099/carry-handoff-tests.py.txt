@@ -1,0 +1,143 @@
+"""Offline adversarial tests for verified carry-to-answer handoff."""
+import copy
+import hashlib
+import importlib.machinery
+import json
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+H = importlib.machinery.SourceFileLoader(
+    "exp099_carry_handoff_under_test", str(HERE / "carry-handoff.py.txt")
+).load_module()
+CARRIER_RAW = (HERE / "final-json-carrier.py.txt").read_bytes()
+ANSWER_PLAN_RAW = (HERE.parent / "EXP-077" / "assignment-plan.json").read_bytes()
+
+
+def fixture():
+    source_rows = []
+    payloads = {}
+    for task_no in range(1, 9):
+        task = f"d{task_no}"
+        for assessor in ("R1", "R2"):
+            for chunk in range(3):
+                logical = f"development-{task}-source-{assessor}-{chunk + 1}"
+                identity = {"logical_submission": logical, "role": "source", "task_id": task,
+                            "assessor_id": assessor, "chunk_index": chunk,
+                            "helper_id": f"{assessor.lower()}-{chunk + 1}"}
+                source_rows.append({"logical_submission": logical, "slot_identity": identity})
+                payloads[logical] = {"slot_identity": identity,
+                                     "decoded_response": {"opaque_source_record": logical}}
+    closures = {f"d{i}": {"task_id": f"d{i}", "assessors_joined": False,
+                           "assessors": {"R1": {"opaque": "r1"}, "R2": {"opaque": "r2"}}}
+                for i in range(1, 9)}
+    proof = {"schema": "exp099-source-carry48-proof/1", "accepted_assignments": 48,
+             "nested_accepted_assignments": 23, "fresh_replayed_assignments": 25,
+             "source_plans_closed": 8, "all_original_assignments_required": True,
+             "prior_time_credit_seconds": 0, "quality_analyzed": False,
+             "grade_repaired": False, "assignments": source_rows,
+             "closure_sha256": {task: hashlib.sha256(H.canonical(value)).hexdigest()
+                                for task, value in closures.items()}}
+    actor_ids = [f"00000000-0000-4000-8000-{i:012d}" for i in range(1, 49)]
+    answer_plan = json.loads(ANSWER_PLAN_RAW)
+    return {"proof": proof, "payloads": payloads, "closures": closures,
+            "original_actor_ids": actor_ids}, answer_plan
+
+
+class Admission:
+    def __init__(self):
+        self.stage_checks = []
+
+    def strict_json(self, raw):
+        return json.loads(raw)
+
+    def require_stage(self, permit, outdir, clock_raw):
+        self.stage_checks.append((permit, outdir, clock_raw))
+
+
+def state():
+    admission = Admission()
+    return SimpleNamespace(
+        carried_source_references=None,
+        integrity={"qualified_source_revision": "a" * 40},
+        clock=({"schema": "exp078-stage-clock/1", "stage_id": "stage-099"}, b"clock", "b" * 64),
+        outdir=Path("/tmp/exp099-stage"), admission=admission, permit=object()), admission
+
+
+class CarryHandoffTests(unittest.TestCase):
+    def _build(self, current, carry, plan, plan_raw=None):
+        current.carried_source_references = carry["proof"]
+        current.carried_source_payloads = carry["payloads"]
+        current.carried_source_closures = carry["closures"]
+        current.carried_original_actor_ids = carry["original_actor_ids"]
+
+        def committed(_revision, relative):
+            if relative == H.ASSIGNMENT_PLAN_PATH:
+                return ANSWER_PLAN_RAW if plan_raw is None else plan_raw
+            if relative == H.FINAL_JSON_CARRIER_PATH:
+                return CARRIER_RAW
+            raise AssertionError(relative)
+
+        with mock.patch.object(H, "_committed_bytes", side_effect=committed):
+            return H.build_handoff(current)
+
+    def test_complete_verified_carry_builds_answer_only_registry_and_guard(self):
+        carry, plan = fixture()
+        current, admission = state()
+        result = self._build(current, carry, plan)
+        self.assertEqual(result["schema"], "exp099-carry-handoff/1")
+        self.assertEqual(len(result["source_jobs"]), 48)
+        self.assertEqual(result["source_valid"], result["next_source"], 48)
+        self.assertIsNone(result["source_active"])
+        self.assertFalse(result["source_dispatch_permitted"])
+        self.assertIsNone(result["source_phase_permit"])
+        self.assertEqual(len(result["answer_jobs"]), 32)
+        self.assertEqual(len(result["registry"]._identities), 80)
+        self.assertEqual(result["original_actor_ids"], carry["original_actor_ids"])
+        self.assertIs(result["source_closed"], result["source_closed_by_task"])
+        self.assertEqual(result["registry"]._carried_source_proof_sha256,
+                         hashlib.sha256(H.canonical(carry["proof"])).hexdigest())
+        self.assertEqual(set(result["source_closed_by_task"]), {f"d{i}" for i in range(1, 9)})
+        result["source_guard"]()
+        self.assertEqual(len(admission.stage_checks), 2)
+        self.assertEqual(result["source_payload_bindings"], carry["payloads"])
+        self.assertIsNot(result["source_payload_bindings"], carry["payloads"])
+
+    def test_changed_closure_hash_or_missing_task_stops_handoff(self):
+        carry, plan = fixture()
+        current, _ = state()
+        carry["proof"]["closure_sha256"]["d1"] = "0" * 64
+        with self.assertRaisesRegex(H.CarryHandoffError, "carry-closure-hash"):
+            self._build(current, carry, plan)
+
+        carry, plan = fixture()
+        carry["closures"].pop("d8")
+        current, _ = state()
+        with self.assertRaisesRegex(H.CarryHandoffError, "carry-closure-coverage"):
+            self._build(current, carry, plan)
+
+    def test_source_payload_identity_and_future_plan_are_bound(self):
+        carry, plan = fixture()
+        carry["payloads"]["development-d1-source-R1-1"]["slot_identity"]["assessor_id"] = "R2"
+        current, _ = state()
+        with self.assertRaisesRegex(H.CarryHandoffError, "carry-source-identity-invalid"):
+            self._build(current, carry, plan)
+
+        carry, plan = fixture()
+        plan["stages"]["development"]["answer"].pop()
+        current, _ = state()
+        with self.assertRaisesRegex(H.CarryHandoffError, "future-answer-plan-pin"):
+            self._build(current, carry, plan, H.canonical(plan))
+
+    def test_unclosed_or_quality_analyzed_carry_rejected_before_registry(self):
+        carry, plan = fixture()
+        carry["proof"]["quality_analyzed"] = True
+        current, _ = state()
+        with self.assertRaisesRegex(H.CarryHandoffError, "verified-carry-state-required"):
+            self._build(current, carry, plan)
+
+
+if __name__ == "__main__":
+    unittest.main()

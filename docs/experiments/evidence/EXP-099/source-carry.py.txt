@@ -1,0 +1,634 @@
+"""Offline verification and carry of the complete EXP-098 source cohort.
+
+This module grants no execution clock, model call, grading, or quality credit.
+The caller supplies a registered snapshot digest from the EXP-099 qualification.
+All historical code is executed from the byte-verified owned repository copy.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import shutil
+import sys
+import tempfile
+import types
+from pathlib import Path
+
+SNAPSHOT_SCHEMA = "exp099-carry48-snapshot-pins/1"
+NESTED_23_PINS_SHA256 = "45af4810cd3f25256b2324b11737180741fb73b5605d98a5960eeb6aa5497d5e"
+EXP098_CARRY_SHA256 = "8a959b36cda0af0abe6e18f98857bdba6d4be5f348a93ccc85dceff0c255472f"
+MEASUREMENT_SCHEMA_SHA256 = "d2dec068368e50df631b824cdb821127457b5934110d6492c9fb7d6aa24b2e12"
+FRESH_COUNT = 25
+TOTAL_COUNT = 48
+
+
+class CarryError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value) -> bytes:
+    return (json.dumps(value, sort_keys=True, ensure_ascii=False,
+                       separators=(",", ":"), allow_nan=False) + "\n").encode()
+
+
+def strict_json(raw: bytes):
+    def pairs(rows):
+        result = {}
+        for key, value in rows:
+            if key in result:
+                raise CarryError("duplicate-json-key")
+            result[key] = value
+        return result
+
+    def nonfinite(_):
+        raise CarryError("nonfinite-json-value")
+
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=nonfinite)
+
+
+def _safe_file(root: Path, relative: str) -> Path:
+    rel = Path(relative)
+    if (not isinstance(relative, str) or not relative or rel.is_absolute()
+            or rel.as_posix() != relative or any(part in {".", ".."} for part in rel.parts)):
+        raise CarryError("unsafe-snapshot-path")
+    path = root
+    for part in rel.parts:
+        path = path / part
+        if path.is_symlink():
+            raise CarryError("snapshot-symlink")
+    if not path.is_file() or not path.resolve().is_relative_to(root.resolve()):
+        raise CarryError("snapshot-file-missing-or-escape")
+    return path
+
+
+def _safe_dir(root: Path, relative: str) -> Path:
+    rel = Path(relative)
+    if (not isinstance(relative, str) or not relative or rel.is_absolute()
+            or rel.as_posix() != relative or any(part in {".", ".."} for part in rel.parts)):
+        raise CarryError("unsafe-snapshot-directory")
+    path = root
+    for part in rel.parts:
+        path = path / part
+        if path.is_symlink():
+            raise CarryError("snapshot-symlink")
+    if not path.is_dir() or not path.resolve().is_relative_to(root.resolve()):
+        raise CarryError("snapshot-directory-missing-or-escape")
+    return path
+
+
+def verify_inventory(root: Path, pins_raw: bytes, expected_pins_sha256: str) -> dict:
+    if sha(pins_raw) != expected_pins_sha256:
+        raise CarryError("snapshot-pins-digest")
+    pins = strict_json(pins_raw)
+    required = {"schema", "stage_path", "nested_checkpoint_path", "nested_pins_path",
+                "owned_repo_path", "profile_path", "files", "file_count", "total_bytes",
+                "source_coordinator_sha256", "actor_bindings_sha256", "final_log_reader_sha256",
+                "phase_bindings_sha256", "input_view_verifier_sha256", "model_packets_sha256",
+                "source_closer_sha256", "source_slot_manifest_sha256", "viewer_sha256",
+                "source_coordinator_path", "actor_bindings_path", "final_log_reader_path",
+                "final_json_carrier_sha256", "assignment_plan_sha256"}
+    if type(pins) is not dict or set(pins) != required or pins["schema"] != SNAPSHOT_SCHEMA:
+        raise CarryError("snapshot-pins-shape")
+    rows = pins["files"]
+    if type(rows) is not list or len(rows) != pins["file_count"]:
+        raise CarryError("snapshot-inventory-count")
+    names, total = set(), 0
+    for row in rows:
+        if type(row) is not dict or set(row) != {"path", "bytes", "sha256"}:
+            raise CarryError("snapshot-inventory-row")
+        if row["path"] in names or type(row["bytes"]) is not int or row["bytes"] < 0:
+            raise CarryError("snapshot-inventory-duplicate-or-size")
+        path = _safe_file(root, row["path"])
+        raw = path.read_bytes()
+        if len(raw) != row["bytes"] or sha(raw) != row["sha256"]:
+            raise CarryError("snapshot-file-pin")
+        names.add(row["path"])
+        total += len(raw)
+    observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
+    if (any(p.is_symlink() for p in root.rglob("*")) or observed != names
+            or total != pins["total_bytes"]):
+        raise CarryError("snapshot-inventory-coverage")
+    for key in ("source_coordinator_sha256", "actor_bindings_sha256", "final_log_reader_sha256"):
+        if type(pins[key]) is not str or len(pins[key]) != 64:
+            raise CarryError("snapshot-helper-pin-shape")
+    return pins
+
+
+def _copy_verified_tree(source: Path, target: Path, pins: dict) -> None:
+    for row in pins["files"]:
+        src = _safe_file(source, row["path"])
+        dst = target / row["path"]
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        raw = src.read_bytes()
+        if len(raw) != row["bytes"] or sha(raw) != row["sha256"]:
+            raise CarryError("snapshot-file-changed-before-owned-copy")
+        dst.write_bytes(raw)
+
+
+def _load_bytes(name: str, path: Path, expected_sha256: str):
+    if path.is_symlink():
+        raise CarryError("owned-code-symlink")
+    raw = path.read_bytes()
+    if sha(raw) != expected_sha256:
+        raise CarryError("owned-code-pin")
+    module = types.ModuleType(name)
+    module.__file__ = str(path)
+    sys.modules[name] = module
+    exec(compile(raw, str(path), "exec"), module.__dict__)
+    return module
+
+
+def _verify_owned_bytes(path: Path, expected_sha256: str, code: str) -> bytes:
+    if path.is_symlink():
+        raise CarryError(code + "-symlink")
+    raw = path.read_bytes()
+    if sha(raw) != expected_sha256:
+        raise CarryError(code + "-pin")
+    return raw
+
+
+def _supply_pinned_measurement_schema(owned_repo: Path) -> None:
+    """Add the one pinned dependency omitted from the compact original-source archive."""
+    relative = "docs/experiments/evidence/research-usefulness-measurement/schema.json"
+    destination = owned_repo / relative
+    if destination.exists():
+        _verify_owned_bytes(destination, MEASUREMENT_SCHEMA_SHA256, "measurement-schema")
+        return
+    source_root = Path(__file__).resolve().parents[4]
+    source = _safe_file(source_root, relative)
+    raw = source.read_bytes()
+    if sha(raw) != MEASUREMENT_SCHEMA_SHA256:
+        raise CarryError("measurement-schema-pin")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(raw)
+
+
+def _merge_verified_historical_sources(nested_root: Path, nested_pins_path: Path,
+                                       owned_repo: Path) -> None:
+    """Complete the strict23 comparison tree from its exact nested archive."""
+    raw_pins = nested_pins_path.read_bytes()
+    if sha(raw_pins) != NESTED_23_PINS_SHA256:
+        raise CarryError("nested-checkpoint-pins")
+    pins = strict_json(raw_pins)
+    rows = pins.get("files")
+    if type(rows) is not list or len(rows) != pins.get("file_count"):
+        raise CarryError("nested-checkpoint-inventory-count")
+    names, total = set(), 0
+    for row in rows:
+        if type(row) is not dict or set(row) != {"path", "bytes", "sha256"}:
+            raise CarryError("nested-checkpoint-inventory-row")
+        if row["path"] in names:
+            raise CarryError("nested-checkpoint-inventory-duplicate")
+        source = _safe_file(nested_root, row["path"])
+        value = source.read_bytes()
+        if len(value) != row["bytes"] or sha(value) != row["sha256"]:
+            raise CarryError("nested-checkpoint-file-pin")
+        names.add(row["path"])
+        total += len(value)
+    observed = {p.relative_to(nested_root).as_posix() for p in nested_root.rglob("*") if p.is_file()}
+    if (any(p.is_symlink() for p in nested_root.rglob("*")) or observed != names
+            or total != pins.get("total_bytes")):
+        raise CarryError("nested-checkpoint-inventory-coverage")
+    source_root = nested_root / "original-source/docs/experiments/evidence"
+    archive_root = nested_root / "original-source"
+    for exp in ("EXP-077", "EXP-094", "EXP-097"):
+        for source in (source_root / exp).rglob("*"):
+            if not source.is_file() or "__pycache__" in source.parts:
+                continue
+            target = owned_repo / source.relative_to(archive_root)
+            value = source.read_bytes()
+            if target.exists():
+                if target.is_symlink() or target.read_bytes() != value:
+                    raise CarryError("historical-source-tree-drift")
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(value)
+
+
+def _slot_identity(job: dict) -> dict:
+    fields = ("logical_submission", "role", "task_id", "assessor_id", "chunk_index", "helper_id")
+    if type(job) is not dict or any(key not in job for key in fields):
+        raise CarryError("source-slot-identity-shape")
+    if job["role"] != "source" or job["assessor_id"] not in {"R1", "R2"}:
+        raise CarryError("source-slot-role-or-assessor")
+    return {key: job[key] for key in fields}
+
+
+def _validate_slot_universe(jobs: list) -> dict:
+    if type(jobs) is not list or len(jobs) != TOTAL_COUNT:
+        raise CarryError("source-slot-universe")
+    by_key = {}
+    logicals = set()
+    for job in jobs:
+        ident = _slot_identity(job)
+        task, assessor, chunk = ident["task_id"], ident["assessor_id"], ident["chunk_index"]
+        logical = ident["logical_submission"]
+        if (task not in {"d%d" % n for n in range(1, 9)} or type(chunk) is not int
+                or not 0 <= chunk <= 2 or logical in logicals
+                or logical != "development-%s-source-%s-%d" % (task, assessor, chunk + 1)):
+            raise CarryError("source-slot-identity-universe")
+        logicals.add(logical)
+        key = (task, assessor, chunk)
+        if key in by_key:
+            raise CarryError("source-slot-duplicate-assignment")
+        by_key[key] = logical
+    expected = {("d%d" % task, assessor, chunk)
+                for task in range(1, 9) for assessor in ("R1", "R2") for chunk in range(3)}
+    if set(by_key) != expected:
+        raise CarryError("source-slot-missing-or-extra-assignment")
+    return by_key
+
+
+def _validate_fresh_dispatch(dispatch: dict, binding: dict, view_plan: dict,
+                             ref: dict, slot: int, clock: dict) -> None:
+    if (dispatch.get("schema") != "exp098-source-dispatch/1" or dispatch.get("slot") != slot
+            or dispatch.get("binding") != binding or dispatch.get("requested_model") != "gpt-6.1-sol"
+            or dispatch.get("stage_clock_sha256") != sha(canonical(clock))
+            or dispatch.get("input_path") != ref.get("input_path")
+            or view_plan.get("input_path") != ref.get("input_path")):
+        raise CarryError("fresh-original-dispatch-or-uri")
+
+
+def _collect_original_actor_ids(stage: Path, nested_root: Path, jobs: list, payloads: dict,
+                                fresh_actor_rows: dict) -> list[str]:
+    """Bind the 48 source actors from carried receipts, fresh receipts and five archived logs."""
+    actor_ids = {}
+    carried = {job["logical_submission"]: job for job in jobs[:23]}
+    fresh = {job["logical_submission"]: job for job in jobs[23:]}
+    nested_actor_dir = nested_root / "origin-stage/source-reference/actors"
+    for path in nested_actor_dir.glob("*.json"):
+        receipt = strict_json(path.read_bytes())
+        logical = receipt.get("logical_submission")
+        if logical in payloads and logical in carried:
+            actor_ids[logical] = receipt.get("expected_agent_id")
+    hist = nested_root / "historical-five"
+    historical_manifest = strict_json((hist / "assessment-inputs/source-slot-manifest.json").read_bytes())
+    for slot, job in enumerate(historical_manifest.get("active_source_slots", [])[:5], 1):
+        logical = job.get("logical_submission")
+        if logical not in carried or logical in actor_ids:
+            raise CarryError("historical-actor-slot-binding")
+        expected_path = "/root/exp094_%s_%s_source_%d" % (
+            job["task_id"], job["assessor_id"].lower(), job["chunk_index"] + 1)
+        log_path = hist / ("profile/.codex/sessions/2026/10/06/slot-%03d.jsonl" % slot)
+        rows = [strict_json(line) for line in log_path.read_bytes().splitlines()]
+        metas = [row for row in rows if row.get("type") == "session_meta"]
+        if len(metas) != 1:
+            raise CarryError("historical-actor-session-meta")
+        payload = metas[0].get("payload", {})
+        spawn = payload.get("source", {}).get("subagent", {}).get("thread_spawn", {})
+        actor_id = payload.get("id")
+        if (spawn.get("agent_path") != expected_path
+                or type(actor_id) is not str
+                or not re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", actor_id)):
+            raise CarryError("historical-actor-identity")
+        actor_ids[logical] = actor_id
+    for logical, job in fresh.items():
+        receipt = fresh_actor_rows.get(logical)
+        if receipt is None:
+            raise CarryError("fresh-actor-identity-missing")
+        actor_ids[logical] = receipt.get("expected_agent_id")
+    if set(actor_ids) != set(payloads) or len(actor_ids) != TOTAL_COUNT:
+        raise CarryError("original-actor-coverage")
+    values = list(actor_ids.values())
+    if (any(type(value) is not str or not re.fullmatch(
+            r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", value) for value in values)
+            or len(set(values)) != TOTAL_COUNT):
+        raise CarryError("original-actor-uuid-uniqueness")
+    return values
+
+
+def _fresh_records(stage: Path, owned_repo: Path, profile: Path, pins: dict, nested: dict) -> dict:
+    """Replay source assignments 24-48 using the exact EXP-098 validators."""
+    carry_file = owned_repo / "docs/experiments/evidence/EXP-098/source-carry.py.txt"
+    if sha(carry_file.read_bytes()) != EXP098_CARRY_SHA256:
+        raise CarryError("exp098-source-carry-pin")
+    strict23 = _load_bytes("exp098_original_source_carry", carry_file, EXP098_CARRY_SHA256)
+    _merge_verified_historical_sources(nested["root"], nested["pins"], owned_repo)
+    B = _load_bytes("exp099_original_phase", owned_repo / "docs/experiments/evidence/EXP-098/phase-bindings.py.txt",
+                    pins["phase_bindings_sha256"])
+    V = _load_bytes("exp099_original_view", owned_repo / "docs/experiments/evidence/EXP-097/input-view-verifier.py.txt",
+                    pins["input_view_verifier_sha256"])
+    M = _load_bytes("exp099_original_packets", owned_repo / "docs/experiments/evidence/EXP-077/model-packets.py.txt",
+                    pins["model_packets_sha256"])
+    S = _load_bytes("exp099_original_closer", owned_repo / "docs/experiments/evidence/EXP-077/source-assessment-adapter.py.txt",
+                    pins["source_closer_sha256"])
+    C = _load_bytes("exp099_original_carrier", owned_repo / "docs/experiments/evidence/EXP-098/final-json-carrier.py.txt",
+                    pins["final_json_carrier_sha256"])
+    A = _load_bytes("exp099_original_actor_bindings", _safe_file(owned_repo, pins["actor_bindings_path"]),
+                    pins["actor_bindings_sha256"])
+    R = _load_bytes("exp099_original_final_reader", _safe_file(owned_repo, pins["final_log_reader_path"]),
+                    pins["final_log_reader_sha256"])
+    _verify_owned_bytes(_safe_file(owned_repo, pins["source_coordinator_path"]),
+                        pins["source_coordinator_sha256"], "source-coordinator")
+    A.SESSION_ROOT = profile / ".codex/sessions"
+    R.Path = types.SimpleNamespace(home=lambda: profile)
+
+    manifest_path = stage / "assessment-inputs/source-slot-manifest.json"
+    manifest_raw = manifest_path.read_bytes()
+    if sha(manifest_raw) != pins["source_slot_manifest_sha256"]:
+        raise CarryError("source-slot-manifest-pin")
+    manifest = strict_json(manifest_raw)
+    jobs = manifest.get("active_source_slots")
+    if manifest.get("requested_assessment_model_id") != "gpt-6.1-sol":
+        raise CarryError("source-slot-universe")
+    _validate_slot_universe(jobs)
+    carried_rows = {row["logical_submission"]: row
+                    for row in manifest.get("carried_source_assignments", [])}
+    if len(carried_rows) != 23 or manifest.get("carried_source_assignment_count") != 23:
+        raise CarryError("carried-source-manifest-coverage")
+    binding_doc = strict_json((stage / "source-input-bindings.json").read_bytes())
+    source_jobs = [{k: v for k, v in row.items() if k not in {"input_view_plan", "checkpoint_state"}} for row in jobs]
+    if binding_doc.get("bindings") != source_jobs:
+        raise CarryError("source-input-bindings")
+    clock = strict_json((stage / "stage-clock.json").read_bytes())
+    identity_fields = ("logical_submission", "role", "task_id", "assessor_id", "chunk_index", "helper_id")
+    source_identities = [{key: row[key] for key in identity_fields} for row in source_jobs]
+    assignment_path = _safe_file(owned_repo, "docs/experiments/evidence/EXP-077/assignment-plan.json")
+    assignment_raw = _verify_owned_bytes(assignment_path, pins["assignment_plan_sha256"], "assignment-plan")
+    answer_jobs = strict_json(assignment_raw)["stages"]["development"]["answer"]
+    answer_identities = [{"logical_submission": row["submission_id"], "role": "answer-assessor",
+        "task_id": row["task_id"], "assessor_id": row["assessor_id"],
+        "anonymous_arm": row["anonymous_arm"],
+        "packet_id": sha(C.canonical([clock["stage_id"], row["submission_id"]]))}
+        for row in answer_jobs]
+    registry = C.SlotRegistry(source_identities, answer_identities)
+    if binding_doc.get("sha256") != registry.bind_source_inputs(source_jobs):
+        raise CarryError("source-input-bindings-digest")
+    refs = {row["logical_submission"]: row for row in manifest.get("source_input_refs", [])}
+    if len(refs) != TOTAL_COUNT:
+        raise CarryError("source-input-ref-universe")
+    relocated = json.loads(json.dumps(manifest))
+    for ref in relocated["source_input_refs"]:
+        ref["input_path"] = str(stage / "assessment-inputs/deterministic-preparation/wire-inputs" /
+                                (ref["logical_submission"] + ".json"))
+    tables = B.load_task_tables(source_slot_manifest=relocated, preparation_root=stage / "assessment-inputs")
+    # Existing verifier is deliberately unchanged and retains its exact
+    # three-argument interface. Cross-bind its 23 outputs below.
+    nested_result = strict23.verify_source_checkpoint(
+        nested["root"], nested["pins"], NESTED_23_PINS_SHA256)
+    nested_stage = nested["root"] / "origin-stage"
+    nested_manifest = strict_json((nested_stage / "assessment-inputs/source-slot-manifest.json").read_bytes())
+    nested_jobs = {row["logical_submission"]: row for row in nested_manifest["active_source_slots"]}
+    nested_refs = {row["logical_submission"]: row for row in nested_manifest["source_input_refs"]}
+    sr = stage / "source-reference"
+    actor_rows = [strict_json(p.read_bytes()) for p in (sr / "actors").glob("*.json")]
+    actors = {row.get("logical_submission"): row for row in actor_rows}
+    fresh_files = {
+        "validation": list(sr.glob("validation-*.json")),
+        "dispatch": list(sr.glob("dispatch-*.json")),
+        "actor": list((sr / "actors").glob("*.json")),
+        "final": list((sr / "finals").glob("*.final.txt")),
+        "final_receipt": list((sr / "finals").glob("*.final.txt.json")),
+        "view": list((sr / "views").glob("*.view.json")),
+        "decoded": list(sr.glob("*.decoded.json")),
+        "delivery": list(sr.glob("*.delivery.json")),
+    }
+    if any(len(paths) != FRESH_COUNT for paths in fresh_files.values()) or len(actors) != len(actor_rows):
+        raise CarryError("fresh-artifact-coverage")
+    legacy = strict_json((stage / "assessment-inputs/deterministic-preparation/manifest.json").read_bytes())
+    legacy_pins = {row["path"]: row["sha256"] for row in legacy.get("files", [])}
+    payloads, source_outputs = {}, {job["task_id"]: [] for job in jobs}
+    for logical, payload in nested_result["payloads"].items():
+        if logical not in {j["logical_submission"] for j in jobs[:23]}:
+            raise CarryError("nested-source-outside-current-cohort")
+        payloads[logical] = payload
+        job = next(j for j in jobs[:23] if j["logical_submission"] == logical)
+        source_outputs[job["task_id"]].append(payload["decoded_response"])
+    if len(payloads) != 23:
+        raise CarryError("nested-23-coverage")
+    for logical, payload in payloads.items():
+        job = next(row for row in jobs[:23] if row["logical_submission"] == logical)
+        original_job = nested_jobs.get(logical)
+        original_ref = nested_refs.get(logical)
+        if original_job is None or original_ref is None:
+            raise CarryError("nested-original-manifest-entry")
+        plan = original_job["input_view_plan"]
+        identity = _slot_identity({k: v for k, v in job.items()
+                                   if k not in {"input_view_plan", "checkpoint_state"}})
+        original_identity = _slot_identity({k: v for k, v in original_job.items()
+                                            if k not in {"input_view_plan", "checkpoint_state"}})
+        if identity != original_identity:
+            raise CarryError("nested-slot-identity")
+        if plan.get("input_path") != original_ref.get("input_path"):
+            raise CarryError("nested-original-input-uri")
+        if payload.get("slot_identity") != original_identity:
+            raise CarryError("nested-payload-identity")
+        if payload.get("task_table_sha256") != tables[job["task_id"]].binding_sha256:
+            raise CarryError("nested-table-binding")
+        carried = carried_rows.get(logical)
+        carry_fields = ("input_sha256", "label_binding_sha256", "scientific_context_sha256",
+                        "task_table_sha256", "decoded_response_sha256", "decoded_file_sha256",
+                        "transcript_log_sha256", "final_text_sha256", "dispatch_sha256",
+                        "validation_sha256", "source_count", "slot_identity")
+        if carried is None or any(carried.get(key) != payload.get(key) for key in carry_fields):
+            raise CarryError("nested-carried-source-binding")
+        payload["input_uri_sha256"] = sha(plan["input_path"].encode("utf-8"))
+        payload["viewer_uri_sha256"] = sha(plan["viewer_path"].encode("utf-8"))
+
+    original_viewer = jobs[0]["input_view_plan"]["viewer_path"]
+    if any(job["input_view_plan"]["viewer_path"] != original_viewer for job in jobs):
+        raise CarryError("original-viewer-identity")
+    viewer_copy = owned_repo / "docs/experiments/evidence/EXP-097/packet-viewer.py.txt"
+    viewer_bytes = viewer_copy.read_bytes()
+    if sha(viewer_bytes) != pins["viewer_sha256"]:
+        raise CarryError("viewer-source-pin")
+    V.VIEWER_PATH = viewer_copy
+    renderer = V._viewer()
+    class OriginalViewerIdentity(type(Path())):
+        def read_bytes(self):
+            return viewer_bytes
+    V._viewer = lambda: renderer
+    V.VIEWER_PATH = OriginalViewerIdentity(original_viewer)
+
+    for index in range(23, TOTAL_COUNT):
+        job = jobs[index]
+        logical = job["logical_submission"]
+        identity = _slot_identity(job)
+        ref = refs[logical]
+        validation_path = sr / ("validation-%03d.json" % (index + 1))
+        dispatch_path = sr / ("dispatch-%03d.json" % (index + 1))
+        validation_raw, dispatch_raw = validation_path.read_bytes(), dispatch_path.read_bytes()
+        validation, dispatch = strict_json(validation_raw), strict_json(dispatch_raw)
+        binding = {k: v for k, v in job.items() if k not in {"input_view_plan", "checkpoint_state"}}
+        if (validation.get("schema") != "exp098-source-validation/1" or validation.get("slot") != index + 1
+                or validation.get("job") != logical or validation.get("status") != "valid"
+                or validation.get("persisted_exact_final_text") is not True):
+            raise CarryError("fresh-validation-or-dispatch-binding")
+        _validate_fresh_dispatch(dispatch, binding, job["input_view_plan"], ref, index + 1, clock)
+        actor = actors.get(logical)
+        if actor is None:
+            raise CarryError("fresh-actor-missing")
+        actor_path = next((p for p in (sr / "actors").glob("*.json") if strict_json(p.read_bytes()).get("logical_submission") == logical), None)
+        if actor_path is None:
+            raise CarryError("fresh-actor-file-missing")
+        A.read_bound_actor98(sr / "actors", logical, binding=binding, reservation_raw=dispatch_raw,
+            clock=clock, receipt_sha256=sha(actor_path.read_bytes()), expected_slot=index + 1,
+            dispatch_sha256=sha(dispatch_raw))
+        final_text, calls, meta = R.read_exact_assessor_final(actor["expected_agent_path"],
+            session_date=actor["session_date"], expected_binding=binding,
+            expected_agent_id=actor["expected_agent_id"], expected_clock=clock)
+        final_raw = final_text.encode("utf-8")
+        final_receipts = [strict_json(p.read_bytes()) for p in (sr / "finals").glob("*.txt.json")
+                          if strict_json(p.read_bytes()).get("logical_submission") == logical]
+        if len(final_receipts) != 1:
+            raise CarryError("fresh-final-receipt-identity")
+        receipt = final_receipts[0]
+        raw_path = _safe_file(stage, "source-reference/finals/" + receipt["path"])
+        if (raw_path.is_symlink() or raw_path.read_bytes() != final_raw
+                or sha(final_raw) != validation.get("response_sha256")
+                or receipt.get("sha256") != sha(final_raw)
+                or receipt.get("persisted_exact_final_text") is not True
+                or receipt.get("parsed_or_repaired") is not False):
+            raise CarryError("fresh-original-final-bytes")
+        plan = job["input_view_plan"]
+        input_path = stage / "assessment-inputs/deterministic-preparation/wire-inputs" / (logical + ".json")
+        input_raw = input_path.read_bytes()
+        if sha(input_raw) != job["input_sha256"]:
+            raise CarryError("fresh-input-binding")
+        view_proof = V.verify_tool_transcript(input_raw, expected_sha256=plan["input_sha256"],
+            input_path=plan["input_path"], viewer_path=plan["viewer_path"], slot_id=logical,
+            source_manifest_sha256=plan["source_manifest_sha256"], calls=calls,
+            transcript_log_sha256=meta["private_log_sha256"])
+        view_path = sr / "views" / (sha(logical.encode())[:20] + ".view.json")
+        stored_view = strict_json(view_path.read_bytes())
+        if (any(stored_view.get(k) != v for k, v in view_proof.items())
+                or stored_view.get("final_text_sha256") != sha(final_raw)
+                or stored_view.get("final_text_persisted_exactly") is not True):
+            raise CarryError("fresh-transcript-view-proof")
+        label_path = _safe_file(stage, "assessment-inputs/" + ref["label_binding_path"])
+        label_raw = label_path.read_bytes()
+        if sha(label_raw) != job["label_binding_sha256"]:
+            raise CarryError("fresh-label-binding")
+        decoded = B.decode_source_reference_response(strict_json(label_raw), strict_json(final_raw), table=tables[job["task_id"]])
+        if len(decoded.get("source_assessments", [])) != validation.get("source_count"):
+            raise CarryError("fresh-source-count")
+        decoded_raw = (sr / (logical + ".decoded.json")).read_bytes()
+        if canonical(decoded) != decoded_raw:
+            raise CarryError("fresh-decoded-bytes")
+        sourceplan_path = stage / "assessment-inputs/deterministic-preparation/private/source-plans" / (job["task_id"] + ".json")
+        rel_plan = "private/source-plans/" + job["task_id"] + ".json"
+        if rel_plan not in legacy_pins or sha(sourceplan_path.read_bytes()) != legacy_pins[rel_plan]:
+            raise CarryError("fresh-source-plan-pin")
+        sourceplan = strict_json(sourceplan_path.read_bytes())
+        chunks = [c for c in sourceplan["chunks"] if c.get("assignment_id") == job["helper_id"]]
+        if len(chunks) != 1:
+            raise CarryError("fresh-source-chunk-identity")
+        chunk = chunks[0]
+        local = dict(sourceplan, chunks=[chunk], inventory_source_ids=chunk["source_ids"], assessor_ids=[chunk["assessor_id"]])
+        M.verify_source_chunk_coverage(local, [decoded])
+        delivery_raw = (sr / (logical + ".delivery.json")).read_bytes()
+        delivery = strict_json(delivery_raw)
+        if any(delivery.get(k) != v for k, v in view_proof.items()):
+            raise CarryError("fresh-delivery-proof")
+        payloads[logical] = {"decoded_response": decoded, "slot_identity": identity,
+            "input_sha256": sha(input_raw), "label_binding_sha256": sha(label_raw),
+            "input_uri_sha256": sha(plan["input_path"].encode("utf-8")),
+            "viewer_uri_sha256": sha(plan["viewer_path"].encode("utf-8")),
+            "final_text_sha256": sha(final_raw), "transcript_log_sha256": meta["private_log_sha256"],
+            "task_table_sha256": tables[job["task_id"]].binding_sha256,
+            "validation_sha256": sha(validation_raw), "dispatch_sha256": sha(dispatch_raw),
+            "decoded_response_sha256": sha(decoded_raw), "delivery_sha256": sha(delivery_raw)}
+        source_outputs[job["task_id"]].append(decoded)
+
+    if len(payloads) != TOTAL_COUNT or set(payloads) != {j["logical_submission"] for j in jobs}:
+        raise CarryError("all-48-source-coverage")
+    actor_ids = _collect_original_actor_ids(stage, nested["root"], jobs, payloads, actors)
+    if len({_slot_identity(j)["logical_submission"] for j in jobs}) != TOTAL_COUNT:
+        raise CarryError("duplicate-source-logical")
+    # Recompute each task closure from exact R1/R2 submissions and compare bytes.
+    cohort_path = owned_repo / "docs/experiments/evidence/EXP-098/cohorts.json"
+    cohorts = strict_json(cohort_path.read_bytes())["cohorts"]["development"]
+    cases = [c for c in cohorts if c.get("kind") == "research"]
+    if len(cases) != 8 or {c["id"] for c in cases} != set(source_outputs):
+        raise CarryError("source-plan-task-coverage")
+    closures, closure_hashes = {}, {}
+    job_by_logical = {job["logical_submission"]: job for job in jobs}
+    for case in cases:
+        task = case["id"]
+        plan_path = stage / "assessment-inputs/deterministic-preparation/private/source-plans" / (task + ".json")
+        plan = strict_json(plan_path.read_bytes())
+        decoded = source_outputs[task]
+        by_assessor = {assessor: [row for logical, payload in payloads.items()
+                                  if job_by_logical[logical]["task_id"] == task
+                                  and job_by_logical[logical]["assessor_id"] == assessor
+                                  for row in payload["decoded_response"]["source_assessments"]]
+                       for assessor in ("R1", "R2")}
+        if not by_assessor["R1"] or not by_assessor["R2"]:
+            raise CarryError("source-assessor-separation")
+        closed = S.close_source_chunk_assessments(plan, decoded, case)
+        original_raw = (sr / (task + ".closed.json")).read_bytes()
+        if canonical(closed) != original_raw:
+            raise CarryError("source-closure-replay-mismatch")
+        if (closed.get("task_id") != task or closed.get("assessors_joined") is not False
+                or set(closed.get("assessors", {})) != {"R1", "R2"}
+                or any(not by_assessor[assessor] for assessor in ("R1", "R2"))):
+            raise CarryError("source-closure-assessor-separation")
+        closures[task] = closed
+        closure_hashes[task] = sha(original_raw)
+    private_manifest = strict_json((stage / "source-closure-private-manifest.json").read_bytes())
+    expected_tasks = {"d%d" % n for n in range(1, 9)}
+    packet_hashes = private_manifest.get("packet_hashes")
+    if (private_manifest.get("schema") != "exp098-source-closure-proof/1"
+            or private_manifest.get("status") != "complete"
+            or set(private_manifest.get("tasks", [])) != expected_tasks
+            or type(packet_hashes) is not dict or set(packet_hashes) != expected_tasks
+            or any(type(packet_hashes[task]) is not dict
+                   or set(packet_hashes[task]) != {"R1", "R2"}
+                   or any(type(packet_hashes[task][assessor]) is not str
+                          or not re.fullmatch(r"[0-9a-f]{64}", packet_hashes[task][assessor])
+                          for assessor in ("R1", "R2")) for task in expected_tasks)):
+        raise CarryError("source-closure-manifest")
+    return payloads, nested_result["proof"], closures, closure_hashes, actor_ids
+
+
+def verify_carry48(snapshot_root, pins_path, expected_pins_sha256):
+    """Verify the pinned EXP-098 snapshot and return a private opaque proof/payload map.
+
+    Snapshot pins use paths relative to snapshot_root:
+      stage_path: complete EXP-098 development stage
+      nested_checkpoint_path/nested_pins_path: strict-23 source checkpoint
+      owned_repo_path: qualified source tree needed by historical validators
+      profile_path: archived session logs used by the original reader
+    """
+    root = Path(snapshot_root).resolve()
+    if Path(snapshot_root).is_symlink() or not root.is_dir() or Path(pins_path).is_symlink():
+        raise CarryError("snapshot-root")
+    pins_raw = Path(pins_path).read_bytes()
+    pins = verify_inventory(root, pins_raw, expected_pins_sha256)
+    # Copy only verified files before executing any historical code.
+    with tempfile.TemporaryDirectory(prefix="exp099-carry48-") as temporary:
+        owned = Path(temporary) / "owned"
+        owned.mkdir()
+        _copy_verified_tree(root, owned, pins)
+        nested = {"root": _safe_dir(owned, pins["nested_checkpoint_path"]),
+                  "pins": _safe_file(owned, pins["nested_pins_path"])}
+        stage = _safe_dir(owned, pins["stage_path"])
+        owned_repo = _safe_dir(owned, pins["owned_repo_path"])
+        profile = _safe_dir(owned, pins["profile_path"])
+        _supply_pinned_measurement_schema(owned_repo)
+        payloads, nested_proof, closures, closure_hashes, actor_ids = _fresh_records(
+            stage, owned_repo, profile, pins, nested)
+    rows = []
+    for logical, payload in payloads.items():
+        rows.append({"logical_submission": logical,
+                     "slot_identity": payload.get("slot_identity"),
+                     "input_sha256": payload.get("input_sha256"),
+                     "input_uri_sha256": payload.get("input_uri_sha256"),
+                     "viewer_uri_sha256": payload.get("viewer_uri_sha256"),
+                     "label_binding_sha256": payload.get("label_binding_sha256"),
+                     "final_text_sha256": payload.get("final_text_sha256"),
+                     "decoded_response_sha256": payload.get("decoded_response_sha256")})
+    proof = {"schema": "exp099-source-carry48-proof/1", "accepted_assignments": TOTAL_COUNT,
+             "nested_accepted_assignments": 23, "fresh_replayed_assignments": FRESH_COUNT,
+             "source_plans_closed": 8, "all_original_assignments_required": True,
+             "prior_time_credit_seconds": 0, "quality_analyzed": False,
+             "grade_repaired": False, "snapshot_pins_sha256": expected_pins_sha256,
+             "nested_proof": nested_proof, "closure_sha256": closure_hashes, "assignments": rows}
+    return {"proof": proof, "payloads": payloads, "closures": closures,
+            "original_actor_ids": actor_ids}

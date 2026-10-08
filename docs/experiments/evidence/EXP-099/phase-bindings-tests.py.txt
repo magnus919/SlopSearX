@@ -1,0 +1,82 @@
+"""Offline phase tests for EXP-099; no provider or source requests."""
+import importlib.machinery
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+P = importlib.machinery.SourceFileLoader(
+    "exp099_phase_bindings_under_test", str(HERE / "phase-bindings.py.txt")
+).load_module()
+
+
+class Admission:
+    def __init__(self):
+        self.claims = []
+
+    def acquire_phase(self, _permit, name, _stage, _clock):
+        self.claims.append(name)
+        return object()
+
+    def require_phase(self, *_args):
+        return None
+
+
+class PhaseBindingTests(unittest.TestCase):
+    def test_source_assessor_phase_cannot_be_claimed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            admission = Admission()
+            with self.assertRaisesRegex(ValueError, "source-assessor-phase-not-permitted"):
+                P._phase(admission, object(), "source-reference", Path(tmp),
+                         Path(tmp) / "source-reference", b"clock")
+            self.assertEqual(admission.claims, [])
+
+    def test_source_prompt_and_decoders_are_disabled(self):
+        with self.assertRaisesRegex(ValueError, "source-assessment-forbidden"):
+            P.source_viewer_prompt({})
+        with self.assertRaisesRegex(ValueError, "source-assessment-forbidden"):
+            P.decode_assessment_response("source", {}, {}, table=None)
+        with self.assertRaisesRegex(ValueError, "source-assessment-forbidden"):
+            P.decode_source_reference_response({}, {}, table=None)
+
+    def test_answer_assessment_phase_claims_exact_registered_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            admission = Admission()
+            _permit, require = P.claim_answer_assessment_phase(
+                admission=admission, stage_permit=object(), stage_outdir=tmp,
+                phase_outdir=Path(tmp) / "answer-assessment", clock_bytes=b"clock")
+            require()
+            self.assertEqual(admission.claims, ["answer-assessment"])
+
+    def test_answer_phase_requires_complete_opaque_source_carry_and_preserves_identity(self):
+        payloads = {f"source-{i}": object() for i in range(48)}
+        closures = {f"d{i}": {} for i in range(1, 9)}
+        carry = {"proof": {"schema": "exp099-source-carry48-proof/1",
+                           "accepted_assignments": 48}, "payloads": payloads,
+                 "closures": closures}
+        bindings = {"stage-local": "answer-only"}
+        result = P.preserve_original_source_bindings(carry_result=carry,
+                                                     answer_phase_bindings=bindings)
+        self.assertIs(result["original_source_payloads"], payloads)
+        self.assertIs(result["source_closures"], closures)
+        self.assertIs(result["answer_phase_bindings"], bindings)
+        self.assertFalse(result["source_dispatch_permitted"])
+        self.assertIsNone(result["source_assessor_phase"])
+        carry["payloads"] = dict(list(payloads.items())[:-1])
+        with self.assertRaisesRegex(ValueError, "original-source-bindings-required"):
+            P.preserve_original_source_bindings(carry_result=carry)
+
+    def test_answer_assessment_coverage_is_frozen_to_eight_research_tasks(self):
+        cases = [{"id": f"d{i}", "kind": "research"} for i in range(1, 9)]
+        assignments = []
+        for task in cases:
+            for arm in ("w0", "candidate"):
+                assignments.append({"model_input": {"task": {"task_id": task["id"]}},
+                                    "private_binding": {"arm_id": arm}})
+        P.validate_answer_coverage(assignments, cases)
+        with self.assertRaisesRegex(ValueError, "answer-assignment-coverage"):
+            P.validate_answer_coverage(assignments[:-1], cases)
+
+
+if __name__ == "__main__":
+    unittest.main()

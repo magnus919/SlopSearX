@@ -1,0 +1,145 @@
+"""Mechanical EXP-099 design consistency checks; never grant authority.
+
+The contract deliberately accepts a prospective status so that preparation can
+be checked offline. Admission independently requires registered, qualified
+source and a fresh runtime health gate.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+
+def validate(protocol, cohorts, registration, qualification, *, source_prompt_raw):
+    expected = (
+        (protocol, "exp099-protocol/1"),
+        (cohorts, "exp099-cohorts/1"),
+        (registration, "exp099-registration/1"),
+        (qualification, "exp099-qualification/1"),
+    )
+    if any(type(obj) is not dict or obj.get("schema") != schema
+           for obj, schema in expected):
+        raise ValueError("current-design-schema")
+    if protocol.get("status") not in {"prospective-not-qualified", "registered", "qualified"}:
+        raise ValueError("current-protocol-status")
+    if cohorts.get("status") not in {"prospective-not-qualified", "registered", "qualified"}:
+        raise ValueError("current-cohorts-status")
+    if (registration.get("study_id") != "EXP-099"
+            or qualification.get("study_id") != "EXP-099"
+            or cohorts.get("study_id") != "EXP-099"):
+        raise ValueError("current-study-identity")
+    if (protocol.get("predecessor") != "EXP-098"
+            or registration.get("predecessor") != "EXP-098"):
+        raise ValueError("current-lineage")
+
+    expected_counts = {
+        "source_assessments_carried_unchanged": 48,
+        "fresh_source_assessments": 0,
+        "fresh_answer_assessments": 32,
+        "historical_grader_submissions_total": 72,
+        "fresh_grader_submissions_total": 32,
+        "planned_grader_submissions_total": 104,
+        "planned_all_model_submissions_total": 122,
+    }
+    for key, value in expected_counts.items():
+        if cohorts.get(key) != value:
+            raise ValueError("cohort-current-accounting")
+    acquisition = cohorts.get("acquisition")
+    if type(acquisition) is not dict:
+        raise ValueError("cohort-acquisition-shape")
+    for key, value in {
+        "source_assessments_carried_unchanged": 48,
+        "fresh_source_assessments": 0,
+        "source_assessments_total_required": 48,
+        "fresh_answer_assessments": 32,
+        "new_searches": 0,
+    }.items():
+        if acquisition.get(key) != value:
+            raise ValueError("cohort-acquisition-current-accounting")
+
+    acq = protocol.get("acquisition")
+    if type(acq) is not dict:
+        raise ValueError("protocol-acquisition-shape")
+    for key, value in {
+        "source_assessments_carried_unchanged": 48,
+        "source_assessments_fresh": 0,
+        "carried_source_assignments": 48,
+        "source_assessments_total_required": 48,
+        "fresh_answer_assessments": 32,
+        "historical_grader_submissions_total": 72,
+        "fresh_grader_submissions_total": 32,
+        "planned_grader_submissions_total": 104,
+        "planned_answer_api_calls": 18,
+        "planned_all_model_submissions_total": 122,
+        "maximum_all_model_submissions_total": 130,
+        "new_searches": 0,
+        "new_source_fetches": 0,
+        "retries": 0,
+    }.items():
+        if acq.get(key) != value:
+            raise ValueError("protocol-acquisition-current-accounting")
+
+    models = protocol.get("models")
+    if type(models) is not dict:
+        raise ValueError("protocol-models-shape")
+    for key, value in {
+        "historical_grader_submissions_counted": 72,
+        "source_assessments_carried_unchanged": 48,
+        "fresh_source_assessments": 0,
+        "fresh_answer_assessments": 32,
+        "planned_fresh_grader_submissions": 32,
+        "planned_total_logical_model_submissions_including_historical": 122,
+    }.items():
+        if models.get(key) != value:
+            raise ValueError("protocol-model-current-accounting")
+    if (models.get("answerer_alias") != "free"
+            or models.get("assessment_model", {}).get("model_id") != "gpt-6.1-sol"):
+        raise ValueError("current-model-policy")
+    if 72 + 32 != 104 or 104 + 18 != 122 or 122 > 130:
+        raise ValueError("current-budget-arithmetic")
+
+    correction = protocol.get("budget_correction", {})
+    if (correction.get("per_call_input_tokens") != {"before": 64000, "after": 128000}
+            or correction.get("reserve_input_tokens") != {"before": 64000, "after": 128000}):
+        raise ValueError("input-budget-correction")
+    # Numerical quality gates and task definitions are inherited unchanged.
+    # Compare to the frozen EXP-098 files instead of trusting a self-declared
+    # snapshot embedded in the prospective protocol.
+    reference_root = Path(__file__).resolve().parent.parent / "EXP-098"
+    reference_protocol_path = reference_root / "protocol.json"
+    reference_cohorts_path = reference_root / "cohorts.json"
+    if reference_protocol_path.is_symlink() or reference_cohorts_path.is_symlink():
+        raise ValueError("frozen-reference-symlink")
+    try:
+        reference_protocol = json.loads(reference_protocol_path.read_bytes())
+        reference_cohorts = json.loads(reference_cohorts_path.read_bytes())
+    except (OSError, ValueError) as exc:
+        raise ValueError("frozen-reference-unavailable") from exc
+    frozen = ("quality", "candidate", "consumer", "confirmation_scope",
+              "confirmation_requires_development_pass")
+    if any(protocol.get(key) != reference_protocol.get(key) for key in frozen):
+        raise ValueError("frozen-semantics-changed")
+    if cohorts.get("cohorts") != reference_cohorts.get("cohorts"):
+        raise ValueError("frozen-cohort-changed")
+
+    aliases = protocol.get("source_citation_aliases")
+    if (type(source_prompt_raw) is not bytes or type(aliases) is not dict
+            or aliases.get("source_prompt_sha256") != hashlib.sha256(source_prompt_raw).hexdigest()):
+        raise ValueError("current-source-prompt-binding")
+    if protocol.get("external_source_pins") != qualification.get("external_source_pins"):
+        raise ValueError("current-external-helper-pins")
+    pins = qualification.get("external_source_pins")
+    checkpoint = pins.get("source_checkpoint") if type(pins) is dict else None
+    if (type(checkpoint) is not dict or set(checkpoint) != {"sha256"}
+            or type(checkpoint.get("sha256")) is not str
+            or len(checkpoint["sha256"]) != 64
+            or any(c not in "0123456789abcdef" for c in checkpoint["sha256"])):
+        raise ValueError("source-checkpoint-pin-required")
+    if (protocol.get("runtime_readiness_baseline", {}).get("schema")
+            != "exp099-readiness-baseline/1"
+            or protocol.get("input_provenance", {}).get("schema")
+            != "exp099-reused-input-pins/1"):
+        raise ValueError("current-readiness-or-input-schema")
+    return {"study_id": "EXP-099", "internally_consistent": True,
+            "authority_granted": False, "quality_claim": False}

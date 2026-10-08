@@ -1,0 +1,84 @@
+"""Offline design-contract checks; no stage admission or live calls."""
+import copy
+import importlib.machinery
+import json
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+D = importlib.machinery.SourceFileLoader(
+    "exp099_design_contract_under_test", str(HERE / "design-contract.py.txt")
+).load_module()
+
+
+class CurrentDesign(unittest.TestCase):
+    def setUp(self):
+        self.protocol = json.loads((HERE / "protocol.json").read_bytes())
+        self.cohorts = json.loads((HERE / "cohorts.json").read_bytes())
+        pins = copy.deepcopy(self.protocol.get("external_source_pins", {}))
+        pins.setdefault("source_checkpoint", {"sha256": "a" * 64})
+        self.registration = {"schema": "exp099-registration/1", "study_id": "EXP-099",
+                             "predecessor": "EXP-098", "status": "registered"}
+        self.qualification = {"schema": "exp099-qualification/1", "study_id": "EXP-099",
+                              "external_source_pins": pins}
+        self.protocol["external_source_pins"] = pins
+        self.prompt = (HERE / "source-assessor-prompt.txt").read_bytes()
+
+    def validate(self, protocol=None, cohorts=None, registration=None, qualification=None,
+                 prompt=None):
+        return D.validate(protocol or self.protocol, cohorts or self.cohorts,
+                          registration or self.registration,
+                          qualification or self.qualification,
+                          source_prompt_raw=self.prompt if prompt is None else prompt)
+
+    def test_current_prospective_design_is_mechanically_consistent_without_authority(self):
+        result = self.validate()
+        self.assertTrue(result["internally_consistent"])
+        self.assertFalse(result["authority_granted"])
+        self.assertFalse(result["quality_claim"])
+
+    def test_wrong_carry_or_fresh_counts_fail_closed(self):
+        for obj, key, value in ((self.protocol["acquisition"], "carried_source_assignments", 47),
+                                (self.protocol["acquisition"], "source_assessments_fresh", 1),
+                                (self.cohorts["acquisition"], "source_assessments_carried_unchanged", 47)):
+            with self.subTest(key=key):
+                p, c = copy.deepcopy(self.protocol), copy.deepcopy(self.cohorts)
+                target = p["acquisition"] if obj is self.protocol["acquisition"] else c["acquisition"]
+                target[key] = value
+                with self.assertRaises(ValueError):
+                    self.validate(protocol=p, cohorts=c)
+
+    def test_old_input_budget_and_changed_quality_gate_rejected(self):
+        p = copy.deepcopy(self.protocol)
+        p["budget_correction"]["per_call_input_tokens"]["after"] = 64000
+        with self.assertRaisesRegex(ValueError, "input-budget-correction"):
+            self.validate(protocol=p)
+        p = copy.deepcopy(self.protocol)
+        p["quality"] = copy.deepcopy(p["quality"])
+        p["quality"]["modified_for_test"] = True
+        with self.assertRaisesRegex(ValueError, "frozen-semantics-changed"):
+            self.validate(protocol=p)
+
+    def test_prompt_and_checkpoint_pin_required(self):
+        with self.assertRaisesRegex(ValueError, "current-source-prompt-binding"):
+            self.validate(prompt=b"different prompt")
+        q = copy.deepcopy(self.qualification)
+        q["external_source_pins"].pop("source_checkpoint")
+        p = copy.deepcopy(self.protocol)
+        p["external_source_pins"] = copy.deepcopy(q["external_source_pins"])
+        with self.assertRaisesRegex(ValueError, "source-checkpoint-pin-required"):
+            self.validate(protocol=p, qualification=q)
+
+    def test_lineage_study_identity_and_search_budget_are_enforced(self):
+        r = copy.deepcopy(self.registration)
+        r["predecessor"] = "EXP-097"
+        with self.assertRaisesRegex(ValueError, "current-lineage"):
+            self.validate(registration=r)
+        p = copy.deepcopy(self.protocol)
+        p["acquisition"]["new_searches"] = 1
+        with self.assertRaisesRegex(ValueError, "protocol-acquisition-current-accounting"):
+            self.validate(protocol=p)
+
+
+if __name__ == "__main__":
+    unittest.main()
