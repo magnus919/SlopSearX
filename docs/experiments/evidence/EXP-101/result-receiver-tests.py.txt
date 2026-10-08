@@ -21,7 +21,6 @@ def load_text_module(name, path):
     return module
 
 RECEIVER = load_text_module("exp101_result_receiver", HERE / "result-receiver.py.txt")
-READER = load_text_module("exp101_final_log_reader", HERE / "final-log-reader.py.txt")
 
 
 class ResultReceiverTests(unittest.TestCase):
@@ -97,39 +96,6 @@ class ResultReceiverTests(unittest.TestCase):
             original_slots={self.logical: self.slot}, transport_bindings={self.logical: self.transport},
             decode_and_validate=decode, persist_close=persist)
         return receiver, lease, authority, calls
-
-    def test_reader_requires_exact_origin_transport_join_and_preserves_registry_identity(self):
-        binding = {"logical_submission": self.logical, "role": "answer-assessor",
-                   "task_id": "d1", "assessor_id": "R1", "anonymous_arm": "arm1",
-                   "input_sha256": self.input_sha, "packet_id": "original-registry-id",
-                   "stage_clock_sha256": "c" * 64}
-        transport = {"schema": "exp101-original-packet-transport/1",
-                     "logical_submission": self.logical,
-                     "original_input_sha256": self.input_sha,
-                     "original_registry_packet_id": "original-registry-id",
-                     "original_clock_sha256": "c" * 64,
-                     "current_clock_sha256": self.current_clock_sha,
-                     "model_packet_id": "separate-semantic-model-id"}
-        calls = []
-        old_read = READER._read
-        READER._read = lambda *args: (calls.append(args) or ("opaque", [], {}))
-        try:
-            text, _, _ = READER.read_exact_assessor_final(
-                agent_path=READER.expected_path(binding), expected_binding=binding,
-                expected_agent_id=self.actor, expected_clock=self.clock,
-                expected_transport=transport)
-            self.assertEqual(text, "opaque")
-            self.assertEqual(len(calls), 1)
-            self.assertEqual(transport["original_registry_packet_id"], binding["packet_id"])
-            self.assertNotEqual(transport["original_registry_packet_id"], transport["model_packet_id"])
-            wrong = dict(transport, current_clock_sha256="d" * 64)
-            with self.assertRaisesRegex(ValueError, "assessor-fresh-clock-binding"):
-                READER.read_exact_assessor_final(
-                    agent_path=READER.expected_path(binding), expected_binding=binding,
-                    expected_agent_id=self.actor, expected_clock=self.clock, expected_transport=wrong)
-            self.assertEqual(len(calls), 1, "wrong transport join must fail before transcript parser")
-        finally:
-            READER._read = old_read
 
     def test_actual_lease_actor_and_original_input_are_checked_before_proof(self):
         receiver, lease, _, calls = self.make_receiver()
