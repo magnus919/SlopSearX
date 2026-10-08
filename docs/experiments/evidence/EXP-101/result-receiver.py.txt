@@ -13,7 +13,7 @@ import sys
 class ResultReceiver:
     def __init__(self, *, authority, original_phase, original_receiver,
                  reader_path, reader_sha256, current_clock, proof_directory,
-                 original_bindings, original_slots, decode_and_validate, persist_close):
+                 original_bindings, original_slots, transport_bindings, decode_and_validate, persist_close):
         self._authority = authority
         self._phase = original_phase
         self._receiver = original_receiver
@@ -23,6 +23,7 @@ class ResultReceiver:
         self._proofs = Path(proof_directory)
         self._bindings = dict(original_bindings)
         self._slots = dict(original_slots)
+        self._transports = dict(transport_bindings)
         self._decode = decode_and_validate
         self._persist = persist_close
         self._terminal = False
@@ -51,7 +52,8 @@ class ResultReceiver:
             loader.exec_module(reader)
             text, calls, metadata = reader.read_exact_assessor_final(
                 agent_path=agent_path, expected_binding=binding,
-                expected_agent_id=actor_id, expected_clock=self._clock)
+                expected_agent_id=actor_id, expected_clock=self._clock,
+                expected_transport=self._transports[logical])
             raw = Path(slot["input_path"]).read_bytes()
             if hashlib.sha256(raw).hexdigest() != lease.original_input_sha256:
                 raise ValueError("receiver-original-input-changed")
