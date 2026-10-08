@@ -1,0 +1,132 @@
+"""Synthetic EXP-104 protocol, lineage, and fresh-clock authority tests."""
+from __future__ import annotations
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+import uuid
+
+HERE=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[4]
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,separators=(",",":"),ensure_ascii=False,
+                        allow_nan=False)+"\n").encode()
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+AUTH=load("exp104_continuation_authority_test",HERE/"continuation-authority.py.txt")
+CURRENT=json.loads((HERE/"protocol.json").read_bytes())
+ORIGINAL=json.loads((ROOT/"docs/experiments/evidence/EXP-103/protocol.json").read_bytes())
+
+class ContinuationAuthorityTests(unittest.TestCase):
+    def test_protocol_preserves_science_transport_and_execution_caps(self):
+        AUTH.validate_protocol(CURRENT,ORIGINAL)
+        mutable={"schema","study_id","status","continuation","operative_execution_order","execution"}
+        self.assertEqual({k:v for k,v in CURRENT.items() if k not in mutable},
+                         {k:v for k,v in ORIGINAL.items() if k not in mutable})
+        expected_execution=dict(ORIGINAL["execution"],fresh_answer_assessments=4,
+            historical_conservative_grader_charges=103,planned_grader_charges=107,
+            planned_combined_charges=125)
+        self.assertEqual(CURRENT["execution"],expected_execution)
+        self.assertEqual(CURRENT["continuation"]["accepted_assessments_carried"],28)
+        self.assertEqual(CURRENT["continuation"]["failed_grader_calls_retained"],1)
+        self.assertEqual(CURRENT["continuation"]["unstarted_original_slots"],3)
+        self.assertEqual(CURRENT["continuation"]["fresh_assessments"],4)
+        self.assertEqual(CURRENT["continuation"]["grader_charges_historical"],103)
+        self.assertEqual(CURRENT["continuation"]["grader_charges_planned"],107)
+        self.assertEqual(CURRENT["continuation"]["combined_charges_planned"],125)
+        self.assertEqual(CURRENT["continuation"]["elapsed_time_credit"],0)
+        self.assertEqual(CURRENT["continuation"]["physical_actor_namespace"],
+                         "/root/exp104_d8_r<1-2>_answer_arm<1-2>")
+
+    def test_science_transport_budget_lineage_dispatch_or_order_tampering_is_rejected(self):
+        mutations=[]
+        def add(path,value):
+            def mutate(p):
+                node=p
+                for key in path[:-1]:node=node[key]
+                node[path[-1]]=value
+            mutations.append((".".join(path),mutate))
+        add(("immutable_science","answer_assessment_packets","count"),31)
+        add(("immutable_science","consumer","source_context_character_limit"),7999)
+        add(("execution","fresh_answer_assessments"),5)
+        add(("execution","maximum_grader_charges"),113)
+        add(("execution","planned_combined_charges"),126)
+        add(("continuation","failed_grader_calls_retained"),0)
+        add(("continuation","accepted_assessments_carried"),27)
+        add(("continuation","unstarted_original_slots"),4)
+        add(("continuation","physical_actor_namespace"),"/root/exp104_all_slots")
+        add(("continuation","elapsed_time_credit"),1)
+        add(("operative_execution_order","selector_dispatches"),1)
+        add(("operative_execution_order","source_grader_dispatches"),1)
+        add(("operative_execution_order","answerer_dispatches"),1)
+        add(("operative_execution_order","answerer_readiness_dispatches"),1)
+        add(("operative_execution_order","precedence"),"old authority wins")
+        # The order arrays are registered exact lists and may not be shortened, reordered, or extended.
+        for field in ("preclock","postclock"):
+            expected=CURRENT["operative_execution_order"][field]
+            for changed in (expected[:-1],list(reversed(expected)),expected+["extra step"]):
+                add(("operative_execution_order",field),changed)
+        for name,mutate in mutations:
+            with self.subTest(field=name):
+                bad=copy.deepcopy(CURRENT);mutate(bad)
+                with self.assertRaises(ValueError):AUTH.validate_protocol(bad,ORIGINAL)
+
+    def test_fresh_clock_receipt_binds_revision_protocol_and_carry_hash(self):
+        revision="a"*40
+        carry_sha="b"*64
+        protocol_raw=canonical(CURRENT)
+        terminal={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+            "source_revision":"c"*40,"protocol_sha256":"d"*64}
+        fresh={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+            "source_revision":revision,"protocol_sha256":sha(protocol_raw)}
+        receipt=AUTH.bind_clock(clock_raw=canonical(fresh),terminal_clock_raw=canonical(terminal),
+            protocol_raw=protocol_raw,qualified_source_revision=revision,
+            accepted_carry_sha256=carry_sha)
+        self.assertEqual(receipt["schema"],"exp104-current-clock-authority/1")
+        self.assertEqual(receipt["study_id"],"EXP-104")
+        self.assertEqual(receipt["current_clock_sha256"],sha(canonical(fresh)))
+        self.assertEqual(receipt["terminal_exp103_clock_sha256"],sha(canonical(terminal)))
+        self.assertEqual(receipt["qualified_source_revision"],revision)
+        self.assertEqual(receipt["protocol_sha256"],sha(protocol_raw))
+        self.assertEqual(receipt["accepted_carry_sha256"],carry_sha)
+        self.assertEqual(receipt["elapsed_time_credit_seconds"],0)
+
+    def test_reused_terminal_clock_stage_id_protocol_revision_or_noncanonical_bytes_fail(self):
+        revision="e"*40;carry_sha="f"*64;protocol_raw=canonical(CURRENT)
+        terminal={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+            "source_revision":"c"*40,"protocol_sha256":"d"*64}
+        fresh={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+            "source_revision":revision,"protocol_sha256":sha(protocol_raw)}
+        def attempt(clock,terminal_raw=canonical(terminal),protocol=protocol_raw,rev=revision,carry=carry_sha):
+            return AUTH.bind_clock(clock_raw=clock,terminal_clock_raw=terminal_raw,
+                protocol_raw=protocol,qualified_source_revision=rev,accepted_carry_sha256=carry)
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            attempt(canonical(terminal))
+        same_id=dict(fresh,stage_id=terminal["stage_id"])
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            attempt(canonical(same_id))
+        wrong_revision=dict(fresh,source_revision="9"*40)
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            attempt(canonical(wrong_revision))
+        wrong_protocol=dict(fresh,protocol_sha256="0"*64)
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            attempt(canonical(wrong_protocol))
+        with self.assertRaisesRegex(ValueError,"source-or-carry-identity"):
+            attempt(canonical(fresh),carry="invalid")
+        noncanonical=json.dumps(fresh,indent=2).encode()
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            attempt(noncanonical)
+
+if __name__=="__main__":unittest.main(verbosity=2)

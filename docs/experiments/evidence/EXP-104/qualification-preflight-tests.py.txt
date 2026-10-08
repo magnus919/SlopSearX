@@ -1,0 +1,224 @@
+"""Synthetic Git-repository tests for EXP-104 review-only qualification preflight."""
+from __future__ import annotations
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+
+HERE=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[4]
+
+def load(name,path):
+    loader=importlib.machinery.SourceFileLoader(name,str(path))
+    spec=importlib.util.spec_from_loader(name,loader)
+    module=importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,separators=(",",":"),ensure_ascii=False,
+                        allow_nan=False)+"\n").encode()
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+QUAL=load("exp104_qualification_preflight_test",HERE/"qualification-preflight.py.txt")
+
+class SyntheticGitFixture:
+    """A real local Git repo containing only synthetic source and seal fixtures."""
+    def __init__(self,*,qualified=False,protocol_mutation=None,trim_parent_source=False):
+        self.temp=tempfile.TemporaryDirectory(prefix="exp104-qualification-git-")
+        self.repo=Path(self.temp.name)/"repo"
+        self.repo.mkdir()
+        self.git("init","-q")
+        self.git("config","user.name","Synthetic Test")
+        self.git("config","user.email","synthetic@example.invalid")
+        self.exp103=self.repo/"docs/experiments/evidence/EXP-103"
+        self.exp104=self.repo/"docs/experiments/evidence/EXP-104"
+        self.exp103.mkdir(parents=True);self.exp104.mkdir(parents=True)
+        self.capture=self.repo/"old-delegate-kwargs.json"
+        # First source commit anchors the prior qualification's revision.
+        self.write("docs/experiments/evidence/EXP-103/inherited-source.py",b"synthetic inherited source\n")
+        self.commit("synthetic inherited source")
+        self.old_revision=self.git("rev-parse","HEAD").strip()
+        old_source="docs/experiments/evidence/EXP-103/inherited-source.py"
+        self.old_files={old_source:sha(self.read(old_source))}
+        self.write("docs/experiments/evidence/EXP-103/qualification.json",canonical({
+            "schema":"exp103-synthetic-qualification/1","study_id":"EXP-103",
+            "qualified_source_revision":self.old_revision,"source_files":self.old_files}))
+        self.write("docs/experiments/evidence/EXP-103/registration-integrity.json",
+            canonical({"schema":"exp103-synthetic-registration/1","fixture_only":True}))
+        self.write("docs/experiments/evidence/EXP-103/protocol.json",
+            (ROOT/"docs/experiments/evidence/EXP-103/protocol.json").read_bytes())
+        self.write("docs/experiments/evidence/EXP-103/qualification-preflight.py.txt",
+            ("from pathlib import Path\n"
+             f"CAPTURE = Path({str(self.capture)!r})\n"
+             "def verify(**kwargs):\n"
+             "    CAPTURE.write_bytes(__import__('json').dumps(kwargs, sort_keys=True).encode())\n"
+             "    return {'status':'synthetic-prior-qualified'}\n").encode())
+        self.commit("synthetic previous qualification")
+        self.q103_revision=self.old_revision
+
+        current_protocol=json.loads((ROOT/"docs/experiments/evidence/EXP-104/protocol.json").read_bytes())
+        if protocol_mutation is not None:protocol_mutation(current_protocol)
+        files={}
+        required=("qualification-preflight.py.txt","continuation-authority.py.txt","protocol.json",
+                  "reader-transport.py.txt","accepted-assessment-carry.py.txt","four-slot-authority.py.txt")
+        source_root=ROOT/"docs/experiments/evidence/EXP-104"
+        for name in required:
+            relative="docs/experiments/evidence/EXP-104/"+name
+            raw=canonical(current_protocol) if name=="protocol.json" else (source_root/name).read_bytes()
+            self.write(relative,raw);files[relative]=sha(raw)
+        for relative in ("docs/experiments/evidence/EXP-103/qualification.json",
+                         "docs/experiments/evidence/EXP-103/registration-integrity.json",
+                         old_source):
+            files[relative]=sha(self.read(relative))
+        if trim_parent_source:
+            files.pop(old_source)
+        self.scheduler=self.repo/"synthetic-private-scheduler.py"
+        self.reader=self.repo/"synthetic-private-reader.py"
+        self.snapshot=self.repo/"synthetic-accepted-snapshot-pins.json"
+        self.scheduler.write_bytes(b"synthetic scheduler bytes")
+        self.reader.write_bytes(b"synthetic reader bytes")
+        self.snapshot.write_bytes(b"synthetic snapshot pins bytes")
+        accepted_pins=sha(self.snapshot.read_bytes())
+        carry_sha="c"*64
+        answer_manifest_sha="d"*64
+        registration={"schema":"exp104-accepted-carry-registration/1","study_id":"EXP-104",
+            "source_revision_binding":"qualification.qualified_source_revision","source_files":files,
+            "reused_source_revision":self.q103_revision,
+            "operator_scheduler_sha256":sha(self.scheduler.read_bytes()),
+            "reader_transport_sha256":sha(self.reader.read_bytes()),
+            "accepted_snapshot_pins_sha256":accepted_pins,
+            "accepted_carry_sha256":carry_sha,
+            "original_answer_manifest_sha256":answer_manifest_sha}
+        self.write("docs/experiments/evidence/EXP-104/registration-integrity.json",canonical(registration))
+        self.commit("synthetic EXP-104 source registration")
+        self.source_revision=self.git("rev-parse","HEAD").strip()
+        self.q={"schema":"exp104-accepted-carry-qualification/1","study_id":"EXP-104",
+            "qualified":qualified,"independent_review_complete":qualified,
+            "qualified_source_revision":self.source_revision,"source_files":files,
+            "reused_source_revision":self.q103_revision,
+            "operator_scheduler_sha256":registration["operator_scheduler_sha256"],
+            "reader_transport_sha256":registration["reader_transport_sha256"],
+            "accepted_snapshot_pins_sha256":accepted_pins,"accepted_carry_sha256":carry_sha,
+            "original_answer_manifest_sha256":answer_manifest_sha}
+        self.write("docs/experiments/evidence/EXP-104/qualification.json",canonical(self.q))
+        self.commit("synthetic EXP-104 qualification seal")
+        self.capture.unlink(missing_ok=True)
+        self.old_here,self.old_repo=QUAL.HERE,QUAL.REPO
+        QUAL.HERE=self.exp104;QUAL.REPO=self.repo
+
+    def git(self,*args):
+        result=subprocess.run(["git",*args],cwd=self.repo,check=True,stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        return result.stdout.decode().strip()
+    def commit(self,message):
+        self.git("add",".");self.git("commit","-qm",message)
+    def write(self,relative,raw):
+        path=self.repo/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(raw);return path
+    def read(self,relative):return (self.repo/relative).read_bytes()
+    def close(self):
+        QUAL.HERE,QUAL.REPO=self.old_here,self.old_repo
+        self.temp.cleanup()
+    def kwargs(self):
+        return {"previous_qualification_kwargs":{"fixture_token":"explicit-old-kwargs",
+                    "previous_failed_run_files":{"only":"synthetic"}},
+                "continuation_entrypoint":self.scheduler,"reader_entrypoint":self.reader,
+                "accepted_snapshot_pins_path":self.snapshot}
+    def verify(self,**overrides):
+        kwargs=self.kwargs();kwargs.update(overrides)
+        return QUAL.verify(**kwargs)
+
+class QualificationPreflightTests(unittest.TestCase):
+    def setUp(self):self.fx=SyntheticGitFixture()
+    def tearDown(self):self.fx.close()
+
+    def test_review_only_source_verification_is_unqualified_and_never_authorizes_execution(self):
+        result=self.fx.verify(review_only=True)
+        self.assertEqual(result["status"],"verified-unqualified")
+        self.assertIs(result["fresh_execution_authorized"],False)
+        self.assertEqual(result["study_id"],"EXP-104")
+        self.assertTrue(self.fx.capture.is_file(),"explicit prior qualification delegate should run")
+        self.assertEqual(json.loads(self.fx.capture.read_bytes()),self.fx.kwargs()["previous_qualification_kwargs"])
+
+    def test_default_flags_false_reject_before_registration_private_pins_or_delegate(self):
+        with self.assertRaisesRegex(ValueError,"qualification-not-approved"):
+            self.fx.verify(continuation_entrypoint=self.fx.repo/"does-not-exist",
+                reader_entrypoint=self.fx.repo/"does-not-exist-reader",
+                accepted_snapshot_pins_path=self.fx.repo/"does-not-exist-snapshot")
+        self.assertFalse(self.fx.capture.exists())
+
+    def test_flags_true_only_verify_source_seal_and_still_never_claim_execution_authority(self):
+        self.fx.close();self.fx=SyntheticGitFixture(qualified=True)
+        result=self.fx.verify()
+        self.assertEqual(result["status"],"qualified")
+        self.assertIs(result["fresh_execution_authorized"],False)
+
+    def test_registration_inventory_must_equal_qualified_source_inventory(self):
+        qpath=self.fx.exp104/"qualification.json"
+        q=json.loads(qpath.read_bytes())
+        q["source_files"].pop("docs/experiments/evidence/EXP-104/protocol.json")
+        qpath.write_bytes(canonical(q));self.fx.commit("synthetic trimmed q inventory")
+        with self.assertRaisesRegex(ValueError,"qualification-source-inventory"):
+            self.fx.verify(review_only=True)
+
+    def test_parent_source_completeness_and_registration_bytes_are_pinned(self):
+        self.fx.close();self.fx=SyntheticGitFixture(trim_parent_source=True)
+        with self.assertRaisesRegex(ValueError,"qualification-reused-source-changed"):
+            self.fx.verify(review_only=True)
+
+        self.fx.close();self.fx=SyntheticGitFixture()
+        reg=self.fx.exp104/"registration-integrity.json"
+        reg.write_bytes(reg.read_bytes()+b" ")
+        with self.assertRaisesRegex(ValueError,"qualification-source-registration-changed"):
+            self.fx.verify(review_only=True)
+
+    def test_q_must_be_committed_and_source_bytes_must_match_revision_head_and_disk(self):
+        qpath=self.fx.exp104/"qualification.json"
+        qpath.write_bytes(qpath.read_bytes()+b" ")
+        with self.assertRaisesRegex(ValueError,"qualification-uncommitted"):
+            self.fx.verify(review_only=True)
+        self.fx.close();self.fx=SyntheticGitFixture()
+        source=self.fx.exp104/"reader-transport.py.txt"
+        source.write_bytes(source.read_bytes()+b"local uncommitted drift")
+        with self.assertRaisesRegex(ValueError,"qualification-source-changed"):
+            self.fx.verify(review_only=True)
+
+        self.fx.close();self.fx=SyntheticGitFixture()
+        source=self.fx.exp104/"reader-transport.py.txt"
+        source.write_bytes(source.read_bytes()+b"committed post-registration drift")
+        self.fx.commit("synthetic changed HEAD source")
+        with self.assertRaisesRegex(ValueError,"qualification-source-changed"):
+            self.fx.verify(review_only=True)
+
+    def test_private_scheduler_reader_and_snapshot_pins_must_match(self):
+        for name in ("scheduler","reader","snapshot"):
+            with self.subTest(pin=name):
+                self.fx.close();self.fx=SyntheticGitFixture()
+                path=getattr(self.fx,name);path.write_bytes(path.read_bytes()+b"drift")
+                with self.assertRaisesRegex(ValueError,"qualification-private-entrypoint-or-carry-changed"):
+                    self.fx.verify(review_only=True)
+
+    def test_prior_qualification_is_called_with_explicit_kwargs(self):
+        result=self.fx.verify(review_only=True)
+        self.assertEqual(result["status"],"verified-unqualified")
+        self.assertEqual(json.loads(self.fx.capture.read_bytes()),{
+            "fixture_token":"explicit-old-kwargs",
+            "previous_failed_run_files":{"only":"synthetic"}})
+
+    def test_protocol_science_and_execution_drift_fail_after_source_is_sealed(self):
+        def science(p):p["immutable_science"]["answer_assessment_packets"]["count"]=31
+        self.fx.close();self.fx=SyntheticGitFixture(protocol_mutation=science)
+        with self.assertRaisesRegex(ValueError,"continuation-science-or-transport-drift"):
+            self.fx.verify(review_only=True)
+        def budget(p):p["execution"]["maximum_grader_charges"]+=1
+        self.fx.close();self.fx=SyntheticGitFixture(protocol_mutation=budget)
+        with self.assertRaisesRegex(ValueError,"continuation-execution-budget-drift"):
+            self.fx.verify(review_only=True)
+
+if __name__=="__main__":unittest.main(verbosity=2)

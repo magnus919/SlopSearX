@@ -1,0 +1,102 @@
+"""Committed source/carry seals; review-only verification grants no clock authority."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import json
+from pathlib import Path
+import re
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def blob(revision, relative):
+    return subprocess.run(["git", "show", revision + ":" + relative], cwd=REPO,
+                          check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+
+
+def regular(path):
+    path = Path(path)
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("qualification-regular-file")
+    return path.read_bytes()
+
+
+def verify(*, previous_qualification_kwargs, continuation_entrypoint,
+           reader_entrypoint, accepted_snapshot_pins_path, review_only=False):
+    qpath = HERE / "qualification.json"
+    qraw = regular(qpath)
+    if qraw != blob("HEAD", qpath.relative_to(REPO).as_posix()):
+        raise ValueError("qualification-uncommitted")
+    q = json.loads(qraw)
+    revision = q.get("qualified_source_revision")
+    if (q.get("schema") != "exp104-accepted-carry-qualification/1"
+            or q.get("study_id") != "EXP-104" or type(review_only) is not bool
+            or type(revision) is not str or not re.fullmatch(r"[0-9a-f]{40}", revision)):
+        raise ValueError("qualification-identity")
+    if not review_only and (q.get("qualified") is not True or q.get("independent_review_complete") is not True):
+        raise ValueError("qualification-not-approved")
+    registration_path = HERE / "registration-integrity.json"
+    registered_raw = blob(revision, registration_path.relative_to(REPO).as_posix())
+    if (regular(registration_path) != registered_raw
+            or blob("HEAD", registration_path.relative_to(REPO).as_posix()) != registered_raw):
+        raise ValueError("qualification-source-registration-changed")
+    registration = json.loads(registered_raw)
+    files = q.get("source_files")
+    if (registration.get("schema") != "exp104-accepted-carry-registration/1"
+            or registration.get("study_id") != "EXP-104"
+            or registration.get("source_revision_binding") != "qualification.qualified_source_revision"
+            or type(files) is not dict or files != registration.get("source_files")):
+        raise ValueError("qualification-source-inventory")
+    fields = ("reused_source_revision", "operator_scheduler_sha256", "reader_transport_sha256",
+              "accepted_snapshot_pins_sha256", "accepted_carry_sha256", "original_answer_manifest_sha256")
+    if any(q.get(key) != registration.get(key) for key in fields):
+        raise ValueError("qualification-registration-binding")
+    required = {"docs/experiments/evidence/EXP-104/" + name for name in (
+        "qualification-preflight.py.txt", "continuation-authority.py.txt", "protocol.json",
+        "reader-transport.py.txt", "accepted-assessment-carry.py.txt", "four-slot-authority.py.txt")}
+    required.update({"docs/experiments/evidence/EXP-103/qualification.json",
+                     "docs/experiments/evidence/EXP-103/registration-integrity.json"})
+    if not required.issubset(files):
+        raise ValueError("qualification-required-source-inventory")
+    for name, digest in files.items():
+        relative = Path(name)
+        disk = REPO / relative
+        if (type(name) is not str or relative.is_absolute() or ".." in relative.parts
+                or type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            raise ValueError("qualification-source-entry")
+        for parent in disk.parents:
+            if parent == REPO:
+                break
+            if parent.is_symlink():
+                raise ValueError("qualification-source-parent-symlink")
+        original = blob(revision, name)
+        if sha(original) != digest or blob("HEAD", name) != original or regular(disk) != original:
+            raise ValueError("qualification-source-changed")
+    previous_q = json.loads(regular(HERE.parent / "EXP-103/qualification.json"))
+    if (q.get("reused_source_revision") != previous_q["qualified_source_revision"]
+            or any(files.get(name) != digest for name, digest in previous_q["source_files"].items())):
+        raise ValueError("qualification-reused-source-changed")
+    old = importlib.machinery.SourceFileLoader(
+        "exp104_previous_qualification", str(HERE.parent / "EXP-103/qualification-preflight.py.txt")).load_module()
+    old.verify(**previous_qualification_kwargs)
+    for path, field in ((continuation_entrypoint, "operator_scheduler_sha256"),
+                        (reader_entrypoint, "reader_transport_sha256"),
+                        (accepted_snapshot_pins_path, "accepted_snapshot_pins_sha256")):
+        if sha(regular(path)) != q.get(field):
+            raise ValueError("qualification-private-entrypoint-or-carry-changed")
+    authority = importlib.machinery.SourceFileLoader(
+        "exp104_current_continuation_authority", str(HERE / "continuation-authority.py.txt")).load_module()
+    authority.validate_protocol(json.loads(regular(HERE / "protocol.json")),
+                                json.loads(regular(HERE.parent / "EXP-103/protocol.json")))
+    return {"status": "verified-unqualified" if review_only else "qualified",
+            "qualified_source_revision": revision, "qualification_sha256": sha(qraw),
+            "source_files": len(files), "study_id": "EXP-104",
+            "accepted_carry_sha256": q["accepted_carry_sha256"],
+            "original_answer_manifest_sha256": q["original_answer_manifest_sha256"],
+            "fresh_execution_authorized": False}
