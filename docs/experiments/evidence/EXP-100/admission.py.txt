@@ -40,6 +40,8 @@ _PHASE_COMPLETIONS: dict[tuple[str, str], str] = {}
 _PHASE_NAMES = {"health", "assessment-preparation", "carried-card-validation", "selector", "answer", "answer-assessment", "analysis"}
 _LIVE_PREDECESSOR = {"selector": "health", "answer": "selector",
                      "answer-assessment": "answer", "analysis": "answer-assessment"}
+_ANSWER_ASSIGNMENT_PLAN_PATH = "docs/experiments/evidence/EXP-077/assignment-plan.json"
+_ANSWER_ASSIGNMENT_PLAN_SHA256 = "487c655ab2c8d69c3b2acc9f0be46844df601abf0efe6ab31e79d7861907a9cd"
 PINNED_DEPENDENCIES = {"anyio": "4.13.0", "fastapi": "0.136.3", "httpcore": "1.0.9",
                        "httpx": "0.28.1", "jsonschema": "4.26.0", "lxml": "6.1.1",
                        "pydantic": "2.13.4", "requests": "2.34.2", "starlette": "1.2.1",
@@ -614,6 +616,224 @@ def _artifact_bytes(path: Path) -> bytes:
     return path.read_bytes()
 
 
+def _registered_answer_slots(root: Path) -> tuple[dict, dict]:
+    """Load the immutable EXP-077 development answer identities for this clock."""
+    clock = strict_json(_artifact_bytes(Path(root) / "stage-clock.json"))
+    revision, stage_id = clock.get("source_revision"), clock.get("stage_id")
+    raw = _git_blob(revision, _ANSWER_ASSIGNMENT_PLAN_PATH)
+    if sha(raw) != _ANSWER_ASSIGNMENT_PLAN_SHA256:
+        raise AdmissionError("answer-assessor-assignment-plan-pin")
+    plan = strict_json(raw)
+    try:
+        rows = plan["stages"]["development"]["answer"]
+    except (KeyError, TypeError) as exc:
+        raise AdmissionError("answer-assessor-assignment-plan-shape") from exc
+    if (type(plan) is not dict or plan.get("schema") != "exp077-assignment-plan/1"
+            or type(rows) is not list or len(rows) != 32
+            or type(stage_id) is not str or not stage_id):
+        raise AdmissionError("answer-assessor-assignment-plan-shape")
+    expected = {}
+    for row in rows:
+        if (type(row) is not dict or set(row) !=
+                {"anonymous_arm", "assessor_id", "role", "submission_id", "task_id"}
+                or row.get("role") != "answer"):
+            raise AdmissionError("answer-assessor-assignment-plan-row")
+        logical, task = row.get("submission_id"), row.get("task_id")
+        assessor, arm = row.get("assessor_id"), row.get("anonymous_arm")
+        if (type(logical) is not str or type(task) is not str
+                or assessor not in {"R1", "R2"} or arm not in {"arm1", "arm2"}
+                or task not in {f"d{i}" for i in range(1, 9)}
+                or logical != f"development-{task}-answer-{assessor}-{arm}"
+                or logical in expected):
+            raise AdmissionError("answer-assessor-assignment-plan-identity")
+        expected[logical] = {"logical_submission": logical, "role": "answer-assessor",
+            "task_id": task, "assessor_id": assessor, "anonymous_arm": arm,
+            "packet_id": sha(canonical_json([stage_id, logical]))}
+    matrix = {(f"d{i}", assessor, arm) for i in range(1, 9)
+              for assessor in ("R1", "R2") for arm in ("arm1", "arm2")}
+    if len(expected) != 32 or {(row["task_id"], row["assessor_id"], row["anonymous_arm"])
+                               for row in expected.values()} != matrix:
+        raise AdmissionError("answer-assessor-assignment-plan-coverage")
+    return clock, expected
+
+
+def _stage_file(root: Path, relative: str) -> tuple[Path, bytes]:
+    base = Path(root).resolve()
+    path = base / relative
+    if path.is_symlink() or not path.is_file():
+        raise AdmissionError("answer-assessment-bound-file-missing")
+    for parent in path.parents:
+        if parent == base:
+            break
+        if parent.is_symlink():
+            raise AdmissionError("answer-assessment-bound-path-symlink")
+    if not path.resolve().is_relative_to(base):
+        raise AdmissionError("answer-assessment-bound-path-scope")
+    return path, path.read_bytes()
+
+
+def _validate_answer_assessor_bindings(root: Path, clock_sha: str) -> dict[str, dict]:
+    """Rebuild exact frozen answer bindings and verify current input/answer bytes."""
+    clock, registered = _registered_answer_slots(root)
+    if sha(_artifact_bytes(Path(root) / "stage-clock.json")) != clock_sha:
+        raise AdmissionError("answer-assessment-stage-clock-binding")
+    revision = clock["source_revision"]
+    _, manifest_raw = _stage_file(root, "answer-handoff/answer-assessments/answer-assessor-input-manifest.json")
+    manifest = strict_json(manifest_raw)
+    if (canonical_json(manifest) != manifest_raw or type(manifest) is not dict
+            or set(manifest) != {"schema", "status", "anonymous_arm_map_sha256",
+                                 "answer_output_manifest_sha256", "slots"}
+            or manifest.get("schema") != "exp095-answer-assessor-input-manifest/1"
+            or manifest.get("status") != "complete" or type(manifest.get("slots")) is not list
+            or len(manifest["slots"]) != 32):
+        raise AdmissionError("answer-assessment-input-manifest-invalid")
+    slots = manifest["slots"]
+    logicals = [row.get("logical_submission") if type(row) is dict else None for row in slots]
+    if logicals != sorted(registered) or len(set(logicals)) != 32:
+        raise AdmissionError("answer-assessment-input-manifest-coverage")
+    _, answer_manifest_raw = _stage_file(
+        root, "answer-handoff/answerer-output/answer-output-manifest.json")
+    answer_manifest = strict_json(answer_manifest_raw)
+    if canonical_json(answer_manifest) != answer_manifest_raw:
+        raise AdmissionError("answer-assessment-answer-manifest-invalid")
+    if sha(canonical_json(answer_manifest)) != manifest.get("answer_output_manifest_sha256"):
+        raise AdmissionError("answer-assessment-answer-manifest-binding")
+    if (type(answer_manifest) is not dict or answer_manifest.get("schema") != "exp095-answer-output-manifest/1"
+            or answer_manifest.get("status") != "complete" or type(answer_manifest.get("answers")) is not list
+            or len(answer_manifest["answers"]) != 16):
+        raise AdmissionError("answer-assessment-answer-manifest-invalid")
+    answer_rows = {}
+    for answer in answer_manifest["answers"]:
+        if type(answer) is not dict or set(answer) != {"task_id", "arm", "answer_sha256", "receipt_sha256", "bytes"}:
+            raise AdmissionError("answer-assessment-answer-manifest-row")
+        key = (answer["task_id"], answer["arm"])
+        if key in answer_rows:
+            raise AdmissionError("answer-assessment-answer-manifest-duplicate")
+        answer_rows[key] = answer
+    expected_answer_keys = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+    if set(answer_rows) != expected_answer_keys:
+        raise AdmissionError("answer-assessment-answer-manifest-coverage")
+    answer_output_sha = sha(canonical_json(answer_manifest))
+    answer_payloads = {}
+    for (task, arm), row in answer_rows.items():
+        payload_rel = f"answer-handoff/answerer-output/portable-answer-wire/{task}-{arm}.json"
+        _, payload = _stage_file(root, payload_rel)
+        if len(payload) != row["bytes"] or sha(payload) != row["answer_sha256"]:
+            raise AdmissionError("answer-assessment-answer-payload-binding")
+        answer_payloads[(task, arm)] = row
+
+    _, answerer_inputs_raw = _stage_file(root, "answer-handoff/answerer-input-manifest.json")
+    answerer_inputs = strict_json(answerer_inputs_raw)
+    if (canonical_json(answerer_inputs) != answerer_inputs_raw or type(answerer_inputs) is not dict
+            or answerer_inputs.get("schema") != "exp095-answerer-inputs/1"
+            or type(answerer_inputs.get("assignments")) is not list
+            or len(answerer_inputs["assignments"]) != 16):
+        raise AdmissionError("answer-assessment-answerer-input-manifest-invalid")
+    answerer_inputs_sha = sha(answerer_inputs_raw)
+
+    protocol_sha = sha((HERE / "protocol.json").read_bytes())
+    binding_rows = []
+    by_logical = {}
+    expected_slot_fields = {"logical_submission", "task_id", "assessor_id", "anonymous_arm",
+        "answer_arm_source_binding", "input_path", "input_sha256", "input_bytes", "input_view_plan",
+        "label_binding_sha256", "grouped_binding_sha256", "grouped_packet_sha256",
+        "original_coded_packet_sha256", "answer_sha256", "answer_receipt_sha256", "own_source_packet_id"}
+    for entry in slots:
+        logical = entry.get("logical_submission")
+        identity = registered.get(logical)
+        if type(entry) is not dict or set(entry) != expected_slot_fields or identity is None:
+            raise AdmissionError("answer-assessment-registered-slot-required")
+        for key in ("task_id", "assessor_id", "anonymous_arm"):
+            if entry.get(key) != identity[key]:
+                raise AdmissionError("answer-assessment-slot-identity-binding")
+        source_arm = {"arm1": "w0", "arm2": "candidate"}[identity["anonymous_arm"]]
+        answer_row = answer_payloads[(identity["task_id"], source_arm)]
+        if (entry.get("answer_arm_source_binding") != source_arm
+                or entry.get("answer_sha256") != answer_row["answer_sha256"]
+                or entry.get("answer_receipt_sha256") != answer_row["receipt_sha256"]):
+            raise AdmissionError("answer-assessment-slot-answer-binding")
+        input_rel = f"answer-handoff/answer-assessments/inputs/{logical}.json"
+        input_path, input_raw = _stage_file(root, input_rel)
+        if (type(entry.get("input_path")) is not str
+                or Path(entry["input_path"]) != input_path.resolve()
+                or type(entry.get("input_bytes")) is not int or len(input_raw) != entry["input_bytes"]
+                or type(entry.get("input_sha256")) is not str or sha(input_raw) != entry["input_sha256"]):
+            raise AdmissionError("answer-assessment-slot-input-binding")
+        view = entry.get("input_view_plan")
+        if (type(view) is not dict or view.get("schema") != "exp095-input-view-plan/1"
+                or view.get("logical_submission") != logical or view.get("input_path") != entry["input_path"]
+                or view.get("input_sha256") != entry["input_sha256"]
+                or view.get("input_bytes") != entry["input_bytes"]
+                or view.get("source_manifest_sha256") != answerer_inputs_sha):
+            raise AdmissionError("answer-assessment-slot-view-binding")
+        for digest_field in ("label_binding_sha256", "grouped_binding_sha256",
+                             "grouped_packet_sha256", "original_coded_packet_sha256"):
+            value = entry.get(digest_field)
+            if type(value) is not str or not re.fullmatch(r"[0-9a-f]{64}", value):
+                raise AdmissionError("answer-assessment-slot-digest")
+        if entry["grouped_packet_sha256"] != entry["input_sha256"]:
+            raise AdmissionError("answer-assessment-grouped-packet-binding")
+        if type(entry.get("own_source_packet_id")) is not str or not entry["own_source_packet_id"]:
+            raise AdmissionError("answer-assessment-own-source-packet-binding")
+        bound = {**identity, "input_sha256": entry["input_sha256"],
+            "input_bytes": entry["input_bytes"], "label_binding_sha256": entry["label_binding_sha256"],
+            "grouped_binding_sha256": entry["grouped_binding_sha256"],
+            "grouped_packet_sha256": entry["grouped_packet_sha256"],
+            "original_coded_packet_sha256": entry["original_coded_packet_sha256"],
+            "stage_clock_sha256": clock_sha, "protocol_sha256": protocol_sha,
+            "qualified_source_revision": revision}
+        binding_rows.append(bound)
+        by_logical[logical] = entry
+
+    bindings_path, bindings_raw = _stage_file(root, "answer-handoff/answer-assessor-input-bindings.json")
+    bindings = strict_json(bindings_raw)
+    if (canonical_json(bindings) != bindings_raw or type(bindings) is not dict
+            or set(bindings) != {"schema", "bindings_sha256", "answer_assessor_manifest_sha256",
+                                 "answer_output_manifest_sha256", "slot_count"}
+            or bindings.get("schema") != "exp100-answer-assessor-bindings/1"
+            or bindings.get("slot_count") != 32
+            or bindings.get("answer_assessor_manifest_sha256") != sha(manifest_raw)
+            or bindings.get("answer_output_manifest_sha256") != answer_output_sha):
+        raise AdmissionError("answer-assessment-input-binding-receipt")
+    expected_binding_sha = sha(canonical_json({"answer_output_manifest_sha256": answer_output_sha,
+                                               "slots": binding_rows}))
+    if bindings.get("bindings_sha256") != expected_binding_sha:
+        raise AdmissionError("answer-assessment-binding-digest-mismatch")
+    return by_logical
+
+
+def _validate_answer_assessment_close(root: Path, closure: dict, clock_sha: str) -> None:
+    slots = _validate_answer_assessor_bindings(root, clock_sha)
+    closed = Path(root) / "answer-handoff" / "answer-assessments" / "closed"
+    if closed.is_symlink() or not closed.is_dir():
+        raise AdmissionError("answer-assessment-closed-map-missing")
+    expected_names = set(slots)
+    files = list(closed.glob("*.json"))
+    if {path.stem for path in files} != expected_names or len(files) != 32:
+        raise AdmissionError("answer-assessment-registered-slot-coverage")
+    rows = {}
+    for path in files:
+        entry = slots[path.stem]
+        row = strict_json(_artifact_bytes(path))
+        required = {"schema", "logical_submission", "input_sha256", "answer_sha256",
+                    "decoded_response_sha256", "raw_final_sha256", "structurally_valid",
+                    "semantic_completion", "metric_computed"}
+        if (type(row) is not dict or set(row) != required
+                or row.get("schema") != "exp100-answer-structural-close/1"
+                or row.get("logical_submission") != path.stem
+                or row.get("input_sha256") != entry["input_sha256"]
+                or row.get("answer_sha256") != entry["answer_sha256"]
+                or any(type(row.get(key)) is not str or not re.fullmatch(r"[0-9a-f]{64}", row[key])
+                       for key in ("input_sha256", "answer_sha256", "decoded_response_sha256", "raw_final_sha256"))
+                or row.get("structurally_valid") is not True
+                or row.get("semantic_completion") != "not_claimed"
+                or row.get("metric_computed") is not False):
+            raise AdmissionError("answer-assessment-closed-row-binding")
+        rows[path.stem] = row
+    if len(rows) != 32 or sha(canonical_json(rows)) != closure.get("closure_sha256"):
+        raise AdmissionError("answer-assessment-closed-map-binding")
+
+
 def _validate_phase_artifact(phase: str, root: Path, clock_sha: str) -> tuple[str, str]:
     """Validate the phase's final artifact and return its stage-relative path and digest."""
     if phase == "selector":
@@ -660,29 +880,7 @@ def _validate_phase_artifact(phase: str, root: Path, clock_sha: str) -> tuple[st
                 or obj.get("metric_computed") is not False
                 or not re.fullmatch(r"[0-9a-f]{64}", str(obj.get("closure_sha256", "")))):
             raise AdmissionError("answer-assessment-completion-artifact-invalid")
-        # Bind the advertised closed-map digest to the actual 32 per-slot rows.
-        closed = root / "answer-handoff" / "answer-assessments" / "closed"
-        if closed.is_symlink() or not closed.is_dir():
-            raise AdmissionError("answer-assessment-closed-map-missing")
-        rows = {}
-        for path in sorted(closed.glob("*.json")):
-            row = strict_json(_artifact_bytes(path))
-            required = {"schema", "logical_submission", "input_sha256", "answer_sha256",
-                        "decoded_response_sha256", "raw_final_sha256", "structurally_valid",
-                        "semantic_completion", "metric_computed"}
-            if (type(row) is not dict or set(row) != required
-                    or row.get("schema") != "exp100-answer-structural-close/1"
-                    or row.get("logical_submission") != path.stem
-                    or any(type(row.get(key)) is not str or
-                           not re.fullmatch(r"[0-9a-f]{64}", row[key])
-                           for key in ("input_sha256", "answer_sha256", "decoded_response_sha256", "raw_final_sha256"))
-                    or row.get("structurally_valid") is not True
-                    or row.get("semantic_completion") != "not_claimed"
-                    or row.get("metric_computed") is not False):
-                raise AdmissionError("answer-assessment-closed-row-invalid")
-            rows[path.stem] = row
-        if len(rows) != 32 or sha(canonical_json(rows)) != obj["closure_sha256"]:
-            raise AdmissionError("answer-assessment-closed-map-binding")
+        _validate_answer_assessment_close(root, obj, clock_sha)
     else:
         raise AdmissionError("phase-artifact-unsupported")
     return rel, sha(raw)
