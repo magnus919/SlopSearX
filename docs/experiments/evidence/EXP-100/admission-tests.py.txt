@@ -1,0 +1,380 @@
+"""Offline phase-order and artifact-freeze tests for EXP-100 admission."""
+import hashlib
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+A = importlib.machinery.SourceFileLoader(
+    "exp100_admission_order_tests", str(HERE / "admission.py.txt")).load_module()
+
+
+def canonical(value):
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True,
+                       separators=(",", ":"), allow_nan=False) + "\n").encode()
+
+
+class PhaseOrderTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name) / "stage"
+        self.root.mkdir()
+        self.leases = Path(self.temp.name) / "leases"
+        self.leases.mkdir()
+        self.stage_id = "00000000-0000-4000-8000-000000000099"
+        self.revision = "e" * 40
+        assignment_rows = [{"anonymous_arm": arm, "assessor_id": assessor, "role": "answer",
+                            "submission_id": f"development-d{task}-answer-{assessor}-{arm}",
+                            "task_id": f"d{task}"}
+                           for task in range(1, 9) for assessor in ("R1", "R2")
+                           for arm in ("arm1", "arm2")]
+        self.plan_raw = canonical({"schema": "exp077-assignment-plan/1",
+                                   "stages": {"development": {"answer": assignment_rows}}})
+        self.clock = canonical({"schema": "exp078-stage-clock/1", "stage_id": self.stage_id,
+                                "source_revision": self.revision, "stage": "development"})
+        self.clock_sha = hashlib.sha256(self.clock).hexdigest()
+        (self.root / "stage-clock.json").write_bytes(self.clock)
+        self.stage = A._StagePermit("stage-id", self.clock_sha, "b" * 64,
+                                    "/fixture-baseline", self.root)
+        A._PERMITS[id(self.stage)] = self.stage
+        A._PERMIT_BY_ID[self.stage.identity] = self.stage
+        A._PERMIT_BASELINE_BINDINGS[id(self.stage)] = (self.stage.readiness_baseline_path,
+                                                        self.stage.readiness_baseline_sha256)
+        self.patchers = [
+            mock.patch.object(A, "LEASE_ROOT", self.leases),
+            mock.patch.object(A, "_check_clock_permit", side_effect=self._check_clock),
+            mock.patch.object(A, "_successful_health", side_effect=self._fake_successful_health),
+            mock.patch.object(A, "_load_pinned_readiness_baseline"),
+            mock.patch.object(A, "_validate_stage_baseline_binding"),
+            mock.patch.object(A, "_validate_phase_baseline_binding"),
+            mock.patch.object(A, "_git_blob", return_value=self.plan_raw),
+            mock.patch.object(A, "_ANSWER_ASSIGNMENT_PLAN_SHA256", hashlib.sha256(self.plan_raw).hexdigest()),
+        ]
+        for patcher in self.patchers:
+            patcher.start()
+
+    def tearDown(self):
+        for patcher in reversed(self.patchers):
+            patcher.stop()
+        self.temp.cleanup()
+        A._PHASE_BY_STAGE.pop("stage-id", None)
+        A._PHASE_COMPLETIONS.clear()
+        A._PHASES.clear()
+        A._PHASE_BASELINE_BINDINGS.clear()
+        A._PERMITS.clear()
+        A._PERMIT_BY_ID.clear()
+        A._PERMIT_BASELINE_BINDINGS.clear()
+
+    def _health(self, completed=True):
+        permit = A.acquire_phase(self.stage, "health", self.root, self.clock)
+        A._PHASE_BY_STAGE[self.stage.identity]["health"] = permit
+        if completed:
+            completion = {"fixture": "successful-health", "phase_identity": permit.identity}
+            (self.root / "health-completion.json").write_bytes(canonical(completion))
+            (self.leases / f"{permit.identity}.complete.json").write_bytes(canonical(completion))
+
+    def _fake_successful_health(self, _stage, _outdir, _clock):
+        if not (self.root / "health-completion.json").is_file():
+            raise A.AdmissionError("health-completion-invalid")
+
+    def _check_clock(self, outdir, clock_bytes, _identity, expected_clock):
+        if hashlib.sha256(clock_bytes).hexdigest() != expected_clock:
+            raise A.AdmissionError("phase-clock-digest")
+        if (Path(outdir) / "stage-clock.json").read_bytes() != clock_bytes:
+            raise A.AdmissionError("phase-clock-file-binding")
+
+    def _write(self, rel, value):
+        path = self.root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(canonical(value))
+        return path
+
+    def _complete_selector(self):
+        selector = A.acquire_phase(self.stage, "selector", self.root, self.clock)
+        self._write("selector/selector-run.json", {
+            "schema": "exp078-selector-run/1", "status": "complete", "synthetic": False,
+            "stage_clock_sha256": self.clock_sha,
+            "neutral": {"status": "complete"},
+            "operations": [{"status": "complete"} for _ in range(21)]})
+        A.complete_phase(selector, self.clock, self.root)
+
+    def _prepare_answer_artifacts(self):
+        answer_rows = []
+        for task in range(1, 9):
+            for arm in ("w0", "candidate"):
+                payload = f"answer-{task}-{arm}".encode()
+                answer_rows.append({"task_id": f"d{task}", "arm": arm,
+                    "answer_sha256": hashlib.sha256(payload).hexdigest(),
+                    "receipt_sha256": hashlib.sha256(b"receipt-" + payload).hexdigest(),
+                    "bytes": len(payload)})
+                output_path = self.root / f"answer-handoff/answerer-output/portable-answer-wire/d{task}-{arm}.json"
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_bytes(payload)
+        answer_manifest = {"schema": "exp095-answer-output-manifest/1", "status": "complete",
+                           "answers": answer_rows}
+        self._write("answer-handoff/answerer-output/answer-output-manifest.json", answer_manifest)
+        self._write("answer-handoff/answerer-output/answer-phase.json", {
+            "schema": "exp078-answer-phase/1", "status": "complete", "synthetic": False,
+            "stage_clock_sha256": self.clock_sha, "owned_api_calls": 18,
+            "answer_output_manifest_sha256": hashlib.sha256(canonical(answer_manifest)).hexdigest()})
+        answerer_input_manifest = {"schema": "exp095-answerer-inputs/1",
+            "assignments": [{"task_id": f"d{task}", "arm": arm}
+                            for task in range(1, 9) for arm in ("w0", "candidate")]}
+        self._write("answer-handoff/answerer-input-manifest.json", answerer_input_manifest)
+        return answer_manifest, answerer_input_manifest
+
+    def _prepare_assessment_artifacts(self, *, mutate=None):
+        answer_manifest, answerer_inputs = self._prepare_answer_artifacts()
+        _, registered = A._registered_answer_slots(self.root)
+        answer_by_key = {(row["task_id"], row["arm"]): row for row in answer_manifest["answers"]}
+        source_manifest_sha = hashlib.sha256(canonical(answerer_inputs)).hexdigest()
+        entries, bound_rows = [], []
+        for logical in sorted(registered):
+            identity = registered[logical]
+            task, arm, assessor = identity["task_id"], identity["anonymous_arm"], identity["assessor_id"]
+            source_arm = {"arm1": "w0", "arm2": "candidate"}[arm]
+            answer = answer_by_key[(task, source_arm)]
+            input_raw = ("packet:" + logical).encode()
+            input_sha = hashlib.sha256(input_raw).hexdigest()
+            input_rel = f"answer-handoff/answer-assessments/inputs/{logical}.json"
+            input_path = self.root / input_rel
+            input_path.parent.mkdir(parents=True, exist_ok=True)
+            input_path.write_bytes(input_raw)
+            entry = {"logical_submission": logical, "task_id": task, "assessor_id": assessor,
+                "anonymous_arm": arm, "answer_arm_source_binding": source_arm,
+                "input_path": str(input_path.resolve()), "input_sha256": input_sha,
+                "input_bytes": len(input_raw),
+                "input_view_plan": {"schema": "exp095-input-view-plan/1",
+                    "logical_submission": logical, "input_path": str(input_path.resolve()),
+                    "input_sha256": input_sha, "input_bytes": len(input_raw),
+                    "source_manifest_sha256": source_manifest_sha},
+                "label_binding_sha256": "1" * 64,
+                "grouped_binding_sha256": "2" * 64,
+                "grouped_packet_sha256": input_sha,
+                "original_coded_packet_sha256": "3" * 64,
+                "answer_sha256": answer["answer_sha256"],
+                "answer_receipt_sha256": answer["receipt_sha256"],
+                "own_source_packet_id": f"development-{task}-source-{assessor}-1"}
+            entries.append(entry)
+        if mutate:
+            mutate(entries)
+        assessor_manifest = {"schema": "exp095-answer-assessor-input-manifest/1", "status": "complete",
+            "anonymous_arm_map_sha256": "4" * 64,
+            "answer_output_manifest_sha256": hashlib.sha256(canonical(answer_manifest)).hexdigest(),
+            "slots": entries}
+        manifest_raw = canonical(assessor_manifest)
+        self._write("answer-handoff/answer-assessments/answer-assessor-input-manifest.json",
+                    assessor_manifest)
+        for entry in entries:
+            identity = registered.get(entry["logical_submission"])
+            if identity is None:
+                continue
+            bound_rows.append({**identity, "input_sha256": entry["input_sha256"],
+                "input_bytes": entry["input_bytes"], "label_binding_sha256": entry["label_binding_sha256"],
+                "grouped_binding_sha256": entry["grouped_binding_sha256"],
+                "grouped_packet_sha256": entry["grouped_packet_sha256"],
+                "original_coded_packet_sha256": entry["original_coded_packet_sha256"],
+                "stage_clock_sha256": self.clock_sha,
+                "protocol_sha256": hashlib.sha256((HERE / "protocol.json").read_bytes()).hexdigest(),
+                "qualified_source_revision": self.revision})
+        bindings = {"schema": "exp100-answer-assessor-bindings/1",
+            "bindings_sha256": hashlib.sha256(canonical({
+                "answer_output_manifest_sha256": assessor_manifest["answer_output_manifest_sha256"],
+                "slots": bound_rows})).hexdigest(),
+            "answer_assessor_manifest_sha256": hashlib.sha256(manifest_raw).hexdigest(),
+            "answer_output_manifest_sha256": assessor_manifest["answer_output_manifest_sha256"],
+            "slot_count": 32}
+        self._write("answer-handoff/answer-assessor-input-bindings.json", bindings)
+        close_rows = {}
+        for entry in entries:
+            logical = entry["logical_submission"]
+            close_rows[logical] = {"schema": "exp100-answer-structural-close/1",
+                "logical_submission": logical, "input_sha256": entry["input_sha256"],
+                "answer_sha256": entry["answer_sha256"], "decoded_response_sha256": "5" * 64,
+                "raw_final_sha256": "6" * 64, "structurally_valid": True,
+                "semantic_completion": "not_claimed", "metric_computed": False}
+        for logical, row in close_rows.items():
+            self._write(f"answer-handoff/answer-assessments/closed/{logical}.json", row)
+        closure = {"schema": "exp100-answer-assessor-closure/1", "status": "complete",
+            "slot_count": 32, "structurally_valid": True, "semantic_completion": "not_claimed",
+            "metric_computed": False, "closure_sha256": hashlib.sha256(canonical(close_rows)).hexdigest()}
+        self._write("answer-handoff/answer-assessments/closure.json", closure)
+        return entries, close_rows
+
+    def test_selector_cannot_be_acquired_after_health_lease_only(self):
+        self._health(completed=False)
+        with self.assertRaisesRegex(A.AdmissionError, "health-completion-invalid"):
+            A.acquire_phase(self.stage, "selector", self.root, self.clock)
+        self.assertFalse((self.root / "selector").exists())
+
+    def test_analysis_cannot_skip_live_predecessors(self):
+        self._health()
+        with self.assertRaisesRegex(A.AdmissionError, "phase-predecessor-not-issued"):
+            A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+
+    def test_incomplete_selector_cannot_be_frozen_or_unlock_answer(self):
+        self._health()
+        selector = A.acquire_phase(self.stage, "selector", self.root, self.clock)
+        self._write("selector/selector-run.json", {
+            "schema": "exp078-selector-run/1", "status": "incomplete", "synthetic": False,
+            "stage_clock_sha256": self.clock_sha,
+            "neutral": {"status": "complete"},
+            "operations": [{"status": "complete"} for _ in range(21)]})
+        with self.assertRaisesRegex(A.AdmissionError, "selector-completion-artifact-invalid"):
+            A.complete_phase(selector, self.clock, self.root)
+        with self.assertRaisesRegex(A.AdmissionError, "phase-completion-invalid"):
+            A.acquire_phase(self.stage, "answer", self.root, self.clock)
+
+    def test_stale_clock_and_repeated_completion_are_rejected(self):
+        self._health()
+        self._complete_selector()
+        selector = A._PHASE_BY_STAGE[self.stage.identity]["selector"]
+        with self.assertRaisesRegex(A.AdmissionError, "phase-already-completed"):
+            A.complete_phase(selector, self.clock, self.root)
+        with self.assertRaisesRegex(A.AdmissionError, "phase-clock-digest"):
+            A.acquire_phase(self.stage, "answer", self.root, b"stale-clock")
+
+    def test_live_phases_require_ordered_completed_artifacts(self):
+        self._health()
+        self._complete_selector()
+        answer = A.acquire_phase(self.stage, "answer", self.root, self.clock)
+        self._prepare_answer_artifacts()
+        A.complete_phase(answer, self.clock, self.root)
+        assess = A.acquire_phase(self.stage, "answer-assessment", self.root, self.clock)
+        entries, _rows = self._prepare_assessment_artifacts()
+        A.complete_phase(assess, self.clock, self.root)
+        analysis = A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+        A.require_phase(analysis, self.clock, self.root)
+        selector_path = self.root / "selector/selector-run.json"
+        selector = json.loads(selector_path.read_bytes())
+        selector["status"] = "incomplete"
+        selector_path.write_bytes(canonical(selector))
+        with self.assertRaisesRegex(A.AdmissionError, "selector-completion-artifact-invalid"):
+            A.require_phase(analysis, self.clock, self.root)
+
+    def _run_to_assessment(self, mutate=None):
+        self._health()
+        self._complete_selector()
+        answer = A.acquire_phase(self.stage, "answer", self.root, self.clock)
+        self._prepare_answer_artifacts()
+        A.complete_phase(answer, self.clock, self.root)
+        assess = A.acquire_phase(self.stage, "answer-assessment", self.root, self.clock)
+        entries, rows = self._prepare_assessment_artifacts(mutate=mutate)
+        return assess, entries, rows
+
+    def test_exact_registered_32_slots_are_accepted(self):
+        assess, _entries, _rows = self._run_to_assessment()
+        A.complete_phase(assess, self.clock, self.root)
+
+    def test_unregistered_slot_names_rejected(self):
+        def mutate(entries):
+            entries[0]["logical_submission"] = "slot-00"
+        assess, _entries, _rows = self._run_to_assessment(mutate)
+        with self.assertRaisesRegex(A.AdmissionError, "answer-assessment-input-manifest-coverage"):
+            A.complete_phase(assess, self.clock, self.root)
+
+    def test_fabricated_closed_32_slots_cannot_complete_or_unlock_analysis(self):
+        for after_analysis_grant in (False, True):
+            with self.subTest(after_analysis_grant=after_analysis_grant):
+                if after_analysis_grant:
+                    self.tearDown()
+                    self.setUp()
+                assess, _entries, rows = self._run_to_assessment()
+                analysis = None
+                if after_analysis_grant:
+                    A.complete_phase(assess, self.clock, self.root)
+                    analysis = A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+                    A.require_phase(analysis, self.clock, self.root)
+                manifest_path = self.root / "answer-handoff/answer-assessments/answer-assessor-input-manifest.json"
+                bindings_path = self.root / "answer-handoff/answer-assessor-input-bindings.json"
+                manifest_raw, bindings_raw = manifest_path.read_bytes(), bindings_path.read_bytes()
+                closed = self.root / "answer-handoff/answer-assessments/closed"
+                for path in closed.glob("*.json"):
+                    path.unlink()
+                fabricated = {}
+                for index, original in enumerate(rows.values()):
+                    logical = f"slot-{index:02d}"
+                    row = {**original, "logical_submission": logical}
+                    fabricated[logical] = row
+                    self._write(f"answer-handoff/answer-assessments/closed/{logical}.json", row)
+                closure_path = closed.parent / "closure.json"
+                closure = json.loads(closure_path.read_bytes())
+                closure["closure_sha256"] = hashlib.sha256(canonical(fabricated)).hexdigest()
+                closure_path.write_bytes(canonical(closure))
+                self.assertEqual(len(list(closed.glob("*.json"))), 32)
+                self.assertEqual(manifest_path.read_bytes(), manifest_raw)
+                self.assertEqual(bindings_path.read_bytes(), bindings_raw)
+                # The actual registered input/answer binding validator still succeeds.
+                self.assertEqual(len(A._validate_answer_assessor_bindings(self.root, self.clock_sha)), 32)
+                with self.assertRaisesRegex(A.AdmissionError, "answer-assessment-registered-slot-coverage"):
+                    if analysis is None:
+                        A.complete_phase(assess, self.clock, self.root)
+                    else:
+                        A.require_phase(analysis, self.clock, self.root)
+                if analysis is None:
+                    self.assertFalse((self.root / "phase-completions/answer-assessment.json").exists())
+                    with self.assertRaisesRegex(A.AdmissionError, "phase-completion-invalid"):
+                        A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+
+    def test_wrong_task_assessor_or_arm_rejected(self):
+        for field, value in (("task_id", "d8"), ("assessor_id", "R2"), ("anonymous_arm", "arm2")):
+            with self.subTest(field=field):
+                self.tearDown()
+                self.setUp()
+                def mutate(entries, field=field, value=value):
+                    entries[0][field] = value
+                assess, _entries, _rows = self._run_to_assessment(mutate)
+                with self.assertRaisesRegex(A.AdmissionError, "answer-assessment-slot-identity-binding"):
+                    A.complete_phase(assess, self.clock, self.root)
+
+    def test_missing_duplicate_and_rebound_inputs_rejected(self):
+        def remove_input(rows):
+            Path(rows[0]["input_path"]).unlink()
+        for mutation, error in (
+                (lambda rows: rows.pop(), "answer-assessment-input-manifest-invalid"),
+                (lambda rows: rows.__setitem__(-1, dict(rows[0])), "answer-assessment-input-manifest-coverage"),
+                (remove_input, "answer-assessment-bound-file-missing"),
+                (lambda rows: rows[0].__setitem__("input_sha256", "f" * 64), "answer-assessment-slot-input-binding"),
+                (lambda rows: rows[0].__setitem__("answer_sha256", "f" * 64), "answer-assessment-slot-answer-binding")):
+            with self.subTest(error=error):
+                self.tearDown()
+                self.setUp()
+                assess, _entries, _rows = self._run_to_assessment(mutation)
+                with self.assertRaisesRegex(A.AdmissionError, error):
+                    A.complete_phase(assess, self.clock, self.root)
+
+    def test_rebound_binding_receipt_rejected(self):
+        assess, _entries, _rows = self._run_to_assessment()
+        path = self.root / "answer-handoff/answer-assessor-input-bindings.json"
+        receipt = json.loads(path.read_bytes())
+        receipt["bindings_sha256"] = "f" * 64
+        path.write_bytes(canonical(receipt))
+        with self.assertRaisesRegex(A.AdmissionError, "answer-assessment-binding-digest-mismatch"):
+            A.complete_phase(assess, self.clock, self.root)
+
+    def test_bound_input_tamper_after_analysis_grant_is_rejected(self):
+        assess, entries, _rows = self._run_to_assessment()
+        A.complete_phase(assess, self.clock, self.root)
+        analysis = A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+        A.require_phase(analysis, self.clock, self.root)
+        input_path = Path(entries[0]["input_path"])
+        input_path.write_bytes(b"changed prepared packet")
+        with self.assertRaisesRegex(A.AdmissionError, "answer-assessment-slot-input-binding"):
+            A.require_phase(analysis, self.clock, self.root)
+
+    def test_tampered_predecessor_artifact_blocks_next_phase(self):
+        self._health()
+        self._complete_selector()
+        path = self.root / "selector/selector-run.json"
+        obj = json.loads(path.read_bytes())
+        obj["status"] = "incomplete"
+        path.write_bytes(canonical(obj))
+        with self.assertRaisesRegex(A.AdmissionError, "selector-completion-artifact-invalid"):
+            A.acquire_phase(self.stage, "answer", self.root, self.clock)
+
+
+if __name__ == "__main__":
+    unittest.main()

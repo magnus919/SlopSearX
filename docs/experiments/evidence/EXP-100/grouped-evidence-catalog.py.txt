@@ -1,0 +1,373 @@
+"""Prospective lossless grouped evidence table for EXP-096 answer inputs.
+
+Only the serialized answer-assessor representation changes. Literal source
+passages remain whole, readable strings. expand_packet restores the exact
+canonical coded packet before existing validators run.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import re
+from typing import Any
+
+SCHEMA = "exp096-grouped-evidence-catalog/1"
+_SHA = re.compile(r"^[0-9a-f]{64}$")
+_CODE = re.compile(r"D([1-8])E([0-9]{4})\Z")
+_ROOT_KEYS = {"schema", "packet_id", "assessor_id", "packet_kind", "task_id", "arm_id", "catalog_kind", "facet_claims", "pool_source_ids", "delivered_source_ids", "opening_outcomes", "delivered_sources", "catalog", "catalog_sha256", "answer_facets", "own_source_assessment", "output_schema"}
+_CATALOG_KEYS = {"version", "sources", "passages"}
+_SOURCE_CATALOG_ROW_KEYS = {"characters", "context_sha256"}
+_PASSAGE_KEYS = {"context_sha256", "end", "passage_sha256", "source_id", "start", "text"}
+_DELIVERED_SOURCE_KEYS = {"characters", "context", "context_sha256", "evidence_ids", "original_characters", "source_id", "truncated"}
+_REFERENCE_KEYS = {"context_sha256", "end", "evidence_id", "quote", "source_id", "start"}
+
+class GroupedCatalogError(ValueError):
+    """Malformed, ambiguous, conflicting, or non-invertible packet."""
+
+def canonical_bytes(value: Any) -> bytes:
+    try:
+        return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
+    except (TypeError, ValueError, UnicodeError) as exc:
+        raise GroupedCatalogError("non-canonical-json-value") from exc
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+def _object(value: Any, keys: set[str], code: str) -> dict:
+    if type(value) is not dict or set(value) != keys:
+        raise GroupedCatalogError(code)
+    return value
+
+def _hash(value: Any, code: str) -> str:
+    if type(value) is not str or not _SHA.fullmatch(value):
+        raise GroupedCatalogError(code)
+    return value
+
+def _int(value: Any, *, minimum: int, code: str) -> int:
+    if type(value) is not int or value < minimum:
+        raise GroupedCatalogError(code)
+    return value
+
+def _code(value: Any, task_id: str) -> str:
+    if type(value) is not str:
+        raise GroupedCatalogError("evidence-code-type")
+    match = _CODE.fullmatch(value)
+    if match is None or value[:2] != f"D{int(task_id[1:])}":
+        raise GroupedCatalogError("evidence-code-scope")
+    return value
+
+def _strict_packet(packet: Any, *, task_id: str | None = None) -> tuple[dict, dict, list[str]]:
+    root = _object(packet, _ROOT_KEYS, "packet-root-fields")
+    if (root.get("schema") != "research-usefulness-assessment/1" or root.get("packet_kind") != "answer" or root.get("catalog_kind") != "answer_arm" or type(root.get("task_id")) is not str or not re.fullmatch(r"d[1-8]", root["task_id"]) or (task_id is not None and root["task_id"] != task_id)):
+        raise GroupedCatalogError("packet-identity")
+    task_id = root["task_id"]
+    for name in ("packet_id", "assessor_id", "arm_id"):
+        if type(root.get(name)) is not str or not root[name]:
+            raise GroupedCatalogError("packet-identity-field")
+    if (type(root.get("facet_claims")) is not dict or type(root.get("delivered_source_ids")) is not list or any(type(sid) is not str or not sid for sid in root["delivered_source_ids"]) or len(root["delivered_source_ids"]) != len(set(root["delivered_source_ids"])) or type(root.get("opening_outcomes")) is not list or type(root.get("answer_facets")) is not list or type(root.get("output_schema")) is not dict):
+        raise GroupedCatalogError("packet-field-types")
+    catalog = _object(root.get("catalog"), _CATALOG_KEYS, "catalog-fields")
+    if type(catalog["version"]) is not int or catalog["version"] != 1:
+        raise GroupedCatalogError("catalog-version")
+    sources, passages = catalog["sources"], catalog["passages"]
+    if type(sources) is not dict or type(passages) is not dict:
+        raise GroupedCatalogError("catalog-map-types")
+    _hash(root.get("catalog_sha256"), "catalog-digest")
+    pool_ids = root.get("pool_source_ids")
+    if type(pool_ids) is not list or any(type(sid) is not str or not sid for sid in pool_ids) or len(pool_ids) != len(set(pool_ids)):
+        raise GroupedCatalogError("pool-source-id-list")
+    for sid, metadata in sources.items():
+        if type(sid) is not str or not sid:
+            raise GroupedCatalogError("catalog-source-id")
+        row = _object(metadata, _SOURCE_CATALOG_ROW_KEYS, "catalog-source-fields")
+        _int(row["characters"], minimum=0, code="catalog-source-character-count")
+        _hash(row["context_sha256"], "catalog-source-context-digest")
+    delivered = root["delivered_sources"]
+    if type(delivered) is not list:
+        raise GroupedCatalogError("delivered-source-list")
+    delivered_by_id = {}
+    for item in delivered:
+        item = _object(item, _DELIVERED_SOURCE_KEYS, "delivered-source-fields")
+        sid, context = item["source_id"], item["context"]
+        if type(sid) is not str or not sid or sid in delivered_by_id or type(context) is not str:
+            raise GroupedCatalogError("duplicate-or-invalid-delivered-source")
+        digest = _hash(item["context_sha256"], "delivered-context-digest")
+        chars = _int(item["characters"], minimum=0, code="delivered-context-character-count")
+        _int(item["original_characters"], minimum=chars, code="delivered-original-character-count")
+        if len(context) != chars or _sha(context.encode("utf-8")) != digest:
+            raise GroupedCatalogError("delivered-context-integrity")
+        if sid not in sources or sources[sid] != {"characters": chars, "context_sha256": digest}:
+            raise GroupedCatalogError("delivered-source-catalog-binding")
+        if type(item["truncated"]) is not bool:
+            raise GroupedCatalogError("delivered-source-truncated-type")
+        ids = item["evidence_ids"]
+        if type(ids) is not list or any(type(eid) is not str for eid in ids) or len(ids) != len(set(ids)):
+            raise GroupedCatalogError("delivered-evidence-id-list")
+        delivered_by_id[sid] = item
+    if set(sources) != set(delivered_by_id) or set(root["delivered_source_ids"]) != set(delivered_by_id):
+        raise GroupedCatalogError("delivered-source-coverage")
+    rows_by_code = {}
+    catalog_order = list(passages)
+    for raw_eid, raw_row in passages.items():
+        eid = _code(raw_eid, task_id)
+        row = _object(raw_row, _PASSAGE_KEYS, "catalog-passage-fields")
+        sid = row["source_id"]
+        if type(sid) is not str or not sid:
+            raise GroupedCatalogError("catalog-passage-source-id")
+        digest = _hash(row["context_sha256"], "catalog-passage-context-digest")
+        start = _int(row["start"], minimum=0, code="catalog-passage-start")
+        end = _int(row["end"], minimum=1, code="catalog-passage-end")
+        text = row["text"]
+        if type(text) is not str or end <= start or end - start != len(text):
+            raise GroupedCatalogError("catalog-passage-span")
+        if _sha(text.encode("utf-8")) != _hash(row["passage_sha256"], "catalog-passage-text-digest"):
+            raise GroupedCatalogError("catalog-passage-text-digest")
+        if sid in sources and digest == sources[sid]["context_sha256"]:
+            if end > sources[sid]["characters"] or delivered_by_id[sid]["context"][start:end] != text:
+                raise GroupedCatalogError("catalog-passage-source-binding")
+        rows_by_code[eid] = {"evidence_id": eid, "source_id": sid, "context_sha256": digest, "start": start, "end": end, "text": text}
+    own = root.get("own_source_assessment")
+    if type(own) is not dict or set(own) != {"packet_kind", "assessor_id", "tasks"} or own["packet_kind"] != "source" or own["assessor_id"] != root["assessor_id"] or type(own["tasks"]) is not list:
+        raise GroupedCatalogError("own-source-assessment-fields")
+    if len(own["tasks"]) != 1 or type(own["tasks"][0]) is not dict or set(own["tasks"][0]) != {"task_id", "arms"} or own["tasks"][0]["task_id"] != task_id or type(own["tasks"][0]["arms"]) is not list:
+        raise GroupedCatalogError("own-source-task-coverage")
+    refs_by_code = {}
+    for arm in own["tasks"][0]["arms"]:
+        _object(arm, {"arm_id", "facet_assessments"}, "own-source-arm-fields")
+        if type(arm["facet_assessments"]) is not list:
+            raise GroupedCatalogError("own-source-facet-list")
+        facet_ids = []
+        for facet in arm["facet_assessments"]:
+            _object(facet, {"facet_id", "evidence_dispositions", "limitations"}, "own-source-facet-fields")
+            if type(facet["facet_id"]) is not str or not facet["facet_id"] or type(facet["limitations"]) is not list or any(type(x) is not str for x in facet["limitations"]) or type(facet["evidence_dispositions"]) is not list:
+                raise GroupedCatalogError("own-source-facet-shape")
+            facet_ids.append(facet["facet_id"])
+            disposition_ids = []
+            for disp in facet["evidence_dispositions"]:
+                _object(disp, {"applicability", "disposition", "entailment", "not_assessable_reason", "reason", "references", "scope_match", "source_id"}, "evidence-disposition-fields")
+                sid, refs = disp["source_id"], disp["references"]
+                if type(sid) is not str or not sid or type(refs) is not list or any(type(disp[k]) is not str for k in ("applicability", "disposition", "entailment", "not_assessable_reason", "reason", "scope_match")):
+                    raise GroupedCatalogError("reference-disposition-shape")
+                disposition_ids.append(sid)
+                for ref in refs:
+                    _object(ref, _REFERENCE_KEYS, "reference-fields")
+                    eid = _code(ref["evidence_id"], task_id)
+                    if ref["source_id"] != sid:
+                        raise GroupedCatalogError("reference-source-scope")
+                    digest = _hash(ref["context_sha256"], "reference-context-digest")
+                    start = _int(ref["start"], minimum=0, code="reference-start")
+                    end = _int(ref["end"], minimum=1, code="reference-end")
+                    quote = ref["quote"]
+                    if type(quote) is not str or end <= start or end - start != len(quote):
+                        raise GroupedCatalogError("reference-span")
+                    if sid in delivered_by_id and delivered_by_id[sid]["context_sha256"] == digest and delivered_by_id[sid]["context"][start:end] != quote:
+                        raise GroupedCatalogError("reference-context-offset")
+                    row = {"evidence_id": eid, "source_id": sid, "context_sha256": digest, "start": start, "end": end, "text": quote}
+                    if eid in refs_by_code and refs_by_code[eid] != row:
+                        raise GroupedCatalogError("conflicting-evidence-id")
+                    refs_by_code[eid] = row
+            if len(disposition_ids) != len(set(disposition_ids)):
+                raise GroupedCatalogError("duplicate-disposition-source-id")
+        if len(facet_ids) != len(set(facet_ids)):
+            raise GroupedCatalogError("duplicate-facet-id")
+    for eid, row in refs_by_code.items():
+        if eid in rows_by_code and rows_by_code[eid] != row:
+            raise GroupedCatalogError("catalog-reference-conflict")
+        rows_by_code[eid] = row
+    if any(row["source_id"] not in set(pool_ids) for row in rows_by_code.values()):
+        raise GroupedCatalogError("evidence-source-outside-pool")
+    for sid, item in delivered_by_id.items():
+        digest, context = item["context_sha256"], item["context"]
+        found = sorted((row for eid, row in rows_by_code.items() if eid in catalog_order and row["source_id"] == sid and row["context_sha256"] == digest), key=lambda r: (r["start"], r["end"]))
+        pos = 0
+        for row in found:
+            if row["start"] != pos:
+                raise GroupedCatalogError("unsupported-context-coverage")
+            pos = row["end"]
+        if pos != len(context) or set(item["evidence_ids"]) != {r["evidence_id"] for r in found}:
+            if len(context) or found or item["evidence_ids"]:
+                raise GroupedCatalogError("unsupported-context-coverage")
+    return root, rows_by_code, catalog_order
+
+def compact_packet(packet: Any, *, task_id: str | None = None,
+                   expected_original_sha256: str | None = None) -> dict:
+    """Return direct source-ID/evidence-code lookups with an exact inverse."""
+    original = canonical_bytes(packet)
+    if expected_original_sha256 is not None:
+        _hash(expected_original_sha256, "expected-original-digest")
+        if _sha(original) != expected_original_sha256:
+            raise GroupedCatalogError("original-packet-binding-mismatch")
+    checked, rows, catalog_order = _strict_packet(packet, task_id=task_id)
+    compact = copy.deepcopy(checked)
+    compact["catalog"]["passage_ids"] = catalog_order
+    del compact["catalog"]["passages"]
+    compact["schema"] = SCHEMA
+    source_table = {}
+    for eid, row in rows.items():
+        sid, digest = row["source_id"], row["context_sha256"]
+        group = source_table.setdefault(sid, {"contexts": [], "passages": {}})
+        if digest not in [c["context_sha256"] for c in group["contexts"]]:
+            group["contexts"].append({"context_sha256": digest})
+        group["passages"][eid] = {"context_index": next(i for i, c in enumerate(group["contexts"]) if c["context_sha256"] == digest), "span": [row["start"], row["end"]], "text": row["text"]}
+    for group in source_table.values():
+        group["contexts"].sort(key=lambda x: x["context_sha256"])
+        indexes = {row["context_sha256"]: i for i, row in enumerate(group["contexts"])}
+        for eid, passage in group["passages"].items():
+            passage["context_index"] = indexes[rows[eid]["context_sha256"]]
+    for task in compact["own_source_assessment"]["tasks"]:
+        for arm in task["arms"]:
+            for facet in arm["facet_assessments"]:
+                for disp in facet["evidence_dispositions"]:
+                    disp["references"] = [ref["evidence_id"] for ref in disp["references"]]
+    for source in compact["delivered_sources"]:
+        del source["context"]
+    compact["evidence_sources"] = source_table
+    expanded = expand_packet(compact, expected_task_id=checked["task_id"],
+                             expected_original_sha256=expected_original_sha256 or _sha(original))
+    if canonical_bytes(expanded) != original:
+        raise GroupedCatalogError("canonical-inverse-mismatch")
+    return compact
+
+def expand_packet(compact: Any, *, expected_task_id: str | None = None, expected_original_sha256: str | None = None) -> dict:
+    """Restore the full coded packet after strict table/hash/offset checks."""
+    if expected_original_sha256 is None:
+        raise GroupedCatalogError("independent-original-digest-required")
+    _hash(expected_original_sha256, "expected-original-digest")
+    if type(compact) is not dict or compact.get("schema") != SCHEMA:
+        raise GroupedCatalogError("compact-schema")
+    if set(compact) != (_ROOT_KEYS - {"schema"}) | {"schema", "evidence_sources"}:
+        raise GroupedCatalogError("compact-root-fields")
+    task_id = compact.get("task_id")
+    if type(task_id) is not str or not re.fullmatch(r"d[1-8]", task_id) or (expected_task_id is not None and task_id != expected_task_id):
+        raise GroupedCatalogError("compact-task-id")
+    catalog = _object(compact.get("catalog"), {"version", "sources", "passage_ids"}, "compact-catalog-fields")
+    passage_ids = catalog["passage_ids"]
+    if type(passage_ids) is not list or any(type(x) is not str for x in passage_ids) or len(passage_ids) != len(set(passage_ids)):
+        raise GroupedCatalogError("compact-catalog-passage-ids")
+    groups = compact.get("evidence_sources")
+    if type(groups) is not dict:
+        raise GroupedCatalogError("compact-evidence-source-map")
+    by_code = {}
+    for sid, group in groups.items():
+        if type(sid) is not str or not sid:
+            raise GroupedCatalogError("compact-source-group-id")
+        group = _object(group, {"contexts", "passages"}, "compact-source-group-fields")
+        contexts = group["contexts"]
+        if type(contexts) is not list or not contexts:
+            raise GroupedCatalogError("compact-context-list")
+        digests = []
+        for context in contexts:
+            _object(context, {"context_sha256"}, "compact-context-fields")
+            digests.append(_hash(context["context_sha256"], "compact-context-digest"))
+        if digests != sorted(set(digests)):
+            raise GroupedCatalogError("compact-context-order-or-duplicate")
+        if type(group["passages"]) is not dict:
+            raise GroupedCatalogError("compact-passage-map")
+        for raw_eid, entry in group["passages"].items():
+            eid = _code(raw_eid, task_id)
+            if eid in by_code:
+                raise GroupedCatalogError("duplicate-evidence-code")
+            entry = _object(entry, {"context_index", "span", "text"}, "compact-passage-fields")
+            ix = _int(entry["context_index"], minimum=0, code="compact-context-index")
+            if ix >= len(contexts):
+                raise GroupedCatalogError("compact-context-index-range")
+            span = entry["span"]
+            if type(span) is not list or len(span) != 2:
+                raise GroupedCatalogError("compact-passage-span")
+            start, end = _int(span[0], minimum=0, code="compact-passage-start"), _int(span[1], minimum=1, code="compact-passage-end")
+            text = entry["text"]
+            if type(text) is not str or end <= start or end - start != len(text):
+                raise GroupedCatalogError("compact-passage-text-span")
+            by_code[eid] = {"evidence_id": eid, "source_id": sid, "context_sha256": contexts[ix]["context_sha256"], "start": start, "end": end, "text": text}
+    if not set(passage_ids).issubset(by_code):
+        raise GroupedCatalogError("catalog-passage-coverage")
+    referenced_ids = set(passage_ids)
+    own_compact = compact.get("own_source_assessment")
+    if type(own_compact) is not dict or type(own_compact.get("tasks")) is not list:
+        raise GroupedCatalogError("compact-own-source-assessment")
+    for task in own_compact["tasks"]:
+        if type(task) is not dict or type(task.get("arms")) is not list:
+            raise GroupedCatalogError("compact-own-source-task")
+        for arm in task["arms"]:
+            if type(arm) is not dict or type(arm.get("facet_assessments")) is not list:
+                raise GroupedCatalogError("compact-own-source-arm")
+            for facet in arm["facet_assessments"]:
+                if type(facet) is not dict or type(facet.get("evidence_dispositions")) is not list:
+                    raise GroupedCatalogError("compact-own-source-facet")
+                for disposition in facet["evidence_dispositions"]:
+                    if type(disposition) is not dict or type(disposition.get("references")) is not list:
+                        raise GroupedCatalogError("compact-reference-list")
+                    for raw_eid in disposition["references"]:
+                        referenced_ids.add(_code(raw_eid, task_id))
+    if set(by_code) != referenced_ids:
+        raise GroupedCatalogError("compact-evidence-code-coverage")
+    referenced_sources = {by_code[eid]["source_id"] for eid in referenced_ids}
+    if set(groups) != referenced_sources:
+        raise GroupedCatalogError("compact-evidence-source-coverage")
+    for group in groups.values():
+        used_contexts = {row["context_index"] for row in group["passages"].values()}
+        if used_contexts != set(range(len(group["contexts"]))):
+            raise GroupedCatalogError("unused-context-variant")
+    packet = copy.deepcopy(compact)
+    packet.pop("evidence_sources")
+    packet["schema"] = "research-usefulness-assessment/1"
+    packet["catalog"].pop("passage_ids")
+    packet["catalog"]["passages"] = {}
+    for eid in passage_ids:
+        row = by_code[eid]
+        packet["catalog"]["passages"][eid] = {"context_sha256": row["context_sha256"], "end": row["end"], "passage_sha256": _sha(row["text"].encode("utf-8")), "source_id": row["source_id"], "start": row["start"], "text": row["text"]}
+    for task in packet["own_source_assessment"]["tasks"]:
+        for arm in task["arms"]:
+            for facet in arm["facet_assessments"]:
+                for disp in facet["evidence_dispositions"]:
+                    sid, ids = disp["source_id"], disp["references"]
+                    if type(ids) is not list:
+                        raise GroupedCatalogError("compact-reference-list")
+                    restored = []
+                    for raw_eid in ids:
+                        eid = _code(raw_eid, task_id)
+                        row = by_code.get(eid)
+                        if row is None or row["source_id"] != sid:
+                            raise GroupedCatalogError("unknown-or-cross-source-reference")
+                        restored.append({"context_sha256": row["context_sha256"], "end": row["end"], "evidence_id": eid, "quote": row["text"], "source_id": sid, "start": row["start"]})
+                    disp["references"] = restored
+    for source in packet["delivered_sources"]:
+        sid, digest = source["source_id"], source["context_sha256"]
+        rows = sorted((row for row in by_code.values() if row["source_id"] == sid and row["context_sha256"] == digest), key=lambda row: (row["start"], row["end"]))
+        cursor, parts = 0, []
+        for row in rows:
+            if row["start"] != cursor:
+                raise GroupedCatalogError("unsupported-context")
+            parts.append(row["text"])
+            cursor = row["end"]
+        context = "".join(parts)
+        if len(context) != source["characters"] or _sha(context.encode("utf-8")) != digest:
+            raise GroupedCatalogError("unsupported-context-integrity")
+        source["context"] = context
+    _strict_packet(packet, task_id=task_id)
+    raw = canonical_bytes(packet)
+    if expected_original_sha256 is not None and _sha(raw) != _hash(expected_original_sha256, "expected-original-digest"):
+        raise GroupedCatalogError("canonical-original-digest-mismatch")
+    return packet
+
+def parse_compact_json(raw: bytes) -> dict:
+    """Parse compact JSON while rejecting duplicate object keys."""
+    if type(raw) is not bytes:
+        raise GroupedCatalogError("compact-bytes-required")
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise GroupedCatalogError("duplicate-json-key")
+            out[key] = value
+        return out
+    try:
+        value = json.loads(raw.decode("utf-8", "strict"), object_pairs_hook=pairs, parse_constant=lambda _x: (_ for _ in ()).throw(GroupedCatalogError("non-finite-json")))
+    except GroupedCatalogError:
+        raise
+    except (UnicodeError, json.JSONDecodeError, ValueError) as exc:
+        raise GroupedCatalogError("invalid-compact-json") from exc
+    if type(value) is not dict:
+        raise GroupedCatalogError("compact-root-type")
+    return value

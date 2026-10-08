@@ -1,0 +1,271 @@
+"""Verified EXP-098 source carry handoff into EXP-100's answer-only phases.
+
+This bridge consumes the in-memory result returned by the strict carry48
+verifier. It does not reopen snapshot paths, dispatch source graders, interpret
+source grades, or compute research metrics.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import importlib.util
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+ASSIGNMENT_PLAN_PATH = "docs/experiments/evidence/EXP-077/assignment-plan.json"
+ASSIGNMENT_PLAN_SHA256 = "487c655ab2c8d69c3b2acc9f0be46844df601abf0efe6ab31e79d7861907a9cd"
+FINAL_JSON_CARRIER_PATH = "docs/experiments/evidence/EXP-100/final-json-carrier.py.txt"
+CITATION_CODEC_PATH = "docs/experiments/evidence/EXP-100/citation-codec.py.txt"
+
+
+class CarryHandoffError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def _committed_bytes(revision: str, relative: str) -> bytes:
+    if (type(revision) is not str or len(revision) != 40
+            or any(char not in "0123456789abcdef" for char in revision)):
+        raise CarryHandoffError("qualified-revision-invalid")
+    path = Path(relative)
+    if path.is_absolute() or not path.parts or any(part in {"", ".", ".."} for part in path.parts):
+        raise CarryHandoffError("committed-path-invalid")
+    try:
+        return subprocess.run(["git", "show", f"{revision}:{relative}"], cwd=REPO,
+                              check=True, stdout=subprocess.PIPE,
+                              stderr=subprocess.DEVNULL).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise CarryHandoffError("qualified-source-unavailable") from exc
+
+
+def _load_committed_module(name: str, revision: str, relative: str):
+    raw = _committed_bytes(revision, relative)
+    module = sys.modules.get(name)
+    if module is not None:
+        if getattr(module, "__exp100_source_sha256__", None) != sha(raw):
+            raise CarryHandoffError("module-identity-conflict")
+        return module
+    spec = importlib.util.spec_from_loader(name, loader=None)
+    if spec is None:
+        raise CarryHandoffError("module-spec-unavailable")
+    module = importlib.util.module_from_spec(spec)
+    module.__file__ = f"{revision}:{relative}"
+    module.__exp100_source_sha256__ = sha(raw)
+    sys.modules[name] = module
+    try:
+        exec(compile(raw, module.__file__, "exec"), module.__dict__)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+
+def _source_identities(carry_proof: dict, payloads: dict) -> list[dict]:
+    rows = carry_proof.get("assignments")
+    if type(rows) is not list or len(rows) != 48:
+        raise CarryHandoffError("carry-assignment-proof-coverage")
+    by_logical = {}
+    for row in rows:
+        if type(row) is not dict:
+            raise CarryHandoffError("carry-assignment-proof-row")
+        logical = row.get("logical_submission")
+        identity = row.get("slot_identity")
+        if type(logical) is not str or logical in by_logical or type(identity) is not dict:
+            raise CarryHandoffError("carry-assignment-proof-identity")
+        expected_fields = {"logical_submission", "role", "task_id", "assessor_id", "chunk_index", "helper_id"}
+        if set(identity) != expected_fields or identity.get("logical_submission") != logical:
+            raise CarryHandoffError("carry-source-identity-shape")
+        try:
+            task = identity["task_id"]
+            number = int(task[1:])
+            assessor, chunk = identity["assessor_id"], identity["chunk_index"]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise CarryHandoffError("carry-source-identity-shape") from exc
+        if (identity.get("role") != "source" or task != f"d{number}"
+                or number not in range(1, 9) or assessor not in {"R1", "R2"}
+                or type(chunk) is not int or chunk not in range(3)
+                or logical != f"development-{task}-source-{assessor}-{chunk + 1}"
+                or type(identity.get("helper_id")) is not str or not identity["helper_id"]):
+            raise CarryHandoffError("carry-source-identity-invalid")
+        payload = payloads.get(logical)
+        if type(payload) is not dict or payload.get("slot_identity") != identity:
+            raise CarryHandoffError("carry-payload-identity-mismatch")
+        by_logical[logical] = copy.deepcopy(identity)
+    if set(by_logical) != set(payloads):
+        raise CarryHandoffError("carry-payload-coverage")
+    return sorted(by_logical.values(), key=lambda row: (
+        int(row["task_id"][1:]), 0 if row["assessor_id"] == "R1" else 1, row["chunk_index"]))
+
+
+def _closures(carry_proof: dict, closures: dict) -> dict:
+    tasks = {f"d{i}" for i in range(1, 9)}
+    hashes = carry_proof.get("closure_sha256")
+    if type(closures) is not dict or set(closures) != tasks or type(hashes) is not dict or set(hashes) != tasks:
+        raise CarryHandoffError("carry-closure-coverage")
+    frozen = {}
+    for task in sorted(tasks, key=lambda value: int(value[1:])):
+        row = closures[task]
+        if (type(row) is not dict or row.get("task_id") != task
+                or row.get("assessors_joined") is not False
+                or type(row.get("assessors")) is not dict
+                or set(row["assessors"]) != {"R1", "R2"}):
+            raise CarryHandoffError("carry-closure-separation")
+        digest = hashes[task]
+        if type(digest) is not str or sha(canonical(row)) != digest:
+            raise CarryHandoffError("carry-closure-hash")
+        frozen[task] = copy.deepcopy(row)
+    return frozen
+
+
+def _source_context(carry_proof: dict, context: dict, revision: str) -> tuple[dict, dict]:
+    """Restore the verifier-bound plans and citation tables without grading."""
+    tasks = {f"d{i}" for i in range(1, 9)}
+    if (type(context) is not dict or set(context) != {"source_plans", "citation_tables"}
+            or type(context.get("source_plans")) is not dict
+            or set(context["source_plans"]) != tasks
+            or type(context.get("citation_tables")) is not dict
+            or set(context["citation_tables"]) != tasks):
+        raise CarryHandoffError("carry-source-context-coverage")
+    if type(carry_proof.get("source_context_sha256")) is not str or sha(canonical(context)) != carry_proof["source_context_sha256"]:
+        raise CarryHandoffError("carry-source-context-hash")
+    plans = {}
+    for task in sorted(tasks, key=lambda value: int(value[1:])):
+        plan = context["source_plans"][task]
+        table_receipt = context["citation_tables"][task]
+        if (type(plan) is not dict or plan.get("task_id") not in (None, task)
+                or type(plan.get("pool_catalog")) is not dict
+                or type(table_receipt) is not dict
+                or set(table_receipt) != {"task_id", "entries", "binding_sha256"}
+                or table_receipt.get("task_id") != task
+                or type(table_receipt.get("entries")) is not list
+                or type(table_receipt.get("binding_sha256")) is not str):
+            raise CarryHandoffError("carry-source-context-row")
+        plans[task] = copy.deepcopy(plan)
+    codec = _load_committed_module("exp100_handoff_citation_codec", revision,
+                                   CITATION_CODEC_PATH)
+    tables = {}
+    try:
+        for task in sorted(tasks, key=lambda value: int(value[1:])):
+            receipt = context["citation_tables"][task]
+            tables[task] = codec.table_from_entries(task, receipt["entries"],
+                                                    receipt["binding_sha256"])
+    except (KeyError, TypeError, ValueError, codec.CitationCodeError) as exc:
+        raise CarryHandoffError("carry-source-context-table") from exc
+    return plans, tables
+
+
+def _answer_identities(assignment_plan: dict, stage_id: str) -> list[dict]:
+    try:
+        rows = assignment_plan["stages"]["development"]["answer"]
+    except (KeyError, TypeError) as exc:
+        raise CarryHandoffError("future-answer-plan-missing") from exc
+    if type(rows) is not list or len(rows) != 32:
+        raise CarryHandoffError("future-answer-plan-count")
+    answers = []
+    logicals = set()
+    for row in rows:
+        if (type(row) is not dict or row.get("role") != "answer"
+                or any(type(row.get(key)) is not str for key in
+                       ("submission_id", "task_id", "assessor_id", "anonymous_arm"))):
+            raise CarryHandoffError("future-answer-plan-row")
+        logical = row["submission_id"]
+        if logical in logicals:
+            raise CarryHandoffError("future-answer-plan-duplicate")
+        logicals.add(logical)
+        packet_id = sha(canonical([stage_id, logical]))
+        answers.append({"logical_submission": logical, "role": "answer-assessor",
+                        "task_id": row["task_id"], "assessor_id": row["assessor_id"],
+                        "anonymous_arm": row["anonymous_arm"], "packet_id": packet_id})
+    expected = {(f"d{i}", assessor, arm) for i in range(1, 9)
+                for assessor in ("R1", "R2") for arm in ("arm1", "arm2")}
+    observed = {(row["task_id"], row["assessor_id"], row["anonymous_arm"]) for row in answers}
+    if observed != expected:
+        raise CarryHandoffError("future-answer-plan-coverage")
+    return answers
+
+
+def build_handoff(state) -> dict:
+    """Construct a complete answer-only handoff from verified controller state."""
+    proof = state.carried_source_references
+    payloads = state.carried_source_payloads
+    closures_input = state.carried_source_closures
+    actor_ids = state.carried_original_actor_ids
+    source_context = state.carried_source_context
+    if (type(proof) is not dict or proof.get("schema") != "exp100-source-carry48-proof/1"
+            or proof.get("accepted_assignments") != 48
+            or proof.get("nested_accepted_assignments") != 23
+            or proof.get("fresh_replayed_assignments") != 25
+            or proof.get("source_plans_closed") != 8
+            or proof.get("all_original_assignments_required") is not True
+            or proof.get("prior_time_credit_seconds") != 0
+            or proof.get("quality_analyzed") is not False
+            or proof.get("grade_repaired") is not False
+            or type(payloads) is not dict
+            or len(payloads) != 48 or type(actor_ids) is not list
+            or len(actor_ids) != 48 or len(set(actor_ids)) != 48
+            or any(type(actor_id) is not str for actor_id in actor_ids)):
+        raise CarryHandoffError("verified-carry-state-required")
+    source_jobs = _source_identities(proof, payloads)
+    closed = _closures(proof, closures_input)
+
+    revision = state.integrity.get("qualified_source_revision")
+    source_plans, citation_tables = _source_context(proof, source_context, revision)
+    plan_raw = _committed_bytes(revision, ASSIGNMENT_PLAN_PATH)
+    if sha(plan_raw) != ASSIGNMENT_PLAN_SHA256:
+        raise CarryHandoffError("future-answer-plan-pin")
+    try:
+        assignment_plan = state.admission.strict_json(plan_raw)
+    except Exception as exc:
+        raise CarryHandoffError("future-answer-plan-json") from exc
+    clock = state.clock[0]
+    stage_id = clock.get("stage_id") if type(clock) is dict else None
+    if type(stage_id) is not str or not stage_id:
+        raise CarryHandoffError("current-stage-id-required")
+    answer_jobs = _answer_identities(assignment_plan, stage_id)
+
+    carrier = _load_committed_module("exp100_handoff_carrier", revision,
+                                     FINAL_JSON_CARRIER_PATH)
+    try:
+        registry = carrier.SlotRegistry(source_jobs, answer_jobs)
+        registry.mark_carried_source_inputs(proof)
+    except carrier.CarrierError as exc:
+        raise CarryHandoffError("slot-registry-carry-binding") from exc
+
+    stage_root, clock_raw = Path(state.outdir).resolve(), state.clock[1]
+
+    def source_guard():
+        # This is a stage/health guard only. It claims no source phase lease.
+        state.admission.require_stage(state.permit, stage_root, clock_raw)
+
+    source_guard()
+    return {
+        "schema": "exp100-carry-handoff/1",
+        "study_id": "EXP-100",
+        "registry": registry,
+        "source_jobs": source_jobs,
+        "source_payload_bindings": copy.deepcopy(payloads),
+        "source_closed_by_task": closed,
+        "source_closed": closed,
+        "source_plans": source_plans,
+        "citation_tables": citation_tables,
+        "original_actor_ids": list(actor_ids),
+        "source_valid": 48,
+        "next_source": 48,
+        "source_active": None,
+        "source_phase_permit": None,
+        "source_dispatch_permitted": False,
+        "source_guard": source_guard,
+        "answer_jobs": answer_jobs,
+    }
