@@ -1,0 +1,156 @@
+"""Synthetic tests for the EXP-101 fresh-run admission guard."""
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+import uuid
+
+
+HERE = Path(__file__).resolve().parent
+LOADER = importlib.machinery.SourceFileLoader(
+    "exp101_run_admission", str(HERE / "run-admission.py.txt"))
+SPEC = importlib.util.spec_from_loader(LOADER.name, LOADER)
+MODULE = importlib.util.module_from_spec(SPEC)
+LOADER.exec_module(MODULE)
+
+
+class Fixture:
+    def __init__(self, *, now_offset=timedelta(hours=1)):
+        self.root = tempfile.TemporaryDirectory()
+        self.path = Path(self.root.name)
+        self.start = datetime(2026, 10, 8, 12, tzinfo=timezone.utc)
+        self.now = self.start + now_offset
+        self.revision = "a" * 40
+        self.protocol_sha = "1" * 64
+        self.origin_clock_sha = "2" * 64
+        clock = {
+            "schema": "exp101-grading-clock/1",
+            "stage_id": str(uuid.uuid4()),
+            "stage_started_utc": self.start.isoformat().replace("+00:00", "Z"),
+            "stage_deadline_utc": (self.start + timedelta(hours=8)).isoformat().replace("+00:00", "Z"),
+            "source_revision": self.revision,
+            "protocol_sha256": self.protocol_sha,
+            "origin_clock_sha256": self.origin_clock_sha,
+        }
+        self.clock_path, self.clock_sha = self.write("clock.json", clock)
+        baseline = {"expected_revision": self.revision, "model_alias": "free"}
+        self.baseline_path, self.baseline_sha = self.write("baseline.json", baseline)
+        health = {
+            "schema": "exp101-awaited-health-completion/1",
+            "status": "healthy", "http_status": 200,
+            "request_completed": True,
+            "clock_sha256": self.clock_sha,
+            "baseline_sha256": self.baseline_sha,
+            "runtime_revision": self.revision, "model": "free",
+            "observed_utc": (self.start + timedelta(minutes=1)).isoformat().replace("+00:00", "Z"),
+        }
+        self.health_path, self.health_sha = self.write("health.json", health)
+        self.qualified = {"status": "qualified", "qualified_source_revision": self.revision}
+        self.carry = {"status": "verified", "quality_analyzed": False}
+        self.calls = {"qualification": 0, "carry": 0}
+
+    def write(self, name, value):
+        raw = MODULE.canonical(value)
+        path = self.path / name
+        path.write_bytes(raw)
+        return path, hashlib.sha256(raw).hexdigest()
+
+    def admission(self, *, now=None):
+        def qualification():
+            self.calls["qualification"] += 1
+            return self.qualified
+        def carry():
+            self.calls["carry"] += 1
+            return self.carry
+        return MODULE.RunAdmission(
+            qualification_check=qualification, carry_check=carry,
+            clock_path=self.clock_path, clock_sha256=self.clock_sha,
+            health_path=self.health_path, health_sha256=self.health_sha,
+            baseline_path=self.baseline_path, baseline_sha256=self.baseline_sha,
+            protocol_sha256=self.protocol_sha, source_revision=self.revision,
+            origin_clock_sha256=self.origin_clock_sha,
+            now=now or (lambda: self.now))
+
+    def cleanup(self):
+        self.root.cleanup()
+
+
+class RunAdmissionTests(unittest.TestCase):
+    def setUp(self):
+        self.fx = Fixture()
+        self.addCleanup(self.fx.cleanup)
+
+    def assert_terminal(self, admission, expected_reason):
+        with self.assertRaisesRegex(ValueError, expected_reason):
+            admission.revalidate()
+        with self.assertRaisesRegex(ValueError, "admission-terminal-no-resume"):
+            admission.revalidate()
+
+    def test_valid_fresh_uuid4_eight_hour_clock_health_and_carry(self):
+        result = self.fx.admission().revalidate()
+        self.assertEqual(result, {
+            "status": "admitted", "clock_sha256": self.fx.clock_sha,
+            "fresh_health_complete": True, "carry_verified": True,
+            "qualified_source_verified": True,
+        })
+
+    def test_old_clock_is_rejected_terminally(self):
+        self.fx.origin_clock_sha = self.fx.clock_sha
+        self.assert_terminal(self.fx.admission(), "admission-fresh-canonical-clock")
+
+    def test_expired_or_future_clock_is_rejected_terminally(self):
+        expired = self.fx.admission(now=lambda: self.fx.start + timedelta(hours=8))
+        self.assert_terminal(expired, "admission-clock-inactive")
+        future = self.fx.admission(now=lambda: self.fx.start - timedelta(seconds=1))
+        self.assert_terminal(future, "admission-clock-inactive")
+
+    def test_modified_health_clock_and_baseline_bytes_fail_closed(self):
+        mutations = (
+            ("health", self.fx.health_path, self.fx.health_sha),
+            ("clock", self.fx.clock_path, self.fx.clock_sha),
+            ("baseline", self.fx.baseline_path, self.fx.baseline_sha),
+        )
+        for label, path, digest in mutations:
+            with self.subTest(label=label):
+                admission = self.fx.admission()
+                path.write_bytes(path.read_bytes() + b" ")
+                self.assert_terminal(admission, "admission-file-changed")
+                path.write_bytes(path.read_bytes().rstrip() + b"\n")
+
+    def test_wrong_model_revision_and_clock_binding_are_rejected(self):
+        health = json.loads(self.fx.health_path.read_bytes())
+        for key, value, reason in (
+            ("model", "other", "admission-fresh-health"),
+            ("runtime_revision", "b" * 40, "admission-fresh-health"),
+            ("clock_sha256", "3" * 64, "admission-fresh-health"),
+        ):
+            with self.subTest(key=key):
+                changed = dict(health, **{key: value})
+                self.fx.health_path, self.fx.health_sha = self.fx.write("health.json", changed)
+                self.assert_terminal(self.fx.admission(), reason)
+                self.fx.health_path, self.fx.health_sha = self.fx.write("health.json", health)
+        self.fx.qualified = {"status": "qualified", "qualified_source_revision": "b" * 40}
+        self.assert_terminal(self.fx.admission(), "admission-qualification")
+
+    def test_unawaited_or_missing_health_completion_is_terminal(self):
+        health = json.loads(self.fx.health_path.read_bytes())
+        bad_health = dict(health, request_completed=False)
+        self.fx.health_path, self.fx.health_sha = self.fx.write("health.json", bad_health)
+        self.assert_terminal(self.fx.admission(), "admission-fresh-health")
+
+    def test_qualification_and_carry_failures_are_terminal(self):
+        self.fx.qualified = {"status": "not-qualified", "qualified_source_revision": self.fx.revision}
+        self.assert_terminal(self.fx.admission(), "admission-qualification")
+        self.fx.qualified = {"status": "qualified", "qualified_source_revision": self.fx.revision}
+        self.fx.carry = {"status": "failed", "quality_analyzed": False}
+        self.assert_terminal(self.fx.admission(), "admission-carry")
+
+
+if __name__ == "__main__":
+    unittest.main()
