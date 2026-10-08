@@ -1,0 +1,58 @@
+"""Explicitly bind original packet identity to a prospective grading authority.
+
+This module grants no dispatch permission. Admission must separately verify the
+qualified source, current health, deadline, actor parent and one-shot registry.
+"""
+from __future__ import annotations
+import hashlib
+import json
+import re
+
+_SHA = re.compile(r"[0-9a-f]{64}")
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def bind_origin(*, original_clock, original_clock_sha, original_slot,
+                original_input, original_view_plan, original_registry_identity, current_clock,
+                current_clock_sha, qualified_source_sha):
+    for digest in (original_clock_sha, current_clock_sha, qualified_source_sha):
+        if type(digest) is not str or not _SHA.fullmatch(digest):
+            raise ValueError("transport-digest")
+    if sha(canonical(original_clock)) != original_clock_sha:
+        raise ValueError("transport-original-clock")
+    if sha(canonical(current_clock)) != current_clock_sha:
+        raise ValueError("transport-current-clock")
+    if original_clock_sha == current_clock_sha:
+        raise ValueError("transport-new-clock-required")
+    logical = original_slot.get("logical_submission")
+    if type(logical) is not str or not re.fullmatch(r"development-d[1-8]-answer-R[12]-arm[12]", logical):
+        raise ValueError("transport-registered-slot")
+    if type(original_input) is not bytes or sha(original_input) != original_slot.get("input_sha256"):
+        raise ValueError("transport-original-input")
+    packet = json.loads(original_input)
+    original_id = sha(canonical([original_clock["stage_id"], logical]))
+    if (original_registry_identity.get("packet_id") != original_id
+            or original_registry_identity.get("logical_submission") != logical):
+        raise ValueError("transport-original-identity")
+    model_packet_id = packet.get("packet_id")
+    if type(model_packet_id) is not str or not model_packet_id:
+        raise ValueError("transport-model-packet-identity")
+    if (original_view_plan != original_slot.get("input_view_plan")
+            or original_view_plan.get("input_sha256") != sha(original_input)
+            or original_view_plan.get("input_path") != original_slot.get("input_path")):
+        raise ValueError("transport-original-view")
+    return {"schema": "exp101-original-packet-transport/1",
+            "logical_submission": logical, "original_registry_packet_id": original_id,
+            "original_model_packet_id": model_packet_id,
+            "original_clock_sha256": original_clock_sha,
+            "original_input_sha256": sha(original_input),
+            "original_view_plan_sha256": sha(canonical(original_view_plan)),
+            "current_clock_sha256": current_clock_sha,
+            "qualified_source_sha256": qualified_source_sha,
+            "historical_elapsed_time_credit_seconds": 0,
+            "dispatch_authority": "not_granted"}
