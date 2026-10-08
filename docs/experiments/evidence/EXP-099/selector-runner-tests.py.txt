@@ -1,4 +1,9 @@
-"""Offline boundary reproduction through the actual selector exchange and parser."""
+"""Synthetic offline boundary reproduction through the real selector exchange and parser.
+
+Every response body comes from EXP-076's deterministic response_fixture over
+httpx.MockTransport. Usage counters are synthetic guard inputs; no provider is
+contacted and no ranking-quality or adoption conclusion is measured.
+"""
 import asyncio
 import hashlib
 import importlib.machinery
@@ -16,17 +21,19 @@ P = importlib.machinery.SourceFileLoader('exp099_prepare_fixtures', str(HERE.par
 class BudgetTests(unittest.TestCase):
     def test_only_registered_input_constants_change(self):
         old = (HERE.parent/'EXP-078/selector-runner.py.txt').read_bytes()
-        expected = old.replace(b'RESERVE_INPUT = 64_000', b'RESERVE_INPUT = 128_000').replace(b'CALL_INPUT_MAX = 64_000', b'CALL_INPUT_MAX = 128_000')
+        expected = (old.replace(b'RESERVE_INPUT = 64_000', b'RESERVE_INPUT = 128_000')
+                    .replace(b'CALL_INPUT_MAX = 64_000', b'CALL_INPUT_MAX = 128_000')
+                    .replace(b'MAX_OUTPUT_TOTAL = 160_000', b'MAX_OUTPUT_TOTAL = 256_000'))
         current = (HERE/'selector-runner.py.txt').read_bytes()
         self.assertEqual(current, expected)
         protocol = json.loads((HERE/'protocol.json').read_text())
         self.assertEqual(hashlib.sha256(current).hexdigest(), protocol['selector_provenance']['prospective_sha256'])
-        self.assertEqual((R.MAX_CALLS,R.MAX_INPUT_TOTAL,R.MAX_OUTPUT_TOTAL,R.CALL_OUTPUT_MAX,R.RESPONSE_MAX,R.PHASE_SECONDS),(44,3000000,160000,32000,2000000,1.0))
+        self.assertEqual((R.MAX_CALLS,R.MAX_INPUT_TOTAL,R.MAX_OUTPUT_TOTAL,R.RESERVE_INPUT,R.CALL_INPUT_MAX,R.RESERVE_OUTPUT,R.CALL_OUTPUT_MAX,R.RESPONSE_MAX,R.PHASE_SECONDS),(44,3000000,256000,128000,128000,32000,32000,2000000,1.0))
 
     def test_aggregate_reserves_remain_fail_closed(self):
-        self.assertTrue(R._usage_admissible({'input_tokens':2872000,'output_tokens':128000}))
+        self.assertTrue(R._usage_admissible({'input_tokens':2872000,'output_tokens':224000}))
         self.assertFalse(R._usage_admissible({'input_tokens':2872001,'output_tokens':0}))
-        self.assertFalse(R._usage_admissible({'input_tokens':0,'output_tokens':128001}))
+        self.assertFalse(R._usage_admissible({'input_tokens':0,'output_tokens':224001}))
 
     def run_fixture(self, input_tokens, output_tokens=10, candidate_only=False):
         clock,_ = P.clock()
@@ -35,12 +42,19 @@ class BudgetTests(unittest.TestCase):
         raw = R.OLD_PREPARE.clock_wire(clock)
         prepared = P.P.prepare_stage(P.fixture(),P.correction(),stage_clock=clock,stage_clock_bytes=raw)
         acquisition = prepared
+        cases=json.loads((HERE.parent/'EXP-078/cohorts.json').read_text())['cohorts']['development']
         for i in range(1,9):
             acquisition['pools'][f'd{i}']['cards'] = [{'id':f'd{i}-{n}','url':f'https://example.test/{i}/{n}','title':'fixture','snippet':'fixture text'} for n in range(41)]
-        cases=json.loads((HERE.parent/'EXP-078/cohorts.json').read_text())['cohorts']['development']
         for case in cases:
             if case['kind']=='navigation':
-                acquisition['pools'][case['id']]['cards'][0]['url']=case['target_url']
+                cards = acquisition['pools'][case['id']]['cards']
+                first = cards[0]
+                second = cards[1] if len(cards) > 1 else {
+                    'id': f"{case['id']}-other", 'url': 'https://example.test/navigation/other',
+                    'title': 'fixture', 'snippet': 'fixture text'}
+                first['url'] = case['target_url']
+                second['url'] = 'https://example.test/navigation/other'
+                acquisition['pools'][case['id']]['cards'] = [first, second]
         count=[0]
         async def handler(request):
             count[0]+=1
@@ -48,20 +62,24 @@ class BudgetTests(unittest.TestCase):
             response=R.F.strict_json(R.F.response_fixture(body))
             response['usage']={'input_tokens':10 if candidate_only and count[0]==1 else input_tokens,'output_tokens':output_tokens}
             return httpx.Response(200,content=R.F.wire(response))
+        stats={'calls':0,'clients':0,'closed':0}
         def factory(**kwargs):
+            stats['clients'] += 1
             return httpx.AsyncClient(transport=httpx.MockTransport(handler),**kwargs)
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
-            return asyncio.run(R.run_selector(acquisition,json.loads((HERE.parent/'EXP-078/cohorts.json').read_text())['cohorts']['development'],raw,root,root/'selector',offline=True,transport_factory=factory))
+            run = asyncio.run(R.run_selector(acquisition,cases,raw,root,root/'selector',offline=True,transport_factory=factory))
+            stats['calls'] = count[0]
+            return run, stats
 
     def test_original_64015_usage_completes_neutral_with_no_quality_credit(self):
-        run=self.run_fixture(64015)
+        run,_=self.run_fixture(64015)
         self.assertEqual(run['neutral']['status'],'complete')
         self.assertFalse(run['quality_credit'])
         self.assertFalse(run['adoption_eligible'])
 
     def test_over_corrected_cap_stops_and_retains_whole_native_order(self):
-        run=self.run_fixture(128001,candidate_only=True)
+        run,_=self.run_fixture(128001,candidate_only=True)
         self.assertEqual(run['status'],'incomplete')
         self.assertEqual(run['neutral']['candidate_order_ids'],run['neutral']['native_order_ids'])
         self.assertTrue(all(op['status']=='uninvoked' for op in run['operations']))
@@ -69,8 +87,49 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual(run['neutral']['status'],'candidate_failed_fallback')
 
     def test_output_cap_unchanged(self):
-        run=self.run_fixture(64015,32001)
+        run,_=self.run_fixture(64015,32001)
         self.assertEqual(run['status'],'incomplete')
         self.assertEqual(run['budget']['attempts'],1)
+
+    def test_high_output_44_call_schedule_completes_under_256k(self):
+        run,stats=self.run_fixture(100,3795)
+        self.assertEqual(run['status'],'complete')
+        self.assertEqual(len(run['operations']),21)
+        self.assertEqual(run['budget']['attempts'],44)
+        self.assertEqual(stats['calls'],44)
+        self.assertEqual(run['budget']['output_tokens'],166980)
+        self.assertTrue(all(op['status']=='complete' for op in run['operations']))
+        self.assertFalse(run['quality_credit'])
+        self.assertFalse(run['adoption_eligible'])
+
+    def test_same_fixture_would_stop_at_old_160k_aggregate_gate(self):
+        old_limit=R.MAX_OUTPUT_TOTAL
+        try:
+            R.MAX_OUTPUT_TOTAL=160000
+            run,stats=self.run_fixture(100,3795)
+        finally:
+            R.MAX_OUTPUT_TOTAL=old_limit
+        self.assertEqual(run['status'],'incomplete')
+        self.assertEqual(run['budget']['attempts'],34)
+        self.assertEqual(stats['calls'],34)
+        self.assertEqual(run['budget']['output_tokens'],129030)
+        self.assertFalse(run['quality_credit'])
+        self.assertFalse(run['adoption_eligible'])
+
+    def test_output_reserve_stops_after_eight_calls_before_ninth_dispatch(self):
+        run,stats=self.run_fixture(100,32000)
+        self.assertEqual(run['status'],'incomplete')
+        self.assertEqual(run['budget']['attempts'],8)
+        self.assertEqual(stats['calls'],8)
+        self.assertEqual(run['budget']['output_tokens'],256000)
+        invoked=[op for op in run['operations'] if op.get('status')!='uninvoked']
+        uninvoked=[op for op in run['operations'] if op.get('status')=='uninvoked']
+        self.assertEqual(len(uninvoked),17)
+        failed=invoked[-1]
+        self.assertEqual(failed['status'],'failed')
+        self.assertEqual(failed['candidate_order_ids'],failed['native_order_ids'])
+        self.assertEqual(failed['calls'][-1]['status'],'not_dispatched')
+        self.assertFalse(run['quality_credit'])
+        self.assertFalse(run['adoption_eligible'])
 
 if __name__=='__main__': unittest.main()

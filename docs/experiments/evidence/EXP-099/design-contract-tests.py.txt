@@ -1,14 +1,26 @@
 """Offline design-contract checks; no stage admission or live calls."""
 import copy
+import hashlib
 import importlib.machinery
 import json
+import importlib.util
+import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 D = importlib.machinery.SourceFileLoader(
     "exp099_design_contract_under_test", str(HERE / "design-contract.py.txt")
 ).load_module()
+ADMISSION_PATH = HERE / "admission.py.txt"
+ADMISSION_LOADER = importlib.machinery.SourceFileLoader(
+    "exp099_design_contract_admission_under_test", str(ADMISSION_PATH))
+ADMISSION_SPEC = importlib.util.spec_from_loader(ADMISSION_LOADER.name, ADMISSION_LOADER)
+ADMISSION = importlib.util.module_from_spec(ADMISSION_SPEC)
+sys.modules[ADMISSION_LOADER.name] = ADMISSION
+ADMISSION_LOADER.exec_module(ADMISSION)
 
 
 class CurrentDesign(unittest.TestCase):
@@ -59,6 +71,75 @@ class CurrentDesign(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "frozen-semantics-changed"):
             self.validate(protocol=p)
 
+    def test_all_inherited_descriptions_fail_even_when_claimed_hashes_are_refreshed(self):
+        stale = [
+            ("fresh_stage_scope", "starts_before",
+             "the one health check and first fresh source assessment after new admission"),
+            ("input_provenance", "source",
+             "Same513frozen input files and16carried card assignments; all23valid source references retained only by original provenance, no rejected response or quality selection."),
+            ("", "protocol_intervention",
+             "Clarify only the existing source-assessor citation condition in prompt/output schema; replay all23 original valid references with immutable historical source execution. No repair or partial quality analysis."),
+            ("", "purpose",
+             "Prospective citation-contract continuation after terminal EXP-097: require all23 valid original references,25fresh source and32fresh answer assessments. Exact semantic gates and untouched confirmation remain mandatory."),
+            ("recovery_runtime", "purpose",
+             "Use the frozen source contexts, task identities and citation mapping. Change only the declared source-assessor instruction/output-schema clarification. Preserve candidate, answerer, answer rubrics, context projection and quality gates. No source or runtime mutation follows from this prototype."),
+            ("models", "purpose",
+             "Prospective citation-contract clarification after terminal EXP-097. Retain every accepted assignment only through strict provenance replay. Explicitly encode the unchanged evidence_available citation rule; never repair or regrade accepted outputs, score partial references, or weaken semantic acceptance. Delivery, qualified admission and the single successful health gate are mandatory before dispatch; registration establishes no scientific quality or adoption credit."),
+        ]
+        for section, key, old_value in stale:
+            with self.subTest(section=section, key=key):
+                p, c = copy.deepcopy(self.protocol), copy.deepcopy(self.cohorts)
+                target = p.get(section) if section else p
+                target[key] = old_value
+                # Model the surrounding registration/qualification manifests
+                # being refreshed after an edit. The content contract remains
+                # independently enforced before any admission side effect.
+                r, q = copy.deepcopy(self.registration), copy.deepcopy(self.qualification)
+                refreshed = hashlib.sha256(
+                    json.dumps(p, ensure_ascii=False, sort_keys=True,
+                               separators=(",", ":")).encode()).hexdigest()
+                r["protocol_sha256"] = refreshed
+                q["protocol_sha256"] = refreshed
+                with self.assertRaises(ValueError):
+                    self.validate(protocol=p, cohorts=c, registration=r, qualification=q)
+        p, c = copy.deepcopy(self.protocol), copy.deepcopy(self.cohorts)
+        p["grading_order"] = [
+            "verify513frozen input files and all23 original accepted reference lineages without quality analysis",
+            "create fresh EXP-099 clock/admission and complete the single successful health gate",
+            "prepare48source bindings, bind23carry and declare25fresh slots",
+            "complete25fresh source assessments with original raw-final/view/citation/coverage validation",
+            "close independent source references for all8research tasks without joining assessors",
+            "run frozen13case21operation selector schedule within44Jev calls",
+            "produce16task/arm answers plus2neutral checks using free",
+            "prepare and grade all32answer-assessor packets before final quality analysis",
+        ]
+        with self.assertRaisesRegex(ValueError, "current-description-grading-order"):
+            self.validate(protocol=p, cohorts=c)
+        p, c = copy.deepcopy(self.protocol), copy.deepcopy(self.cohorts)
+        c["request_count_basis"] = "23carry+25fresh=48source;47historical+25source+32answer=104graders;18answerAPI gives122total;Jev44;onehealth;zero search/fetch."
+        with self.assertRaisesRegex(ValueError, "current-description-request-count-basis"):
+            self.validate(protocol=p, cohorts=c)
+
+    def test_output_reserve_correction_is_exact_and_per_call_reserve_stays_fixed(self):
+        p = copy.deepcopy(self.protocol)
+        p["budget_correction"]["aggregate_output_tokens"]["after"] = 160000
+        with self.assertRaisesRegex(ValueError, "input-budget-correction"):
+            self.validate(protocol=p)
+        p = copy.deepcopy(self.protocol)
+        p["jev_invocation"]["reported_output_tokens_total_maximum"] = 160000
+        with self.assertRaisesRegex(ValueError, "output-budget-correction"):
+            self.validate(protocol=p)
+        p = copy.deepcopy(self.protocol)
+        p["jev_invocation"]["reserve_before_each_call"]["output"] = 64000
+        with self.assertRaisesRegex(ValueError, "output-budget-correction"):
+            self.validate(protocol=p)
+
+    def test_selector_budget_source_pin_covers_only_the_registered_three_constants(self):
+        p = copy.deepcopy(self.protocol)
+        p["selector_provenance"]["prospective_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "selector-budget-provenance"):
+            self.validate(protocol=p)
+
     def test_prompt_and_checkpoint_pin_required(self):
         with self.assertRaisesRegex(ValueError, "current-source-prompt-binding"):
             self.validate(prompt=b"different prompt")
@@ -78,6 +159,85 @@ class CurrentDesign(unittest.TestCase):
         p["acquisition"]["new_searches"] = 1
         with self.assertRaisesRegex(ValueError, "protocol-acquisition-current-accounting"):
             self.validate(protocol=p)
+
+
+class AdmissionUseSiteTests(unittest.TestCase):
+    """Prove stale prose is rejected through real admission closure validation."""
+
+    def reject_resealed_mutant(self, *, mutate_protocol=None, mutate_cohorts=None,
+                               expected_error):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            here = root / "docs/experiments/evidence/EXP-099"
+            here.mkdir(parents=True)
+            protocol = json.loads((HERE / "protocol.json").read_bytes())
+            cohorts = json.loads((HERE / "cohorts.json").read_bytes())
+            if mutate_protocol is not None:
+                mutate_protocol(protocol)
+            if mutate_cohorts is not None:
+                mutate_cohorts(cohorts)
+            files_data = {
+                "protocol.json": ADMISSION.canonical_json(protocol),
+                "cohorts.json": ADMISSION.canonical_json(cohorts),
+                "design-contract.py.txt": (HERE / "design-contract.py.txt").read_bytes(),
+                "source-assessor-prompt.txt": (HERE / "source-assessor-prompt.txt").read_bytes(),
+            }
+            for name, raw in files_data.items():
+                (here / name).write_bytes(raw)
+            sources = {str((here / name).relative_to(root)): ADMISSION.sha(raw)
+                       for name, raw in files_data.items()}
+            registration = {
+                "schema": "exp099-registration/1", "study_id": "EXP-099",
+                "predecessor": "EXP-098", "status": "registered", "registered": True,
+                "registered_source_revision": "a" * 40, "source_files": sources,
+            }
+            registration_raw = ADMISSION.canonical_json(registration)
+            qualification = {
+                "schema": "exp099-qualification/1", "study_id": "EXP-099",
+                "qualified": True, "status": "qualified",
+                "qualified_source_revision": "a" * 40, "files": sources,
+                "registration_sha256": ADMISSION.sha(registration_raw),
+                "external_source_pins": protocol["external_source_pins"],
+                "protocol_sha256": ADMISSION.sha(files_data["protocol.json"]),
+                "cohorts_sha256": ADMISSION.sha(files_data["cohorts.json"]),
+            }
+            qualification_raw = ADMISSION.canonical_json(qualification)
+            integrity = {
+                "synthetic": False, "study_id": "EXP-099",
+                "qualification_sha256": ADMISSION.sha(qualification_raw),
+                "registration_sha256": ADMISSION.sha(registration_raw),
+                "qualified_source_revision": "a" * 40,
+            }
+            side_effects = []
+            with mock.patch.object(ADMISSION, "REPO", root), \
+                 mock.patch.object(ADMISSION, "HERE", here), \
+                 mock.patch.object(ADMISSION, "_committed_design",
+                    return_value=(registration, registration_raw, qualification_raw, qualification)), \
+                 mock.patch.object(ADMISSION, "_git_blob",
+                    side_effect=lambda _revision, path: (root / path).read_bytes()), \
+                 mock.patch.object(ADMISSION, "create_stage_clock",
+                    side_effect=lambda *args, **kwargs: side_effects.append("clock")), \
+                 mock.patch.object(ADMISSION, "admit_live",
+                    side_effect=lambda *args, **kwargs: side_effects.append("admission")), \
+                 mock.patch.object(ADMISSION, "acquire_phase",
+                    side_effect=lambda *args, **kwargs: side_effects.append("phase")):
+                with self.assertRaisesRegex(ValueError, expected_error):
+                    ADMISSION.verify_closure(integrity, qualification_raw)
+            self.assertEqual(side_effects, [])
+            self.assertFalse(list(root.rglob("stage-clock.json")))
+            self.assertFalse(list(root.rglob("*.lease")))
+
+    def test_resealed_stale_protocol_description_rejected_at_admission_use_site(self):
+        self.reject_resealed_mutant(
+            mutate_protocol=lambda p: p["fresh_stage_scope"].__setitem__(
+                "starts_before", "the one health check and first fresh source assessment after new admission"),
+            expected_error="current-description-fresh-stage-scope")
+
+    def test_resealed_stale_cohort_accounting_description_rejected_at_admission_use_site(self):
+        self.reject_resealed_mutant(
+            mutate_cohorts=lambda c: c.__setitem__("request_count_basis",
+                "23carry+25fresh=48source;47historical+25source+32answer=104graders;18answerAPI gives122total;Jev44;onehealth;zero search/fetch."),
+            expected_error="current-description-request-count-basis")
 
 
 if __name__ == "__main__":

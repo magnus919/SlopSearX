@@ -57,7 +57,26 @@
     },
     "source_limit": "At most five successful distinct sources and 8000 characters per context under unchanged EXP-077 answer_projection."
   },
+  "budget_adequacy": {
+    "basis": "Known EXP-098 usage receipts and fixed schedule cardinality only; no scores or partial quality analysis.",
+    "fixed_candidate_questions": 2000,
+    "forecast_is_not_a_worst_case_guarantee": true,
+    "maximum_output_if_every_call_hits_per_call_cap": 1408000,
+    "new_dispatch_threshold": 224000,
+    "observed_baseline_output_tokens": 594,
+    "pre_dispatch_output_reserve": 32000,
+    "previous_dispatch_threshold": 128000,
+    "projected_output_tokens_approximate_range": [
+      159000,
+      167000
+    ],
+    "unexpected_budget_failure": "Terminal whole-native-order fallback; retain receipts and no partial quality/adoption credit."
+  },
   "budget_correction": {
+    "aggregate_output_tokens": {
+      "after": 256000,
+      "before": 160000
+    },
     "per_call_input_tokens": {
       "after": 128000,
       "before": 64000
@@ -207,17 +226,17 @@
     "covers_seconds": 28800,
     "historical_input_time_credit_seconds": 0,
     "reuse_does_not_reset_or_extend_clock": "Only qualified and separately admitted EXP-099 receives a clock; historical work receives zero time credit.",
-    "starts_before": "the one health check and first fresh source assessment after new admission"
+    "starts_before": "The single health check and first selector call after new admission; all 48 original source references are replayed before the clock."
   },
   "grading_order": [
-    "verify513frozen input files and all23 original accepted reference lineages without quality analysis",
-    "create fresh EXP-099 clock/admission and complete the single successful health gate",
-    "prepare48source bindings, bind23carry and declare25fresh slots",
-    "complete25fresh source assessments with original raw-final/view/citation/coverage validation",
-    "close independent source references for all8research tasks without joining assessors",
-    "run frozen13case21operation selector schedule within44Jev calls",
-    "produce16task/arm answers plus2neutral checks using free",
-    "prepare and grade all32answer-assessor packets before final quality analysis"
+    "Verify all 513 frozen input files and replay all 48 original source references before the clock, without quality analysis.",
+    "Create a fresh EXP-099 clock and admission, then complete the single successful health check.",
+    "Carry all eight original source closures with R1 and R2 separate; create no source input bindings and dispatch no source graders.",
+    "Run the unchanged 13-case, 21-operation selector schedule with at most 44 Jev calls inside the registered token bounds.",
+    "Generate 16 task/arm answers and two readiness checks using free; freeze all 16 complete answer outputs.",
+    "Prepare all 32 answer-assessment packets and verify exact inversions, coverage and complete view delivery under 384000 bytes before any grader dispatch.",
+    "Dispatch each of the 32 independent answer assessments once; retain exact raw finals and validate transcripts, citations, coverage and frozen rubrics.",
+    "Only after complete valid reference closure compute the unchanged quality and task-use metrics; untouched confirmation remains required before adoption."
   ],
   "historical_predecessor": {
     "id": "EXP-094",
@@ -229,7 +248,7 @@
   "input_provenance": {
     "all_bytes_hash_bound": true,
     "schema": "exp099-reused-input-pins/1",
-    "source": "Same513frozen input files and16carried card assignments; all23valid source references retained only by original provenance, no rejected response or quality selection.",
+    "source": "Reuse the same 513 frozen input files and 16 carried card assignments. Retain all 48 accepted source references through original provenance replay: 23 nested and 25 accepted EXP-098 assignments. Exclude rejected responses; perform no repair, regrading or quality selection.",
     "source_bundle_terminal_private_sha256": "4e5f956ced4ba305f766077bc3cfbb5e40d8c5ebd88d40ecc0e7da5dca39cb9a",
     "source_bundle_terminal_public_sha256": "751d7e20efc58f48076541991fd6a61171fa5c7ee3bcce92c0f1392809c7768a",
     "source_bundle_terminal_study": "EXP-088"
@@ -253,7 +272,7 @@
     "per_call_reported_output_tokens_maximum": 32000,
     "physical_calls_maximum_per_stage": 44,
     "reported_input_tokens_total_maximum": 3000000,
-    "reported_output_tokens_total_maximum": 160000,
+    "reported_output_tokens_total_maximum": 256000,
     "reserve_before_each_call": {
       "input": 128000,
       "output": 32000
@@ -312,7 +331,7 @@
     "planned_fresh_answer_api_calls": 18,
     "planned_fresh_grader_submissions": 32,
     "planned_total_logical_model_submissions_including_historical": 122,
-    "purpose": "Prospective citation-contract clarification after terminal EXP-097. Retain every accepted assignment only through strict provenance replay. Explicitly encode the unchanged evidence_available citation rule; never repair or regrade accepted outputs, score partial references, or weaken semantic acceptance. Delivery, qualified admission and the single successful health gate are mandatory before dispatch; registration establishes no scientific quality or adoption credit.",
+    "purpose": "Resume development after terminal EXP-098 by mechanically replaying all 48 accepted source assignments unchanged. Count 72 historical grader submissions and 32 fresh answer assessments, totaling 104 graders; add 18 free answerer calls for 122 grading/answerer submissions. No source repair, regrading or partial quality analysis is permitted. Delivery, fresh admission and successful health remain mandatory before scientific dispatch.",
     "reported_usage": "retain where exposed; in-app grader billing/tokens may be unobservable, never invent them",
     "retries": 0,
     "source_assessment_calls_expected": 0,
@@ -347,8 +366,8 @@
     "answerer_inputs": "Use only the guarded selector artifact and its frozen base-variant top-10 orders, together with actual frozen capture contexts; generate exactly 16 source-limited answerer inputs and retain full source universes and opening outcomes.",
     "offline_replay": "Replay synthetic orders and answers through actual frozen capture contexts, source projection, answerer validation, frozen answer claim/template constructors, fixed codebook encoding/inversion, and exact packet viewer. Include duplicate/failure/success limits, citation inversions and poisoned-hash rejection. No semantic quality analysis."
   },
-  "protocol_intervention": "Clarify only the existing source-assessor citation condition in prompt/output schema; replay all23 original valid references with immutable historical source execution. No repair or partial quality analysis.",
-  "purpose": "Prospective citation-contract continuation after terminal EXP-097: require all23 valid original references,25fresh source and32fresh answer assessments. Exact semantic gates and untouched confirmation remain mandatory.",
+  "protocol_intervention": "Prospectively increase selector per-call input allowance and input reserve from 64000 to 128000, and aggregate reported output allowance from 160000 to 256000. Carry all 48 original source references without repair or regrading. Preserve representation, model, instructions, rubrics, timing, fallback, all numerical quality gates and untouched confirmation.",
+  "purpose": "Continue the terminal EXP-098 development study with all 48 accepted source assignments unchanged: 23 nested and 25 accepted EXP-098 assignments. Dispatch zero source graders and 32 fresh answer graders. Preserve all scientific gates and untouched confirmation requirements.",
   "quality": {
     "all_targets_acquired_and_top1_required": true,
     "bootstrap95_lower_bound_strictly_positive": true,
@@ -388,7 +407,7 @@
     "health_requests_maximum_per_stage": 1,
     "model_identity_unchanged": true,
     "private_binding": "Root-owned private salted configuration receipt binds the exact per-process runtime config. Never place URL, key, user profile, or raw config values in public protocol, source, logs, or receipts.",
-    "purpose": "Use the frozen source contexts, task identities and citation mapping. Change only the declared source-assessor instruction/output-schema clarification. Preserve candidate, answerer, answer rubrics, context projection and quality gates. No source or runtime mutation follows from this prototype.",
+    "purpose": "Replay the frozen original source contexts, task identities and citation mapping. Carry all 48 source references and eight separate R1/R2 closures unchanged; dispatch no source graders. Change only the registered selector token allowances and carry handoff mechanics. Preserve answerer, answer rubrics, context projection and quality gates; change no deployment configuration.",
     "runtime_config_receipt_sha256": "9b235c28265bfd6ef3968d128564f593655d7a914cb618079146b267cf2ec980"
   },
   "runtime_readiness_baseline": {
@@ -426,10 +445,10 @@
   },
   "schema": "exp099-protocol/1",
   "selector_provenance": {
-    "byte_diff_restricted_to_two_input_constants": true,
+    "byte_diff_restricted_to_three_budget_constants": true,
     "original_path": "docs/experiments/evidence/EXP-078/selector-runner.py.txt",
     "original_sha256": "f3672439a4b2c21f2d290fdf134a85845589813760bbe6322a51ae85663adc93",
-    "prospective_sha256": "8d1769bade949b470de87119a2a7551bad84277f9b565e1e4053b8b85416df4c"
+    "prospective_sha256": "33c9252dbf20e6307717a04f3ecf1447ddd1b1e181c79b0669670fa89b56266e"
   },
   "source_citation_aliases": {
     "answer_assessor_prompt_sha256": "58522f899b391a1cc8e472b583f0e46d42766661eda2fafad7b15018bd4f4222",

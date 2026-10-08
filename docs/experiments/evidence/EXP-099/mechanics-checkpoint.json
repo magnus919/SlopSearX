@@ -9,8 +9,28 @@
     "time_credit_seconds": 0,
     "unique_original_actors": 48
   },
+  "admission_use_site_regressions": {
+    "clock_admission_and_phase_effects": 0,
+    "resealed_stale_cohort_description_rejected": true,
+    "resealed_stale_protocol_description_rejected": true
+  },
+  "budget_forecast_regression": {
+    "new_aggregate_output_cap": 256000,
+    "new_bound_calls_before_ninth_denied": 8,
+    "new_bound_reported_output_tokens": 256000,
+    "new_completed_calls": 44,
+    "new_reported_output_tokens": 166980,
+    "old_aggregate_output_cap": 160000,
+    "old_completed_calls": 34,
+    "old_reported_output_tokens": 129030,
+    "output_tokens_per_mock_call": 3795,
+    "quality_credit": false,
+    "synthetic_only": true,
+    "whole_native_fallback": true
+  },
   "external_calls": 0,
   "independent_carry_review": "one copy-race finding fixed; bounded second pass passed",
+  "independent_registration_review": "First pass found stale current-stage descriptions; exact descriptive admission validation and prospective output-budget adequacy correction added for bounded second review.",
   "offline_full_pipeline": {
     "answer_assessment_packets": 32,
     "exact_pages_checked": 1548,
@@ -45,8 +65,8 @@
     "carry_adversarial": 12,
     "carry_handoff": 5,
     "controller": 3,
-    "design_contract": 5,
+    "design_contract": 10,
     "phase_bindings": 5,
-    "selector_boundary": 5
+    "selector_boundary": 8
   }
 }
