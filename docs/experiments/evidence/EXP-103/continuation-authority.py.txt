@@ -1,0 +1,57 @@
+"""EXP-103 identity and charged rejected-grade lineage over unchanged wire code."""
+from __future__ import annotations
+import hashlib
+import json
+import re
+
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False)+"\n").encode()
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def validate_protocol(current, original):
+    allowed={"schema","study_id","status","continuation","operative_execution_order","execution"}
+    if current.get("schema")!="exp103-anchor-continuation-protocol/1" or current.get("study_id")!="EXP-103":
+        raise ValueError("continuation-study")
+    if {k:v for k,v in current.items() if k not in allowed}!={k:v for k,v in original.items() if k not in allowed}:
+        raise ValueError("continuation-science-or-budget-drift")
+    execution=dict(original["execution"])
+    execution.update(historical_conservative_grader_charges=74,
+                     planned_grader_charges=106,planned_combined_charges=124)
+    if current.get("execution")!=execution:
+        raise ValueError("continuation-execution-drift")
+    order=current.get("operative_execution_order")
+    if (type(order) is not dict or {k:v for k,v in order.items() if k!="precedence"}!=
+            {k:v for k,v in original["operative_execution_order"].items() if k!="precedence"}
+            or not order.get("precedence","").startswith("EXP-103 authority and this order govern execution.")):
+        raise ValueError("continuation-operative-order")
+    lineage=current.get("continuation")
+    if (type(lineage) is not dict or lineage.get("failed_execution_origin")!="EXP-102"
+            or lineage.get("completed_output_origin")!="EXP-100"
+            or lineage.get("clock_wire_schema_reused")!="exp101-grading-clock/1"
+            or lineage.get("health_slots_historical_failed")!=1
+            or lineage.get("health_slots_fresh")!=1
+            or lineage.get("grader_reservations_in_failed_102")!=1
+            or lineage.get("accepted_grades_in_failed_102")!=0
+            or lineage.get("health_slots_historical_successful")!=1
+            or lineage.get("physical_actor_namespace")!="/root/exp103_d<1-8>_r<1-2>_answer_arm<1-2>"
+            or lineage.get("grader_charges_historical")!=74
+            or lineage.get("grader_charges_planned")!=106
+            or lineage.get("combined_charges_planned")!=124
+            or lineage.get("elapsed_time_credit")!=0):
+        raise ValueError("continuation-lineage-budget")
+
+def bind_clock(*, clock_raw, failed_clock_raw, protocol_raw, qualified_source_revision):
+    if not re.fullmatch(r"[0-9a-f]{40}",qualified_source_revision):
+        raise ValueError("continuation-source-revision")
+    current=json.loads(clock_raw);failed=json.loads(failed_clock_raw)
+    if (clock_raw!=canonical(current) or current.get("schema")!="exp101-grading-clock/1"
+            or sha(clock_raw)==sha(failed_clock_raw) or current.get("stage_id")==failed.get("stage_id")
+            or current.get("source_revision")!=qualified_source_revision
+            or current.get("protocol_sha256")!=sha(protocol_raw)):
+        raise ValueError("continuation-fresh-clock-required")
+    return {"schema":"exp103-current-clock-authority/1","study_id":"EXP-103",
+            "current_clock_sha256":sha(clock_raw),"failed_exp102_clock_sha256":sha(failed_clock_raw),
+            "qualified_source_revision":qualified_source_revision,"protocol_sha256":sha(protocol_raw),
+            "clock_wire_schema_reused":"exp101-grading-clock/1","elapsed_time_credit_seconds":0}

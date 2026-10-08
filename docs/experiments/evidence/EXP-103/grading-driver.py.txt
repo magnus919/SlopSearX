@@ -1,0 +1,24 @@
+"""Append the original validator's conditional citation contract, without changing grading."""
+from __future__ import annotations
+
+ANCHOR_CONTRACT = (
+    "\n\nExisting conditional evidence-anchor contract (required by the unchanged validator):\n"
+    "In each facet's evidence_dispositions, delivered_unused, used_with_support and used_invalidly "
+    "require a nonempty evidence_ids array. Select only fixed evidence codes from this packet's "
+    "delivered answer_arm catalog for the SAME source_id. This citation grounds your disposition; "
+    "it does not imply that the passage supports the claim or that the source is useful. "
+    "Keep your independent entailment, applicability and usefulness judgments unchanged.\n"
+    "For not_acquired, acquired_unusable and available_not_delivered, evidence_ids must be empty. "
+    "For not_assessable, preserve the existing schema and required reason; do not invent a citation. "
+    "The instruction to include explicit arrays does not permit empty evidence_ids for delivered_unused, "
+    "used_with_support or used_invalidly. Preserve every frozen identifier and claim text. "
+    "Do not repair or validate a returned grade, request another source, or change a judgment to pass validation.\n"
+)
+
+
+def format_answer_assessor_driver(phase_bindings, view_plan, *, original_driver):
+    original = original_driver.format_answer_assessor_driver(phase_bindings, view_plan)
+    result = original + ANCHOR_CONTRACT
+    if len(result.encode("utf-8")) > original_driver.MAX_DRIVER_RESERVE_BYTES:
+        raise original_driver.DriverFormatError("complete-driver-over-reserve")
+    return result
