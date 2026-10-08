@@ -9,21 +9,15 @@
     "terminal_audit": "41f20ac97832a6bd1572d523c646fabbfbdd1f6c1536648495ddedf6706fc3a5",
     "view_proof": "9725e109a5e76f80614fba0f67d7fa4ce5917bcca139bb6c20e4d0bc23f3f6c4"
   },
-  "independent_review_complete": true,
+  "independent_review_complete": false,
   "operator_scheduler_sha256": "871f2006034430abae877c439630fef772d476cb9e39ff6a571a3ebaf6d0a431",
   "production_credit": false,
-  "qualified": true,
+  "qualified": false,
   "qualified_source_revision": "4ee97e46abdee9d8b6fd6a6f7cc272c2b673cba1",
   "quality_analyzed": false,
   "reader_transport_sha256": "0ecc6aba5678ec273e96dfe3fb73241c95ae208c283c960a8e0d82d255da4a24",
   "reused_source_revision": "6a128bfbf9b7aae118c1b3b45ae2b71fc8ce849e",
-  "review_evidence": {
-    "actionable_findings_remaining": 0,
-    "result": "PASS",
-    "reviewed_head": "a7c4000ed8dfa2a67b3145193d9d91494c2cb57d",
-    "reviewed_source_revision": "4ee97e46abdee9d8b6fd6a6f7cc272c2b673cba1",
-    "scope": "conditional-anchor clarification, unique physical reader namespace and isolated nested qualification module identities; complete source-registration and charged rejected-grade lineage; no quality or execution credit"
-  },
+  "review_evidence": {},
   "schema": "exp103-anchor-qualification/1",
   "source_files": {
     "docs/experiments/EXP-088-short-evidence-labels.md": "1804472799356b0470e3175c0c0fefa418880607281e5ecb3f3824a62ea1c8f6",
@@ -447,7 +441,7 @@
     "docs/experiments/evidence/EXP-102/registration-integrity.json": "3c91eb9acc40f07c093d1353257c36b674628d3e93a311162b028f4413015ae9",
     "docs/experiments/evidence/EXP-103/anchor-validation-tests.py.txt": "0feaa84ea4e49740e1bd1f71ce1c381abd64622f5fc8a530860f4b884cd978ed",
     "docs/experiments/evidence/EXP-103/continuation-authority.py.txt": "db35bdb5d7062cf2120b2ca6781fd26a53c5b1b95594b3520de40b36e344894b",
-    "docs/experiments/evidence/EXP-103/grading-driver-tests.py.txt": "b1edd6cd75c2866fdfc81ace87251edf77f43ffa0d6d6ddb936258a7e81de321",
+    "docs/experiments/evidence/EXP-103/grading-driver-tests.py.txt": "edefe7a458721438a919b416882ffa3cfb6c269423f0c8373c80125dedd1cb96",
     "docs/experiments/evidence/EXP-103/grading-driver.py.txt": "425d878026dffc87d7f323bb370878ecdd454f5d1503c05ef40407639d2ceda4",
     "docs/experiments/evidence/EXP-103/protocol.json": "1dc1c73c016c4ed56b116da2b034a76f650edc7563ca83a0d377ab03c6dd5f7b",
     "docs/experiments/evidence/EXP-103/qualification-authority-tests.py.txt": "a4d5771cedc000143c0f7a24c6d0cd7f8c52fb38827251f7e4061cb2e8890b01",
@@ -580,6 +574,6 @@
     "slopsearx/workflow_console.py": "565c82cc91e3832e7edcba36423e5629b81fa3340a0cb3c75f8b226d14caed68",
     "slopsearx/workflow_portal.py": "6745b20350fa2c109228bcf64dcf8c07c5ed958e110ec0f41fe839b8ff2bf75b"
   },
-  "status": "qualified-mechanical-source-only",
+  "status": "awaiting-independent-review",
   "study_id": "EXP-103"
 }
