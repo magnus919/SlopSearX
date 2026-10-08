@@ -1,0 +1,233 @@
+"""Synthetic EXP-103 registration, lineage, and fresh-authority tests."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+import uuid
+
+ROOT = Path(__file__).resolve().parents[4]
+HERE = Path(__file__).resolve().parent
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                        ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+AUTH = load("exp103_authority_test", HERE / "continuation-authority.py.txt")
+QUAL = load("exp103_qualification_test", HERE / "qualification-preflight.py.txt")
+
+class QualificationFixture:
+    """All files and git-blob responses are local synthetic bytes."""
+    def __init__(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self.tmp.name)
+        self.exp103 = self.repo / "docs/experiments/evidence/EXP-103"
+        self.exp102 = self.repo / "docs/experiments/evidence/EXP-102"
+        self.exp103.mkdir(parents=True); self.exp102.mkdir(parents=True)
+        self.rev = "a" * 40
+        self.oldrev = "b" * 40
+        self.blobs = {}
+        self.qmodule = b"synthetic qualified preflight source"
+        self.authmodule = (HERE / "continuation-authority.py.txt").read_bytes()
+        self.protocol = json.loads((HERE / "protocol.json").read_bytes())
+        self.old_protocol = json.loads((ROOT / "docs/experiments/evidence/EXP-102/protocol.json").read_bytes())
+        # The authority helper is tested against the actual frozen protocol pair.
+        self.write("docs/experiments/evidence/EXP-103/protocol.json", canonical(self.protocol))
+        self.write("docs/experiments/evidence/EXP-102/protocol.json", canonical(self.old_protocol))
+        self.write("docs/experiments/evidence/EXP-103/qualification-preflight.py.txt", self.qmodule)
+        self.write("docs/experiments/evidence/EXP-103/continuation-authority.py.txt", self.authmodule)
+        self.write("docs/experiments/evidence/EXP-103/grading-driver.py.txt", b"synthetic driver")
+        self.write("docs/experiments/evidence/EXP-103/reader-transport.py.txt", b"synthetic reader")
+        self.write("docs/experiments/evidence/EXP-102/qualification.json", b'{"qualified_source_revision":"' + self.oldrev.encode() + b'","source_files":{"docs/experiments/evidence/EXP-102/legacy.py":"' + sha(b"old source").encode() + b'"}}')
+        self.write("docs/experiments/evidence/EXP-102/registration-integrity.json", b"synthetic old registration")
+        self.write("docs/experiments/evidence/EXP-102/legacy.py", b"old source")
+        # Required registration inventory, including unchanged EXP-102 pins.
+        names = ["docs/experiments/evidence/EXP-103/qualification-preflight.py.txt",
+                 "docs/experiments/evidence/EXP-103/continuation-authority.py.txt",
+                 "docs/experiments/evidence/EXP-103/protocol.json",
+                 "docs/experiments/evidence/EXP-103/grading-driver.py.txt",
+                 "docs/experiments/evidence/EXP-103/reader-transport.py.txt",
+                 "docs/experiments/evidence/EXP-102/qualification.json",
+                 "docs/experiments/evidence/EXP-102/registration-integrity.json",
+                 "docs/experiments/evidence/EXP-102/legacy.py"]
+        self.files = {n: sha(self.disk(n).read_bytes()) for n in names}
+        self.scheduler = self.repo / "private-scheduler.py"
+        self.scheduler.write_bytes(b"synthetic scheduler")
+        self.reader = self.repo / "private-reader.py"
+        self.reader.write_bytes(b"synthetic private reader")
+        self.lineage_paths = self.make_lineage()
+        self.update_registration_and_qualification()
+        self.install_patches()
+
+    def disk(self, name): return self.repo / name
+    def write(self, name, raw):
+        p = self.disk(name); p.parent.mkdir(parents=True, exist_ok=True); p.write_bytes(raw)
+        self.blobs[(self.rev, name)] = raw
+        self.blobs[("HEAD", name)] = raw
+    def make_lineage(self):
+        clock = canonical({"schema":"exp101-grading-clock/1", "stage_id":str(uuid.uuid4())})
+        clocksha = sha(clock)
+        health = canonical({"clock_sha256":clocksha})
+        healthsha = sha(health)
+        completion = canonical({"clock_sha256":clocksha})
+        completionsha = sha(completion)
+        raw_final = b"synthetic opaque final bytes"
+        raw_log = b"synthetic opaque transcript bytes"
+        finalsha, logsha = sha(raw_final), sha(raw_log)
+        audit = canonical({"clock_sha256":clocksha,"health_attempt_sha256":healthsha,
+            "health_slot_claimed":True,"health_completion_sha256":completionsha,
+            "private_log_sha256":logsha,"status":"terminal-first-grade-hydration-rejected",
+            "grader_reservations":1,"grader_calls":1,"accepted_grader_results":0,
+            "strict_closures":0,"historical_grader_charges_including_this_run":74,
+            "health_request_completed":True,"clock_reuse_permitted":False,
+            "process_exit_confirmed":True,"quality_analyzed":False})
+        auditsha=sha(audit)
+        proof=canonical({"status":"complete","page_count":61,"pages_covered":list(range(1,62)),
+            "tool_call_count":32,"final_text_sha256":finalsha,"transcript_log_sha256":logsha})
+        diagnostic=canonical({"terminal_audit_sha256":auditsha,"raw_final_sha256":finalsha,
+            "original_log_sha256":logsha,"reason":"delivered/used item requires an assessor evidence anchor",
+            "raw_grade_modified":False,"quality_analyzed":False})
+        raws={"clock":clock,"health_attempt":health,"health_completion":completion,
+              "terminal_audit":audit,"diagnostic":diagnostic,"view_proof":proof,
+              "final_raw":raw_final,"raw_log":raw_log}
+        paths={}
+        for key, raw in raws.items():
+            p=self.repo/"lineage"/(key+".bin");p.parent.mkdir(exist_ok=True);p.write_bytes(raw);paths[key]=p
+        return paths
+    def update_registration_and_qualification(self):
+        # Keep synthetic git snapshots exactly equal to on-disk source bytes.
+        for name in self.files:
+            raw=self.disk(name).read_bytes()
+            self.blobs[(self.rev,name)]=raw;self.blobs[("HEAD",name)]=raw
+            self.files[name]=sha(raw)
+        pins={k:sha(p.read_bytes()) for k,p in self.lineage_paths.items()}
+        reg={"schema":"exp103-anchor-registration/1","study_id":"EXP-103",
+             "source_revision_binding":"qualification.qualified_source_revision",
+             "source_files":self.files,"reused_source_revision":self.oldrev,
+             "operator_scheduler_sha256":sha(self.scheduler.read_bytes()),
+             "reader_transport_sha256":sha(self.reader.read_bytes()),"failed_run_pins":pins}
+        regraw=canonical(reg)
+        self.write("docs/experiments/evidence/EXP-103/registration-integrity.json",regraw)
+        q={"schema":"exp103-anchor-qualification/1","study_id":"EXP-103",
+           "qualified":True,"independent_review_complete":True,
+           "qualified_source_revision":self.rev,"source_files":self.files,
+           "reused_source_revision":self.oldrev,
+           "operator_scheduler_sha256":reg["operator_scheduler_sha256"],
+           "reader_transport_sha256":reg["reader_transport_sha256"],"failed_run_pins":pins}
+        self.write("docs/experiments/evidence/EXP-103/qualification.json",canonical(q))
+        # Registration references the source inventory; refresh its HEAD/rev bytes after any mutation.
+        self.blobs[(self.rev,"docs/experiments/evidence/EXP-103/registration-integrity.json")]=regraw
+        self.blobs[("HEAD","docs/experiments/evidence/EXP-103/registration-integrity.json")]=regraw
+    def install_patches(self):
+        self.old_loader=QUAL.importlib.machinery.SourceFileLoader
+        self.old_here,self.old_repo,self.old_blob=QUAL.HERE,QUAL.REPO,QUAL.blob
+        QUAL.HERE=self.exp103;QUAL.REPO=self.repo
+        QUAL.blob=lambda ref,path:self.blobs[(ref,str(path))]
+        # EXP-102 was already independently qualified; keep this dependency synthetic.
+        class OldQualification:
+            def verify(self, **kwargs): return {"status":"qualified"}
+        class Loader:
+            def __init__(self,name,path): self.path=path
+            def load_module(self):
+                if str(self.path).endswith("continuation-authority.py.txt"): return AUTH
+                return OldQualification()
+        QUAL.importlib.machinery.SourceFileLoader=Loader
+    def close(self):
+        QUAL.importlib.machinery.SourceFileLoader=self.old_loader
+        QUAL.HERE,QUAL.REPO,QUAL.blob=self.old_here,self.old_repo,self.old_blob
+        self.tmp.cleanup()
+    def verify(self):
+        return QUAL.verify(original_entrypoints=[],previous_continuation_entrypoint=self.scheduler,
+            previous_failed_run_files={},continuation_entrypoint=self.scheduler,
+            reader_entrypoint=self.reader,failed_run_files=self.lineage_paths)
+
+class QualificationAndAuthorityTests(unittest.TestCase):
+    def setUp(self): self.fx=QualificationFixture()
+    def tearDown(self): self.fx.close()
+
+    def test_synthetic_registration_and_all_eight_failed_lineage_pins_qualify(self):
+        result=self.fx.verify()
+        self.assertEqual(result["status"],"qualified")
+        self.assertEqual(result["study_id"],"EXP-103")
+        self.assertEqual(result["failed_exp102_clock_sha256"],sha(self.fx.lineage_paths["clock"].read_bytes()))
+
+    def test_missing_unqualified_registration_trim_and_private_pin_drift_fail_closed(self):
+        qpath=self.fx.exp103/"qualification.json"
+        original=qpath.read_bytes()
+        q=json.loads(original);qpath.unlink()
+        with self.assertRaisesRegex(ValueError,"qualification-missing"): self.fx.verify()
+        qpath.write_bytes(original)
+        q["qualified"]=False;qpath.write_bytes(canonical(q));self.fx.blobs[("HEAD","docs/experiments/evidence/EXP-103/qualification.json")]=qpath.read_bytes()
+        with self.assertRaisesRegex(ValueError,"not-qualified"): self.fx.verify()
+        qpath.write_bytes(original);self.fx.blobs[("HEAD","docs/experiments/evidence/EXP-103/qualification.json")]=original
+        regpath=self.fx.exp103/"registration-integrity.json"; reg=regpath.read_bytes();regpath.unlink()
+        with self.assertRaisesRegex(ValueError,"registration-missing"): self.fx.verify()
+        regpath.write_bytes(reg)
+        q=json.loads(original);q["source_files"].pop("docs/experiments/evidence/EXP-103/grading-driver.py.txt")
+        qpath.write_bytes(canonical(q));self.fx.blobs[("HEAD","docs/experiments/evidence/EXP-103/qualification.json")]=qpath.read_bytes()
+        with self.assertRaisesRegex(ValueError,"source-inventory"): self.fx.verify()
+        qpath.write_bytes(original);self.fx.blobs[("HEAD","docs/experiments/evidence/EXP-103/qualification.json")]=original
+        self.fx.scheduler.write_bytes(b"changed scheduler")
+        with self.assertRaisesRegex(ValueError,"scheduler-changed"): self.fx.verify()
+
+    def test_lineage_requires_terminal_zero_acceptance_one_charge_and_all_bindings(self):
+        auditpath=self.fx.lineage_paths["terminal_audit"]
+        audit=json.loads(auditpath.read_bytes());audit["accepted_grader_results"]=1
+        auditpath.write_bytes(canonical(audit))
+        self.fx.update_registration_and_qualification()
+        with self.assertRaisesRegex(ValueError,"failed-lineage-not-terminal"):
+            self.fx.verify()
+        with self.assertRaisesRegex(ValueError,"failed-lineage-inventory"):
+            paths=dict(self.fx.lineage_paths);paths.pop("view_proof")
+            QUAL.verify(original_entrypoints=[],previous_continuation_entrypoint=self.fx.scheduler,
+                previous_failed_run_files={},continuation_entrypoint=self.fx.scheduler,
+                reader_entrypoint=self.fx.reader,failed_run_files=paths)
+
+    def test_authority_protocol_keeps_execution_caps_order_and_namespace(self):
+        AUTH.validate_protocol(self.fx.protocol,self.fx.old_protocol)
+        for mutate in (lambda p:p["execution"].__setitem__("fresh_answer_assessments",33),
+                       lambda p:p["immutable_science"].__setitem__("source_limit","changed"),
+                       lambda p:p["operative_execution_order"].__setitem__("precedence","old first"),
+                       lambda p:p["continuation"].__setitem__("physical_actor_namespace","/root/old")):
+            bad=json.loads(json.dumps(self.fx.protocol));mutate(bad)
+            with self.subTest(bad=bad.get("continuation",{}).get("physical_actor_namespace")),self.assertRaises(ValueError):
+                AUTH.validate_protocol(bad,self.fx.old_protocol)
+
+    def test_new_clock_binds_fresh_exp103_identity_and_rejects_failed_exp102_clock(self):
+        old={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+             "source_revision":"b"*40,"protocol_sha256":"0"*64}
+        protocol_raw=canonical(self.fx.protocol)
+        current={"schema":"exp101-grading-clock/1","stage_id":str(uuid.uuid4()),
+                 "source_revision":self.fx.rev,"protocol_sha256":sha(protocol_raw)}
+        result=AUTH.bind_clock(clock_raw=canonical(current),failed_clock_raw=canonical(old),
+            protocol_raw=protocol_raw,qualified_source_revision=self.fx.rev)
+        self.assertEqual(result["schema"],"exp103-current-clock-authority/1")
+        self.assertEqual(result["study_id"],"EXP-103")
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            AUTH.bind_clock(clock_raw=canonical(old),failed_clock_raw=canonical(old),
+                protocol_raw=protocol_raw,qualified_source_revision=self.fx.rev)
+        reused=dict(current,stage_id=old["stage_id"])
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            AUTH.bind_clock(clock_raw=canonical(reused),failed_clock_raw=canonical(old),
+                protocol_raw=protocol_raw,qualified_source_revision=self.fx.rev)
+        wrongrev=dict(current,source_revision="c"*40)
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            AUTH.bind_clock(clock_raw=canonical(wrongrev),failed_clock_raw=canonical(old),
+                protocol_raw=protocol_raw,qualified_source_revision=self.fx.rev)
+        wrongprotocol=dict(current,protocol_sha256="f"*64)
+        with self.assertRaisesRegex(ValueError,"fresh-clock-required"):
+            AUTH.bind_clock(clock_raw=canonical(wrongprotocol),failed_clock_raw=canonical(old),
+                protocol_raw=protocol_raw,qualified_source_revision=self.fx.rev)
+
+if __name__ == "__main__": unittest.main()
