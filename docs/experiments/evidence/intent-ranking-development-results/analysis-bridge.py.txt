@@ -218,6 +218,11 @@ def _operation_map(run, research_tasks, navigation_targets):
                     or len(candidate) != len(set(candidate))
                     or set(baseline) != set(candidate)):
                 raise AnalysisBridgeError("selector-order-membership")
+            if key[0] in navigation_targets:
+                pool_ids = navigation_targets[key[0]].get("pool_ids")
+                if (type(pool_ids) is not list or len(pool_ids) != len(set(pool_ids))
+                        or set(candidate) != set(pool_ids)):
+                    raise AnalysisBridgeError("selector-navigation-pool-membership")
         else:
             candidate = op.get("candidate_order_ids")
             navigation_case = navigation_targets.get(key[0])
@@ -227,7 +232,7 @@ def _operation_map(run, research_tasks, navigation_targets):
                     or pool_ids != [target_id] or candidate != pool_ids
                     or op.get("native_order_ids") != pool_ids
                     or op.get("target_url") != navigation_case.get("target_url")
-                    or op.get("model_calls") != 0 or op.get("calls") != []):
+                    or op.get("model_calls") != 0 or op.get("calls", []) != []):
                 raise AnalysisBridgeError("selector-noop-order")
         by_key[key] = op
     if set(by_key) != expected:

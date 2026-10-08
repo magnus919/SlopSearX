@@ -22,7 +22,7 @@ All eight repeat/rotation comparisons pass: top-ten overlap is 0.9 or 1.0 agains
 
 The carried card verifier validates frozen inventories, raw/decoded/expanded assessment joins, and byte hashes. The original selector-artifact validator verifies structural completion and clock binding. The analysis bridge checks complete ordering, separate assessor calculations, navigation, stability, known usage and recorded bounds.
 
-The old selector did not preserve raw provider response bodies. Its parse functions ran during execution, but response hashes alone cannot reproduce parsing independently. Accordingly this report does not claim raw-response replay, full independent timing provenance, or production qualification. The bridge's nine synthetic tests establish calculator integration and rejection behavior, not semantic correctness.
+The old selector did not preserve raw provider response bodies. Its parse functions ran during execution, but response hashes alone cannot reproduce parsing independently. Accordingly this report does not claim raw-response replay, full independent timing provenance, or production qualification. The bridge's ten synthetic tests establish calculator integration and rejection behavior, not semantic correctness.
 
 ## Decision and next work
 

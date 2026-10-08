@@ -231,6 +231,15 @@ class AnalysisBridgeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "selector-noop-order"):
             self.fx.run_analysis()
 
+    def test_complete_navigation_rejects_out_of_pool_order(self):
+        op = next(op for op in self.fx.run["operations"] if op["case"] == "d9")
+        op.update(status="complete", baseline_phase_ms=1, candidate_phase_ms=1,
+                  baseline_order_ids=["d9-target", "outside-pool"],
+                  candidate_order_ids=["d9-target", "outside-pool"])
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-navigation-pool-membership"):
+            self.fx.run_analysis()
+
     def test_negative_phase_elapsed_is_rejected(self):
         self.fx.run["operations"][0]["baseline_phase_ms"] = -0.01
         (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
