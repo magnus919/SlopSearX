@@ -1,0 +1,181 @@
+"""Offline adversarial tests for EXP-100 carry48 inventory and identity gates."""
+import hashlib
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from importlib.machinery import SourceFileLoader
+
+HERE = Path(__file__).resolve().parent
+CARRY = SourceFileLoader("exp100_source_carry_tests", str(HERE / "source-carry.py.txt")).load_module()
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def fixture(root):
+    (root / "stage").mkdir()
+    (root / "stage/evidence.json").write_bytes(b'{"status":"offline"}\n')
+    raw = (root / "stage/evidence.json").read_bytes()
+    pins = {
+        "schema": CARRY.SNAPSHOT_SCHEMA,
+        "stage_path": "stage",
+        "nested_checkpoint_path": "nested-checkpoint",
+        "nested_pins_path": "nested-pins.json",
+        "owned_repo_path": "owned-repo",
+        "profile_path": "profile",
+        "files": [{"path": "stage/evidence.json", "bytes": len(raw), "sha256": digest(raw)}],
+        "file_count": 1,
+        "total_bytes": len(raw),
+        "source_coordinator_sha256": "a" * 64,
+        "actor_bindings_sha256": "b" * 64,
+        "final_log_reader_sha256": "c" * 64,
+        "phase_bindings_sha256": "d" * 64,
+        "input_view_verifier_sha256": "e" * 64,
+        "model_packets_sha256": "f" * 64,
+        "source_closer_sha256": "1" * 64,
+        "source_slot_manifest_sha256": "2" * 64,
+        "viewer_sha256": "3" * 64,
+        "final_json_carrier_sha256": "4" * 64,
+        "assignment_plan_sha256": "5" * 64,
+        "source_coordinator_path": "original-helpers/coordinator.py",
+        "actor_bindings_path": "original-helpers/actors.py",
+        "final_log_reader_path": "original-helpers/reader.py",
+    }
+    pins_raw = CARRY.canonical(pins)
+    return pins, pins_raw
+
+
+def write_pins(root, raw):
+    path = root.parent / (root.name + "-pins.json")
+    path.write_bytes(raw)
+    return path
+
+
+class InventoryTests(unittest.TestCase):
+    def test_mutation_after_inventory_cannot_enter_owned_tree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "snapshot"
+            root.mkdir()
+            _, raw = fixture(root)
+            pins = CARRY.verify_inventory(root, raw, digest(raw))
+            (root / "stage/evidence.json").write_bytes(b'{"status":"mutated-after-verify"}\n')
+            owned = Path(tmp) / "owned"
+            owned.mkdir()
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-file-changed-before-owned-copy"):
+                CARRY._copy_verified_tree(root, owned, pins)
+            self.assertFalse((owned / "stage/evidence.json").exists())
+
+    def test_accepts_exact_inventory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, raw = fixture(root)
+            self.assertEqual(CARRY.verify_inventory(root, raw, digest(raw))["file_count"], 1)
+
+    def test_rejects_changed_pin_digest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, raw = fixture(root)
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-pins-digest"):
+                CARRY.verify_inventory(root, raw, "0" * 64)
+
+    def test_rejects_tampered_file_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, raw = fixture(root)
+            (root / "stage/evidence.json").write_bytes(b'{"status":"changed"}\n')
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-file-pin"):
+                CARRY.verify_inventory(root, raw, digest(raw))
+
+    def test_rejects_unpinned_extra_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, raw = fixture(root)
+            (root / "extra.txt").write_text("unexpected")
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-inventory-coverage"):
+                CARRY.verify_inventory(root, raw, digest(raw))
+
+    def test_rejects_duplicate_inventory_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pins, _ = fixture(root)
+            pins["files"].append(dict(pins["files"][0]))
+            pins["file_count"] += 1
+            raw = CARRY.canonical(pins)
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-inventory-duplicate-or-size"):
+                CARRY.verify_inventory(root, raw, digest(raw))
+
+    def test_rejects_symlinked_snapshot_input(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, raw = fixture(root)
+            target = root / "outside"
+            target.write_bytes((root / "stage/evidence.json").read_bytes())
+            (root / "stage/evidence.json").unlink()
+            (root / "stage/evidence.json").symlink_to(target)
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-symlink"):
+                CARRY.verify_inventory(root, raw, digest(raw))
+
+    def test_entrypoint_fails_closed_before_replay_on_tampered_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "snapshot"
+            root.mkdir()
+            _, raw = fixture(root)
+            (root / "stage/evidence.json").write_bytes(b"tampered")
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-file-pin"):
+                CARRY.verify_carry48(root, write_pins(root, raw), digest(raw))
+
+    def test_entrypoint_rejects_unregistered_pins_digest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "snapshot"
+            root.mkdir()
+            _, raw = fixture(root)
+            pins_path = write_pins(root, raw)
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-pins-digest"):
+                CARRY.verify_carry48(root, pins_path, "0" * 64)
+
+    def test_source_identity_keeps_assessor_and_chunk(self):
+        base = {"logical_submission": "development-d1-source-R1-1", "role": "source",
+                "task_id": "d1", "assessor_id": "R1", "chunk_index": 0, "helper_id": "r1-1"}
+        self.assertEqual(CARRY._slot_identity(base)["assessor_id"], "R1")
+        other = dict(base, logical_submission="development-d1-source-R2-1", assessor_id="R2", helper_id="r2-1")
+        self.assertNotEqual(CARRY._slot_identity(base), CARRY._slot_identity(other))
+        with self.assertRaisesRegex(CARRY.CarryError, "source-slot-role-or-assessor"):
+            CARRY._slot_identity(dict(base, assessor_id="R3"))
+
+    def test_slot_universe_requires_all_48_distinct_assessor_chunks(self):
+        jobs = []
+        for task in range(1, 9):
+            for assessor in ("R1", "R2"):
+                for chunk in range(3):
+                    jobs.append({"logical_submission": f"development-d{task}-source-{assessor}-{chunk + 1}",
+                                 "role": "source", "task_id": f"d{task}", "assessor_id": assessor,
+                                 "chunk_index": chunk, "helper_id": f"{assessor.lower()}-{chunk + 1}"})
+        self.assertEqual(len(CARRY._validate_slot_universe(jobs)), 48)
+        with self.assertRaisesRegex(CARRY.CarryError, "source-slot-universe"):
+            CARRY._validate_slot_universe(jobs[:-1])
+        duplicated = list(jobs)
+        duplicated[-1] = dict(duplicated[0])
+        with self.assertRaises(CARRY.CarryError):
+            CARRY._validate_slot_universe(duplicated)
+
+    def test_dispatch_cannot_rewrite_original_uri(self):
+        clock = {"schema": "clock"}
+        original_uri = "/qualified/original/wire-input.json"
+        binding = {"logical_submission": "development-d1-source-R1-1"}
+        view_plan = {"input_path": original_uri}
+        ref = {"input_path": original_uri}
+        dispatch = {"schema": "exp098-source-dispatch/1", "slot": 24,
+                    "binding": binding, "requested_model": "gpt-6.1-sol",
+                    "stage_clock_sha256": digest(CARRY.canonical(clock)),
+                    "input_path": original_uri}
+        CARRY._validate_fresh_dispatch(dispatch, binding, view_plan, ref, 24, clock)
+        with self.assertRaisesRegex(CARRY.CarryError, "fresh-original-dispatch-or-uri"):
+            CARRY._validate_fresh_dispatch(dispatch, binding,
+                {"input_path": "/relocated/new-input.json"}, ref, 24, clock)
+
+
+if __name__ == "__main__":
+    unittest.main()

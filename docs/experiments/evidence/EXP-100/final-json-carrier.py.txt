@@ -1,0 +1,302 @@
+"""Exact final-message receiver and two-phase assessment-slot binding for EXP-095.
+
+This module is inert: it makes no provider, filesystem-discovery, clock, or
+lease calls until explicit caller methods run. It stores the supplied final
+text bytes exactly and leaves every parse/schema/coverage decision to the
+unchanged downstream validator.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+MAX_INPUT_BYTES = 384_000
+MAX_OUTPUT_BYTES = 2_000_000
+
+
+class CarrierError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def _write_once(path: Path, raw: bytes) -> None:
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as f:
+        f.write(raw)
+        f.flush()
+        os.fsync(f.fileno())
+    dfd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+
+
+def _slot_id(row: dict) -> str:
+    # `logical_submission` is the frozen EXP-077 assignment-plan identity.
+    value = row.get("logical_submission")
+    if type(value) is not str or not value or len(value.encode("utf-8")) > 256:
+        raise CarrierError("slot-id-invalid")
+    return value
+
+
+def _identity(row: dict, role: str) -> dict:
+    required = ({"logical_submission", "role", "task_id", "assessor_id", "chunk_index", "helper_id"}
+                if role == "source" else
+                {"logical_submission", "role", "task_id", "assessor_id", "anonymous_arm", "packet_id"})
+    if type(row) is not dict or set(row) != required or row.get("role") != role:
+        raise CarrierError("slot-identity-shape")
+    if any(type(row.get(key)) is not str or not row[key] for key in required - {"chunk_index"}):
+        raise CarrierError("slot-identity-value")
+    if role == "source":
+        if type(row.get("chunk_index")) is not int or row["chunk_index"] not in range(3):
+            raise CarrierError("source-chunk-index")
+        if row["assessor_id"] not in {"R1", "R2"} or row["task_id"] not in {f"d{i}" for i in range(1, 9)}:
+            raise CarrierError("source-slot-identity")
+        expected = f"development-{row['task_id']}-source-{row['assessor_id']}-{row['chunk_index'] + 1}"
+        if row["logical_submission"] != expected:
+            raise CarrierError("source-slot-logical-id")
+    if role == "answer-assessor":
+        if (row.get("anonymous_arm") not in {"arm1", "arm2"}
+                or row["assessor_id"] not in {"R1", "R2"}
+                or row["task_id"] not in {f"d{i}" for i in range(1, 9)}):
+            raise CarrierError("answer-arm")
+        expected = f"development-{row['task_id']}-answer-{row['assessor_id']}-{row['anonymous_arm']}"
+        if row["logical_submission"] != expected:
+            raise CarrierError("answer-slot-logical-id")
+    return copy.deepcopy(row)
+
+
+def _bound(row: dict, role: str) -> dict:
+    identity_fields = ({"logical_submission", "role", "task_id", "assessor_id", "chunk_index", "helper_id"}
+                       if role == "source" else
+                       {"logical_submission", "role", "task_id", "assessor_id", "anonymous_arm", "packet_id"})
+    role_fields = ({"grouped_binding_sha256", "grouped_packet_sha256", "original_coded_packet_sha256"}
+                   if role == "answer-assessor" else set())
+    if type(row) is not dict or set(row) != identity_fields | {
+            "input_sha256", "input_bytes", "label_binding_sha256", "stage_clock_sha256",
+            "protocol_sha256", "qualified_source_revision"} | role_fields:
+        raise CarrierError("slot-binding-shape")
+    identity = _identity({k: row[k] for k in identity_fields}, role)
+    for name in ("input_sha256", "label_binding_sha256", "stage_clock_sha256", "protocol_sha256"):
+        value = row.get(name)
+        if type(value) is not str or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+            raise CarrierError("slot-binding-digest")
+    for name in role_fields:
+        value = row.get(name)
+        if type(value) is not str or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+            raise CarrierError("grouped-answer-binding-digest")
+    rev = row.get("qualified_source_revision")
+    if type(rev) is not str or len(rev) != 40 or any(c not in "0123456789abcdef" for c in rev):
+        raise CarrierError("slot-binding-revision")
+    size = row.get("input_bytes")
+    if type(size) is not int or size < 1 or size > MAX_INPUT_BYTES:
+        raise CarrierError("slot-input-byte-cap")
+    return {**identity, **{k: row[k] for k in ("input_sha256", "input_bytes", "label_binding_sha256",
+                                               "stage_clock_sha256", "protocol_sha256",
+                                               "qualified_source_revision")},
+            **{k: row[k] for k in role_fields}}
+
+
+class SlotRegistry:
+    """Predeclare source and answer identities; freeze exact inputs at phase boundaries."""
+
+    def __init__(self, source_slots: list[dict], answer_slots: list[dict]):
+        if type(source_slots) is not list or type(answer_slots) is not list:
+            raise CarrierError("slot-inventory-type")
+        self._identities = {}
+        for row in source_slots:
+            item = _identity(row, "source")
+            key = _slot_id(item)
+            if key in self._identities:
+                raise CarrierError("duplicate-slot")
+            self._identities[key] = item
+        for row in answer_slots:
+            item = _identity(row, "answer-assessor")
+            key = _slot_id(item)
+            if key in self._identities:
+                raise CarrierError("duplicate-slot")
+            self._identities[key] = item
+        if len(source_slots) != 48 or len(answer_slots) != 32:
+            raise CarrierError("slot-inventory-count")
+        source_matrix = {(f"d{task}", assessor, chunk)
+                         for task in range(1, 9) for assessor in ("R1", "R2")
+                         for chunk in range(3)}
+        answer_matrix = {(f"d{task}", assessor, arm)
+                         for task in range(1, 9) for assessor in ("R1", "R2")
+                         for arm in ("arm1", "arm2")}
+        observed_source = {(row["task_id"], row["assessor_id"], row["chunk_index"])
+                           for row in self._identities.values() if row["role"] == "source"}
+        observed_answer = {(row["task_id"], row["assessor_id"], row["anonymous_arm"])
+                           for row in self._identities.values() if row["role"] == "answer-assessor"}
+        if observed_source != source_matrix or observed_answer != answer_matrix:
+            raise CarrierError("slot-identity-coverage")
+        self._bindings: dict[str, dict] = {}
+        self._received: dict[str, dict] = {}
+        self._carried_source_proof_sha256 = None
+        self._answer_frozen = False
+        self._answer_output_manifest_sha256: str | None = None
+
+    def bind_source_inputs(self, rows: list[dict]) -> str:
+        raise CarrierError("exp100-source-dispatch-not-permitted")
+
+    def mark_carried_source_inputs(self, proof: dict) -> str:
+        """Record replay provenance without inventing new source input bindings."""
+        if self._bindings or self._carried_source_proof_sha256 is not None:
+            raise CarrierError("source-bindings-already-frozen")
+        if (type(proof) is not dict or proof.get("schema") != "exp100-source-carry48-proof/1"
+                or proof.get("accepted_assignments") != 48
+                or proof.get("source_plans_closed") != 8
+                or proof.get("all_original_assignments_required") is not True
+                or proof.get("quality_analyzed") is not False
+                or proof.get("grade_repaired") is not False):
+            raise CarrierError("carried-source-proof-required")
+        rows = proof.get("assignments")
+        expected = {key: row for key, row in self._identities.items() if row["role"] == "source"}
+        if (type(rows) is not list or len(rows) != 48
+                or len({row.get("logical_submission") for row in rows if type(row) is dict}) != 48
+                or {row.get("logical_submission"): row.get("slot_identity") for row in rows
+                    if type(row) is dict} != expected):
+            raise CarrierError("carried-source-identity-coverage")
+        self._carried_source_proof_sha256 = sha(canonical(proof))
+        return self._carried_source_proof_sha256
+
+    def bind_answer_inputs(self, rows: list[dict], *, answer_output_manifest: dict | None = None) -> str:
+        if self._carried_source_proof_sha256 is None or self._answer_frozen:
+            raise CarrierError("answer-bind-phase")
+        manifest_sha = self._validate_answer_output_manifest(answer_output_manifest)
+        parsed = [_bound(row, "answer-assessor") for row in rows]
+        expected = {key for key, value in self._identities.items() if value["role"] == "answer-assessor"}
+        if len(parsed) != 32 or {row["logical_submission"] for row in parsed} != expected:
+            raise CarrierError("answer-binding-coverage")
+        for row in parsed:
+            identity = self._identities[row["logical_submission"]]
+            if identity != {k: row[k] for k in identity}:
+                raise CarrierError("answer-binding-identity")
+        self._bindings.update({row["logical_submission"]: row for row in parsed})
+        self._answer_output_manifest_sha256 = manifest_sha
+        self._answer_frozen = True
+        return sha(canonical({"answer_output_manifest_sha256": manifest_sha, "slots": parsed}))
+
+    @staticmethod
+    def _validate_answer_output_manifest(manifest: dict) -> str:
+        if (type(manifest) is not dict or set(manifest) != {"schema", "status", "answers"}
+                or manifest.get("schema") != "exp095-answer-output-manifest/1"
+                or manifest.get("status") != "complete" or type(manifest.get("answers")) is not list
+                or len(manifest["answers"]) != 16):
+            raise CarrierError("answer-output-manifest")
+        observed = set()
+        for row in manifest["answers"]:
+            if (type(row) is not dict or set(row) != {"task_id", "arm", "answer_sha256",
+                    "receipt_sha256", "bytes"}):
+                raise CarrierError("answer-output-row")
+            task, arm = row["task_id"], row["arm"]
+            if task not in {f"d{i}" for i in range(1, 9)} or arm not in {"w0", "candidate"}:
+                raise CarrierError("answer-output-identity")
+            key = (task, arm)
+            if key in observed:
+                raise CarrierError("answer-output-duplicate")
+            observed.add(key)
+            for name in ("answer_sha256", "receipt_sha256"):
+                value = row[name]
+                if type(value) is not str or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+                    raise CarrierError("answer-output-digest")
+            if type(row["bytes"]) is not int or row["bytes"] < 1 or row["bytes"] > MAX_OUTPUT_BYTES:
+                raise CarrierError("answer-output-size")
+        expected = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+        if observed != expected:
+            raise CarrierError("answer-output-coverage")
+        return sha(canonical(manifest))
+
+    def binding(self, slot_id: str) -> dict:
+        if slot_id not in self._bindings:
+            raise CarrierError("slot-not-frozen")
+        if self._identities[slot_id]["role"] == "answer-assessor" and not self._answer_frozen:
+            raise CarrierError("answer-inputs-not-frozen")
+        return copy.deepcopy(self._bindings[slot_id])
+
+
+class FinalTextReceiver:
+    """Persist exactly one current agent final string per frozen grader slot."""
+
+    def __init__(self, registry: SlotRegistry, outdir: Path, *, stage_outdir: Path,
+                 phase_binding: dict, require_phase):
+        self.registry = registry
+        self.outdir = Path(outdir)
+        self.stage_outdir = Path(stage_outdir).resolve()
+        target = self.outdir.resolve()
+        if (target == self.stage_outdir or not target.is_relative_to(self.stage_outdir)
+                or not callable(require_phase) or type(phase_binding) is not dict):
+            raise CarrierError("phase-permit-or-output-scope-required")
+        self.require_phase = require_phase
+        self.require_phase(phase_binding)
+        if self.outdir.exists() or self.outdir.is_symlink():
+            raise CarrierError("receiver-output-must-be-new")
+        self.outdir.mkdir(mode=0o700, parents=True, exist_ok=False)
+        self._receipts: dict[str, dict] = {}
+
+    def receive(self, slot_id: str, expected_binding: dict, final_text: str) -> dict:
+        binding = self.registry.binding(slot_id)
+        if type(expected_binding) is not dict or expected_binding != binding:
+            raise CarrierError("slot-binding-mismatch")
+        self.require_phase(binding)
+        if slot_id in self._receipts:
+            raise CarrierError("duplicate-final-text")
+        if type(final_text) is not str or not final_text:
+            raise CarrierError("missing-or-empty-final-text")
+        try:
+            raw = final_text.encode("utf-8", errors="strict")
+        except UnicodeEncodeError as exc:
+            raise CarrierError("final-text-invalid-unicode") from exc
+        if len(raw) > MAX_OUTPUT_BYTES:
+            raise CarrierError("final-text-byte-cap")
+        # Never parse, strip, normalize, repair or reserialize this content.
+        name = f"{sha(slot_id.encode('utf-8'))[:20]}.final.txt"
+        _write_once(self.outdir / name, raw)
+        receipt = {"schema": "exp095-final-text-receipt/1", "logical_submission": slot_id,
+                   "role": binding["role"], "path": name, "bytes": len(raw),
+                   "sha256": sha(raw), "input_sha256": binding["input_sha256"],
+                   "label_binding_sha256": binding["label_binding_sha256"],
+                   "answer_output_manifest_sha256": self.registry._answer_output_manifest_sha256
+                       if binding["role"] == "answer-assessor" else None,
+                   "persisted_exact_final_text": True, "parsed_or_repaired": False}
+        if binding["role"] == "answer-assessor":
+            receipt.update({key: binding[key] for key in (
+                "grouped_binding_sha256", "grouped_packet_sha256", "original_coded_packet_sha256")})
+        _write_once(self.outdir / (name + ".json"), canonical(receipt))
+        self._receipts[slot_id] = receipt
+        return copy.deepcopy(receipt)
+
+    def terminal_missing(self, slot_id: str, expected_binding: dict) -> dict:
+        binding = self.registry.binding(slot_id)
+        if type(expected_binding) is not dict or expected_binding != binding:
+            raise CarrierError("slot-binding-mismatch")
+        self.require_phase(binding)
+        if slot_id in self._receipts:
+            raise CarrierError("duplicate-final-text")
+        receipt = {"schema": "exp095-final-text-receipt/1", "logical_submission": slot_id,
+                   "role": binding["role"], "status": "missing_final_text", "bytes": 0,
+                   "sha256": None, "input_sha256": binding["input_sha256"],
+                   "answer_output_manifest_sha256": self.registry._answer_output_manifest_sha256
+                       if binding["role"] == "answer-assessor" else None,
+                   "persisted_exact_final_text": False, "parsed_or_repaired": False}
+        if binding["role"] == "answer-assessor":
+            receipt.update({key: binding[key] for key in (
+                "grouped_binding_sha256", "grouped_packet_sha256", "original_coded_packet_sha256")})
+        name = f"{sha(slot_id.encode('utf-8'))[:20]}.missing.json"
+        _write_once(self.outdir / name, canonical(receipt))
+        self._receipts[slot_id] = receipt
+        return copy.deepcopy(receipt)

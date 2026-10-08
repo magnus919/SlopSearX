@@ -1,0 +1,72 @@
+{
+  "actual_source_replay": {
+    "accepted_assignments": 48,
+    "fresh_original_assignments": 25,
+    "nested_assignments": 23,
+    "quality_analyzed": false,
+    "repair": false,
+    "separate_task_closures": 8,
+    "time_credit_seconds": 0,
+    "unique_original_actors": 48
+  },
+  "admission_use_site_regressions": {
+    "clock_admission_and_phase_effects": 0,
+    "resealed_stale_cohort_description_rejected": true,
+    "resealed_stale_protocol_description_rejected": true
+  },
+  "budget_forecast_regression": {
+    "new_aggregate_output_cap": 256000,
+    "new_bound_calls_before_ninth_denied": 8,
+    "new_bound_reported_output_tokens": 256000,
+    "new_completed_calls": 44,
+    "new_reported_output_tokens": 166980,
+    "old_aggregate_output_cap": 160000,
+    "old_completed_calls": 34,
+    "old_reported_output_tokens": 129030,
+    "output_tokens_per_mock_call": 3795,
+    "quality_credit": false,
+    "synthetic_only": true,
+    "whole_native_fallback": true
+  },
+  "external_calls": 0,
+  "independent_carry_review": "one copy-race finding fixed; bounded second pass passed",
+  "independent_registration_review": "First pass found stale current-stage descriptions; exact descriptive admission validation and prospective output-budget adequacy correction added for bounded second review.",
+  "offline_full_pipeline": {
+    "answer_assessment_packets": 32,
+    "exact_pages_checked": 1548,
+    "frozen_answers": 16,
+    "live_http_calls": 0,
+    "maximum_packet_bytes": 235022,
+    "maximum_view_delivery_bytes": 262290,
+    "mock_answerer_calls": 18,
+    "mock_jev_calls": 44,
+    "per_slot_byte_cap": 384000,
+    "quality_scored": false,
+    "receipt_sha256": "6c515bd814345e8637012dd02bcb1bb0159f259d58d391a151da8b911ebd4a71",
+    "selector_operations": 21,
+    "source_context_origin": "Digest-bound plans and citation tables returned from the verifier-owned original snapshot; no reopening of original mutable preparation paths.",
+    "source_dispatches": 0,
+    "source_judgments_in_answerer": false
+  },
+  "remaining": [
+    "registration review, required CI and merged-byte verification",
+    "fresh admission and health before scientific dispatch",
+    "supported development, untouched confirmation and product implementation"
+  ],
+  "scope": "offline mechanics only; no scientific quality or live admission claim",
+  "source_closure_checks": {
+    "clock_created": false,
+    "default_and_alternate_readiness_baselines_passed": true,
+    "live_calls": 0,
+    "protected_sources": 467
+  },
+  "status": "offline_mechanics_passed_delivery_pending",
+  "suites": {
+    "carry_adversarial": 12,
+    "carry_handoff": 5,
+    "controller": 3,
+    "design_contract": 10,
+    "phase_bindings": 5,
+    "selector_boundary": 8
+  }
+}

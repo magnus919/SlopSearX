@@ -1,0 +1,33 @@
+"""Offline tests of actual pre-clock operator entrypoint enforcement."""
+import hashlib,importlib.machinery,tempfile,unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+HERE=Path(__file__).resolve().parent
+C=importlib.machinery.SourceFileLoader('exp100_entrypoint_controller_tests',str(HERE/'controller.py.txt')).load_module()
+class EntrypointPins(unittest.TestCase):
+ def fixture(self,root):
+  paths={k:root/k for k in ('operator_scheduler','operator_bootstrap')}
+  for p in paths.values():p.write_bytes(b'qualified fixture')
+  pins={k:{'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for k,p in paths.items()}
+  return pins,paths
+ def test_exact_entrypoint_bytes_are_required(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   pins,paths=self.fixture(Path(tmp));C.verify_operator_entrypoints(pins,paths)
+   paths['operator_scheduler'].write_bytes(b'unawaited original fixture')
+   with self.assertRaisesRegex(ValueError,'operator-entrypoint-pin-mismatch'):C.verify_operator_entrypoints(pins,paths)
+ def test_missing_and_symlink_entrypoints_are_rejected(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   pins,paths=self.fixture(Path(tmp))
+   with self.assertRaisesRegex(ValueError,'operator-entrypoint-pins-required'):C.verify_operator_entrypoints(pins,None)
+   target=paths['operator_bootstrap'];link=Path(tmp)/'link';link.symlink_to(target);paths['operator_bootstrap']=link
+   with self.assertRaisesRegex(ValueError,'operator-entrypoint-pin-mismatch'):C.verify_operator_entrypoints(pins,paths)
+ def test_changed_scheduler_is_rejected_at_preflight_before_clock_or_carry(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   pins,paths=self.fixture(Path(tmp));paths['operator_scheduler'].write_bytes(b'changed')
+   admission=SimpleNamespace(_committed_design=lambda:({},b'r',b'q',{'external_source_pins':pins}))
+   with mock.patch.object(C,'load',return_value=admission) as load:
+    with self.assertRaisesRegex(ValueError,'operator-entrypoint-pin-mismatch'):
+     C.preflight('/unused',source_checkpoint_root='/unused',source_checkpoint_pins_path='/unused',operator_entrypoints=paths)
+   self.assertEqual(load.call_count,1)
+if __name__=='__main__':unittest.main()

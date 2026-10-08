@@ -1,0 +1,11 @@
+# EXP-100: qualified health invocation
+
+This is a setup-only successor to [EXP-099's terminal attempt](EXP-099-terminal-setup.md). No research quality result is available. The private launcher previously called the asynchronous health function without awaiting it; initialization correctly refused to proceed without a durable health-completion record.
+
+The successor changes the operator invocation, not the research experiment. The committed controller now loads a qualified helper that awaits the actual health operation, requires a healthy receipt and rechecks the durable current-stage completion guard before returning success. The scheduler and bootstrap are individually hash-pinned. The bootstrap checks their committed pins before configuration access, and controller preflight verifies both entrypoint files before creating a clock. Offline tests exercise awaited success, asynchronous failure, missing completion, and changed entrypoint bytes at the preflight use site.
+
+All 48 accepted source assessments and all 513 frozen input files remain unchanged. No new search or source fetch is planned. The 72 historical grader submissions remain charged; 32 fresh answer assessments and 18 `free` answerer calls remain planned, for 104 graders and 122 grading/answerer submissions. Coding helpers use Luna; scientific graders use GPT-6.1 Sol.
+
+All EXP-099 scientific criteria, complete-pool dual Score selection, exact equal-weight RRF fusion, source projection, answer rubrics, stability tests, numerical quality gates and untouched confirmation remain unchanged. The selector retains the 128,000-token per-call input cap and reserve, 3,000,000 aggregate input tokens, 256,000 aggregate output tokens and maximum 44 Jev calls. Its source is byte-identical to EXP-099. No production or deployment configuration changes.
+
+EXP-099's original clock remains terminal, with zero elapsed-time or quality credit carried forward. EXP-100 requires independent registration and qualification, review, required CI, merged-byte verification, a fresh admitted clock and an actual successful health request before ranking. Later phases remain locked until their predecessors' validated completion records are intact. Delivery and setup success alone do not establish a supported research result or authorize production adoption.

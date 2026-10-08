@@ -1,0 +1,36 @@
+"""Successor-only schema alignment; preserve all semantic judgments and old validators."""
+import copy
+
+
+def source_schema(base_schema):
+    schema = copy.deepcopy(base_schema)
+    facet = schema['properties']['source_assessments']['items']['properties']['facets']['items']
+    facet['allOf'] = [
+        {'if': {'properties': {'disposition': {'const': 'evidence_available'}}, 'required': ['disposition']},
+         'then': {'properties': {'evidence_ids': {'minItems': 1}}}},
+        {'if': {'properties': {'disposition': {'const': 'not_acquired'}}, 'required': ['disposition']},
+         'then': {'properties': {'evidence_ids': {'maxItems': 0}}}},
+    ]
+    return schema
+
+
+def prepare_source_packet(base_packet, prompt):
+    """Apply only prospective instruction/schema clarification to exact source context."""
+    packet = copy.deepcopy(base_packet)
+    packet['prompt'] = prompt
+    model_input = packet['source_model_input']
+    model_input['output_schema'] = source_schema(model_input['output_schema'])
+    return packet
+
+
+def context_fingerprint(packet):
+    """Bind every scientific input field; exclude only instructions and output schema."""
+    import hashlib
+    import json
+    if set(packet) != {'prompt', 'source_model_input'}:
+        raise ValueError('source-packet-fields')
+    model = copy.deepcopy(packet['source_model_input'])
+    del model['output_schema']
+    raw = (json.dumps(model, sort_keys=True, ensure_ascii=False,
+                      separators=(',', ':'), allow_nan=False) + '\n').encode()
+    return hashlib.sha256(raw).hexdigest()

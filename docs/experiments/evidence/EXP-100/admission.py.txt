@@ -1,0 +1,857 @@
+"""EXP-100 source-bound stage clock and one-shot live admission.
+
+No provider, model, search or credential I/O is performed here. A successful
+admission yields one opaque in-process permit only after committed source,
+registration, qualification, input and stage-clock bindings verify.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import subprocess
+import uuid
+import platform
+import importlib.metadata
+from datetime import datetime, timedelta, timezone
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[3]
+REG_PATH = "docs/experiments/evidence/EXP-100/registration-integrity.json"
+QUAL_PATH = "docs/experiments/evidence/EXP-100/qualification-integrity.json"
+MANIFEST_PATH = HERE / "stage-development-manifest.json"
+LEASE_ROOT = Path.home() / ".local" / "state" / "exp100" / "leases"
+READINESS_BASELINE_PATH = Path("/private/tmp/exp100-readiness-baseline.json")
+_DURATION = 8 * 60 * 60
+_CAP_SENTINEL = object()
+_PERMIT_SENTINEL = object()
+_ISSUED: dict[int, object] = {}
+_PERMITS: dict[int, object] = {}
+_PERMIT_BY_ID: dict[str, object] = {}
+_PHASES: dict[int, object] = {}
+_CAP_BASELINE_BINDINGS: dict[int, tuple[str, str]] = {}
+_PERMIT_BASELINE_BINDINGS: dict[int, tuple[str, str]] = {}
+_PHASE_BASELINE_BINDINGS: dict[int, tuple[str, str]] = {}
+_PHASE_BY_STAGE: dict[str, dict[str, object]] = {}
+_PHASE_COMPLETIONS: dict[tuple[str, str], str] = {}
+_PHASE_NAMES = {"health", "assessment-preparation", "carried-card-validation", "selector", "answer", "answer-assessment", "analysis"}
+_LIVE_PREDECESSOR = {"selector": "health", "answer": "selector",
+                     "answer-assessment": "answer", "analysis": "answer-assessment"}
+PINNED_DEPENDENCIES = {"anyio": "4.13.0", "fastapi": "0.136.3", "httpcore": "1.0.9",
+                       "httpx": "0.28.1", "jsonschema": "4.26.0", "lxml": "6.1.1",
+                       "pydantic": "2.13.4", "requests": "2.34.2", "starlette": "1.2.1",
+                       "structlog": "26.1.0"}
+
+
+class AdmissionError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                        allow_nan=False) + "\n").encode("utf-8")
+
+
+def strict_json(raw: bytes) -> Any:
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise AdmissionError("duplicate-json-key")
+            out[key] = value
+        return out
+
+    def constant(_):
+        raise AdmissionError("non-finite-json")
+
+    try:
+        return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AdmissionError("invalid-json") from exc
+
+
+def _git_blob(revision: str, path: str) -> bytes:
+    if not re.fullmatch(r"[0-9a-f]{40}|HEAD", revision):
+        raise AdmissionError("git-revision")
+    rel = PurePosixPath(path)
+    if rel.is_absolute() or not rel.parts or any(part in {"", ".", ".."} for part in rel.parts):
+        raise AdmissionError("source-path")
+    try:
+        result = subprocess.run(["git", "show", f"{revision}:{path}"], cwd=REPO,
+                                check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise AdmissionError("committed-source-missing") from exc
+    return result.stdout
+
+
+def load_registration() -> dict:
+    path = REPO / REG_PATH
+    if path.is_symlink() or not path.is_file():
+        raise AdmissionError("registration-missing")
+    raw = path.read_bytes()
+    obj = strict_json(raw)
+    if (type(obj) is not dict or obj.get("schema") != "exp100-registration/1"
+            or obj.get("study_id") != "EXP-100" or obj.get("status") != "registered"
+            or obj.get("registered") is not True):
+        raise AdmissionError("registration-schema")
+    return obj
+
+
+def _active_clock(raw: bytes, manifest: dict, manifest_sha: str, protocol_sha: str, cohorts_sha: str,
+                  source_revision: str, now: datetime | None = None) -> dict:
+    clock = strict_json(raw)
+    fields = {"schema", "stage_id", "stage", "stage_started_utc", "stage_deadline_utc",
+              "stage_manifest_sha256", "protocol_sha256", "cohorts_sha256", "source_revision",
+              "ordered_task_ids"}
+    if (type(clock) is not dict or set(clock) != fields or clock.get("schema") != "exp078-stage-clock/1"
+            or canonical_json(clock) != raw or clock.get("stage") != "development"):
+        raise AdmissionError("stage-clock-schema")
+    try:
+        started = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+        deadline = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+    except (AttributeError, TypeError, ValueError):
+        raise AdmissionError("stage-clock-timestamp") from None
+    current = now or datetime.now(timezone.utc)
+    if (started.tzinfo is None or deadline.tzinfo is None or current.tzinfo is None
+            or (deadline - started).total_seconds() != _DURATION or deadline <= started
+            or current < started or current >= deadline):
+        raise AdmissionError("stage-clock-inactive")
+    try:
+        stage_uuid = uuid.UUID(clock["stage_id"])
+    except (ValueError, TypeError, AttributeError):
+        raise AdmissionError("stage-clock-id") from None
+    if stage_uuid.version != 4:
+        raise AdmissionError("stage-clock-id")
+    if (clock.get("stage_manifest_sha256") != manifest_sha
+            or clock.get("protocol_sha256") != protocol_sha
+            or clock.get("cohorts_sha256") != cohorts_sha
+            or clock.get("source_revision") != source_revision
+            or clock.get("ordered_task_ids") != manifest.get("ordered_task_ids")):
+        raise AdmissionError("stage-clock-binding")
+    return clock
+
+
+def _committed_design() -> tuple[dict, bytes, bytes, bytes]:
+    registration_path = REPO / REG_PATH
+    if registration_path.is_symlink() or not registration_path.is_file():
+        raise AdmissionError("registration-missing")
+    registration_bytes = registration_path.read_bytes()
+    if _git_blob("HEAD", REG_PATH) != registration_bytes:
+        raise AdmissionError("registration-not-committed-head")
+    registration = strict_json(registration_bytes)
+    if (registration.get("schema") != "exp100-registration/1"
+            or registration.get("study_id") != "EXP-100" or registration.get("status") != "registered"
+            or registration.get("registered") is not True):
+        raise AdmissionError("registration-schema")
+    qpath = REPO / QUAL_PATH
+    if qpath.is_symlink() or not qpath.is_file():
+        raise AdmissionError("qualification-missing")
+    qraw = qpath.read_bytes()
+    if _git_blob("HEAD", QUAL_PATH) != qraw:
+        raise AdmissionError("qualification-not-committed-head")
+    qualification = strict_json(qraw)
+    if (type(qualification) is not dict or qualification.get("schema") != "exp100-qualification/1"
+            or qualification.get("study_id") != "EXP-100" or qualification.get("qualified") is not True
+            or qualification.get("status") != "qualified"):
+        raise AdmissionError("qualification-schema")
+    return registration, registration_bytes, qraw, qualification
+
+
+def _normalized_readiness_baseline_path(path: Path | str | None) -> str:
+    try:
+        selected = READINESS_BASELINE_PATH if path is None else Path(path)
+        normalized = Path(os.path.abspath(os.fspath(selected)))
+    except (OSError, TypeError, ValueError) as exc:
+        raise AdmissionError("readiness-baseline-path") from exc
+    if not normalized.is_absolute():
+        raise AdmissionError("readiness-baseline-path")
+    return str(normalized)
+
+
+def verify_closure(source_integrity: dict, qualification_bytes: bytes,
+                   bundle_root: Path | None = None,
+                   readiness_baseline_path: Path | str | None = None) -> dict:
+    """Read-only check of committed registration, qualification, source, env and optional inputs."""
+    if type(source_integrity) is not dict or source_integrity.get("synthetic") is not False:
+        raise AdmissionError("live-source-integrity")
+    registration, registration_bytes, committed_qraw, _ = _committed_design()
+    if committed_qraw != qualification_bytes:
+        raise AdmissionError("qualification-not-committed-head")
+    qualification = strict_json(qualification_bytes)
+    qsha = sha(qualification_bytes)
+    if (qualification.get("schema") != "exp100-qualification/1"
+            or qualification.get("study_id") != "EXP-100"
+            or source_integrity.get("study_id") != "EXP-100"
+            or qualification.get("qualified") is not True
+            or source_integrity.get("qualification_sha256") != qsha
+            or source_integrity.get("registration_sha256") != sha(registration_bytes)
+            or qualification.get("registration_sha256") != sha(registration_bytes)):
+        raise AdmissionError("qualification-binding")
+    revision = qualification.get("qualified_source_revision")
+    sources = registration.get("source_files")
+    if (registration.get("study_id") != "EXP-100"
+            or not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision)
+            or registration.get("registered_source_revision") != revision
+            or qualification.get("files") != sources or type(sources) is not dict or not sources):
+        raise AdmissionError("qualification-source-inventory")
+    for path, expected in sources.items():
+        committed = _git_blob(revision, path)
+        head = _git_blob("HEAD", path)
+        disk_path = REPO / path
+        if disk_path.is_symlink() or not disk_path.is_file():
+            raise AdmissionError("source-not-regular")
+        disk = disk_path.read_bytes()
+        if sha(committed) != expected or head != committed or disk != committed:
+            raise AdmissionError("qualified-source-hash-or-dirty-tree")
+    contract_relative = "docs/experiments/evidence/EXP-100/design-contract.py.txt"
+    if contract_relative not in sources or "docs/experiments/evidence/EXP-100/source-assessor-prompt.txt" not in sources:
+        raise AdmissionError("design-contract-source-pin")
+    contract_raw = _git_blob(revision,contract_relative)
+    contract_namespace = {"__file__":str(REPO/contract_relative)}
+    exec(compile(contract_raw,str(REPO/contract_relative),"exec"),contract_namespace)
+    contract_namespace["validate"](strict_json((HERE/"protocol.json").read_bytes()),
+        strict_json((HERE/"cohorts.json").read_bytes()),registration,qualification,
+        source_prompt_raw=_git_blob(revision,"docs/experiments/evidence/EXP-100/source-assessor-prompt.txt"))
+    env, deps = qualification.get("environment"), qualification.get("dependencies")
+    if type(env) is not dict or type(deps) is not dict or deps != PINNED_DEPENDENCIES:
+        raise AdmissionError("qualified-environment-shape")
+    actual_env = {"python_implementation": platform.python_implementation(),
+                  "python_version": platform.python_version()}
+    if env != actual_env or source_integrity.get("environment") != actual_env:
+        raise AdmissionError("python-environment-mismatch")
+    actual_deps = {}
+    try:
+        for name in PINNED_DEPENDENCIES:
+            actual_deps[name] = importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError as exc:
+        raise AdmissionError("dependency-missing") from exc
+    if actual_deps != deps or source_integrity.get("dependencies") != deps:
+        raise AdmissionError("dependency-version-mismatch")
+    protocol_sha = sha((HERE / "protocol.json").read_bytes())
+    cohorts_sha = sha((HERE / "cohorts.json").read_bytes())
+    pins_path = HERE / "reuse-input-pins.json"
+    if pins_path.is_symlink() or not pins_path.is_file():
+        raise AdmissionError("input-pins-missing")
+    pins_raw = pins_path.read_bytes()
+    pins_sha = sha(pins_raw)
+    manifest_raw = (HERE / "stage-development-manifest.json").read_bytes()
+    manifest_obj = strict_json(manifest_raw)
+    pins_obj = strict_json(pins_raw)
+    if (type(pins_obj) is not dict or pins_obj.get("schema") != "exp100-reused-input-pins/1"
+            or pins_obj.get("study_id") != "EXP-100" or pins_obj.get("file_count") != 513
+            or type(pins_obj.get("files")) is not list or len(pins_obj["files"]) != 513):
+        raise AdmissionError("input-pins-schema")
+    config_pin = pins_obj.get("runtime_config_receipt_sha256")
+    if (manifest_obj.get("schema") != "exp100-stage-manifest/1"
+            or manifest_obj.get("study_id") != "EXP-100"
+            or manifest_obj.get("source_files") != sources
+            or manifest_obj.get("input_pins_sha256") != pins_sha
+            or manifest_obj.get("input_bundle_sha256") != qualification.get("input_bundle_sha256")
+            or manifest_obj.get("runtime_config_receipt_sha256") != config_pin
+            or qualification.get("input_bundle_sha256") is None
+            or qualification.get("input_pins_sha256") != pins_sha
+            or qualification.get("runtime_config_receipt_sha256") != config_pin
+            or source_integrity.get("stage_manifest_sha256") != sha(manifest_raw)
+            or source_integrity.get("input_pins_sha256") != pins_sha
+            or source_integrity.get("runtime_config_receipt_sha256") != config_pin
+            or source_integrity.get("external_source_pins") != qualification.get("external_source_pins")
+            or qualification.get("protocol_sha256") != protocol_sha
+            or qualification.get("cohorts_sha256") != cohorts_sha
+            or qualification.get("stage_manifest_sha256") != sha(manifest_raw)
+            or source_integrity.get("qualified_source_revision") != revision
+            or source_integrity.get("protocol_sha256") != protocol_sha
+            or source_integrity.get("cohorts_sha256") != cohorts_sha
+            or source_integrity.get("input_pins_sha256") != pins_sha):
+        raise AdmissionError("source-integrity-binding")
+    input_result = None
+    if bundle_root is not None:
+        from importlib.machinery import SourceFileLoader
+        from importlib.util import module_from_spec, spec_from_loader
+        bridge_path = HERE / "input-bridge.py.txt"
+        loader = SourceFileLoader("exp100_admission_input_bridge", str(bridge_path))
+        spec = spec_from_loader(loader.name, loader)
+        bridge = module_from_spec(spec)
+        loader.exec_module(bridge)
+        input_result = bridge.verify_bundle_inventory(Path(bundle_root))
+        if (input_result["input_pins_sha256"] != pins_sha
+                or source_integrity.get("input_bundle_sha256") != input_result["input_bundle_sha256"]
+                or source_integrity.get("runtime_config_receipt_sha256") != input_result["runtime_config_receipt_sha256"]
+                or qualification.get("input_bundle_sha256") != input_result["input_bundle_sha256"]
+                or qualification.get("runtime_config_receipt_sha256") != input_result["runtime_config_receipt_sha256"]):
+            raise AdmissionError("input-pins-binding")
+    pins = source_integrity.get("external_source_pins")
+    readiness_pin = pins.get("readiness_baseline") if type(pins) is dict else None
+    if (type(readiness_pin) is not dict or set(readiness_pin) != {"sha256"}
+            or type(readiness_pin.get("sha256")) is not str
+            or not re.fullmatch(r"[0-9a-f]{64}", readiness_pin["sha256"])):
+        raise AdmissionError("readiness-baseline-pin")
+    baseline_path = _normalized_readiness_baseline_path(readiness_baseline_path)
+    _load_pinned_readiness_baseline(readiness_pin["sha256"], baseline_path)
+    return {"study_id": "EXP-100", "registration_sha256": sha(registration_bytes), "qualification_sha256": qsha,
+            "qualified_source_revision": revision, "protocol_sha256": protocol_sha,
+            "cohorts_sha256": cohorts_sha, "input_pins_sha256": pins_sha,
+            "input_bundle_sha256": input_result["input_bundle_sha256"] if input_result else None,
+            "runtime_config_receipt_sha256": input_result["runtime_config_receipt_sha256"] if input_result else None,
+            "readiness_baseline_sha256": readiness_pin["sha256"],
+            "readiness_baseline_path": baseline_path,
+            "files_verified": len(sources), "input_integrity": input_result,
+            "environment": actual_env, "dependencies": actual_deps}
+
+
+def create_stage_clock(outdir: Path, source_revision: str) -> tuple[dict, bytes, str]:
+    """Create a fresh eight-hour development clock once, bound to the qualified manifest."""
+    output = Path(outdir)
+    if output.is_symlink() or not output.is_dir() or not re.fullmatch(r"[0-9a-f]{40}", source_revision):
+        raise AdmissionError("clock-output-or-revision")
+    registration, registration_raw, qraw, qualification = _committed_design()
+    manifest_raw = MANIFEST_PATH.read_bytes()
+    if _git_blob("HEAD", str(MANIFEST_PATH.relative_to(REPO))) != manifest_raw:
+        raise AdmissionError("stage-manifest-not-committed")
+    manifest = strict_json(manifest_raw)
+    pins_raw = (HERE / "reuse-input-pins.json").read_bytes()
+    pins = strict_json(pins_raw)
+    if (type(pins) is not dict or pins.get("schema") != "exp100-reused-input-pins/1"
+            or pins.get("study_id") != "EXP-100" or pins.get("file_count") != 513
+            or type(pins.get("files")) is not list or len(pins["files"]) != 513
+            or manifest.get("input_pins_sha256") != sha(pins_raw)
+            or qualification.get("input_pins_sha256") != sha(pins_raw)):
+        raise AdmissionError("input-pins-schema-or-binding")
+    protocol_raw, cohorts_raw = (HERE / "protocol.json").read_bytes(), (HERE / "cohorts.json").read_bytes()
+    if (manifest.get("schema") != "exp100-stage-manifest/1" or manifest.get("study_id") != "EXP-100"
+            or manifest.get("stage") != "development"
+            or manifest.get("protocol_sha256") != sha(protocol_raw)
+            or manifest.get("cohorts_sha256") != sha(cohorts_raw)
+            or manifest.get("ordered_task_ids") != [f"d{i}" for i in range(1, 14)]
+            or manifest.get("source_files") != registration.get("source_files")
+            or registration.get("registered_source_revision") != source_revision
+            or qualification.get("stage_manifest_sha256") != sha(manifest_raw)
+            or qualification.get("qualified_source_revision") != source_revision):
+        raise AdmissionError("stage-manifest-binding")
+    started = datetime.now(timezone.utc).replace(microsecond=0)
+    deadline = started + timedelta(seconds=_DURATION)
+    clock = {"schema": "exp078-stage-clock/1", "stage_id": str(uuid.uuid4()), "stage": "development",
+             "stage_started_utc": started.isoformat().replace("+00:00", "Z"),
+             "stage_deadline_utc": deadline.isoformat().replace("+00:00", "Z"),
+             "stage_manifest_sha256": sha(manifest_raw), "protocol_sha256": sha(protocol_raw),
+             "cohorts_sha256": sha(cohorts_raw), "source_revision": source_revision,
+             "ordered_task_ids": [f"d{i}" for i in range(1, 14)]}
+    raw = canonical_json(clock)
+    path = output / "stage-clock.json"
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        fd = os.open(path, flags, 0o600)
+        with os.fdopen(fd, "wb") as file:
+            file.write(raw)
+            file.flush()
+            os.fsync(file.fileno())
+        dirfd = os.open(output, os.O_RDONLY)
+        try:
+            os.fsync(dirfd)
+        finally:
+            os.close(dirfd)
+    except FileExistsError as exc:
+        raise AdmissionError("stage-clock-already-created") from exc
+    return clock, raw, sha(raw)
+
+
+class _Capability:
+    __slots__ = ("seal", "identity", "stage", "clock_digest", "readiness_baseline_sha256",
+                 "readiness_baseline_path", "outdir", "used")
+
+    def __init__(self, identity: str, clock_digest: str, readiness_baseline_sha256: str,
+                 readiness_baseline_path: str, outdir: Path):
+        self.seal = _CAP_SENTINEL
+        self.identity = identity
+        self.stage = "development"
+        self.clock_digest = clock_digest
+        self.readiness_baseline_sha256 = readiness_baseline_sha256
+        self.readiness_baseline_path = readiness_baseline_path
+        self.outdir = outdir.resolve()
+        self.used = False
+
+
+class _StagePermit:
+    __slots__ = ("seal", "identity", "stage", "clock_digest", "readiness_baseline_sha256",
+                 "readiness_baseline_path", "outdir")
+
+    def __init__(self, identity: str, clock_digest: str, readiness_baseline_sha256: str,
+                 readiness_baseline_path: str, outdir: Path):
+        self.seal = _PERMIT_SENTINEL
+        self.identity = identity
+        self.stage = "development"
+        self.clock_digest = clock_digest
+        self.readiness_baseline_sha256 = readiness_baseline_sha256
+        self.readiness_baseline_path = readiness_baseline_path
+        self.outdir = outdir.resolve()
+
+
+class _PhasePermit:
+    __slots__ = ("seal", "identity", "stage", "phase", "stage_identity", "clock_digest",
+                 "readiness_baseline_sha256", "readiness_baseline_path", "outdir")
+
+    def __init__(self, identity: str, phase: str, stage_identity: str, clock_digest: str,
+                 readiness_baseline_sha256: str, readiness_baseline_path: str, outdir: Path):
+        self.seal = _PERMIT_SENTINEL
+        self.identity = identity
+        self.stage = "development"
+        self.phase = phase
+        self.stage_identity = stage_identity
+        self.clock_digest = clock_digest
+        self.readiness_baseline_sha256 = readiness_baseline_sha256
+        self.readiness_baseline_path = readiness_baseline_path
+        self.outdir = outdir.resolve()
+
+
+def _write_once(path: Path, data: bytes) -> None:
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if path.parent.is_symlink() or not path.parent.is_dir():
+        raise AdmissionError("lease-directory")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        fd = os.open(path, flags, 0o600)
+    except FileExistsError as exc:
+        raise AdmissionError("stage-already-admitted") from exc
+    with os.fdopen(fd, "wb") as file:
+        file.write(data)
+        file.flush()
+        os.fsync(file.fileno())
+    dirfd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(dirfd)
+    finally:
+        os.close(dirfd)
+
+
+def admit_live(outdir: Path, source_integrity: dict, qualification_bytes: bytes,
+               bundle_root: Path, readiness_baseline_path: Path | str | None = None) -> _Capability:
+    """Validate committed source/input bindings and burn the stage lease."""
+    if bundle_root is None:
+        raise AdmissionError("frozen-recovery-inputs-required")
+    proof = verify_closure(source_integrity, qualification_bytes, bundle_root, readiness_baseline_path)
+    out = Path(outdir)
+    clock_path = out / "stage-clock.json"
+    if out.is_symlink() or clock_path.is_symlink() or not clock_path.is_file():
+        raise AdmissionError("stage-clock-file")
+    clock_raw = clock_path.read_bytes()
+    manifest_path = HERE / "stage-development-manifest.json"
+    manifest_raw = manifest_path.read_bytes()
+    clock = _active_clock(clock_raw, strict_json(manifest_raw), sha(manifest_raw),
+                          proof["protocol_sha256"], proof["cohorts_sha256"],
+                          proof["qualified_source_revision"])
+    identity = sha(canonical_json({"registration": proof["registration_sha256"],
+                                   "qualification": proof["qualification_sha256"],
+                                   "inputs": proof["input_pins_sha256"],
+                                   "input_bundle": proof["input_bundle_sha256"],
+                                   "runtime_config": proof["runtime_config_receipt_sha256"],
+                                   "study_id": "EXP-100", "stage": clock["stage"]}))
+    lease = {"schema": "exp100-stage-lease/1", "stage": "development", "identity": identity,
+             "clock_sha256": sha(clock_raw), "qualification_sha256": proof["qualification_sha256"]}
+    _write_once(LEASE_ROOT / f"{identity}.json", canonical_json(lease))
+    capability = _Capability(identity, sha(clock_raw), proof["readiness_baseline_sha256"],
+                             proof["readiness_baseline_path"], out)
+    _ISSUED[id(capability)] = capability
+    _CAP_BASELINE_BINDINGS[id(capability)] = (capability.readiness_baseline_path,
+                                               capability.readiness_baseline_sha256)
+    return capability
+
+def consume_capability(capability: _Capability) -> _StagePermit:
+    """Consume the stage capability once and return its reusable in-process permit."""
+    if (not isinstance(capability, _Capability) or capability.seal is not _CAP_SENTINEL
+            or capability.used or _ISSUED.get(id(capability)) is not capability):
+        raise AdmissionError("live-capability-invalid-or-used")
+    if _CAP_BASELINE_BINDINGS.get(id(capability)) != (capability.readiness_baseline_path,
+                                                       capability.readiness_baseline_sha256):
+        raise AdmissionError("readiness-baseline-capability-binding")
+    capability.used = True
+    _ISSUED.pop(id(capability), None)
+    _CAP_BASELINE_BINDINGS.pop(id(capability), None)
+    permit = _StagePermit(capability.identity, capability.clock_digest,
+                          capability.readiness_baseline_sha256, capability.readiness_baseline_path,
+                          capability.outdir)
+    _PERMITS[id(permit)] = permit
+    _PERMIT_BY_ID[permit.identity] = permit
+    _PERMIT_BASELINE_BINDINGS[id(permit)] = (permit.readiness_baseline_path,
+                                              permit.readiness_baseline_sha256)
+    return permit
+
+
+def _check_clock_permit(outdir: Path, clock_bytes: bytes, identity: str, expected_clock: str) -> dict:
+    output = Path(outdir)
+    if output.is_symlink():
+        raise AdmissionError("phase-output-directory")
+    clock_path = output / "stage-clock.json"
+    if clock_path.is_symlink() or not clock_path.is_file() or clock_path.read_bytes() != clock_bytes:
+        raise AdmissionError("phase-clock-file-binding")
+    if sha(clock_bytes) != expected_clock:
+        raise AdmissionError("phase-clock-digest")
+    manifest_raw = MANIFEST_PATH.read_bytes()
+    manifest = strict_json(manifest_raw)
+    clock = _active_clock(clock_bytes, manifest, sha(manifest_raw),
+                          sha((HERE / "protocol.json").read_bytes()),
+                          sha((HERE / "cohorts.json").read_bytes()),
+                          strict_json(clock_bytes)["source_revision"] )
+    if identity == "":
+        raise AdmissionError("phase-identity")
+    return clock
+
+
+def _load_pinned_readiness_baseline(expected_sha256: str, path: Path | str | None = None):
+    """Reload the exact private runtime baseline before each downstream phase."""
+    from importlib.machinery import SourceFileLoader
+    from importlib.util import module_from_spec, spec_from_loader
+    loader = SourceFileLoader("exp100_admission_readiness_baseline", str(HERE / "readiness-baseline.py.txt"))
+    spec = spec_from_loader(loader.name, loader)
+    module = module_from_spec(spec)
+    import sys
+    sys.modules[loader.name] = module
+    try:
+        loader.exec_module(module)
+        return module.load_baseline(Path(_normalized_readiness_baseline_path(path)), expected_sha256)
+    except (OSError, ValueError) as exc:
+        raise AdmissionError("readiness-baseline-invalid") from exc
+    finally:
+        sys.modules.pop(loader.name, None)
+
+
+def _validate_stage_baseline_binding(stage_permit: _StagePermit) -> None:
+    expected = _PERMIT_BASELINE_BINDINGS.get(id(stage_permit))
+    if (expected is None or expected != (stage_permit.readiness_baseline_path,
+                                         stage_permit.readiness_baseline_sha256)):
+        raise AdmissionError("readiness-baseline-permit-binding")
+
+
+def _validate_phase_baseline_binding(phase_permit: _PhasePermit) -> None:
+    expected = _PHASE_BASELINE_BINDINGS.get(id(phase_permit))
+    if (expected is None or expected != (phase_permit.readiness_baseline_path,
+                                         phase_permit.readiness_baseline_sha256)):
+        raise AdmissionError("readiness-baseline-phase-binding")
+
+
+def _read_canonical_object(path: Path, expected_fields: set[str], error_code: str) -> dict:
+    if path.is_symlink() or not path.is_file():
+        raise AdmissionError(error_code)
+    raw = path.read_bytes()
+    value = strict_json(raw)
+    if type(value) is not dict or set(value) != expected_fields or canonical_json(value) != raw:
+        raise AdmissionError(error_code)
+    return value
+
+
+def _validated_health_receipt(stage_identity: str, clock_sha: str, baseline_sha: str,
+                              outdir: Path, baseline_path: str) -> tuple[Any, dict, dict, str]:
+    baseline = _load_pinned_readiness_baseline(baseline_sha, baseline_path)
+    health_identity = sha(canonical_json({"stage_identity": stage_identity, "phase": "health"}))
+    health_lease_path = LEASE_ROOT / f"{health_identity}.json"
+    health_lease = _read_canonical_object(health_lease_path,
+        {"schema", "stage_identity", "phase", "clock_sha256", "phase_identity"}, "health-phase-lease-invalid")
+    if health_lease != {"schema": "exp100-phase-lease/1", "stage_identity": stage_identity,
+                        "phase": "health", "clock_sha256": clock_sha,
+                        "phase_identity": health_identity}:
+        raise AdmissionError("health-phase-lease-binding")
+    receipt_fields = {"schema", "study_id", "status", "model_identity", "revision",
+                      "stage_clock_sha256", "readiness_baseline_sha256", "physical_http_calls",
+                      "failure_code", "quality_credit", "endpoint_and_response_body_retained"}
+    receipt = _read_canonical_object(Path(outdir) / "health.json", receipt_fields, "health-receipt-invalid")
+    if (receipt.get("schema") != "exp100-health-receipt/1" or receipt.get("study_id") != "EXP-100"
+            or receipt.get("status") != "healthy" or receipt.get("model_identity") != baseline.model_alias
+            or receipt.get("revision") != baseline.expected_revision
+            or receipt.get("stage_clock_sha256") != clock_sha
+            or receipt.get("readiness_baseline_sha256") != baseline.sha256
+            or receipt.get("physical_http_calls") != 1 or receipt.get("failure_code") is not None
+            or receipt.get("quality_credit") is not False
+            or receipt.get("endpoint_and_response_body_retained") is not False):
+        raise AdmissionError("health-receipt-not-successful")
+    return baseline, health_lease, receipt, health_identity
+
+
+def _successful_health(stage_permit: _StagePermit, outdir: Path, clock_bytes: bytes) -> None:
+    """Require an intact successful one-shot health receipt and matching completion lease."""
+    clock_sha = sha(clock_bytes)
+    baseline, health_lease, receipt, health_identity = _validated_health_receipt(
+        stage_permit.identity, clock_sha, stage_permit.readiness_baseline_sha256, outdir,
+        stage_permit.readiness_baseline_path)
+    completion_fields = {"schema", "status", "stage_identity", "phase_identity", "stage_clock_sha256",
+                         "readiness_baseline_sha256", "health_phase_lease_sha256", "health_receipt_sha256"}
+    completion_path = Path(outdir) / "health-completion.json"
+    completion = _read_canonical_object(completion_path, completion_fields, "health-completion-invalid")
+    completion_lease = _read_canonical_object(LEASE_ROOT / f"{health_identity}.complete.json",
+                                               completion_fields, "health-completion-lease-invalid")
+    expected_completion = {"schema": "exp100-health-completion/1", "status": "complete",
+        "stage_identity": stage_permit.identity, "phase_identity": health_identity,
+        "stage_clock_sha256": clock_sha, "readiness_baseline_sha256": baseline.sha256,
+        "health_phase_lease_sha256": sha(canonical_json(health_lease)),
+        "health_receipt_sha256": sha(canonical_json(receipt))}
+    if completion != expected_completion or completion_lease != expected_completion:
+        raise AdmissionError("health-completion-binding")
+
+
+def _phase_lease(phase_permit: _PhasePermit) -> dict:
+    lease = _read_canonical_object(LEASE_ROOT / f"{phase_permit.identity}.json",
+        {"schema", "stage_identity", "phase", "clock_sha256", "phase_identity"},
+        "phase-lease-invalid")
+    expected = {"schema": "exp100-phase-lease/1", "stage_identity": phase_permit.stage_identity,
+                "phase": phase_permit.phase, "clock_sha256": phase_permit.clock_digest,
+                "phase_identity": phase_permit.identity}
+    if lease != expected:
+        raise AdmissionError("phase-lease-binding")
+    return lease
+
+
+def _artifact_bytes(path: Path) -> bytes:
+    if path.is_symlink() or not path.is_file():
+        raise AdmissionError("phase-artifact-missing")
+    return path.read_bytes()
+
+
+def _validate_phase_artifact(phase: str, root: Path, clock_sha: str) -> tuple[str, str]:
+    """Validate the phase's final artifact and return its stage-relative path and digest."""
+    if phase == "selector":
+        rel = "selector/selector-run.json"
+        raw = _artifact_bytes(root / rel)
+        obj = strict_json(raw)
+        operations = obj.get("operations") if type(obj) is dict else None
+        neutral = obj.get("neutral") if type(obj) is dict else None
+        if (type(obj) is not dict or obj.get("schema") != "exp078-selector-run/1"
+                or obj.get("status") != "complete" or obj.get("synthetic") is not False
+                or obj.get("stage_clock_sha256") != clock_sha
+                or type(neutral) is not dict or neutral.get("status") != "complete"
+                or type(operations) is not list or len(operations) != 21
+                or any(type(row) is not dict or row.get("status") not in
+                       {"complete", "native_target_top1_noop"} for row in operations)):
+            raise AdmissionError("selector-completion-artifact-invalid")
+    elif phase == "answer":
+        rel = "answer-handoff/answerer-output/answer-phase.json"
+        raw = _artifact_bytes(root / rel)
+        obj = strict_json(raw)
+        manifest_rel = "answer-handoff/answerer-output/answer-output-manifest.json"
+        manifest_raw = _artifact_bytes(root / manifest_rel)
+        manifest = strict_json(manifest_raw)
+        answers = manifest.get("answers") if type(manifest) is dict else None
+        expected_answers = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+        observed_answers = ({(row.get("task_id"), row.get("arm")) for row in answers
+                            if type(row) is dict} if type(answers) is list else set())
+        if (type(obj) is not dict or obj.get("schema") != "exp078-answer-phase/1"
+                or obj.get("status") != "complete" or obj.get("synthetic") is not False
+                or obj.get("stage_clock_sha256") != clock_sha or obj.get("owned_api_calls") != 18
+                or obj.get("answer_output_manifest_sha256") != sha(manifest_raw)
+                or type(manifest) is not dict or manifest.get("schema") != "exp095-answer-output-manifest/1"
+                or manifest.get("status") != "complete" or type(answers) is not list
+                or len(answers) != 16 or observed_answers != expected_answers):
+            raise AdmissionError("answer-completion-artifact-invalid")
+    elif phase == "answer-assessment":
+        rel = "answer-handoff/answer-assessments/closure.json"
+        raw = _artifact_bytes(root / rel)
+        obj = strict_json(raw)
+        if (type(obj) is not dict or obj.get("schema") != "exp100-answer-assessor-closure/1"
+                or obj.get("status") != "complete" or obj.get("slot_count") != 32
+                or obj.get("structurally_valid") is not True
+                or obj.get("semantic_completion") != "not_claimed"
+                or obj.get("metric_computed") is not False
+                or not re.fullmatch(r"[0-9a-f]{64}", str(obj.get("closure_sha256", "")))):
+            raise AdmissionError("answer-assessment-completion-artifact-invalid")
+        # Bind the advertised closed-map digest to the actual 32 per-slot rows.
+        closed = root / "answer-handoff" / "answer-assessments" / "closed"
+        if closed.is_symlink() or not closed.is_dir():
+            raise AdmissionError("answer-assessment-closed-map-missing")
+        rows = {}
+        for path in sorted(closed.glob("*.json")):
+            row = strict_json(_artifact_bytes(path))
+            required = {"schema", "logical_submission", "input_sha256", "answer_sha256",
+                        "decoded_response_sha256", "raw_final_sha256", "structurally_valid",
+                        "semantic_completion", "metric_computed"}
+            if (type(row) is not dict or set(row) != required
+                    or row.get("schema") != "exp100-answer-structural-close/1"
+                    or row.get("logical_submission") != path.stem
+                    or any(type(row.get(key)) is not str or
+                           not re.fullmatch(r"[0-9a-f]{64}", row[key])
+                           for key in ("input_sha256", "answer_sha256", "decoded_response_sha256", "raw_final_sha256"))
+                    or row.get("structurally_valid") is not True
+                    or row.get("semantic_completion") != "not_claimed"
+                    or row.get("metric_computed") is not False):
+                raise AdmissionError("answer-assessment-closed-row-invalid")
+            rows[path.stem] = row
+        if len(rows) != 32 or sha(canonical_json(rows)) != obj["closure_sha256"]:
+            raise AdmissionError("answer-assessment-closed-map-binding")
+    else:
+        raise AdmissionError("phase-artifact-unsupported")
+    return rel, sha(raw)
+
+
+def _require_phase_completion(stage_identity: str, phase: str, outdir: Path, clock_sha: str) -> None:
+    permit = _PHASE_BY_STAGE.get(stage_identity, {}).get(phase)
+    if permit is None or _PHASES.get(id(permit)) is not permit:
+        raise AdmissionError("phase-predecessor-not-issued")
+    if phase == "health":
+        stage_permit = _PERMIT_BY_ID.get(stage_identity)
+        if stage_permit is None:
+            raise AdmissionError("phase-predecessor-not-issued")
+        clock_path = Path(outdir) / "stage-clock.json"
+        clock_raw = _artifact_bytes(clock_path)
+        if sha(clock_raw) != clock_sha:
+            raise AdmissionError("phase-clock-digest")
+        _successful_health(stage_permit, outdir, clock_raw)
+        return
+    predecessor = _LIVE_PREDECESSOR.get(phase)
+    if predecessor is not None:
+        _require_phase_completion(stage_identity, predecessor, outdir, clock_sha)
+    completion_path = Path(outdir) / "phase-completions" / f"{phase}.json"
+    fields = {"schema", "status", "stage_identity", "phase_identity", "stage_clock_sha256",
+              "artifact_path", "artifact_sha256", "phase_lease_sha256"}
+    completion = _read_canonical_object(completion_path, fields, "phase-completion-invalid")
+    mirror = _read_canonical_object(LEASE_ROOT / f"{permit.identity}.complete.json", fields,
+                                    "phase-completion-lease-invalid")
+    rel, digest = _validate_phase_artifact(phase, Path(outdir), clock_sha)
+    expected = {"schema": "exp100-phase-completion/1", "status": "complete",
+        "stage_identity": stage_identity, "phase_identity": permit.identity,
+        "stage_clock_sha256": clock_sha, "artifact_path": rel, "artifact_sha256": digest,
+        "phase_lease_sha256": sha(canonical_json(_phase_lease(permit)))}
+    if completion != expected or mirror != expected:
+        raise AdmissionError("phase-completion-binding")
+    if _PHASE_COMPLETIONS.get((stage_identity, phase)) != sha(canonical_json(expected)):
+        raise AdmissionError("phase-completion-not-current")
+
+
+def complete_health_phase(phase_permit: _PhasePermit, clock_bytes: bytes, outdir: Path) -> None:
+    """Record durable completion only after a valid successful health response."""
+    if (not isinstance(phase_permit, _PhasePermit) or phase_permit.seal is not _PERMIT_SENTINEL
+            or _PHASES.get(id(phase_permit)) is not phase_permit or phase_permit.phase != "health"
+            or phase_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("health-phase-permit-required")
+    _validate_phase_baseline_binding(phase_permit)
+    _check_clock_permit(outdir, clock_bytes, phase_permit.stage_identity, phase_permit.clock_digest)
+    baseline, health_lease, receipt, health_identity = _validated_health_receipt(
+        phase_permit.stage_identity, phase_permit.clock_digest,
+        phase_permit.readiness_baseline_sha256, outdir, phase_permit.readiness_baseline_path)
+    if phase_permit.identity != health_identity:
+        raise AdmissionError("health-phase-identity")
+    completion = {"schema": "exp100-health-completion/1", "status": "complete",
+        "stage_identity": phase_permit.stage_identity, "phase_identity": health_identity,
+        "stage_clock_sha256": phase_permit.clock_digest,
+        "readiness_baseline_sha256": baseline.sha256,
+        "health_phase_lease_sha256": sha(canonical_json(health_lease)),
+        "health_receipt_sha256": sha(canonical_json(receipt))}
+    raw = canonical_json(completion)
+    _write_once(Path(outdir) / "health-completion.json", raw)
+    _write_once(LEASE_ROOT / f"{health_identity}.complete.json", raw)
+
+
+def require_stage(stage_permit: _StagePermit, outdir: Path, clock_bytes: bytes) -> None:
+    """Check the admitted stage and successful health without claiming a phase."""
+    if (not isinstance(stage_permit, _StagePermit) or stage_permit.seal is not _PERMIT_SENTINEL
+            or _PERMITS.get(id(stage_permit)) is not stage_permit
+            or stage_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("stage-permit-required")
+    _validate_stage_baseline_binding(stage_permit)
+    _check_clock_permit(outdir, clock_bytes, stage_permit.identity, stage_permit.clock_digest)
+    _successful_health(stage_permit, outdir, clock_bytes)
+
+
+def acquire_phase(stage_permit: _StagePermit, phase: str, outdir: Path,
+                  clock_bytes: bytes) -> _PhasePermit:
+    if (not isinstance(stage_permit, _StagePermit) or stage_permit.seal is not _PERMIT_SENTINEL
+            or _PERMITS.get(id(stage_permit)) is not stage_permit
+            or phase not in _PHASE_NAMES or stage_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("stage-permit-required")
+    _validate_stage_baseline_binding(stage_permit)
+    _check_clock_permit(outdir, clock_bytes, stage_permit.identity, stage_permit.clock_digest)
+    by_phase = _PHASE_BY_STAGE.setdefault(stage_permit.identity, {})
+    if phase in by_phase:
+        raise AdmissionError("phase-already-acquired")
+    predecessor = _LIVE_PREDECESSOR.get(phase)
+    if predecessor is not None:
+        _require_phase_completion(stage_permit.identity, predecessor, Path(outdir), stage_permit.clock_digest)
+    elif phase != "health":
+        # Compatibility-only preparation/validation leases still require the
+        # successful health gate; they do not unlock a live phase.
+        _successful_health(stage_permit, outdir, clock_bytes)
+    else:
+        _load_pinned_readiness_baseline(stage_permit.readiness_baseline_sha256,
+                                        stage_permit.readiness_baseline_path)
+    phase_identity = sha(canonical_json({"stage_identity": stage_permit.identity, "phase": phase}))
+    lease = {"schema": "exp100-phase-lease/1", "stage_identity": stage_permit.identity,
+             "phase": phase, "clock_sha256": stage_permit.clock_digest, "phase_identity": phase_identity}
+    _write_once(LEASE_ROOT / f"{phase_identity}.json", canonical_json(lease))
+    permit = _PhasePermit(phase_identity, phase, stage_permit.identity, stage_permit.clock_digest,
+                          stage_permit.readiness_baseline_sha256, stage_permit.readiness_baseline_path,
+                          Path(outdir))
+    _PHASES[id(permit)] = permit
+    by_phase[phase] = permit
+    _PHASE_BASELINE_BINDINGS[id(permit)] = (permit.readiness_baseline_path,
+                                             permit.readiness_baseline_sha256)
+    return permit
+
+
+def require_phase(phase_permit: _PhasePermit, clock_bytes: bytes, outdir: Path) -> None:
+    """Reusable guard before environment/client access and before each dispatch."""
+    if (not isinstance(phase_permit, _PhasePermit) or phase_permit.seal is not _PERMIT_SENTINEL
+            or _PHASES.get(id(phase_permit)) is not phase_permit
+            or phase_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("phase-permit-required")
+    _validate_phase_baseline_binding(phase_permit)
+    _check_clock_permit(outdir, clock_bytes, phase_permit.identity, phase_permit.clock_digest)
+    _phase_lease(phase_permit)
+    predecessor = _LIVE_PREDECESSOR.get(phase_permit.phase)
+    if predecessor is not None:
+        _require_phase_completion(phase_permit.stage_identity, predecessor, Path(outdir),
+                                  phase_permit.clock_digest)
+    elif phase_permit.phase != "health":
+        stage_permit = _StagePermit(phase_permit.stage_identity, phase_permit.clock_digest,
+                                    phase_permit.readiness_baseline_sha256,
+                                    phase_permit.readiness_baseline_path, Path(outdir))
+        _successful_health(stage_permit, outdir, clock_bytes)
+    else:
+        _load_pinned_readiness_baseline(phase_permit.readiness_baseline_sha256,
+                                        phase_permit.readiness_baseline_path)
+
+
+def _complete_phase(phase_permit: _PhasePermit, clock_bytes: bytes, outdir: Path) -> None:
+    if (not isinstance(phase_permit, _PhasePermit) or phase_permit.seal is not _PERMIT_SENTINEL
+            or _PHASES.get(id(phase_permit)) is not phase_permit
+            or phase_permit.phase not in {"selector", "answer", "answer-assessment"}
+            or phase_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("phase-permit-required")
+    _validate_phase_baseline_binding(phase_permit)
+    _check_clock_permit(outdir, clock_bytes, phase_permit.stage_identity, phase_permit.clock_digest)
+    require_phase(phase_permit, clock_bytes, outdir)
+    if ((phase_permit.stage_identity, phase_permit.phase) in _PHASE_COMPLETIONS
+            or (Path(outdir) / "phase-completions" / f"{phase_permit.phase}.json").exists()):
+        raise AdmissionError("phase-already-completed")
+    rel, artifact_digest = _validate_phase_artifact(phase_permit.phase, Path(outdir), phase_permit.clock_digest)
+    completion = {"schema": "exp100-phase-completion/1", "status": "complete",
+        "stage_identity": phase_permit.stage_identity, "phase_identity": phase_permit.identity,
+        "stage_clock_sha256": phase_permit.clock_digest, "artifact_path": rel,
+        "artifact_sha256": artifact_digest,
+        "phase_lease_sha256": sha(canonical_json(_phase_lease(phase_permit)))}
+    raw = canonical_json(completion)
+    _write_once(Path(outdir) / "phase-completions" / f"{phase_permit.phase}.json", raw)
+    _write_once(LEASE_ROOT / f"{phase_permit.identity}.complete.json", raw)
+    _PHASE_COMPLETIONS[(phase_permit.stage_identity, phase_permit.phase)] = sha(raw)
+
+
+def complete_phase(phase_permit: _PhasePermit, clock_bytes: bytes, outdir: Path) -> None:
+    """Freeze a validated selector, answer, or answer-assessment completion."""
+    _complete_phase(phase_permit, clock_bytes, outdir)
+
+
+def complete_issued_phase(stage_permit: _StagePermit, phase: str, clock_bytes: bytes,
+                          outdir: Path) -> None:
+    """Complete a phase such as selector whose permit is intentionally private to its runner."""
+    if (not isinstance(stage_permit, _StagePermit) or stage_permit.seal is not _PERMIT_SENTINEL
+            or _PERMITS.get(id(stage_permit)) is not stage_permit
+            or stage_permit.outdir != Path(outdir).resolve()):
+        raise AdmissionError("stage-permit-required")
+    permit = _PHASE_BY_STAGE.get(stage_permit.identity, {}).get(phase)
+    if permit is None:
+        raise AdmissionError("phase-not-issued")
+    _complete_phase(permit, clock_bytes, outdir)

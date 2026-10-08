@@ -1,0 +1,82 @@
+"""Offline tests for awaited EXP-100 health dispatch and controller use site."""
+import importlib.machinery
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+H = importlib.machinery.SourceFileLoader(
+    "exp100_operator_health_tests", str(HERE / "operator-health.py.txt")).load_module()
+C = importlib.machinery.SourceFileLoader(
+    "exp100_operator_health_controller_tests", str(HERE / "controller.py.txt")).load_module()
+
+
+class AwaitedHealthTests(unittest.TestCase):
+    def _state(self):
+        calls = []
+        admission = SimpleNamespace(require_stage=lambda permit, outdir, clock: calls.append(
+            (permit, outdir, clock)))
+        state = SimpleNamespace(admission=admission, permit="permit", outdir="stage",
+                                clock=({}, b"clock", "digest"))
+        return state, calls
+
+    def test_success_waits_for_coroutine_before_return(self):
+        events = []
+        state, guards = self._state()
+
+        async def fake_health(state, *, client_factory=None):
+            events.append(("started", state, client_factory))
+            await __import__("asyncio").sleep(0)
+            events.append(("completed",))
+            return {"status": "healthy", "physical_http_calls": 1}
+
+        result = H.await_health_check(fake_health, state, client_factory="fake")
+        self.assertEqual(result, {"status": "healthy", "physical_http_calls": 1})
+        self.assertEqual(events, [("started", state, "fake"), ("completed",)])
+        self.assertEqual(guards, [("permit", "stage", b"clock")])
+
+    def test_failure_never_returns_success(self):
+        state, guards = self._state()
+        async def failed_health(_state):
+            return {"status": "incomplete", "physical_http_calls": 0}
+
+        with self.assertRaisesRegex(ValueError, "health-check-not-successful"):
+            H.await_health_check(failed_health, state)
+        self.assertEqual(guards, [])
+
+    def test_async_exception_propagates_without_completion_guard(self):
+        state, guards = self._state()
+
+        async def failed_health(_state):
+            raise RuntimeError("fixture-failure")
+
+        with self.assertRaisesRegex(RuntimeError, "fixture-failure"):
+            H.await_health_check(failed_health, state)
+        self.assertEqual(guards, [])
+
+    def test_controller_unawaited_regression_uses_awaiting_helper(self):
+        events = []
+
+        async def health(_state, *, client_factory=None):
+            events.append("entered")
+            return {"status": "healthy"}
+
+        launcher = mock.Mock()
+        state, guards = self._state()
+        launcher.await_health_check.side_effect = lambda fn, state, **kw: H.await_health_check(fn, state, **kw)
+        with mock.patch.object(C, "health_check", health), \
+                mock.patch.object(C, "load", return_value=launcher) as load:
+            result = C.run_health_check(state, client_factory="fake")
+        load.assert_called_once_with("exp100_operator_health", "operator-health.py.txt")
+        self.assertEqual(result["status"], "healthy")
+        self.assertEqual(events, ["entered"])
+        self.assertEqual(guards, [("permit", "stage", b"clock")])
+
+    def test_nonawaitable_health_result_is_rejected(self):
+        with self.assertRaisesRegex(TypeError, "health-check-awaitable-required"):
+            H.await_health_check(lambda _state: {"status": "healthy"}, object())
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,50 @@
+"""Recover only original hash-bound observations; retain full archival evidence."""
+import hashlib
+import json
+
+
+class TranscriptError(ValueError):
+    pass
+
+
+def strict_json(raw):
+    def unique_pairs(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise TranscriptError('duplicate-json-key')
+            result[key] = value
+        return result
+
+    def nonfinite(_):
+        raise TranscriptError('nonfinite-json-value')
+
+    return json.loads(raw, object_pairs_hook=unique_pairs, parse_constant=nonfinite)
+
+
+def observed_bytes(archived, expected_sha256):
+    if type(archived) is not bytes or not archived.endswith(b'\n'):
+        raise TranscriptError('transcript-partial-line')
+    digest = hashlib.sha256()
+    offset = 0
+    matches = []
+    for line in archived.splitlines(keepends=True):
+        if not line.endswith(b'\n'):
+            raise TranscriptError('transcript-partial-line')
+        digest.update(line)
+        offset += len(line)
+        if digest.hexdigest() == expected_sha256:
+            matches.append(offset)
+    if len(matches) != 1:
+        raise TranscriptError('original-observation-hash-missing')
+    boundary = matches[0]
+    for line in archived[boundary:].splitlines(keepends=True):
+        try:
+            row = strict_json(line)
+        except (ValueError, TypeError) as exc:
+            raise TranscriptError('appended-record-malformed') from exc
+        if (type(row) is not dict or row.get('type') != 'event_msg'
+                or type(row.get('payload')) is not dict
+                or row['payload'].get('type') != 'thread_settings_applied'):
+            raise TranscriptError('substantive-record-after-observation')
+    return archived[:boundary]

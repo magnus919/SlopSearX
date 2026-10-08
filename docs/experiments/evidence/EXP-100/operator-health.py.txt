@@ -1,0 +1,34 @@
+"""Fail-closed synchronous launcher for the EXP-100 asynchronous health check."""
+from __future__ import annotations
+
+import asyncio
+import inspect
+from collections.abc import Mapping
+from typing import Any, Callable
+
+
+def await_health_check(health_check: Callable[..., Any], state: Any, **kwargs) -> dict:
+    """Await the controller health coroutine and return only a healthy receipt.
+
+    The controller deliberately keeps its HTTP exchange asynchronous. This
+    synchronous entry point is for the offline stage launcher; it refuses a
+    synchronous return value so an unawaited coroutine can never be mistaken
+    for health completion.
+    """
+    if not callable(health_check):
+        raise TypeError("health-check-callable-required")
+    pending = health_check(state, **kwargs)
+    if not inspect.isawaitable(pending):
+        raise TypeError("health-check-awaitable-required")
+    receipt = asyncio.run(pending)
+    if not isinstance(receipt, Mapping) or receipt.get("status") != "healthy":
+        raise ValueError("health-check-not-successful")
+    admission = getattr(state, "admission", None)
+    permit = getattr(state, "permit", None)
+    outdir = getattr(state, "outdir", None)
+    clock = getattr(state, "clock", None)
+    if (admission is None or permit is None or not isinstance(clock, tuple)
+            or len(clock) < 2 or not isinstance(clock[1], bytes)):
+        raise ValueError("health-completion-guard-context-required")
+    admission.require_stage(permit, outdir, clock[1])
+    return dict(receipt)
