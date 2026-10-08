@@ -1,0 +1,184 @@
+"""EXP-103 prompt and reader transport tests using frozen inputs, no grades."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import re
+import shlex
+import unittest
+import uuid
+
+ROOT = Path(__file__).resolve().parents[4]
+EXP103 = Path(__file__).resolve().parent
+EXP100 = Path("/private/tmp/exp100-merged-runner/docs/experiments/evidence/EXP-100")
+EXP101 = ROOT / "docs/experiments/evidence/EXP-101"
+STAGE100 = Path("/private/tmp/exp100-development-live-20261008")
+
+def load_helper(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+
+DRIVER = load_helper("exp103_driver_test", EXP103 / "grading-driver.py.txt")
+TRANSPORT = load_helper("exp103_reader_transport_test", EXP103 / "reader-transport.py.txt")
+ORIGINAL_DRIVER = load_helper("exp101_original_driver_test", EXP101 / "grading-driver.py.txt")
+PHASE = load_helper("exp100_original_phase_test", EXP100 / "phase-bindings.py.txt")
+VIEWS = load_helper("exp100_original_views_test", EXP100 / "input-view-verifier.py.txt")
+ORIGINAL_VIEWER = VIEWS._viewer()
+
+
+def prompt_wrappers(prompt):
+    return re.findall(r"```javascript\n(.*?)\n```", prompt, re.S)
+
+
+def transcript_call(source, stdout):
+    return {"name": "exec", "input": source,
+        "output_text_blocks": ["Script completed\nWall time 0.1 seconds\nOutput:\n",
+                               "0", stdout.decode("utf-8")]}
+
+
+class FrozenPromptAndViewerTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        manifest_path = STAGE100 / "answer-handoff/answer-assessments/answer-assessor-input-manifest.json"
+        cls.manifest_raw = manifest_path.read_bytes()
+        cls.manifest = json.loads(cls.manifest_raw)
+        cls.rows = {row["logical_submission"]: row for row in cls.manifest["slots"]}
+
+    def test_all32_full_prompts_keep_exact_original_prefix_and_replay_frozen_view_schedules(self):
+        self.assertEqual(len(self.rows), 32)
+        observed_calls = 0
+        observed_pages = 0
+        for logical, row in self.rows.items():
+            with self.subTest(slot=logical):
+                plan = row["input_view_plan"]
+                original = ORIGINAL_DRIVER.format_answer_assessor_driver(PHASE, plan)
+                formatted = DRIVER.format_answer_assessor_driver(
+                    PHASE, plan, original_driver=ORIGINAL_DRIVER)
+                self.assertTrue(formatted.startswith(original), "original full prompt must be byte-exact prefix")
+                self.assertEqual(formatted[len(original):], DRIVER.ANCHOR_CONTRACT)
+                self.assertLessEqual(len(formatted.encode("utf-8")), 12_000)
+                self.assertLessEqual(plan["total_delivered_bytes_with_reserve"], 384_000)
+                self.assertIn("does not imply", formatted)
+                wrappers = prompt_wrappers(formatted)
+                self.assertEqual(len(wrappers), 2)
+                self.assertIn("python3", wrappers[0])
+                self.assertIn("exactly", formatted)
+
+                raw = Path(row["input_path"]).read_bytes()
+                self.assertEqual(sha(raw), row["input_sha256"])
+                self.assertEqual(len(raw), row["input_bytes"])
+                describe = ORIGINAL_VIEWER.describe_from_raw(raw, row["input_sha256"])
+                stdout = (json.dumps(describe, ensure_ascii=False, sort_keys=True,
+                                     separators=(",", ":")) + "\n").encode()
+                calls = [transcript_call(wrappers[0], stdout)]
+                first = ",".join(map(str, plan["batches"][0]["indices"]))
+                for batch in plan["batches"]:
+                    indices = ",".join(map(str, batch["indices"]))
+                    source = wrappers[1].replace("--pages " + first, "--pages " + indices, 1)
+                    calls.append(transcript_call(source,
+                        ORIGINAL_VIEWER.render_from_raw(raw, batch["indices"])))
+                proof = VIEWS.verify_tool_transcript(raw,
+                    expected_sha256=row["input_sha256"], input_path=plan["input_path"],
+                    viewer_path=plan["viewer_path"], slot_id=logical,
+                    source_manifest_sha256=plan["source_manifest_sha256"], calls=calls,
+                    transcript_log_sha256="a" * 64)
+                self.assertEqual(proof["status"], "complete")
+                self.assertEqual(proof["pages_covered"], list(range(1, plan["page_count"] + 1)))
+                self.assertEqual(proof["rendered_bytes"] + 12_000,
+                                 plan["total_delivered_bytes_with_reserve"])
+                observed_calls += proof["tool_call_count"]
+                observed_pages += proof["page_count"]
+        self.assertEqual(observed_calls, sum(1 + len(row["input_view_plan"]["batches"])
+                                             for row in self.rows.values()))
+        self.assertEqual(observed_pages, sum(row["input_view_plan"]["page_count"]
+                                             for row in self.rows.values()))
+
+    def test_reader_transport_uses_exp103_path_and_delegates_unchanged_original_reader(self):
+        class OriginalReader:
+            SOL_MODEL = "gpt-6.1-sol"
+            @staticmethod
+            def expected_path(binding):
+                if binding.get("role") != "answer-assessor": raise ValueError("wrong role")
+                return "/root/exp100_%s_%s_answer_%s" % (
+                    binding["task_id"], binding["assessor_id"].lower(), binding["anonymous_arm"])
+            def __init__(self): self.calls = []
+            def _read(self, *args):
+                self.calls.append(args)
+                return ("synthetic opaque final", [{"tool": "synthetic"}], {"delivery_source": "synthetic"})
+        original = OriginalReader()
+        reader = TRANSPORT.make_reader(original)
+        clock = {"schema": "exp101-grading-clock/1", "stage_id": str(uuid.uuid4()),
+                 "stage_started_utc": "2026-10-08T12:00:00Z",
+                 "stage_deadline_utc": "2026-10-08T20:00:00Z"}
+        clock_raw = (json.dumps(clock, sort_keys=True, ensure_ascii=False,
+            separators=(",", ":"), allow_nan=False) + "\n").encode()
+        current_clock_sha = sha(clock_raw)
+        count = 0
+        for logical, row in self.rows.items():
+            fields = logical.split("-")
+            binding = {"logical_submission": logical, "role": "answer-assessor",
+                "task_id": fields[1], "assessor_id": fields[3], "anonymous_arm": fields[4],
+                "input_sha256": row["input_sha256"], "packet_id": sha(logical.encode()),
+                "stage_clock_sha256": "b" * 64}
+            path = TRANSPORT.expected_path(binding, original)
+            self.assertTrue(path.startswith("/root/exp103_"))
+            self.assertNotIn("/root/exp100_", path)
+            transport = {"schema": "exp101-original-packet-transport/1",
+                "logical_submission": logical, "original_input_sha256": row["input_sha256"],
+                "original_registry_packet_id": binding["packet_id"],
+                "original_clock_sha256": binding["stage_clock_sha256"],
+                "current_clock_sha256": current_clock_sha}
+            result = reader(path, expected_binding=binding,
+                expected_agent_id=str(uuid.uuid4()), expected_clock=clock,
+                expected_transport=transport)
+            self.assertEqual(result[0], "synthetic opaque final")
+            delegated = original.calls[-1]
+            self.assertEqual(delegated, (path, delegated[1], original.SOL_MODEL, None, clock))
+            count += 1
+        self.assertEqual(count, 32)
+        self.assertEqual(len(original.calls), 32)
+
+    def test_reader_transport_rejects_old_namespace_and_wrong_new_clock_before_delegate(self):
+        class OriginalReader:
+            SOL_MODEL = "gpt-6.1-sol"
+            calls = []
+            @staticmethod
+            def expected_path(binding): return "/root/exp100_d1_r1_answer_arm1"
+            @staticmethod
+            def _read(*args): OriginalReader.calls.append(args); return "x", [], {}
+        original = OriginalReader()
+        reader = TRANSPORT.make_reader(original)
+        binding = {"logical_submission": "development-d1-answer-R1-arm1",
+            "role": "answer-assessor", "task_id": "d1", "assessor_id": "R1",
+            "anonymous_arm": "arm1", "input_sha256": "a" * 64,
+            "packet_id": "old-registry-id", "stage_clock_sha256": "b" * 64}
+        clock = {"schema": "exp101-grading-clock/1", "stage_id": str(uuid.uuid4()),
+                 "stage_started_utc": "2026-10-08T12:00:00Z", "stage_deadline_utc": "2026-10-08T20:00:00Z"}
+        current = sha((json.dumps(clock, sort_keys=True, ensure_ascii=False,
+            separators=(",", ":"), allow_nan=False) + "\n").encode())
+        transport = {"schema": "exp101-original-packet-transport/1",
+            "logical_submission": binding["logical_submission"],
+            "original_input_sha256": binding["input_sha256"],
+            "original_registry_packet_id": binding["packet_id"],
+            "original_clock_sha256": binding["stage_clock_sha256"],
+            "current_clock_sha256": current}
+        with self.assertRaisesRegex(ValueError, "assessor-slot-path-mismatch"):
+            reader("/root/exp100_d1_r1_answer_arm1", expected_binding=binding,
+                expected_agent_id=str(uuid.uuid4()), expected_clock=clock,
+                expected_transport=transport)
+        with self.assertRaisesRegex(ValueError, "assessor-fresh-clock-binding"):
+            reader("/root/exp103_d1_r1_answer_arm1", expected_binding=binding,
+                expected_agent_id=str(uuid.uuid4()), expected_clock=clock,
+                expected_transport=dict(transport, current_clock_sha256="c" * 64))
+        self.assertEqual(original.calls, [])
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

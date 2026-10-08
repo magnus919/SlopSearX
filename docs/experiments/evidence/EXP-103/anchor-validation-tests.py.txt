@@ -1,0 +1,135 @@
+"""Synthetic structural tests for explicit evidence-anchor requirements.
+
+These tests do not judge evidence quality or task completion. They check only
+the unchanged hydrator and validator's identity/anchor shape constraints.
+"""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+
+ROOT = Path(__file__).resolve().parents[4]
+EVIDENCE = ROOT / "docs/experiments/evidence"
+
+def load_helper(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+VALIDATOR = load_helper("exp077_synthetic_validate",
+    EVIDENCE / "research-usefulness-measurement/validate.py.txt")
+HYDRATOR = load_helper("exp077_synthetic_hydrate",
+    EVIDENCE / "research-usefulness-measurement/hydrate.py.txt")
+
+DELIVERED = ("s_delivered_unused", "s_used_with_support", "s_used_invalidly")
+EMPTY_REQUIRED = ("s_not_acquired", "s_acquired_unusable", "s_available_not_delivered")
+DISPOSITIONS = {
+    "s_delivered_unused": "delivered_unused",
+    "s_used_with_support": "used_with_support",
+    "s_used_invalidly": "used_invalidly",
+    "s_not_acquired": "not_acquired",
+    "s_acquired_unusable": "acquired_unusable",
+    "s_available_not_delivered": "available_not_delivered",
+}
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+
+class SyntheticAnchorFixture:
+    def __init__(self):
+        self.contexts = {sid: "synthetic context for " + sid for sid in (*DELIVERED, *EMPTY_REQUIRED)}
+        self.catalog_sources = {}
+        self.passages = {}
+        self.evidence_for_source = {}
+        for sid, context in self.contexts.items():
+            context_sha = sha(context.encode())
+            evidence_id = VALIDATOR.evidence_id(sid, context_sha, 0, len(context))
+            self.catalog_sources[sid] = {"context_sha256": context_sha, "characters": len(context)}
+            self.passages[evidence_id] = {"source_id": sid, "start": 0, "end": len(context),
+                "context_sha256": context_sha, "passage_sha256": sha(context.encode()), "text": context}
+            self.evidence_for_source[sid] = evidence_id
+        self.catalog = {"version": 1, "sources": self.catalog_sources, "passages": self.passages}
+        self.catalog_sha = sha(HYDRATOR._canonical(self.catalog))
+        self.registry = {"assignments": [{"packet_id": "synthetic-packet",
+                            "assessor_id": "synthetic-assessor", "packet_kind": "answer"}],
+            "tasks": [{"task_id": "d1", "arms": ["candidate"], "critical_facets": ["f1"],
+                "pool_sources": {sid: {"context": context, "context_sha256": sha(context.encode()),
+                                       "scope": {"synthetic": True}}
+                                 for sid, context in self.contexts.items()},
+                "delivered_sources": {"candidate": list(DELIVERED)},
+                "answer_claims": {"candidate": {"f1": [{"claim_id": "claim-1",
+                                                            "text": "synthetic fixed claim"}]}}}]}
+
+    def model_packet(self, evidence_overrides=None):
+        evidence_overrides = evidence_overrides or {}
+        dispositions = []
+        for sid in (*DELIVERED, *EMPTY_REQUIRED):
+            default = [self.evidence_for_source[sid]] if sid in DELIVERED else []
+            dispositions.append({"source_id": sid, "disposition": DISPOSITIONS[sid],
+                "not_assessable_reason": "", "evidence_ids": evidence_overrides.get(sid, default),
+                "reason": ""})
+        facet = {"facet_id": "f1", "status": "partial", "not_assessable_reason": "",
+            "conclusion": "synthetic structural fixture", "claims": [{"claim_id": "claim-1",
+                "text": "synthetic fixed claim", "evidence_ids": []}],
+            "unsupported_claim_indices": [], "unsupported_material_claims": [],
+            "missed_qualifications": [], "evidence_found_but_unused": [],
+            "evidence_dispositions": dispositions, "scope_match": "uncertain",
+            "entailment": "uncertain", "applicability": "uncertain", "reason": ""}
+        return {"schema": "research-usefulness-assessment/1", "packet_id": "synthetic-packet",
+            "assessor_id": "synthetic-assessor", "packet_kind": "answer",
+            "tasks": [{"task_id": "d1", "arms": [{"arm_id": "candidate",
+                "facet_assessments": [facet], "limitations": []}]}]}
+
+    def hydrate(self, evidence_overrides=None):
+        raw = json.dumps(self.model_packet(evidence_overrides), ensure_ascii=False,
+                         separators=(",", ":")).encode()
+        result = HYDRATOR.hydrate(raw, packet_kind="answer_arm", catalog=self.catalog,
+            contexts=self.contexts, assigned_source_ids=sorted(self.contexts),
+            expected_catalog_sha256=self.catalog_sha)
+        return result["expanded_envelope"]
+
+
+class ExplicitAnchorValidationTests(unittest.TestCase):
+    def setUp(self): self.fx = SyntheticAnchorFixture()
+
+    def test_delivered_unused_and_both_used_states_accept_nonempty_same_arm_anchors(self):
+        packet = self.fx.hydrate()
+        result = VALIDATOR.validate(packet, self.fx.registry)
+        self.assertTrue(result["structurally_valid"])
+        self.assertEqual(result["task_completion"], "not_computed")
+
+    def test_all_delivered_or_used_states_reject_empty_evidence_anchors(self):
+        for sid in DELIVERED:
+            with self.subTest(source=sid):
+                packet = self.fx.hydrate({sid: []})
+                with self.assertRaisesRegex(VALIDATOR.PacketError,
+                        "delivered/used item requires an assessor evidence anchor"):
+                    VALIDATOR.validate(packet, self.fx.registry)
+
+    def test_not_acquired_unusable_and_available_not_delivered_require_empty_anchors(self):
+        packet = self.fx.hydrate()
+        result = VALIDATOR.validate(packet, self.fx.registry)
+        self.assertTrue(result["structurally_valid"])
+        self.assertEqual(result["task_completion"], "not_computed")
+        for sid in EMPTY_REQUIRED:
+            with self.subTest(source=sid):
+                packet = self.fx.hydrate({sid: [self.fx.evidence_for_source[sid]]})
+                with self.assertRaisesRegex(VALIDATOR.PacketError,
+                        "undelivered/unusable item cannot assert delivered evidence"):
+                    VALIDATOR.validate(packet, self.fx.registry)
+
+    def test_answer_arm_cannot_anchor_a_pool_source_not_delivered_to_that_arm(self):
+        packet = self.fx.hydrate({"s_available_not_delivered": [
+            self.fx.evidence_for_source["s_available_not_delivered"]]})
+        # The disposition guard rejects the prohibited anchor before any semantic check.
+        with self.assertRaisesRegex(VALIDATOR.PacketError,
+                "undelivered/unusable item cannot assert delivered evidence"):
+            VALIDATOR.validate(packet, self.fx.registry)
+
+
+if __name__ == "__main__":
+    unittest.main()
