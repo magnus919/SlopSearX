@@ -1,0 +1,136 @@
+"""Offline tests for carry-before-clock ordering and inert controller imports."""
+import hashlib
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+C = importlib.machinery.SourceFileLoader(
+    "exp099_controller_under_test", str(HERE / "controller.py.txt")
+).load_module()
+
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+
+
+def carry_fixture():
+    assignments = [{"logical_submission": f"s{i:02d}"} for i in range(48)]
+    closures = {f"d{i}": {"task_id": f"d{i}", "assessors_joined": False,
+                           "assessors": {"R1": {}, "R2": {}}}
+                for i in range(1, 9)}
+    source_plans = {f"d{i}": {"task_id": f"d{i}", "pool_catalog": {"task_id": f"d{i}"}}
+                    for i in range(1, 9)}
+    citation_tables = {}
+    for i in range(1, 9):
+        task = f"d{i}"
+        entries = [[f"D{i}E0001", f"g-{task}", f"original-{task}", f"alias-{task}"]]
+        digest = hashlib.sha256(json.dumps({"task_id": task, "entries": entries}, sort_keys=True,
+            separators=(",", ":")).encode()).hexdigest()
+        citation_tables[task] = {"task_id": task, "entries": entries, "binding_sha256": digest}
+    context = {"source_plans": source_plans, "citation_tables": citation_tables}
+    proof = {"schema": "exp099-source-carry48-proof/1",
+                      "accepted_assignments": 48, "nested_accepted_assignments": 23,
+                      "fresh_replayed_assignments": 25, "source_plans_closed": 8,
+                      "all_original_assignments_required": True,
+                      "prior_time_credit_seconds": 0, "quality_analyzed": False,
+                      "grade_repaired": False, "assignments": assignments,
+                      "closure_sha256": {task: hashlib.sha256(canonical(row)).hexdigest()
+                                         for task, row in closures.items()},
+                      "source_context_sha256": hashlib.sha256(canonical(context)).hexdigest()}
+    return {"proof": proof,
+            "payloads": {row["logical_submission"]: object() for row in assignments},
+            "closures": closures,
+            "source_context": context,
+            "original_actor_ids": [f"00000000-0000-4000-8000-{i:012d}" for i in range(1, 49)]}
+
+
+class FakeAdmission:
+    def __init__(self):
+        self.events = []
+
+    @staticmethod
+    def canonical_json(value):
+        return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+
+    @staticmethod
+    def strict_json(raw):
+        return json.loads(raw)
+
+    def _write_once(self, path, raw):
+        self.events.append(("write", Path(path).name, raw))
+
+    def create_stage_clock(self, _outdir, _revision):
+        self.events.append(("clock",))
+        clock = {"schema": "exp078-stage-clock/1", "stage": "development"}
+        raw = self.canonical_json(clock)
+        return clock, raw, hashlib.sha256(raw).hexdigest()
+
+    def admit_live(self, *_args, **_kwargs):
+        self.events.append(("admit",))
+        return object()
+
+    @staticmethod
+    def consume_capability(_capability):
+        return object()
+
+
+class ControllerTests(unittest.TestCase):
+    def test_import_is_inert(self):
+        self.assertTrue(callable(C.preflight))
+        self.assertTrue(callable(C.begin))
+
+    def test_carry_proof_requires_exact_48_complete_replay(self):
+        class Carry:
+            @staticmethod
+            def verify_carry48(*_args):
+                return carry_fixture()
+
+        result = C.verify_carry_checkpoint(Carry, "/snapshot", "/pins", "a" * 64)
+        self.assertEqual(len(result["payloads"]), 48)
+
+        class BadCarry(Carry):
+            @staticmethod
+            def verify_carry48(*_args):
+                result = carry_fixture()
+                result["proof"]["accepted_assignments"] = 47
+                return result
+
+        with self.assertRaisesRegex(ValueError, "source-carry-proof-invalid"):
+            C.verify_carry_checkpoint(BadCarry, "/snapshot", "/pins", "a" * 64)
+
+    def test_proof_is_persisted_before_clock_and_admission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            admission = FakeAdmission()
+            carry = carry_fixture()
+            bridge = SimpleNamespace(prepare_reused_inputs=lambda *_args, **_kwargs: {
+                "effective_acquisition": {"schema": "exp099-reused-inputs/1"},
+                "input_integrity": {"input_pins_sha256": "b" * 64},
+                "carried_card_references": {"opaque": True},
+            })
+            preflight = (admission, {"qualified_source_revision": "c" * 40},
+                         b"qualification", {"readiness_baseline_path": "/baseline"},
+                         object(), carry)
+            with mock.patch.object(C, "preflight", return_value=preflight), \
+                 mock.patch.object(C, "_read_bound_capture_configuration", return_value=("url", "key")), \
+                 mock.patch.object(C, "_configure_capture"), \
+                 mock.patch.object(C, "load", return_value=bridge), \
+                 mock.patch.object(C, "_opaque_card_proof", return_value={"proof": True}):
+                state = C.begin(Path(tmp) / "stage", Path(tmp) / "bundle",
+                                source_checkpoint_root=Path(tmp) / "snapshot",
+                                source_checkpoint_pins_path=Path(tmp) / "pins")
+            events = [row[0] for row in admission.events]
+            self.assertLess(events.index("write"), events.index("clock"))
+            self.assertLess(events.index("clock"), events.index("admit"))
+            self.assertEqual(admission.events[0][1], "carried-source-proof.json")
+            self.assertEqual(state.carried_source_payloads, carry["payloads"])
+            self.assertEqual(state.carried_source_closures, carry["closures"])
+            self.assertEqual(state.carried_original_actor_ids, carry["original_actor_ids"])
+
+
+if __name__ == "__main__":
+    unittest.main()

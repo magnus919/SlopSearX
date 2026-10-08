@@ -1,0 +1,163 @@
+"""Verify complete, byte-exact packet-viewer calls against one frozen input.
+
+The caller supplies records extracted from the current agent tool transcript,
+not agent-authored receipt claims. This module returns hashes/counts only; it
+never returns packet text or page stdout in the verification result.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import json
+import re
+import shlex
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+VIEWER_PATH = HERE / "packet-viewer.py.txt"
+VIEWER_RELATIVE = "docs/experiments/evidence/EXP-095/packet-viewer.py.txt"
+MAX_INPUT_BYTES = 384_000
+MAX_PAGE_BYTES = 4_096
+MAX_RENDER_BYTES = 9_000
+MAX_DRIVER_RESERVE_BYTES = 12_000
+_SHA = re.compile(r"^[0-9a-f]{64}$")
+
+
+class ViewError(ValueError):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _viewer():
+    if VIEWER_PATH.is_symlink() or not VIEWER_PATH.is_file():
+        raise ViewError("viewer-unavailable")
+    return importlib.machinery.SourceFileLoader("exp094_packet_viewer_verifier", str(VIEWER_PATH)).load_module()
+
+
+_EXEC_INPUT = re.compile(
+    r'^\s*const\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*await\s+'
+    r'tools\.exec_command\(\{\s*cmd\s*:\s*(?P<cmd>"(?:\\.|[^"\\])*")\s*,\s*'
+    r'max_output_tokens\s*:\s*10000\s*\}\)\s*;\s*text\(\s*(?P=name)\.exit_code\s*\)\s*;\s*'
+    r'text\(\s*(?P=name)\.output\s*\)\s*;\s*$')
+_COMPLETION_META = re.compile(r"^Script completed\nWall time [0-9]+(?:\.[0-9]+)? seconds\nOutput:\n$")
+
+
+def _tool_evidence(row: dict) -> tuple[str, list[str], bytes, str, int]:
+    """Decode only the trusted logger's fixed wrapper; never evaluate JavaScript."""
+    if type(row) is not dict or row.get("name") != "exec":
+        raise ViewError("transcript-call-identity")
+    source = row.get("input")
+    if type(source) is not str:
+        raise ViewError("transcript-call-input")
+    match = _EXEC_INPUT.fullmatch(source)
+    if match is None:
+        raise ViewError("transcript-call-wrapper")
+    try:
+        command = json.loads(match.group("cmd"))
+        argv = shlex.split(command, posix=True)
+    except (json.JSONDecodeError, TypeError, ValueError) as exc:
+        raise ViewError("transcript-command-parse") from exc
+    blocks = row.get("output_text_blocks")
+    if type(blocks) is not list or len(blocks) != 3 or any(type(x) is not str for x in blocks):
+        raise ViewError("transcript-output-blocks")
+    if _COMPLETION_META.fullmatch(blocks[0]) is None:
+        raise ViewError("transcript-completion-metadata")
+    if blocks[1] != "0":
+        raise ViewError("transcript-call-incomplete")
+    try:
+        stdout = blocks[2].encode("utf-8", errors="strict")
+    except UnicodeEncodeError as exc:
+        raise ViewError("transcript-stdout-encoding") from exc
+    return source, argv, stdout, sha(blocks[0].encode("utf-8")), 0
+
+
+def input_view_plan(raw: bytes, *, expected_sha256: str, input_path: str, viewer_path: str,
+                    slot_id: str, source_manifest_sha256: str) -> dict:
+    """Build hash-only expected view schedule and enforce the submission cap."""
+    if type(raw) is not bytes or not 1 <= len(raw) <= MAX_INPUT_BYTES:
+        raise ViewError("assigned-input-size")
+    if not _SHA.fullmatch(expected_sha256) or sha(raw) != expected_sha256:
+        raise ViewError("assigned-input-hash")
+    if not _SHA.fullmatch(source_manifest_sha256):
+        raise ViewError("source-manifest-hash")
+    if (type(input_path) is not str or not Path(input_path).is_absolute()
+            or type(viewer_path) is not str or not Path(viewer_path).is_absolute()
+            or Path(viewer_path).resolve() != VIEWER_PATH.resolve()
+            or type(slot_id) is not str or not slot_id):
+        raise ViewError("assigned-input-identity")
+    viewer = _viewer()
+    view = viewer.build_views(raw)
+    description = (json.dumps(viewer.describe_from_raw(raw, expected_sha256), ensure_ascii=False,
+                              sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+    batches = []
+    for start in range(0, view["page_count"], 2):
+        indices = list(range(start + 1, min(start + 2, view["page_count"]) + 1))
+        rendered = viewer.render_from_raw(raw, indices)
+        if len(rendered) > MAX_RENDER_BYTES:
+            raise ViewError("render-over-limit")
+        batches.append({"indices": indices, "bytes": len(rendered), "sha256": sha(rendered)})
+    # Include viewer framing, the describe response, and a fixed driver reserve
+    # for task/slot instructions in the unchanged per-submission byte budget.
+    delivered = len(description) + sum(row["bytes"] for row in batches) + MAX_DRIVER_RESERVE_BYTES
+    if delivered > MAX_INPUT_BYTES:
+        raise ViewError("delivered-input-over-limit")
+    return {"schema": "exp095-input-view-plan/1", "logical_submission": slot_id,
+            "input_path": input_path, "viewer_path": viewer_path,
+            "viewer_sha256": sha(VIEWER_PATH.read_bytes()),
+            "input_sha256": expected_sha256, "input_bytes": len(raw),
+            "source_manifest_sha256": source_manifest_sha256,
+            "page_count": view["page_count"], "page_size_limit": MAX_PAGE_BYTES,
+            "describe_bytes": len(description), "describe_sha256": sha(description),
+            "batches": batches, "driver_reserve_bytes": MAX_DRIVER_RESERVE_BYTES,
+            "total_delivered_bytes_with_reserve": delivered}
+
+
+def verify_tool_transcript(raw: bytes, *, expected_sha256: str, input_path: str,
+                           viewer_path: str,
+                           slot_id: str, source_manifest_sha256: str,
+                           calls: list[dict], transcript_log_sha256: str) -> dict:
+    """Verify one describe and every page call exactly once in complete order."""
+    if type(transcript_log_sha256) is not str or not _SHA.fullmatch(transcript_log_sha256):
+        raise ViewError("transcript-log-hash")
+    plan = input_view_plan(raw, expected_sha256=expected_sha256, input_path=input_path,
+                           viewer_path=viewer_path,
+                           slot_id=slot_id, source_manifest_sha256=source_manifest_sha256)
+    if type(calls) is not list or len(calls) != 1 + len(plan["batches"]):
+        raise ViewError("transcript-call-count")
+    viewer = _viewer()
+    expected = [(["python3", viewer_path, "--input", input_path,
+                  "--expected-sha", expected_sha256, "--describe"],
+                 (json.dumps(viewer.describe_from_raw(raw, expected_sha256), ensure_ascii=False,
+                             sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"), [])]
+    for batch in plan["batches"]:
+        indices = batch["indices"]
+        expected.append((["python3", viewer_path, "--input", input_path,
+                          "--expected-sha", expected_sha256, "--pages", ",".join(map(str, indices))],
+                         viewer.render_from_raw(raw, indices), indices))
+    checked = []
+    observed_indices = []
+    for row, (argv, stdout_expected, indices) in zip(calls, expected):
+        source, actual_argv, stdout, meta_sha, exit_code = _tool_evidence(row)
+        if actual_argv != argv:
+            raise ViewError("transcript-command-arguments")
+        if len(stdout) > MAX_RENDER_BYTES or stdout != stdout_expected:
+            raise ViewError("transcript-output-mismatch")
+        observed_indices.extend(indices)
+        checked.append({"tool": "exec", "input_sha256": sha(source.encode("utf-8")),
+                        "completion_metadata_sha256": meta_sha, "argv": argv,
+                        "stdout_sha256": sha(stdout), "stdout_bytes": len(stdout),
+                        "exit_code": exit_code,
+                        "page_indices": indices})
+    if observed_indices != list(range(1, plan["page_count"] + 1)):
+        raise ViewError("transcript-page-coverage")
+    return {"schema": "exp095-input-view-verification/1", "status": "complete",
+            "logical_submission": slot_id, "input_sha256": expected_sha256,
+            "source_manifest_sha256": source_manifest_sha256,
+            "transcript_log_sha256": transcript_log_sha256,
+            "page_count": plan["page_count"], "tool_call_count": len(calls),
+            "rendered_bytes": sum(row["stdout_bytes"] for row in checked),
+            "transcript_sha256": sha(json.dumps(checked, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode()), "pages_covered": observed_indices}

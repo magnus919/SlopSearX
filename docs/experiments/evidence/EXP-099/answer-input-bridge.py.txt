@@ -1,0 +1,311 @@
+"""Build EXP-099 answerer and answer-assessor inputs from verified frozen capture.
+
+This module projects only fixed, already selected orders. It performs no
+selection, semantic grading, answer generation, or metric calculation.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.machinery
+import json
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+EXP077 = HERE.parent / "EXP-077"
+
+
+class AnswerInputError(ValueError):
+    pass
+
+
+def _load(name: str, path: Path):
+    if path.is_symlink() or not path.is_file():
+        raise AnswerInputError("pinned-helper-missing")
+    return importlib.machinery.SourceFileLoader(name, str(path)).load_module()
+
+
+def _canonical(value) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True,
+                        separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
+
+
+def _packet_json(value) -> bytes:
+    """Keep complete packet values on bounded physical lines for the frozen viewer."""
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2,
+                       allow_nan=False) + "\n").encode("utf-8")
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _validated_answer_manifest(manifest: dict, expected_keys: set[tuple[str, str]]) -> dict:
+    """Validate the complete frozen receiver manifest before consuming any answer."""
+    if (type(manifest) is not dict or set(manifest) != {"schema", "status", "answers"}
+            or manifest.get("schema") != "exp095-answer-output-manifest/1"
+            or manifest.get("status") != "complete" or type(manifest.get("answers")) is not list
+            or len(manifest["answers"]) != 16):
+        raise AnswerInputError("complete-answer-output-manifest-required")
+    rows = {}
+    for row in manifest["answers"]:
+        if (type(row) is not dict or set(row) != {"task_id", "arm", "answer_sha256",
+                "receipt_sha256", "bytes"}):
+            raise AnswerInputError("answer-output-manifest-row")
+        if type(row["task_id"]) is not str or type(row["arm"]) is not str:
+            raise AnswerInputError("answer-output-manifest-row")
+        key = (row["task_id"], row["arm"])
+        if (key not in expected_keys or key in rows
+                or any(type(row[name]) is not str or len(row[name]) != 64
+                       or any(char not in "0123456789abcdef" for char in row[name])
+                       for name in ("answer_sha256", "receipt_sha256"))
+                or type(row["bytes"]) is not int or not 1 <= row["bytes"] <= 2_000_000):
+            raise AnswerInputError("answer-output-manifest-row")
+        rows[key] = row
+    if set(rows) != expected_keys:
+        raise AnswerInputError("complete-answer-output-manifest-required")
+    return rows
+
+
+def load_verified_capture(*, snapshot: Path, acquisition: dict, cases: list[dict]):
+    """Return source rows only after the frozen EXP-084 terminal proof passes."""
+    prepare = _load("exp086_capture_integrity", HERE.parent / "EXP-086" / "prepare-assessments.py.txt")
+    bridge = _load("exp084_capture_projector", HERE.parent / "EXP-078" / "prepare.py.txt")
+    packets = _load("exp077_capture_packets", EXP077 / "model-packets.py.txt")
+    rows, proof = prepare._capture_inventory(Path(snapshot), acquisition, cases, bridge, packets)
+    if (type(rows) is not dict or type(proof) is not dict
+            or type(proof.get("phase_sha256")) is not str
+            or type(proof.get("capture_sha256")) is not str
+            or proof.get("source_count") != len(rows)):
+        raise AnswerInputError("capture-integrity-receipt-shape")
+    return rows, proof
+
+
+def build_answerer_assignments(*, acquisition: dict, cases: list[dict], source_rows: dict,
+                               capture_proof: dict, fixed_orders: dict) -> dict:
+    """Project fixed arm orders into the unchanged EXP-077 answer schema."""
+    packets = _load("exp095_answer_packets", EXP077 / "model-packets.py.txt")
+    phase = _load("exp095_answer_phase", HERE / "phase-bindings.py.txt")
+    if (type(capture_proof) is not dict
+            or not all(type(capture_proof.get(key)) is str and len(capture_proof[key]) == 64
+                       for key in ("phase_sha256", "capture_sha256", "receipts_sha256", "binding_sha256"))
+            or type(source_rows) is not dict
+            or capture_proof.get("source_count") != len(source_rows)):
+        raise AnswerInputError("verified-capture-proof-required")
+    research = [case for case in cases if case.get("kind") == "research"]
+    task_ids = [case.get("id") for case in research]
+    if len(task_ids) != 8 or len(set(task_ids)) != 8:
+        raise AnswerInputError("research-case-coverage")
+    expected = {(task_id, arm) for task_id in task_ids for arm in ("w0", "candidate")}
+    normalized_orders = {}
+    if type(fixed_orders) is not dict:
+        raise AnswerInputError("fixed-orders-shape")
+    for task_id in task_ids:
+        order_map = fixed_orders.get(task_id)
+        if type(order_map) is not dict or set(order_map) != {"w0", "candidate"}:
+            raise AnswerInputError("fixed-order-arm-coverage")
+        pool = acquisition.get("pools", {}).get(task_id, {}).get("cards")
+        source_map = acquisition.get("source_id_by_card_id", {}).get(task_id)
+        card_ids = [row.get("id") for row in pool] if type(pool) is list else []
+        if (len(card_ids) != len(set(card_ids)) or type(source_map) is not dict
+                or set(source_map) != set(card_ids)):
+            raise AnswerInputError("frozen-pool-source-map")
+        for arm in ("w0", "candidate"):
+            order = order_map[arm]
+            if (type(order) is not list or len(order) != 10 or len(order) != len(set(order))
+                    or any(type(card_id) is not str or card_id not in set(card_ids) for card_id in order)):
+                raise AnswerInputError("fixed-top10-order")
+            normalized_orders[(task_id, arm)] = list(order)
+    if set(normalized_orders) != expected or len(fixed_orders) != 8:
+        raise AnswerInputError("fixed-order-complete-coverage")
+    universes = phase.source_id_universes(acquisition, research)
+    assignments, projections = [], {}
+    for task in research:
+        task_id = task["id"]
+        source_map = acquisition["source_id_by_card_id"][task_id]
+        pool_cards = {row["id"]: row for row in acquisition["pools"][task_id]["cards"]}
+        for arm in ("w0", "candidate"):
+            order = normalized_orders[(task_id, arm)]
+            openings, seen_source_ids = [], set()
+            for card_id in order:
+                source_id = source_map[card_id]
+                captured = source_rows.get(source_id)
+                if type(captured) is not dict or captured.get("source_id") != source_id:
+                    raise AnswerInputError("capture-source-inventory-missing")
+                state = captured.get("state")
+                if type(state) is not str or not state:
+                    raise AnswerInputError("capture-source-state-missing")
+                if source_id in seen_source_ids:
+                    openings.append({"card_id": card_id, "source_id": source_id, "state": "duplicate"})
+                    continue
+                seen_source_ids.add(source_id)
+                opening = {"card_id": card_id, "source_id": source_id, "state": state}
+                if state == "success":
+                    context = captured.get("context")
+                    if type(context) is not str:
+                        raise AnswerInputError("successful-capture-context-missing")
+                    opening["context"] = context
+                openings.append(opening)
+            projection = packets.answer_projection(order, openings, arm_id=arm,
+                                                   max_cards=10, max_successes=5,
+                                                   context_chars=8000)
+            assignment = packets.answerer_assignment(task, projection, task["critical_checks"])
+            assignments.append(assignment)
+            projections[(task_id, arm)] = projection
+    packets_answer = {"schema": "exp095-answerer-inputs/1", "assignments": assignments}
+    return {"schema": "exp095-answer-bridge/1", "assignments": assignments,
+            "projections": projections, "fixed_orders": normalized_orders,
+            "full_source_id_universe_by_task": universes,
+            "capture_proof_sha256": _sha(_canonical(capture_proof)),
+            "answerer_input_manifest": packets_answer,
+            "answerer_input_manifest_sha256": _sha(_canonical(packets_answer))}
+
+
+def build_answer_assessor_packets(*, answer_bridge: dict, cases: list[dict], answer_payloads: dict,
+                                  answer_output_manifest: dict, own_source_assessments: dict,
+                                  source_catalogs: dict, citation_tables: dict,
+                                  output_root: Path, preparation_manifest_sha256: str,
+                                  anonymous_arm_map: dict | None = None) -> dict:
+    """Freeze 32 arm-blind assessor inputs from complete answers and own refs."""
+    packets = _load("exp095_answer_assessor_packets", EXP077 / "model-packets.py.txt")
+    phase = _load("exp095_answer_assessor_phase", HERE / "phase-bindings.py.txt")
+    bridge = answer_bridge
+    assignments = bridge.get("assignments") if type(bridge) is dict else None
+    projections = bridge.get("projections") if type(bridge) is dict else None
+    universes = bridge.get("full_source_id_universe_by_task") if type(bridge) is dict else None
+    if (type(assignments) is not list or len(assignments) != 16 or type(projections) is not dict
+            or type(universes) is not dict or type(answer_payloads) is not dict
+            or type(own_source_assessments) is not dict or type(source_catalogs) is not dict
+            or type(citation_tables) is not dict):
+        raise AnswerInputError("answer-assessment-inputs-incomplete")
+    expected_keys = {(f"d{i}", arm) for i in range(1, 9) for arm in ("w0", "candidate")}
+    if set(answer_payloads) != expected_keys:
+        raise AnswerInputError("complete-answer-output-manifest-required")
+    manifest_by_key = _validated_answer_manifest(answer_output_manifest, expected_keys)
+    arm_map = anonymous_arm_map or {"w0": "arm1", "candidate": "arm2"}
+    if arm_map != {"w0": "arm1", "candidate": "arm2"}:
+        raise AnswerInputError("frozen-anonymous-arm-map")
+    output_root = Path(output_root)
+    if output_root.exists() or output_root.is_symlink():
+        raise AnswerInputError("answer-assessor-output-must-be-new")
+    output_root.mkdir(mode=0o700, parents=True, exist_ok=False)
+    entries = []
+    refs_by_key = manifest_by_key
+    for task_num in range(1, 9):
+        task_id = f"d{task_num}"
+        task = next((row for row in cases if row.get("id") == task_id), None)
+        if type(task) is not dict or task.get("kind") != "research":
+            raise AnswerInputError("answer-task-coverage")
+        assignment_by_key = {(row["model_input"]["task"]["task_id"], row["private_binding"]["arm_id"]): row
+                             for row in assignments}
+        case_assignments = {arm: assignment_by_key.get((task_id, arm)) for arm in ("w0", "candidate")}
+        if any(value is None for value in case_assignments.values()):
+            raise AnswerInputError("answerer-assignment-task-arm-coverage")
+        task_obj = case_assignments["w0"]["model_input"]["task"]
+        critical_checks = task.get("critical_checks")
+        facet_ids = [row.get("id") for row in critical_checks] if type(critical_checks) is list else []
+        if len(facet_ids) != 3 or any(not isinstance(value, str) for value in facet_ids):
+            raise AnswerInputError("answer-task-facet-schema")
+        task_keyed_refs = own_source_assessments.get(task_id)
+        source_catalog = source_catalogs.get(task_id)
+        table = citation_tables.get(task_id)
+        if type(task_keyed_refs) is not dict or type(source_catalog) is not dict or table is None:
+            raise AnswerInputError("answer-source-reference-or-codebook-missing")
+        for assessor in ("R1", "R2"):
+            own = task_keyed_refs.get(assessor)
+            if (type(own) is not dict or own.get("packet_kind") != "source"
+                    or own.get("assessor_id") != assessor
+                    or [row.get("task_id") for row in own.get("tasks", []) if type(row) is dict] != [task_id]):
+                raise AnswerInputError("same-assessor-own-source-reference-required")
+            for source_arm in ("w0", "candidate"):
+                assignment = case_assignments[source_arm]
+                answer_record = answer_payloads[(task_id, source_arm)]
+                if (type(answer_record) is not dict
+                        or set(answer_record) != {"raw_bytes", "parsed"}
+                        or type(answer_record["raw_bytes"]) is not bytes
+                        or type(answer_record["parsed"]) is not dict):
+                    raise AnswerInputError("answer-payload-receipt-shape")
+                answer_receipt = manifest_by_key[(task_id, source_arm)]
+                if (len(answer_record["raw_bytes"]) != answer_receipt["bytes"]
+                        or _sha(answer_record["raw_bytes"]) != answer_receipt["answer_sha256"]):
+                    raise AnswerInputError("answer-payload-output-binding")
+                answer = answer_record["parsed"]
+                answer_runner = _load("exp095_answer_payload_validator", EXP077 / "answer-runner.py.txt")
+                if answer_runner.strict_json(answer_record["raw_bytes"]) != answer:
+                    raise AnswerInputError("answer-payload-parse-binding")
+                answer_runner.validate_answer(
+                    answer_record["raw_bytes"].decode("utf-8"),
+                    answer_runner.validate_schema((EXP077 / "answerer.schema.json").read_bytes()),
+                    {passage["evidence_id"]
+                     for row in assignment["model_input"]["delivered_sources"]
+                     for passage in row["passages"]}, facet_ids)
+                frozen_claims = packets.freeze_answer_claims(critical_checks, answer)
+                claims = {facet_id: [{"claim_id": row["claim_id"], "text": row["text"]}
+                                     for row in rows]
+                          for facet_id, rows in frozen_claims.items()}
+                projection = json.loads(json.dumps(projections[(task_id, source_arm)], ensure_ascii=False))
+                anonymous_arm = arm_map[source_arm]
+                projection["arm_id"] = anonymous_arm
+                packet_id = f"development-{task_id}-answer-{assessor}-{anonymous_arm}"
+                packet = packets.answer_assessor_template(
+                    packet_id, assessor, task_id, anonymous_arm, facet_ids, claims,
+                    universes[task_id], projection, answer["facets"], own)
+                encoded = phase.encode_answer_assessor_packet(
+                    task_id=task_id, packet_input=packet, source_catalog=source_catalog,
+                    answer_catalog=projection["catalog"], source_ids=universes[task_id],
+                    table=table, outdir=output_root / "bindings" / packet_id)
+                model_input = encoded["model_input"]
+                grouped = _load("exp099_grouped_evidence_catalog", HERE / "grouped-evidence-catalog.py.txt")
+                original_coded_sha = _sha(grouped.canonical_bytes(model_input))
+                model_input = grouped.compact_packet(model_input, task_id=task_id,
+                                                     expected_original_sha256=original_coded_sha)
+                raw = grouped.canonical_bytes(model_input)
+                grouped_binding = {
+                    "schema": "exp099-grouped-answer-packet-binding/1",
+                    "task_id": task_id,
+                    "packet_id": packet_id,
+                    "original_coded_packet_sha256": original_coded_sha,
+                    "grouped_packet_sha256": _sha(raw),
+                    "source_label_binding_sha256": encoded["label_binding"]["sha256"],
+                    "citation_table_sha256": _sha(_canonical(encoded["label_binding_bundle"]["task_table"])),
+                }
+                grouped_binding_ref = phase.write_once(
+                    output_root / "bindings" / packet_id / "grouped-packet-binding.json",
+                    _canonical(grouped_binding))
+                if len(raw) < 1 or len(raw) > 384_000:
+                    raise AnswerInputError("answer-assessor-input-byte-cap")
+                input_path = output_root / "inputs" / f"{packet_id}.json"
+                input_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+                if input_path.exists() or input_path.is_symlink():
+                    raise AnswerInputError("answer-assessor-input-must-be-new")
+                phase.write_once(input_path, raw)
+                view = _load("exp095_answer_view_verifier", HERE / "input-view-verifier.py.txt")
+                view_plan = view.input_view_plan(
+                    raw, expected_sha256=_sha(raw), input_path=str(input_path.resolve()),
+                    viewer_path=str((HERE / "packet-viewer.py.txt").resolve()),
+                    slot_id=f"development-{task_id}-answer-{assessor}-{anonymous_arm}",
+                    source_manifest_sha256=preparation_manifest_sha256)
+                entries.append({
+                    "logical_submission": f"development-{task_id}-answer-{assessor}-{anonymous_arm}",
+                    "task_id": task_id, "assessor_id": assessor, "anonymous_arm": anonymous_arm,
+                    "answer_arm_source_binding": source_arm,
+                    "input_path": str(input_path.resolve()), "input_sha256": _sha(raw),
+                    "input_bytes": len(raw), "input_view_plan": view_plan,
+                    "label_binding_sha256": encoded["label_binding"]["sha256"],
+                    "grouped_binding_sha256": grouped_binding_ref["sha256"],
+                    "grouped_packet_sha256": grouped_binding["grouped_packet_sha256"],
+                    "original_coded_packet_sha256": grouped_binding["original_coded_packet_sha256"],
+                    "answer_sha256": refs_by_key[(task_id, source_arm)]["answer_sha256"],
+                    "answer_receipt_sha256": refs_by_key[(task_id, source_arm)]["receipt_sha256"],
+                    "own_source_packet_id": own["packet_id"],
+                })
+    if len(entries) != 32 or len({row["logical_submission"] for row in entries}) != 32:
+        raise AnswerInputError("answer-assessor-slot-completeness")
+    manifest = {"schema": "exp095-answer-assessor-input-manifest/1", "status": "complete",
+                "anonymous_arm_map_sha256": _sha(_canonical(arm_map)),
+                "answer_output_manifest_sha256": _sha(_canonical(answer_output_manifest)),
+                "slots": sorted(entries, key=lambda row: row["logical_submission"])}
+    raw = _canonical(manifest)
+    manifest_path = output_root / "answer-assessor-input-manifest.json"
+    phase.write_once(manifest_path, raw)
+    return {"manifest": manifest, "manifest_sha256": _sha(raw),
+            "slot_count": len(entries), "manifest_path": str(manifest_path.resolve())}

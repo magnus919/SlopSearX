@@ -1,0 +1,174 @@
+"""Offline phase-order and artifact-freeze tests for EXP-099 admission."""
+import hashlib
+import importlib.machinery
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+HERE = Path(__file__).resolve().parent
+A = importlib.machinery.SourceFileLoader(
+    "exp099_admission_order_tests", str(HERE / "admission.py.txt")).load_module()
+
+
+def canonical(value):
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True,
+                       separators=(",", ":"), allow_nan=False) + "\n").encode()
+
+
+class PhaseOrderTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name) / "stage"
+        self.root.mkdir()
+        self.leases = Path(self.temp.name) / "leases"
+        self.leases.mkdir()
+        self.clock = b"fixture-clock"
+        self.clock_sha = hashlib.sha256(self.clock).hexdigest()
+        (self.root / "stage-clock.json").write_bytes(self.clock)
+        self.stage = A._StagePermit("stage-id", self.clock_sha, "b" * 64,
+                                    "/fixture-baseline", self.root)
+        A._PERMITS[id(self.stage)] = self.stage
+        A._PERMIT_BY_ID[self.stage.identity] = self.stage
+        A._PERMIT_BASELINE_BINDINGS[id(self.stage)] = (self.stage.readiness_baseline_path,
+                                                        self.stage.readiness_baseline_sha256)
+        self.patchers = [
+            mock.patch.object(A, "LEASE_ROOT", self.leases),
+            mock.patch.object(A, "_check_clock_permit", side_effect=self._check_clock),
+            mock.patch.object(A, "_successful_health", side_effect=self._fake_successful_health),
+            mock.patch.object(A, "_load_pinned_readiness_baseline"),
+            mock.patch.object(A, "_validate_stage_baseline_binding"),
+            mock.patch.object(A, "_validate_phase_baseline_binding"),
+        ]
+        for patcher in self.patchers:
+            patcher.start()
+
+    def tearDown(self):
+        for patcher in reversed(self.patchers):
+            patcher.stop()
+        self.temp.cleanup()
+        A._PHASE_BY_STAGE.pop("stage-id", None)
+        A._PHASE_COMPLETIONS.clear()
+        A._PHASES.clear()
+        A._PHASE_BASELINE_BINDINGS.clear()
+        A._PERMITS.clear()
+        A._PERMIT_BY_ID.clear()
+        A._PERMIT_BASELINE_BINDINGS.clear()
+
+    def _health(self, completed=True):
+        permit = A.acquire_phase(self.stage, "health", self.root, self.clock)
+        A._PHASE_BY_STAGE[self.stage.identity]["health"] = permit
+        if completed:
+            completion = {"fixture": "successful-health", "phase_identity": permit.identity}
+            (self.root / "health-completion.json").write_bytes(canonical(completion))
+            (self.leases / f"{permit.identity}.complete.json").write_bytes(canonical(completion))
+
+    def _fake_successful_health(self, _stage, _outdir, _clock):
+        if not (self.root / "health-completion.json").is_file():
+            raise A.AdmissionError("health-completion-invalid")
+
+    def _check_clock(self, outdir, clock_bytes, _identity, expected_clock):
+        if hashlib.sha256(clock_bytes).hexdigest() != expected_clock:
+            raise A.AdmissionError("phase-clock-digest")
+        if (Path(outdir) / "stage-clock.json").read_bytes() != clock_bytes:
+            raise A.AdmissionError("phase-clock-file-binding")
+
+    def _write(self, rel, value):
+        path = self.root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(canonical(value))
+        return path
+
+    def _complete_selector(self):
+        selector = A.acquire_phase(self.stage, "selector", self.root, self.clock)
+        self._write("selector/selector-run.json", {
+            "schema": "exp078-selector-run/1", "status": "complete", "synthetic": False,
+            "stage_clock_sha256": self.clock_sha,
+            "neutral": {"status": "complete"},
+            "operations": [{"status": "complete"} for _ in range(21)]})
+        A.complete_phase(selector, self.clock, self.root)
+
+    def test_selector_cannot_be_acquired_after_health_lease_only(self):
+        self._health(completed=False)
+        with self.assertRaisesRegex(A.AdmissionError, "health-completion-invalid"):
+            A.acquire_phase(self.stage, "selector", self.root, self.clock)
+        self.assertFalse((self.root / "selector").exists())
+
+    def test_analysis_cannot_skip_live_predecessors(self):
+        self._health()
+        with self.assertRaisesRegex(A.AdmissionError, "phase-predecessor-not-issued"):
+            A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+
+    def test_incomplete_selector_cannot_be_frozen_or_unlock_answer(self):
+        self._health()
+        selector = A.acquire_phase(self.stage, "selector", self.root, self.clock)
+        self._write("selector/selector-run.json", {
+            "schema": "exp078-selector-run/1", "status": "incomplete", "synthetic": False,
+            "stage_clock_sha256": self.clock_sha,
+            "neutral": {"status": "complete"},
+            "operations": [{"status": "complete"} for _ in range(21)]})
+        with self.assertRaisesRegex(A.AdmissionError, "selector-completion-artifact-invalid"):
+            A.complete_phase(selector, self.clock, self.root)
+        with self.assertRaisesRegex(A.AdmissionError, "phase-completion-invalid"):
+            A.acquire_phase(self.stage, "answer", self.root, self.clock)
+
+    def test_stale_clock_and_repeated_completion_are_rejected(self):
+        self._health()
+        self._complete_selector()
+        selector = A._PHASE_BY_STAGE[self.stage.identity]["selector"]
+        with self.assertRaisesRegex(A.AdmissionError, "phase-already-completed"):
+            A.complete_phase(selector, self.clock, self.root)
+        with self.assertRaisesRegex(A.AdmissionError, "phase-clock-digest"):
+            A.acquire_phase(self.stage, "answer", self.root, b"stale-clock")
+
+    def test_live_phases_require_ordered_completed_artifacts(self):
+        self._health()
+        self._complete_selector()
+        answer = A.acquire_phase(self.stage, "answer", self.root, self.clock)
+        self._write("answer-handoff/answerer-output/answer-output-manifest.json",
+                    {"schema": "exp095-answer-output-manifest/1", "status": "complete",
+                     "answers": [{"task_id": f"d{i}", "arm": arm}
+                                 for i in range(1, 9) for arm in ("w0", "candidate")]})
+        manifest = self.root / "answer-handoff/answerer-output/answer-output-manifest.json"
+        self._write("answer-handoff/answerer-output/answer-phase.json", {
+            "schema": "exp078-answer-phase/1", "status": "complete", "synthetic": False,
+            "stage_clock_sha256": self.clock_sha, "owned_api_calls": 18,
+            "answer_output_manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest()})
+        A.complete_phase(answer, self.clock, self.root)
+        assess = A.acquire_phase(self.stage, "answer-assessment", self.root, self.clock)
+        rows = {f"slot-{i:02d}": {"schema": "exp099-answer-structural-close/1",
+                    "logical_submission": f"slot-{i:02d}", "input_sha256": "a" * 64,
+                    "answer_sha256": "b" * 64, "decoded_response_sha256": "c" * 64,
+                    "raw_final_sha256": "d" * 64, "structurally_valid": True,
+                    "semantic_completion": "not_claimed", "metric_computed": False}
+                for i in range(32)}
+        for name, row in rows.items():
+            self._write(f"answer-handoff/answer-assessments/closed/{name}.json", row)
+        self._write("answer-handoff/answer-assessments/closure.json", {
+            "schema": "exp099-answer-assessor-closure/1", "status": "complete", "slot_count": 32,
+            "structurally_valid": True, "semantic_completion": "not_claimed", "metric_computed": False,
+            "closure_sha256": hashlib.sha256(canonical(rows)).hexdigest()})
+        A.complete_phase(assess, self.clock, self.root)
+        analysis = A.acquire_phase(self.stage, "analysis", self.root, self.clock)
+        A.require_phase(analysis, self.clock, self.root)
+        selector_path = self.root / "selector/selector-run.json"
+        selector = json.loads(selector_path.read_bytes())
+        selector["status"] = "incomplete"
+        selector_path.write_bytes(canonical(selector))
+        with self.assertRaisesRegex(A.AdmissionError, "selector-completion-artifact-invalid"):
+            A.require_phase(analysis, self.clock, self.root)
+
+    def test_tampered_predecessor_artifact_blocks_next_phase(self):
+        self._health()
+        self._complete_selector()
+        path = self.root / "selector/selector-run.json"
+        obj = json.loads(path.read_bytes())
+        obj["status"] = "incomplete"
+        path.write_bytes(canonical(obj))
+        with self.assertRaisesRegex(A.AdmissionError, "selector-completion-artifact-invalid"):
+            A.acquire_phase(self.stage, "answer", self.root, self.clock)
+
+
+if __name__ == "__main__":
+    unittest.main()
