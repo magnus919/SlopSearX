@@ -1,0 +1,156 @@
+"""Synthetic lifecycle tests for the EXP-101 public controller helper."""
+from __future__ import annotations
+
+from datetime import datetime as RealDateTime, timedelta, timezone
+import asyncio
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+
+HERE = Path(__file__).resolve().parent
+LOADER = importlib.machinery.SourceFileLoader(
+    "exp101_controller", str(HERE / "controller.py.txt"))
+SPEC = importlib.util.spec_from_loader(LOADER.name, LOADER)
+MODULE = importlib.util.module_from_spec(SPEC)
+LOADER.exec_module(MODULE)
+
+FROZEN_NOW = RealDateTime(2026, 10, 8, 12, tzinfo=timezone.utc)
+
+
+class FrozenDateTime(RealDateTime):
+    @classmethod
+    def now(cls, tz=None):
+        return FROZEN_NOW if tz is not None else FROZEN_NOW.replace(tzinfo=None)
+
+
+class ControllerTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name)
+        self.qual = {"status": "qualified", "qualified_source_revision": "a" * 40}
+        self.carry = {"status": "verified"}
+        self.preflight = {"status": "complete", "packets": 32,
+                          "actual_grader_calls": 0, "quality_analyzed": False}
+        self.baseline = {"expected_revision": "a" * 40, "model_alias": "free"}
+        self.protocol = b'{"protocol":"synthetic"}\n'
+        self.origin = b'{"origin":"synthetic"}\n'
+        self.calls = {"qualify": 0, "carry": 0, "preflight": 0}
+        self.controller = self.make_controller()
+
+    def make_controller(self):
+        def qualify():
+            self.calls["qualify"] += 1
+            return self.qual
+        def carry():
+            self.calls["carry"] += 1
+            return self.carry
+        def preflight():
+            self.calls["preflight"] += 1
+            return self.preflight
+        return MODULE.Controller(
+            qualify=qualify, verify_carry=carry, full_packet_preflight=preflight,
+            protocol_raw=self.protocol, baseline_raw=MODULE.canonical(self.baseline),
+            origin_clock_raw=self.origin)
+
+    def begin(self, controller=None, outdir=None):
+        controller = controller or self.controller
+        with patch.object(MODULE, "datetime", FrozenDateTime):
+            return controller.begin(outdir or self.base / "stage")
+
+    def async_health(self, result=None):
+        result = result or {"http_status": 200, "status": "healthy",
+                            "runtime_revision": self.baseline["expected_revision"],
+                            "model": "free"}
+        async def request():
+            await asyncio.sleep(0)
+            return result
+        return request
+
+    def health(self, awaited_request, controller=None):
+        with patch.object(MODULE, "datetime", FrozenDateTime):
+            return (controller or self.controller).health(awaited_request)
+
+    def test_full_preflight_precedes_clock_and_valid_begin_is_fresh_uuid4_eight_hours(self):
+        clock = self.begin()
+        self.assertEqual(self.calls, {"qualify": 2, "carry": 2, "preflight": 2})
+        self.assertEqual(clock["schema"], "exp101-grading-clock/1")
+        self.assertEqual(clock["source_revision"], self.qual["qualified_source_revision"])
+        self.assertEqual(clock["stage_id"], str(__import__("uuid").UUID(clock["stage_id"])))
+        self.assertEqual(__import__("uuid").UUID(clock["stage_id"]).version, 4)
+        start = RealDateTime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+        end = RealDateTime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+        self.assertEqual(end - start, timedelta(hours=8))
+        self.assertTrue((self.base / "stage" / "stage-clock.json").is_file())
+
+    def test_missing_qualification_carry_or_full_32_packet_proof_blocks_clock(self):
+        for field, value in (
+            ("qual", {"status": "not-qualified", "qualified_source_revision": "a" * 40}),
+            ("carry", {"status": "failed"}),
+            ("preflight", {"status": "complete", "packets": 31,
+                           "actual_grader_calls": 0, "quality_analyzed": False}),
+        ):
+            with self.subTest(field=field):
+                setattr(self, field, value)
+                outdir = self.base / ("blocked-" + field)
+                with self.assertRaisesRegex(ValueError, "controller-preclock-proof"):
+                    self.make_controller()
+                self.assertFalse(outdir.exists())
+
+    def test_begin_is_one_attempt_and_clock_is_retained_after_health_failure(self):
+        self.begin()
+        with self.assertRaisesRegex(ValueError, "controller-no-restart"):
+            self.begin()
+        clock_path = self.base / "stage" / "stage-clock.json"
+        clock_before = clock_path.read_bytes()
+        with self.assertRaisesRegex(ValueError, "controller-health-failed"):
+            self.health(self.async_health({"http_status": 503, "status": "unhealthy",
+                                           "runtime_revision": "a" * 40, "model": "free"}))
+        self.assertEqual(clock_path.read_bytes(), clock_before)
+        with self.assertRaisesRegex(ValueError, "controller-one-health-after-clock"):
+            self.health(self.async_health())
+
+    def test_health_requires_awaitable_and_rejects_original_unawaited_sync_result(self):
+        self.begin()
+        with self.assertRaisesRegex(ValueError, "controller-health-awaitable-required"):
+            self.health(lambda: {"http_status": 200, "status": "healthy"})
+        self.assertFalse((self.base / "stage" / "health-completion.json").exists())
+        with self.assertRaisesRegex(ValueError, "controller-one-health-after-clock"):
+            self.health(self.async_health())
+
+    def test_awaited_health_is_pinned_to_free_revision_status_and_written_once(self):
+        self.begin()
+        receipt = self.health(self.async_health())
+        self.assertTrue(receipt["request_completed"])
+        self.assertEqual(receipt["runtime_revision"], self.baseline["expected_revision"])
+        self.assertEqual(receipt["model"], "free")
+        self.assertEqual(receipt["http_status"], 200)
+        self.assertEqual(receipt["status"], "healthy")
+        path = self.base / "stage" / "health-completion.json"
+        stored = json.loads(path.read_bytes())
+        self.assertEqual(stored, receipt)
+        with self.assertRaisesRegex(ValueError, "controller-one-health-after-clock"):
+            self.health(self.async_health())
+
+    def test_wrong_revision_or_model_health_is_terminal_and_cannot_restart(self):
+        for key, bad in (("runtime_revision", "b" * 40), ("model", "other")):
+            with self.subTest(key=key):
+                controller = self.make_controller()
+                self.begin(controller, self.base / ("health-" + key))
+                result = {"http_status": 200, "status": "healthy",
+                          "runtime_revision": self.baseline["expected_revision"],
+                          "model": "free"}
+                result[key] = bad
+                with self.assertRaisesRegex(ValueError, "controller-health-failed"):
+                    self.health(self.async_health(result), controller)
+                with self.assertRaisesRegex(ValueError, "controller-one-health-after-clock"):
+                    self.health(self.async_health(), controller)
+
+
+if __name__ == "__main__":
+    unittest.main()
