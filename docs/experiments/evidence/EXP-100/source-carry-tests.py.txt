@@ -55,6 +55,19 @@ def write_pins(root, raw):
 
 
 class InventoryTests(unittest.TestCase):
+    def test_original_frozen_snapshot_schema_is_preserved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pins, _ = fixture(root)
+            pins["schema"] = "exp099-carry48-snapshot-pins/1"
+            raw = CARRY.canonical(pins)
+            self.assertEqual(CARRY.verify_inventory(root, raw, digest(raw))["schema"],
+                             "exp099-carry48-snapshot-pins/1")
+            pins["schema"] = "exp100-carry48-snapshot-pins/1"
+            raw = CARRY.canonical(pins)
+            with self.assertRaisesRegex(CARRY.CarryError, "snapshot-pins-shape"):
+                CARRY.verify_inventory(root, raw, digest(raw))
+
     def test_mutation_after_inventory_cannot_enter_owned_tree(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "snapshot"

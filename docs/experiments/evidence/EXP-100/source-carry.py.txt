@@ -16,7 +16,7 @@ import tempfile
 import types
 from pathlib import Path
 
-SNAPSHOT_SCHEMA = "exp100-carry48-snapshot-pins/1"
+SNAPSHOT_SCHEMA = "exp099-carry48-snapshot-pins/1"  # Preserve the immutable inherited input format.
 NESTED_23_PINS_SHA256 = "45af4810cd3f25256b2324b11737180741fb73b5605d98a5960eeb6aa5497d5e"
 EXP098_CARRY_SHA256 = "8a959b36cda0af0abe6e18f98857bdba6d4be5f348a93ccc85dceff0c255472f"
 MEASUREMENT_SCHEMA_SHA256 = "d2dec068368e50df631b824cdb821127457b5934110d6492c9fb7d6aa24b2e12"
