@@ -66,7 +66,7 @@ def verify(*, original_entrypoints, previous_continuation_entrypoint, previous_f
     if (q.get('reused_source_revision')!=reused_q['qualified_source_revision']
             or any(files.get(name)!=digest for name,digest in reused_q['source_files'].items())):
         raise ValueError('continuation-reused-source-changed')
-    old=importlib.machinery.SourceFileLoader('exp102_original_qualification',str(HERE.parent/'EXP-102/qualification-preflight.py.txt')).load_module()
+    old=importlib.machinery.SourceFileLoader('exp103_previous_qualification',str(HERE.parent/'EXP-102/qualification-preflight.py.txt')).load_module()
     old.verify(original_entrypoints=original_entrypoints,
         continuation_entrypoint=previous_continuation_entrypoint,failed_run_files=previous_failed_run_files)
     scheduler=Path(continuation_entrypoint)
@@ -116,7 +116,7 @@ def verify(*, original_entrypoints, previous_continuation_entrypoint, previous_f
             or diagnostic.get('raw_grade_modified') is not False
             or diagnostic.get('quality_analyzed') is not False):
         raise ValueError('continuation-failed-grade-binding')
-    authority=importlib.machinery.SourceFileLoader('exp102_continuation_authority',str(HERE/'continuation-authority.py.txt')).load_module()
+    authority=importlib.machinery.SourceFileLoader('exp103_continuation_authority',str(HERE/'continuation-authority.py.txt')).load_module()
     authority.validate_protocol(json.loads((HERE/'protocol.json').read_bytes()),json.loads((HERE.parent/'EXP-102/protocol.json').read_bytes()))
     return {'status':'qualified','qualified_source_revision':rev,'qualification_sha256':sha(raw),
             'study_id':'EXP-103','failed_exp102_clock_sha256':lineage['clock'],'source_files':len(files)}
