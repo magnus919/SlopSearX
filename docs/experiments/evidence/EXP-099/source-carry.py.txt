@@ -584,7 +584,15 @@ def _fresh_records(stage: Path, owned_repo: Path, profile: Path, pins: dict, nes
                           or not re.fullmatch(r"[0-9a-f]{64}", packet_hashes[task][assessor])
                           for assessor in ("R1", "R2")) for task in expected_tasks)):
         raise CarryError("source-closure-manifest")
-    return payloads, nested_result["proof"], closures, closure_hashes, actor_ids
+    source_context = {
+        "source_plans": {task: strict_json((stage / "assessment-inputs/deterministic-preparation/private/source-plans" / (task + ".json")).read_bytes())
+                         for task in sorted(closures)},
+        "citation_tables": {task: {"task_id": table.task_id,
+                                   "entries": [list(row) for row in table.entries],
+                                   "binding_sha256": table.binding_sha256}
+                            for task, table in sorted(tables.items())},
+    }
+    return payloads, nested_result["proof"], closures, closure_hashes, actor_ids, source_context
 
 
 def verify_carry48(snapshot_root, pins_path, expected_pins_sha256):
@@ -612,7 +620,7 @@ def verify_carry48(snapshot_root, pins_path, expected_pins_sha256):
         owned_repo = _safe_dir(owned, pins["owned_repo_path"])
         profile = _safe_dir(owned, pins["profile_path"])
         _supply_pinned_measurement_schema(owned_repo)
-        payloads, nested_proof, closures, closure_hashes, actor_ids = _fresh_records(
+        payloads, nested_proof, closures, closure_hashes, actor_ids, source_context = _fresh_records(
             stage, owned_repo, profile, pins, nested)
     rows = []
     for logical, payload in payloads.items():
@@ -629,6 +637,7 @@ def verify_carry48(snapshot_root, pins_path, expected_pins_sha256):
              "source_plans_closed": 8, "all_original_assignments_required": True,
              "prior_time_credit_seconds": 0, "quality_analyzed": False,
              "grade_repaired": False, "snapshot_pins_sha256": expected_pins_sha256,
-             "nested_proof": nested_proof, "closure_sha256": closure_hashes, "assignments": rows}
+             "nested_proof": nested_proof, "closure_sha256": closure_hashes, "assignments": rows,
+             "source_context_sha256": sha(canonical(source_context))}
     return {"proof": proof, "payloads": payloads, "closures": closures,
-            "original_actor_ids": actor_ids}
+            "original_actor_ids": actor_ids, "source_context": source_context}

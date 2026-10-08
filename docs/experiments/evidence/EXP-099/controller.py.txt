@@ -77,6 +77,28 @@ def verify_carry_checkpoint(carry_module, snapshot_root, pins_path, expected_pin
                    or not re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", actor_id)
                    for actor_id in actor_ids)):
         raise ValueError("source-carry-actor-coverage")
+    context = result.get("source_context")
+    tasks = {f"d{i}" for i in range(1, 9)}
+    if (type(context) is not dict or set(context) != {"source_plans", "citation_tables"}
+            or type(context.get("source_plans")) is not dict
+            or set(context["source_plans"]) != tasks
+            or type(context.get("citation_tables")) is not dict
+            or set(context["citation_tables"]) != tasks):
+        raise ValueError("source-carry-context-coverage")
+    for task in tasks:
+        plan = context["source_plans"][task]
+        table = context["citation_tables"][task]
+        if (type(plan) is not dict or plan.get("task_id") not in (None, task)
+                or type(plan.get("pool_catalog")) is not dict
+                or type(table) is not dict or set(table) != {"task_id", "entries", "binding_sha256"}
+                or table.get("task_id") != task or type(table.get("entries")) is not list
+                or type(table.get("binding_sha256")) is not str
+                or not re.fullmatch(r"[0-9a-f]{64}", table["binding_sha256"])):
+            raise ValueError("source-carry-context-row")
+    context_raw = (json.dumps(context, ensure_ascii=False, sort_keys=True,
+                               separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
+    if proof.get("source_context_sha256") != hashlib.sha256(context_raw).hexdigest():
+        raise ValueError("source-carry-context-hash")
     return result
 
 
@@ -156,6 +178,7 @@ class State:
     carried_source_payloads: dict | None = None
     carried_source_closures: dict | None = None
     carried_original_actor_ids: list | None = None
+    carried_source_context: dict | None = None
 
 
 def begin(outdir, bundle_root, cli_path=None, *, source_checkpoint_root=None,
@@ -190,7 +213,8 @@ def begin(outdir, bundle_root, cli_path=None, *, source_checkpoint_root=None,
     return State(output, Path(bundle_root), admission, permit, integrity, clock,
                  effective, prepared["input_integrity"], readiness_baseline, proof,
                  carried_sources["proof"], carried_sources["payloads"],
-                 carried_sources["closures"], carried_sources["original_actor_ids"])
+                 carried_sources["closures"], carried_sources["original_actor_ids"],
+                 carried_sources["source_context"])
 
 
 def _opaque_card_proof(carried: dict) -> dict:

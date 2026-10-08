@@ -19,6 +19,7 @@ REPO = HERE.parents[3]
 ASSIGNMENT_PLAN_PATH = "docs/experiments/evidence/EXP-077/assignment-plan.json"
 ASSIGNMENT_PLAN_SHA256 = "487c655ab2c8d69c3b2acc9f0be46844df601abf0efe6ab31e79d7861907a9cd"
 FINAL_JSON_CARRIER_PATH = "docs/experiments/evidence/EXP-099/final-json-carrier.py.txt"
+CITATION_CODEC_PATH = "docs/experiments/evidence/EXP-099/citation-codec.py.txt"
 
 
 class CarryHandoffError(ValueError):
@@ -128,6 +129,43 @@ def _closures(carry_proof: dict, closures: dict) -> dict:
     return frozen
 
 
+def _source_context(carry_proof: dict, context: dict, revision: str) -> tuple[dict, dict]:
+    """Restore the verifier-bound plans and citation tables without grading."""
+    tasks = {f"d{i}" for i in range(1, 9)}
+    if (type(context) is not dict or set(context) != {"source_plans", "citation_tables"}
+            or type(context.get("source_plans")) is not dict
+            or set(context["source_plans"]) != tasks
+            or type(context.get("citation_tables")) is not dict
+            or set(context["citation_tables"]) != tasks):
+        raise CarryHandoffError("carry-source-context-coverage")
+    if type(carry_proof.get("source_context_sha256")) is not str or sha(canonical(context)) != carry_proof["source_context_sha256"]:
+        raise CarryHandoffError("carry-source-context-hash")
+    plans = {}
+    for task in sorted(tasks, key=lambda value: int(value[1:])):
+        plan = context["source_plans"][task]
+        table_receipt = context["citation_tables"][task]
+        if (type(plan) is not dict or plan.get("task_id") not in (None, task)
+                or type(plan.get("pool_catalog")) is not dict
+                or type(table_receipt) is not dict
+                or set(table_receipt) != {"task_id", "entries", "binding_sha256"}
+                or table_receipt.get("task_id") != task
+                or type(table_receipt.get("entries")) is not list
+                or type(table_receipt.get("binding_sha256")) is not str):
+            raise CarryHandoffError("carry-source-context-row")
+        plans[task] = copy.deepcopy(plan)
+    codec = _load_committed_module("exp099_handoff_citation_codec", revision,
+                                   CITATION_CODEC_PATH)
+    tables = {}
+    try:
+        for task in sorted(tasks, key=lambda value: int(value[1:])):
+            receipt = context["citation_tables"][task]
+            tables[task] = codec.table_from_entries(task, receipt["entries"],
+                                                    receipt["binding_sha256"])
+    except (KeyError, TypeError, ValueError, codec.CitationCodeError) as exc:
+        raise CarryHandoffError("carry-source-context-table") from exc
+    return plans, tables
+
+
 def _answer_identities(assignment_plan: dict, stage_id: str) -> list[dict]:
     try:
         rows = assignment_plan["stages"]["development"]["answer"]
@@ -164,6 +202,7 @@ def build_handoff(state) -> dict:
     payloads = state.carried_source_payloads
     closures_input = state.carried_source_closures
     actor_ids = state.carried_original_actor_ids
+    source_context = state.carried_source_context
     if (type(proof) is not dict or proof.get("schema") != "exp099-source-carry48-proof/1"
             or proof.get("accepted_assignments") != 48
             or proof.get("nested_accepted_assignments") != 23
@@ -182,6 +221,7 @@ def build_handoff(state) -> dict:
     closed = _closures(proof, closures_input)
 
     revision = state.integrity.get("qualified_source_revision")
+    source_plans, citation_tables = _source_context(proof, source_context, revision)
     plan_raw = _committed_bytes(revision, ASSIGNMENT_PLAN_PATH)
     if sha(plan_raw) != ASSIGNMENT_PLAN_SHA256:
         raise CarryHandoffError("future-answer-plan-pin")
@@ -218,6 +258,8 @@ def build_handoff(state) -> dict:
         "source_payload_bindings": copy.deepcopy(payloads),
         "source_closed_by_task": closed,
         "source_closed": closed,
+        "source_plans": source_plans,
+        "citation_tables": citation_tables,
         "original_actor_ids": list(actor_ids),
         "source_valid": 48,
         "next_source": 48,

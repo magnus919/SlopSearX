@@ -13,6 +13,7 @@ H = importlib.machinery.SourceFileLoader(
     "exp099_carry_handoff_under_test", str(HERE / "carry-handoff.py.txt")
 ).load_module()
 CARRIER_RAW = (HERE / "final-json-carrier.py.txt").read_bytes()
+CODEC_RAW = (HERE / "citation-codec.py.txt").read_bytes()
 ANSWER_PLAN_RAW = (HERE.parent / "EXP-077" / "assignment-plan.json").read_bytes()
 
 
@@ -40,9 +41,21 @@ def fixture():
              "grade_repaired": False, "assignments": source_rows,
              "closure_sha256": {task: hashlib.sha256(H.canonical(value)).hexdigest()
                                 for task, value in closures.items()}}
+    source_plans = {f"d{i}": {"task_id": f"d{i}", "pool_catalog": {"task_id": f"d{i}"}}
+                    for i in range(1, 9)}
+    citation_tables = {}
+    for i in range(1, 9):
+        task = f"d{i}"
+        entries = [[f"D{i}E0001", f"g-{task}", f"original-{task}", f"alias-{task}"]]
+        binding = hashlib.sha256(H.canonical({"task_id": task, "entries": entries}).rstrip(b"\n")).hexdigest()
+        citation_tables[task] = {"task_id": task, "entries": entries,
+                                 "binding_sha256": binding}
+    context = {"source_plans": source_plans, "citation_tables": citation_tables}
+    proof["source_context_sha256"] = hashlib.sha256(H.canonical(context)).hexdigest()
     actor_ids = [f"00000000-0000-4000-8000-{i:012d}" for i in range(1, 49)]
     answer_plan = json.loads(ANSWER_PLAN_RAW)
     return {"proof": proof, "payloads": payloads, "closures": closures,
+            "source_context": context,
             "original_actor_ids": actor_ids}, answer_plan
 
 
@@ -72,12 +85,15 @@ class CarryHandoffTests(unittest.TestCase):
         current.carried_source_payloads = carry["payloads"]
         current.carried_source_closures = carry["closures"]
         current.carried_original_actor_ids = carry["original_actor_ids"]
+        current.carried_source_context = carry["source_context"]
 
         def committed(_revision, relative):
             if relative == H.ASSIGNMENT_PLAN_PATH:
                 return ANSWER_PLAN_RAW if plan_raw is None else plan_raw
             if relative == H.FINAL_JSON_CARRIER_PATH:
                 return CARRIER_RAW
+            if relative == H.CITATION_CODEC_PATH:
+                return CODEC_RAW
             raise AssertionError(relative)
 
         with mock.patch.object(H, "_committed_bytes", side_effect=committed):
@@ -94,6 +110,8 @@ class CarryHandoffTests(unittest.TestCase):
         self.assertFalse(result["source_dispatch_permitted"])
         self.assertIsNone(result["source_phase_permit"])
         self.assertEqual(len(result["answer_jobs"]), 32)
+        self.assertEqual(set(result["source_plans"]), {f"d{i}" for i in range(1, 9)})
+        self.assertEqual(set(result["citation_tables"]), {f"d{i}" for i in range(1, 9)})
         self.assertEqual(len(result["registry"]._identities), 80)
         self.assertEqual(result["original_actor_ids"], carry["original_actor_ids"])
         self.assertIs(result["source_closed"], result["source_closed_by_task"])
@@ -136,6 +154,13 @@ class CarryHandoffTests(unittest.TestCase):
         carry["proof"]["quality_analyzed"] = True
         current, _ = state()
         with self.assertRaisesRegex(H.CarryHandoffError, "verified-carry-state-required"):
+            self._build(current, carry, plan)
+
+    def test_changed_source_context_stops_handoff(self):
+        carry, plan = fixture()
+        carry["source_context"]["source_plans"]["d1"]["pool_catalog"]["task_id"] = "d2"
+        current, _ = state()
+        with self.assertRaisesRegex(H.CarryHandoffError, "carry-source-context-hash"):
             self._build(current, carry, plan)
 
 
