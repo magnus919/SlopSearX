@@ -9,15 +9,21 @@
     "terminal_audit": "41f20ac97832a6bd1572d523c646fabbfbdd1f6c1536648495ddedf6706fc3a5",
     "view_proof": "9725e109a5e76f80614fba0f67d7fa4ce5917bcca139bb6c20e4d0bc23f3f6c4"
   },
-  "independent_review_complete": false,
+  "independent_review_complete": true,
   "operator_scheduler_sha256": "871f2006034430abae877c439630fef772d476cb9e39ff6a571a3ebaf6d0a431",
   "production_credit": false,
-  "qualified": false,
+  "qualified": true,
   "qualified_source_revision": "6d553768aa47425061268b25713b96d4737b2b86",
   "quality_analyzed": false,
   "reader_transport_sha256": "0ecc6aba5678ec273e96dfe3fb73241c95ae208c283c960a8e0d82d255da4a24",
   "reused_source_revision": "6a128bfbf9b7aae118c1b3b45ae2b71fc8ce849e",
-  "review_evidence": {},
+  "review_evidence": {
+    "actionable_findings_remaining": 0,
+    "result": "PASS",
+    "reviewed_head": "d46209c47873fee245d81f6fa6b175bc62b147e4",
+    "reviewed_source_revision": "6d553768aa47425061268b25713b96d4737b2b86",
+    "scope": "portable synthetic public tests with separate unchanged actual32 frozen-packet qualification, conditional anchors, unique physical namespace and isolated qualification loaders; no quality or execution credit"
+  },
   "schema": "exp103-anchor-qualification/1",
   "source_files": {
     "docs/experiments/EXP-088-short-evidence-labels.md": "1804472799356b0470e3175c0c0fefa418880607281e5ecb3f3824a62ea1c8f6",
@@ -574,6 +580,6 @@
     "slopsearx/workflow_console.py": "565c82cc91e3832e7edcba36423e5629b81fa3340a0cb3c75f8b226d14caed68",
     "slopsearx/workflow_portal.py": "6745b20350fa2c109228bcf64dcf8c07c5ed958e110ec0f41fe839b8ff2bf75b"
   },
-  "status": "awaiting-independent-review",
+  "status": "qualified-mechanical-source-only",
   "study_id": "EXP-103"
 }
