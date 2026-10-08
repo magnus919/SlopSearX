@@ -27,11 +27,19 @@ def verify(*, original_entrypoints, continuation_entrypoint, failed_run_files):
             or type(rev) is not str or not re.fullmatch(r'[0-9a-f]{40}',rev)):
         raise ValueError('continuation-not-qualified')
     files=q.get('source_files')
-    if type(files) is not dict or not files:raise ValueError('continuation-source-inventory')
+    required={"docs/experiments/evidence/EXP-102/"+name for name in (
+        "qualification-preflight.py.txt","continuation-authority.py.txt","protocol.json")}
+    required.update({"docs/experiments/evidence/EXP-101/qualification.json",
+                     "docs/experiments/evidence/EXP-101/registration-integrity.json"})
+    if type(files) is not dict or not required.issubset(files):
+        raise ValueError('continuation-source-inventory')
     for name,digest in files.items():
         rel=Path(name);disk=REPO/rel
         if rel.is_absolute() or '..' in rel.parts or disk.is_symlink() or not disk.is_file():
             raise ValueError('continuation-source-path')
+        for parent in disk.parents:
+            if parent==REPO:break
+            if parent.is_symlink():raise ValueError('continuation-source-parent-symlink')
         original=blob(rev,name)
         if sha(original)!=digest or blob('HEAD',name)!=original or disk.read_bytes()!=original:
             raise ValueError('continuation-source-changed')
@@ -54,6 +62,11 @@ def verify(*, original_entrypoints, continuation_entrypoint, failed_run_files):
             raise ValueError('continuation-failed-lineage-changed')
         values[name]=json.loads(source.read_bytes())
     audit=values['terminal_audit']
+    if (audit.get('clock_sha256')!=lineage['clock']
+            or audit.get('health_attempt_sha256')!=lineage['health_attempt']
+            or audit.get('health_slot_claimed') is not True
+            or values['health_attempt'].get('clock_sha256')!=lineage['clock']):
+        raise ValueError('continuation-failed-lineage-binding')
     if (audit.get('status')!='terminal-before-grading' or audit.get('grader_reservations')!=0
             or audit.get('grader_calls')!=0 or audit.get('health_request_completed') is not False
             or audit.get('clock_reuse_permitted') is not False or audit.get('process_exit_confirmed') is not True):
