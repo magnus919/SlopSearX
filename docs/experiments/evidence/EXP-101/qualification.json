@@ -29,7 +29,7 @@
       "sha256": "400e4e65e60e0b7a4d313fa8d8c77178e1391059b9e89a23ec58ae046d8c56cf"
     }
   },
-  "independent_review_complete": false,
+  "independent_review_complete": true,
   "origin_source_files": {
     "docs/experiments/EXP-088-short-evidence-labels.md": "1804472799356b0470e3175c0c0fefa418880607281e5ecb3f3824a62ea1c8f6",
     "docs/experiments/EXP-089-final-json-checkpoint-continuation.md": "9f334bd8e7c969ddf1f1268bf789a1274125ed205dc6a13d58e14b41e959a212",
@@ -542,9 +542,16 @@
   },
   "origin_source_revision": "69b9ab7f9e11070c91308cd7fabf784a582a78f7",
   "production_credit": false,
-  "qualified": false,
+  "qualified": true,
   "qualified_source_revision": "8a7b126385e79ca8cd48d0f973e5608dfd379dde",
   "quality_analyzed": false,
+  "review_evidence": {
+    "actionable_findings": 0,
+    "result": "PASS",
+    "reviewed_head": "a52d421b3b2e562adfa2abc1b3a5869581c13d6b",
+    "reviewed_source_revision": "8a7b126385e79ca8cd48d0f973e5608dfd379dde",
+    "scope": "mechanical source boundary; no quality or execution credit"
+  },
   "schema": "exp101-grading-qualification/1",
   "source_files": {
     "docs/experiments/EXP-088-short-evidence-labels.md": "1804472799356b0470e3175c0c0fefa418880607281e5ecb3f3824a62ea1c8f6",
@@ -1078,6 +1085,6 @@
     "slopsearx/workflow_console.py": "565c82cc91e3832e7edcba36423e5629b81fa3340a0cb3c75f8b226d14caed68",
     "slopsearx/workflow_portal.py": "6745b20350fa2c109228bcf64dcf8c07c5ed958e110ec0f41fe839b8ff2bf75b"
   },
-  "status": "awaiting-independent-review",
+  "status": "qualified-mechanical-source-only",
   "study_id": "EXP-101"
 }
