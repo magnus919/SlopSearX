@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime as RealDateTime, timedelta, timezone
 import asyncio
+import threading
+import time
 import importlib.machinery
 import importlib.util
 import json
@@ -112,6 +114,9 @@ class ControllerTests(unittest.TestCase):
             self.health(self.async_health({"http_status": 503, "status": "unhealthy",
                                            "runtime_revision": "a" * 40, "model": "free"}))
         self.assertEqual(clock_path.read_bytes(), clock_before)
+        attempt = json.loads((self.base / "stage" / "health-attempt.json").read_bytes())
+        self.assertEqual(attempt["schema"], "exp101-health-attempt/1")
+        self.assertEqual(attempt["status"], "reserved")
         with self.assertRaisesRegex(ValueError, "controller-one-health-after-clock"):
             self.health(self.async_health())
 
@@ -120,8 +125,46 @@ class ControllerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "controller-health-awaitable-required"):
             self.health(lambda: {"http_status": 200, "status": "healthy"})
         self.assertFalse((self.base / "stage" / "health-completion.json").exists())
+        self.assertTrue((self.base / "stage" / "health-attempt.json").is_file())
         with self.assertRaisesRegex(ValueError, "controller-one-health-after-clock"):
             self.health(self.async_health())
+
+    def test_health_attempt_is_reserved_before_pending_request_and_concurrent_retry_cannot_dispatch(self):
+        self.begin()
+        started = threading.Event()
+        release = threading.Event()
+        request_count = []
+        outcomes = []
+        async def pending_health():
+            request_count.append("started")
+            started.set()
+            await asyncio.to_thread(release.wait, 5)
+            return {"http_status": 200, "status": "healthy",
+                    "runtime_revision": self.baseline["expected_revision"], "model": "free"}
+        def first_call():
+            try:
+                outcomes.append(self.health(lambda: pending_health()))
+            except BaseException as exc:
+                outcomes.append(exc)
+        thread = threading.Thread(target=first_call)
+        thread.start()
+        self.assertTrue(started.wait(3), "first awaited health call should start")
+        attempt_path = self.base / "stage" / "health-attempt.json"
+        self.assertTrue(attempt_path.is_file(), "durable reservation precedes request dispatch")
+        attempt = json.loads(attempt_path.read_bytes())
+        self.assertEqual(attempt["status"], "reserved")
+        with self.assertRaises(FileExistsError):
+            self.controller.health(lambda: request_count.append("duplicate"))
+        self.assertEqual(request_count, ["started"])
+        release.set()
+        thread.join(5)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(len(outcomes), 1)
+        self.assertIsInstance(outcomes[0], dict)
+        self.assertTrue((self.base / "stage" / "health-completion.json").is_file())
+        with self.assertRaisesRegex(ValueError, "controller-one-health-after-clock"):
+            self.health(lambda: request_count.append("retry"))
+        self.assertEqual(request_count, ["started"])
 
     def test_awaited_health_is_pinned_to_free_revision_status_and_written_once(self):
         self.begin()
