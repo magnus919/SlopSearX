@@ -27,6 +27,8 @@ def make_authority(original, carry_module):
             self._verify_accepted_carry = verify_carry
             self._expected_accepted_carry_sha = expected_carry_sha256
             carry = self._carry()
+            if kwargs.get("slots") != carry["original_slot_bindings"]:
+                raise ValueError("four-slot-original-source-plan-binding")
             if kwargs.get("clock_sha256") == carry["original_clock_sha256"]:
                 raise ValueError("four-slot-terminal-clock-reuse")
             super().__init__(**kwargs)
@@ -44,6 +46,8 @@ def make_authority(original, carry_module):
                     or carry.get("schema") != "exp104-accepted-assessment-carry/1"
                     or set(carry.get("accepted_closures", {})) != set(carry_module.ACCEPTED)
                     or carry.get("missing_slots") != list(carry_module.MISSING)
+                    or type(carry.get("original_slot_bindings")) is not dict
+                    or set(carry["original_slot_bindings"]) != set(original.SLOTS)
                     or carry.get("historical_grader_charges") != 103
                     or carry.get("planned_grader_charges") != 107
                     or carry.get("planned_combined_charges") != 125

@@ -40,7 +40,7 @@ def strict_json(raw):
 
 def verify(root, *, pins_raw, expected_pins_sha256, expected_clock_sha256,
            expected_protocol_sha256, expected_source_revision, expected_parent_id,
-           decode_validate):
+           original_slots, original_prompts, decode_validate):
     """Bind all 28 prior closures before any new clock or quality interpretation.
 
     decode_validate must be the independently pinned, unchanged original decoder
@@ -48,6 +48,12 @@ def verify(root, *, pins_raw, expected_pins_sha256, expected_clock_sha256,
     bytes must equal the already persisted accepted result, not repair it.
     """
     root = Path(root)
+    all_slots = set(ACCEPTED) | set(MISSING)
+    if (type(original_slots) is not dict or set(original_slots) != all_slots
+            or type(original_prompts) is not dict or set(original_prompts) != all_slots
+            or not all(type(prompt) is bytes and 0 < len(prompt) <= 12000
+                       for prompt in original_prompts.values())):
+        raise ValueError("carry-original-32-slot-plan")
     if root.is_symlink() or not root.is_dir() or sha(pins_raw) != expected_pins_sha256:
         raise ValueError("carry-snapshot-identity")
     pins = strict_json(pins_raw)
@@ -125,6 +131,21 @@ def verify(root, *, pins_raw, expected_pins_sha256, expected_clock_sha256,
         receipt = data(f"finals/{key}.final.txt.json")
         final_raw = raw(f"finals/{key}.final.txt")
         decoded_raw = raw(logical + ".decoded.json")
+        slot = original_slots[logical]
+        reservation = data(logical + ".reservation.json")
+        if (type(slot) is not dict or slot.get("logical_submission") != logical
+                or close.get("input_sha256") != slot.get("input_sha256")
+                or proof.get("input_sha256") != slot.get("input_sha256")
+                or receipt.get("label_binding_sha256") != slot.get("label_binding_sha256")
+                or receipt.get("grouped_binding_sha256") != slot.get("grouped_binding_sha256")
+                or receipt.get("grouped_packet_sha256") != slot.get("grouped_packet_sha256")
+                or receipt.get("original_coded_packet_sha256") != slot.get("original_coded_packet_sha256")
+                or reservation.get("logical_submission") != logical
+                or reservation.get("current_clock_sha256") != expected_clock_sha256
+                or reservation.get("original_input_sha256") != slot.get("input_sha256")
+                or reservation.get("full_prompt_sha256") != sha(original_prompts[logical])
+                or raw(logical + ".prompt.txt") != original_prompts[logical]):
+            raise ValueError("carry-original-slot-or-prompt-binding")
         if (close.get("schema") != "exp100-answer-structural-close/1"
                 or close.get("logical_submission") != logical
                 or close.get("structurally_valid") is not True
@@ -150,12 +171,24 @@ def verify(root, *, pins_raw, expected_pins_sha256, expected_clock_sha256,
     failed_actor = data(MISSING[0] + ".actor.json").get("actor_id")
     if not failed_actor or failed_actor in actor_ids:
         raise ValueError("carry-failed-actor-identity")
+    failed_reservation = data(MISSING[0] + ".reservation.json")
+    failed_slot = original_slots[MISSING[0]]
+    if (failed_reservation.get("logical_submission") != MISSING[0]
+            or failed_reservation.get("current_clock_sha256") != expected_clock_sha256
+            or failed_reservation.get("original_input_sha256") != failed_slot.get("input_sha256")
+            or failed_reservation.get("full_prompt_sha256") != sha(original_prompts[MISSING[0]])
+            or raw(MISSING[0] + ".prompt.txt") != original_prompts[MISSING[0]]):
+        raise ValueError("carry-failed-reservation-binding")
     return {"schema": "exp104-accepted-assessment-carry/1",
             "snapshot_pins_sha256": expected_pins_sha256,
             "original_clock_sha256": expected_clock_sha256,
             "original_protocol_sha256": expected_protocol_sha256,
             "original_source_revision": expected_source_revision,
             "accepted_closures": closure_hashes, "missing_slots": list(MISSING),
+            "original_slot_bindings": {
+                logical: {"original_input_sha256": original_slots[logical]["input_sha256"],
+                          "full_prompt_sha256": sha(original_prompts[logical])}
+                for logical in sorted(all_slots)},
             "excluded_actor_ids": sorted(actor_ids | {failed_actor}),
             "historical_grader_charges": 103, "planned_grader_charges": 107,
             "planned_combined_charges": 125, "elapsed_time_credit_seconds": 0,

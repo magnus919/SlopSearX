@@ -48,9 +48,10 @@ class AuthorityFixture:
             "historical_grader_charges":103,"planned_grader_charges":107,
             "planned_combined_charges":125,"elapsed_time_credit_seconds":0,
             "quality_analyzed":False,"fresh_execution_authorized":False}
-        self.carry_sha=sha(canonical(self.carry))
         self.slots={logical:{"original_input_sha256":sha((logical+" input").encode()),
             "full_prompt_sha256":sha((logical+" prompt").encode())} for logical in ORIGINAL.SLOTS}
+        self.carry["original_slot_bindings"]=copy.deepcopy(self.slots)
+        self.carry_sha=sha(canonical(self.carry))
         self.reservations=[];self.closures=[];self.revalidations=0
         self.authority_type=ADAPTER.make_authority(ORIGINAL,CARRY_MODULE)
         self.authority=self.new_authority()
@@ -180,12 +181,38 @@ class FourSlotAuthorityTests(unittest.TestCase):
             self.fx.carry["accepted_closures"].pop(CARRY_MODULE.ACCEPTED[0])
             self.fx.authority._carry()
         fx=AuthorityFixture()
-        with self.assertRaisesRegex(ValueError,"authority-exact-slot-coverage"):
+        with self.assertRaisesRegex(ValueError,"four-slot-original-source-plan-binding"):
             fx.authority_type(verify_carry=fx.verify_carry,
                 expected_carry_sha256=fx.carry_sha,clock_sha256=fx.clock,
                 slots={"wrong":{}},original_actor_ids=fx.original_actor_ids,
                 parent_id=fx.parent,revalidate=fx.revalidate,
                 reserve_once=fx.reserve_once,close_once=fx.close_once)
+
+    def test_receipt_pins_every_original_slot_and_rejects_d8_plan_drift(self):
+        fx=AuthorityFixture()
+        d8=CARRY_MODULE.MISSING[0]
+        self.assertEqual(set(fx.carry["original_slot_bindings"]),set(ORIGINAL.SLOTS))
+        fx.slots[d8]["original_input_sha256"]="f"*64
+        with self.assertRaisesRegex(ValueError,"four-slot-original-source-plan-binding"):
+            fx.new_authority()
+
+        for mutation,pattern in (("missing","four-slot-carry-receipt-binding"),
+                                 ("extra","four-slot-carry-receipt-binding"),
+                                 ("drift","four-slot-original-source-plan-binding")):
+            with self.subTest(mutation=mutation):
+                fx=AuthorityFixture()
+                if mutation=="missing":
+                    fx.carry["original_slot_bindings"].pop(d8)
+                elif mutation=="extra":
+                    fx.carry["original_slot_bindings"]["development-d9-answer-R1-arm1"]={
+                        "original_input_sha256":"a"*64,"full_prompt_sha256":"b"*64}
+                else:
+                    fx.carry["original_slot_bindings"][d8]["full_prompt_sha256"]="f"*64
+                # Simulate a self-consistent candidate receipt; the runtime slot plan
+                # must still equal the independently pinned 32-slot carry mapping.
+                fx.carry_sha=sha(canonical(fx.carry))
+                with self.assertRaisesRegex(ValueError,pattern):
+                    fx.new_authority()
         fx=AuthorityFixture()
         with self.assertRaisesRegex(ValueError,"authority-original-actor-coverage"):
             fx.authority_type(verify_carry=fx.verify_carry,

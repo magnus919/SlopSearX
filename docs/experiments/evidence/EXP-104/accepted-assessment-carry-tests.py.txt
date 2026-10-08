@@ -37,6 +37,16 @@ class SyntheticCarry:
         self.parent_id="synthetic-exp103-parent"
         self.files={}
         self.decoded={}
+        self.original_slots={}
+        self.original_prompts={}
+        for logical in (*CARRY.ACCEPTED,*CARRY.MISSING):
+            self.original_slots[logical]={"logical_submission":logical,
+                "input_sha256":sha(("synthetic-input:"+logical).encode()),
+                "label_binding_sha256":sha(("label:"+logical).encode()),
+                "grouped_binding_sha256":sha(("grouped-binding:"+logical).encode()),
+                "grouped_packet_sha256":sha(("grouped-packet:"+logical).encode()),
+                "original_coded_packet_sha256":sha(("coded-packet:"+logical).encode())}
+            self.original_prompts[logical]=("synthetic frozen complete prompt:"+logical).encode()
         self.write("stage-clock.json",canonical({"schema":"exp101-grading-clock/1",
             "source_revision":self.source_revision,"protocol_sha256":self.protocol_sha,
             "fixture":"synthetic"}))
@@ -53,7 +63,11 @@ class SyntheticCarry:
         for index,logical in enumerate(CARRY.ACCEPTED):
             self._accepted(logical,index)
         missing=CARRY.MISSING[0]
-        self.write(missing+".reservation.json",canonical({"logical_submission":missing,"status":"charged"}))
+        self.write(missing+".reservation.json",canonical({"logical_submission":missing,"status":"charged",
+            "current_clock_sha256":self.clock_sha,
+            "original_input_sha256":self.original_slots[missing]["input_sha256"],
+            "full_prompt_sha256":sha(self.original_prompts[missing])}))
+        self.write(missing+".prompt.txt",self.original_prompts[missing])
         self.write(missing+".actor.json",canonical({"logical_submission":missing,
             "parent_id":self.parent_id,"model":"gpt-6.1-sol","actor_id":"failed-actor-29"}))
         self.refresh_pins()
@@ -71,12 +85,16 @@ class SyntheticCarry:
         input_sha=sha(("synthetic-input:"+logical).encode())
         raw_log=("synthetic-log:"+logical).encode()
         actor_id=f"synthetic-actor-{index:02d}"
+        slot=self.original_slots[logical]
+        prompt=self.original_prompts[logical]
         self.decoded[logical]=decoded
         self.write(logical+".closed.json",canonical({"schema":"exp100-answer-structural-close/1",
             "logical_submission":logical,"input_sha256":input_sha,
             "raw_final_sha256":sha(raw_final),"decoded_response_sha256":sha(decoded),
             "structurally_valid":True,"metric_computed":False,"semantic_completion":"not_claimed"}))
-        self.write(logical+".reservation.json",canonical({"logical_submission":logical,"status":"charged"}))
+        self.write(logical+".reservation.json",canonical({"logical_submission":logical,"status":"charged",
+            "current_clock_sha256":self.clock_sha,"original_input_sha256":slot["input_sha256"],
+            "full_prompt_sha256":sha(prompt)}))
         self.write(logical+".actor.json",canonical({"logical_submission":logical,
             "parent_id":self.parent_id,"model":"gpt-6.1-sol","actor_id":actor_id}))
         self.write(f"views/{key}.view.json",canonical({"logical_submission":logical,
@@ -84,8 +102,13 @@ class SyntheticCarry:
             "transcript_log_sha256":sha(raw_log)}))
         self.write(f"finals/{key}.final.txt",raw_final)
         self.write(f"finals/{key}.final.txt.json",canonical({"logical_submission":logical,
-            "input_sha256":input_sha,"sha256":sha(raw_final)}))
+            "input_sha256":input_sha,"sha256":sha(raw_final),
+            "label_binding_sha256":slot["label_binding_sha256"],
+            "grouped_binding_sha256":slot["grouped_binding_sha256"],
+            "grouped_packet_sha256":slot["grouped_packet_sha256"],
+            "original_coded_packet_sha256":slot["original_coded_packet_sha256"]}))
         self.write(logical+".decoded.json",decoded)
+        self.write(logical+".prompt.txt",prompt)
         self.write(f"accepted-raw-logs/{logical}.jsonl",raw_log)
 
     def refresh_pins(self):
@@ -105,13 +128,17 @@ class SyntheticCarry:
         return CARRY.verify(self.root,pins_raw=self.pins_raw,
             expected_pins_sha256=self.pins_sha,expected_clock_sha256=self.clock_sha,
             expected_protocol_sha256=self.protocol_sha,expected_source_revision=self.source_revision,
-            expected_parent_id=self.parent_id,decode_validate=decode_validate)
+            expected_parent_id=self.parent_id,original_slots=self.original_slots,
+            original_prompts=self.original_prompts,decode_validate=decode_validate)
 
     def close(self): self.temp.cleanup()
 
 class AcceptedAssessmentCarryTests(unittest.TestCase):
     def setUp(self): self.fx=SyntheticCarry()
     def tearDown(self): self.fx.close()
+    def reset_fixture(self):
+        self.fx.close()
+        self.fx=SyntheticCarry()
 
     def test_exact_28_accepted_results_and_four_d8_slots_are_missing_without_authority(self):
         receipt=self.fx.verify()
@@ -132,6 +159,7 @@ class AcceptedAssessmentCarryTests(unittest.TestCase):
         kwargs={"pins_raw":self.fx.pins_raw,"expected_pins_sha256":self.fx.pins_sha,
             "expected_clock_sha256":self.fx.clock_sha,"expected_protocol_sha256":self.fx.protocol_sha,
             "expected_source_revision":self.fx.source_revision,"expected_parent_id":self.fx.parent_id,
+            "original_slots":self.fx.original_slots,"original_prompts":self.fx.original_prompts,
             "decode_validate":lambda logical,raw:self.fx.decoded[logical]}
         for field,value,pattern in (("expected_clock_sha256","f"*64,"original-clock-binding"),
                 ("expected_protocol_sha256","f"*64,"original-clock-binding"),
@@ -152,7 +180,8 @@ class AcceptedAssessmentCarryTests(unittest.TestCase):
             CARRY.verify(self.fx.root,pins_raw=self.fx.pins_raw,
                 expected_pins_sha256=self.fx.pins_sha,expected_clock_sha256=self.fx.clock_sha,
                 expected_protocol_sha256=self.fx.protocol_sha,expected_source_revision=self.fx.source_revision,
-                expected_parent_id=self.fx.parent_id,decode_validate=lambda _l,_r:b"")
+                expected_parent_id=self.fx.parent_id,original_slots=self.fx.original_slots,
+                original_prompts=self.fx.original_prompts,decode_validate=lambda _l,_r:b"")
         final.write_bytes(original)
 
         # Re-pin independent byte changes to prove the cross-artifact joins reject them.
@@ -184,12 +213,12 @@ class AcceptedAssessmentCarryTests(unittest.TestCase):
         (self.fx.root/(logical+".closed.json")).unlink()
         with self.assertRaisesRegex(ValueError,"carry-accepted-slot-coverage"):
             self.fx.verify()
-        self.fx.close();self.fx= SyntheticCarry()
+        self.reset_fixture()
         unexpected=CARRY.MISSING[0]+".closed.json"
         self.fx.write(unexpected,canonical({"unexpected":"synthetic"}))
         with self.assertRaisesRegex(ValueError,"carry-accepted-slot-coverage"):
             self.fx.verify()
-        self.fx.close();self.fx=SyntheticCarry()
+        self.reset_fixture()
         failed=self.fx.root/(CARRY.MISSING[0]+".actor.json")
         failed.write_bytes(canonical({"parent_id":self.fx.parent_id,"model":"gpt-6.1-sol",
             "actor_id":"synthetic-actor-00"}))
@@ -211,5 +240,76 @@ class AcceptedAssessmentCarryTests(unittest.TestCase):
         actor.write_bytes(canonical(value))
         with self.assertRaisesRegex(ValueError,"carry-accepted-result-binding"):
             self.fx.verify()
+
+    def test_original_slot_plan_must_have_exact_32_identities_and_hashes(self):
+        self.fx.original_slots.pop(CARRY.ACCEPTED[0])
+        with self.assertRaisesRegex(ValueError,"carry-original-32-slot-plan"):
+            self.fx.verify()
+        self.reset_fixture()
+        self.fx.original_prompts[CARRY.MISSING[0]]=b"extra slot prompt"
+        self.fx.original_slots["development-d9-answer-R1-arm1"]={}
+        self.fx.original_prompts["development-d9-answer-R1-arm1"]=b"extra slot prompt"
+        with self.assertRaisesRegex(ValueError,"carry-original-32-slot-plan"):
+            self.fx.verify()
+        self.reset_fixture()
+        self.fx.original_prompts[CARRY.ACCEPTED[0]]=b"p"*12001
+        with self.assertRaisesRegex(ValueError,"carry-original-32-slot-plan"):
+            self.fx.verify()
+
+    def test_input_and_each_original_packet_binding_hash_must_match(self):
+        logical=CARRY.ACCEPTED[0]
+        self.fx.original_slots[logical]["input_sha256"]="f"*64
+        with self.assertRaisesRegex(ValueError,"carry-original-slot-or-prompt-binding"):
+            self.fx.verify()
+        fields=("label_binding_sha256","grouped_binding_sha256",
+                "grouped_packet_sha256","original_coded_packet_sha256")
+        for field in fields:
+            with self.subTest(field=field):
+                self.reset_fixture()
+                key=sha(logical.encode())[:20]
+                receipt_path=self.fx.root/f"finals/{key}.final.txt.json"
+                receipt=json.loads(receipt_path.read_bytes())
+                receipt[field]="f"*64
+                receipt_path.write_bytes(canonical(receipt))
+                # Refresh all outer byte pins: the join itself must still reject the edit.
+                with self.assertRaisesRegex(ValueError,"carry-original-slot-or-prompt-binding"):
+                    self.fx.verify()
+
+    def test_saved_prompt_and_all_reservation_clock_input_prompt_hashes_are_joined(self):
+        logical=CARRY.ACCEPTED[0]
+        self.fx.original_prompts[logical]=b"different frozen prompt bytes"
+        with self.assertRaisesRegex(ValueError,"carry-original-slot-or-prompt-binding"):
+            self.fx.verify()
+
+        self.reset_fixture()
+        prompt_path=self.fx.root/(logical+".prompt.txt")
+        prompt_path.write_bytes(prompt_path.read_bytes()+b"drift")
+        with self.assertRaisesRegex(ValueError,"carry-original-slot-or-prompt-binding"):
+            self.fx.verify()
+
+        reservation_fields=("current_clock_sha256","original_input_sha256","full_prompt_sha256")
+        for field in reservation_fields:
+            with self.subTest(reservation_field=field):
+                self.reset_fixture()
+                reservation_path=self.fx.root/(logical+".reservation.json")
+                reservation=json.loads(reservation_path.read_bytes())
+                reservation[field]="f"*64
+                reservation_path.write_bytes(canonical(reservation))
+                # Reseal snapshot so the validator must check the immutable join.
+                with self.assertRaisesRegex(ValueError,"carry-original-slot-or-prompt-binding"):
+                    self.fx.verify()
+
+    def test_failed_29th_reservation_is_joined_to_original_slot_and_prompt(self):
+        logical=CARRY.MISSING[0]
+        for field in ("current_clock_sha256","original_input_sha256","full_prompt_sha256"):
+            with self.subTest(failed_reservation_field=field):
+                self.reset_fixture()
+                path=self.fx.root/(logical+".reservation.json")
+                value=json.loads(path.read_bytes())
+                value[field]="f"*64
+                path.write_bytes(canonical(value))
+                # The snapshot is recomputed by verify, so only a missing semantic join can accept this.
+                with self.assertRaisesRegex(ValueError,"carry-failed-reservation-binding"):
+                    self.fx.verify()
 
 if __name__=="__main__": unittest.main(verbosity=2)
