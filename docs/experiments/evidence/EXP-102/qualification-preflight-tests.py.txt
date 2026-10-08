@@ -112,6 +112,15 @@ class QualificationFixture:
             "source_files": source_inventory,
             "operator_scheduler_sha256": sha(scheduler.read_bytes()),
             "failed_run_pins": {name: digest for name, (_, digest) in self.lineage.items()}}
+        self.registration_path = self.here / "registration-integrity.json"
+        self.registration = {"schema": "exp102-network-registration/1", "study_id": "EXP-102",
+            "source_revision_binding": "qualification.qualified_source_revision",
+            "source_files": dict(source_inventory)}
+        registration_raw = canonical(self.registration)
+        self.registration_path.write_bytes(registration_raw)
+        registration_name = self.registration_path.relative_to(self.root).as_posix()
+        self.files[(self.rev, registration_name)] = registration_raw
+        self.head[registration_name] = registration_raw
         self.q_path = self.here / "qualification.json"
         self.q_raw = canonical(self.q)
         self.q_path.write_bytes(self.q_raw)
@@ -194,6 +203,36 @@ class QualificationPreflightTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "continuation-failed-lineage-not-terminal"):
             self.fx.verify()
         self.assertTrue(self.fx.marker.exists())
+
+    def test_omitted_current_source_is_denied_before_private_validation(self):
+        del self.fx.q["source_files"]["synthetic/current.py"]
+        self.fx.q_raw = canonical(self.fx.q)
+        self.fx.q_path.write_bytes(self.fx.q_raw)
+        self.fx.head[self.fx.q_path.relative_to(self.fx.root).as_posix()] = self.fx.q_raw
+        self.fx.head["synthetic/current.py"] = b"unverified changed source\n"
+        with self.assertRaisesRegex(ValueError, "continuation-source-inventory"):
+            self.fx.verify()
+        self.assertFalse(self.fx.marker.exists())
+
+    def test_joint_qualification_and_registration_omission_cannot_rewrite_source_anchor(self):
+        del self.fx.q["source_files"]["synthetic/current.py"]
+        self.fx.q_raw = canonical(self.fx.q)
+        self.fx.q_path.write_bytes(self.fx.q_raw)
+        self.fx.head[self.fx.q_path.relative_to(self.fx.root).as_posix()] = self.fx.q_raw
+        del self.fx.registration["source_files"]["synthetic/current.py"]
+        changed = canonical(self.fx.registration)
+        self.fx.registration_path.write_bytes(changed)
+        self.fx.head[self.fx.registration_path.relative_to(self.fx.root).as_posix()] = changed
+        self.fx.head["synthetic/current.py"] = b"unverified changed source\n"
+        with self.assertRaisesRegex(ValueError, "continuation-registration-changed"):
+            self.fx.verify()
+        self.assertFalse(self.fx.marker.exists())
+
+    def test_uncommitted_registration_is_denied_before_private_validation(self):
+        self.fx.registration_path.write_bytes(b"uncommitted registration\n")
+        with self.assertRaisesRegex(ValueError, "continuation-registration-changed"):
+            self.fx.verify()
+        self.assertFalse(self.fx.marker.exists())
 
     def test_valid_synthetic_qualification_only_passes_after_old_source_checks(self):
         result = self.fx.verify()

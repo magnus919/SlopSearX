@@ -4,20 +4,14 @@
     "health_attempt": "26755e5321498f94884dc6cdba834cd1dc7c2d64b87a685c650e1a0c94ccad90",
     "terminal_audit": "b39283f9578e4c6367582822e82699b8895b08d300f14629aac45192c1c8b057"
   },
-  "independent_review_complete": true,
+  "independent_review_complete": false,
   "operator_scheduler_sha256": "b1b966f7ca204ae38a9f995fc0f0da008e32039e636b4599d426ccacfb124ce5",
   "production_credit": false,
-  "qualified": true,
+  "qualified": false,
   "qualified_source_revision": "0b29253b7d870f8c35951b061b1e0cf030c5d039",
   "quality_analyzed": false,
   "reused_source_revision": "c9990728ea861ec457e060f62f6d044b7a9a4710",
-  "review_evidence": {
-    "actionable_findings_remaining": 0,
-    "result": "PASS",
-    "reviewed_head": "78208e0cfeaece83240a2f12d8a65f3462433cd5",
-    "reviewed_source_revision": "0b29253b7d870f8c35951b061b1e0cf030c5d039",
-    "scope": "mechanical continuation authority and approved-network preclock adapter; no quality or execution credit"
-  },
+  "review_evidence": {},
   "schema": "exp102-network-qualification/1",
   "source_files": {
     "docs/experiments/EXP-088-short-evidence-labels.md": "1804472799356b0470e3175c0c0fefa418880607281e5ecb3f3824a62ea1c8f6",
@@ -433,8 +427,8 @@
     "docs/experiments/evidence/EXP-102/continuation-authority-tests.py.txt": "02f568f5bb072cbd79b6cd313cb456e263e6eb362591ad4f3f963f09d81cd8cb",
     "docs/experiments/evidence/EXP-102/continuation-authority.py.txt": "fb871146fc0f1bf31b266d57718801f24b55c22e4924f10bb519f2fc2b7fe29b",
     "docs/experiments/evidence/EXP-102/protocol.json": "37ab0a755bd28659f6fc3ee5f4ae03cab2a268eb44ce752adfdc585ed8c3fcd9",
-    "docs/experiments/evidence/EXP-102/qualification-preflight-tests.py.txt": "66266370f9a07f393e839e2f7eaabb05bac9604cda9eb6f3777b918fa04061fe",
-    "docs/experiments/evidence/EXP-102/qualification-preflight.py.txt": "1f709d368031ab2eb0bddf1837d7416302b84bf3dd652a68519d4addf3fd859b",
+    "docs/experiments/evidence/EXP-102/qualification-preflight-tests.py.txt": "7182928f8ad79641d05a6937a6c6bf41456448b8157e07ebc1e5fae65c9f0d1d",
+    "docs/experiments/evidence/EXP-102/qualification-preflight.py.txt": "79202c6ae837828a0260dd9f5e05f7d60408d72bd5a1fb5c0c746e7c6fc8d0f8",
     "docs/experiments/evidence/research-usefulness-measurement/hydrate.py.txt": "b84876282594ab6f5c452a9703e3194be282b0db77cd00514a068e071605e4cf",
     "docs/experiments/evidence/research-usefulness-measurement/schema.json": "d2dec068368e50df631b824cdb821127457b5934110d6492c9fb7d6aa24b2e12",
     "docs/experiments/evidence/research-usefulness-measurement/validate.py.txt": "d4fe4320ae2ec538506bdea64a937de5c47d185ca190dc2704a4976e05d5d77f",
@@ -562,6 +556,6 @@
     "slopsearx/workflow_console.py": "565c82cc91e3832e7edcba36423e5629b81fa3340a0cb3c75f8b226d14caed68",
     "slopsearx/workflow_portal.py": "6745b20350fa2c109228bcf64dcf8c07c5ed958e110ec0f41fe839b8ff2bf75b"
   },
-  "status": "qualified-mechanical-source-only",
+  "status": "awaiting-independent-review",
   "study_id": "EXP-102"
 }
