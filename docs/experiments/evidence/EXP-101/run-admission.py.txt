@@ -1,0 +1,108 @@
+"""Revalidate a fresh grading-only run and its immutable carry on every lease.
+
+No clock or health receipt is created here. Trusted qualified launch code must
+write those once after qualification/preflight and a real awaited health call.
+"""
+from __future__ import annotations
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import re
+import uuid
+
+DURATION_SECONDS = 28_800
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+
+def read_pinned(path, expected):
+    path = Path(path)
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("admission-regular-file")
+    raw = path.read_bytes()
+    if sha(raw) != expected:
+        raise ValueError("admission-file-changed")
+    return raw
+
+class RunAdmission:
+    def __init__(self, *, qualification_check, carry_check, clock_path, clock_sha256,
+                 health_path, health_sha256, baseline_path, baseline_sha256,
+                 protocol_sha256, source_revision, origin_clock_sha256, now=None):
+        if not callable(qualification_check) or not callable(carry_check):
+            raise ValueError("admission-pinned-verifiers-required")
+        self._qualification = qualification_check
+        self._carry = carry_check
+        self._clock_path = Path(clock_path)
+        self._clock_sha = clock_sha256
+        self._health_path = Path(health_path)
+        self._health_sha = health_sha256
+        self._baseline_path = Path(baseline_path)
+        self._baseline_sha = baseline_sha256
+        self._protocol_sha = protocol_sha256
+        self._revision = source_revision
+        self._origin_clock = origin_clock_sha256
+        self._now = now or (lambda: datetime.now(timezone.utc))
+        self._terminal = False
+        for digest in (clock_sha256, health_sha256, baseline_sha256,
+                       protocol_sha256, origin_clock_sha256):
+            if type(digest) is not str or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                raise ValueError("admission-digest")
+        if type(source_revision) is not str or not re.fullmatch(r"[0-9a-f]{40}", source_revision):
+            raise ValueError("admission-source-revision")
+
+    def revalidate(self):
+        if self._terminal:
+            raise ValueError("admission-terminal-no-resume")
+        try:
+            qualified = self._qualification()
+            if (qualified.get("status") != "qualified"
+                    or qualified.get("qualified_source_revision") != self._revision):
+                raise ValueError("admission-qualification")
+            clock_raw = read_pinned(self._clock_path, self._clock_sha)
+            clock = json.loads(clock_raw)
+            if clock_raw != canonical(clock) or self._clock_sha == self._origin_clock:
+                raise ValueError("admission-fresh-canonical-clock")
+            if (clock.get("schema") != "exp101-grading-clock/1"
+                    or clock.get("source_revision") != self._revision
+                    or clock.get("protocol_sha256") != self._protocol_sha
+                    or clock.get("origin_clock_sha256") != self._origin_clock):
+                raise ValueError("admission-clock-binding")
+            if uuid.UUID(clock["stage_id"]).version != 4:
+                raise ValueError("admission-clock-id")
+            start = datetime.fromisoformat(clock["stage_started_utc"].replace("Z", "+00:00"))
+            end = datetime.fromisoformat(clock["stage_deadline_utc"].replace("Z", "+00:00"))
+            now = self._now()
+            if (start.tzinfo is None or end.tzinfo is None or now.tzinfo is None
+                    or start.utcoffset().total_seconds() != 0
+                    or end.utcoffset().total_seconds() != 0
+                    or (end - start).total_seconds() != DURATION_SECONDS
+                    or now < start or now >= end):
+                raise ValueError("admission-clock-inactive")
+            baseline = json.loads(read_pinned(self._baseline_path, self._baseline_sha))
+            health = json.loads(read_pinned(self._health_path, self._health_sha))
+            observed = datetime.fromisoformat(health["observed_utc"].replace("Z", "+00:00"))
+            if (health.get("schema") != "exp101-awaited-health-completion/1"
+                    or health.get("status") != "healthy"
+                    or health.get("http_status") != 200
+                    or health.get("request_completed") is not True
+                    or health.get("clock_sha256") != self._clock_sha
+                    or health.get("baseline_sha256") != self._baseline_sha
+                    or health.get("runtime_revision") != baseline.get("expected_revision")
+                    or health.get("model") != "free" or baseline.get("model_alias") != "free"
+                    or observed.tzinfo is None or observed < start or observed >= end
+                    or observed > now):
+                raise ValueError("admission-fresh-health")
+            carry = self._carry()
+            if carry.get("status") != "verified" or carry.get("quality_analyzed") is not False:
+                raise ValueError("admission-carry")
+            return {"status": "admitted", "clock_sha256": self._clock_sha,
+                    "fresh_health_complete": True, "carry_verified": True,
+                    "qualified_source_verified": True}
+        except BaseException:
+            self._terminal = True
+            raise
