@@ -1,0 +1,111 @@
+"""Synthetic fail-closed tests for EXP-102 continuation authority."""
+from __future__ import annotations
+import copy
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import unittest
+import uuid
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[3]
+loader = importlib.machinery.SourceFileLoader(
+    "exp102_continuation_authority", str(HERE / "continuation-authority.py.txt"))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+authority = importlib.util.module_from_spec(spec)
+loader.exec_module(authority)
+
+def load_json(path):
+    return json.loads(Path(path).read_bytes())
+
+class ContinuationAuthorityTests(unittest.TestCase):
+    def setUp(self):
+        self.current = load_json(HERE / "protocol.json")
+        self.original = load_json(ROOT / "docs/experiments/evidence/EXP-101/protocol.json")
+        self.revision = "a" * 40
+        self.protocol_raw = authority.canonical(self.current)
+        self.old_clock = {
+            "schema": "exp101-grading-clock/1", "stage_id": str(uuid.uuid4()),
+            "stage_started_utc": "2026-10-08T12:00:00Z",
+            "stage_deadline_utc": "2026-10-08T20:00:00Z",
+            "source_revision": "b" * 40, "protocol_sha256": "c" * 64,
+            "origin_clock_sha256": "d" * 64,
+        }
+        self.old_raw = authority.canonical(self.old_clock)
+        self.new_clock = {
+            "schema": "exp101-grading-clock/1", "stage_id": str(uuid.uuid4()),
+            "stage_started_utc": "2026-10-08T13:00:00Z",
+            "stage_deadline_utc": "2026-10-08T21:00:00Z",
+            "source_revision": self.revision,
+            "protocol_sha256": authority.sha(self.protocol_raw),
+            "origin_clock_sha256": authority.sha(self.old_raw),
+        }
+        self.new_raw = authority.canonical(self.new_clock)
+
+    def test_valid_clock_returns_exp102_authority_bound_to_failed_lineage(self):
+        receipt = authority.bind_clock(clock_raw=self.new_raw,
+            failed_clock_raw=self.old_raw, protocol_raw=self.protocol_raw,
+            qualified_source_revision=self.revision)
+        self.assertEqual(receipt, {
+            "schema": "exp102-current-clock-authority/1", "study_id": "EXP-102",
+            "current_clock_sha256": authority.sha(self.new_raw),
+            "failed_exp101_clock_sha256": authority.sha(self.old_raw),
+            "qualified_source_revision": self.revision,
+            "protocol_sha256": authority.sha(self.protocol_raw),
+            "clock_wire_schema_reused": "exp101-grading-clock/1",
+            "elapsed_time_credit_seconds": 0,
+        })
+
+    def test_old_clock_identical_clock_uuid_wrong_revision_and_wrong_protocol_fail(self):
+        with self.assertRaisesRegex(ValueError, "continuation-fresh-clock-required"):
+            authority.bind_clock(clock_raw=self.old_raw, failed_clock_raw=self.old_raw,
+                protocol_raw=self.protocol_raw, qualified_source_revision=self.revision)
+        same_id = dict(self.new_clock, stage_id=self.old_clock["stage_id"])
+        with self.assertRaisesRegex(ValueError, "continuation-fresh-clock-required"):
+            authority.bind_clock(clock_raw=authority.canonical(same_id), failed_clock_raw=self.old_raw,
+                protocol_raw=self.protocol_raw, qualified_source_revision=self.revision)
+        wrong_revision = dict(self.new_clock, source_revision="e" * 40)
+        with self.assertRaisesRegex(ValueError, "continuation-fresh-clock-required"):
+            authority.bind_clock(clock_raw=authority.canonical(wrong_revision), failed_clock_raw=self.old_raw,
+                protocol_raw=self.protocol_raw, qualified_source_revision=self.revision)
+        wrong_protocol = dict(self.new_clock, protocol_sha256="f" * 64)
+        with self.assertRaisesRegex(ValueError, "continuation-fresh-clock-required"):
+            authority.bind_clock(clock_raw=authority.canonical(wrong_protocol), failed_clock_raw=self.old_raw,
+                protocol_raw=self.protocol_raw, qualified_source_revision=self.revision)
+
+    def test_noncanonical_clock_and_invalid_qualified_revision_fail(self):
+        with self.assertRaisesRegex(ValueError, "continuation-fresh-clock-required"):
+            authority.bind_clock(clock_raw=self.new_raw + b" ", failed_clock_raw=self.old_raw,
+                protocol_raw=self.protocol_raw, qualified_source_revision=self.revision)
+        with self.assertRaisesRegex(ValueError, "continuation-source-revision"):
+            authority.bind_clock(clock_raw=self.new_raw, failed_clock_raw=self.old_raw,
+                protocol_raw=self.protocol_raw, qualified_source_revision="not-a-git-sha")
+
+    def test_actual_exp102_protocol_preserves_exp101_science_and_budgets(self):
+        # This direct call validates every protocol field outside the expressly
+        # allowed namespace, lineage, and precedence changes against the frozen 101 source.
+        authority.validate_protocol(self.current, self.original)
+
+    def test_protocol_budget_science_order_and_old_identity_drift_are_rejected(self):
+        mutations = []
+        candidate = copy.deepcopy(self.current)
+        candidate["execution"]["maximum_grader_charges"] += 1
+        mutations.append((candidate, "continuation-science-or-budget-drift"))
+        candidate = copy.deepcopy(self.current)
+        candidate["immutable_science"]["quality"]["bootstrap_seed"] += 1
+        mutations.append((candidate, "continuation-science-or-budget-drift"))
+        candidate = copy.deepcopy(self.current)
+        candidate["operative_execution_order"]["postclock"][0] = "skip the health slot"
+        mutations.append((candidate, "continuation-operative-order"))
+        candidate = copy.deepcopy(self.current)
+        candidate["study_id"] = "EXP-101"
+        mutations.append((candidate, "continuation-study"))
+        for protocol, reason in mutations:
+            with self.subTest(reason=reason):
+                with self.assertRaisesRegex(ValueError, reason):
+                    authority.validate_protocol(protocol, self.original)
+
+
+if __name__ == "__main__":
+    unittest.main()
