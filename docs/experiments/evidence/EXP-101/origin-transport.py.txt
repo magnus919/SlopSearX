@@ -20,9 +20,11 @@ def sha(raw):
 def bind_origin(*, original_clock, original_clock_sha, original_slot,
                 original_input, original_view_plan, original_registry_identity, current_clock,
                 current_clock_sha, qualified_source_sha):
-    for digest in (original_clock_sha, current_clock_sha, qualified_source_sha):
+    for digest in (original_clock_sha, current_clock_sha):
         if type(digest) is not str or not _SHA.fullmatch(digest):
             raise ValueError("transport-digest")
+    if type(qualified_source_sha) is not str or not re.fullmatch(r"[0-9a-f]{40}", qualified_source_sha):
+        raise ValueError("transport-source-revision")
     if sha(canonical(original_clock)) != original_clock_sha:
         raise ValueError("transport-original-clock")
     if sha(canonical(current_clock)) != current_clock_sha:
@@ -53,6 +55,6 @@ def bind_origin(*, original_clock, original_clock_sha, original_slot,
             "original_input_sha256": sha(original_input),
             "original_view_plan_sha256": sha(canonical(original_view_plan)),
             "current_clock_sha256": current_clock_sha,
-            "qualified_source_sha256": qualified_source_sha,
+            "qualified_source_revision": qualified_source_sha,
             "historical_elapsed_time_credit_seconds": 0,
             "dispatch_authority": "not_granted"}
