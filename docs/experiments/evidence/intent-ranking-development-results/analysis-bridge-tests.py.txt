@@ -1,0 +1,294 @@
+"""Synthetic offline tests for the EXP-105 ranking/stability bridge."""
+from __future__ import annotations
+
+import hashlib
+import copy
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+
+HERE = Path(__file__).resolve().parent
+
+
+def load(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+B = load("exp105_analysis_bridge_test", HERE / "analysis-bridge.py.txt")
+D = load("exp077_decision_for_exp105_bridge_test",
+         HERE.parent / "EXP-077" / "decision.py.txt")
+
+
+def canon(value):
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                      allow_nan=False).encode()
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+class FakeInputBridge:
+    def __init__(self, proof, events):
+        self.proof = proof
+        self.events = events
+
+    def verify_carried_card_references(self, bundle, pins, base_pins):
+        self.events.append("card-input-verification")
+        return {"card_reuse_proof": self.proof}
+
+
+class FakeAdmission:
+    def __init__(self, root, clock_sha, events):
+        self.root = root
+        self.clock_sha = clock_sha
+        self.events = events
+
+    def _validate_phase_artifact(self, phase, root, clock_sha):
+        self.events.append("selector-phase-artifact-verification")
+        if phase != "selector" or Path(root) != self.root or clock_sha != self.clock_sha:
+            raise ValueError("wrong-selector-validation-call")
+        raw = (self.root / "selector/selector-run.json").read_bytes()
+        return "selector/selector-run.json", sha(raw)
+
+
+class WrongDigestAdmission(FakeAdmission):
+    def _validate_phase_artifact(self, phase, root, clock_sha):
+        super()._validate_phase_artifact(phase, root, clock_sha)
+        return "selector/selector-run.json", "0" * 64
+
+
+class Fixture:
+    def __init__(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="exp105-analysis-bridge-")
+        self.root = Path(self.temp.name)
+        self.bundle = self.root / "bundle"
+        self.bundle.mkdir()
+        self.stage = self.root / "stage"
+        (self.stage / "selector").mkdir(parents=True)
+        self.clock_sha = "c" * 64
+        self.events = []
+        self.records = []
+        self.card_rows = {}
+        for task in B.RESEARCH_TASKS:
+            for assessor in B.ASSESSORS:
+                task_rows = []
+                id_map = {}
+                global_ids = []
+                for index in range(12):
+                    card_sha = sha(f"{task}:{index}".encode())
+                    global_id = f"{task}-card-{index}"
+                    id_map[card_sha] = global_id
+                    global_ids.append(global_id)
+                    task_rows.append({"card_sha256": card_sha, "lead": (index + 1) % 4,
+                                      "facets": [f"facet-{index % 3}"]})
+                assignment = {"assignment": {"task_id": task, "assessor_id": assessor,
+                                              "global_id_by_sha": id_map}}
+                verified = {"expanded_response": {"records": task_rows}}
+                assign_raw, verified_raw = canon(assignment), canon(verified)
+                assign_path, verified_path = f"cards/{task}-{assessor}-assignment.json", f"cards/{task}-{assessor}-verified.json"
+                (self.bundle / "cards").mkdir(exist_ok=True)
+                (self.bundle / assign_path).write_bytes(assign_raw)
+                (self.bundle / verified_path).write_bytes(verified_raw)
+                self.records.append({"task_id": task, "assessor_id": assessor,
+                                     "record_count": len(task_rows), "assignment_path": assign_path,
+                                     "assignment_sha256": sha(assign_raw),
+                                     "verified_response_path": verified_path,
+                                     "verified_response_sha256": sha(verified_raw)})
+                self.card_rows[(task, assessor)] = {r["card_sha256"]: r for r in task_rows}
+        self.proof = {"schema": "exp095-carried-card-reference-proof/1",
+                      "exp084_grader_outputs_used": False,
+                      "card_assessments_carried_unchanged": True,
+                      "card_job_count": 16, "records": self.records}
+        self.cases = [{"id": task, "kind": "research"} for task in B.RESEARCH_TASKS]
+        self.cases += [{"id": f"d{i}", "kind": "navigation", "target_url": f"https://e.test/{i}",
+                        "target_id": f"d{i}-target", "pool_ids": [f"d{i}-target"]}
+                       for i in range(9, 14)]
+        self.run = self._run()
+        self.run_raw = canon(self.run)
+        (self.stage / "selector/selector-run.json").write_bytes(self.run_raw)
+
+    def _call(self):
+        return {"usage_status": "known", "usage": {"input_tokens": 1, "output_tokens": 1},
+                "response_bytes": 32}
+
+    def _run(self):
+        ops = []
+        calls_total = 0
+        for task in [case["id"] for case in self.cases]:
+            variants = ("base", "repeat", "rotate") if task in B.STABILITY_TASKS else ("base",)
+            for variant in variants:
+                if task.startswith("d") and task[1:].isdigit() and int(task[1:]) >= 9:
+                    ops.append({"case": task, "variant": variant, "status": "native_target_top1_noop",
+                                "candidate_order_ids": [f"{task}-target"],
+                                "native_order_ids": [f"{task}-target"],
+                                "target_url": f"https://e.test/{task[1:]}",
+                                "model_calls": 0, "calls": []})
+                else:
+                    ids = [f"{task}-card-{i}" for i in range(12)]
+                    calls = [self._call(), self._call()]
+                    calls_total += len(calls)
+                    ops.append({"case": task, "variant": variant, "status": "complete",
+                                "baseline_order_ids": ids, "candidate_order_ids": ids,
+                                "baseline_phase_ms": 10.0, "candidate_phase_ms": 11.0,
+                                "calls": calls})
+        neutral = {"status": "complete", "calls": [self._call(), self._call()]}
+        calls_total += 2
+        return {"schema": "exp078-selector-run/1", "status": "complete", "synthetic": False,
+                "stage_clock_sha256": self.clock_sha, "neutral": neutral, "operations": ops,
+                "budget": {"attempts": calls_total, "input_tokens": calls_total,
+                           "output_tokens": calls_total, "unknown_usage": False}}
+
+    def run_analysis(self):
+        return B.analyze_verified_stage(input_bridge=FakeInputBridge(self.proof, self.events),
+            admission=FakeAdmission(self.stage, self.clock_sha, self.events), bundle_root=self.bundle,
+            pins_path=self.bundle / "pins.json", base_pins_path=self.bundle / "base-pins.json",
+            stage_root=self.stage, clock_sha256=self.clock_sha, cases=self.cases,
+            selector_run=self.run, decision_module=D)
+
+    def close(self):
+        self.temp.cleanup()
+
+
+class AnalysisBridgeTests(unittest.TestCase):
+    def setUp(self):
+        self.fx = Fixture()
+
+    def tearDown(self):
+        self.fx.close()
+
+    def test_valid_synthetic_bridge_maps_two_references_and_all_frozen_gates(self):
+        result = self.fx.run_analysis()
+        self.assertEqual(result["schema"], "exp105-offline-analysis-bridge/1")
+        self.assertEqual(set(result["assessors"]), {"A", "B"})
+        for assessor in ("A", "B"):
+            self.assertEqual(len(result["assessors"][assessor]["cases"]), 8)
+            self.assertEqual(set(result["assessors"][assessor]["cases"]), set(B.RESEARCH_TASKS))
+            self.assertEqual(len(result["assessors"][assessor]["endpoint"]["bootstrap95"]), 2)
+        self.assertEqual(len(result["stability"]), 8)
+        self.assertEqual(len(result["navigation"]), 5)
+        self.assertEqual(result["resources"]["calls"], 34)
+        self.assertFalse(result["raw_selector_receipts_replayed"])
+        self.assertEqual(self.fx.events, ["card-input-verification", "selector-phase-artifact-verification"])
+
+    def test_card_proof_failure_precedes_selector_validation(self):
+        bridge = FakeInputBridge({"schema": "bad", "records": []}, self.fx.events)
+        with self.assertRaisesRegex(ValueError, "carried-card-proof-invalid"):
+            B.analyze_verified_stage(input_bridge=bridge, admission=FakeAdmission(
+                self.fx.stage, self.fx.clock_sha, self.fx.events), bundle_root=self.fx.bundle,
+                pins_path=self.fx.bundle / "pins.json", base_pins_path=self.fx.bundle / "base-pins.json",
+                stage_root=self.fx.stage, clock_sha256=self.fx.clock_sha, cases=self.fx.cases,
+                selector_run=self.fx.run, decision_module=D)
+        self.assertEqual(self.fx.events, ["card-input-verification"])
+
+    def test_tampered_card_payload_is_rejected_before_selector_validation(self):
+        entry = self.fx.records[0]
+        path = self.fx.bundle / entry["verified_response_path"]
+        path.write_bytes(path.read_bytes() + b" ")
+        with self.assertRaisesRegex(ValueError, "pinned-file-digest"):
+            self.fx.run_analysis()
+        self.assertEqual(self.fx.events, ["card-input-verification"])
+
+    def test_selector_artifact_digest_and_schedule_fail_closed(self):
+        bad_run = dict(self.fx.run, stage_clock_sha256="wrong")
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(bad_run))
+        self.fx.run = bad_run
+        self.fx.events.clear()
+        with self.assertRaisesRegex(ValueError, "selector-artifact-digest"):
+            B.analyze_verified_stage(input_bridge=FakeInputBridge(self.fx.proof, self.fx.events),
+                admission=WrongDigestAdmission(self.fx.stage, self.fx.clock_sha, self.fx.events),
+                bundle_root=self.fx.bundle, pins_path=self.fx.bundle / "pins.json",
+                base_pins_path=self.fx.bundle / "base-pins.json", stage_root=self.fx.stage,
+                clock_sha256=self.fx.clock_sha, cases=self.fx.cases, selector_run=bad_run,
+                decision_module=D)
+        self.assertEqual(self.fx.events, ["card-input-verification", "selector-phase-artifact-verification"])
+
+    def test_resource_receipts_reject_unknown_usage_and_reserve_overrun(self):
+        bad = copy.deepcopy(self.fx.run)
+        bad["neutral"]["calls"][0]["usage_status"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "selector-usage-unknown"):
+            B._validate_resource_receipts(bad)
+        bad = copy.deepcopy(self.fx.run)
+        bad["budget"]["input_tokens"] = B.MAX_INPUT - B.RESERVE_INPUT + 1
+        for op in [bad["neutral"], *bad["operations"]]:
+            for call in op.get("calls", []):
+                call["usage"] = {"input_tokens": 0, "output_tokens": 0}
+        with self.assertRaisesRegex(ValueError, "selector-budget-receipt-mismatch"):
+            B._validate_resource_receipts(bad)
+
+    def test_navigation_target_binding_is_required(self):
+        self.fx.cases[-1]["target_id"] = "missing"
+        self.fx.run = self.fx._run()
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-noop-order"):
+            self.fx.run_analysis()
+
+    def test_complete_navigation_rejects_out_of_pool_order(self):
+        op = next(op for op in self.fx.run["operations"] if op["case"] == "d9")
+        op.update(status="complete", baseline_phase_ms=1, candidate_phase_ms=1,
+                  baseline_order_ids=["d9-target", "outside-pool"],
+                  candidate_order_ids=["d9-target", "outside-pool"])
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-navigation-pool-membership"):
+            self.fx.run_analysis()
+
+    def test_negative_phase_elapsed_is_rejected(self):
+        self.fx.run["operations"][0]["baseline_phase_ms"] = -0.01
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-phase-deadline"):
+            self.fx.run_analysis()
+
+    def test_repeat_rotate_must_preserve_full_base_pool_of_at_least_ten(self):
+        repeat = next(op for op in self.fx.run["operations"]
+                      if op["case"] == "d1" and op["variant"] == "repeat")
+        repeat["candidate_order_ids"][-1] = "outside-base-pool"
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-stability-pool-membership"):
+            self.fx.run_analysis()
+
+        self.fx.run = self.fx._run()
+        base = next(op for op in self.fx.run["operations"]
+                    if op["case"] == "d1" and op["variant"] == "base")
+        base["candidate_order_ids"] = base["candidate_order_ids"][:9]
+        base["baseline_order_ids"] = base["baseline_order_ids"][:9]
+        for variant in ("repeat", "rotate"):
+            op = next(op for op in self.fx.run["operations"]
+                      if op["case"] == "d1" and op["variant"] == variant)
+            op["candidate_order_ids"] = op["candidate_order_ids"][:9]
+            op["baseline_order_ids"] = op["baseline_order_ids"][:9]
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-stability-pool-size"):
+            self.fx.run_analysis()
+
+    def test_noop_navigation_binds_url_native_pool_and_zero_model_calls(self):
+        noop = next(op for op in self.fx.run["operations"] if op["case"] == "d9")
+        noop["target_url"] = "https://wrong.example/"
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-noop-order"):
+            self.fx.run_analysis()
+
+        self.fx.run = self.fx._run()
+        noop = next(op for op in self.fx.run["operations"] if op["case"] == "d9")
+        noop["native_order_ids"] = ["other-target"]
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-noop-order"):
+            self.fx.run_analysis()
+
+        self.fx.run = self.fx._run()
+        noop = next(op for op in self.fx.run["operations"] if op["case"] == "d9")
+        noop["model_calls"] = 1
+        (self.fx.stage / "selector/selector-run.json").write_bytes(canon(self.fx.run))
+        with self.assertRaisesRegex(ValueError, "selector-noop-order"):
+            self.fx.run_analysis()
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

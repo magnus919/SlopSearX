@@ -1,0 +1,334 @@
+"""Offline EXP-105 ranking/stability/navigation bridge.
+
+This module only transforms already verified frozen inputs and selector receipts
+into calls to the unchanged EXP-077 pure ranking calculator. It never grades,
+repairs, dispatches, or claims adoption.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+from pathlib import Path, PurePosixPath
+
+
+RESEARCH_TASKS = tuple(f"d{i}" for i in range(1, 9))
+STABILITY_TASKS = ("d1", "d4", "d7", "d8")
+ASSESSORS = ("A", "B")
+EXPECTED_STATUSES = {"complete", "native_target_top1_noop"}
+MAX_CALLS = 44
+MAX_INPUT = 3_000_000
+MAX_OUTPUT = 256_000
+RESERVE_INPUT = 128_000
+RESERVE_OUTPUT = 32_000
+CALL_INPUT = 128_000
+CALL_OUTPUT = 32_000
+MAX_RESPONSE = 2_000_000
+MAX_PHASE_MS = 1_000
+
+
+class AnalysisBridgeError(ValueError):
+    """Fail-closed source, order, or resource-contract violation."""
+
+
+def _pairs_no_duplicates(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise AnalysisBridgeError("duplicate-json-key")
+        out[key] = value
+    return out
+
+
+def strict_json(raw: bytes):
+    try:
+        return json.loads(raw.decode("utf-8"), object_pairs_hook=_pairs_no_duplicates,
+                          parse_constant=lambda _value: (_ for _ in ()).throw(
+                              AnalysisBridgeError("nonfinite-json-number")))
+    except AnalysisBridgeError:
+        raise
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AnalysisBridgeError("invalid-json") from exc
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _safe_pinned_read(root: Path, relative: str, expected_sha256: str) -> bytes:
+    rel = PurePosixPath(relative)
+    if rel.is_absolute() or not rel.parts or any(part in ("", ".", "..") for part in rel.parts):
+        raise AnalysisBridgeError("unsafe-pinned-path")
+    root = Path(root)
+    if root.is_symlink() or not root.is_dir():
+        raise AnalysisBridgeError("input-root-invalid")
+    current = root
+    for part in rel.parts:
+        current = current / part
+        if current.is_symlink():
+            raise AnalysisBridgeError("pinned-path-symlink")
+    if not current.is_file():
+        raise AnalysisBridgeError("pinned-file-missing")
+    raw = current.read_bytes()
+    if type(expected_sha256) is not str or _sha(raw) != expected_sha256:
+        raise AnalysisBridgeError("pinned-file-digest")
+    return raw
+
+
+def verify_card_inputs(input_bridge, bundle_root, pins_path, base_pins_path):
+    """Invoke the original EXP-100 carried-card verifier before reading grades.
+
+    The exact source API is ``verify_carried_card_references(bundle_root,
+    pins_path, base_pins_path)``. It checks the pinned bundle, assignment and
+    label bindings, raw/decoded/verified response joins, and original validators.
+    """
+    verify = getattr(input_bridge, "verify_carried_card_references", None)
+    if not callable(verify):
+        raise AnalysisBridgeError("original-card-input-verifier-required")
+    result = verify(Path(bundle_root), Path(pins_path), Path(base_pins_path))
+    proof = result.get("card_reuse_proof") if type(result) is dict else None
+    if (type(proof) is not dict
+            or proof.get("schema") != "exp095-carried-card-reference-proof/1"
+            or proof.get("exp084_grader_outputs_used") is not False
+            or proof.get("card_assessments_carried_unchanged") is not True
+            or proof.get("card_job_count") != 16
+            or type(proof.get("records")) is not list):
+        raise AnalysisBridgeError("carried-card-proof-invalid")
+    expected = {(task, assessor) for task in RESEARCH_TASKS for assessor in ASSESSORS}
+    observed = {(row.get("task_id"), row.get("assessor_id"))
+                for row in proof["records"] if type(row) is dict}
+    if len(proof["records"]) != 16 or observed != expected:
+        raise AnalysisBridgeError("carried-card-proof-coverage")
+    return proof
+
+
+def _card_rows(proof, bundle_root):
+    expected = {(task, assessor) for task in RESEARCH_TASKS for assessor in ASSESSORS}
+    rows_by_assessor = {assessor: {} for assessor in ASSESSORS}
+    seen = set()
+    for entry in proof["records"]:
+        if type(entry) is not dict:
+            raise AnalysisBridgeError("carried-card-proof-row")
+        key = (entry.get("task_id"), entry.get("assessor_id"))
+        if key not in expected or key in seen:
+            raise AnalysisBridgeError("carried-card-proof-identity")
+        seen.add(key)
+        assignment_raw = _safe_pinned_read(bundle_root, entry.get("assignment_path"),
+                                           entry.get("assignment_sha256"))
+        verified_raw = _safe_pinned_read(bundle_root, entry.get("verified_response_path"),
+                                         entry.get("verified_response_sha256"))
+        assignment_doc = strict_json(assignment_raw)
+        verified_doc = strict_json(verified_raw)
+        assignment = assignment_doc.get("assignment") if type(assignment_doc) is dict else None
+        response = verified_doc.get("expanded_response") if type(verified_doc) is dict else None
+        if (type(assignment) is not dict or assignment.get("task_id") != key[0]
+                or assignment.get("assessor_id") != key[1]
+                or type(assignment.get("global_id_by_sha")) is not dict
+                or type(response) is not dict or type(response.get("records")) is not list):
+            raise AnalysisBridgeError("card-assignment-response-shape")
+        ids_by_sha = assignment["global_id_by_sha"]
+        case_rows = {}
+        for record in response["records"]:
+            if type(record) is not dict:
+                raise AnalysisBridgeError("card-grade-row-shape")
+            card_sha = record.get("card_sha256")
+            global_id = ids_by_sha.get(card_sha)
+            lead, facets = record.get("lead"), record.get("facets")
+            if (type(global_id) is not str or not global_id or global_id in case_rows
+                    or type(lead) is not int or lead not in range(4)
+                    or type(facets) is not list or any(type(facet) is not str for facet in facets)
+                    or len(facets) != len(set(facets))):
+                raise AnalysisBridgeError("card-grade-binding")
+            case_rows[global_id] = {"lead": lead, "facets": list(facets)}
+        if not case_rows or len(case_rows) != entry.get("record_count"):
+            raise AnalysisBridgeError("card-grade-coverage")
+        rows_by_assessor[key[1]][key[0]] = case_rows
+    if seen != expected or any(set(rows_by_assessor[a]) != set(RESEARCH_TASKS) for a in ASSESSORS):
+        raise AnalysisBridgeError("card-grade-inventory")
+    return rows_by_assessor
+
+
+def _validate_resource_receipts(run):
+    budget = run.get("budget")
+    neutral = run.get("neutral")
+    ops = run.get("operations")
+    if type(budget) is not dict or type(neutral) is not dict or type(ops) is not list:
+        raise AnalysisBridgeError("selector-resource-shape")
+    all_calls = []
+    for operation in [neutral, *ops]:
+        if type(operation) is not dict:
+            raise AnalysisBridgeError("selector-operation-shape")
+        calls = operation.get("calls", [])
+        if type(calls) is not list:
+            raise AnalysisBridgeError("selector-call-list")
+        all_calls.extend(calls)
+    if len(all_calls) > MAX_CALLS or budget.get("attempts") != len(all_calls):
+        raise AnalysisBridgeError("selector-call-count")
+    inputs = outputs = 0
+    for call in all_calls:
+        usage = call.get("usage") if type(call) is dict else None
+        if (type(call) is not dict or call.get("usage_status") != "known"
+                or type(usage) is not dict):
+            raise AnalysisBridgeError("selector-usage-unknown")
+        in_tokens, out_tokens = usage.get("input_tokens"), usage.get("output_tokens")
+        response_bytes = call.get("response_bytes")
+        if (type(in_tokens) is not int or type(out_tokens) is not int
+                or in_tokens < 0 or out_tokens < 0
+                or in_tokens > CALL_INPUT or out_tokens > CALL_OUTPUT
+                or type(response_bytes) is not int or not 0 <= response_bytes <= MAX_RESPONSE):
+            raise AnalysisBridgeError("selector-call-resource-bound")
+        # The runner checks aggregate headroom before dispatch, then the actual
+        # usage against the cap. Reproduce those checks in receipt order.
+        if inputs + RESERVE_INPUT > MAX_INPUT or outputs + RESERVE_OUTPUT > MAX_OUTPUT:
+            raise AnalysisBridgeError("selector-reserve-before-call")
+        inputs += in_tokens
+        outputs += out_tokens
+        if inputs > MAX_INPUT or outputs > MAX_OUTPUT:
+            raise AnalysisBridgeError("selector-aggregate-resource-bound")
+    if (budget.get("input_tokens") != inputs or budget.get("output_tokens") != outputs
+            or budget.get("unknown_usage") is not False):
+        raise AnalysisBridgeError("selector-budget-receipt-mismatch")
+    return {"calls": len(all_calls), "input_tokens": inputs, "output_tokens": outputs,
+            "unknown_usage": False}
+
+
+def _operation_map(run, research_tasks, navigation_targets):
+    operations = run.get("operations")
+    all_tasks = tuple(research_tasks) + tuple(navigation_targets)
+    if type(operations) is not list or len(operations) != 21:
+        raise AnalysisBridgeError("selector-operation-count")
+    expected = {(task, "base") for task in all_tasks}
+    expected.update((task, variant) for task in STABILITY_TASKS for variant in ("repeat", "rotate"))
+    by_key = {}
+    for op in operations:
+        if type(op) is not dict:
+            raise AnalysisBridgeError("selector-operation-shape")
+        key = (op.get("case"), op.get("variant"))
+        if key not in expected or key in by_key or op.get("status") not in EXPECTED_STATUSES:
+            raise AnalysisBridgeError("selector-operation-identity-or-status")
+        if op.get("status") == "complete":
+            for field in ("baseline_phase_ms", "candidate_phase_ms"):
+                elapsed = op.get(field)
+                if (type(elapsed) not in (int, float) or not math.isfinite(elapsed)
+                        or elapsed < 0 or elapsed > MAX_PHASE_MS):
+                    raise AnalysisBridgeError("selector-phase-deadline")
+            baseline, candidate = op.get("baseline_order_ids"), op.get("candidate_order_ids")
+            if (type(baseline) is not list or type(candidate) is not list
+                    or len(baseline) != len(set(baseline))
+                    or len(candidate) != len(set(candidate))
+                    or set(baseline) != set(candidate)):
+                raise AnalysisBridgeError("selector-order-membership")
+            if key[0] in navigation_targets:
+                pool_ids = navigation_targets[key[0]].get("pool_ids")
+                if (type(pool_ids) is not list or len(pool_ids) != len(set(pool_ids))
+                        or set(candidate) != set(pool_ids)):
+                    raise AnalysisBridgeError("selector-navigation-pool-membership")
+        else:
+            candidate = op.get("candidate_order_ids")
+            navigation_case = navigation_targets.get(key[0])
+            target_id = navigation_case.get("target_id") if type(navigation_case) is dict else None
+            pool_ids = navigation_case.get("pool_ids") if type(navigation_case) is dict else None
+            if (type(candidate) is not list or type(pool_ids) is not list or len(pool_ids) != 1
+                    or pool_ids != [target_id] or candidate != pool_ids
+                    or op.get("native_order_ids") != pool_ids
+                    or op.get("target_url") != navigation_case.get("target_url")
+                    or op.get("model_calls") != 0 or op.get("calls", []) != []):
+                raise AnalysisBridgeError("selector-noop-order")
+        by_key[key] = op
+    if set(by_key) != expected:
+        raise AnalysisBridgeError("selector-schedule-coverage")
+    for task in STABILITY_TASKS:
+        base = by_key[(task, "base")].get("candidate_order_ids")
+        if type(base) is not list or len(base) < 10:
+            raise AnalysisBridgeError("selector-stability-pool-size")
+        base_pool = set(base)
+        for variant in ("repeat", "rotate"):
+            op = by_key[(task, variant)]
+            if (set(op.get("baseline_order_ids", [])) != base_pool
+                    or set(op.get("candidate_order_ids", [])) != base_pool):
+                raise AnalysisBridgeError("selector-stability-pool-membership")
+    return by_key
+
+
+def analyze_verified_stage(*, input_bridge, admission, bundle_root, pins_path,
+                           base_pins_path, stage_root, clock_sha256, cases,
+                           selector_run, decision_module):
+    """Run unchanged EXP-077 ranking math after original bridge checks.
+
+    ``admission`` must be the frozen EXP-100 module. This calls its exact
+    structural stage-artifact verifier ``_validate_phase_artifact('selector',
+    stage_root, clock_sha256)``; that verifier checks schema, active clock,
+    complete nonsynthetic status and 21 statuses. EXP-100 exposes no independent
+    offline selector raw-receipt replay function, so this helper does not claim
+    that call receipts have been re-parsed from raw provider bytes.
+    """
+    proof = verify_card_inputs(input_bridge, bundle_root, pins_path, base_pins_path)
+    _card_rows(proof, bundle_root)  # fail before selector metrics on bad card bindings
+    validator = getattr(admission, "_validate_phase_artifact", None)
+    if not callable(validator):
+        raise AnalysisBridgeError("original-selector-phase-validator-required")
+    rel, artifact_sha = validator("selector", Path(stage_root), clock_sha256)
+    if rel != "selector/selector-run.json":
+        raise AnalysisBridgeError("selector-artifact-path")
+    run_path = Path(stage_root) / rel
+    if run_path.is_symlink() or not run_path.is_file():
+        raise AnalysisBridgeError("selector-artifact-missing")
+    run_raw = run_path.read_bytes()
+    if _sha(run_raw) != artifact_sha:
+        raise AnalysisBridgeError("selector-artifact-digest")
+    run = strict_json(run_raw)
+    if (type(run) is not dict or run.get("schema") != "exp078-selector-run/1"
+            or run.get("status") != "complete" or run.get("synthetic") is not False
+            or run.get("stage_clock_sha256") != clock_sha256
+            or selector_run != run):
+        raise AnalysisBridgeError("selector-run-binding")
+    research = tuple(case.get("id") for case in cases if case.get("kind") == "research")
+    navigation = {case.get("id"): case for case in cases if case.get("kind") == "navigation"}
+    if (len(cases) != 13 or len(research) != 8 or set(research) != set(RESEARCH_TASKS)
+            or len(navigation) != 5 or any(type(row.get("target_url")) is not str for row in navigation.values())):
+        raise AnalysisBridgeError("frozen-case-inventory")
+    resources = _validate_resource_receipts(run)
+    op_map = _operation_map(run, research, navigation)
+    rows = _card_rows(proof, bundle_root)
+    per_assessor = {}
+    for assessor in ASSESSORS:
+        cases_for_ranking = []
+        for task in RESEARCH_TASKS:
+            op = op_map[(task, "base")]
+            if op.get("status") != "complete":
+                raise AnalysisBridgeError("research-operation-incomplete")
+            cases_for_ranking.append(decision_module.ranking_case(
+                op["baseline_order_ids"], op["candidate_order_ids"], rows[assessor][task]))
+        endpoint = decision_module.ranking_endpoint(cases_for_ranking)
+        per_assessor[assessor] = {"endpoint": endpoint,
+                                  "cases": dict(zip(RESEARCH_TASKS, cases_for_ranking))}
+
+    stability = []
+    for task in STABILITY_TASKS:
+        base = op_map[(task, "base")]["candidate_order_ids"][:10]
+        for variant in ("repeat", "rotate"):
+            other = op_map[(task, variant)]["candidate_order_ids"][:10]
+            overlap = len(set(base) & set(other)) / 10
+            stability.append({"task": task, "variant": variant, "top10_overlap": overlap,
+                              "passed": overlap >= 0.8})
+
+    navigation_rows = []
+    for task, case in navigation.items():
+        operation = op_map[(task, "base")]
+        target_url = case["target_url"]
+        target_id = case.get("target_id")
+        pool_ids = case.get("pool_ids")
+        if (type(target_id) is not str or not target_id or type(pool_ids) is not list
+                or target_id not in pool_ids):
+            raise AnalysisBridgeError("navigation-target-binding")
+        order = operation.get("candidate_order_ids")
+        rank = order.index(target_id) + 1 if target_id in order else None
+        navigation_rows.append({"task": task, "target_url": target_url, "target_id": target_id,
+                                "target_present": target_id in pool_ids,
+                                "candidate_rank": rank, "candidate_target_top1": rank == 1})
+    if len(navigation_rows) != 5:
+        raise AnalysisBridgeError("navigation-target-count")
+    return {"schema": "exp105-offline-analysis-bridge/1", "status": "computed",
+            "assessors": per_assessor, "stability": stability, "navigation": navigation_rows,
+            "resources": resources, "raw_selector_receipts_replayed": False,
+            "adoption_eligible": False, "quality_credit": False}
