@@ -1,0 +1,122 @@
+"""Fresh EXP-103 qualification layered over unchanged qualified EXP-102 code."""
+from __future__ import annotations
+import hashlib
+import importlib.machinery
+import json
+from pathlib import Path
+import re
+import subprocess
+
+HERE=Path(__file__).resolve().parent
+REPO=HERE.parents[3]
+
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+
+def blob(ref,path):
+    return subprocess.run(["git","show",ref+":"+path],cwd=REPO,check=True,
+                          stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
+
+def verify(*, original_entrypoints, previous_continuation_entrypoint, previous_failed_run_files,
+           continuation_entrypoint, reader_entrypoint, failed_run_files):
+    path=HERE/'qualification.json'
+    if path.is_symlink() or not path.is_file():raise ValueError('continuation-qualification-missing')
+    raw=path.read_bytes()
+    if raw!=blob('HEAD',path.relative_to(REPO).as_posix()):raise ValueError('continuation-qualification-uncommitted')
+    q=json.loads(raw);rev=q.get('qualified_source_revision')
+    if (q.get('schema')!='exp103-anchor-qualification/1' or q.get('study_id')!='EXP-103'
+            or q.get('qualified') is not True or q.get('independent_review_complete') is not True
+            or type(rev) is not str or not re.fullmatch(r'[0-9a-f]{40}',rev)):
+        raise ValueError('continuation-not-qualified')
+    registration_path=HERE/'registration-integrity.json'
+    if registration_path.is_symlink() or not registration_path.is_file():
+        raise ValueError('continuation-registration-missing')
+    registration_name=registration_path.relative_to(REPO).as_posix()
+    registered_raw=blob(rev,registration_name)
+    if (registration_path.read_bytes()!=registered_raw
+            or blob('HEAD',registration_name)!=registered_raw):
+        raise ValueError('continuation-registration-changed')
+    registration=json.loads(registered_raw)
+    files=q.get('source_files')
+    if (registration.get('schema')!='exp103-anchor-registration/1'
+            or registration.get('study_id')!='EXP-103'
+            or registration.get('source_revision_binding')!='qualification.qualified_source_revision'
+            or type(files) is not dict or files!=registration.get('source_files')):
+        raise ValueError('continuation-source-inventory')
+    if any(q.get(key)!=registration.get(key) for key in (
+            'reused_source_revision','operator_scheduler_sha256','reader_transport_sha256','failed_run_pins')):
+        raise ValueError('continuation-registration-binding')
+    required={"docs/experiments/evidence/EXP-103/"+name for name in (
+        "qualification-preflight.py.txt","continuation-authority.py.txt","protocol.json",
+        "grading-driver.py.txt","reader-transport.py.txt")}
+    required.update({"docs/experiments/evidence/EXP-102/qualification.json",
+                     "docs/experiments/evidence/EXP-102/registration-integrity.json"})
+    if type(files) is not dict or not required.issubset(files):
+        raise ValueError('continuation-source-inventory')
+    for name,digest in files.items():
+        rel=Path(name);disk=REPO/rel
+        if rel.is_absolute() or '..' in rel.parts or disk.is_symlink() or not disk.is_file():
+            raise ValueError('continuation-source-path')
+        for parent in disk.parents:
+            if parent==REPO:break
+            if parent.is_symlink():raise ValueError('continuation-source-parent-symlink')
+        original=blob(rev,name)
+        if sha(original)!=digest or blob('HEAD',name)!=original or disk.read_bytes()!=original:
+            raise ValueError('continuation-source-changed')
+    reused_q=json.loads((HERE.parent/'EXP-102/qualification.json').read_bytes())
+    if (q.get('reused_source_revision')!=reused_q['qualified_source_revision']
+            or any(files.get(name)!=digest for name,digest in reused_q['source_files'].items())):
+        raise ValueError('continuation-reused-source-changed')
+    old=importlib.machinery.SourceFileLoader('exp102_original_qualification',str(HERE.parent/'EXP-102/qualification-preflight.py.txt')).load_module()
+    old.verify(original_entrypoints=original_entrypoints,
+        continuation_entrypoint=previous_continuation_entrypoint,failed_run_files=previous_failed_run_files)
+    scheduler=Path(continuation_entrypoint)
+    if scheduler.is_symlink() or sha(scheduler.read_bytes())!=q.get('operator_scheduler_sha256'):
+        raise ValueError('continuation-scheduler-changed')
+    reader=Path(reader_entrypoint)
+    if reader.is_symlink() or sha(reader.read_bytes())!=q.get('reader_transport_sha256'):
+        raise ValueError('continuation-reader-changed')
+    lineage=q.get('failed_run_pins')
+    if type(lineage) is not dict or set(lineage)!={'clock','health_attempt','health_completion','terminal_audit',
+            'diagnostic','view_proof','final_raw','raw_log'} or set(failed_run_files)!=set(lineage):
+        raise ValueError('continuation-failed-lineage-inventory')
+    values={}
+    for name,digest in lineage.items():
+        source=Path(failed_run_files[name])
+        if source.is_symlink() or not source.is_file() or sha(source.read_bytes())!=digest:
+            raise ValueError('continuation-failed-lineage-changed')
+        if name not in {'final_raw','raw_log'}:
+            values[name]=json.loads(source.read_bytes())
+    audit=values['terminal_audit']
+    if (audit.get('clock_sha256')!=lineage['clock']
+            or audit.get('health_attempt_sha256')!=lineage['health_attempt']
+            or audit.get('health_slot_claimed') is not True
+            or values['health_attempt'].get('clock_sha256')!=lineage['clock']
+            or audit.get('health_completion_sha256')!=lineage['health_completion']
+            or values['health_completion'].get('clock_sha256')!=lineage['clock']
+            or audit.get('private_log_sha256')!=lineage['raw_log']):
+        raise ValueError('continuation-failed-lineage-binding')
+    if (audit.get('status')!='terminal-first-grade-hydration-rejected'
+            or audit.get('grader_reservations')!=1 or audit.get('grader_calls')!=1
+            or audit.get('accepted_grader_results')!=0 or audit.get('strict_closures')!=0
+            or audit.get('historical_grader_charges_including_this_run')!=74
+            or audit.get('health_request_completed') is not True
+            or audit.get('clock_reuse_permitted') is not False
+            or audit.get('process_exit_confirmed') is not True
+            or audit.get('quality_analyzed') is not False):
+        raise ValueError('continuation-failed-lineage-not-terminal')
+    proof=values['view_proof'];diagnostic=values['diagnostic']
+    if (proof.get('status')!='complete' or proof.get('page_count')!=61
+            or proof.get('pages_covered')!=list(range(1,62)) or proof.get('tool_call_count')!=32
+            or proof.get('final_text_sha256')!=lineage['final_raw']
+            or proof.get('transcript_log_sha256')!=lineage['raw_log']
+            or diagnostic.get('terminal_audit_sha256')!=lineage['terminal_audit']
+            or diagnostic.get('raw_final_sha256')!=lineage['final_raw']
+            or diagnostic.get('original_log_sha256')!=lineage['raw_log']
+            or diagnostic.get('reason')!='delivered/used item requires an assessor evidence anchor'
+            or diagnostic.get('raw_grade_modified') is not False
+            or diagnostic.get('quality_analyzed') is not False):
+        raise ValueError('continuation-failed-grade-binding')
+    authority=importlib.machinery.SourceFileLoader('exp102_continuation_authority',str(HERE/'continuation-authority.py.txt')).load_module()
+    authority.validate_protocol(json.loads((HERE/'protocol.json').read_bytes()),json.loads((HERE.parent/'EXP-102/protocol.json').read_bytes()))
+    return {'status':'qualified','qualified_source_revision':rev,'qualification_sha256':sha(raw),
+            'study_id':'EXP-103','failed_exp102_clock_sha256':lineage['clock'],'source_files':len(files)}
