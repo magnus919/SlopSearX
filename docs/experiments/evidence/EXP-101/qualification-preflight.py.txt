@@ -30,7 +30,7 @@ def regular(relative):
         raise ValueError("qualification-source-scope")
     return path.read_bytes()
 
-def verify():
+def verify(*, private_entrypoints):
     relative = "docs/experiments/evidence/EXP-101/qualification.json"
     raw = regular(relative)
     if blob("HEAD", relative) != raw:
@@ -48,7 +48,8 @@ def verify():
     required = {"docs/experiments/evidence/EXP-101/" + name for name in (
         "qualification-preflight.py.txt", "protocol.json", "completed-output-carry.py.txt",
         "grading-driver.py.txt", "origin-transport.py.txt", "grading-authority.py.txt",
-        "run-admission.py.txt", "controller.py.txt")}
+        "run-admission.py.txt", "controller.py.txt", "full-packet-preflight.py.txt",
+        "result-receiver.py.txt")}
     if not required.issubset(files):
         raise ValueError("qualification-required-sources")
     for name, digest in files.items():
@@ -75,5 +76,17 @@ def verify():
         "grouped-evidence-catalog.py.txt", "citation-codec.py.txt", "admission.py.txt")}
     if not origin_required.issubset(q.get("origin_source_files", {})):
         raise ValueError("qualification-origin-inventory")
+    pins = q.get("external_source_pins")
+    expected_names = {"final_text_reader", "strict_hydrator", "live_health", "operator_scheduler"}
+    if (type(pins) is not dict or set(pins) != expected_names
+            or type(private_entrypoints) is not dict or set(private_entrypoints) != expected_names):
+        raise ValueError("qualification-private-entrypoint-inventory")
+    for name in expected_names:
+        pin = pins[name]
+        path = Path(private_entrypoints[name])
+        if (type(pin) is not dict or set(pin) != {"sha256"}
+                or path.is_symlink() or not path.is_file()
+                or sha(path.read_bytes()) != pin.get("sha256")):
+            raise ValueError("qualification-private-entrypoint-changed")
     return {"status": "qualified", "qualified_source_revision": revision,
             "qualification_sha256": sha(raw), "source_files": len(files)}
