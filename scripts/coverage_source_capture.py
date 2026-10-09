@@ -191,7 +191,10 @@ def _strict_json(raw: bytes) -> object:
 
 def _validate_protocol(protocol_bytes: bytes) -> tuple[dict[str, object], str]:
     obj = _strict_json(protocol_bytes)
-    if type(obj) is not dict or obj.get("schema") != "coverage-first-study-protocol/1":
+    if type(obj) is not dict or obj.get("schema") not in {
+        "coverage-first-study-protocol/1",
+        "coverage-first-study-protocol/2",
+    }:
         raise SourceCaptureError("protocol-schema")
     capture = obj.get("capture")
     if type(capture) is not dict or (

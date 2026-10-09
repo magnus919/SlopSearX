@@ -23,6 +23,7 @@ pools of 41–80 results. Confirmation has not been acquired or scored.
 | [execution-preparation.md](execution-preparation.md) | Offline-tested transport, archival and paired-consumer seams; remaining invocation prerequisites |
 | [candidate-runtime-identity.json](candidate-runtime-identity.json) | Expected public runtime projection; not a live health receipt or admission |
 | [selector-resource-collection.md](selector-resource-collection.md) | Collection of pinned selector observations; missing proof remains unknown |
+| [stage-finalization-preparation.md](stage-finalization-preparation.md) | Draft v2 pending/actual elapsed closeout; not registered and not an admission |
 
 The observed deployments differ: the stable configuration has no Jev reranker,
 while the experimental configuration enables it. The primary control is the
@@ -64,6 +65,14 @@ composes the once-only stage through a complete synthetic workflow. Its
 [validation receipt](answer-grading-validation.json) records the limited offline
 evidence. Live capture remains disabled pending the
 [fetch-boundary qualification](capture-fetch-boundary-review.md).
+
+The protocol document is schema v2 draft. The gate inventory remains
+non-authoritative until an independent verifier checks the durable lower-bound
+sample, exact gate-input and calculation receipts, and actual post-final-fsync
+elapsed receipt. The original 28,800-second limit includes calculation and
+final decision inventory fsync; a late actual sample invalidates even a
+preliminary pass. This protocol amendment requires fresh review and registration
+before any calls and does not transfer prior authority.
 
 No Brave search, source capture, Jev evaluation, answerer or scientific-assessor
 call was made in preparing this packet. Coding and review agents helped prepare

@@ -1,0 +1,11 @@
+# Stage finalization preparation (protocol v2 draft)
+
+Status: **DRAFT, not registered, not admitted.** This is a forward-only timing/dataflow amendment. It does not authorize acquisition, capture, Jev, answerer, grader, confirmation, or product calls. Existing terminal or inconclusive records remain terminal and cannot be reinterpreted or rescued.
+
+The original 28,800-second stage limit is unchanged and includes the gate calculation and durable final decision inventory. A durable pending-time receipt is sampled before gate calculation and is explicitly only a lower bound. Its exact SHA is carried in the persisted gate-input manifest. The existing calculator receives that lower bound for the existing stage-wall predicate; all other numeric gates and their precedence remain unchanged.
+
+The coordinator writes and fsyncs a non-authoritative inventory containing the closed evidence pins, complete gate calculation receipt, and preliminary status. It then samples elapsed time after that inventory's file and directory fsync and persists a closeout receipt binding the final inventory SHA and actual elapsed time. The closeout receipt's own fsync is outside the measured endpoint. At or beyond the deadline, the coordinator durably terminal-invalidates the stage even if the preliminary gate result passed.
+
+A separate finalizer verifies source/protocol/cohort, pending-time, gate-input, gate-calculation, inventory, and closeout pins. The actual end sample is the stage-wall decision evidence: if it is below the deadline, it proves the earlier lower-bound resource predicate; if it reaches the deadline, no earlier pass is admissible. Only a complete pin set with every frozen gate true and actual elapsed strictly below the same deadline can be reported as `gates-pass-awaiting-independent-decision`. This is not product authority or study admission. Inconclusive and failed results remain so.
+
+The v2 schema change does not alter `quality`, `task_use`, provider/token budgets, source/capture limits, selector timing, task mix, or sample sizes. The amendment must be reviewed and the protocol newly registered with a new source-bound admission before any calls. No existing receipt, stage UUID, authorization, or approval transfers to v2.
