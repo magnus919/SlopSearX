@@ -397,6 +397,281 @@ def _capture_observations(
     return observed
 
 
+def _selector_observations(
+    *,
+    stage_uuid: str,
+    source_revision: str,
+    protocol_sha256: str,
+    source_closure_sha256: str,
+    expected_terminal_sha256: str | None,
+    terminal_inventory_bytes: bytes | None,
+    result_root: Path | None,
+    archive_root: Path | None,
+    expected_operation_ids: tuple[str, ...],
+    operation_rows: tuple[Mapping[str, object], ...],
+) -> dict[str, object]:
+    """Consume selector measurements only from a pinned terminal/result/archive chain.
+
+    Missing proof is represented as unknown observations. Present but altered or
+    misbound proof is rejected, so caller-supplied usage rows cannot fill gaps.
+    """
+    unknown = {
+        "terminal_inventory_complete": None,
+        "selector_elapsed_ms": None,
+        "stage_elapsed_seconds": None,
+        "selector_usage": None,
+        "selector_concurrency": None,
+        "selector_retries": None,
+        "selector_provider_dispatches": None,
+    }
+    if terminal_inventory_bytes is None:
+        return unknown
+    if (
+        type(expected_terminal_sha256) is not str
+        or not _SHA.fullmatch(expected_terminal_sha256)
+        or type(terminal_inventory_bytes) is not bytes
+        or _sha(terminal_inventory_bytes) != expected_terminal_sha256
+    ):
+        raise ResourceEvidenceError("selector-terminal-inventory-pin-mismatch")
+    if result_root is None or archive_root is None:
+        return unknown
+    _require_private_directory(Path(result_root))
+    _require_private_directory(Path(archive_root))
+    try:
+        sealed_terminal_bytes = _read_private(
+            Path(result_root) / f"{stage_uuid}.terminal-inventory.json", max_bytes=4_000_000
+        )
+    except Exception as exc:
+        raise ResourceEvidenceError("selector-terminal-inventory-unavailable") from exc
+    if sealed_terminal_bytes != terminal_inventory_bytes or _sha(sealed_terminal_bytes) != expected_terminal_sha256:
+        raise ResourceEvidenceError("selector-terminal-inventory-file-mismatch")
+    terminal = _strict_json(terminal_inventory_bytes, "selector-terminal-inventory")
+    # The selector producer writes canonical JSON with one trailing newline.
+    canonical_terminal = (
+        json.dumps(terminal, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n"
+    ).encode("utf-8")
+    if terminal != json.loads(canonical_terminal) or canonical_terminal != terminal_inventory_bytes:
+        raise ResourceEvidenceError("selector-terminal-inventory-not-canonical")
+    if type(terminal) is not dict:
+        raise ResourceEvidenceError("selector-terminal-inventory-shape")
+    expected_bindings = {
+        "schema": "coverage-jev-terminal-inventory/1",
+        "stage_uuid": stage_uuid,
+        "source_revision": source_revision,
+        "protocol_sha256": protocol_sha256,
+        "source_closure_sha256": source_closure_sha256,
+    }
+    if any(terminal.get(key) != value for key, value in expected_bindings.items()):
+        raise ResourceEvidenceError("selector-terminal-stage-binding")
+    if type(expected_operation_ids) is not tuple or not expected_operation_ids:
+        raise ResourceEvidenceError("selector-operation-inventory-required")
+    operations = terminal.get("operations")
+    expected_operations = [
+        {"operation_id": operation_id, "state": "complete-success"} for operation_id in expected_operation_ids
+    ]
+    supplied_operations = [
+        {"operation_id": row.get("operation_id"), "state": row.get("state")}
+        for row in operation_rows
+        if type(row) is dict
+    ]
+    if (
+        operations != expected_operations
+        or supplied_operations != expected_operations
+        or len(supplied_operations) != len(operation_rows)
+        or terminal.get("all_calls_complete") is not True
+        or terminal.get("status") != "all-registered-calls-complete"
+    ):
+        raise ResourceEvidenceError("selector-terminal-operation-inventory-mismatch")
+    rows = terminal.get("resource_observations")
+    if type(rows) is not list or [row.get("operation_id") if type(row) is dict else None for row in rows] != list(
+        expected_operation_ids
+    ):
+        raise ResourceEvidenceError("selector-terminal-observation-inventory-mismatch")
+
+    usage_rows: list[dict[str, object]] = []
+    elapsed_values: list[int] = []
+    concurrency_values: list[int] = []
+    dispatch_total = 0
+    retries_total = 0
+    for index, (operation_id, observation) in enumerate(zip(expected_operation_ids, rows, strict=True), start=1):
+        if type(observation) is not dict:
+            raise ResourceEvidenceError("selector-terminal-observation-shape")
+        if observation == {"operation_id": operation_id, "status": "not-observed"}:
+            usage_rows.append({"operation_id": operation_id, "status": "unknown"})
+            continue
+        required_keys = {
+            "operation_id",
+            "status",
+            "result_receipt_sha256",
+            "archive_receipt_sha256",
+            "elapsed_ms_through_final_receipt_fsync",
+            "provider_dispatch_count",
+            "request_bytes",
+            "response_bytes",
+            "usage_state",
+            "input_tokens_observed",
+            "output_tokens_observed",
+            "serialized_operation_sequence",
+            "max_concurrent_operations_observed",
+            "serialization_scope",
+        }
+        if (
+            set(observation) != required_keys
+            or observation.get("operation_id") != operation_id
+            or observation.get("status") != "observed"
+        ):
+            raise ResourceEvidenceError("selector-terminal-observation-fields")
+        result_sha = observation.get("result_receipt_sha256")
+        archive_sha = observation.get("archive_receipt_sha256")
+        if (
+            type(result_sha) is not str
+            or not _SHA.fullmatch(result_sha)
+            or type(archive_sha) is not str
+            or not _SHA.fullmatch(archive_sha)
+        ):
+            raise ResourceEvidenceError("selector-result-or-archive-pin-invalid")
+        result_path = Path(result_root) / f"{stage_uuid}.{operation_id}.result.json"
+        try:
+            result_bytes = _read_private(result_path, max_bytes=65_536)
+        except Exception as exc:
+            raise ResourceEvidenceError("selector-result-receipt-unavailable") from exc
+        if _sha(result_bytes) != result_sha:
+            raise ResourceEvidenceError("selector-result-receipt-pin-mismatch")
+        result = _strict_json(result_bytes, "selector-result-receipt")
+        canonical_result = (
+            json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n"
+        ).encode("utf-8")
+        if type(result) is not dict or canonical_result != result_bytes:
+            raise ResourceEvidenceError("selector-result-receipt-not-canonical")
+        result_bindings = {
+            "schema": "coverage-jev-operation-result/1",
+            "stage_uuid": stage_uuid,
+            "operation_id": operation_id,
+            "source_revision": source_revision,
+            "protocol_sha256": protocol_sha256,
+            "source_closure_sha256": source_closure_sha256,
+        }
+        if any(result.get(key) != value for key, value in result_bindings.items()):
+            raise ResourceEvidenceError("selector-result-stage-binding")
+        if (
+            result.get("archive_receipt_sha256") != archive_sha
+            or result.get("parser_mode") not in {"coverage", "original-v1"}
+            or result.get("parser_mode") != ("coverage" if "candidate" in operation_id else "original-v1")
+            or (
+                result.get("parser_mode") == "coverage"
+                and (
+                    result.get("status") not in {"selected", "fallback"}
+                    or result.get("ranking_status") != result.get("status")
+                )
+            )
+            or (result.get("parser_mode") == "original-v1" and result.get("status") != "complete-original-v1")
+            or result.get("timed_out") is not False
+            or result.get("terminal_reason") is not None
+            or result.get("provider_dispatch_count") != observation.get("provider_dispatch_count")
+            or result.get("request_bytes") != observation.get("request_bytes")
+            or result.get("response_bytes") != observation.get("response_bytes")
+            or result.get("input_tokens_observed") != observation.get("input_tokens_observed")
+            or result.get("output_tokens_observed") != observation.get("output_tokens_observed")
+            or result.get("serialized_operation_sequence") != observation.get("serialized_operation_sequence")
+            or result.get("max_concurrent_operations_observed") != observation.get("max_concurrent_operations_observed")
+        ):
+            raise ResourceEvidenceError("selector-result-observation-binding")
+        elapsed = observation.get("elapsed_ms_through_final_receipt_fsync")
+        dispatches = observation.get("provider_dispatch_count")
+        request_bytes = observation.get("request_bytes")
+        response_bytes = observation.get("response_bytes")
+        sequence = observation.get("serialized_operation_sequence")
+        concurrency = observation.get("max_concurrent_operations_observed")
+        input_tokens = observation.get("input_tokens_observed")
+        output_tokens = observation.get("output_tokens_observed")
+        usage_state = observation.get("usage_state")
+        if (
+            type(elapsed) is not int
+            or elapsed < 0
+            or type(dispatches) is not int
+            or dispatches != 1
+            or type(request_bytes) is not int
+            or request_bytes <= 0
+            or type(response_bytes) is not int
+            or response_bytes < 0
+            or type(sequence) is not int
+            or sequence != index
+            or type(concurrency) is not int
+            or concurrency != 1
+            or observation.get("serialization_scope") != "same-study-ledger-lock"
+            or (input_tokens is None) != (output_tokens is None)
+            or usage_state != ("known" if input_tokens is not None else "unknown-or-not-parsed")
+            or (input_tokens is not None and (type(input_tokens) is not int or input_tokens < 0))
+            or (output_tokens is not None and (type(output_tokens) is not int or output_tokens < 0))
+            or result.get("usage_state") != usage_state
+        ):
+            raise ResourceEvidenceError("selector-resource-observation-invalid")
+        receipt, response = _receipt_any(
+            Path(archive_root),
+            bindings={
+                "stage_uuid": stage_uuid,
+                "operation_id": operation_id,
+                "request_body_sha256": result.get("request_body_sha256"),
+                "source_revision": source_revision,
+            },
+            expected_sha256=archive_sha,
+        )
+        if (
+            receipt.get("complete") is not True
+            or receipt.get("status") != "complete"
+            or type(receipt.get("http_status")) is not int
+            or not 200 <= receipt["http_status"] < 300
+            or len(response) != response_bytes
+            or _sha(response) != result.get("response_sha256")
+        ):
+            raise ResourceEvidenceError("selector-archive-result-binding")
+        # Token counts are measurements from the archived provider body. The
+        # terminal and result receipts duplicate these fields for auditability,
+        # but neither duplicate is an independent source of truth.
+        if result.get("parser_mode") == "coverage":
+            from scripts import coverage_jev_execution as jev_execution
+
+            body_usage = jev_execution._observed_usage(response)
+        else:
+            from scripts import coverage_legacy_control
+
+            body_usage_state, body_input_tokens, body_output_tokens = coverage_legacy_control._usage_observation(
+                response
+            )
+            body_usage = (body_input_tokens, body_output_tokens) if body_usage_state == "known" else None
+        claimed_usage = (input_tokens, output_tokens) if usage_state == "known" else None
+        if body_usage != claimed_usage:
+            raise ResourceEvidenceError("selector-usage-archive-mismatch")
+        dispatch_total += dispatches
+        retries_total += dispatches - 1
+        elapsed_values.append(elapsed)
+        concurrency_values.append(concurrency)
+        if usage_state == "known":
+            usage_rows.append(
+                {
+                    "operation_id": operation_id,
+                    "status": "reported",
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                }
+            )
+        else:
+            usage_rows.append({"operation_id": operation_id, "status": "unknown"})
+
+    all_observed = len(elapsed_values) == len(expected_operation_ids)
+    return {
+        "terminal_inventory_complete": True if all_observed else None,
+        "selector_elapsed_ms": max(elapsed_values) if all_observed else None,
+        # The stage-wide timer is measured by the coordinator after its final fsync.
+        "stage_elapsed_seconds": None,
+        "selector_usage": usage_rows if all_observed else None,
+        "selector_concurrency": max(concurrency_values) if all_observed else None,
+        # Dispatches are observed at the HTTP transport, one expected per slot.
+        "selector_retries": retries_total if all_observed else None,
+        "selector_provider_dispatches": dispatch_total if all_observed else None,
+    }
+
+
 def coverage_source_capture_normalize(url: str) -> str:
     from slopsearx.merger import _normalise_url
 
@@ -663,7 +938,23 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             expected_manifest_sha256=kwargs["expected_answer_operation_manifest_sha256"],
         )
         grader = _grade_observations(kwargs)
-        observations = {**acq, **capture, **answer, **grader}
+        selector = _selector_observations(
+            stage_uuid=stage_uuid,
+            source_revision=source_revision,
+            protocol_sha256=protocol_sha256,
+            source_closure_sha256=kwargs["source_closure_sha256"],
+            expected_terminal_sha256=kwargs.get("expected_selector_terminal_sha256"),
+            terminal_inventory_bytes=kwargs.get("selector_terminal_inventory_bytes"),
+            result_root=(
+                Path(kwargs["selector_result_root"]) if kwargs.get("selector_result_root") is not None else None
+            ),
+            archive_root=(
+                Path(kwargs["selector_archive_root"]) if kwargs.get("selector_archive_root") is not None else None
+            ),
+            expected_operation_ids=tuple(kwargs.get("selector_expected_operation_ids", ())),
+            operation_rows=tuple(kwargs.get("selector_operation_rows", ())),
+        )
+        observations = {**acq, **capture, **answer, **grader, **selector}
         observations["w0_control_source_sha256"] = None
         observations["w0_source_revision"] = None
         observations["w0_model"] = None
@@ -699,6 +990,11 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             "capture_inventory_sha256": kwargs["expected_capture_inventory_sha256"],
             "answer_terminal_sha256": kwargs["expected_answer_terminal_sha256"],
             "answer_manifest_sha256": kwargs["expected_answer_operation_manifest_sha256"],
+            "selector_terminal_inventory_sha256": kwargs.get("expected_selector_terminal_sha256"),
+            "selector_stage_uuid": stage_uuid,
+            "selector_source_revision": source_revision,
+            "selector_protocol_sha256": protocol_sha256,
+            "selector_source_closure_sha256": kwargs["source_closure_sha256"],
             "protocol_limits_and_configuration": _configuration_provenance(protocol),
             "quality_credit": False,
             "admission_created": False,

@@ -547,3 +547,202 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     assert report.observations["selector_elapsed_ms"] is None
     assert report.observations["stage_elapsed_seconds"] is None
     assert report.configuration_provenance["quality_credit"] is False
+
+
+@pytest.mark.asyncio
+async def test_selector_resources_replay_terminal_result_and_archive_chain(monkeypatch):
+    from scripts import coverage_jev_execution as execution
+    from scripts import coverage_resource_evidence as resource_evidence
+    from scripts import coverage_study_core as core
+    from tests.test_coverage_jev_execution import (
+        PrivateRoots,
+        compile_small,
+        invoke_w0_kwargs,
+        prepared_stage,
+        valid_response,
+    )
+    from tests.test_coverage_jev_resource_observations import _call_kwargs
+    from tests.test_coverage_legacy_control import _response as legacy_response
+
+    prepared = prepared_stage()
+    ledger = core.StudyRun(prepared)
+    roots = PrivateRoots()
+    compiled = compile_small()
+    response = valid_response(compiled, input_tokens=17, output_tokens=6)
+    v1_response = legacy_response({"c0": 7, "c1": 8, "c2": 6, "c3": 9})
+
+    async def handler(request):
+        if request.content == compiled.body:
+            return httpx.Response(200, content=response, request=request)
+        return httpx.Response(200, content=v1_response, request=request)
+
+    def call_kwargs(operation_id):
+        if "-w0" in operation_id:
+            return invoke_w0_kwargs(
+                prepared,
+                ledger,
+                roots,
+                operation_id,
+                httpx.MockTransport(handler),
+            )
+        return _call_kwargs(
+            prepared,
+            ledger,
+            roots,
+            operation_id,
+            compiled,
+            httpx.MockTransport(handler),
+        )
+
+    for operation_id in prepared.operation_ids:
+        result = await execution.execute_selector_call(**call_kwargs(operation_id))
+        assert result.dispatch_count == 1
+        if "-w0" in operation_id:
+            assert result.status == "complete-original-v1"
+            assert result.input_tokens_observed == 123
+            assert result.output_tokens_observed == 12
+        else:
+            assert result.status in {"selected", "fallback"}
+            assert result.input_tokens_observed == 17
+            assert result.output_tokens_observed == 6
+
+    terminal = execution.close_stage(prepared=prepared, ledger=ledger, result_root=roots.result)
+    terminal_bytes = (roots.result / f"{prepared.stage_uuid}.terminal-inventory.json").read_bytes()
+    operation_rows = tuple(
+        {"operation_id": operation_id, "state": "complete-success"} for operation_id in prepared.operation_ids
+    )
+    kwargs = {
+        "stage_uuid": prepared.stage_uuid,
+        "source_revision": prepared.source_revision,
+        "protocol_sha256": prepared.pins["protocol"],
+        "source_closure_sha256": prepared.pins["qualified_source_closure"],
+        "expected_terminal_sha256": terminal["sha256"],
+        "terminal_inventory_bytes": terminal_bytes,
+        "result_root": roots.result,
+        "archive_root": roots.archive,
+        "expected_operation_ids": prepared.operation_ids,
+        "operation_rows": operation_rows,
+    }
+    observed = resource_evidence._selector_observations(**kwargs)
+    terminal_doc = json.loads(terminal_bytes)
+    elapsed = [row["elapsed_ms_through_final_receipt_fsync"] for row in terminal_doc["resource_observations"]]
+    assert observed["terminal_inventory_complete"] is True
+    assert observed["selector_elapsed_ms"] == max(elapsed)
+    assert observed["selector_usage"] == [
+        {
+            "operation_id": operation_id,
+            "status": "reported",
+            "input_tokens": 123 if "-w0" in operation_id else 17,
+            "output_tokens": 12 if "-w0" in operation_id else 6,
+        }
+        for operation_id in prepared.operation_ids
+    ]
+    assert observed["selector_concurrency"] == 1
+    assert observed["selector_retries"] == 0
+    assert observed["selector_provider_dispatches"] == len(prepared.operation_ids)
+    assert observed["stage_elapsed_seconds"] is None
+
+    # A changed but self-canonical terminal body cannot replace the external pin.
+    altered_doc = json.loads(terminal_bytes)
+    altered_doc["resource_observations"][0]["elapsed_ms_through_final_receipt_fsync"] += 1
+    altered_terminal = execution._canonical(altered_doc)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="terminal-inventory-pin-mismatch"):
+        resource_evidence._selector_observations(**{**kwargs, "terminal_inventory_bytes": altered_terminal})
+    terminal_path = roots.result / f"{prepared.stage_uuid}.terminal-inventory.json"
+    saved_terminal = terminal_path.read_bytes()
+    terminal_path.write_bytes(altered_terminal)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="terminal-inventory-file-mismatch"):
+        resource_evidence._selector_observations(**kwargs)
+    terminal_path.write_bytes(saved_terminal)
+
+    # Result receipts and archived bodies are independently checked after the terminal pin.
+    first_id = prepared.operation_ids[0]
+    result_path = roots.result / f"{prepared.stage_uuid}.{first_id}.result.json"
+    saved_result = result_path.read_bytes()
+    result_path.write_bytes(saved_result + b" ")
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="result-receipt-pin-mismatch"):
+        resource_evidence._selector_observations(**kwargs)
+    result_path.write_bytes(saved_result)
+
+    archive_body = roots.archive / prepared.stage_uuid / first_id / "response.bin"
+    saved_body = archive_body.read_bytes()
+    archive_body.write_bytes(saved_body + b"x")
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="receipt-body-mismatch"):
+        resource_evidence._selector_observations(**kwargs)
+    archive_body.write_bytes(saved_body)
+
+    # Even a replacement terminal/result chain that is externally re-pinned
+    # cannot claim usage absent from the unchanged archived provider body.
+    saved_terminal = terminal_path.read_bytes()
+    result_path = roots.result / f"{prepared.stage_uuid}.{first_id}.result.json"
+    saved_result = result_path.read_bytes()
+    forged_result = json.loads(saved_result)
+    forged_result["input_tokens_observed"] += 1
+    forged_result_bytes = execution._canonical(forged_result)
+    result_path.write_bytes(forged_result_bytes)
+    forged_terminal_doc = json.loads(saved_terminal)
+    forged_row = forged_terminal_doc["resource_observations"][0]
+    forged_row["input_tokens_observed"] += 1
+    forged_row["result_receipt_sha256"] = _sha(forged_result_bytes)
+    forged_terminal_bytes = execution._canonical(forged_terminal_doc)
+    terminal_path.write_bytes(forged_terminal_bytes)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="selector-usage-archive-mismatch"):
+        resource_evidence._selector_observations(
+            **{
+                **kwargs,
+                "expected_terminal_sha256": _sha(forged_terminal_bytes),
+                "terminal_inventory_bytes": forged_terminal_bytes,
+            }
+        )
+    result_path.write_bytes(saved_result)
+    terminal_path.write_bytes(saved_terminal)
+
+    # A self-consistent digest chain still cannot claim candidate parsing for
+    # the production W0 operation, or a candidate status for original-v1.
+    forged_result = json.loads(saved_result)
+    forged_result["status"] = "fallback"
+    forged_result["parser_mode"] = "coverage"
+    forged_result["ranking_status"] = "fallback"
+    forged_result_bytes = execution._canonical(forged_result)
+    result_path.write_bytes(forged_result_bytes)
+    forged_terminal_doc = json.loads(saved_terminal)
+    forged_terminal_doc["resource_observations"][0]["result_receipt_sha256"] = _sha(forged_result_bytes)
+    forged_terminal_bytes = execution._canonical(forged_terminal_doc)
+    terminal_path.write_bytes(forged_terminal_bytes)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="selector-result-observation-binding"):
+        resource_evidence._selector_observations(
+            **{
+                **kwargs,
+                "expected_terminal_sha256": _sha(forged_terminal_bytes),
+                "terminal_inventory_bytes": forged_terminal_bytes,
+            }
+        )
+    result_path.write_bytes(saved_result)
+    terminal_path.write_bytes(saved_terminal)
+    roots.close()
+
+
+def test_missing_selector_terminal_proof_remains_unknown():
+    from scripts import coverage_resource_evidence as resource_evidence
+
+    observed = resource_evidence._selector_observations(
+        stage_uuid="f611a79a-9eef-46f4-b211-3d4d394e9e21",
+        source_revision="a" * 40,
+        protocol_sha256="b" * 64,
+        source_closure_sha256="c" * 64,
+        expected_terminal_sha256="d" * 64,
+        terminal_inventory_bytes=None,
+        result_root=None,
+        archive_root=None,
+        expected_operation_ids=("research-01-base-candidate",),
+        operation_rows=({"operation_id": "research-01-base-candidate", "state": "complete-success"},),
+    )
+    assert observed == {
+        "terminal_inventory_complete": None,
+        "selector_elapsed_ms": None,
+        "stage_elapsed_seconds": None,
+        "selector_usage": None,
+        "selector_concurrency": None,
+        "selector_retries": None,
+        "selector_provider_dispatches": None,
+    }

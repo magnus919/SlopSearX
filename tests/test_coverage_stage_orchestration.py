@@ -743,7 +743,12 @@ class StageOrchestrationTests(unittest.TestCase):
                     ids = list(task["native_order"])
                     orders[task["task_id"]] = {"w0": ids, "candidate": list(reversed(ids))}
                 operation_rows = tuple(
-                    {"operation_id": operation_id, "state": "complete-success"}
+                    {
+                        "operation_id": operation_id,
+                        "state": "complete-success",
+                        "input_tokens": 9_999,
+                        "output_tokens": 9_999,
+                    }
                     for operation_id in prepared.operation_ids
                 )
                 return stage.SelectorEvidence(
@@ -899,6 +904,9 @@ class StageOrchestrationTests(unittest.TestCase):
         self.assertEqual(digest(resource_bytes), inventory["resource_evidence_receipt_sha256"])
         self.assertEqual(resource_receipt["schema"], "coverage-resource-evidence/1")
         self.assertIsNone(resource_receipt["observations"].get("selector_elapsed_ms"))
+        # The callback's plausible token claims have no archived terminal/result
+        # chain and therefore remain unknown; resource collection ignores them.
+        self.assertIsNone(resource_receipt["observations"].get("selector_usage"))
 
     def test_gate_threshold_binding_uses_frozen_gate_subset(self):
         plan = plan_fixture()
