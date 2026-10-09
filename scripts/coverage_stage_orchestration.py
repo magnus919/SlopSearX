@@ -122,6 +122,12 @@ class SelectorEvidence:
     # Exact candidate top-1 URLs, keyed by navigation task ID. Boolean rank
     # claims alone cannot prove that the selected URL is the exact target.
     navigation_top1_urls: Mapping[str, str] | None = None
+    # Exact selector terminal bytes and private roots required for resource
+    # collection. Omitting these preserves unknowns; caller operation rows
+    # alone never supply measured usage, timing, or serialization.
+    terminal_inventory_bytes: bytes | None = None
+    result_root: Path | None = None
+    archive_root: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -1182,6 +1188,12 @@ async def coordinate_coverage_stage(
                 expected_answer_assessment_manifest_sha256=answer_manifest_pin,
                 expected_reference_closure_sha256=closed_references.receipt_sha256,
                 expected_answer_closure_sha256=closed_answers.receipt_sha256,
+                expected_selector_terminal_sha256=selector.terminal_inventory_sha256,
+                selector_terminal_inventory_bytes=selector.terminal_inventory_bytes,
+                selector_result_root=selector.result_root,
+                selector_archive_root=selector.archive_root,
+                selector_expected_operation_ids=prepared.operation_ids,
+                selector_operation_rows=selector.operation_rows,
             )
             receipt_bytes = _canonical(
                 {
@@ -1209,24 +1221,6 @@ async def coordinate_coverage_stage(
             lambda value: value.source_receipt_sha256,
         )
         resource_evidence = dict(resource_report.observations)
-        # Usage is accepted only from the selector's validated per-operation
-        # rows and remains separate from resource values reconstructed above.
-        if selector.usage_status == "known":
-            usage_rows = []
-            for row in selector.operation_rows:
-                if any(type(row.get(key)) is not int or row[key] < 0 for key in ("input_tokens", "output_tokens")):
-                    usage_rows = []
-                    break
-                usage_rows.append(
-                    {
-                        "operation_id": row["operation_id"],
-                        "status": "reported",
-                        "input_tokens": row["input_tokens"],
-                        "output_tokens": row["output_tokens"],
-                    }
-                )
-            if usage_rows:
-                resource_evidence["selector_usage"] = usage_rows
         gate_inputs = {
             "stage_uuid": plan.stage_uuid,
             "protocol_sha256": identity["protocol_sha256"],
