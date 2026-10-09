@@ -527,9 +527,7 @@ def _capture_observations(
             "cohorts_sha256": cohorts_sha256,
             "operation_plan_sha256": expected_manifest_sha256,
             "producer_module_sha256": execution_controls.module_source_sha256(source_capture.__file__),
-            "execution_controls_module_sha256": execution_controls.module_source_sha256(
-                execution_controls.__file__
-            ),
+            "execution_controls_module_sha256": execution_controls.module_source_sha256(execution_controls.__file__),
             "timeout_limit_seconds_configured": timeout_limit_seconds,
             "response_bytes_limit_applied": response_bytes_limit,
             "application_retry_policy": "one-dispatch-per-operation",
@@ -569,9 +567,7 @@ def _capture_observations(
             timeout_value = control_row["timeout_seconds_applied"]
             response_limit = control_row["response_bytes_limit_applied"]
             expected_attempted = (
-                state["health_calls"] == 1
-                if control_index == 0
-                else rows[control_index - 1].get("attempted") is True
+                state["health_calls"] == 1 if control_index == 0 else rows[control_index - 1].get("attempted") is True
             )
             if dispatch_count is None:
                 if expected_attempted or timeout_value is not None or response_limit is not None:
@@ -1094,9 +1090,7 @@ def collect_acquisition_observations(
         "acquisition_response_bytes_total": response_total,
         "acquisition_max_response_body_bytes_observed": max_response,
         "acquisition_timeout_seconds": (
-            dispatched_timeouts[0]
-            if dispatched_timeouts and len(set(dispatched_timeouts)) == 1
-            else None
+            dispatched_timeouts[0] if dispatched_timeouts and len(set(dispatched_timeouts)) == 1 else None
         ),
         "acquisition_timeout_seconds_by_exchange": dispatched_timeouts,
         "acquisition_timeout_observation_state": (
@@ -1250,7 +1244,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         observations["grader_concurrency"] = None
         observations["atomic_fallback_verified"] = None
         observations["capture_internal_fanout"] = None
-        observations["capture_response_bytes_limit"] = None
+        observations["capture_response_bytes_limit"] = capture.get("capture_response_bytes_limit_applied")
         observations["acquisition_retries"] = None
         observations["acquisition_pacing_seconds"] = None
         observations["arxiv_pacing_seconds"] = None
@@ -1354,9 +1348,7 @@ def _answer_observations(**kwargs) -> dict[str, object]:
             "cohorts_sha256": kwargs["cohorts_sha256"],
             "operation_plan_sha256": kwargs["expected_manifest_sha256"],
             "producer_module_sha256": execution_controls.module_source_sha256(answer_execution.__file__),
-            "execution_controls_module_sha256": execution_controls.module_source_sha256(
-                execution_controls.__file__
-            ),
+            "execution_controls_module_sha256": execution_controls.module_source_sha256(execution_controls.__file__),
             "timeout_seconds_limit_configured": answer_execution.REQUEST_TIMEOUT_SECONDS,
             "response_bytes_limit_applied": answer_execution.MAX_RESPONSE_BYTES,
             "request_bytes_limit_applied": answer_execution.MAX_REQUEST_BYTES,
