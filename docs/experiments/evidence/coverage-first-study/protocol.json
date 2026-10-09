@@ -1,0 +1,190 @@
+{
+  "acquisition": {
+    "adapter_calls_maximum": {
+      "arxiv": 2,
+      "github": 1,
+      "openalex": 1,
+      "wikipedia": 2
+    },
+    "brave_calls": 0,
+    "brave_remaining_reserved": 2,
+    "categories": [
+      "reference"
+    ],
+    "credentials": "keyless public acquisition; no provider key loaded before admitted model phase",
+    "engines": [
+      "arxiv",
+      "openalex",
+      "github",
+      "wikipedia"
+    ],
+    "max_physical_http_calls": 53,
+    "pacing_seconds": 7,
+    "per_engine_results": 20,
+    "pool_failure": "retain empty, failed, wrong-band and overflow outcomes; stage inconclusive, no replacement/concatenation/trimming",
+    "response_bytes": 2000000,
+    "retries": 0,
+    "timeout_seconds": 10
+  },
+  "approval": "coverage-first-release-decision.md, maintainer approval 2026-10-09",
+  "authority": {
+    "confirmation": "new source-bound admission, independently sealed development-pass receipt; no outputs inspected/acquired beforehand",
+    "failed_partial_slots": "sealed terminal inventory plus later uninvoked slots; no successful replay claim for failure bytes",
+    "historical_clocks_or_leases": false,
+    "new_stage_uuid_and_durable_one_shot_identity_required": true,
+    "preflight_helpers_create_authority": false
+  },
+  "candidate_source_sha256": "806746b4fa5c497f269933008db76650e2c1113dbd35a08b011d86c4d81f11ca",
+  "capture": {
+    "context_unicode_characters": 8000,
+    "internal_scraper_fanout": "unknown unless exposed, not counted as zero",
+    "max_health_calls": 1,
+    "max_owned_http_calls": 641,
+    "max_owned_scrape_calls": 640,
+    "one_attempt_per_distinct_public_url": true,
+    "raw_contents": "private; publish sanitized counts/digests only",
+    "response_bytes": 2000000,
+    "retries": 0,
+    "source_chunk_maximum": 20,
+    "timeout_seconds": 30
+  },
+  "cohorts_sha256": "36d4cbff9c93555d35d7269525616f009a21727c8d1141a8a2a61934791038f0",
+  "consumer": {
+    "answer_words_maximum": 800,
+    "answerer_alias": "free",
+    "answerer_calls_maximum": 18,
+    "answerer_output_tokens_requested": 8192,
+    "assessor_concurrency_maximum": 2,
+    "grader_input_bytes_maximum": 384000,
+    "grader_output_bytes_maximum": 2000000,
+    "max_combined_logical_model_submissions": 130,
+    "max_logical_grader_submissions": 112,
+    "maximum_successful_sources": 5,
+    "prefix": 10,
+    "same_opening_availability_and_context_for_both_arms": true,
+    "scientific_assessor_model": "gpt-6.1-sol",
+    "source_context_unicode_characters": 8000,
+    "usage_not_exposed": "report unavailable; never invent billing/tokens"
+  },
+  "inputs": {
+    "candidate_purpose": "task_question + newline + purpose; same full task supplied to both downstream consumer arms",
+    "fresh_tasks_per_stage": 8,
+    "grader_labels_as_candidate_inputs": false,
+    "high_band_cases": 4,
+    "higher_band": "41-80 natural canonical results",
+    "incidental_url_recurrence": "retain and report; fresh captures/references, no old-grade carry",
+    "intent_cases_per_band": 2,
+    "intents": [
+      "evidence_seeking",
+      "source_discovery"
+    ],
+    "low_band_cases": 4,
+    "lower_band": "1-40 natural canonical results",
+    "minimum_higher_band_cases": 4,
+    "navigation_targets_per_stage": 5,
+    "projection": "fixed original service bounded title/url/snippet projection on every card, sealed before grades; no pool truncation, dynamic shrinking or splitting",
+    "source_artifact_reuse": false
+  },
+  "ordering": [
+    "freeze both cohorts/protocol and exact source/prompt/assignment closure",
+    "merge registration and qualified runner artifacts",
+    "publish new source-bound acquisition admission",
+    "acquire/capture development once; retain all outcomes",
+    "fresh blind independent card/source references close before any task Jev score",
+    "seal complete model-input manifest; publish new selector admission",
+    "run registered provider schedule once, archive before parsing, replay original parsers",
+    "create equal-budget paired answers; freeze anonymous assessor packets",
+    "fresh independent answer grading; close all outputs before unblinding",
+    "evaluate all unchanged endpoints separately; publish result regardless of outcome",
+    "only a complete development pass admits already registered untouched confirmation"
+  ],
+  "outstanding_before_registration": [
+    "executable guarded live acquisition/capture/provider/answer/assessment driver",
+    "exact source/dependency closure and blind packet assignments",
+    "first40/broader intent-qualified scope decision rules",
+    "registered request/receipt inventory and neutral payloads",
+    "independent source qualification and new admissions"
+  ],
+  "phase_limits": {
+    "includes": "construction, serialization, exchange, archival fsync, original parsing/selection and final receipt fsync",
+    "selector_phase_ms": 1000,
+    "stage_wall_seconds": 28800
+  },
+  "primary_control": {
+    "current_main_parser": "not substituted for deployed V1",
+    "model": "jev-1.13.0",
+    "provider_configured": true,
+    "ranking_strategy": "presence",
+    "rerank_source_sha256": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+    "scope": "fixed explicit engines; original first-40 query Score path; original V1 parser; untouched deterministic tail",
+    "source_revision": "8f3577d022e2d98fcd405d915b5c3b9b16e899bf",
+    "stable_presence": "diagnostic only; no additional provider calls"
+  },
+  "provider_schedule": {
+    "call_input_maximum_and_reserve": 128000,
+    "call_output_maximum_and_reserve": 32000,
+    "capacity": "remaining reserve must fit before each call; no guaranteed fit assumed from serialized JSON bytes",
+    "concurrency": 1,
+    "historical_ceiling_retained": 44,
+    "max_planned_calls": 39,
+    "navigation_calls_maximum": 5,
+    "readiness": "synthetic W0-first40 and candidate-80, no task-quality credit; after merged qualification/admission and blind reference closure",
+    "readiness_calls": 2,
+    "repeat_rotate_calls": 16,
+    "research_base_calls": 16,
+    "retries": 0,
+    "stage_token_input_maximum": 3000000,
+    "stage_token_output_maximum": 256000,
+    "unknown_usage": "terminal stop"
+  },
+  "quality": {
+    "bands_and_intents": "report each separately; no inference of broader scope from a prefix-only result; final scope decisions must be declared before invocation",
+    "bootstrap_95_lower_bound": "strictly positive",
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 7701,
+    "candidate_complete_pool_permutation_required": true,
+    "candidate_top10_overlap_minimum": 0.8,
+    "exact_navigation_targets_acquired_and_top1_required": 5,
+    "independent_references": [
+      "A",
+      "B"
+    ],
+    "mean_ndcg10_gain_minimum": 0.02,
+    "per_case_delta_minimum": -0.03,
+    "useful_count_loss_allowed": 0,
+    "useful_facet_loss_allowed": 0,
+    "useful_lead_grade_minimum": 2
+  },
+  "schema": "coverage-first-study-protocol/1",
+  "status": "draft_not_registered_not_admitted",
+  "stop": "one invocation per declared stage; failure or inconclusive result terminates this fixed study; no rescue, retry, tuning, replacement or automatic product implementation; both stages must pass before optional product delivery",
+  "task_use": {
+    "abstention_counts_as_completion": false,
+    "additional_completed_tasks_each_minimum": 2,
+    "bibliographic_only": "useful for discovery when justified; not substantive evidence for factual-answer claims",
+    "candidate_critical_qualification_or_contradiction_omissions_allowed": 0,
+    "candidate_material_unsupported_claims_allowed": 0,
+    "candidate_target_or_version_errors_allowed": 0,
+    "candidate_unearned_completion_assurances_allowed": 0,
+    "critical_evidence": "all checks supported, applicable, delivered and correctly used",
+    "incumbent_completion_loss_allowed": 0,
+    "independent_assessors": [
+      "R1",
+      "R2"
+    ],
+    "paired_completion_bootstrap": "10000 draws, seed7701; descriptive uncertainty, not an additional significance gate",
+    "unknown_or_invalid_required_packet": "inconclusive; never repaired/imputed/averaged away"
+  },
+  "variants": {
+    "canonical_candidate_rotation": "canonical compiler may remove permutation before dispatch; not evidence of robustness to distinct provider-input order",
+    "repeat": "identical frozen request",
+    "rotation": "Candidate: rotate the supplied card array by one while keeping stable card IDs and base incumbent fallback; canonical compilation may remove that permutation. W0: rotate only the fixed first-40 membership, keep the tail fixed, use original positional request IDs and original production fallback for that variant; map output objects to sealed global card IDs.",
+    "task_indices": [
+      1,
+      4,
+      7,
+      8
+    ],
+    "w0_fallback": "Native variant input order, as original production code defines; never substitute candidate fallback policy or select a better variant."
+  }
+}

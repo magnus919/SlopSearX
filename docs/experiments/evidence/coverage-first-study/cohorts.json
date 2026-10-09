@@ -1,0 +1,1101 @@
+{
+  "decision_context": {
+    "authorization_date": "2026-10-09",
+    "authorization_scope": "Maintainer approved the coverage-first replacement candidate on 2026-10-09; exact registration and admission remain outstanding.",
+    "candidate_status": "proposed; not frozen, registered, executed, or approved for calls",
+    "quality_claim": "No ranking quality, task usefulness, adoption, or production suitability is claimed.",
+    "registration_dependency": "Root review and an immutable new registration binding exact source, protocol, cohorts, budgets, controls, and stage IDs are required before any acquisition, provider, or grading calls."
+  },
+  "global_contract": {
+    "allowed_engines": [
+      "arxiv",
+      "openalex",
+      "github",
+      "wikipedia"
+    ],
+    "brave": "excluded",
+    "freshness": "All task definitions are newly authored. Pools, physical source captures, and independent references must be newly acquired for this registered study; no prior pool, capture, source artifact, or grade may be carried forward. A URL may naturally recur in a fresh acquisition: preserve the card under the frozen production dedup rules and report URL overlap as metadata; do not drop it or claim the stage is untouched from an earlier measurement on that basis alone.",
+    "intent_balance": "Each stage contains four evidence_seeking and four source_discovery tasks; each pool-size band contains exactly two of each intent.",
+    "intent_definitions": {
+      "evidence_seeking": "Find candidate sources that provide evidence relevant to the task requirements; ranking assesses visible relevance, not truth or sufficiency.",
+      "source_discovery": "Locate and compare public documentation or research resources relevant to the declared topic and facets. Candidate metadata supports finding sources; it does not justify factual implementation claims about those sources."
+    },
+    "metadata_overlap_audit": {
+      "fields_compared": [
+        "research.task_question",
+        "research.search_query",
+        "navigation.search_query",
+        "navigation.target_url"
+      ],
+      "prior_manifest": "docs/experiments/evidence/EXP-077/cohorts.json",
+      "report": "cohort-overlap-check.json",
+      "result": "No normalized hash overlaps after replacement; incidental URL recurrence in newly acquired results remains allowed and must be reported, not suppressed.",
+      "status": "completed_metadata_only"
+    },
+    "natural_count_definition": "Number of eligible cards naturally present after the frozen production acquisition, grouping, and deduplication path, before ranking or presentation slicing.",
+    "navigation_target_contract": "Navigation targets are exact official GitHub repository landing pages, not vendor documentation pages. Each target has an explicit GitHub-only reference-category pool plan and a 2-4 keyword repository-search query. Root confirmed this target kind matches the prior approved EXP-077 development navigation targets and preserves the exact-target rank-1 gate. Each target URL remains subject to source qualification during the separately authorized registration process.",
+    "paired_query_contract": "Each research case has three distinct fields. search_query is a predeclared concise topical retrieval query of one to four terms and is sent unchanged to every selected engine and to both W0 and coverage candidate ranking. The coverage candidate additionally receives the full purpose and critical facets. task_question is the bounded task-use question for answer assessment; it is not substituted into the search API query.",
+    "per_engine_limit_per_pool": 20,
+    "pool_band_rules": {
+      "research_41_80": "Four predeclared engines, each capped at 20; expected natural eligible count is 41-80. Counts 0-40 or above 80 are inconclusive; no rescue or truncation.",
+      "research_le_40": "Two predeclared engines, each capped at 20; expected natural eligible count is 1-40. Zero is inconclusive."
+    },
+    "pool_rules": "Acquire the complete natural eligible pool. Do not trim, pad, split, concatenate, substitute engines, rescue, or issue replacement queries. Record actual post-grouping/deduplication count. Empty, failed, overflow, or wrong-band pools remain in the record and are inconclusive; do not replace them.",
+    "scope_limit": "This manifest proposes task/query content and engine mix only. It does not authorize live calls, freeze source/runtime/protocol hashes, set stage UUIDs, or replace any prior release decision by itself.",
+    "search_policy": "Evidence-seeking/source-discovery only; no answer synthesis or answer claims are inputs to ranking.",
+    "search_surface": "Research and navigation queries use only the declared SearXNG category reference. This is supported by the declared arxiv/openalex/github/wikipedia engine set; GitHub reference searches the repository endpoint and returns repository landing URLs.",
+    "separation": "Research facets are caller-declared evidence requirements, not evaluator labels, source grades, answer keys, or expected conclusions. Keep source/reference artifacts and evaluator judgments out of candidate inputs."
+  },
+  "schema": "coverage-first-study-cohorts/1",
+  "stages": [
+    {
+      "confirmation_precondition": "Untouched output set: no result pools, captures, references, scores, or grades exist in this draft; confirmation is eligible only after development passes under the same new immutable registration.",
+      "navigation_targets": [
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D-NQ01",
+          "purpose": "Find the official GitHub Actions runner repository landing page.",
+          "search_query": "actions runner",
+          "target_id": "D-N01",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/actions/runner"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D-NQ02",
+          "purpose": "Find the official GitHub Actions runner-images repository landing page.",
+          "search_query": "runner images",
+          "target_id": "D-N02",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/actions/runner-images"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D-NQ03",
+          "purpose": "Find the official SLSA GitHub generator repository landing page.",
+          "search_query": "slsa github generator",
+          "target_id": "D-N03",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/slsa-framework/slsa-github-generator"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D-NQ04",
+          "purpose": "Find the official OpenTelemetry specification repository landing page.",
+          "search_query": "opentelemetry specification",
+          "target_id": "D-N04",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/open-telemetry/opentelemetry-specification"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D-NQ05",
+          "purpose": "Find the official Kubernetes SIGs Kustomize repository landing page.",
+          "search_query": "kubernetes kustomize",
+          "target_id": "D-N05",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/kubernetes-sigs/kustomize"
+        }
+      ],
+      "research_cases": [
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify the documented isolation boundary and who owns each task workspace.",
+                "Capture shared-state or collision limitations that affect safe integration."
+              ],
+              "definition": "Execution isolation and ownership boundaries between concurrent coding tasks.",
+              "facet_id": "D-Q01-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify the documented review or merge responsibility before changes enter shared state.",
+                "Capture interruption or integration-failure behavior, including any unrecoverable or partial work."
+              ],
+              "definition": "Review, integration, and recovery of agent-produced repository changes.",
+              "facet_id": "D-Q01-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover concrete repository execution and coordination choices, including their stated constraints and failure cases.",
+          "purpose_id": "D-P01",
+          "query_id": "D-Q01",
+          "search_query": "coding agents",
+          "task_id": "D-R01",
+          "task_question": "How should an enterprise software factory isolate parallel coding-agent work and integrate changes into one repository?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify how authority is bounded by tool, task, or stage.",
+                "Capture credential exposure, lifetime, or revocation constraints."
+              ],
+              "definition": "Permission and credential scope across agent tools and execution stages.",
+              "facet_id": "D-Q02-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify which actions need approval and who or what grants it.",
+                "Capture how approval and execution are attributed, including audit gaps."
+              ],
+              "definition": "Authorization and audit evidence for consequential tool actions.",
+              "facet_id": "D-Q02-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find implementation decisions for agent tool authority, credential exposure, and reviewable authorization evidence.",
+          "purpose_id": "D-P02",
+          "query_id": "D-Q02",
+          "search_query": "agent permissions",
+          "task_id": "D-R02",
+          "task_question": "How should an organization limit a coding agent’s repository and CI tool access while preserving accountable authorization?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify which checks are required and where they run in the change lifecycle.",
+                "Capture how unavailable or inconclusive checks affect merge eligibility."
+              ],
+              "definition": "Required automated and human validation before merge.",
+              "facet_id": "D-Q03-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify how a failed check is treated when other checks pass.",
+                "Capture how evidence is linked to the exact source revision and its limits."
+              ],
+              "definition": "Handling of conflicting results and provenance of validation evidence.",
+              "facet_id": "D-Q03-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate implementation documentation or research that describes required validation, review ownership, and responses to failed or unavailable checks. Use visible result metadata to identify relevant sources; do not infer that a source implements a control it does not document.",
+          "purpose_id": "D-P03",
+          "query_id": "D-Q03",
+          "search_query": "code validation",
+          "task_id": "D-R03",
+          "task_question": "Find and compare public technical sources documenting pre-merge validation for coding-agent changes, including treatment of checks that fail or cannot run."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify what counts as a completed task and how correctness is assessed.",
+                "Capture whether evaluation tasks reflect real repository constraints."
+              ],
+              "definition": "Task success definition and validity of the measured outcome.",
+              "facet_id": "D-Q04-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify the comparator and how variability or repeated trials are handled.",
+                "Capture qualifications involving repository scale, permissions, maintenance, or human review."
+              ],
+              "definition": "Comparison design and limits on applying findings to enterprise use.",
+              "facet_id": "D-Q04-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "openalex",
+              "arxiv"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover evaluation protocols and analyses covering task validity, comparison design, and external-validity limits. Prefer resources that make methods and qualifications inspectable; do not turn benchmark descriptions into an adoption claim.",
+          "purpose_id": "D-P04",
+          "query_id": "D-Q04",
+          "search_query": "coding agent evaluation",
+          "task_id": "D-R04",
+          "task_question": "Find and compare public technical sources that evaluate repository coding agents and discuss limits on applying benchmark results to enterprise use."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify the records or identifiers that connect lifecycle stages.",
+                "Capture any missing, mutable, or unverifiable link."
+              ],
+              "definition": "Identity and linkage across request, source revision, build, and artifact.",
+              "facet_id": "D-Q05-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify which identities, build facts, or policies a consumer verifies.",
+                "Capture qualifications about what provenance does not establish, including correctness or security."
+              ],
+              "definition": "Downstream verification policy and limits of provenance evidence.",
+              "facet_id": "D-Q05-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover public provenance and evidence-linking mechanisms, including trust assumptions and verification gaps.",
+          "purpose_id": "D-P05",
+          "query_id": "D-Q05",
+          "search_query": "software provenance",
+          "task_id": "D-R05",
+          "task_question": "What evidence links an agent’s requested code change to the source revision, build, and released artifact?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify persisted task state and the component responsible for it.",
+                "Capture state loss, partial artifacts, or resumption uncertainty."
+              ],
+              "definition": "Durable task state and ownership across interruption.",
+              "facet_id": "D-Q06-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify how duplicate execution or non-idempotent actions are controlled.",
+                "Capture cancellation or handoff behavior and any side effects that cannot be undone."
+              ],
+              "definition": "Retry, cancellation, and side-effect safety.",
+              "facet_id": "D-Q06-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find lifecycle and recovery decisions for asynchronous agent work, including the limits of resumability.",
+          "purpose_id": "D-P06",
+          "query_id": "D-Q06",
+          "search_query": "software agents",
+          "task_id": "D-R06",
+          "task_question": "How should long-running coding-agent work resume after interruption without repeating unsafe side effects?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify stage-specific checks and who or what decides promotion.",
+                "Capture manual approval, missing-evidence, or exception paths."
+              ],
+              "definition": "Promotion evidence and decision ownership between deployment stages.",
+              "facet_id": "D-Q07-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify the health signals and response trigger when stated.",
+                "Capture rollback limits involving persistent data or external effects."
+              ],
+              "definition": "Regression detection and recovery constraints.",
+              "facet_id": "D-Q07-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate operational documentation or research describing promotion evidence, ownership, regression detection, and recovery constraints. Rank resources for their visible relevance to these topics without claiming that any particular control is sufficient.",
+          "purpose_id": "D-P07",
+          "query_id": "D-Q07",
+          "search_query": "continuous deployment",
+          "task_id": "D-R07",
+          "task_question": "Find and compare public technical sources documenting staged deployment controls and regression recovery for agent-modified software."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify which inputs are recorded and when.",
+                "Capture omissions or version ambiguity for generated or fetched inputs."
+              ],
+              "definition": "Inventory and identity of direct, transitive, and generated build inputs.",
+              "facet_id": "D-Q08-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify how untrusted or unauthorized inputs are checked and exceptions handled.",
+                "Capture what signatures or attestations verify and what remains unproven."
+              ],
+              "definition": "Policy, provenance, and qualification before trusting an artifact.",
+              "facet_id": "D-Q08-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover resources that document input inventory, policy checks, and artifact verification limits. Use candidate metadata for source discovery and avoid implying that a cited mechanism proves artifact correctness or security.",
+          "purpose_id": "D-P08",
+          "query_id": "D-Q08",
+          "search_query": "software supply chain",
+          "task_id": "D-R08",
+          "task_question": "Find and compare public technical sources on verifying dependencies, build inputs, and provenance for software artifacts changed by automation."
+        }
+      ],
+      "stage": "development",
+      "stage_state": "not_acquired_not_scored"
+    },
+    {
+      "confirmation_precondition": "Untouched output set: no result pools, captures, references, scores, or grades exist in this draft; confirmation is eligible only after development passes under the same new immutable registration.",
+      "navigation_targets": [
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C-NQ01",
+          "purpose": "Find the official Docker Buildx repository landing page.",
+          "search_query": "docker buildx",
+          "target_id": "C-N01",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/docker/buildx"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C-NQ02",
+          "purpose": "Find the official Kyverno repository landing page.",
+          "search_query": "kyverno policy engine",
+          "target_id": "C-N02",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/kyverno/kyverno"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C-NQ03",
+          "purpose": "Find the official OpenAPI Initiative specification repository landing page.",
+          "search_query": "openapi specification",
+          "target_id": "C-N03",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/OAI/OpenAPI-Specification"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C-NQ04",
+          "purpose": "Find the official Temporal repository landing page.",
+          "search_query": "temporal server",
+          "target_id": "C-N04",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/temporalio/temporal"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C-NQ05",
+          "purpose": "Find the official Kubernetes website repository landing page.",
+          "search_query": "kubernetes website",
+          "target_id": "C-N05",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/kubernetes/website"
+        }
+      ],
+      "research_cases": [
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify validation scope for direct and transitive changes.",
+                "Capture missing checks or conditions that weaken the evidence."
+              ],
+              "definition": "Compatibility and regression evidence across affected packages and platforms.",
+              "facet_id": "C-Q01-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify how the proposed version/source is verified and who may approve it.",
+                "Capture how security urgency is balanced against compatibility uncertainty."
+              ],
+              "definition": "Update provenance, approval, and treatment of conflicting urgency signals.",
+              "facet_id": "C-Q01-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover safe dependency-update workflows and their compatibility, provenance, and exception handling constraints.",
+          "purpose_id": "C-P01",
+          "query_id": "C-Q01",
+          "search_query": "dependency updates",
+          "task_id": "C-R01",
+          "task_question": "How should an enterprise review automated dependency updates when compatibility and security signals disagree?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify how source location/version or retrieval time is recorded.",
+                "Capture staleness and reproducibility limits."
+              ],
+              "definition": "Source identity, version, and freshness of retrieved context.",
+              "facet_id": "C-Q02-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify how contradictory versions or claims are surfaced.",
+                "Capture how untrusted instructions are separated from authority and residual risk."
+              ],
+              "definition": "Conflict and trust-boundary handling for retrieved content.",
+              "facet_id": "C-Q02-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence-management choices for source freshness, conflicting context, and untrusted retrieved content.",
+          "purpose_id": "C-P02",
+          "query_id": "C-Q02",
+          "search_query": "retrieval context",
+          "task_id": "C-R02",
+          "task_question": "How should an agent use retrieved repository context when sources may be stale, conflicting, or untrusted?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify which user-controlled or repository-controlled inputs are treated as untrusted.",
+                "Capture exclusions or assumptions that narrow the threat model."
+              ],
+              "definition": "Untrusted input surfaces and threat-model assumptions.",
+              "facet_id": "C-Q03-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify isolation or permission controls that limit input-driven actions.",
+                "Capture residual credential/side-effect paths and how violations are recorded or handled."
+              ],
+              "definition": "Privilege containment and response evidence.",
+              "facet_id": "C-Q03-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate technical documentation or research describing untrusted input surfaces, privilege containment, and response evidence. Rank relevant resources without asserting that a defense blocks all attacks.",
+          "purpose_id": "C-P03",
+          "query_id": "C-Q03",
+          "search_query": "indirect prompt injection",
+          "task_id": "C-R03",
+          "task_question": "Find and compare public threat-model and defense resources for coding agents that read untrusted issues and repository files before privileged execution."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify how the verifier connects the artifact to source and build facts.",
+                "Capture missing, mutable, or ambiguous links."
+              ],
+              "definition": "Binding among artifact identity, source revision, and build record.",
+              "facet_id": "C-Q04-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify signer/builder identities or policy facts that are checked.",
+                "Capture trust-root assumptions and limits on correctness or security claims."
+              ],
+              "definition": "Verifier policy and evidentiary limits.",
+              "facet_id": "C-Q04-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "arxiv"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover documentation or research covering source/artifact binding, verifier policy, and what attestations do not establish. Do not convert the presence of an attestation resource into a correctness or security claim.",
+          "purpose_id": "C-P04",
+          "query_id": "C-Q04",
+          "search_query": "artifact attestations",
+          "task_id": "C-R04",
+          "task_question": "Find and compare public verifier guidance for attested artifacts built from agent-modified source, including stated evidentiary limits."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify persisted state and how its completeness is determined.",
+                "Capture omitted context or state reconstruction uncertainty."
+              ],
+              "definition": "Task state and context preserved across pause and resume.",
+              "facet_id": "C-Q05-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify whether permissions or approval are rechecked on resume.",
+                "Capture how stale consent, changed versions, or conflicting state are handled."
+              ],
+              "definition": "Revalidation of authority and changed source/environment state.",
+              "facet_id": "C-Q05-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover handoff and resumption mechanisms with explicit state, authorization, and version boundaries.",
+          "purpose_id": "C-P05",
+          "query_id": "C-Q05",
+          "search_query": "multi-agent collaboration",
+          "task_id": "C-R05",
+          "task_question": "How can a coding agent pause for human input and resume later without silently changing task scope or authority?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify how review quality is assessed and whether missed defects are measured.",
+                "Capture delayed or downstream defect outcomes that are absent."
+              ],
+              "definition": "Review quality and defect-detection outcomes.",
+              "facet_id": "C-Q06-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify whose time/burden is measured and what comparator is used.",
+                "Capture confounders, omitted costs, or limits on causal interpretation."
+              ],
+              "definition": "Effort measures and study limitations.",
+              "facet_id": "C-Q06-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evaluation measures and tradeoffs relevant to adopting review agents in an enterprise workflow.",
+          "purpose_id": "C-P06",
+          "query_id": "C-Q06",
+          "search_query": "code review",
+          "task_id": "C-R06",
+          "task_question": "How can a team measure AI-assisted code review effort without overlooking missed defects or added reviewer burden?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify which actor or stage may propose, approve, and apply changes.",
+                "Capture emergency or bypass paths."
+              ],
+              "definition": "Separation of proposal, approval, and execution authority.",
+              "facet_id": "C-Q07-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify checks for scope, impact, and policy compliance.",
+                "Capture provider-state drift, audit gaps, or irreversible-effect limitations."
+              ],
+              "definition": "Pre-apply validation and recovery evidence.",
+              "facet_id": "C-Q07-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate implementation sources describing proposal/approval separation, pre-apply validation, and recovery/audit evidence. Rank for relevance using visible metadata; do not claim a resource guarantees safe execution.",
+          "purpose_id": "C-P07",
+          "query_id": "C-Q07",
+          "search_query": "infrastructure automation",
+          "task_id": "C-R07",
+          "task_question": "Find and compare public technical resources documenting approval and validation boundaries for agent-proposed infrastructure changes before cloud execution."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify the signal and actor that initiates recovery.",
+                "Capture ambiguity, detection limits, or documented disagreement."
+              ],
+              "definition": "Decision signals and ownership for rollback or forward repair.",
+              "facet_id": "C-Q08-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify how persistent data or external state affects reversibility.",
+                "Capture who verifies recovery and what residual risk remains."
+              ],
+              "definition": "Data compatibility and completion verification after recovery.",
+              "facet_id": "C-Q08-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Discover documentation or research describing recovery triggers, reversibility constraints, and post-recovery verification. Avoid presenting any one strategy as universally correct.",
+          "purpose_id": "C-P08",
+          "query_id": "C-Q08",
+          "search_query": "rollback",
+          "task_id": "C-R08",
+          "task_question": "Find and compare public operations resources on rollback versus forward repair after automated releases, especially where persistent data changed."
+        }
+      ],
+      "stage": "confirmation",
+      "stage_state": "not_acquired_not_scored"
+    }
+  ],
+  "status": "draft_not_registered"
+}
