@@ -20,6 +20,8 @@ pools of 41–80 results. Confirmation has not been acquired or scored.
 | [observed-control-baseline.json](observed-control-baseline.json) | Sanitized read-only source/configuration observations; no inference or quality probe |
 | [control-source-parity.json](control-source-parity.json) | Source comparison identifying the deployed V1 parser and unchanged projection helpers |
 | [w0-rerank-v1.py.txt](w0-rerank-v1.py.txt) | Exact public V1 source bytes for reproducible offline control replay |
+| [execution-preparation.md](execution-preparation.md) | Offline-tested transport, archival and paired-consumer seams; remaining invocation prerequisites |
+| [candidate-runtime-identity.json](candidate-runtime-identity.json) | Expected public runtime projection; not a live health receipt or admission |
 
 The observed deployments differ: the stable configuration has no Jev reranker,
 while the experimental configuration enables it. The primary control is the
