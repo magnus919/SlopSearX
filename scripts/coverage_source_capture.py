@@ -27,7 +27,10 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from scripts import coverage_execution_controls as execution_controls
 from scripts import intent_ranking_receipts as receipts
+
+SOURCE_MODULE_SHA256 = execution_controls.module_source_sha256(__file__)
 
 MAX_OWNED_CALLS = 641
 MAX_HEALTH_CALLS = 1
@@ -491,12 +494,37 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
         self.owned_calls = 0
         self.health_calls = 0
         self.scrape_calls = 0
+        self.max_concurrent_requests = 0
+        self._active_requests = 0
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        self._active_requests += 1
+        self.max_concurrent_requests = max(self.max_concurrent_requests, self._active_requests)
+        try:
+            return await self._handle_async_request(request)
+        finally:
+            self._active_requests -= 1
+
+    async def _handle_async_request(self, request: httpx.Request) -> httpx.Response:
         operation = _ACTIVE_OPERATION.get()
         if operation is None or operation.get("dispatched") is True:
             raise SourceCaptureError("capture-operation-context-invalid")
-        operation["dispatched"] = True
+        request_body = request.content
+        if len(request_body) > 16_384 or request.method != operation["method"] or request.url.path != operation["path"]:
+            operation["failure"] = "request-shape-mismatch"
+            raise SourceCaptureError("capture-request-shape-mismatch")
+        expected_timeout = operation.get("timeout_seconds", REQUEST_TIMEOUT_SECONDS)
+        applied_timeout = execution_controls.request_timeout_seconds(request)
+        if (
+            type(expected_timeout) not in {int, float}
+            or not 0 < expected_timeout <= REQUEST_TIMEOUT_SECONDS
+            or applied_timeout is None
+            or applied_timeout != float(expected_timeout)
+        ):
+            operation["failure"] = "request-timeout-binding-mismatch"
+            raise SourceCaptureError("capture-request-timeout-binding-mismatch")
+        operation["timeout_seconds_applied"] = applied_timeout
+        operation["response_bytes_limit_applied"] = MAX_RESPONSE_BYTES
         self.owned_calls += 1
         if operation["kind"] == "health":
             self.health_calls += 1
@@ -509,11 +537,10 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
         ):
             operation["failure"] = "owned-request-cap"
             raise SourceCaptureError("capture-owned-request-cap")
-
-        request_body = request.content
-        if len(request_body) > 16_384 or request.method != operation["method"] or request.url.path != operation["path"]:
-            operation["failure"] = "request-shape-mismatch"
-            raise SourceCaptureError("capture-request-shape-mismatch")
+        # This is the application-to-transport dispatch count. The injected
+        # transport's internal retry policy remains separately unknown.
+        operation["transport_dispatch_count"] = 1
+        operation["dispatched"] = True
         request_sha = _sha(request_body)
         binding = {
             "stage_uuid": self.stage_uuid,
@@ -786,6 +813,9 @@ async def capture_sources_once(
                 "response_body_bytes": None,
                 "observed_response_body_bytes": None,
                 "response_content_encoding": None,
+                "timeout_seconds_applied": None,
+                "transport_dispatch_count": None,
+                "response_bytes_limit_applied": None,
                 "context_sha256": None,
                 "failure_code": None,
             }
@@ -807,6 +837,22 @@ async def capture_sources_once(
         "health_response_content_encoding": None,
         "internal_scraper_fanout": "unknown unless independently exposed; not counted as zero",
         "quality_credit": False,
+        "execution_control_attestation": {
+            "schema": "coverage-capture-execution-controls/1",
+            "stage_uuid": stage_uuid,
+            "source_revision": manifest["source_revision"],
+            "protocol_sha256": protocol_sha,
+            "cohorts_sha256": manifest["cohorts_sha256"],
+            "operation_plan_sha256": _sha(source_manifest_bytes),
+            "producer_module_sha256": SOURCE_MODULE_SHA256,
+            "execution_controls_module_sha256": execution_controls.MODULE_SOURCE_SHA256,
+            "timeout_limit_seconds_configured": REQUEST_TIMEOUT_SECONDS,
+            "response_bytes_limit_applied": MAX_RESPONSE_BYTES,
+            "application_retry_policy": "one-dispatch-per-operation",
+            "transport_retry_policy": "unknown-injected-transport",
+            "max_concurrent_requests_observed": 0,
+            "operations": [],
+        },
     }
     inventory_path = stage_dir / "inventory.json"
     _write_inventory(inventory_path, inventory, state)
@@ -825,6 +871,9 @@ async def capture_sources_once(
         "method": "GET",
         "path": urlsplit(health_url).path,
         "dispatched": False,
+        "transport_dispatch_count": 0,
+        "timeout_seconds_applied": None,
+        "response_bytes_limit_applied": None,
     }
     terminal = False
     try:
@@ -895,6 +944,9 @@ async def capture_sources_once(
                         "method": "POST",
                         "path": urlsplit(scrape_url).path,
                         "dispatched": False,
+                        "transport_dispatch_count": 0,
+                        "timeout_seconds_applied": None,
+                        "response_bytes_limit_applied": None,
                         "timeout_seconds": min(REQUEST_TIMEOUT_SECONDS, remaining),
                     }
                     row["status"] = "in_flight"
@@ -915,6 +967,9 @@ async def capture_sources_once(
                         row["response_body_bytes"] = receipt_info.get("response_body_bytes")
                         row["observed_response_body_bytes"] = operation.get("observed_response_body_bytes")
                         row["response_content_encoding"] = operation.get("response_content_encoding")
+                        row["timeout_seconds_applied"] = operation.get("timeout_seconds_applied")
+                        row["transport_dispatch_count"] = operation.get("transport_dispatch_count", 0)
+                        row["response_bytes_limit_applied"] = operation.get("response_bytes_limit_applied")
                         payload = _strict_json(raw_body) if 200 <= response.status_code < 300 else None
                         data = payload.get("data", payload) if type(payload) is dict else None
                         markdown = data.get("markdown") if type(data) is dict else None
@@ -950,6 +1005,10 @@ async def capture_sources_once(
                         row["status"] = "terminal_capture_failure"
                         row["failure_code"] = str(operation.get("failure") or type(exc).__name__)
                         terminal = True
+                    if row.get("transport_dispatch_count") is None:
+                        row["timeout_seconds_applied"] = operation.get("timeout_seconds_applied")
+                        row["transport_dispatch_count"] = operation.get("transport_dispatch_count", 0)
+                        row["response_bytes_limit_applied"] = operation.get("response_bytes_limit_applied")
                     if not terminal and clock() >= stage_deadline_monotonic:
                         row["completed_after_stage_deadline"] = True
                         terminal = True
@@ -985,6 +1044,30 @@ async def capture_sources_once(
         state["status"] = "terminal-incomplete"
     else:
         state["status"] = "complete" if failed == 0 else "complete-with-source-failures"
+    control_rows = []
+    health_timeout = health_operation.get("timeout_seconds_applied")
+    health_dispatch_count = health_operation.get("transport_dispatch_count", 0)
+    control_rows.append(
+        {
+            "operation_id": "health",
+            "timeout_seconds_applied": health_timeout,
+            "transport_dispatch_count": health_dispatch_count,
+            "response_bytes_limit_applied": health_operation.get("response_bytes_limit_applied"),
+        }
+    )
+    for source_sequence, row in enumerate(inventory, start=1):
+        control_rows.append(
+            {
+                "operation_id": f"source-{source_sequence:04d}",
+                "timeout_seconds_applied": row.get("timeout_seconds_applied"),
+                "transport_dispatch_count": row.get("transport_dispatch_count"),
+                "response_bytes_limit_applied": row.get("response_bytes_limit_applied"),
+            }
+        )
+    attestation = state["execution_control_attestation"]
+    assert type(attestation) is dict
+    attestation["operations"] = control_rows
+    attestation["max_concurrent_requests_observed"] = wrapped.max_concurrent_requests
     _write_inventory(inventory_path, inventory, state)
     return SourceCaptureResult(
         status=str(state["status"]),

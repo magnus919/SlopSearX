@@ -64,7 +64,7 @@ def test_collection_checks_deadline_after_each_bounded_read(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_capture_observations_replay_actual_mock_response_receipts(tmp_path: Path):
+async def test_capture_observations_replay_actual_mock_response_receipts(tmp_path: Path, monkeypatch):
     protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"
     protocol_bytes = protocol_path.read_bytes()
     protocol = json.loads(protocol_bytes)
@@ -94,6 +94,8 @@ async def test_capture_observations_replay_actual_mock_response_receipts(tmp_pat
         candidate_identity_bytes=identity,
         candidate_identity_sha256=_sha(identity),
         candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+        timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+        response_bytes_limit=protocol["capture"]["response_bytes"],
     )
     assert observed["capture_owned_http_calls"] == 2
     assert observed["capture_health_calls"] == 1
@@ -104,6 +106,73 @@ async def test_capture_observations_replay_actual_mock_response_receipts(tmp_pat
     )
     assert observed["capture_max_context_characters_observed"] == len("A short implementation passage.")
     assert observed["capture_internal_fanout"] is None
+    assert observed["capture_timeout_seconds"] == 30.0
+    assert observed["capture_application_retries_observed"] == 0
+    assert observed["capture_retries"] is None
+    assert observed["capture_response_bytes_limit_applied"] == 2_000_000
+    assert observed["capture_concurrency_observed"] == 1
+
+    # The consumer reads and hashes producer source from disk. A changed
+    # producer cannot validate an attestation written by the earlier source.
+    producer_source = Path(resource_evidence.source_capture.__file__)
+    changed_source = tmp_path / "changed-source-capture.py"
+    changed_source.write_bytes(producer_source.read_bytes() + b"\n# source changed after receipt\n")
+    monkeypatch.setattr(resource_evidence.source_capture, "__file__", str(changed_source))
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="capture-control-attestation-binding"):
+        resource_evidence._capture_observations(
+            capture_result=result,
+            expected_inventory_sha256=_sha(inventory_bytes),
+            expected_manifest_sha256=_sha(manifest_bytes),
+            protocol_sha256=_sha(protocol_bytes),
+            cohorts_sha256=protocol["cohorts_sha256"],
+            source_revision=manifest["source_revision"],
+            candidate_identity_bytes=identity,
+            candidate_identity_sha256=_sha(identity),
+            candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+            timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+            response_bytes_limit=protocol["capture"]["response_bytes"],
+        )
+    monkeypatch.setattr(resource_evidence.source_capture, "__file__", str(producer_source))
+
+    # A newly resealed inventory cannot substitute a different producer module.
+    forged_control = json.loads(inventory_bytes)
+    forged_control["execution_control_attestation"]["producer_module_sha256"] = "0" * 64
+    forged_control_bytes = resource_evidence.source_capture._canonical_json(forged_control)
+    (root / "inventory.json").write_bytes(forged_control_bytes)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="capture-control-attestation-binding"):
+        resource_evidence._capture_observations(
+            capture_result=result,
+            expected_inventory_sha256=_sha(forged_control_bytes),
+            expected_manifest_sha256=_sha(manifest_bytes),
+            protocol_sha256=_sha(protocol_bytes),
+            cohorts_sha256=protocol["cohorts_sha256"],
+            source_revision=manifest["source_revision"],
+            candidate_identity_bytes=identity,
+            candidate_identity_sha256=_sha(identity),
+            candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+            timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+            response_bytes_limit=protocol["capture"]["response_bytes"],
+        )
+    # Historical inventories without this new producer receipt remain unknown.
+    legacy_control = json.loads(inventory_bytes)
+    legacy_control.pop("execution_control_attestation")
+    legacy_control_bytes = resource_evidence.source_capture._canonical_json(legacy_control)
+    (root / "inventory.json").write_bytes(legacy_control_bytes)
+    legacy_observed = resource_evidence._capture_observations(
+        capture_result=result,
+        expected_inventory_sha256=_sha(legacy_control_bytes),
+        expected_manifest_sha256=_sha(manifest_bytes),
+        protocol_sha256=_sha(protocol_bytes),
+        cohorts_sha256=protocol["cohorts_sha256"],
+        source_revision=manifest["source_revision"],
+        candidate_identity_bytes=identity,
+        candidate_identity_sha256=_sha(identity),
+        candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+        timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+        response_bytes_limit=protocol["capture"]["response_bytes"],
+    )
+    assert legacy_observed["capture_timeout_seconds"] is None
+    assert legacy_observed["capture_retries"] is None
 
     altered = json.loads(inventory_bytes)
     altered["owned_http_calls"] = 0
@@ -119,6 +188,8 @@ async def test_capture_observations_replay_actual_mock_response_receipts(tmp_pat
             candidate_identity_bytes=identity,
             candidate_identity_sha256=_sha(identity),
             candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+            timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+            response_bytes_limit=protocol["capture"]["response_bytes"],
         )
 
 
@@ -161,6 +232,8 @@ async def test_capture_observations_replay_pinned_gzip_health_and_source(tmp_pat
         candidate_identity_bytes=identity,
         candidate_identity_sha256=_sha(identity),
         candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+        timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+        response_bytes_limit=protocol["capture"]["response_bytes"],
     )
 
     inventory = json.loads(inventory_bytes)
@@ -187,6 +260,8 @@ async def test_capture_observations_replay_pinned_gzip_health_and_source(tmp_pat
             candidate_identity_bytes=identity,
             candidate_identity_sha256=_sha(identity),
             candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+            timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+            response_bytes_limit=protocol["capture"]["response_bytes"],
         )
 
 
@@ -301,6 +376,50 @@ def test_answer_observations_replay_mock_archives_and_reject_wrong_stage(tmp_pat
     assert observed["answerer_max_request_body_bytes_observed"] > 0
     assert observed["answerer_max_response_body_bytes_observed"] > 0
     assert observed["answerer_max_words_observed"] > 0
+    assert observed["answerer_timeout_seconds"] == 30.0
+    assert observed["answerer_application_retries_observed"] == 0
+    assert observed["answerer_retries"] is None  # Injected transport retry behavior is not attested.
+    assert observed["answerer_concurrency_observed"] == 1
+
+    from dataclasses import replace
+
+    original_terminal = terminal_path.read_bytes()
+    forged_terminal = json.loads(original_terminal)
+    forged_terminal["execution_control_attestation"]["producer_module_sha256"] = "0" * 64
+    forged_terminal_bytes = answer_execution._canonical(forged_terminal)
+    terminal_path.write_bytes(forged_terminal_bytes)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="answer-control-attestation-binding"):
+        resource_evidence._answer_observations(
+            stage_uuid=args["stage_uuid"],
+            source_revision=args["source_revision"],
+            protocol_sha256=args["protocol_sha256"],
+            cohorts_sha256=args["cohorts_sha256"],
+            answer_result=replace(result, terminal_receipt_sha256=_sha(forged_terminal_bytes)),
+            answer_tasks=args["tasks"],
+            answer_archive_root=args["archive_root"],
+            answer_result_root=args["result_root"],
+            expected_terminal_sha256=_sha(forged_terminal_bytes),
+            expected_manifest_sha256=args["answer_manifest_sha256"],
+        )
+
+    legacy_terminal = json.loads(original_terminal)
+    legacy_terminal.pop("execution_control_attestation")
+    legacy_terminal_bytes = answer_execution._canonical(legacy_terminal)
+    terminal_path.write_bytes(legacy_terminal_bytes)
+    legacy_observed = resource_evidence._answer_observations(
+        stage_uuid=args["stage_uuid"],
+        source_revision=args["source_revision"],
+        protocol_sha256=args["protocol_sha256"],
+        cohorts_sha256=args["cohorts_sha256"],
+        answer_result=replace(result, terminal_receipt_sha256=_sha(legacy_terminal_bytes)),
+        answer_tasks=args["tasks"],
+        answer_archive_root=args["archive_root"],
+        answer_result_root=args["result_root"],
+        expected_terminal_sha256=_sha(legacy_terminal_bytes),
+        expected_manifest_sha256=args["answer_manifest_sha256"],
+    )
+    assert legacy_observed["answerer_timeout_seconds"] is None
+    assert legacy_observed["answerer_retries"] is None
     with pytest.raises(resource_evidence.ResourceEvidenceError, match="answer-stage-binding-mismatch"):
         resource_evidence._answer_observations(
             stage_uuid="00000000-0000-0000-0000-000000000000",
@@ -593,7 +712,7 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     acquisition_bytes = resource_evidence.coverage_live_acquire._canonical(acquisition_manifest)
     capture_inventory_bytes = (capture.receipt_directory / "inventory.json").read_bytes()
     capture_endpoint_sha = capture_manifest["candidate_endpoint_sha256"]
-    report = resource_evidence.collect_resource_evidence(
+    collector_kwargs = dict(
         stage_uuid=stage_uuid,
         source_revision=source_revision,
         protocol_bytes=protocol_bytes,
@@ -640,11 +759,19 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         selector_concurrency=999,
         selector_retries=999,
     )
+    report = resource_evidence.collect_resource_evidence(**collector_kwargs)
     assert report.stage_uuid == stage_uuid
     assert report.observations["acquisition_engine_calls"]["brave"] == 0
     assert report.observations["answerer_calls"] == 18
     assert report.observations["grader_submissions"] > 0
     assert report.observations["capture_internal_fanout"] is None
+    assert report.observations["capture_timeout_seconds"] == 30.0
+    assert report.observations["capture_response_bytes_limit"] == 2_000_000
+    assert report.observations["capture_response_bytes_limit_applied"] == 2_000_000
+    assert report.observations["capture_retries"] is None
+    assert report.observations["answerer_timeout_seconds"] == 30.0
+    assert report.observations["answerer_retries"] is None
+    assert report.observations["answerer_concurrency_observed"] == 1
     selector_terminal_doc = json.loads(selector_terminal_bytes)
     selector_expected_elapsed = max(
         row["elapsed_ms_through_final_receipt_fsync"]
@@ -667,6 +794,23 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     assert report.observations["selector_provider_dispatches"] == len(prepared_selector.operation_ids)
     assert report.observations["stage_elapsed_seconds"] is None
     assert report.configuration_provenance["quality_credit"] is False
+
+    # A full collection over historical inventory bytes without the new
+    # attestation must keep the measured control unknown.
+    capture_inventory_doc = json.loads(capture_inventory_bytes)
+    capture_inventory_doc.pop("execution_control_attestation")
+    legacy_capture_inventory_bytes = resource_evidence.source_capture._canonical_json(capture_inventory_doc)
+    (capture.receipt_directory / "inventory.json").write_bytes(legacy_capture_inventory_bytes)
+    from dataclasses import replace
+
+    collector_kwargs["capture_result"] = replace(
+        capture,
+        private_inventory=tuple(capture_inventory_doc["sources"]),
+    )
+    collector_kwargs["expected_capture_inventory_sha256"] = _sha(legacy_capture_inventory_bytes)
+    legacy_report = resource_evidence.collect_resource_evidence(**collector_kwargs)
+    assert legacy_report.observations["capture_response_bytes_limit"] is None
+    assert legacy_report.observations["capture_response_bytes_limit_applied"] is None
     selector_roots.close()
 
 
