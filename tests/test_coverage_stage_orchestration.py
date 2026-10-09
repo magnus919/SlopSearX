@@ -15,6 +15,8 @@ import httpx
 
 from scripts import coverage_answer_execution as answer_execution
 from scripts import coverage_live_acquire as live_acquire
+from scripts import coverage_resource_evidence
+from scripts import coverage_resource_evidence as resource_evidence
 from scripts import coverage_source_capture as source_capture
 from scripts import coverage_stage_orchestration as stage
 from scripts import coverage_study_acquire as acquisition
@@ -500,6 +502,81 @@ class StageOrchestrationTests(unittest.TestCase):
         self.assertFalse(data["product_authorized"])
         self.assertFalse(data["admission_created"])
 
+    def test_phase_failure_and_late_final_fsync_closeout_preserve_failure(self):
+        plan = plan_fixture()
+        calls = []
+
+        async def fail_acquisition(_plan):
+            calls.append("acquisition")
+            raise RuntimeError("synthetic failure")
+
+        async def unexpected(*_args):
+            calls.append("later")
+            raise AssertionError("later phase was invoked")
+
+        executors = stage.StageExecutors(
+            acquire=fail_acquisition,
+            verify_acquisition=unexpected,
+            capture=unexpected,
+            prepare_after_acquisition=unexpected,
+            verify_late_preflight=unexpected,
+            grade_references=unexpected,
+            selectors=unexpected,
+            answerer=unexpected,
+            grade_answers=unexpected,
+        )
+        fake_now = [plan.stage_started_monotonic + 1]
+        original_write_inventory = stage._write_inventory
+        terminal_writes = 0
+
+        def write_inventory(path, value):
+            nonlocal terminal_writes
+            result_sha = original_write_inventory(path, value)
+            if value.get("status") == "terminal-incomplete":
+                terminal_writes += 1
+                if terminal_writes == 3:
+                    # The final inventory file+directory fsync itself crosses
+                    # the stage deadline. No later correction may erase the
+                    # acquisition failure that already terminated the stage.
+                    fake_now[0] = plan.stage_deadline_monotonic + 1
+            return result_sha
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "private"
+            root.mkdir(mode=0o700)
+            os.chmod(root, 0o700)
+            with (
+                mock.patch.object(stage, "_monotonic", side_effect=lambda: fake_now[0]),
+                mock.patch.object(stage, "_write_inventory", side_effect=write_inventory),
+            ):
+                result = asyncio.run(
+                    stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=root)
+                )
+            inventory = json.loads(result.inventory_path.read_bytes())
+            observed = coverage_resource_evidence.verify_stage_closeout(
+                inventory_path=result.inventory_path,
+                expected_inventory_sha256=result.inventory_sha256,
+                closeout_receipt_path=result.closeout_receipt_path,
+                expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                expected_stage_uuid=plan.stage_uuid,
+                expected_source_revision=plan.source_revision,
+                protocol_bytes=plan.protocol_bytes,
+                cohorts_bytes=plan.cohorts_bytes,
+                expected_protocol_sha256=digest(plan.protocol_bytes),
+                expected_cohorts_sha256=digest(plan.cohorts_bytes),
+            )
+        self.assertEqual(calls, ["acquisition"])
+        self.assertEqual(result.status, "terminal-incomplete")
+        self.assertEqual(result.terminal_reason, "acquisition-failed")
+        self.assertEqual(inventory["terminal_reason"], "acquisition-failed")
+        self.assertIs(inventory["gate_result_authoritative"], False)
+        self.assertGreaterEqual(
+            observed.stage_elapsed_seconds,
+            plan.stage_deadline_monotonic - plan.stage_started_monotonic,
+        )
+        self.assertEqual(observed.terminal_reason, "acquisition-failed")
+        self.assertEqual(observed.terminal_status, "terminal-incomplete")
+
     def test_navigation_uses_reverified_snapshot_not_mutable_acquisition_object(self):
         plan = plan_fixture()
         with tempfile.TemporaryDirectory() as temporary:
@@ -538,7 +615,12 @@ class StageOrchestrationTests(unittest.TestCase):
     def test_stage_deadline_overrun_after_final_fsync_corrects_inventory(self):
         self._run_integrated_synthetic_stage(deadline_cross=True)
 
-    def _run_integrated_synthetic_stage(self, *, deadline_cross: bool, poison_receipts: bool = False):
+    def test_stage_closeout_receipt_and_inventory_pins_reject_tampering(self):
+        self._run_integrated_synthetic_stage(deadline_cross=False, tamper_closeout=True)
+
+    def _run_integrated_synthetic_stage(
+        self, *, deadline_cross: bool, poison_receipts: bool = False, tamper_closeout: bool = False
+    ):
         plan = plan_fixture()
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
@@ -868,6 +950,56 @@ class StageOrchestrationTests(unittest.TestCase):
                     stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)
                 )
             inventory = json.loads(result.inventory_path.read_bytes())
+            closeout = resource_evidence.verify_stage_closeout(
+                inventory_path=result.inventory_path,
+                expected_inventory_sha256=result.inventory_sha256,
+                closeout_receipt_path=result.closeout_receipt_path,
+                expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                expected_stage_uuid=plan.stage_uuid,
+                expected_source_revision=plan.source_revision,
+                protocol_bytes=plan.protocol_bytes,
+                cohorts_bytes=plan.cohorts_bytes,
+                expected_protocol_sha256=digest(plan.protocol_bytes),
+                expected_cohorts_sha256=digest(plan.cohorts_bytes),
+            )
+            self.assertEqual(closeout.stage_elapsed_seconds, result.stage_elapsed_seconds)
+            self.assertEqual(closeout.inventory_sha256, result.inventory_sha256)
+            self.assertEqual(closeout.terminal_status, result.status)
+            closeout_bytes = result.closeout_receipt_path.read_bytes()
+            closeout_document = json.loads(closeout_bytes)
+            self.assertEqual(closeout_document["final_inventory_sha256"], result.inventory_sha256)
+            self.assertIn("closeout receipt fsync excluded", closeout_document["measurement_basis"])
+            if tamper_closeout:
+                result.closeout_receipt_path.write_bytes(closeout_bytes + b" ")
+                with self.assertRaisesRegex(resource_evidence.ResourceEvidenceError, "receipt-pin-mismatch"):
+                    resource_evidence.verify_stage_closeout(
+                        inventory_path=result.inventory_path,
+                        expected_inventory_sha256=result.inventory_sha256,
+                        closeout_receipt_path=result.closeout_receipt_path,
+                        expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                        expected_stage_uuid=plan.stage_uuid,
+                        expected_source_revision=plan.source_revision,
+                        protocol_bytes=plan.protocol_bytes,
+                        cohorts_bytes=plan.cohorts_bytes,
+                        expected_protocol_sha256=digest(plan.protocol_bytes),
+                        expected_cohorts_sha256=digest(plan.cohorts_bytes),
+                    )
+                result.closeout_receipt_path.write_bytes(closeout_bytes)
+                result.inventory_path.write_bytes(result.inventory_path.read_bytes() + b" ")
+                with self.assertRaisesRegex(resource_evidence.ResourceEvidenceError, "inventory-pin-mismatch"):
+                    resource_evidence.verify_stage_closeout(
+                        inventory_path=result.inventory_path,
+                        expected_inventory_sha256=result.inventory_sha256,
+                        closeout_receipt_path=result.closeout_receipt_path,
+                        expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                        expected_stage_uuid=plan.stage_uuid,
+                        expected_source_revision=plan.source_revision,
+                        protocol_bytes=plan.protocol_bytes,
+                        cohorts_bytes=plan.cohorts_bytes,
+                        expected_protocol_sha256=digest(plan.protocol_bytes),
+                        expected_cohorts_sha256=digest(plan.cohorts_bytes),
+                    )
+                return
             if poison_receipts:
                 self.assertEqual(result.status, "terminal-incomplete", inventory)
                 self.assertEqual(result.terminal_reason, "resource_evidence_collection-failed")
@@ -886,6 +1018,10 @@ class StageOrchestrationTests(unittest.TestCase):
             original_sha = inventory["deadline_overrun_correction"]["original_inventory_sha256"]
             self.assertRegex(original_sha, r"^[0-9a-f]{64}$")
             self.assertNotEqual(original_sha, result.inventory_sha256)
+            self.assertGreaterEqual(
+                closeout.stage_elapsed_seconds,
+                plan.stage_deadline_monotonic - plan.stage_started_monotonic,
+            )
         else:
             self.assertEqual(result.status, "gates-inconclusive", inventory)
             self.assertEqual(result.terminal_reason, "gate-inconclusive")

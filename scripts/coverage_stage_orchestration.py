@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import math
 import os
 import re
 import stat
@@ -175,6 +176,9 @@ class StageResult:
     stage_uuid: str
     inventory_path: Path
     inventory_sha256: str
+    closeout_receipt_path: Path
+    closeout_receipt_sha256: str
+    stage_elapsed_seconds: float
     terminal_reason: str | None
     product_authorized: bool = False
     admission_created: bool = False
@@ -921,6 +925,9 @@ async def coordinate_coverage_stage(
         "scientific_calls_made_by_coordinator": False,
         "status": "in-progress",
         "terminal_reason": None,
+        # A result gains authority only after the frozen gate calculation is
+        # validated. All earlier and terminal-failure inventories are explicit.
+        "gate_result_authoritative": False,
         "phases": phase_rows,
     }
     inventory_path = stage_dir / "inventory.json"
@@ -1330,12 +1337,53 @@ async def coordinate_coverage_stage(
             "deadline_monotonic": plan.stage_deadline_monotonic,
         }
         final_sha = _write_inventory(inventory_path, inventory)
+        # The correction inventory is now the final durable inventory, so the
+        # measured endpoint must follow its fsync rather than the earlier one.
+        completed_at = _monotonic()
+    elapsed = completed_at - plan.stage_started_monotonic
+    if not math.isfinite(elapsed) or elapsed < 0:
+        raise OrchestrationError("stage-closeout-clock-invalid")
+    closeout_path = stage_dir / "stage-closeout.json"
+    closeout = {
+        "schema": "coverage-stage-closeout/1",
+        "stage_uuid": plan.stage_uuid,
+        "stage_kind": plan.stage_kind,
+        "source_revision": plan.source_revision,
+        "protocol_sha256": identity["protocol_sha256"],
+        "cohorts_sha256": identity["cohorts_sha256"],
+        "preacquisition_binding_sha256": inventory["preacquisition_binding_sha256"],
+        "final_inventory_sha256": final_sha,
+        "final_inventory_status": inventory["status"],
+        "final_inventory_terminal_reason": inventory["terminal_reason"],
+        "stage_started_monotonic": plan.stage_started_monotonic,
+        "observed_after_final_inventory_fsync_monotonic": completed_at,
+        "stage_elapsed_seconds": elapsed,
+        "stage_deadline_seconds": plan.stage_deadline_monotonic - plan.stage_started_monotonic,
+        "measurement_basis": (
+            "stage start through final inventory file and directory fsync; closeout receipt fsync excluded"
+        ),
+    }
+    try:
+        closeout_sha = _write_new(closeout_path, _canonical(closeout))
+    except Exception as exc:
+        # A missing/durability-uncertain closeout cannot leave a previously
+        # authoritative gate result intact. Persist a terminal correction;
+        # do not attempt to recreate the one-shot stage receipt.
+        inventory["status"] = "terminal-incomplete"
+        inventory["terminal_reason"] = "stage-closeout-receipt-write-failed"
+        inventory["gate_result_authoritative"] = False
+        inventory["stage_closeout_error_class"] = type(exc).__name__
+        _write_inventory(inventory_path, inventory)
+        raise OrchestrationError("stage-closeout-receipt-write-failed") from exc
     terminal_reason = inventory.get("terminal_reason")
     return StageResult(
         status=str(inventory["status"]),
         stage_uuid=plan.stage_uuid,
         inventory_path=inventory_path,
         inventory_sha256=final_sha,
+        closeout_receipt_path=closeout_path,
+        closeout_receipt_sha256=closeout_sha,
+        stage_elapsed_seconds=elapsed,
         terminal_reason=str(terminal_reason) if terminal_reason is not None else None,
     )
 

@@ -208,11 +208,15 @@ def test_acquisition_observations_bind_real_mock_exchange_receipts_and_stage(tmp
         cohorts_sha256=manifest["cohorts_sha256"],
         source_closure_sha256=manifest["source_closure_sha256"],
         acquisition_plan_sha256=_sha(acquisition_plan),
+        configured_timeout_seconds=10,
     )
     assert observed["acquisition_physical_http_calls"] == evidence.stage.physical_request_count
     assert sum(observed["acquisition_engine_calls"].values()) == evidence.stage.physical_request_count
     assert observed["acquisition_engine_calls"]["brave"] == 0
     assert observed["acquisition_response_bytes_total"] > 0
+    assert observed["acquisition_timeout_seconds"] == 10.0
+    assert set(observed["acquisition_timeout_seconds_by_exchange"]) == {10.0}
+    assert observed["acquisition_timeout_observation_state"] == "observed-uniform"
     final_receipt = evidence.receipt_directory / "http-0001-final.json"
     final_receipt.write_bytes(final_receipt.read_bytes() + b" ")
     with pytest.raises(resource_evidence.ResourceEvidenceError, match="acquisition-receipt-inventory-invalid"):
@@ -230,6 +234,36 @@ def test_acquisition_observations_bind_real_mock_exchange_receipts_and_stage(tmp
             cohorts_sha256=manifest["cohorts_sha256"],
             source_closure_sha256=manifest["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan),
+            configured_timeout_seconds=10,
+        )
+
+
+def test_acquisition_timeout_observation_rejects_receipt_value_above_bound(tmp_path: Path):
+    manifest, acquisition_plan = make_manifest()
+    evidence, _verifier, _lease, _pacer, _calls = asyncio.run(_run_acquisition(tmp_path))
+    start_path = evidence.receipt_directory / "http-0001-start.json"
+    final_path = evidence.receipt_directory / "http-0001-final.json"
+    for path in (start_path, final_path):
+        row = json.loads(path.read_bytes())
+        row["timeout_seconds"] = 11
+        path.write_bytes(resource_evidence.coverage_live_acquire._canonical(row))
+    receipt_sha = resource_evidence.receipt_inventory_sha256(evidence.receipt_directory)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="acquisition-exchange-timeout-invalid"):
+        resource_evidence.collect_acquisition_observations(
+            snapshots_directory=evidence.receipt_directory,
+            receipt_directory=evidence.receipt_directory,
+            expected_receipt_inventory_sha256=receipt_sha,
+            acquisition_manifest_bytes=resource_evidence.coverage_live_acquire._canonical(manifest),
+            acquisition_plan_bytes=acquisition_plan,
+            expected_index_sha256=evidence.pool_snapshot_index_sha256,
+            expected_manifest_sha256=evidence.stage_manifest_sha256,
+            stage_uuid=manifest["stage_uuid"],
+            source_revision=manifest["source_revision"],
+            protocol_sha256=manifest["protocol_sha256"],
+            cohorts_sha256=manifest["cohorts_sha256"],
+            source_closure_sha256=manifest["source_closure_sha256"],
+            acquisition_plan_sha256=_sha(acquisition_plan),
+            configured_timeout_seconds=10,
         )
 
 

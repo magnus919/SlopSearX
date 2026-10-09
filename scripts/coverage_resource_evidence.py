@@ -59,6 +59,18 @@ class ResourceEvidenceReport:
     source_receipt_sha256: str
 
 
+@dataclass(frozen=True)
+class StageCloseoutObservation:
+    """Elapsed-time proof joined to its independently pinned final inventory."""
+
+    stage_uuid: str
+    stage_elapsed_seconds: float
+    terminal_status: str
+    terminal_reason: str | None
+    inventory_sha256: str
+    closeout_receipt_sha256: str
+
+
 def _sha(raw: bytes) -> str:
     _check_deadline()
     return hashlib.sha256(raw).hexdigest()
@@ -119,6 +131,126 @@ def _require_private_directory(path: Path) -> None:
         or info.st_uid != os.geteuid()
     ):
         raise ResourceEvidenceError("private-directory-invalid")
+
+
+def verify_stage_closeout(
+    *,
+    inventory_path: str | os.PathLike[str],
+    expected_inventory_sha256: str,
+    closeout_receipt_path: str | os.PathLike[str],
+    expected_closeout_receipt_sha256: str,
+    expected_stage_uuid: str,
+    expected_source_revision: str,
+    protocol_bytes: bytes,
+    cohorts_bytes: bytes,
+    expected_protocol_sha256: str,
+    expected_cohorts_sha256: str,
+) -> StageCloseoutObservation:
+    """Verify the post-inventory-fsync timing receipt for later-stage use.
+
+    The closeout file is intentionally written after the measured endpoint;
+    its own fsync is not included in ``stage_elapsed_seconds``. Both files must
+    live in the same private stage directory, and their expected digests must
+    come from the immutable StageResult/independent stage handoff.
+    """
+    inv_path = Path(inventory_path)
+    close_path = Path(closeout_receipt_path)
+    if close_path.parent != inv_path.parent or close_path.name != "stage-closeout.json":
+        raise ResourceEvidenceError("stage-closeout-path-binding")
+    _require_private_directory(inv_path.parent)
+    if not _SHA.fullmatch(expected_inventory_sha256) or not _SHA.fullmatch(expected_closeout_receipt_sha256):
+        raise ResourceEvidenceError("stage-closeout-expected-pin-invalid")
+    if (
+        type(protocol_bytes) is not bytes
+        or type(cohorts_bytes) is not bytes
+        or _sha(protocol_bytes) != expected_protocol_sha256
+        or _sha(cohorts_bytes) != expected_cohorts_sha256
+    ):
+        raise ResourceEvidenceError("stage-closeout-protocol-cohort-pin-mismatch")
+    protocol = _strict_json(protocol_bytes, "stage-closeout-protocol")
+    if type(protocol) is not dict or protocol.get("cohorts_sha256") != expected_cohorts_sha256:
+        raise ResourceEvidenceError("stage-closeout-protocol-cohort-binding")
+    try:
+        inventory_raw = _read_private(inv_path, max_bytes=4_000_000)
+        closeout_raw = _read_private(close_path, max_bytes=16_384)
+    except Exception as exc:
+        raise ResourceEvidenceError("stage-closeout-artifact-unavailable") from exc
+    if _sha(inventory_raw) != expected_inventory_sha256:
+        raise ResourceEvidenceError("stage-closeout-inventory-pin-mismatch")
+    if _sha(closeout_raw) != expected_closeout_receipt_sha256:
+        raise ResourceEvidenceError("stage-closeout-receipt-pin-mismatch")
+    inventory = _strict_json(inventory_raw, "stage-inventory")
+    closeout = _strict_json(closeout_raw, "stage-closeout")
+    if _canonical(inventory) != inventory_raw or _canonical(closeout) != closeout_raw:
+        raise ResourceEvidenceError("stage-closeout-noncanonical")
+    if type(inventory) is not dict or type(closeout) is not dict:
+        raise ResourceEvidenceError("stage-closeout-shape-invalid")
+    expected_keys = {
+        "schema",
+        "stage_uuid",
+        "stage_kind",
+        "source_revision",
+        "protocol_sha256",
+        "cohorts_sha256",
+        "preacquisition_binding_sha256",
+        "final_inventory_sha256",
+        "final_inventory_status",
+        "final_inventory_terminal_reason",
+        "stage_started_monotonic",
+        "observed_after_final_inventory_fsync_monotonic",
+        "stage_elapsed_seconds",
+        "stage_deadline_seconds",
+        "measurement_basis",
+    }
+    if set(closeout) != expected_keys:
+        raise ResourceEvidenceError("stage-closeout-fields-invalid")
+    if (
+        closeout["schema"] != "coverage-stage-closeout/1"
+        or closeout["stage_uuid"] != expected_stage_uuid
+        or closeout["source_revision"] != expected_source_revision
+        or closeout["protocol_sha256"] != expected_protocol_sha256
+        or closeout["cohorts_sha256"] != expected_cohorts_sha256
+        or closeout["final_inventory_sha256"] != expected_inventory_sha256
+        or closeout["stage_kind"] != inventory.get("stage_kind")
+        or closeout["preacquisition_binding_sha256"] != inventory.get("preacquisition_binding_sha256")
+        or closeout["final_inventory_status"] != inventory.get("status")
+        or closeout["final_inventory_terminal_reason"] != inventory.get("terminal_reason")
+        or inventory.get("stage_uuid") != expected_stage_uuid
+        or inventory.get("source_revision") != expected_source_revision
+        or inventory.get("protocol_sha256") != expected_protocol_sha256
+        or inventory.get("cohorts_sha256") != expected_cohorts_sha256
+    ):
+        raise ResourceEvidenceError("stage-closeout-binding-mismatch")
+    started = closeout["stage_started_monotonic"]
+    stopped = closeout["observed_after_final_inventory_fsync_monotonic"]
+    elapsed = closeout["stage_elapsed_seconds"]
+    deadline = closeout["stage_deadline_seconds"]
+    numbers = (started, stopped, elapsed, deadline)
+    if any(type(value) not in {int, float} or not math.isfinite(value) for value in numbers):
+        raise ResourceEvidenceError("stage-closeout-time-invalid")
+    if started < 0 or stopped < started or elapsed < 0 or deadline <= 0 or deadline > 28_800:
+        raise ResourceEvidenceError("stage-closeout-time-range-invalid")
+    if elapsed != stopped - started:
+        raise ResourceEvidenceError("stage-closeout-elapsed-mismatch")
+    if closeout["measurement_basis"] != (
+        "stage start through final inventory file and directory fsync; closeout receipt fsync excluded"
+    ):
+        raise ResourceEvidenceError("stage-closeout-measurement-basis-invalid")
+    if elapsed >= deadline and inventory.get("status") != "terminal-incomplete":
+        raise ResourceEvidenceError("stage-closeout-late-stage-not-invalidated")
+    if elapsed >= deadline and inventory.get("gate_result_authoritative") is not False:
+        raise ResourceEvidenceError("stage-closeout-late-gates-still-authoritative")
+    terminal_reason = inventory.get("terminal_reason")
+    if terminal_reason is not None and type(terminal_reason) is not str:
+        raise ResourceEvidenceError("stage-closeout-terminal-reason-invalid")
+    return StageCloseoutObservation(
+        stage_uuid=expected_stage_uuid,
+        stage_elapsed_seconds=float(elapsed),
+        terminal_status=inventory["status"],
+        terminal_reason=terminal_reason,
+        inventory_sha256=expected_inventory_sha256,
+        closeout_receipt_sha256=expected_closeout_receipt_sha256,
+    )
 
 
 def _receipt_any(root: Path, *, bindings: dict, expected_sha256: str) -> tuple[dict, bytes]:
@@ -693,6 +825,7 @@ def collect_acquisition_observations(
     cohorts_sha256: str,
     source_closure_sha256: str,
     acquisition_plan_sha256: str,
+    configured_timeout_seconds: int | float,
     deadline_monotonic: float | None = None,
 ) -> dict[str, object]:
     try:
@@ -768,6 +901,7 @@ def collect_acquisition_observations(
     physical_calls = 0
     unknown_engine = False
     request_total = response_total = max_response = 0
+    dispatched_timeouts: list[float] = []
     for sequence in sorted(starts):
         start, final = starts[sequence], finals[sequence]
         if type(start) is not dict or type(final) is not dict:
@@ -784,6 +918,25 @@ def collect_acquisition_observations(
         )
         if any(start.get(key) != final.get(key) for key in common) or start.get("status") != "attempted":
             raise ResourceEvidenceError("acquisition-exchange-request-binding")
+        timeout = start.get("timeout_seconds")
+        configured_timeout = configured_timeout_seconds
+        if (
+            isinstance(timeout, bool)
+            or not isinstance(timeout, (int, float))
+            or isinstance(configured_timeout, bool)
+            or not isinstance(configured_timeout, (int, float))
+        ):
+            raise ResourceEvidenceError("acquisition-exchange-timeout-invalid")
+        timeout_value = float(timeout)
+        configured_timeout_value = float(configured_timeout)
+        if (
+            not math.isfinite(timeout_value)
+            or timeout_value <= 0
+            or not math.isfinite(configured_timeout_value)
+            or configured_timeout_value <= 0
+            or timeout_value > configured_timeout_value
+        ):
+            raise ResourceEvidenceError("acquisition-exchange-timeout-invalid")
         operation_id, engine = start.get("operation_id"), start.get("engine")
         if type(operation_id) is not str or operation_id not in operation_engine_allowlist:
             raise ResourceEvidenceError("acquisition-exchange-operation-unknown")
@@ -798,6 +951,10 @@ def collect_acquisition_observations(
             unknown_engine = True
         if final.get("dispatched") is True:
             physical_calls += 1
+            # These receipts are written at the HTTPX transport boundary. The
+            # value is the timeout configuration on that concrete request,
+            # not its elapsed duration or the protocol ceiling itself.
+            dispatched_timeouts.append(timeout_value)
             if type(engine) is str:
                 counts[engine] += 1
         elif final.get("dispatched") is not False:
@@ -825,6 +982,19 @@ def collect_acquisition_observations(
         "acquisition_request_bytes_total": request_total,
         "acquisition_response_bytes_total": response_total,
         "acquisition_max_response_body_bytes_observed": max_response,
+        "acquisition_timeout_seconds": (
+            dispatched_timeouts[0]
+            if dispatched_timeouts and len(set(dispatched_timeouts)) == 1
+            else None
+        ),
+        "acquisition_timeout_seconds_by_exchange": dispatched_timeouts,
+        "acquisition_timeout_observation_state": (
+            "observed-uniform"
+            if dispatched_timeouts and len(set(dispatched_timeouts)) == 1
+            else "observed-variable"
+            if dispatched_timeouts
+            else "no-dispatched-exchanges"
+        ),
     }
     if not unknown_engine and set(counts) <= set(_ENGINE_NAMES):
         result["acquisition_engine_calls"] = {engine: counts[engine] for engine in _ENGINE_NAMES}
@@ -912,6 +1082,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             cohorts_sha256=cohorts_sha256,
             source_closure_sha256=kwargs["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan_bytes),
+            configured_timeout_seconds=protocol["acquisition"]["timeout_seconds"],
             deadline_monotonic=deadline,
         )
         capture = _capture_observations(
@@ -971,7 +1142,6 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         observations["atomic_fallback_verified"] = None
         observations["capture_internal_fanout"] = None
         observations["capture_response_bytes_limit"] = None
-        observations["acquisition_timeout_seconds"] = None
         observations["acquisition_retries"] = None
         observations["acquisition_pacing_seconds"] = None
         observations["arxiv_pacing_seconds"] = None
@@ -992,6 +1162,10 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             "selector_protocol_sha256": protocol_sha256,
             "selector_source_closure_sha256": kwargs["source_closure_sha256"],
             "protocol_limits_and_configuration": _configuration_provenance(protocol),
+            "acquisition_timeout_measurement_basis": (
+                "per-dispatched-request timeout extension recorded by the pinned HTTPX transport receipts; "
+                "not elapsed request duration"
+            ),
             "quality_credit": False,
             "admission_created": False,
         }
@@ -1215,6 +1389,8 @@ def _configuration_provenance(protocol: Mapping[str, object]) -> dict[str, objec
 __all__ = [
     "ResourceEvidenceError",
     "ResourceEvidenceReport",
+    "StageCloseoutObservation",
     "collect_acquisition_observations",
     "collect_resource_evidence",
+    "verify_stage_closeout",
 ]
