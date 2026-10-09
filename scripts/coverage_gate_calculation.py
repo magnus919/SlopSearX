@@ -763,12 +763,12 @@ def calculate_coverage_gate_report(
             type(obs) is not dict
             or type(target) is not str
             or target not in obs.get("acquired_urls", [])
-            or obs.get("candidate_top1_url") != target
-            or nav_rank_one.get(row["task_id"]) is not True
+            or type(obs.get("candidate_top1_url")) is not str
+            or type(nav_rank_one.get(row["task_id"])) is not bool
         ):
             nav_values.append(None)
         else:
-            nav_values.append(True)
+            nav_values.append(obs["candidate_top1_url"] == target and nav_rank_one[row["task_id"]])
     nav_gate = None if any(value is None for value in nav_values) else all(nav_values)
     planned_operations = selector_inventory((None,) * len(navigation_inputs))
     expected_operation_ids = [operation.operation_id for operation in planned_operations]
