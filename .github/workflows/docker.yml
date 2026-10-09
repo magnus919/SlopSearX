@@ -31,8 +31,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Configure hosted-runner Docker Hub cache
+        run: python3 scripts/configure_ci_dockerhub_mirror.py
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: |
+            [registry."docker.io"]
+              mirrors = ["mirror.gcr.io"]
 
       - name: Log in to ghcr.io
         uses: docker/login-action@v4
