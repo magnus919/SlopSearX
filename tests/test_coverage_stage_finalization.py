@@ -46,6 +46,18 @@ class StageFinalizationTests(unittest.TestCase):
             with self.assertRaisesRegex(finalization.StageFinalizationError, "pending-pin-mismatch"):
                 self._verify(paths, plan)
 
+    def test_repinned_closeout_cannot_shift_start_to_hide_deadline_overrun(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            paths, plan = self._fixture(Path(temporary), elapsed=7.5, stage_deadline=10.0)
+            closeout = json.loads(paths["closeout"].read_bytes())
+            closeout["stage_started_monotonic"] = 105.0
+            closeout["observed_after_final_inventory_fsync_monotonic"] = 112.5
+            closeout_bytes = _canonical(closeout)
+            self._write_private(paths["closeout"], closeout_bytes)
+            paths["closeout_sha"] = _sha(closeout_bytes)
+            with self.assertRaisesRegex(finalization.StageFinalizationError, "closeout-deadline-or-order-mismatch"):
+                self._verify(paths, plan)
+
     def test_resource_receipt_body_tampering_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             paths, plan = self._fixture(Path(temporary), elapsed=7.5)

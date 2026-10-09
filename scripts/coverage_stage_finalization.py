@@ -364,6 +364,8 @@ def verify_stage_finalization(
     closeout_observed = closeout_document.get("observed_after_final_inventory_fsync_monotonic")
     if (
         closeout_document.get("stage_deadline_seconds") != stage_deadline
+        or closeout_document.get("stage_started_monotonic") != pending_started
+        or closeout_document.get("stage_started_monotonic") != inventory.get("stage_started_monotonic")
         or not _finite_nonnegative(closeout_observed)
         or closeout_observed < pending_observed
     ):
