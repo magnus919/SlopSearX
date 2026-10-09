@@ -114,11 +114,10 @@ def docker_runtime_info(
     run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> dict[str, object]:
     """Return bounded nonsecret runtime labels and one expected-mirror flag."""
+
     def read_label(command: list[str]) -> str:
         value = run(command, check=True, capture_output=True, text=True, timeout=5).stdout.strip()
-        if type(value) is not str or not value or len(value) > 64 or not re.fullmatch(
-            r"[A-Za-z0-9._+-]+", value
-        ):
+        if type(value) is not str or not value or len(value) > 64 or not re.fullmatch(r"[A-Za-z0-9._+-]+", value):
             raise RuntimeError("Docker runtime diagnostics were incomplete")
         return value
 

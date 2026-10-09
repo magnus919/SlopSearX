@@ -28,9 +28,7 @@ def test_hosted_linux_only_and_config_preservation(tmp_path: Path) -> None:
     path.parent.mkdir()
     path.write_text(json.dumps({"debug": True, "insecure-registries": ["registry.example:5000"]}))
     restarts: list[bool] = []
-    assert mirror.configure_daemon(
-        path, restart=lambda: restarts.append(True), has_running_containers=lambda: False
-    )
+    assert mirror.configure_daemon(path, restart=lambda: restarts.append(True), has_running_containers=lambda: False)
     config = json.loads(path.read_text())
     assert config["debug"] is True
     assert config["insecure-registries"] == ["registry.example:5000"]
@@ -63,9 +61,7 @@ def test_invalid_daemon_config_fails_without_restart(tmp_path: Path, raw: bytes)
     path.write_bytes(raw)
     restarts: list[bool] = []
     with pytest.raises((ValueError, json.JSONDecodeError)):
-        mirror.configure_daemon(
-            path, restart=lambda: restarts.append(True), has_running_containers=lambda: False
-        )
+        mirror.configure_daemon(path, restart=lambda: restarts.append(True), has_running_containers=lambda: False)
     assert path.read_bytes() == raw
     assert restarts == []
 
@@ -76,9 +72,7 @@ def test_running_container_refuses_change_before_write_or_restart(tmp_path: Path
     path.write_bytes(original)
     restarts: list[bool] = []
     with pytest.raises(RuntimeError, match="containers are running"):
-        mirror.configure_daemon(
-            path, restart=lambda: restarts.append(True), has_running_containers=lambda: True
-        )
+        mirror.configure_daemon(path, restart=lambda: restarts.append(True), has_running_containers=lambda: True)
     assert path.read_bytes() == original
     assert restarts == []
 
