@@ -946,6 +946,17 @@ async def _execute_selector_call_once(
     if api_key_bytes and (api_key_bytes in operation_input_bytes or api_key_bytes in request_body):
         raise JevExecutionError("api-key-in-request-material")
 
+    execution_provenance = _execution_provenance(
+        prepared=prepared,
+        operation_id=operation_id,
+        operation_input_sha256=input_sha,
+        request_body=request_body,
+        parser_mode=parser_mode,
+        transport_injected=transport is not None,
+        legacy_control=legacy_control,
+        selector_input_map_sha256=expected_selector_input_map_sha256,
+    )
+
     leases = _private_root(lease_root)
     archives = _private_root(archive_root)
     results = _private_root(result_root)
@@ -1205,16 +1216,7 @@ async def _execute_selector_call_once(
         "timed_out": timed_out,
         "provider_dispatch": dispatch_transport.dispatch_count > 0,
         "parser_mode": parser_mode,
-        "execution_provenance": _execution_provenance(
-            prepared=prepared,
-            operation_id=operation_id,
-            operation_input_sha256=input_sha,
-            request_body=request_body,
-            parser_mode=parser_mode,
-            transport_injected=transport is not None,
-            legacy_control=legacy_control,
-            selector_input_map_sha256=expected_selector_input_map_sha256,
-        ),
+        "execution_provenance": execution_provenance,
         "ranking_status": ranking.status if ranking is not None else None,
         "ordered_ids": (
             list(ranking.ordered_ids)

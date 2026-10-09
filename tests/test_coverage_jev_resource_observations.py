@@ -59,6 +59,32 @@ def _monkeypatch_candidate_builder(monkeypatch, compiled):
 
 
 @pytest.mark.asyncio
+async def test_missing_strategy_context_rejects_before_claim_and_dispatch(monkeypatch) -> None:
+    prepared = prepared_stage()
+    ledger = core.StudyRun(prepared)
+    compiled = compile_small()
+    _monkeypatch_candidate_builder(monkeypatch, compiled)
+    dispatched = []
+    roots = PrivateRoots()
+    try:
+        kwargs = _call_kwargs(
+            prepared,
+            ledger,
+            roots,
+            prepared.operation_ids[0],
+            compiled,
+            httpx.MockTransport(lambda request: dispatched.append(request)),
+        )
+        kwargs["legacy_control"] = None
+        with pytest.raises(execution.JevExecutionError, match="ranking-strategy-invalid"):
+            await execution.execute_selector_call(**kwargs)
+        assert dispatched == []
+        assert list(roots.lease.iterdir()) == []
+    finally:
+        roots.close()
+
+
+@pytest.mark.asyncio
 async def test_terminal_inventory_binds_actual_dispatch_usage_bytes_and_serial_order(monkeypatch) -> None:
     prepared = prepared_stage()
     ledger = core.StudyRun(prepared)
