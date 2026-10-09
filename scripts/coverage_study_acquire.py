@@ -18,13 +18,14 @@ from __future__ import annotations
 import contextvars
 import hashlib
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol
 from urllib.parse import parse_qsl, urljoin, urlsplit
 
 import httpx
 
+from scripts import coverage_study_core as core
 from slopsearx.adapter import EngineAdapter
 from slopsearx.merger import _normalise_url
 from slopsearx.service import AppContext, SearchRequest, SearchResponse, SearchService
@@ -44,7 +45,11 @@ ENGINE_PATHS = {
 }
 MAX_PHYSICAL_REQUESTS_PER_ENGINE = {"arxiv": 2, "github": 1, "openalex": 1, "wikipedia": 2}
 MAX_PHYSICAL_REQUESTS_PER_STAGE = 53
-MAX_STAGE_TRANSFER_BYTES = 2_000_000
+MAX_RESPONSE_BYTES = 2_000_000
+MAX_REQUEST_MATERIAL_BYTES = core.MAX_MATERIAL_BYTES
+# Aggregate ceiling derives from the unchanged per-response, request-material,
+# and 53-physical-request ceilings; it is not a smaller stage-wide cap.
+MAX_STAGE_TRANSFER_BYTES = MAX_PHYSICAL_REQUESTS_PER_STAGE * (MAX_RESPONSE_BYTES + MAX_REQUEST_MATERIAL_BYTES)
 ENGINE_TIMEOUT_MS = 10_000
 MAX_RESULTS_PER_ENGINE = 20
 QUERY_PACING_SECONDS = 7.0
@@ -56,6 +61,7 @@ _CURRENT_OPERATION: contextvars.ContextVar[str | None] = contextvars.ContextVar(
 _CURRENT_ENGINES: contextvars.ContextVar[tuple[str, ...]] = contextvars.ContextVar(
     "coverage_acquire_engines", default=()
 )
+_LIVE_ACQUISITION_TOKEN = object()
 
 
 class OfflineClock(Protocol):
@@ -334,10 +340,11 @@ class RecordedMockTransport(httpx.MockTransport):
             if not redirect_allowed:
                 failure_code = "redirect_not_allowed"
         exchange_bytes = len(request_material) + len(response_bytes)
-        if (
-            len(response_bytes) > MAX_STAGE_TRANSFER_BYTES
-            or self._transfer_bytes + exchange_bytes > MAX_STAGE_TRANSFER_BYTES
-        ):
+        if len(request_material) > MAX_REQUEST_MATERIAL_BYTES:
+            failure_code = "request_material_cap"
+        elif len(response_bytes) > MAX_RESPONSE_BYTES:
+            failure_code = "response_body_cap"
+        elif self._transfer_bytes + exchange_bytes > MAX_STAGE_TRANSFER_BYTES:
             failure_code = "stage_transfer_byte_cap"
         else:
             accepted = True
@@ -428,20 +435,32 @@ async def acquire_coverage_stage(
     The caller supplies exact mock fixtures, already-configured real adapters,
     and an offline clock implementation.
     """
+    if type(transport) is not RecordedMockTransport:
+        raise TypeError("a caller-injected RecordedMockTransport is required")
     return await _acquire_coverage_stage(stage_manifest, adapters, transport, clock)
 
 
 async def _acquire_coverage_stage(
     stage_manifest: Mapping[str, object],
     adapters: Mapping[str, EngineAdapter],
-    transport: RecordedMockTransport,
+    transport: httpx.AsyncBaseTransport,
     clock: OfflineClock,
+    *,
+    _live_token: object | None = None,
+    on_operation_complete: Callable[[AcquisitionOperation], None] | None = None,
 ) -> StageAcquisition:
     stage_name = stage_manifest.get("stage")
     if not isinstance(stage_name, str) or not stage_name:
         raise ValueError("stage manifest needs a stage name")
-    if not isinstance(transport, RecordedMockTransport):
-        raise TypeError("a caller-injected RecordedMockTransport is required")
+    if _live_token is None:
+        if type(transport) is not RecordedMockTransport:
+            raise TypeError("a caller-injected RecordedMockTransport is required")
+    elif (
+        _live_token is not _LIVE_ACQUISITION_TOKEN or getattr(transport, "_coverage_live_transport", False) is not True
+    ):
+        raise TypeError("authorized coverage live transport required")
+    if on_operation_complete is not None and _live_token is not _LIVE_ACQUISITION_TOKEN:
+        raise TypeError("operation snapshots require authorized coverage live transport")
     if transport.exchanges or transport.transfer_bytes:
         raise ValueError("each stage requires a fresh mock transport and empty receipt ledger")
     _validate_adapters(adapters, transport)
@@ -499,6 +518,26 @@ async def _acquire_coverage_stage(
     stage_failures: list[str] = []
 
     for index, (operation_id, kind, query, engines, band, target_url) in enumerate(operations):
+        if _live_token is _LIVE_ACQUISITION_TOKEN and stage_failures:
+            results.append(
+                AcquisitionOperation(
+                    operation_id=operation_id,
+                    kind=kind,
+                    query=query,
+                    engines=engines,
+                    status="not_invoked_after_terminal_failure",
+                    pool_count=None,
+                    band=band,
+                    band_valid=None,
+                    target_url=target_url,
+                    target_found_at_rank1=None,
+                    scope=None,
+                    canonical_response=None,
+                    exchanges=(),
+                    failure_reasons=["prior_terminal_acquisition_failure"],
+                )
+            )
+            continue
         if index:
             await clock.sleep(QUERY_PACING_SECONDS)
         context_token = _CURRENT_OPERATION.set(operation_id)
@@ -566,26 +605,33 @@ async def _acquire_coverage_stage(
         if transport_failures:
             reasons.extend(f"transport:{code}" for code in transport_failures)
         status = "complete" if not reasons else "inconclusive"
-        results.append(
-            AcquisitionOperation(
-                operation_id=operation_id,
-                kind=kind,
-                query=query,
-                engines=engines,
-                status=status,
-                pool_count=pool_count,
-                band=band,
-                band_valid=band_valid,
-                target_url=target_url,
-                target_found_at_rank1=target_found,
-                scope=response.scope if response else None,
-                canonical_response=response,
-                exchanges=op_exchanges,
-                failure_reasons=reasons,
-                exception_type=exception_type,
-            )
+        operation_result = AcquisitionOperation(
+            operation_id=operation_id,
+            kind=kind,
+            query=query,
+            engines=engines,
+            status=status,
+            pool_count=pool_count,
+            band=band,
+            band_valid=band_valid,
+            target_url=target_url,
+            target_found_at_rank1=target_found,
+            scope=response.scope if response else None,
+            canonical_response=response,
+            exchanges=op_exchanges,
+            failure_reasons=reasons,
+            exception_type=exception_type,
         )
-        if status != "complete":
+        if on_operation_complete is not None:
+            try:
+                on_operation_complete(operation_result)
+            except Exception as exc:
+                operation_result.status = "pool_snapshot_write_failure"
+                failure_code = type(exc).__name__
+                operation_result.failure_reasons.append(f"pool_snapshot_write_failure:{failure_code}")
+                operation_result.exception_type = type(exc).__name__
+        results.append(operation_result)
+        if operation_result.status != "complete":
             stage_failures.append(operation_id)
 
     stage_exchanges = transport.exchanges[start_exchange_index:]
