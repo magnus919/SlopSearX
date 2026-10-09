@@ -45,12 +45,3 @@ reference, selector or scientific gates; immutable historical outcomes preserved
 New coverage-ranking amendment awaits decision, so no speculative live retry.
 EXP-095 finite prerequisite already delivered; supported query-planning capability
 #685 already merged, no other supported runtime candidate awaits delivery.
-
-## Identifier correction
-
-This cache experiment is canonically **EXP-106**. The original EXP-104 label was
-an administrative collision with the pre-existing assessment-carry evidence
-directory. The original preregistration above and commit `0fcce7e` are preserved;
-no hypothesis, baseline, metric, case, guardrail or decision was changed. Existing
-EXP-104/105 studies and evidence remain untouched. See
-[EXP-106 readout](EXP-106-finite-cached-result-score.md).

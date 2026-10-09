@@ -1,0 +1,74 @@
+import copy,json,os,random,subprocess,tempfile,time
+from pathlib import Path
+
+out=Path(os.environ['EXP032_OUTPUT']);out.mkdir(parents=True,exist_ok=True)
+with tempfile.TemporaryDirectory(prefix='exp032-',dir='/private/tmp') as directory:
+ socket=directory+'/v.sock'
+ process=subprocess.Popen(['/opt/homebrew/bin/valkey-server','--port','0','--unixsocket',socket,'--save','','--appendonly','no'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+ try:
+  import valkey
+  store=valkey.Valkey(unix_socket_path=socket)
+  for _ in range(100):
+   try:
+    store.ping();break
+   except valkey.exceptions.ConnectionError:time.sleep(.02)
+  else:raise RuntimeError('disposable Valkey did not start')
+  os.environ['VALKEY_URL']='unix://'+socket
+  from fastapi.testclient import TestClient
+  from slopsearx import server
+  from slopsearx.adapter import EngineAdapter,AdapterResponse,EngineStatus,SearchResult
+  class RecoveryEngine(EngineAdapter):
+   name='recovery';display_name='Recovery fixture';env_prefix='ENGINE_RECOVERY';engine_type='api';categories=['general']
+   def __init__(self):super().__init__();self.calls=0
+   async def search(self,query,params=None):
+    self.calls+=1
+    return AdapterResponse(results=[SearchResult(url='https://example.test/evidence',title='Retained evidence',content='Fixed cache recovery result',engine=self.name)],status=EngineStatus.OK)
+  rows=[];controls=[]
+  with TestClient(server.app,raise_server_exceptions=False) as client:
+   engine=RecoveryEngine();server._active_engines={'recovery':engine};server._router=None
+   server._rate_limiter=None;server._client_rate_window=None
+   params={'q':'cache recovery task','format':'json'}
+   def clear():
+    keys=store.keys('search:v2:*')
+    if keys:store.delete(*keys)
+   def populate():
+    clear();r=client.get('/search',params=params);assert r.status_code==200,r.text
+    keys=store.keys('search:v2:*');assert len(keys)==1,keys
+    return keys[0],json.loads(store.get(keys[0])),r.json()['results']
+   faults=['score_nan','score_inf','score_ninf','score_nan_text','score_inf_text','score_ninf_text','list','number','string','scope','results','elapsed','dispatch_count','jev_score']
+   order=[(fault,rep) for fault in faults for rep in range(1)];random.Random(32).shuffle(order)
+   for fault,rep in order:
+    key,canonical,expected=populate();payload=copy.deepcopy(canonical)
+    if fault.startswith('score_'):
+     values={'score_nan':float('nan'),'score_inf':float('inf'),'score_ninf':float('-inf'),'score_nan_text':'NaN','score_inf_text':'Infinity','score_ninf_text':'-Infinity'}
+     payload['results'][0]['score']=values[fault]
+    elif fault=='list':payload=[]
+    elif fault=='number':payload=42
+    elif fault=='string':payload='broken'
+    elif fault=='scope':payload['scope']='broken'
+    elif fault=='results':payload['results']=['broken']
+    elif fault=='elapsed':payload['response_time_ms']='broken'
+    elif fault=='dispatch_count':payload['dispatched_engine_count']='broken'
+    elif fault=='jev_score':payload['scope']['jev_scores']={'recovery':'broken'}
+    store.set(key,json.dumps(payload));before=engine.calls
+    r=client.get('/search',params=params)
+    body=r.json() if r.status_code==200 else None
+    recovered=r.status_code==200 and body['results']==expected and body['meta']['cached'] is False
+    dispatched=engine.calls-before
+    follow=None
+    if recovered:
+     before_follow=engine.calls;f=client.get('/search',params=params)
+     follow=f.status_code==200 and f.json()['results']==expected and f.json()['meta']['cached'] is True and engine.calls==before_follow
+    rows.append({'fault':fault,'rep':rep,'status':r.status_code,'recovered':recovered,'dispatches':dispatched,'repaired_hit':follow,'body':body if body is not None else r.text})
+   key,payload,expected=populate();before=engine.calls;r=client.get('/search',params=params)
+   controls.append({'kind':'healthy','passed':r.status_code==200 and r.json()['results']==expected and r.json()['meta']['cached'] is True and engine.calls==before})
+   store.set(key,json.dumps({'_error':True}));before=engine.calls;r=client.get('/search',params=params)
+   controls.append({'kind':'negative','passed':r.status_code==503 and engine.calls==before})
+   # Malformed JSON already falls back; this must remain true.
+   store.set(key,'{');before=engine.calls;r=client.get('/search',params=params)
+   controls.append({'kind':'invalid_json','passed':r.status_code==200 and r.json()['results']==expected and engine.calls==before+1})
+  summary={'attempts':len(rows),'recovered':sum(r['recovered'] for r in rows),'controls':controls,'recovery_guards':all(r['dispatches']==1 and r['repaired_hit'] for r in rows if r['recovered'])}
+  (out/'rows.json').write_text(json.dumps(rows,indent=2)+'\n');(out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+  print(json.dumps(summary))
+ finally:
+  process.terminate();process.wait(timeout=10)
