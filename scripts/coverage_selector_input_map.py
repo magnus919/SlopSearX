@@ -355,6 +355,9 @@ def build_selector_input_map(
     if len(targets_by_id) != len(navigation_targets):
         raise SelectorInputMapError("navigation-target-duplicate")
     for task_index, nav in enumerate(manifest["navigation_tasks"], start=1):
+        operation_id = f"navigation-{task_index:02d}-w0"
+        if operation_id not in prepared.operation_ids:
+            continue
         target_id = nav.get("task_id")
         matching = [row for row in navigation_targets if row.get("target_id") == target_id]
         if len(matching) != 1:
@@ -390,7 +393,6 @@ def build_selector_input_map(
                 "snippet": _rerank_text(result.get("content", ""), 1200),
             }
         ordered = [by_id[card_id] for card_id in w0_order]
-        operation_id = f"navigation-{task_index:02d}-w0"
         inp, request_body, legacy_control = _w0_input(
             operation_id=operation_id,
             query=nav["query"],

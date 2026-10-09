@@ -833,6 +833,80 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     assert report.configuration_provenance["selector_transaction_proof_sha256"] is None
     assert report.configuration_provenance["quality_credit"] is False
 
+    # Exercise the collector's map join with a synthetic, externally pinned
+    # map assembled from the just-created immutable operation receipts. The
+    # independent builder/recomputation path is covered separately.
+    map_rows = []
+    for operation_id in prepared_selector.operation_ids:
+        receipt = json.loads((selector_roots.result / f"{stage_uuid}.{operation_id}.result.json").read_bytes())
+        provenance = receipt["execution_provenance"]
+        map_rows.append(
+            {
+                "operation_id": operation_id,
+                "parser_mode": provenance["parser_mode"],
+                "operation_input_sha256": provenance["operation_input_sha256"],
+                "request_body_sha256": provenance["request_body_sha256"],
+            }
+        )
+    selector_map = selector_execution._canonical(
+        {
+            "schema": "coverage-selector-input-map/2-draft",
+            "status": "draft-unadmitted",
+            "stage_uuid": stage_uuid,
+            "source_revision": source_revision,
+            "original_registration_sha256": prepared_selector.registration_sha256,
+            "coverage_source_sha256": protocol["candidate_source_sha256"],
+            "production_rerank_source_sha256": protocol["primary_control"]["rerank_source_sha256"],
+            "execution_source_sha256": "a" * 64,
+            "legacy_control_source_sha256": "b" * 64,
+            "current_service_source_sha256": "c" * 64,
+            "acquisition_snapshot_index_sha256": "a" * 64,
+            "acquisition_manifest_sha256": "b" * 64,
+            "task_input_manifest_sha256": "c" * 64,
+            "neutral_fixture_sha256": "d" * 64,
+            "builder_source_sha256": "e" * 64,
+            "operations": map_rows,
+        }
+    )
+    selector_map_sha = _sha(selector_map)
+    terminal_doc = json.loads(selector_terminal_bytes)
+    for observation in terminal_doc["resource_observations"]:
+        operation_id = observation["operation_id"]
+        result_path = selector_roots.result / f"{stage_uuid}.{operation_id}.result.json"
+        result_doc = json.loads(result_path.read_bytes())
+        result_doc["execution_provenance"]["selector_input_map_sha256"] = selector_map_sha
+        result_bytes = selector_execution._canonical(result_doc)
+        result_path.write_bytes(result_bytes)
+        observation["result_receipt_sha256"] = _sha(result_bytes)
+    selector_terminal_bytes = selector_execution._canonical(terminal_doc)
+    (selector_roots.result / f"{stage_uuid}.terminal-inventory.json").write_bytes(selector_terminal_bytes)
+    mapped = resource_evidence._selector_observations(
+        stage_uuid=stage_uuid,
+        source_revision=source_revision,
+        protocol_sha256=prepared_selector.pins["protocol"],
+        source_closure_sha256=source_closure_sha256,
+        expected_terminal_sha256=_sha(selector_terminal_bytes),
+        terminal_inventory_bytes=selector_terminal_bytes,
+        result_root=selector_roots.result,
+        archive_root=selector_roots.archive,
+        expected_operation_ids=prepared_selector.operation_ids,
+        operation_rows=selector_operation_rows,
+        expected_registration_sha256=prepared_selector.registration_sha256,
+        expected_primary_control=protocol["primary_control"],
+        expected_candidate_source_sha256=protocol["candidate_source_sha256"],
+        selector_input_map_bytes=selector_map,
+        expected_selector_input_map_sha256=selector_map_sha,
+    )
+    mapped_proof = mapped["selector_transaction_proof"]
+    assert mapped_proof["input_map_sha256"] == selector_map_sha
+    assert len(mapped_proof["transactions"]) == len(prepared_selector.operation_ids)
+    assert mapped["w0_control_source_sha256"] == protocol["primary_control"]["rerank_source_sha256"]
+    # Keep the later full-collector pass bound to the same newly sealed
+    # terminal bytes used by the direct map-join assertion above.
+    collector_kwargs["selector_terminal_inventory_bytes"] = selector_terminal_bytes
+    collector_kwargs["expected_selector_terminal_sha256"] = _sha(selector_terminal_bytes)
+    collector_kwargs["selector_input_map_bytes"] = selector_map
+    collector_kwargs["expected_selector_input_map_sha256"] = selector_map_sha
     # A full collection over historical inventory bytes without the new
     # attestation must keep the measured control unknown.
     capture_inventory_doc = json.loads(capture_inventory_bytes)
