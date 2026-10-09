@@ -58,6 +58,12 @@ new source-bound admissions. Fresh blind references must precede task scoring.
 Both stages must pass before optional product implementation. Failed or
 inconclusive results are retained and published, with no automatic rescue study.
 
+[Paired answer and grading preparation](answer-grading-preparation.md) now
+composes the once-only stage through a complete synthetic workflow. Its
+[validation receipt](answer-grading-validation.json) records the limited offline
+evidence. Live capture remains disabled pending the
+[fetch-boundary qualification](capture-fetch-boundary-review.md).
+
 No Brave search, source capture, Jev evaluation, answerer or scientific-assessor
 call was made in preparing this packet. Coding and review agents helped prepare
 the offline artifacts. Runtime metadata checks were read-only; deployments and credentials were
