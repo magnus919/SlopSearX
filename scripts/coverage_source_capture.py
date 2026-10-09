@@ -351,11 +351,12 @@ def _fsync_directory(path: Path) -> None:
 def _validate_transport(transport: httpx.AsyncBaseTransport) -> None:
     if type(transport) is httpx.MockTransport:
         return
-    if type(transport) is not httpx.AsyncHTTPTransport:
-        raise SourceCaptureError("unsupported-injected-httpx-transport")
-    pool = getattr(transport, "_pool", None)
-    if getattr(pool, "_retries", None) != 0 or getattr(pool, "_proxy", None) is not None:
-        raise SourceCaptureError("httpx-transport-must-disable-retries-and-proxies")
+    # The fetch is delegated to the candidate scraper, whose every redirect
+    # and DNS resolution/rebinding boundary is not controlled by this caller.
+    # Do not treat a plain HTTPX transport's retry/proxy settings as SSRF
+    # protection. Live capture stays disabled until that fetch boundary is
+    # independently qualified; synthetic tests may inject only MockTransport.
+    raise SourceCaptureError("live-fetch-boundary-not-qualified-mock-transport-required")
 
 
 def _write_once(path: Path, raw: bytes) -> None:
@@ -477,7 +478,10 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                         if room > 0:
                             body.extend(chunk[:room])
                         forbidden = self._forbidden_response_bytes
-                        if forbidden and forbidden in body:
+                        reflected_prefix = forbidden and any(
+                            body.endswith(forbidden[:size]) for size in range(1, min(len(forbidden) - 1, len(body)) + 1)
+                        )
+                        if forbidden and (forbidden in body or reflected_prefix):
                             body.clear()
                             complete = False
                             status = "transport-failure"
@@ -583,7 +587,7 @@ async def capture_sources_once(
 
     This accepts only explicit endpoint/token/transport inputs; it does not
     consult environment variables. One health request precedes at most one
-    scrape request per distinct eligible public HTTPS URL. On a transport,
+    scrape request per distinct eligible public URL. On a transport,
     response-cap, deadline, or receipt-integrity terminal failure, remaining
     inventory rows remain uninvoked and are retained as such.
     """

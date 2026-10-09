@@ -207,6 +207,30 @@ async def test_reflected_operator_key_is_not_persisted_in_error_body(tmp_path: P
             assert token.encode() not in path.read_bytes()
 
 
+@pytest.mark.asyncio
+async def test_credential_prefix_at_response_cap_is_suppressed(tmp_path: Path) -> None:
+    token = "synthetic-boundary-operator-secret"
+    prefix = token[:12].encode()
+    body = b"x" * (MAX_RESPONSE_BYTES - len(prefix)) + token.encode()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(403, content=body)
+
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(handler),
+        token=token,
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+    assert result.status == "terminal-incomplete"
+    assert result.private_inventory[0]["failure_code"] == "credential-reflection-suppressed"
+    for path in result.receipt_directory.parent.rglob("*"):
+        if path.is_file():
+            assert prefix not in path.read_bytes()
+
+
 async def test_captures_once_with_private_provenance_and_bounded_shared_context(tmp_path: Path) -> None:
     calls: list[httpx.Request] = []
     markdown = "é" * 8_005
@@ -315,6 +339,54 @@ async def test_transport_failure_is_retained_and_later_sources_are_not_invoked(t
     stored = archive.read_text()
     assert "contains-private" not in stored
     assert json.loads(stored)["complete"] is False
+
+
+@pytest.mark.asyncio
+async def test_real_transport_and_nip_dns_alias_are_rejected_before_lease_or_request(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class CountingVerifier(_Verifier):
+        calls = 0
+
+        def verify(self, *args):
+            self.calls += 1
+            return super().verify(*args)
+
+    lease = _Lease()
+    verifier = CountingVerifier()
+    actual_requests = []
+
+    async def count_without_network(self, request):
+        actual_requests.append(request)
+        raise AssertionError("real transport must never be dispatched by this test")
+
+    monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", count_without_network)
+    transport = httpx.AsyncHTTPTransport(retries=0, trust_env=False)
+    try:
+        with pytest.raises(SourceCaptureError, match="live-fetch-boundary-not-qualified"):
+            await _capture(
+                tmp_path=tmp_path,
+                transport=transport,
+                sources=[
+                    {
+                        "task_id": "R01",
+                        "source_id": "c1",
+                        "result_index": 1,
+                        "url": "https://127.0.0.1.nip.io/private",
+                        "title": "synthetic DNS alias to a private address",
+                        "engine": "test",
+                    }
+                ],
+                verifier=verifier,
+                lease=lease,
+            )
+    finally:
+        await transport.aclose()
+
+    assert verifier.calls == 0
+    assert lease.calls == 0
+    assert actual_requests == []
+    assert list((tmp_path / "private-receipts").iterdir()) == []
 
 
 async def test_response_over_cap_is_archived_partial_and_stops_remaining_slots(tmp_path: Path) -> None:

@@ -7,7 +7,8 @@ The new seams implement the proposed budgets without invoking them during
 preparation. They are study tooling; the supported product feature has not
 been implemented or qualified.
 
-The combined local suite passed 163 tests and three subtests on Python 3.12.
+The combined local suite passed 176 tests and nine subtests on Python 3.12
+(`tests/test_coverage*.py` and `tests/test_intent_ranking*.py`).
 Bounded independent coding reviews were completed and their findings addressed.
 [execution-preparation-validation.json](execution-preparation-validation.json)
 records the limited scope of that evidence. Full repository CI remains a merge
@@ -22,7 +23,7 @@ dependency closure remains a registration prerequisite.
 | --- | --- |
 | `coverage_live_acquire.py` | Explicitly admitted keyless public-engine transport, no retries, per-request and stage limits, 7-second serial operation pacing, 3-second arXiv physical-request pacing, private durable complete canonical-pool snapshots |
 | `coverage_pipeline_inputs.py` | Reverify snapshots from disk; retain full metadata/native order; compile the existing bounded ranking projection and stable URL/source bindings |
-| `coverage_source_capture.py` | Bind protocol/cohort/endpoint/runtime identity; one health probe followed by at most one attempt per safe public URL; preserve exact private responses, bounded contexts and all failure/uninvoked outcomes |
+| `coverage_source_capture.py` | Offline MockTransport seam only; binds protocol/cohort/endpoint/runtime identity and preserves bounded synthetic responses and terminal inventory. Live HTTP capture is blocked pending independent qualification of the delegated fetch redirect and DNS-rebinding boundary. |
 | `coverage_jev_execution.py` | Bind one-shot request bytes before dispatch; original V1 generator and replay for the control; unchanged coverage prototype for the candidate; private response archival before parsing; token ledger and one-second phase deadline |
 | `coverage_consumer_inputs.py` | Join duplicate URLs to the same newly captured context; identical first-ten/five-success/8,000-character budgets; anonymous paired inputs and exact passage-citation identity restoration |
 | `coverage_guarded_driver.py` | No-call status and guard contract tests; full scientific orchestration remains outstanding |
@@ -41,6 +42,13 @@ control module digests in
 [control-source-parity.json](control-source-parity.json). Its original V1 parser
 and generator remain the control; preparation source on current main is not
 substituted for that deployed implementation.
+
+Source capture currently accepts only an exact `httpx.MockTransport`. It
+rejects real HTTP transports before the one-shot lease or any request because
+the scraper performs the delegated fetch and this runner has not qualified its
+redirect, DNS resolution, or rebinding protections. Synthetic transport tests
+verify receipt and terminal-inventory behavior only; they do not establish
+live-fetch SSRF safety. Live capture remains a registration prerequisite.
 
 Every operation's canonical pool is persisted before the next acquisition
 operation starts. Downstream preparation consumes externally hash-pinned
