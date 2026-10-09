@@ -10,10 +10,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import stat
+import time
 from collections import Counter
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
@@ -26,10 +29,26 @@ from scripts import intent_ranking_receipts as receipts
 
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _ENGINE_NAMES = ("wikipedia", "arxiv", "github", "openalex", "brave")
+_DEADLINE: ContextVar[float | None] = ContextVar("coverage_resource_deadline", default=None)
 
 
 class ResourceEvidenceError(ValueError):
     """An observation could not be bound to the supplied stage artifacts."""
+
+
+def _check_deadline() -> None:
+    deadline = _DEADLINE.get()
+    if deadline is not None and time.monotonic() >= deadline:
+        raise ResourceEvidenceError("resource-collection-deadline-exceeded")
+
+
+def _read_private(path: Path, *, max_bytes: int) -> bytes:
+    # Stop between bounded reads; an OS filesystem call already in progress
+    # cannot be interrupted here. The coordinator also checks final fsync.
+    _check_deadline()
+    raw = receipts._read_private(path, max_bytes=max_bytes)
+    _check_deadline()
+    return raw
 
 
 @dataclass(frozen=True)
@@ -41,6 +60,7 @@ class ResourceEvidenceReport:
 
 
 def _sha(raw: bytes) -> str:
+    _check_deadline()
     return hashlib.sha256(raw).hexdigest()
 
 
@@ -49,6 +69,8 @@ def _canonical(value: object) -> bytes:
 
 
 def _strict_json(raw: bytes, label: str) -> object:
+    _check_deadline()
+
     def pairs(items):
         result = {}
         for key, value in items:
@@ -91,7 +113,7 @@ def _receipt_any(root: Path, *, bindings: dict, expected_sha256: str) -> tuple[d
         slot = receipts._private_dir(stage_dir, bound["operation_id"], create=False)
         if {path.name for path in slot.iterdir()} != receipts._FILES:
             raise ResourceEvidenceError("receipt-slot-inventory")
-        raw_receipt = receipts._read_private(slot / "receipt.json", max_bytes=16_384)
+        raw_receipt = _read_private(slot / "receipt.json", max_bytes=16_384)
         if _sha(raw_receipt) != expected_sha256:
             raise ResourceEvidenceError("receipt-digest-mismatch")
         receipt = receipts._strict_json(raw_receipt)
@@ -108,7 +130,7 @@ def _receipt_any(root: Path, *, bindings: dict, expected_sha256: str) -> tuple[d
         }
         if receipt != expected or type(receipt["complete"]) is not bool:
             raise ResourceEvidenceError("receipt-binding-mismatch")
-        body = receipts._read_private(slot / "response.bin", max_bytes=receipts.MAX_BODY_BYTES)
+        body = _read_private(slot / "response.bin", max_bytes=receipts.MAX_BODY_BYTES)
         if len(body) != receipt["response_body_bytes"] or _sha(body) != receipt["response_body_sha256"]:
             raise ResourceEvidenceError("receipt-body-mismatch")
         return receipt, body
@@ -133,8 +155,8 @@ def _capture_observations(
     root = Path(capture_result.receipt_directory)
     _require_private_directory(root)
     try:
-        inventory_bytes = receipts._read_private(root / "inventory.json", max_bytes=4_000_000)
-        manifest_bytes = receipts._read_private(root / "source-manifest.json", max_bytes=2_000_000)
+        inventory_bytes = _read_private(root / "inventory.json", max_bytes=4_000_000)
+        manifest_bytes = _read_private(root / "source-manifest.json", max_bytes=2_000_000)
     except Exception as exc:
         raise ResourceEvidenceError("capture-artifact-unreadable") from exc
     if _sha(inventory_bytes) != expected_inventory_sha256 or _sha(manifest_bytes) != expected_manifest_sha256:
@@ -231,7 +253,7 @@ def _capture_observations(
             context_name = row.get("context_artifact")
             if type(context_name) is not str or Path(context_name).name != context_name:
                 raise ResourceEvidenceError("capture-context-path-invalid")
-            context_doc = _strict_json(receipts._read_private(root / context_name, max_bytes=128_000), "context")
+            context_doc = _strict_json(_read_private(root / context_name, max_bytes=128_000), "context")
             context = context_doc.get("context") if type(context_doc) is dict else None
             if (
                 type(context) is not str
@@ -241,8 +263,7 @@ def _capture_observations(
                 or context_doc.get("task_id") != source.get("task_id")
                 or context_doc.get("result_index") != source.get("result_index")
                 or context_doc.get("source_url") != source.get("url")
-                or source_capture._canonical_json(context_doc)
-                != receipts._read_private(root / context_name, max_bytes=128_000)
+                or source_capture._canonical_json(context_doc) != _read_private(root / context_name, max_bytes=128_000)
                 or _sha(context.encode("utf-8")) != row.get("context_sha256")
                 or len(context) != row.get("context_characters")
             ):
@@ -499,7 +520,7 @@ def _read_pinned_receipt_directory(root: Path, expected_sha256: str) -> dict[str
     for path in sorted(root.iterdir(), key=lambda item: item.name):
         if path.is_symlink() or not path.is_file():
             raise ResourceEvidenceError("receipt-inventory-entry-invalid")
-        raw = receipts._read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
+        raw = _read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
         digests.append({"name": path.name, "sha256": _sha(raw), "bytes": len(raw)})
         if path.suffix == ".json":
             document = _strict_json(raw, path.name)
@@ -518,7 +539,7 @@ def receipt_inventory_sha256(root: Path) -> str:
     for path in sorted(root.iterdir(), key=lambda item: item.name):
         if path.is_symlink() or not path.is_file():
             raise ResourceEvidenceError("receipt-inventory-entry-invalid")
-        raw = receipts._read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
+        raw = _read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
         rows.append({"name": path.name, "sha256": _sha(raw), "bytes": len(raw)})
     return _sha(_canonical(rows))
 
@@ -539,7 +560,12 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
     prepared_answers, answer_submissions, answer_closure, and the three grade
     closure pin hashes from their packet-preparation boundaries.
     """
+    deadline = kwargs.get("deadline_monotonic")
+    if deadline is not None and (type(deadline) not in {int, float} or not math.isfinite(deadline) or deadline <= 0):
+        raise ResourceEvidenceError("resource-collection-deadline-invalid")
+    token = _DEADLINE.set(deadline)
     try:
+        _check_deadline()
         stage_uuid = kwargs["stage_uuid"]
         source_revision = kwargs["source_revision"]
         protocol_bytes = kwargs["protocol_bytes"]
@@ -642,6 +668,8 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         raise
     except (KeyError, TypeError, ValueError, OSError) as exc:
         raise ResourceEvidenceError("resource-evidence-input-invalid") from exc
+    finally:
+        _DEADLINE.reset(token)
 
 
 def _answer_observations(**kwargs) -> dict[str, object]:
@@ -653,7 +681,7 @@ def _answer_observations(**kwargs) -> dict[str, object]:
     try:
         _require_private_directory(kwargs["answer_result_root"])
         _require_private_directory(kwargs["answer_archive_root"])
-        terminal_bytes = receipts._read_private(terminal_path, max_bytes=4_000_000)
+        terminal_bytes = _read_private(terminal_path, max_bytes=4_000_000)
     except OSError as exc:
         raise ResourceEvidenceError("answer-terminal-unreadable") from exc
     if (

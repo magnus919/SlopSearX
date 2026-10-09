@@ -29,6 +29,39 @@ def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def test_expired_collection_stops_before_artifact_access_and_restores_context(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(resource_evidence, "time", SimpleNamespace(monotonic=lambda: 10.0))
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="resource-collection-deadline-exceeded"):
+        resource_evidence.collect_resource_evidence(deadline_monotonic=9.0)
+    assert resource_evidence._DEADLINE.get() is None
+
+
+def test_collection_checks_deadline_after_each_bounded_read(monkeypatch):
+    from types import SimpleNamespace
+
+    now = [1.0]
+    reads = []
+    monkeypatch.setattr(resource_evidence, "time", SimpleNamespace(monotonic=lambda: now[0]))
+
+    def slow_read(path, *, max_bytes):
+        reads.append((path, max_bytes))
+        now[0] = 3.0
+        return b"{}"
+
+    monkeypatch.setattr(resource_evidence.receipts, "_read_private", slow_read)
+    token = resource_evidence._DEADLINE.set(2.0)
+    try:
+        with pytest.raises(resource_evidence.ResourceEvidenceError, match="resource-collection-deadline-exceeded"):
+            resource_evidence._read_private(Path("synthetic.json"), max_bytes=10)
+        with pytest.raises(resource_evidence.ResourceEvidenceError, match="resource-collection-deadline-exceeded"):
+            resource_evidence._read_private(Path("must-not-read.json"), max_bytes=10)
+        assert reads == [(Path("synthetic.json"), 10)]
+    finally:
+        resource_evidence._DEADLINE.reset(token)
+
+
 @pytest.mark.asyncio
 async def test_capture_observations_replay_actual_mock_response_receipts(tmp_path: Path):
     protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"
