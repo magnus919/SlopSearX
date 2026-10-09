@@ -1,0 +1,48 @@
+{
+  "schema": "coverage-answer-grading-preparation-validation/1",
+  "status": "offline-tested-not-qualified-not-admitted",
+  "tests": {
+    "command": "python -m pytest -q -o addopts='' tests/test_coverage*.py tests/test_intent_ranking*.py",
+    "passed": 208,
+    "subtests_passed": 9,
+    "python": "3.12",
+    "synthetic_coordinator_completed_phases": 15,
+    "synthetic_coordinator_terminal_state": "gates-inconclusive",
+    "scientific_quality_credit": false
+  },
+  "independent_review": {
+    "model": "GPT-6 Luna",
+    "scope": ["answer execution", "assessment packets", "grade closure", "stage coordinator"],
+    "reported_findings_addressed": true,
+    "coordinator_blocking_findings": 0
+  },
+  "repository_checks": {
+    "all_files_pre_commit": "passed",
+    "dependency_check": "passed",
+    "graph_update": "AST-only completed",
+    "full_repository_ci": "required before merge"
+  },
+  "scientific_calls": {
+    "brave": 0,
+    "source_acquisition": 0,
+    "source_capture": 0,
+    "jev": 0,
+    "answerer": 0,
+    "assessor": 0
+  },
+  "claims": {
+    "registered": false,
+    "admitted": false,
+    "live_capture_qualified": false,
+    "usefulness_proven": false,
+    "production_ready": false,
+    "deployment_changed": false
+  },
+  "limitations": [
+    "scientific source and dependency closure remains outstanding",
+    "full operator entrypoint and admissions remain outstanding",
+    "gate calculator is an injected external component, not yet qualified",
+    "study scripts are outside the repository runtime mypy target; strict standalone typing is not claimed",
+    "live source capture remains disabled pending actual fetch-boundary qualification"
+  ]
+}
