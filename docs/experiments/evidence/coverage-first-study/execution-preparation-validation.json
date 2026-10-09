@@ -5,6 +5,16 @@
     "passed": 176,
     "subtests_passed": 9,
     "scope": "coverage preparation, coverage prototype and response replay tests",
+    "focused_commands": [
+      {
+        "command": "python -m pytest -q -o addopts='' tests/test_coverage_source_capture.py",
+        "result": "18 passed"
+      },
+      {
+        "command": "python -m pytest -q -o addopts='' tests/test_coverage*.py",
+        "result": "117 passed, 3 subtests passed"
+      }
+    ],
     "python": "3.12",
     "full_repository_ci": "required_before_merge"
   },
