@@ -312,6 +312,7 @@ def _capture_observations(
     candidate_endpoint_sha256: str,
     timeout_limit_seconds: int | float,
     response_bytes_limit: int,
+    protocol_schema: str = "coverage-first-study-protocol/1",
 ) -> dict[str, object]:
     root = Path(capture_result.receipt_directory)
     _require_private_directory(root)
@@ -517,6 +518,10 @@ def _capture_observations(
         state["health_runtime_match"] = None
 
     control_attestation = inventory.get("execution_control_attestation")
+    protected_qualification = inventory.get("protected_capture_qualification")
+    owned_capture_transport = protected_qualification is not None
+    if owned_capture_transport and control_attestation is None:
+        raise ResourceEvidenceError("capture-qualification-without-control-attestation")
     capture_timeout_seconds = None
     capture_application_retries = None
     capture_response_limit_applied = None
@@ -534,19 +539,100 @@ def _capture_observations(
             "timeout_limit_seconds_configured": timeout_limit_seconds,
             "response_bytes_limit_applied": response_bytes_limit,
             "application_retry_policy": "one-dispatch-per-operation",
-            "transport_retry_policy": "unknown-injected-transport",
+            "transport_retry_policy": (
+                "httpx-owned-retries-zero" if owned_capture_transport else "unknown-injected-transport"
+            ),
+        }
+        transport_configuration = (
+            {
+                "trust_env": False,
+                "retries": 0,
+                "max_connections": 1,
+                "max_keepalive_connections": 0,
+            }
+            if owned_capture_transport
+            else None
+        )
+        legacy_control_keys = {
+            *expected_control_bindings,
+            "max_concurrent_requests_observed",
+            "operations",
         }
         control_keys = {
             *expected_control_bindings,
+            "transport_configuration",
             "max_concurrent_requests_observed",
             "operations",
         }
         if (
             type(control_attestation) is not dict
-            or set(control_attestation) != control_keys
+            or frozenset(control_attestation) not in {frozenset(control_keys), frozenset(legacy_control_keys)}
+            or (owned_capture_transport and set(control_attestation) != control_keys)
             or any(control_attestation.get(key) != value for key, value in expected_control_bindings.items())
+            or (
+                set(control_attestation) == control_keys
+                and control_attestation.get("transport_configuration") != transport_configuration
+            )
         ):
             raise ResourceEvidenceError("capture-control-attestation-binding")
+        if owned_capture_transport:
+            expected_qualification_bindings = {
+                "stage_uuid": capture_result.stage_uuid,
+                "source_revision": source_revision,
+                "protocol_sha256": protocol_sha256,
+                "candidate_identity_sha256": candidate_identity_sha256,
+                "candidate_endpoint_sha256": candidate_endpoint_sha256,
+                "candidate_endpoint_scheme": capture_result.candidate_endpoint_scheme,
+                "candidate_runtime_revision": expected_identity["runtime"]["revision"],
+                "capture_module_sha256": execution_controls.module_source_sha256(source_capture.__file__),
+            }
+            qualification_bindings = (
+                protected_qualification.get("bindings") if type(protected_qualification) is dict else None
+            )
+            allowed_endpoint_schemes = (
+                {"https", "http"} if protocol_schema == "coverage-first-study-protocol/2" else {"https"}
+            )
+            if (
+                type(qualification_bindings) is not dict
+                or set(qualification_bindings) != {*expected_qualification_bindings, "candidate_endpoint_scheme"}
+                or type(qualification_bindings.get("candidate_endpoint_scheme")) is not str
+                or qualification_bindings.get("candidate_endpoint_scheme") not in allowed_endpoint_schemes
+                or type(capture_result.candidate_endpoint_scheme) is not str
+                or capture_result.candidate_endpoint_scheme not in allowed_endpoint_schemes
+                or any(
+                    qualification_bindings.get(key) != value for key, value in expected_qualification_bindings.items()
+                )
+            ):
+                raise ResourceEvidenceError("capture-qualification-binding")
+            if (
+                type(protected_qualification) is not dict
+                or set(protected_qualification)
+                != {
+                    "status",
+                    "scope",
+                    "receipt_file",
+                    "receipt_sha256",
+                    "grok_image_digest",
+                    "grok_config_sha256",
+                    "protected_profile_sha256",
+                    "full_boundary_evidence_sha256",
+                    "bindings",
+                }
+                or protected_qualification.get("status") != "verified-qualified"
+                or protected_qualification.get("scope") != "protected-source-capture"
+                or protected_qualification.get("receipt_file") != "protected-capture-qualification.json"
+                or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(protected_qualification.get("grok_image_digest", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("grok_config_sha256", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("protected_profile_sha256", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("full_boundary_evidence_sha256", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("receipt_sha256", "")))
+            ):
+                raise ResourceEvidenceError("capture-qualification-binding")
+            qualification_bytes = _read_private(root / protected_qualification["receipt_file"], max_bytes=65_536)
+            if _sha(qualification_bytes) != protected_qualification["receipt_sha256"]:
+                raise ResourceEvidenceError("capture-qualification-receipt-mismatch")
+        elif inventory.get("protected_capture_qualification") is not None:
+            raise ResourceEvidenceError("capture-qualification-shape")
         operation_controls = control_attestation.get("operations")
         expected_operation_ids = ["health", *(f"source-{index:04d}" for index in range(1, len(rows) + 1))]
         if (
@@ -629,9 +715,10 @@ def _capture_observations(
         "capture_health_runtime_match_observed": state["health_runtime_match"],
         "capture_status": state["status"],
         "capture_timeout_seconds": capture_timeout_seconds,
-        # The injected transport can retry internally; its policy is not
-        # attested by this producer, so aggregate transport retries stay unknown.
-        "capture_retries": None,
+        # Only the source-owned transport has an independently source-bound
+        # retries=0 constructor. Mock/injected transport retry behavior remains
+        # unknown and is not collapsed to zero.
+        "capture_retries": 0 if owned_capture_transport else None,
         "capture_application_retries_observed": capture_application_retries,
         "capture_response_bytes_limit_applied": capture_response_limit_applied,
         "capture_concurrency_observed": capture_concurrency_observed,
@@ -651,11 +738,6 @@ def _selector_observations(
     archive_root: Path | None,
     expected_operation_ids: tuple[str, ...],
     operation_rows: tuple[Mapping[str, object], ...],
-    expected_registration_sha256: str | None = None,
-    expected_primary_control: Mapping[str, object] | None = None,
-    expected_candidate_source_sha256: str | None = None,
-    selector_input_map_bytes: bytes | None = None,
-    expected_selector_input_map_sha256: str | None = None,
 ) -> dict[str, object]:
     """Consume selector measurements only from a pinned terminal/result/archive chain.
 
@@ -670,15 +752,6 @@ def _selector_observations(
         "selector_concurrency": None,
         "selector_retries": None,
         "selector_provider_dispatches": None,
-        "selector_transaction_proof": None,
-        "w0_control_source_sha256": None,
-        "w0_source_revision": None,
-        "w0_model": None,
-        "w0_provider_configured": None,
-        "w0_ranking_strategy": None,
-        "w0_parser_parity_verified": None,
-        "candidate_source_sha256": None,
-        "atomic_fallback_verified": None,
     }
     if terminal_inventory_bytes is None:
         return unknown
@@ -710,81 +783,6 @@ def _selector_observations(
         raise ResourceEvidenceError("selector-terminal-inventory-not-canonical")
     if type(terminal) is not dict:
         raise ResourceEvidenceError("selector-terminal-inventory-shape")
-    registered_input_rows: dict[str, Mapping[str, object]] | None = None
-    if selector_input_map_bytes is not None or expected_selector_input_map_sha256 is not None:
-        if (
-            type(selector_input_map_bytes) is not bytes
-            or type(expected_selector_input_map_sha256) is not str
-            or not _SHA.fullmatch(expected_selector_input_map_sha256)
-            or _sha(selector_input_map_bytes) != expected_selector_input_map_sha256
-        ):
-            raise ResourceEvidenceError("selector-input-map-pin-invalid")
-        input_map = _strict_json(selector_input_map_bytes, "selector-input-map")
-        if (
-            type(input_map) is not dict
-            or set(input_map)
-            != {
-                "schema",
-                "status",
-                "stage_uuid",
-                "source_revision",
-                "original_registration_sha256",
-                "coverage_source_sha256",
-                "production_rerank_source_sha256",
-                "execution_source_sha256",
-                "legacy_control_source_sha256",
-                "current_service_source_sha256",
-                "acquisition_snapshot_index_sha256",
-                "acquisition_manifest_sha256",
-                "task_input_manifest_sha256",
-                "neutral_fixture_sha256",
-                "builder_source_sha256",
-                "operations",
-            }
-            or input_map.get("schema") != "coverage-selector-input-map/2-draft"
-            or input_map.get("status") != "draft-unadmitted"
-            or input_map.get("stage_uuid") != stage_uuid
-            or input_map.get("source_revision") != source_revision
-            or input_map.get("original_registration_sha256") != expected_registration_sha256
-            or input_map.get("coverage_source_sha256") != expected_candidate_source_sha256
-            or expected_primary_control is None
-            or input_map.get("production_rerank_source_sha256") != expected_primary_control.get("rerank_source_sha256")
-            or (
-                json.dumps(input_map, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n"
-            ).encode("utf-8")
-            != selector_input_map_bytes
-            or type(input_map.get("operations")) is not list
-            or [row.get("operation_id") if type(row) is dict else None for row in input_map["operations"]]
-            != list(expected_operation_ids)
-        ):
-            raise ResourceEvidenceError("selector-input-map-binding")
-        for name in (
-            "coverage_source_sha256",
-            "production_rerank_source_sha256",
-            "execution_source_sha256",
-            "legacy_control_source_sha256",
-            "current_service_source_sha256",
-            "acquisition_snapshot_index_sha256",
-            "acquisition_manifest_sha256",
-            "task_input_manifest_sha256",
-            "neutral_fixture_sha256",
-            "builder_source_sha256",
-        ):
-            if type(input_map.get(name)) is not str or not _SHA.fullmatch(input_map[name]):
-                raise ResourceEvidenceError("selector-input-map-material-pin-invalid")
-        registered_input_rows = {row["operation_id"]: row for row in input_map["operations"]}
-        for operation_id, row in registered_input_rows.items():
-            is_w0 = operation_id.endswith("-w0") or operation_id == "neutral-w0-first40"
-            if (
-                type(row) is not dict
-                or set(row) != {"operation_id", "parser_mode", "operation_input_sha256", "request_body_sha256"}
-                or row.get("parser_mode") != ("original-v1" if is_w0 else "coverage")
-                or type(row.get("operation_input_sha256")) is not str
-                or not _SHA.fullmatch(row["operation_input_sha256"])
-                or type(row.get("request_body_sha256")) is not str
-                or not _SHA.fullmatch(row["request_body_sha256"])
-            ):
-                raise ResourceEvidenceError("selector-input-map-operation-invalid")
     expected_bindings = {
         "schema": "coverage-jev-terminal-inventory/1",
         "stage_uuid": stage_uuid,
@@ -820,11 +818,6 @@ def _selector_observations(
         raise ResourceEvidenceError("selector-terminal-observation-inventory-mismatch")
 
     usage_rows: list[dict[str, object]] = []
-    transaction_proofs: list[dict[str, object]] = []
-    provenance_states: list[bool] = []
-    w0_models: set[str] = set()
-    w0_strategies: set[str] = set()
-    w0_transports: list[str] = []
     elapsed_values: list[int] = []
     concurrency_values: list[int] = []
     dispatch_total = 0
@@ -912,8 +905,6 @@ def _selector_observations(
             or result.get("max_concurrent_operations_observed") != observation.get("max_concurrent_operations_observed")
         ):
             raise ResourceEvidenceError("selector-result-observation-binding")
-        provenance = result.get("execution_provenance")
-        provenance_states.append(provenance is not None)
         elapsed = observation.get("elapsed_ms_through_final_receipt_fsync")
         dispatches = observation.get("provider_dispatch_count")
         request_bytes = observation.get("request_bytes")
@@ -963,92 +954,6 @@ def _selector_observations(
             or _sha(response) != result.get("response_sha256")
         ):
             raise ResourceEvidenceError("selector-archive-result-binding")
-        if provenance is not None:
-            required_provenance_keys = {
-                "schema",
-                "registration_sha256",
-                "stage_uuid",
-                "source_revision",
-                "operation_id",
-                "operation_input_sha256",
-                "request_body_sha256",
-                "parser_mode",
-                "source_sha256",
-                "requested_model",
-                "transport_kind",
-                "ranking_strategy",
-            }
-            if registered_input_rows is not None:
-                required_provenance_keys.add("selector_input_map_sha256")
-            is_w0 = operation_id.endswith("-w0") or operation_id == "neutral-w0-first40"
-            expected_parser = "original-v1" if is_w0 else "coverage"
-            expected_source = (
-                expected_primary_control.get("rerank_source_sha256")
-                if is_w0 and expected_primary_control is not None
-                else expected_candidate_source_sha256
-            )
-            if (
-                expected_registration_sha256 is None
-                or expected_primary_control is None
-                or expected_candidate_source_sha256 is None
-                or type(provenance) is not dict
-                or set(provenance) != required_provenance_keys
-                or provenance.get("schema") != "coverage-selector-execution-provenance/1"
-                or provenance.get("registration_sha256") != expected_registration_sha256
-                or provenance.get("stage_uuid") != stage_uuid
-                or provenance.get("source_revision") != source_revision
-                or provenance.get("operation_id") != operation_id
-                or provenance.get("operation_input_sha256") != result.get("operation_input_sha256")
-                or type(provenance.get("operation_input_sha256")) is not str
-                or not _SHA.fullmatch(provenance["operation_input_sha256"])
-                or provenance.get("request_body_sha256") != result.get("request_body_sha256")
-                or provenance.get("request_body_sha256") != receipt.get("request_body_sha256")
-                or (
-                    registered_input_rows is not None
-                    and provenance.get("selector_input_map_sha256") != expected_selector_input_map_sha256
-                )
-                or (
-                    registered_input_rows is not None
-                    and (
-                        provenance.get("operation_input_sha256")
-                        != registered_input_rows[operation_id].get("operation_input_sha256")
-                        or provenance.get("request_body_sha256")
-                        != registered_input_rows[operation_id].get("request_body_sha256")
-                    )
-                )
-                or provenance.get("parser_mode") != expected_parser
-                or provenance.get("parser_mode") != result.get("parser_mode")
-                or provenance.get("source_sha256") != expected_source
-                or type(provenance.get("requested_model")) is not str
-                or provenance.get("transport_kind") not in {"default-httpx", "injected"}
-                or (
-                    is_w0
-                    and (
-                        provenance.get("ranking_strategy") != expected_primary_control.get("ranking_strategy")
-                        or provenance.get("requested_model") != expected_primary_control.get("model")
-                    )
-                )
-                or (not is_w0 and provenance.get("ranking_strategy") is not None)
-            ):
-                raise ResourceEvidenceError("selector-execution-provenance-binding")
-            transaction_proofs.append(
-                {
-                    "operation_id": operation_id,
-                    "parser_mode": expected_parser,
-                    "source_sha256": expected_source,
-                    "operation_input_sha256": provenance["operation_input_sha256"],
-                    "request_body_sha256": provenance["request_body_sha256"],
-                    "requested_model": provenance["requested_model"],
-                    "archive_receipt_sha256": archive_sha,
-                    "result_receipt_sha256": result_sha,
-                    "transport_kind": provenance["transport_kind"],
-                    "ranking_strategy": provenance["ranking_strategy"],
-                }
-            )
-            if is_w0:
-                w0_models.add(provenance["requested_model"])
-                w0_strategies.add(provenance["ranking_strategy"])
-                w0_transports.append(provenance["transport_kind"])
         # Token counts are measurements from the archived provider body. The
         # terminal and result receipts duplicate these fields for auditability,
         # but neither duplicate is an independent source of truth.
@@ -1083,9 +988,7 @@ def _selector_observations(
             usage_rows.append({"operation_id": operation_id, "status": "unknown"})
 
     all_observed = len(elapsed_values) == len(expected_operation_ids)
-    if any(provenance_states) and not all(provenance_states):
-        raise ResourceEvidenceError("selector-execution-provenance-incomplete")
-    output: dict[str, object] = {
+    return {
         "terminal_inventory_complete": True if all_observed else None,
         "selector_elapsed_ms": max(elapsed_values) if all_observed else None,
         # The stage-wide timer is measured by the coordinator after its final fsync.
@@ -1095,50 +998,7 @@ def _selector_observations(
         # Dispatches are observed at the HTTP transport, one expected per slot.
         "selector_retries": retries_total if all_observed else None,
         "selector_provider_dispatches": dispatch_total if all_observed else None,
-        "selector_transaction_proof": None,
-        "w0_control_source_sha256": None,
-        "w0_source_revision": None,
-        "w0_model": None,
-        "w0_provider_configured": None,
-        "w0_ranking_strategy": None,
-        "w0_parser_parity_verified": None,
-        "candidate_source_sha256": None,
-        "atomic_fallback_verified": None,
     }
-    if (
-        all_observed
-        and len(transaction_proofs) == len(expected_operation_ids)
-        and registered_input_rows is not None
-        and type(expected_registration_sha256) is str
-        and _SHA.fullmatch(expected_registration_sha256)
-        and expected_primary_control is not None
-        and expected_candidate_source_sha256 is not None
-        and len(w0_models) == 1
-        and len(w0_strategies) == 1
-        and next(iter(w0_models)) == expected_primary_control.get("model")
-        and next(iter(w0_strategies)) == expected_primary_control.get("ranking_strategy")
-    ):
-        output.update(
-            {
-                "selector_transaction_proof": {
-                    "schema": "coverage-selector-source-archive-registry-proof/1",
-                    "registration_sha256": expected_registration_sha256,
-                    "input_map_sha256": expected_selector_input_map_sha256,
-                    "stage_uuid": stage_uuid,
-                    "source_revision": source_revision,
-                    "transactions": transaction_proofs,
-                    "parser_parity_verified": None,
-                    "atomic_fallback_verified": None,
-                },
-                "w0_control_source_sha256": expected_primary_control["rerank_source_sha256"],
-                "w0_source_revision": source_revision,
-                "w0_model": next(iter(w0_models)),
-                "w0_provider_configured": (True if all(kind == "default-httpx" for kind in w0_transports) else None),
-                "w0_ranking_strategy": next(iter(w0_strategies)),
-                "candidate_source_sha256": expected_candidate_source_sha256,
-            }
-        )
-    return output
 
 
 def coverage_source_capture_normalize(url: str) -> str:
@@ -1432,6 +1292,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             candidate_endpoint_sha256=kwargs["candidate_endpoint_sha256"],
             timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
             response_bytes_limit=protocol["capture"]["response_bytes"],
+            protocol_schema=str(protocol.get("schema", "")),
         )
         answer = _answer_observations(
             stage_uuid=stage_uuid,
@@ -1461,17 +1322,18 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             ),
             expected_operation_ids=tuple(kwargs.get("selector_expected_operation_ids", ())),
             operation_rows=tuple(kwargs.get("selector_operation_rows", ())),
-            expected_registration_sha256=kwargs.get("selector_registration_sha256"),
-            expected_primary_control=protocol.get("primary_control") if type(protocol) is dict else None,
-            expected_candidate_source_sha256=(
-                protocol.get("candidate_source_sha256") if type(protocol) is dict else None
-            ),
-            selector_input_map_bytes=kwargs.get("selector_input_map_bytes"),
-            expected_selector_input_map_sha256=kwargs.get("expected_selector_input_map_sha256"),
         )
         observations = {**acq, **capture, **answer, **grader, **selector}
+        observations["w0_control_source_sha256"] = None
+        observations["w0_source_revision"] = None
+        observations["w0_model"] = None
+        observations["w0_provider_configured"] = None
+        observations["w0_ranking_strategy"] = None
+        observations["w0_parser_parity_verified"] = None
+        observations["candidate_source_sha256"] = None
         observations["stage_elapsed_seconds"] = None
         observations["grader_concurrency"] = None
+        observations["atomic_fallback_verified"] = None
         observations["capture_internal_fanout"] = None
         observations["capture_response_bytes_limit"] = capture.get("capture_response_bytes_limit_applied")
         observations["acquisition_retries"] = None
@@ -1493,7 +1355,6 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             "selector_source_revision": source_revision,
             "selector_protocol_sha256": protocol_sha256,
             "selector_source_closure_sha256": kwargs["source_closure_sha256"],
-            "selector_registration_sha256": kwargs.get("selector_registration_sha256"),
             "protocol_limits_and_configuration": _configuration_provenance(protocol),
             "acquisition_timeout_measurement_basis": (
                 "per-dispatched-request timeout extension recorded by the pinned HTTPX transport receipts; "
@@ -1501,11 +1362,6 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             ),
             "quality_credit": False,
             "admission_created": False,
-            "selector_transaction_proof_sha256": (
-                _sha(_canonical(selector["selector_transaction_proof"]))
-                if selector.get("selector_transaction_proof") is not None
-                else None
-            ),
         }
         receipt = _canonical(
             {

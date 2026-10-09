@@ -8,6 +8,7 @@ import json
 import os
 import stat
 import zlib
+from dataclasses import replace
 from pathlib import Path
 from typing import Mapping
 
@@ -18,6 +19,7 @@ from scripts import intent_ranking_receipts
 from scripts.coverage_source_capture import (
     MAX_RESPONSE_BYTES,
     SourceCaptureError,
+    VerifiedProtectedCaptureQualification,
     VerifiedSourceCapturePermit,
     _BoundedContentDecoder,
     capture_sources_once,
@@ -124,7 +126,7 @@ def _root(tmp_path: Path) -> Path:
 async def _capture(
     *,
     tmp_path: Path,
-    transport: httpx.AsyncBaseTransport,
+    transport: httpx.AsyncBaseTransport | None,
     sources: list[dict[str, object]],
     candidate_base_url: str = "https://capture.example",
     token: str | None = "test-secret-token",
@@ -137,8 +139,12 @@ async def _capture(
     candidate_identity_bytes: bytes | None = None,
     manifest_cohorts_sha256: str | None = None,
     manifest_candidate_identity_sha256: str | None = None,
+    qualification_receipt_bytes: bytes | None = None,
+    qualification_verifier=None,
+    expected_qualification_receipt_sha256: str | None = None,
+    protocol_bytes_override: bytes | None = None,
 ):
-    protocol_bytes = _protocol_bytes()
+    protocol_bytes = protocol_bytes_override or _protocol_bytes()
     candidate_identity_bytes = candidate_identity_bytes or _candidate_identity()
     manifest_bytes = _manifest(
         protocol_bytes,
@@ -167,6 +173,9 @@ async def _capture(
         transport=transport,
         stage_started_monotonic=start,
         stage_deadline_monotonic=deadline,
+        qualification_receipt_bytes=qualification_receipt_bytes,
+        expected_qualification_receipt_sha256=expected_qualification_receipt_sha256,
+        qualification_verifier=qualification_verifier,
         clock=clock,
     )
 
@@ -179,6 +188,36 @@ def _response(markdown: str) -> bytes:
 
 def _healthy_response() -> httpx.Response:
     return httpx.Response(200, json={"status": "ok", "runtime": {"revision": "c" * 40, "model": "free"}})
+
+
+class _QualificationVerifier:
+    def __init__(self, *, mutate=None) -> None:
+        self.mutate = mutate
+        self.calls = 0
+
+    def verify(self, receipt_bytes, expected_receipt_sha256, bindings):
+        self.calls += 1
+        if receipt_bytes != b"independently-verified-protected-profile":
+            raise SourceCaptureError("qualification-receipt-untrusted")
+        value = VerifiedProtectedCaptureQualification(
+            status="verified-qualified",
+            scope="protected-source-capture",
+            bindings=bindings,
+            grok_image_digest="sha256:" + "a" * 64,
+            grok_config_sha256="d" * 64,
+            protected_profile_sha256="b" * 64,
+            full_boundary_evidence_sha256="c" * 64,
+            receipt_sha256=expected_receipt_sha256,
+        )
+        return self.mutate(value) if self.mutate else value
+
+
+class _WrongImageVerifier(_QualificationVerifier):
+    def verify(self, receipt_bytes, expected_receipt_sha256, bindings):
+        result = super().verify(receipt_bytes, expected_receipt_sha256, bindings)
+        if result.grok_image_digest != "sha256:" + "a" * 64:
+            raise SourceCaptureError("qualification-image-not-current")
+        return result
 
 
 class _RawAsyncBody(httpx.AsyncByteStream):
@@ -668,11 +707,244 @@ async def test_real_transport_and_nip_dns_alias_are_rejected_before_lease_or_req
             )
     finally:
         await transport.aclose()
-
     assert verifier.calls == 0
     assert lease.calls == 0
     assert actual_requests == []
     assert list((tmp_path / "private-receipts").iterdir()) == []
+
+
+@pytest.mark.asyncio
+async def test_owned_transport_requires_current_external_qualification_before_lease(
+    tmp_path: Path,
+) -> None:
+    lease = _Lease()
+    verifier = _QualificationVerifier()
+    with pytest.raises(SourceCaptureError, match="qualification-required"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=None,
+            sources=[],
+            lease=lease,
+            qualification_verifier=verifier,
+        )
+    assert verifier.calls == 0
+    assert lease.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_protocol_one_remains_https_only_before_lease_or_dispatch(tmp_path: Path) -> None:
+    lease = _Lease()
+    protocol = json.loads(_protocol_bytes())
+    protocol["schema"] = "coverage-first-study-protocol/1"
+    protocol_bytes = _canonical(protocol)
+    called = False
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return _healthy_response()
+
+    with pytest.raises(SourceCaptureError, match="candidate-endpoint-invalid"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=httpx.MockTransport(handler),
+            sources=[],
+            candidate_base_url="http://capture.example",
+            protocol_bytes_override=protocol_bytes,
+            lease=lease,
+        )
+    assert lease.calls == 0
+    assert called is False
+
+
+@pytest.mark.asyncio
+async def test_protocol_two_http_requires_owned_qualified_transport(tmp_path: Path) -> None:
+    lease = _Lease()
+    called = False
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return _healthy_response()
+
+    with pytest.raises(SourceCaptureError, match="http-candidate-endpoint-requires-owned-qualified-transport"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=httpx.MockTransport(handler),
+            sources=[],
+            candidate_base_url="http://capture.example",
+            lease=lease,
+        )
+    assert lease.calls == 0
+    assert called is False
+
+
+@pytest.mark.asyncio
+async def test_qualified_protocol_two_binds_http_scheme_and_uses_http_endpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.coverage_source_capture as capture
+
+    receipt = b"independently-verified-protected-profile"
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.scheme + "://" + request.url.host + request.url.path)
+        return _healthy_response()
+
+    monkeypatch.setattr(capture, "_owned_httpx_transport", lambda: httpx.MockTransport(handler))
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=None,
+        sources=[],
+        candidate_base_url="http://capture.example",
+        qualification_receipt_bytes=receipt,
+        expected_qualification_receipt_sha256=_sha(receipt),
+        qualification_verifier=_QualificationVerifier(),
+    )
+    inventory = json.loads((result.receipt_directory / "inventory.json").read_bytes())
+    qualification = inventory["protected_capture_qualification"]
+    assert result.status == "complete"
+    assert seen == ["http://capture.example/health"]
+    assert qualification["bindings"]["candidate_endpoint_scheme"] == "http"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda value: replace(value, status="failed"),
+        lambda value: replace(value, scope="other"),
+        lambda value: replace(
+            value,
+            bindings=replace(value.bindings, capture_module_sha256="0" * 64),
+        ),
+        lambda value: replace(
+            value,
+            bindings=replace(value.bindings, candidate_runtime_revision="0" * 40),
+        ),
+        lambda value: replace(value, full_boundary_evidence_sha256="not-a-digest"),
+    ],
+)
+async def test_stale_or_wrong_qualification_stops_before_lease(tmp_path: Path, mutation) -> None:
+    lease = _Lease()
+    receipt = b"independently-verified-protected-profile"
+    verifier = _QualificationVerifier(mutate=mutation)
+    with pytest.raises(SourceCaptureError, match="qualification-binding-mismatch"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=None,
+            sources=[],
+            lease=lease,
+            qualification_receipt_bytes=receipt,
+            expected_qualification_receipt_sha256=_sha(receipt),
+            qualification_verifier=verifier,
+        )
+    assert verifier.calls == 1
+    assert lease.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_external_verifier_rejects_wrong_grok_image_before_lease(tmp_path: Path) -> None:
+    receipt = b"independently-verified-protected-profile"
+    lease = _Lease()
+    verifier = _WrongImageVerifier(mutate=lambda value: replace(value, grok_image_digest="sha256:" + "0" * 64))
+    with pytest.raises(SourceCaptureError, match="image-not-current"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=None,
+            sources=[],
+            qualification_receipt_bytes=receipt,
+            expected_qualification_receipt_sha256=_sha(receipt),
+            qualification_verifier=verifier,
+            lease=lease,
+        )
+    assert verifier.calls == 1
+    assert lease.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_qualified_owned_transport_records_exact_controls_and_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.coverage_source_capture as capture
+
+    receipt = b"independently-verified-protected-profile"
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, request.url.path))
+        return _healthy_response()
+
+    def owned_transport():
+        # This factory stands in for the owned constructor to keep the test offline.
+        return httpx.MockTransport(handler)
+
+    monkeypatch.setattr(capture, "_owned_httpx_transport", owned_transport)
+    verifier = _QualificationVerifier()
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=None,
+        sources=[],
+        qualification_receipt_bytes=receipt,
+        expected_qualification_receipt_sha256=_sha(receipt),
+        qualification_verifier=verifier,
+    )
+    inventory = json.loads((result.receipt_directory / "inventory.json").read_bytes())
+    qualification = inventory["protected_capture_qualification"]
+    controls = inventory["execution_control_attestation"]
+    assert result.status == "complete"
+    assert seen == [("GET", "/health")]
+    assert verifier.calls == 1
+    assert (result.receipt_directory / qualification["receipt_file"]).read_bytes() == receipt
+    assert qualification["receipt_sha256"] == _sha(receipt)
+    assert qualification["grok_image_digest"] == "sha256:" + "a" * 64
+    assert qualification["grok_config_sha256"] == "d" * 64
+    assert controls["transport_retry_policy"] == "httpx-owned-retries-zero"
+    assert controls["transport_configuration"] == {
+        "trust_env": False,
+        "retries": 0,
+        "max_connections": 1,
+        "max_keepalive_connections": 0,
+    }
+
+
+def test_owned_transport_factory_sets_no_proxy_retry_or_connection_reuse(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import scripts.coverage_source_capture as capture
+
+    observed = {}
+
+    def factory(**kwargs):
+        observed.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(capture.httpx, "AsyncHTTPTransport", factory)
+    assert capture._owned_httpx_transport() is not None
+    assert observed == {
+        "trust_env": False,
+        "retries": 0,
+        "limits": httpx.Limits(max_connections=1, max_keepalive_connections=0),
+    }
+
+
+@pytest.mark.asyncio
+async def test_qualification_digest_mismatch_precedes_verifier_and_lease(tmp_path: Path) -> None:
+    verifier = _QualificationVerifier()
+    lease = _Lease()
+    with pytest.raises(SourceCaptureError, match="qualification-digest-mismatch"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=None,
+            sources=[],
+            qualification_receipt_bytes=b"receipt",
+            expected_qualification_receipt_sha256="0" * 64,
+            qualification_verifier=verifier,
+            lease=lease,
+        )
+    assert verifier.calls == 0
+    assert lease.calls == 0
 
 
 async def test_response_over_cap_is_archived_partial_and_stops_remaining_slots(tmp_path: Path) -> None:

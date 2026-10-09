@@ -2,9 +2,10 @@
 
 No endpoint, credentials, or transport are discovered at import time. Callers
 must provide a verified source-bound permit, one-shot lease, explicit candidate
-endpoint/authentication, and an HTTPX transport. The permit object is an
-integration contract, not a security boundary; this module is not yet source
-qualified. Scraper-internal network fanout remains unknown and unbounded here.
+endpoint/authentication, and either a MockTransport or an externally verified
+protected-capture qualification. A qualified production call owns its HTTPX
+transport. The candidate scraper's internal fanout is still outside this
+module's boundary and remains unknown unless the exact Grok profile is qualified.
 """
 
 from __future__ import annotations
@@ -143,6 +144,43 @@ class OneShotLease(Protocol):
 
 
 @dataclass(frozen=True)
+class ProtectedCaptureQualificationBindings:
+    """Current source and endpoint facts an external qualification must bind."""
+
+    stage_uuid: str
+    source_revision: str
+    protocol_sha256: str
+    candidate_identity_sha256: str
+    candidate_endpoint_sha256: str
+    candidate_endpoint_scheme: str
+    candidate_runtime_revision: str
+    capture_module_sha256: str
+
+
+@dataclass(frozen=True)
+class VerifiedProtectedCaptureQualification:
+    """Typed result from the independent protected-profile qualification verifier."""
+
+    status: str
+    scope: str
+    bindings: ProtectedCaptureQualificationBindings
+    grok_image_digest: str
+    grok_config_sha256: str
+    protected_profile_sha256: str
+    full_boundary_evidence_sha256: str
+    receipt_sha256: str
+
+
+class ProtectedCaptureQualificationVerifier(Protocol):
+    def verify(
+        self,
+        receipt_bytes: bytes,
+        expected_receipt_sha256: str,
+        bindings: ProtectedCaptureQualificationBindings,
+    ) -> VerifiedProtectedCaptureQualification: ...
+
+
+@dataclass(frozen=True)
 class SourceCaptureResult:
     """Private outcome rows plus a sanitized stage summary and receipt location."""
 
@@ -155,6 +193,7 @@ class SourceCaptureResult:
     owned_http_calls: int
     receipt_directory: Path
     private_inventory: tuple[Mapping[str, object], ...]
+    candidate_endpoint_scheme: str = "https"
     internal_scraper_fanout: str = "unknown unless independently exposed; not counted as zero"
     quality_credit: bool = False
 
@@ -372,13 +411,13 @@ def _consume_lease(lease: OneShotLease | None, permit: VerifiedSourceCapturePerm
     return result["receipt_sha256"]
 
 
-def _candidate_endpoints(base_url: str) -> tuple[str, str, str]:
+def _candidate_endpoints(base_url: str, *, allow_http: bool = False) -> tuple[str, str, str]:
     if type(base_url) is not str or len(base_url) > 2048:
         raise SourceCaptureError("candidate-endpoint-invalid")
     try:
         parsed = urlsplit(base_url)
         if (
-            parsed.scheme != "https"
+            parsed.scheme not in ({"https", "http"} if allow_http else {"https"})
             or not parsed.hostname
             or parsed.username is not None
             or parsed.password is not None
@@ -390,7 +429,7 @@ def _candidate_endpoints(base_url: str) -> tuple[str, str, str]:
     except ValueError as exc:
         raise SourceCaptureError("candidate-endpoint-invalid") from exc
     prefix = parsed.path.rstrip("/")
-    origin = f"https://{parsed.netloc}{prefix}"
+    origin = f"{parsed.scheme}://{parsed.netloc}{prefix}"
     return origin + "/health", origin + "/v2/scrape", _sha(origin.encode("utf-8"))
 
 
@@ -421,6 +460,57 @@ def _validate_transport(transport: httpx.AsyncBaseTransport) -> None:
     # protection. Live capture stays disabled until that fetch boundary is
     # independently qualified; synthetic tests may inject only MockTransport.
     raise SourceCaptureError("live-fetch-boundary-not-qualified-mock-transport-required")
+
+
+def _verify_protected_capture_qualification(
+    *,
+    receipt_bytes: bytes | None,
+    expected_receipt_sha256: str | None,
+    verifier: ProtectedCaptureQualificationVerifier | None,
+    bindings: ProtectedCaptureQualificationBindings,
+) -> VerifiedProtectedCaptureQualification:
+    if type(receipt_bytes) is not bytes or not receipt_bytes or len(receipt_bytes) > 65_536:
+        raise SourceCaptureError("protected-capture-qualification-required")
+    if (
+        type(expected_receipt_sha256) is not str
+        or not _SHA256.fullmatch(expected_receipt_sha256)
+        or _sha(receipt_bytes) != expected_receipt_sha256
+    ):
+        raise SourceCaptureError("protected-capture-qualification-digest-mismatch")
+    if verifier is None or not callable(getattr(verifier, "verify", None)):
+        raise SourceCaptureError("protected-capture-qualification-verifier-required")
+    try:
+        qualification = verifier.verify(receipt_bytes, expected_receipt_sha256, bindings)
+    except SourceCaptureError:
+        raise
+    except Exception as exc:
+        raise SourceCaptureError("protected-capture-qualification-verification-failed") from exc
+    if (
+        type(qualification) is not VerifiedProtectedCaptureQualification
+        or qualification.status != "verified-qualified"
+        or qualification.scope != "protected-source-capture"
+        or qualification.bindings != bindings
+        or type(qualification.grok_image_digest) is not str
+        or not re.fullmatch(r"sha256:[0-9a-f]{64}", qualification.grok_image_digest)
+        or type(qualification.grok_config_sha256) is not str
+        or not _SHA256.fullmatch(qualification.grok_config_sha256)
+        or type(qualification.protected_profile_sha256) is not str
+        or not _SHA256.fullmatch(qualification.protected_profile_sha256)
+        or type(qualification.full_boundary_evidence_sha256) is not str
+        or not _SHA256.fullmatch(qualification.full_boundary_evidence_sha256)
+        or qualification.receipt_sha256 != expected_receipt_sha256
+    ):
+        raise SourceCaptureError("protected-capture-qualification-binding-mismatch")
+    return qualification
+
+
+def _owned_httpx_transport() -> httpx.AsyncHTTPTransport:
+    """Build the production transport with environment proxies and retries disabled."""
+    return httpx.AsyncHTTPTransport(
+        trust_env=False,
+        retries=0,
+        limits=httpx.Limits(max_connections=1, max_keepalive_connections=0),
+    )
 
 
 def _write_once(path: Path, raw: bytes) -> None:
@@ -721,16 +811,22 @@ async def capture_sources_once(
     permit_verifier: PermitVerifier,
     one_shot_lease: OneShotLease,
     receipt_root: Path,
-    transport: httpx.AsyncBaseTransport,
+    transport: httpx.AsyncBaseTransport | None,
     stage_started_monotonic: float,
     stage_deadline_monotonic: float,
+    qualification_receipt_bytes: bytes | None = None,
+    expected_qualification_receipt_sha256: str | None = None,
+    qualification_verifier: ProtectedCaptureQualificationVerifier | None = None,
     clock=time.monotonic,
 ) -> SourceCaptureResult:
     """Capture one exact source inventory through an injected HTTPX transport.
 
     This accepts only explicit endpoint/token/transport inputs; it does not
-    consult environment variables. One health request precedes at most one
-    scrape request per distinct eligible public URL. On a transport,
+    consult environment variables. Tests may inject MockTransport. A live call
+    must pass ``transport=None`` and an external verifier for a qualification
+    bound to the exact endpoint, candidate identity, protocol, current source
+    module, Grok image/profile, and full-boundary evidence. One health request
+    precedes at most one scrape request per distinct eligible public URL. On a transport,
     response-cap, deadline, or receipt-integrity terminal failure, remaining
     inventory rows remain uninvoked and are retained as such.
     """
@@ -741,7 +837,11 @@ async def capture_sources_once(
     candidate_identity = _validate_candidate_identity(
         candidate_identity_bytes, str(manifest["candidate_identity_sha256"])
     )
-    health_url, scrape_url, candidate_endpoint_sha256 = _candidate_endpoints(candidate_base_url)
+    protocol_v2 = protocol.get("schema") == "coverage-first-study-protocol/2"
+    health_url, scrape_url, candidate_endpoint_sha256 = _candidate_endpoints(candidate_base_url, allow_http=protocol_v2)
+    endpoint_scheme = urlsplit(candidate_base_url).scheme
+    if endpoint_scheme == "http" and transport is not None:
+        raise SourceCaptureError("http-candidate-endpoint-requires-owned-qualified-transport")
     if manifest["candidate_endpoint_sha256"] != candidate_endpoint_sha256:
         raise SourceCaptureError("capture-candidate-endpoint-binding-mismatch")
     if operator_token is not None and (
@@ -752,9 +852,19 @@ async def capture_sources_once(
     ):
         raise SourceCaptureError("operator-token-invalid")
     _private_root(receipt_root)
-    if not isinstance(transport, httpx.AsyncBaseTransport):
-        raise SourceCaptureError("injected-httpx-transport-required")
-    _validate_transport(transport)
+    if transport is not None:
+        if not isinstance(transport, httpx.AsyncBaseTransport):
+            raise SourceCaptureError("injected-httpx-transport-required")
+        _validate_transport(transport)
+        if any(
+            value is not None
+            for value in (
+                qualification_receipt_bytes,
+                expected_qualification_receipt_sha256,
+                qualification_verifier,
+            )
+        ):
+            raise SourceCaptureError("mock-transport-qualification-unexpected")
     if (
         type(stage_started_monotonic) not in {int, float}
         or type(stage_deadline_monotonic) not in {int, float}
@@ -766,6 +876,25 @@ async def capture_sources_once(
     if type(now) not in {int, float} or not stage_started_monotonic <= now < stage_deadline_monotonic:
         raise SourceCaptureError("capture-stage-deadline-inactive")
 
+    qualification: VerifiedProtectedCaptureQualification | None = None
+    if transport is None:
+        bindings = ProtectedCaptureQualificationBindings(
+            stage_uuid=str(manifest["stage_uuid"]),
+            source_revision=str(manifest["source_revision"]),
+            protocol_sha256=protocol_sha,
+            candidate_identity_sha256=str(manifest["candidate_identity_sha256"]),
+            candidate_endpoint_sha256=candidate_endpoint_sha256,
+            candidate_endpoint_scheme=endpoint_scheme,
+            candidate_runtime_revision=str(candidate_identity["runtime"]["revision"]),
+            capture_module_sha256=execution_controls.module_source_sha256(__file__),
+        )
+        qualification = _verify_protected_capture_qualification(
+            receipt_bytes=qualification_receipt_bytes,
+            expected_receipt_sha256=expected_qualification_receipt_sha256,
+            verifier=qualification_verifier,
+            bindings=bindings,
+        )
+
     permit = _verify_permit(
         manifest,
         source_manifest_bytes,
@@ -773,6 +902,11 @@ async def capture_sources_once(
         expected_permit_receipt_sha256,
         permit_verifier,
     )
+    if transport is None:
+        # Construction is local and occurs only after the external boundary
+        # qualification and capture permit pass, but before consuming the
+        # one-shot lease so a constructor error cannot burn an unused slot.
+        transport = _owned_httpx_transport()
     lease_sha = _consume_lease(one_shot_lease, permit)
     stage_uuid = str(manifest["stage_uuid"])
     stage_dir = receipt_root / stage_uuid
@@ -786,6 +920,9 @@ async def capture_sources_once(
         raise SourceCaptureError("capture-stage-directory-create-failed") from exc
 
     _write_once(stage_dir / "source-manifest.json", source_manifest_bytes)
+    if qualification is not None:
+        assert qualification_receipt_bytes is not None
+        _write_once(stage_dir / "protected-capture-qualification.json", qualification_receipt_bytes)
     inventory: list[dict[str, object]] = []
     normalized_urls: set[str] = set()
     for index, source in enumerate(sources, start=1):
@@ -837,6 +974,21 @@ async def capture_sources_once(
         "health_response_content_encoding": None,
         "internal_scraper_fanout": "unknown unless independently exposed; not counted as zero",
         "quality_credit": False,
+        "protected_capture_qualification": (
+            {
+                "status": qualification.status,
+                "scope": qualification.scope,
+                "receipt_file": "protected-capture-qualification.json",
+                "receipt_sha256": qualification.receipt_sha256,
+                "grok_image_digest": qualification.grok_image_digest,
+                "grok_config_sha256": qualification.grok_config_sha256,
+                "protected_profile_sha256": qualification.protected_profile_sha256,
+                "full_boundary_evidence_sha256": qualification.full_boundary_evidence_sha256,
+                "bindings": qualification.bindings.__dict__,
+            }
+            if qualification is not None
+            else None
+        ),
         "execution_control_attestation": {
             "schema": "coverage-capture-execution-controls/1",
             "stage_uuid": stage_uuid,
@@ -849,7 +1001,19 @@ async def capture_sources_once(
             "timeout_limit_seconds_configured": REQUEST_TIMEOUT_SECONDS,
             "response_bytes_limit_applied": MAX_RESPONSE_BYTES,
             "application_retry_policy": "one-dispatch-per-operation",
-            "transport_retry_policy": "unknown-injected-transport",
+            "transport_retry_policy": (
+                "httpx-owned-retries-zero" if qualification is not None else "unknown-injected-transport"
+            ),
+            "transport_configuration": (
+                {
+                    "trust_env": False,
+                    "retries": 0,
+                    "max_connections": 1,
+                    "max_keepalive_connections": 0,
+                }
+                if qualification is not None
+                else None
+            ),
             "max_concurrent_requests_observed": 0,
             "operations": [],
         },
@@ -1079,6 +1243,7 @@ async def capture_sources_once(
         owned_http_calls=wrapped.owned_calls,
         receipt_directory=stage_dir,
         private_inventory=tuple(inventory),
+        candidate_endpoint_scheme=endpoint_scheme,
     )
 
 
