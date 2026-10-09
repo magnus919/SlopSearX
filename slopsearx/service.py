@@ -24,6 +24,7 @@ import dataclasses
 import datetime as _dt
 import hashlib
 import logging
+import math
 import os
 import time
 import uuid
@@ -1787,6 +1788,9 @@ def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
     """Rehydrate a :class:`SearchResult` from a serialized dict."""
     raw_category = data.get("category")
     raw_score = data.get("score")
+    score = float(raw_score) if raw_score is not None else 0.0
+    if not math.isfinite(score):
+        raise ValueError("non-finite result score")
     raw_position = data.get("position")
     raw_tier = data.get("tier")
     return SearchResult(
@@ -1795,7 +1799,7 @@ def search_result_from_dict(data: dict[str, Any]) -> SearchResult:
         content=str(data.get("content", "")),
         engine=str(data.get("engine", "")),
         engines=_rehydrate_engines(data.get("engines")),
-        score=float(raw_score) if raw_score is not None else 0.0,
+        score=score,
         position=int(raw_position) if raw_position is not None else 0,
         category=raw_category if raw_category is not None else "general",
         published_date=data.get("published_date"),
