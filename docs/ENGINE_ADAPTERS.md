@@ -334,3 +334,11 @@ See `slopsearx/adapter.py` for the base classes (`EngineAdapter`, `ScrapeAdapter
 > (`slopsearx_list_capabilities`, `slopsearx://capabilities`) is generated from
 > the runtime registry at startup and is authoritative; this prose table is a
 > convenience copy.
+
+## Bing HTML candidate decision
+
+Bing HTML scraping was investigated for keyless general search in issue #674
+and was not adopted. The [investigation evidence ledger](experiments/bing-html-issue-674.md)
+records the observed relevance failures, the merged Wikipedia fix, the limits
+of the probes, and requirements for any future proposal. Bing is not a built-in
+adapter.
