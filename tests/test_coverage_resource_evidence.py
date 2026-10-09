@@ -14,6 +14,7 @@ from scripts import coverage_resource_evidence as resource_evidence
 from tests.test_coverage_answer_execution import _answer_content, _response, _stage_inputs
 from tests.test_coverage_grade_closure import _answer_outputs, _closed_prepared, _pre_submissions
 from tests.test_coverage_live_acquire import FakePermitVerifier, OneShot, make_manifest
+from tests.test_coverage_live_acquire import _mock_handler as acquisition_mock_handler
 from tests.test_coverage_live_acquire import _run as _run_acquisition
 from tests.test_coverage_source_capture import (
     _candidate_identity,
@@ -284,6 +285,8 @@ def test_acquisition_observations_bind_real_mock_exchange_receipts_and_stage(tmp
         source_closure_sha256=manifest["source_closure_sha256"],
         acquisition_plan_sha256=_sha(acquisition_plan),
         configured_timeout_seconds=10,
+        configured_query_pacing_seconds=7,
+        configured_arxiv_pacing_seconds=3,
     )
     assert observed["acquisition_physical_http_calls"] == evidence.stage.physical_request_count
     assert sum(observed["acquisition_engine_calls"].values()) == evidence.stage.physical_request_count
@@ -292,6 +295,42 @@ def test_acquisition_observations_bind_real_mock_exchange_receipts_and_stage(tmp
     assert observed["acquisition_timeout_seconds"] == 10.0
     assert set(observed["acquisition_timeout_seconds_by_exchange"]) == {10.0}
     assert observed["acquisition_timeout_observation_state"] == "observed-uniform"
+    assert observed["acquisition_retries"] == 0
+    assert observed["acquisition_pacing_seconds"] == 7.0
+    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] == 7_000_000
+    assert observed["arxiv_pacing_seconds"] is None
+    assert observed["acquisition_arxiv_min_gap_microseconds_observed"] is None
+
+    # The query invocation ledger and final HTTP receipt independently bind
+    # timestamps. Re-sealing a modified control claim cannot alter the actual
+    # dispatch timestamps in the transport receipts.
+    summary_path = evidence.receipt_directory / "stage-summary.json"
+    summary = json.loads(summary_path.read_bytes())
+    summary["execution_control_attestation"]["physical_dispatch_offsets_us"][0]["dispatch_offset_us"] += 1
+    summary_path.write_bytes(resource_evidence.coverage_live_acquire._canonical(summary))
+    resealed_inventory = resource_evidence.receipt_inventory_sha256(evidence.receipt_directory)
+    with pytest.raises(
+        resource_evidence.ResourceEvidenceError,
+        match="acquisition-dispatch-offset-receipt-mismatch",
+    ):
+        resource_evidence.collect_acquisition_observations(
+            snapshots_directory=evidence.receipt_directory,
+            receipt_directory=evidence.receipt_directory,
+            expected_receipt_inventory_sha256=resealed_inventory,
+            acquisition_manifest_bytes=resource_evidence.coverage_live_acquire._canonical(manifest),
+            acquisition_plan_bytes=acquisition_plan,
+            expected_index_sha256=evidence.pool_snapshot_index_sha256,
+            expected_manifest_sha256=evidence.stage_manifest_sha256,
+            stage_uuid=manifest["stage_uuid"],
+            source_revision=manifest["source_revision"],
+            protocol_sha256=manifest["protocol_sha256"],
+            cohorts_sha256=manifest["cohorts_sha256"],
+            source_closure_sha256=manifest["source_closure_sha256"],
+            acquisition_plan_sha256=_sha(acquisition_plan),
+            configured_timeout_seconds=10,
+            configured_query_pacing_seconds=7,
+            configured_arxiv_pacing_seconds=3,
+        )
     final_receipt = evidence.receipt_directory / "http-0001-final.json"
     final_receipt.write_bytes(final_receipt.read_bytes() + b" ")
     with pytest.raises(resource_evidence.ResourceEvidenceError, match="acquisition-receipt-inventory-invalid"):
@@ -310,6 +349,8 @@ def test_acquisition_observations_bind_real_mock_exchange_receipts_and_stage(tmp
             source_closure_sha256=manifest["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan),
             configured_timeout_seconds=10,
+            configured_query_pacing_seconds=7,
+            configured_arxiv_pacing_seconds=3,
         )
 
 
@@ -339,7 +380,78 @@ def test_acquisition_timeout_observation_rejects_receipt_value_above_bound(tmp_p
             source_closure_sha256=manifest["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan),
             configured_timeout_seconds=10,
+            configured_query_pacing_seconds=7,
+            configured_arxiv_pacing_seconds=3,
         )
+
+
+def test_acquisition_collector_reports_short_measured_query_gap_not_configured_limit(tmp_path: Path):
+    class NoWaitPacer:
+        def __init__(self):
+            self.elapsed = 0.0
+
+        async def sleep(self, _seconds):
+            return None
+
+        def monotonic(self):
+            return self.elapsed
+
+    manifest, acquisition_plan = make_manifest()
+    evidence, _verifier, _lease, _pacer, _calls = asyncio.run(
+        _run_acquisition(tmp_path, pacer=NoWaitPacer())
+    )
+    observed = resource_evidence.collect_acquisition_observations(
+        snapshots_directory=evidence.receipt_directory,
+        receipt_directory=evidence.receipt_directory,
+        expected_receipt_inventory_sha256=resource_evidence.receipt_inventory_sha256(evidence.receipt_directory),
+        acquisition_manifest_bytes=resource_evidence.coverage_live_acquire._canonical(manifest),
+        acquisition_plan_bytes=acquisition_plan,
+        expected_index_sha256=evidence.pool_snapshot_index_sha256,
+        expected_manifest_sha256=evidence.stage_manifest_sha256,
+        stage_uuid=manifest["stage_uuid"],
+        source_revision=manifest["source_revision"],
+        protocol_sha256=manifest["protocol_sha256"],
+        cohorts_sha256=manifest["cohorts_sha256"],
+        source_closure_sha256=manifest["source_closure_sha256"],
+        acquisition_plan_sha256=_sha(acquisition_plan),
+        configured_timeout_seconds=10,
+        configured_query_pacing_seconds=7,
+        configured_arxiv_pacing_seconds=3,
+    )
+    assert observed["acquisition_pacing_seconds"] == 0.0
+    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] == 0
+
+
+def test_acquisition_collector_derives_arxiv_physical_gap_from_dispatch_receipts(tmp_path: Path):
+    manifest, acquisition_plan = make_manifest(include_arxiv=True)
+    evidence, _verifier, _lease, _pacer, _calls = asyncio.run(
+        _run_acquisition(
+            tmp_path,
+            handler=acquisition_mock_handler(arxiv_redirect=True),
+            include_arxiv=True,
+        )
+    )
+    observed = resource_evidence.collect_acquisition_observations(
+        snapshots_directory=evidence.receipt_directory,
+        receipt_directory=evidence.receipt_directory,
+        expected_receipt_inventory_sha256=resource_evidence.receipt_inventory_sha256(evidence.receipt_directory),
+        acquisition_manifest_bytes=resource_evidence.coverage_live_acquire._canonical(manifest),
+        acquisition_plan_bytes=acquisition_plan,
+        expected_index_sha256=evidence.pool_snapshot_index_sha256,
+        expected_manifest_sha256=evidence.stage_manifest_sha256,
+        stage_uuid=manifest["stage_uuid"],
+        source_revision=manifest["source_revision"],
+        protocol_sha256=manifest["protocol_sha256"],
+        cohorts_sha256=manifest["cohorts_sha256"],
+        source_closure_sha256=manifest["source_closure_sha256"],
+        acquisition_plan_sha256=_sha(acquisition_plan),
+        configured_timeout_seconds=10,
+        configured_query_pacing_seconds=7,
+        configured_arxiv_pacing_seconds=3,
+    )
+    assert observed["acquisition_engine_calls"]["arxiv"] == 2
+    assert observed["arxiv_pacing_seconds"] == 3.0
+    assert observed["acquisition_arxiv_min_gap_microseconds_observed"] == 3_000_000
 
 
 def test_answer_observations_replay_mock_archives_and_reject_wrong_stage(tmp_path: Path):

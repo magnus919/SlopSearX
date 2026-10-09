@@ -27,6 +27,7 @@ from engines.arxiv import ArxivAdapter
 from engines.github import GitHubAdapter
 from engines.openalex import OpenAlexAdapter
 from engines.wikipedia import WikipediaAdapter
+from scripts import coverage_execution_controls
 from scripts import coverage_study_acquire as offline
 from scripts import coverage_study_core as core
 from scripts.coverage_study_acquire import StageAcquisition
@@ -614,6 +615,10 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
         per_operation_limits: Mapping[str, Mapping[str, int]],
         pacer: Pacer,
         monotonic: Callable[[], float] = time.monotonic,
+        expected_operation_ids: tuple[str, ...] = (),
+        source_bindings: Mapping[str, str] | None = None,
+        owned_pacer: bool = True,
+        owned_transport: bool = True,
     ) -> None:
         self.inner = inner
         self.sink = sink
@@ -626,6 +631,87 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
         self._monotonic = monotonic
         self._last_arxiv_dispatch: float | None = None
         self._arxiv_dispatch_times: list[float] = []
+        self._stage_started_at = self._monotonic()
+        self._expected_operation_ids = tuple(expected_operation_ids)
+        self._source_bindings = dict(source_bindings or {})
+        self._owned_pacer = owned_pacer
+        self._owned_transport = owned_transport
+        self._pacer_identity = "owned-asyncio-sleep" if owned_pacer else "injected-mock-only"
+        self._operation_invocations: list[dict[str, object]] = []
+        self._active_operation: str | None = None
+        self._invoked_operation_ids: set[str] = set()
+        self._physical_dispatch_offsets: list[dict[str, object]] = []
+
+    def _offset_us(self) -> int:
+        offset = (self._monotonic() - self._stage_started_at) * 1_000_000
+        if not math.isfinite(offset) or offset < 0:
+            raise LiveAcquisitionError("acquisition-monotonic-clock-invalid")
+        return round(offset)
+
+    def begin_operation(self, operation_id: str) -> None:
+        """Record each actual SearchService invocation once."""
+        if (
+            self._active_operation is not None
+            or operation_id not in self._expected_operation_ids
+            or operation_id in self._invoked_operation_ids
+        ):
+            raise LiveAcquisitionError("acquisition-operation-not-one-shot")
+        self._active_operation = operation_id
+        self._invoked_operation_ids.add(operation_id)
+        self._operation_invocations.append(
+            {
+                "operation_id": operation_id,
+                "sequence": len(self._operation_invocations) + 1,
+                "start_offset_us": self._offset_us(),
+                "end_offset_us": None,
+            }
+        )
+
+    def finish_operation(self, operation_id: str) -> None:
+        if self._active_operation != operation_id or not self._operation_invocations:
+            raise LiveAcquisitionError("acquisition-operation-finish-mismatch")
+        row = self._operation_invocations[-1]
+        if row.get("operation_id") != operation_id or row.get("end_offset_us") is not None:
+            raise LiveAcquisitionError("acquisition-operation-finish-mismatch")
+        row["end_offset_us"] = self._offset_us()
+        self._active_operation = None
+
+    def execution_control_attestation(self, stage_manifest_sha256: str) -> dict[str, object]:
+        invoked = {str(row["operation_id"]): row for row in self._operation_invocations}
+        rows = []
+        for operation_id in self._expected_operation_ids:
+            row = invoked.get(operation_id)
+            rows.append(
+                dict(row)
+                if row is not None
+                else {
+                    "operation_id": operation_id,
+                    "sequence": len(rows) + 1,
+                    "start_offset_us": None,
+                    "end_offset_us": None,
+                }
+            )
+        return {
+            "schema": "coverage-acquisition-execution-controls/1",
+            **self._source_bindings,
+            "stage_manifest_sha256": stage_manifest_sha256,
+            "producer_module_sha256": coverage_execution_controls.module_source_sha256(__file__),
+            "operation_runner_module_sha256": coverage_execution_controls.module_source_sha256(offline.__file__),
+            "control_identity": "coverage-acquisition-one-shot/1",
+            "pacer_identity": self._pacer_identity,
+            "transport_identity": "owned-httpx" if self._owned_transport else "injected-mocktransport",
+            "query_pacing_seconds_enforced": QUERY_PACING_SECONDS,
+            "arxiv_physical_pacing_seconds_enforced": ARXIV_PHYSICAL_PACING_SECONDS,
+            "transport_retry_policy": (
+                "configured-zero-owned-httpx-transport"
+                if self._owned_transport
+                else "mock-transport-single-dispatch"
+            ),
+            "transport_retries_configured": 0,
+            "application_retry_policy": "one-search-invocation-per-planned-operation",
+            "operation_invocations": rows,
+            "physical_dispatch_offsets_us": [dict(row) for row in self._physical_dispatch_offsets],
+        }
 
     @property
     def transfer_bytes(self) -> int:
@@ -684,6 +770,7 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
                     "status": "rejected-before-dispatch",
                     "failure_code": failure,
                     "dispatched": False,
+                    "dispatch_offset_us": None,
                     "response_status": None,
                     "response_sha256": None,
                     "response_bytes": 0,
@@ -721,6 +808,7 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
         response_observed = 0
         response: httpx.Response | None = None
         dispatched = False
+        dispatch_offset_us: int | None = None
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT_SECONDS):
                 if engine == "arxiv" and self._last_arxiv_dispatch is not None:
@@ -729,12 +817,21 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
                     if remaining > 0:
                         await self._pacer.sleep(remaining)
                 dispatch_at = self._monotonic()
+                dispatch_offset_us = self._offset_us()
                 if engine == "arxiv":
                     self._last_arxiv_dispatch = dispatch_at
                     self._arxiv_dispatch_times.append(dispatch_at)
                 self._engine_uses[(operation_id, engine)] += 1
                 self._physical_dispatches += 1
                 dispatched = True
+                self._physical_dispatch_offsets.append(
+                    {
+                        "sequence": seq,
+                        "operation_id": operation_id,
+                        "engine": engine,
+                        "dispatch_offset_us": dispatch_offset_us,
+                    }
+                )
                 response = await self.inner.handle_async_request(request)
                 response_status = response.status_code
                 if 300 <= response.status_code < 400:
@@ -768,6 +865,7 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
                     "status": "complete" if accepted else "rejected-response",
                     "failure_code": failure,
                     "dispatched": True,
+                    "dispatch_offset_us": dispatch_offset_us,
                     "response_status": response_status,
                     "response_sha256": response_digest,
                     "response_bytes": len(response_body),
@@ -830,6 +928,7 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
                         "status": "partial-or-transport-failure" if dispatched else "failed-before-dispatch",
                         "failure_code": failure,
                         "dispatched": dispatched,
+                        "dispatch_offset_us": dispatch_offset_us,
                         "response_status": response_status,
                         "response_sha256": response_digest,
                         "response_bytes": response_observed,
@@ -893,7 +992,7 @@ def _build_adapters(transport: httpx.AsyncBaseTransport) -> dict[str, EngineAdap
     return adapters
 
 
-def _summary(stage: StageAcquisition) -> dict:
+def _summary(stage: StageAcquisition, transport: _BoundedTransport, manifest_sha256: str) -> dict:
     return {
         "schema": "coverage-live-acquisition-summary/1",
         "stage": stage.stage,
@@ -917,6 +1016,7 @@ def _summary(stage: StageAcquisition) -> dict:
         ],
         "quality_credit": False,
         "replacement_or_rescue": False,
+        "execution_control_attestation": transport.execution_control_attestation(manifest_sha256),
     }
 
 
@@ -934,8 +1034,9 @@ async def acquire_live_coverage_stage(
 ) -> LiveAcquisitionResult:
     """Acquire one fully planned source stage after external admission.
 
-    Production callers get an owned zero-retry, trust-env-disabled transport.
-    The only transport injection is the explicit MockTransport test seam.
+    Production callers get an owned zero-retry, trust-env-disabled transport
+    and owned asyncio pacing. Transport and pacer injection are test-only and
+    require the explicit MockTransport seam.
     This function never reads credentials or an environment variable.
     """
     manifest, manifest_raw, _ids, _reserved, operation_limits = _validate_manifest(
@@ -947,6 +1048,8 @@ async def acquire_live_coverage_stage(
     )
     if test_transport is not None and type(test_transport) is not httpx.MockTransport:
         raise LiveAcquisitionError("test-transport-must-be-httpx-mocktransport")
+    if pacer is not None and test_transport is None:
+        raise LiveAcquisitionError("pacer-injection-requires-mock-transport")
     sink = PrivateReceiptSink(receipt_directory)
     lease_receipt_sha = _consume_lease(one_shot_lease, permit)
     sink.write_once(
@@ -977,7 +1080,31 @@ async def acquire_live_coverage_stage(
 
     owned_transport = test_transport is None
     inner = test_transport if test_transport is not None else httpx.AsyncHTTPTransport(retries=0, trust_env=False)
-    transport = _BoundedTransport(inner, sink, operation_limits, pacing)
+    operation_ids = tuple(
+        [row["task_id"] for row in manifest["research_cases"]]
+        + [row["target_id"] for row in manifest["navigation_targets"]]
+    )
+    source_bindings = {
+        "stage_uuid": permit.stage_uuid,
+        "source_revision": permit.source_revision,
+        "source_closure_sha256": permit.source_closure_sha256,
+        "protocol_sha256": permit.protocol_sha256,
+        "cohorts_sha256": permit.cohorts_sha256,
+        "input_manifest_sha256": permit.input_manifest_sha256,
+        "acquisition_plan_sha256": permit.acquisition_plan_sha256,
+    }
+    monotonic = getattr(pacing, "monotonic", time.monotonic) if test_transport is not None else time.monotonic
+    transport = _BoundedTransport(
+        inner,
+        sink,
+        operation_limits,
+        pacing,
+        monotonic=monotonic,
+        expected_operation_ids=operation_ids,
+        source_bindings=source_bindings,
+        owned_pacer=pacer is None,
+        owned_transport=owned_transport,
+    )
     adapters = _build_adapters(transport)
     snapshot_rows: dict[str, dict[str, object]] = {}
 
@@ -1044,7 +1171,7 @@ async def acquire_live_coverage_stage(
             "operations": index_rows,
         }
         index_sha = sink.write_once("pool-snapshot-index.json", index_doc)
-        sink.write_once("stage-summary.json", _summary(stage))
+        sink.write_once("stage-summary.json", _summary(stage, transport, manifest_sha))
         return LiveAcquisitionResult(
             stage, manifest_sha, permit.receipt_sha256, lease_receipt_sha, sink.path, index_sha
         )
@@ -1064,6 +1191,7 @@ async def acquire_live_coverage_stage(
                     "physical_request_count": transport.physical_dispatches,
                     "transfer_bytes": transport.transfer_bytes,
                     "quality_credit": False,
+                    "execution_control_attestation": transport.execution_control_attestation(manifest_sha),
                 },
             )
         except LiveAcquisitionError:

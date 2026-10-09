@@ -540,6 +540,13 @@ async def _acquire_coverage_stage(
             continue
         if index:
             await clock.sleep(QUERY_PACING_SECONDS)
+        if _live_token is _LIVE_ACQUISITION_TOKEN:
+            # The admitted producer transport owns this one-shot operation
+            # ledger. Mock-only/offline acquisition stays independent of it.
+            begin_operation = getattr(transport, "begin_operation", None)
+            if not callable(begin_operation):
+                raise TypeError("live transport must own operation invocation receipts")
+            begin_operation(operation_id)
         context_token = _CURRENT_OPERATION.set(operation_id)
         engines_token = _CURRENT_ENGINES.set(engines)
         before = len(transport.exchanges)
@@ -630,6 +637,11 @@ async def _acquire_coverage_stage(
                 failure_code = type(exc).__name__
                 operation_result.failure_reasons.append(f"pool_snapshot_write_failure:{failure_code}")
                 operation_result.exception_type = type(exc).__name__
+        if _live_token is _LIVE_ACQUISITION_TOKEN:
+            finish_operation = getattr(transport, "finish_operation", None)
+            if not callable(finish_operation):
+                raise TypeError("live transport must own operation invocation receipts")
+            finish_operation(operation_id)
         results.append(operation_result)
         if operation_result.status != "complete":
             stage_failures.append(operation_id)
