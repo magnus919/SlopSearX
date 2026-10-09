@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import math
 import os
 import re
 import stat
@@ -35,6 +36,7 @@ JEV_SYSTEMONE_URL = "https://api.typesafe.ai/v1/systemone"
 PERMIT_SCHEMA = "coverage-jev-operation-permit/1"
 FINAL_RECEIPT_SCHEMA = "coverage-jev-operation-result/1"
 INVENTORY_SCHEMA = "coverage-jev-terminal-inventory/1"
+OBSERVATION_SCHEMA = "coverage-jev-operation-observation/1"
 SELECTOR_PHASE_SECONDS = 1.0
 MAX_REQUEST_BYTES = 384_000
 MAX_RESPONSE_BYTES = 2_000_000
@@ -43,6 +45,18 @@ _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _SHA1 = re.compile(r"[0-9a-f]{40}\Z")
 _OP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
 _LEDGER_LOCKS: weakref.WeakKeyDictionary[core.StudyRun, asyncio.Lock] = weakref.WeakKeyDictionary()
+
+
+@dataclass
+class _LedgerActivity:
+    active: int = 0
+    maximum_active: int = 0
+
+
+_LEDGER_ACTIVITY: weakref.WeakKeyDictionary[core.StudyRun, _LedgerActivity] = weakref.WeakKeyDictionary()
+_LEDGER_RESOURCE_OBSERVATIONS: weakref.WeakKeyDictionary[core.StudyRun, dict[str, dict[str, object]]] = (
+    weakref.WeakKeyDictionary()
+)
 
 
 class JevExecutionError(RuntimeError):
@@ -64,6 +78,28 @@ class CallResult:
     native_ordered_ids: tuple[str, ...] | None = None
     native_strict_json_compatible: bool | None = None
     native_strict_json_reason: str | None = None
+    observed_elapsed_ms: int | None = None
+    dispatch_count: int | None = None
+    request_bytes: int | None = None
+    input_tokens_observed: int | None = None
+    output_tokens_observed: int | None = None
+    serialized_operation_sequence: int | None = None
+    max_concurrent_operations_observed: int | None = None
+
+
+class _DispatchCountingTransport(httpx.AsyncBaseTransport):
+    """Count requests at the actual HTTPX transport boundary."""
+
+    def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
+        self.inner = inner
+        self.dispatch_count = 0
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        self.dispatch_count += 1
+        return await self.inner.handle_async_request(request)
+
+    async def aclose(self) -> None:
+        await self.inner.aclose()
 
 
 def _sha(raw: bytes) -> str:
@@ -432,20 +468,36 @@ async def execute_selector_call(
         lock = asyncio.Lock()
         _LEDGER_LOCKS[ledger] = lock
     async with lock:
-        return await _execute_selector_call_once(
-            prepared=prepared,
-            ledger=ledger,
-            operation_id=operation_id,
-            operation_input_bytes=operation_input_bytes,
-            permit_bytes=permit_bytes,
-            expected_permit_sha256=expected_permit_sha256,
-            api_key=api_key,
-            lease_root=lease_root,
-            archive_root=archive_root,
-            result_root=result_root,
-            transport=transport,
-            legacy_control=legacy_control,
+        activity = _LEDGER_ACTIVITY.get(ledger)
+        if activity is None:
+            activity = _LedgerActivity()
+            _LEDGER_ACTIVITY[ledger] = activity
+        activity.active += 1
+        activity.maximum_active = max(activity.maximum_active, activity.active)
+        sequence = (
+            prepared.operation_ids.index(operation_id) + 1
+            if type(prepared) is core.PreparedStage and operation_id in prepared.operation_ids
+            else 0
         )
+        try:
+            return await _execute_selector_call_once(
+                prepared=prepared,
+                ledger=ledger,
+                operation_id=operation_id,
+                operation_input_bytes=operation_input_bytes,
+                permit_bytes=permit_bytes,
+                expected_permit_sha256=expected_permit_sha256,
+                api_key=api_key,
+                lease_root=lease_root,
+                archive_root=archive_root,
+                result_root=result_root,
+                transport=transport,
+                legacy_control=legacy_control,
+                serialized_operation_sequence=sequence,
+                max_concurrent_operations_observed=activity.maximum_active,
+            )
+        finally:
+            activity.active -= 1
 
 
 async def _execute_selector_call_once(
@@ -462,6 +514,8 @@ async def _execute_selector_call_once(
     result_root: str | os.PathLike[str],
     transport: httpx.AsyncBaseTransport | None = None,
     legacy_control: Mapping[str, object] | None = None,
+    serialized_operation_sequence: int = 1,
+    max_concurrent_operations_observed: int = 1,
 ) -> CallResult:
     """Dispatch one registered call exactly once; archive before parsing.
 
@@ -541,6 +595,9 @@ async def _execute_selector_call_once(
     except core.StudyError as exc:
         return CallResult(operation_id, "preflight-stop", request_sha, None, 0, None, None, None, str(exc))
 
+    inner_transport = transport if transport is not None else httpx.AsyncHTTPTransport(trust_env=False, retries=0)
+    dispatch_transport = _DispatchCountingTransport(inner_transport)
+
     bindings = {
         "stage_uuid": prepared.stage_uuid,
         "operation_id": operation_id,
@@ -548,7 +605,6 @@ async def _execute_selector_call_once(
         "source_revision": prepared.source_revision,
     }
     raw_body = bytearray()
-    dispatch_started = False
     http_status: int | None = None
     archived: dict[str, object] | None = None
     state = "transport-or-http-failure"
@@ -564,10 +620,10 @@ async def _execute_selector_call_once(
 
     async def exchange() -> None:
         nonlocal http_status, raw_body, archived, state, status, ranking, terminal_reason
-        nonlocal timed_out, usage, dispatch_started
+        nonlocal timed_out, usage
         nonlocal native_status, native_ordered_ids, native_strict_json_compatible, native_strict_json_reason
         async with httpx.AsyncClient(
-            transport=transport,
+            transport=dispatch_transport,
             timeout=httpx.Timeout(SELECTOR_PHASE_SECONDS),
             follow_redirects=False,
             trust_env=False,
@@ -577,7 +633,6 @@ async def _execute_selector_call_once(
                 terminal_reason = "selector-phase-deadline-exceeded"
                 status = "phase-deadline-exceeded"
             else:
-                dispatch_started = True
                 async with client.stream(
                     "POST",
                     JEV_SYSTEMONE_URL,
@@ -770,11 +825,17 @@ async def _execute_selector_call_once(
         "request_body_sha256": request_sha,
         "response_sha256": _sha(bytes(raw_body)) if archived is not None else None,
         "response_bytes": len(raw_body),
+        "request_bytes": len(request_body),
+        "provider_dispatch_count": dispatch_transport.dispatch_count,
+        "input_tokens_observed": usage[0] if usage is not None else None,
+        "output_tokens_observed": usage[1] if usage is not None else None,
+        "serialized_operation_sequence": serialized_operation_sequence,
+        "max_concurrent_operations_observed": max_concurrent_operations_observed,
         "archive_receipt_sha256": archived["receipt_sha256"] if archived is not None else None,
         "phase_elapsed_ms_before_receipt": int(elapsed_before_receipt * 1000),
         "phase_deadline_s": SELECTOR_PHASE_SECONDS,
         "timed_out": timed_out,
-        "provider_dispatch": dispatch_started,
+        "provider_dispatch": dispatch_transport.dispatch_count > 0,
         "parser_mode": parser_mode,
         "ranking_status": ranking.status if ranking is not None else None,
         "ordered_ids": (
@@ -810,6 +871,28 @@ async def _execute_selector_call_once(
             f"{prepared.stage_uuid}.{operation_id}.correction.json",
             _canonical(correction),
         )
+    # A receipt cannot truthfully contain its own final-fsync duration. Measure
+    # immediately after the result and any deadline-correction receipt are
+    # durable; close_stage later binds this observation into terminal inventory.
+    observed_elapsed_ms = max(0, math.ceil((time.monotonic() - started) * 1000))
+    observation = {
+        "schema": OBSERVATION_SCHEMA,
+        "stage_uuid": prepared.stage_uuid,
+        "operation_id": operation_id,
+        "result_receipt_sha256": result_sha,
+        "archive_receipt_sha256": archived["receipt_sha256"] if archived is not None else None,
+        "elapsed_ms_through_final_receipt_fsync": observed_elapsed_ms,
+        "provider_dispatch_count": dispatch_transport.dispatch_count,
+        "request_bytes": len(request_body),
+        "response_bytes": len(raw_body),
+        "usage_state": "known" if usage is not None else "unknown-or-not-parsed",
+        "input_tokens_observed": usage[0] if usage is not None else None,
+        "output_tokens_observed": usage[1] if usage is not None else None,
+        "serialized_operation_sequence": serialized_operation_sequence,
+        "max_concurrent_operations_observed": max_concurrent_operations_observed,
+        "serialization_scope": "same-study-ledger-lock",
+    }
+    _LEDGER_RESOURCE_OBSERVATIONS.setdefault(ledger, {})[operation_id] = observation
     if ledger.in_flight == operation_id:
         if state == "complete-invalid-response" and usage is not None and not timed_out:
             try:
@@ -846,6 +929,13 @@ async def _execute_selector_call_once(
         native_ordered_ids,
         native_strict_json_compatible,
         native_strict_json_reason,
+        observed_elapsed_ms,
+        dispatch_transport.dispatch_count,
+        len(request_body),
+        usage[0] if usage is not None else None,
+        usage[1] if usage is not None else None,
+        serialized_operation_sequence,
+        max_concurrent_operations_observed,
     )
 
 
@@ -860,6 +950,7 @@ def close_stage(
     closure = ledger.close()
     if tuple(row.operation_id for row in closure.rows) != prepared.operation_ids:
         raise JevExecutionError("terminal-inventory-binding-mismatch")
+    resource_observations = _terminal_resource_observations(root, prepared, ledger)
     body = _canonical(
         {
             "schema": INVENTORY_SCHEMA,
@@ -873,6 +964,7 @@ def close_stage(
             "input_tokens": closure.input_tokens,
             "output_tokens": closure.output_tokens,
             "operations": [{"operation_id": row.operation_id, "state": row.state} for row in closure.rows],
+            "resource_observations": resource_observations,
         }
     )
     digest = _write_exclusive(root, f"{prepared.stage_uuid}.terminal-inventory.json", body)
@@ -882,6 +974,99 @@ def close_stage(
         "status": closure.status,
         "all_calls_complete": closure.all_calls_complete,
     }
+
+
+def _terminal_resource_observations(
+    root: Path, prepared: core.PreparedStage, ledger: core.StudyRun
+) -> list[dict[str, object]]:
+    """Persist in-memory post-fsync measurements, bound to durable result receipts."""
+    observations: list[dict[str, object]] = []
+    measured = _LEDGER_RESOURCE_OBSERVATIONS.get(ledger, {})
+    if set(measured) - set(prepared.operation_ids):
+        raise JevExecutionError("terminal-observation-unregistered-operation")
+    for index, operation_id in enumerate(prepared.operation_ids, start=1):
+        observation = measured.get(operation_id)
+        if observation is None:
+            observations.append({"operation_id": operation_id, "status": "not-observed"})
+            continue
+        result_path = root / f"{prepared.stage_uuid}.{operation_id}.result.json"
+        try:
+            raw_result = receipts._read_private(result_path, max_bytes=65_536)
+            result = json.loads(raw_result.decode("utf-8"), object_pairs_hook=_unique_pairs)
+        except Exception as exc:
+            raise JevExecutionError("terminal-observation-result-missing-or-invalid") from exc
+        if type(result) is not dict or _canonical(result) != raw_result:
+            raise JevExecutionError("terminal-observation-result-not-canonical")
+        elapsed = observation.get("elapsed_ms_through_final_receipt_fsync")
+        dispatch_count = observation.get("provider_dispatch_count")
+        request_bytes = observation.get("request_bytes")
+        response_bytes = observation.get("response_bytes")
+        input_tokens = observation.get("input_tokens_observed")
+        output_tokens = observation.get("output_tokens_observed")
+        sequence = observation.get("serialized_operation_sequence")
+        max_concurrent = observation.get("max_concurrent_operations_observed")
+        expected_observation = {
+            "schema": OBSERVATION_SCHEMA,
+            "stage_uuid": prepared.stage_uuid,
+            "operation_id": operation_id,
+            "result_receipt_sha256": _sha(raw_result),
+            "archive_receipt_sha256": result.get("archive_receipt_sha256"),
+            "elapsed_ms_through_final_receipt_fsync": elapsed,
+            "provider_dispatch_count": result.get("provider_dispatch_count"),
+            "request_bytes": result.get("request_bytes"),
+            "response_bytes": result.get("response_bytes"),
+            "usage_state": result.get("usage_state"),
+            "input_tokens_observed": result.get("input_tokens_observed"),
+            "output_tokens_observed": result.get("output_tokens_observed"),
+            "serialized_operation_sequence": result.get("serialized_operation_sequence"),
+            "max_concurrent_operations_observed": result.get("max_concurrent_operations_observed"),
+            "serialization_scope": "same-study-ledger-lock",
+        }
+        if (
+            observation != expected_observation
+            or type(elapsed) is not int
+            or elapsed < 0
+            or type(dispatch_count) is not int
+            or dispatch_count not in {0, 1}
+            or type(request_bytes) is not int
+            or request_bytes < 0
+            or type(response_bytes) is not int
+            or response_bytes < 0
+            or (input_tokens is not None and (type(input_tokens) is not int or input_tokens < 0))
+            or (output_tokens is not None and (type(output_tokens) is not int or output_tokens < 0))
+            or (input_tokens is None) != (output_tokens is None)
+            or observation.get("usage_state") != ("known" if input_tokens is not None else "unknown-or-not-parsed")
+            or type(sequence) is not int
+            or sequence != index
+            or type(max_concurrent) is not int
+            or max_concurrent != 1
+            or result.get("stage_uuid") != prepared.stage_uuid
+            or result.get("operation_id") != operation_id
+            or result.get("source_revision") != prepared.source_revision
+            or result.get("protocol_sha256") != prepared.pins.get("protocol")
+            or result.get("source_closure_sha256") != prepared.pins.get("qualified_source_closure")
+            or result.get("provider_dispatch") is not (dispatch_count > 0)
+            or result.get("response_bytes") != response_bytes
+            or result.get("request_bytes") != request_bytes
+            or result.get("input_tokens_observed") != input_tokens
+            or result.get("output_tokens_observed") != output_tokens
+            or result.get("serialized_operation_sequence") != sequence
+            or result.get("max_concurrent_operations_observed") != max_concurrent
+        ):
+            raise JevExecutionError("terminal-observation-binding-mismatch")
+        observations.append(
+            {
+                "operation_id": operation_id,
+                "status": "observed",
+                "result_receipt_sha256": _sha(raw_result),
+                **{
+                    key: value
+                    for key, value in observation.items()
+                    if key not in {"schema", "stage_uuid", "result_receipt_sha256"}
+                },
+            }
+        )
+    return observations
 
 
 def replay_candidate_response(
