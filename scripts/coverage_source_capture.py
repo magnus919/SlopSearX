@@ -462,6 +462,8 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
         }
         response_status: int | None = None
         body = bytearray()
+        decoded_body = bytearray()
+        observed_body_bytes = 0
         complete = False
         status = "transport-failure"
         timeout_seconds = operation.get("timeout_seconds", REQUEST_TIMEOUT_SECONDS)
@@ -473,23 +475,57 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                 response = await self.inner.handle_async_request(request)
                 try:
                     response_status = response.status_code
+                    # Inspect decoded bytes before the response can be archived or
+                    # consumed by the caller. Keep `body` as the exact encoded
+                    # transport body: it is the archived/replayed representation,
+                    # and the replacement Response below lets HTTPX decode it once
+                    # for the normal caller path.
+                    # Mock/custom transports may return a buffered Response;
+                    # HTTPX has already decoded its `_content` in that case.
+                    # A network transport returns an unconsumed stream and needs
+                    # a fresh decoder here.
+                    already_decoded = response.content if response.is_stream_consumed else None
+                    decoder = None if already_decoded is not None else response._get_content_decoder()
+
+                    def inspect_decoded(decoded: bytes, *, enforce_cap: bool = True) -> None:
+                        if not decoded:
+                            return
+                        forbidden = self._forbidden_response_bytes
+                        if forbidden:
+                            candidate = bytes(decoded_body) + decoded
+                            reflected_prefix = any(
+                                candidate.endswith(forbidden[:size])
+                                for size in range(1, min(len(forbidden) - 1, len(candidate)) + 1)
+                            )
+                            if forbidden in candidate or reflected_prefix:
+                                body.clear()
+                                operation["failure"] = "credential-reflection-suppressed"
+                                raise SourceCaptureError("credential-reflection-suppressed")
+                        decoded_too_large = len(decoded_body) + len(decoded) > MAX_RESPONSE_BYTES
+                        if enforce_cap and decoded_too_large:
+                            body.clear()
+                            operation["failure"] = "capture-decoded-response-byte-cap"
+                            raise SourceCaptureError("capture-decoded-response-byte-cap")
+                        if not decoded_too_large:
+                            decoded_body.extend(decoded)
+
                     async for chunk in response.stream:
+                        observed_body_bytes += len(chunk)
+                        operation["observed_response_body_bytes"] = observed_body_bytes
+                        if decoder is not None:
+                            inspect_decoded(decoder.decode(chunk))
                         room = MAX_RESPONSE_BYTES - len(body)
                         if room > 0:
                             body.extend(chunk[:room])
-                        forbidden = self._forbidden_response_bytes
-                        reflected_prefix = forbidden and any(
-                            body.endswith(forbidden[:size]) for size in range(1, min(len(forbidden) - 1, len(body)) + 1)
-                        )
-                        if forbidden and (forbidden in body or reflected_prefix):
-                            body.clear()
-                            complete = False
-                            status = "transport-failure"
-                            operation["failure"] = "credential-reflection-suppressed"
-                            raise SourceCaptureError("credential-reflection-suppressed")
                         if len(chunk) > room:
+                            if already_decoded is not None:
+                                inspect_decoded(already_decoded, enforce_cap=False)
                             status = "response-byte-cap"
                             raise SourceCaptureError("capture-response-byte-cap")
+                    if already_decoded is not None:
+                        inspect_decoded(already_decoded)
+                    if decoder is not None:
+                        inspect_decoded(decoder.flush())
                     complete = True
                     status = (
                         "complete" if response_status is not None and 200 <= response_status < 300 else "http-failure"
@@ -500,6 +536,7 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                     await response.aclose()
             operation["http_status"] = response_status
             operation["response_complete"] = complete
+            operation["observed_response_body_bytes"] = observed_body_bytes
             operation["response_body"] = bytes(body)
             operation["status"] = status
             archived = receipts.archive_response(
@@ -523,6 +560,7 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                 raise
             operation["http_status"] = response_status
             operation["response_complete"] = False
+            operation["observed_response_body_bytes"] = observed_body_bytes
             operation["response_body"] = bytes(body)
             operation["status"] = status
             operation["failure"] = type(exc).__name__ if not isinstance(exc, SourceCaptureError) else str(exc)
@@ -667,6 +705,8 @@ async def capture_sources_once(
                 "attempted": False,
                 "receipt_sha256": None,
                 "response_sha256": None,
+                "response_body_bytes": None,
+                "observed_response_body_bytes": None,
                 "context_sha256": None,
                 "failure_code": None,
             }
@@ -683,6 +723,8 @@ async def capture_sources_once(
         "owned_http_calls": 0,
         "health_calls": 0,
         "scrape_calls": 0,
+        "health_response_body_bytes": None,
+        "health_observed_response_body_bytes": None,
         "internal_scraper_fanout": "unknown unless independently exposed; not counted as zero",
         "quality_credit": False,
     }
@@ -746,6 +788,10 @@ async def capture_sources_once(
                     state["health_status"] = "terminal_transport_failure"
                     state["health_failure_class"] = type(exc).__name__
                     terminal = True
+            health_receipt = health_operation.get("receipt", {})
+            if type(health_receipt) is dict:
+                state["health_response_body_bytes"] = health_receipt.get("response_body_bytes")
+            state["health_observed_response_body_bytes"] = health_operation.get("observed_response_body_bytes")
             if not terminal:
                 for sequence, (source, row) in enumerate(zip(sources, inventory), start=1):
                     if row["status"] != "pending":
@@ -785,6 +831,8 @@ async def capture_sources_once(
                         receipt_info = operation.get("receipt", {})
                         row["receipt_sha256"] = receipt_info.get("receipt_sha256")
                         row["response_sha256"] = receipt_info.get("response_body_sha256")
+                        row["response_body_bytes"] = receipt_info.get("response_body_bytes")
+                        row["observed_response_body_bytes"] = operation.get("observed_response_body_bytes")
                         payload = _strict_json(raw_body) if 200 <= response.status_code < 300 else None
                         data = payload.get("data", payload) if type(payload) is dict else None
                         markdown = data.get("markdown") if type(data) is dict else None
@@ -814,6 +862,8 @@ async def capture_sources_once(
                         receipt_info = operation.get("receipt", {})
                         row["receipt_sha256"] = receipt_info.get("receipt_sha256")
                         row["response_sha256"] = receipt_info.get("response_body_sha256")
+                        row["response_body_bytes"] = receipt_info.get("response_body_bytes")
+                        row["observed_response_body_bytes"] = operation.get("observed_response_body_bytes")
                         row["status"] = "terminal_capture_failure"
                         row["failure_code"] = str(operation.get("failure") or type(exc).__name__)
                         terminal = True
