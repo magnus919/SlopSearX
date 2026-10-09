@@ -9,6 +9,7 @@ import time
 import unittest
 import uuid
 from pathlib import Path
+from unittest import mock
 
 import httpx
 
@@ -52,60 +53,12 @@ def _source_closure_bytes(source_revision: str) -> bytes:
 def plan_fixture() -> stage.StagePlan:
     stage_id = str(uuid.UUID(int=8001))
     packet_id = str(uuid.UUID(int=8002))
-    cases = []
-    for index in range(8):
-        band = "research_le_40" if index < 4 else "research_41_80"
-        intent = "evidence_seeking" if index % 2 == 0 else "source_discovery"
-        engines = ["github", "wikipedia"] if index < 4 else ["github", "wikipedia", "arxiv", "openalex"]
-        cases.append(
-            {
-                "task_id": f"R{index + 1:02d}",
-                "search_query": f"synthetic query {index + 1}",
-                "task_question": f"Synthetic question {index + 1}?",
-                "purpose": f"Synthetic purpose {index + 1}.",
-                "purpose_id": f"P{index + 1:02d}",
-                "intent": intent,
-                "pool_plan": {
-                    "band": band,
-                    "engines": engines,
-                    "searx_categories": ["reference"],
-                    "engine_configs": {name: {"max_results": 20} for name in engines},
-                },
-                "critical_facets": [
-                    {
-                        "facet_id": f"F{index + 1}A",
-                        "definition": "facet A",
-                        "critical_checks": ["check A1", "check A2"],
-                    },
-                    {
-                        "facet_id": f"F{index + 1}B",
-                        "definition": "facet B",
-                        "critical_checks": ["check B1", "check B2"],
-                    },
-                ],
-            }
-        )
-    navigation = [
-        {
-            "target_id": f"N{index + 1:02d}",
-            "search_query": f"navigation query {index + 1}",
-            "target_url": f"https://github.com/example/project-{index + 1}",
-            "navigation_pool_plan": {
-                "engines": ["github"],
-                "searx_categories": ["reference"],
-                "engine_configs": {"github": {"max_results": 20}},
-            },
-        }
-        for index in range(5)
-    ]
-    cohort = {"stage": "development", "research_cases": cases, "navigation_targets": navigation}
-    cohorts_bytes = canonical({"stages": [cohort]})
-    protocol = {
-        "cohorts_sha256": digest(cohorts_bytes),
-        "quality": {"candidate_top10_overlap_minimum": 0.8},
-        "task_use": {"useful_count_loss_allowed": 0},
-    }
-    protocol_bytes = canonical(protocol)
+    evidence_dir = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study"
+    protocol_bytes = (evidence_dir / "protocol.json").read_bytes()
+    cohorts_bytes = (evidence_dir / "cohorts.json").read_bytes()
+    cohort_doc = json.loads(cohorts_bytes)
+    dev = next(row for row in cohort_doc["stages"] if row["stage"] == "development")
+    cases, navigation = dev["research_cases"], dev["navigation_targets"]
     acquisition_plan = canonical(
         {
             "schema": core.ACQUISITION_SCHEMA,
@@ -472,6 +425,20 @@ def _synthetic_capture(plan, pipeline_inputs, root: Path) -> stage.CaptureEviden
 
 
 class StageOrchestrationTests(unittest.TestCase):
+    def test_unknown_selector_usage_stops_before_downstream_phases(self):
+        plan = plan_fixture()
+        selector = stage.SelectorEvidence(
+            stage_uuid=plan.stage_uuid,
+            terminal_inventory_sha256=digest(b"synthetic selector inventory"),
+            operation_rows=(),
+            research_orders={},
+            navigation_rank_one={},
+            reference_grade_receipt_sha256=digest(b"reference receipt"),
+            usage_status="unavailable",
+        )
+        with self.assertRaisesRegex(stage.OrchestrationError, "selector-usage-unknown"):
+            stage._check_selector(selector, plan, object(), {}, selector.reference_grade_receipt_sha256)
+
     def test_cohort_digest_mismatch_rejected_before_claim_or_executor(self):
         plan = plan_fixture()
         changed = stage.StagePlan(**{**plan.__dict__, "cohorts_bytes": plan.cohorts_bytes + b" "})
@@ -505,7 +472,6 @@ class StageOrchestrationTests(unittest.TestCase):
             selectors=unexpected,
             answerer=unexpected,
             grade_answers=unexpected,
-            calculate_gates=unexpected,
         )
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "private"
@@ -523,7 +489,42 @@ class StageOrchestrationTests(unittest.TestCase):
         self.assertFalse(data["product_authorized"])
         self.assertFalse(data["admission_created"])
 
+    def test_navigation_uses_reverified_snapshot_not_mutable_acquisition_object(self):
+        plan = plan_fixture()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "snapshots"
+            evidence = _write_synthetic_pool_snapshots(plan, root)
+            poisoned_target = plan.navigation_targets[-1]
+            selector = stage.SelectorEvidence(
+                stage_uuid=plan.stage_uuid,
+                terminal_inventory_sha256=digest(b"selector"),
+                operation_rows=(),
+                research_orders={},
+                navigation_rank_one={row["target_id"]: True for row in plan.navigation_targets},
+                reference_grade_receipt_sha256=digest(b"reference"),
+                usage_status="known",
+                navigation_top1_urls={row["target_id"]: row["target_url"] for row in plan.navigation_targets},
+            )
+            nav_operation = evidence.result.operations[-1]
+            nav_operation.canonical_response.results[0].url = "https://poison.example/"
+            observations = stage._sealed_navigation_observations(plan, evidence, selector)
+            canonical_target = stage.pipeline._canonical_public_url(poisoned_target["target_url"])[1]
+            self.assertIn(canonical_target, observations[poisoned_target["target_id"]]["acquired_urls"])
+            self.assertNotIn("https://poison.example/", observations[poisoned_target["target_id"]]["acquired_urls"])
+
+            index = json.loads((root / "pool-snapshot-index.json").read_bytes())
+            snapshot_path = root / index["operations"][-1]["file"]
+            snapshot_path.write_bytes(snapshot_path.read_bytes() + b" ")
+            with self.assertRaisesRegex(stage.OrchestrationError, "navigation-snapshot-reverification-failed"):
+                stage._sealed_navigation_observations(plan, evidence, selector)
+
     def test_integrated_synthetic_stage_completes_inconclusive_without_live_authority(self):
+        self._run_integrated_synthetic_stage(deadline_cross=False)
+
+    def test_stage_deadline_overrun_after_final_fsync_corrects_inventory(self):
+        self._run_integrated_synthetic_stage(deadline_cross=True)
+
+    def _run_integrated_synthetic_stage(self, *, deadline_cross: bool):
         plan = plan_fixture()
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
@@ -574,6 +575,7 @@ class StageOrchestrationTests(unittest.TestCase):
                     navigation_rank_one={row["target_id"]: True for row in plan_arg.navigation_targets},
                     reference_grade_receipt_sha256=closed_references.receipt_sha256,
                     usage_status="known",
+                    navigation_top1_urls={row["target_id"]: row["target_url"] for row in plan_arg.navigation_targets},
                 )
 
             async def answerer(plan_arg, tasks):
@@ -644,20 +646,6 @@ class StageOrchestrationTests(unittest.TestCase):
                 calls.append("answer_grading")
                 return _answer_outputs(prepared_answers, reference_packets)
 
-            async def calculate_gates(gate_inputs):
-                calls.append("gate_calculation")
-                identity = stage._validate_plan(plan)
-                return stage.GateEvaluation(
-                    status="inconclusive",
-                    scope="mixed-workload-only",
-                    input_manifest_sha256=digest(stage._canonical(gate_inputs)),
-                    threshold_sha256=identity["thresholds_sha256"],
-                    gates={"synthetic-evidence-gate": None},
-                    band_diagnostics={"research_le_40": {"observed": 4}, "research_41_80": {"observed": 4}},
-                    metrics_sha256=digest(b"synthetic metrics"),
-                    calculation_receipt_sha256=digest(b"synthetic gate receipt"),
-                )
-
             # The grader helper needs the exact prepared source packet set. Keep
             # this test executor closure local and bind it before answer grading.
             reference_packets = None
@@ -678,22 +666,46 @@ class StageOrchestrationTests(unittest.TestCase):
                 selectors=selectors,
                 answerer=answerer,
                 grade_answers=grade_answers,
-                calculate_gates=calculate_gates,
             )
-            result = asyncio.run(
-                stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)
-            )
-            inventory = json.loads(result.inventory_path.read_bytes())
+            fake_now = [plan.stage_started_monotonic + 1]
+            original_write_inventory = stage._write_inventory
 
-        self.assertEqual(result.status, "gates-inconclusive", inventory)
-        self.assertEqual(result.terminal_reason, "gate-inconclusive")
+            def write_inventory(path, value):
+                result_sha = original_write_inventory(path, value)
+                if deadline_cross and value.get("status") == "gates-inconclusive":
+                    fake_now[0] = plan.stage_deadline_monotonic + 1
+                return result_sha
+
+            with mock.patch.object(stage, "_monotonic", side_effect=lambda: fake_now[0]), mock.patch.object(
+                stage, "_write_inventory", side_effect=write_inventory
+            ):
+                result = asyncio.run(
+                    stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)
+                )
+            inventory = json.loads(result.inventory_path.read_bytes())
+            receipt_bytes = (result.inventory_path.parent / inventory["gate_calculation_receipt_file"]).read_bytes()
+
+        if deadline_cross:
+            self.assertEqual(result.status, "terminal-incomplete", inventory)
+            self.assertEqual(result.terminal_reason, "stage-deadline-exceeded-after-final-fsync")
+            self.assertFalse(inventory["gate_result_authoritative"])
+            original_sha = inventory["deadline_overrun_correction"]["original_inventory_sha256"]
+            self.assertRegex(original_sha, r"^[0-9a-f]{64}$")
+            self.assertNotEqual(original_sha, result.inventory_sha256)
+        else:
+            self.assertEqual(result.status, "gates-inconclusive", inventory)
+            self.assertEqual(result.terminal_reason, "gate-inconclusive")
+            self.assertTrue(inventory["gate_result_authoritative"])
         self.assertFalse(result.product_authorized)
         self.assertFalse(result.admission_created)
         self.assertFalse(result.scientific_calls_made_by_coordinator)
         self.assertEqual([row["status"] for row in inventory["phases"]], ["complete"] * 15)
-        self.assertEqual(inventory["gate_scope"], "mixed-workload-only")
         self.assertEqual(inventory["per_band_qualification"], "diagnostic-only")
-        self.assertEqual(len(calls), 10)
+        self.assertEqual(len(calls), 9)
+        self.assertEqual(inventory["gate_metrics"]["navigation"], {f"D-N0{i}": True for i in range(1, 6)})
+        self.assertIsNone(inventory["gate_metrics"]["resources"].get("pass"))
+        self.assertEqual(digest(receipt_bytes), inventory["gate_calculation_receipt_sha256"])
+        self.assertEqual(json.loads(receipt_bytes)["status"], "inconclusive")
 
     def test_gate_threshold_binding_uses_frozen_gate_subset(self):
         plan = plan_fixture()

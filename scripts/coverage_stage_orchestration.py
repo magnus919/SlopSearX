@@ -24,6 +24,7 @@ from typing import Any, Awaitable, Callable, Mapping, Sequence
 from scripts import coverage_answer_execution as answer_execution
 from scripts import coverage_assessment_packets as packets
 from scripts import coverage_consumer_inputs as consumer
+from scripts import coverage_live_acquire
 from scripts import coverage_pipeline_inputs as pipeline
 from scripts import coverage_source_capture as source_capture
 from scripts import coverage_study_acquire as acquisition
@@ -115,6 +116,11 @@ class SelectorEvidence:
     navigation_rank_one: Mapping[str, bool]
     reference_grade_receipt_sha256: str
     usage_status: str
+    # Optional only when the selector emits the complete protocol variants.
+    stability_orders: Mapping[str, Mapping[str, Mapping[str, Sequence[str]]]] | None = None
+    # Exact candidate top-1 URLs, keyed by navigation task ID. Boolean rank
+    # claims alone cannot prove that the selected URL is the exact target.
+    navigation_top1_urls: Mapping[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -154,7 +160,6 @@ class StageExecutors:
     selectors: Callable[[StagePlan, core.PreparedStage, Mapping[str, object], Any], Awaitable[SelectorEvidence]]
     answerer: Callable[[StagePlan, Sequence[answer_execution.AnswerTask]], Awaitable[AnswerEvidence]]
     grade_answers: Callable[[packets.PreparedAnswerPackets], Awaitable[Sequence[Any]]]
-    calculate_gates: Callable[[Mapping[str, object]], Awaitable[GateEvaluation]]
 
 
 @dataclass(frozen=True)
@@ -171,6 +176,11 @@ class StageResult:
 
 def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
+
+
+def _monotonic() -> float:
+    """Module-local clock seam for deterministic stage-deadline tests."""
+    return time.monotonic()
 
 
 def _canonical(value: object) -> bytes:
@@ -247,7 +257,7 @@ def _validate_plan(plan: StagePlan) -> dict[str, object]:
         or plan.stage_deadline_monotonic - plan.stage_started_monotonic > MAX_STAGE_WALL_SECONDS
     ):
         raise OrchestrationError("stage-deadline-invalid")
-    if not plan.stage_started_monotonic <= time.monotonic() < plan.stage_deadline_monotonic:
+    if not plan.stage_started_monotonic <= _monotonic() < plan.stage_deadline_monotonic:
         raise OrchestrationError("stage-deadline-inactive")
 
     protocol = _strict_json(plan.protocol_bytes, "protocol")
@@ -740,6 +750,56 @@ def _check_selector(
         type(value) is not bool for value in selector.navigation_rank_one.values()
     ):
         raise OrchestrationError("selector-navigation-target-coverage")
+    if selector.navigation_top1_urls is not None:
+        if type(selector.navigation_top1_urls) is not dict or set(selector.navigation_top1_urls) != expected_nav:
+            raise OrchestrationError("selector-navigation-top1-coverage")
+        try:
+            for value in selector.navigation_top1_urls.values():
+                pipeline._canonical_public_url(value)
+        except Exception as exc:
+            raise OrchestrationError("selector-navigation-top1-url-invalid") from exc
+
+
+def _sealed_navigation_observations(
+    plan: StagePlan, evidence: AcquisitionEvidence, selector: SelectorEvidence
+) -> dict[str, dict[str, object]]:
+    """Re-read navigation URLs only from the pinned complete snapshot artifacts."""
+    try:
+        verified = coverage_live_acquire.verify_pool_snapshot_index(
+            evidence.snapshots_directory,
+            expected_index_sha256=evidence.snapshot_index_sha256,
+            expected_stage_manifest_sha256=evidence.acquisition_manifest_sha256,
+            expected_stage_uuid=plan.stage_uuid,
+            expected_source_revision=plan.source_revision,
+        )
+        operations = verified["operations"]
+        result: dict[str, dict[str, object]] = {}
+        for target in plan.navigation_targets:
+            operation_id = target["target_id"]
+            artifact = operations.get(operation_id)
+            if type(artifact) is not dict or artifact.get("task_plan") != target:
+                raise OrchestrationError("navigation-snapshot-cohort-binding")
+            operation = artifact.get("operation")
+            response = operation.get("canonical_response") if type(operation) is dict else None
+            rows = response.get("results") if type(response) is dict else None
+            if type(rows) is not list:
+                raise OrchestrationError("navigation-snapshot-response-invalid")
+            acquired_urls = []
+            for row in rows:
+                if type(row) is not dict or type(row.get("url")) is not str:
+                    raise OrchestrationError("navigation-snapshot-url-invalid")
+                acquired_urls.append(pipeline._canonical_public_url(row["url"])[1])
+            top1 = None
+            if selector.navigation_top1_urls is not None:
+                top1 = pipeline._canonical_public_url(selector.navigation_top1_urls[operation_id])[1]
+            result[operation_id] = {"acquired_urls": acquired_urls}
+            if top1 is not None:
+                result[operation_id]["candidate_top1_url"] = top1
+        return result
+    except OrchestrationError:
+        raise
+    except Exception as exc:
+        raise OrchestrationError("navigation-snapshot-reverification-failed") from exc
 
 
 def _prepare_answer_tasks(
@@ -864,7 +924,11 @@ async def coordinate_coverage_stage(
         _record_phase(inventory, index, status="in-flight")
         _write_inventory(inventory_path, inventory)
         try:
+            if _monotonic() >= plan.stage_deadline_monotonic:
+                raise OrchestrationError("stage-deadline-exceeded-before-phase")
             value = await _await(invoke())
+            if _monotonic() >= plan.stage_deadline_monotonic:
+                raise OrchestrationError("stage-deadline-exceeded-during-phase")
             output_sha = summarize(value)
             if type(output_sha) is not str or not _SHA256.fullmatch(output_sha):
                 raise OrchestrationError(f"{name}-output-receipt-invalid")
@@ -1041,10 +1105,54 @@ async def coordinate_coverage_stage(
             ),
             lambda value: _phase_digest(value.receipt_sha256),
         )
+        task_inputs = [
+            {
+                "task_id": row["task_id"],
+                "card_ids": list(row["native_order"]),
+                "facet_ids": [facet["id"] for facet in row["facets"]],
+                "band": row["band"],
+                "intent": row["intent"],
+            }
+            for row in pipeline_inputs["tasks"]
+        ]
+        navigation_inputs = [
+            {"task_id": row["target_id"], "target_url": row["target_url"]} for row in plan.navigation_targets
+        ]
+        navigation_observations = _sealed_navigation_observations(plan, acq, selector)
+        nav_rank_one_by_task = {
+            row["task_id"]: selector.navigation_rank_one.get(row["task_id"])
+            for row in navigation_inputs
+            if row["task_id"] in selector.navigation_rank_one
+        }
+        # Only measurements with an explicit source are supplied. In
+        # particular, a hash string alone is not a terminal-inventory receipt,
+        # and unavailable provider usage is not a zero-token observation.
+        resource_evidence: dict[str, object] = {}
+        # A pre-calculation elapsed sample would omit calculation, receipt and
+        # final inventory fsync. It is not supplied as completed-stage timing.
+        if selector.usage_status == "known":
+            usage_rows = []
+            for row in selector.operation_rows:
+                if any(type(row.get(key)) is not int or row[key] < 0 for key in ("input_tokens", "output_tokens")):
+                    usage_rows = []
+                    break
+                usage_rows.append(
+                    {
+                        "operation_id": row["operation_id"],
+                        "status": "reported",
+                        "input_tokens": row["input_tokens"],
+                        "output_tokens": row["output_tokens"],
+                    }
+                )
+            if usage_rows:
+                resource_evidence["selector_usage"] = usage_rows
         gate_inputs = {
             "stage_uuid": plan.stage_uuid,
             "protocol_sha256": identity["protocol_sha256"],
             "cohorts_sha256": identity["cohorts_sha256"],
+            "snapshot_index_sha256": acq.snapshot_index_sha256,
+            "acquisition_manifest_sha256": acq.acquisition_manifest_sha256,
+            "source_closure_sha256": plan.source_closure_sha256,
             "scope": "mixed-workload-only",
             "per_band_qualification": "diagnostic-only",
             "pipeline_inputs_sha256": pipeline_inputs["capture_manifest_sha256"],
@@ -1054,15 +1162,52 @@ async def coordinate_coverage_stage(
             "selector_inventory_sha256": selector.terminal_inventory_sha256,
             "answer_receipt_sha256": answer_evidence.result.terminal_receipt_sha256,
             "answer_grade_receipt_sha256": closed_answers.receipt_sha256,
-            "navigation_rank_one": dict(selector.navigation_rank_one),
-            "reference_grades": closed_references.outputs(),
-            "answer_grades": closed_answers.outputs(),
+            "selector_evidence": {
+                "terminal_inventory_sha256": selector.terminal_inventory_sha256,
+                "operation_rows": list(selector.operation_rows),
+                "research_orders": selector.research_orders,
+                "stability_orders": selector.stability_orders,
+                "navigation_rank_one": selector.navigation_rank_one,
+                "navigation_top1_urls": selector.navigation_top1_urls,
+                "usage_status": selector.usage_status,
+            },
+            "navigation_observations": navigation_observations,
+            "resource_evidence": resource_evidence,
         }
         gate_input_sha = _sha(_canonical(gate_inputs))
+
+        async def calculate_frozen_gates() -> GateEvaluation:
+            from scripts.coverage_gate_calculation import calculate_coverage_gate_report
+
+            report = calculate_coverage_gate_report(
+                protocol=_strict_json(plan.protocol_bytes, "protocol"),
+                task_inputs=task_inputs,
+                navigation_inputs=navigation_inputs,
+                prepared_assessments=prepared_references,
+                reference_closure=closed_references,
+                answer_closure=closed_answers,
+                selector_evidence=SelectorEvidence(
+                    **{
+                        **selector.__dict__,
+                        "navigation_rank_one": nav_rank_one_by_task,
+                    }
+                ),
+                stability_orders=selector.stability_orders,
+                navigation_observations=navigation_observations,
+                resource_evidence=resource_evidence,
+                input_manifest_sha256=gate_input_sha,
+            )
+            receipt_path = stage_dir / "gate-calculation-receipt.json"
+            _write_new(receipt_path, report.receipt_bytes)
+            artifacts["gate_calculation_receipt_bytes"] = report.receipt_bytes
+            artifacts["gate_calculation_metrics"] = report.metrics
+            artifacts["gate_calculation_receipt_path"] = receipt_path.name
+            return report.evaluation
+
         gates = await phase(
             14,
             "gate_calculation",
-            lambda: executors.calculate_gates(gate_inputs),
+            calculate_frozen_gates,
             lambda value: (
                 _check_gates(value, gate_input_sha, plan, identity)
                 or _phase_digest(value.metrics_sha256, value.calculation_receipt_sha256)
@@ -1075,8 +1220,14 @@ async def coordinate_coverage_stage(
         }[gates.status]
         inventory["terminal_reason"] = None if gates.status == "pass" else f"gate-{gates.status}"
         inventory["gate_status"] = gates.status
+        inventory["gate_result_authoritative"] = True
         inventory["gate_scope"] = gates.scope
         inventory["band_diagnostics_sha256"] = _sha(_canonical(gates.band_diagnostics))
+        inventory["gate_calculation_receipt_sha256"] = gates.calculation_receipt_sha256
+        inventory["gate_calculation_receipt_file"] = artifacts["gate_calculation_receipt_path"]
+        metrics = artifacts.get("gate_calculation_metrics")
+        if type(metrics) is dict:
+            inventory["gate_metrics"] = metrics
     except Exception as exc:
         # The phase wrapper already persisted the terminal phase and left every
         # later phase explicitly not-invoked. Cross-output checks outside a
@@ -1091,6 +1242,18 @@ async def coordinate_coverage_stage(
         _write_inventory(inventory_path, inventory)
 
     final_sha = _write_inventory(inventory_path, inventory)
+    completed_at = _monotonic()
+    if completed_at >= plan.stage_deadline_monotonic and inventory.get("status") != "terminal-incomplete":
+        original_inventory_sha256 = final_sha
+        inventory["status"] = "terminal-incomplete"
+        inventory["terminal_reason"] = "stage-deadline-exceeded-after-final-fsync"
+        inventory["gate_result_authoritative"] = False
+        inventory["deadline_overrun_correction"] = {
+            "original_inventory_sha256": original_inventory_sha256,
+            "observed_after_final_fsync": completed_at,
+            "deadline_monotonic": plan.stage_deadline_monotonic,
+        }
+        final_sha = _write_inventory(inventory_path, inventory)
     terminal_reason = inventory.get("terminal_reason")
     return StageResult(
         status=str(inventory["status"]),
