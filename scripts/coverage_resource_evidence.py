@@ -825,6 +825,7 @@ def collect_acquisition_observations(
     cohorts_sha256: str,
     source_closure_sha256: str,
     acquisition_plan_sha256: str,
+    configured_timeout_seconds: int | float,
     deadline_monotonic: float | None = None,
 ) -> dict[str, object]:
     try:
@@ -900,6 +901,7 @@ def collect_acquisition_observations(
     physical_calls = 0
     unknown_engine = False
     request_total = response_total = max_response = 0
+    dispatched_timeouts: list[float] = []
     for sequence in sorted(starts):
         start, final = starts[sequence], finals[sequence]
         if type(start) is not dict or type(final) is not dict:
@@ -916,6 +918,25 @@ def collect_acquisition_observations(
         )
         if any(start.get(key) != final.get(key) for key in common) or start.get("status") != "attempted":
             raise ResourceEvidenceError("acquisition-exchange-request-binding")
+        timeout = start.get("timeout_seconds")
+        configured_timeout = configured_timeout_seconds
+        if (
+            isinstance(timeout, bool)
+            or not isinstance(timeout, (int, float))
+            or isinstance(configured_timeout, bool)
+            or not isinstance(configured_timeout, (int, float))
+        ):
+            raise ResourceEvidenceError("acquisition-exchange-timeout-invalid")
+        timeout_value = float(timeout)
+        configured_timeout_value = float(configured_timeout)
+        if (
+            not math.isfinite(timeout_value)
+            or timeout_value <= 0
+            or not math.isfinite(configured_timeout_value)
+            or configured_timeout_value <= 0
+            or timeout_value > configured_timeout_value
+        ):
+            raise ResourceEvidenceError("acquisition-exchange-timeout-invalid")
         operation_id, engine = start.get("operation_id"), start.get("engine")
         if type(operation_id) is not str or operation_id not in operation_engine_allowlist:
             raise ResourceEvidenceError("acquisition-exchange-operation-unknown")
@@ -930,6 +951,10 @@ def collect_acquisition_observations(
             unknown_engine = True
         if final.get("dispatched") is True:
             physical_calls += 1
+            # These receipts are written at the HTTPX transport boundary. The
+            # value is the timeout configuration on that concrete request,
+            # not its elapsed duration or the protocol ceiling itself.
+            dispatched_timeouts.append(timeout_value)
             if type(engine) is str:
                 counts[engine] += 1
         elif final.get("dispatched") is not False:
@@ -957,6 +982,19 @@ def collect_acquisition_observations(
         "acquisition_request_bytes_total": request_total,
         "acquisition_response_bytes_total": response_total,
         "acquisition_max_response_body_bytes_observed": max_response,
+        "acquisition_timeout_seconds": (
+            dispatched_timeouts[0]
+            if dispatched_timeouts and len(set(dispatched_timeouts)) == 1
+            else None
+        ),
+        "acquisition_timeout_seconds_by_exchange": dispatched_timeouts,
+        "acquisition_timeout_observation_state": (
+            "observed-uniform"
+            if dispatched_timeouts and len(set(dispatched_timeouts)) == 1
+            else "observed-variable"
+            if dispatched_timeouts
+            else "no-dispatched-exchanges"
+        ),
     }
     if not unknown_engine and set(counts) <= set(_ENGINE_NAMES):
         result["acquisition_engine_calls"] = {engine: counts[engine] for engine in _ENGINE_NAMES}
@@ -1044,6 +1082,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             cohorts_sha256=cohorts_sha256,
             source_closure_sha256=kwargs["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan_bytes),
+            configured_timeout_seconds=protocol["acquisition"]["timeout_seconds"],
             deadline_monotonic=deadline,
         )
         capture = _capture_observations(
@@ -1103,7 +1142,6 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         observations["atomic_fallback_verified"] = None
         observations["capture_internal_fanout"] = None
         observations["capture_response_bytes_limit"] = None
-        observations["acquisition_timeout_seconds"] = None
         observations["acquisition_retries"] = None
         observations["acquisition_pacing_seconds"] = None
         observations["arxiv_pacing_seconds"] = None
@@ -1124,6 +1162,10 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             "selector_protocol_sha256": protocol_sha256,
             "selector_source_closure_sha256": kwargs["source_closure_sha256"],
             "protocol_limits_and_configuration": _configuration_provenance(protocol),
+            "acquisition_timeout_measurement_basis": (
+                "per-dispatched-request timeout extension recorded by the pinned HTTPX transport receipts; "
+                "not elapsed request duration"
+            ),
             "quality_credit": False,
             "admission_created": False,
         }
