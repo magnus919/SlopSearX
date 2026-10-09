@@ -1,0 +1,74 @@
+{
+  "comparison": {
+    "design_status": "PROPOSED_NOT_REGISTERED; no live-call authorization or admission established",
+    "fields_compared": [
+      "research.task_question",
+      "research.search_query",
+      "navigation.search_query",
+      "navigation.target_url"
+    ],
+    "new_manifest": "docs/experiments/evidence/coverage-first-study/cohorts.json",
+    "new_manifest_sha256": "36d4cbff9c93555d35d7269525616f009a21727c8d1141a8a2a61934791038f0",
+    "no_answer_or_capture_fields_read": true,
+    "normalization": "Unicode text is whitespace-collapsed and case-folded before SHA-256; URL strings additionally have trailing slashes removed.",
+    "old_strings_emitted": false,
+    "prior_fields": [
+      "query",
+      "target_url"
+    ],
+    "prior_manifest": "docs/experiments/evidence/EXP-077/cohorts.json",
+    "prior_manifest_sha256": "b217b6c249be73da2506fb39836e3edf54ce2b8fdf5447e89443f338b4bfbc12"
+  },
+  "counts": {
+    "new_metadata_strings": 52,
+    "overlaps": 0,
+    "prior_metadata_strings": 36
+  },
+  "overlaps": [],
+  "query_count": 16,
+  "schema": "coverage-metadata-overlap-check/1",
+  "status": "metadata_only",
+  "status_note": "One prior metadata overlap was resolved by changing C-R03 search_query to a new query; zero overlaps remain in this metadata-only hash comparison.",
+  "structural_counts": [
+    {
+      "band_intent_counts": {
+        "research_41_80": {
+          "evidence_seeking": 2,
+          "source_discovery": 2
+        },
+        "research_le_40": {
+          "evidence_seeking": 2,
+          "source_discovery": 2
+        }
+      },
+      "facets_and_checks_valid": true,
+      "intent_counts": {
+        "evidence_seeking": 4,
+        "source_discovery": 4
+      },
+      "navigation": 5,
+      "research": 8,
+      "stage": "development"
+    },
+    {
+      "band_intent_counts": {
+        "research_41_80": {
+          "evidence_seeking": 2,
+          "source_discovery": 2
+        },
+        "research_le_40": {
+          "evidence_seeking": 2,
+          "source_discovery": 2
+        }
+      },
+      "facets_and_checks_valid": true,
+      "intent_counts": {
+        "evidence_seeking": 4,
+        "source_discovery": 4
+      },
+      "navigation": 5,
+      "research": 8,
+      "stage": "untouched_confirmation"
+    }
+  ]
+}

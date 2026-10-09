@@ -1,0 +1,131 @@
+{
+  "ast_comparisons": [
+    {
+      "ast_equal": true,
+      "current_present": true,
+      "old_present": true,
+      "symbol": "SearchService._rerank_results"
+    },
+    {
+      "ast_equal": true,
+      "current_present": true,
+      "old_present": true,
+      "symbol": "_rerank_text"
+    },
+    {
+      "ast_equal": true,
+      "current_present": true,
+      "old_present": true,
+      "symbol": "_rerank_url"
+    },
+    {
+      "ast_equal": true,
+      "current_present": true,
+      "old_present": true,
+      "symbol": "MODEL"
+    },
+    {
+      "ast_equal": true,
+      "current_present": true,
+      "old_present": true,
+      "symbol": "LEVELS"
+    },
+    {
+      "ast_equal": true,
+      "current_present": true,
+      "old_present": true,
+      "symbol": "INSTRUCTIONS"
+    },
+    {
+      "ast_equal": false,
+      "current_present": true,
+      "old_present": true,
+      "symbol": "JevReranker.rerank"
+    },
+    {
+      "ast_equal": false,
+      "current_present": true,
+      "old_present": false,
+      "symbol": "_unique_json_object"
+    },
+    {
+      "ast_equal": false,
+      "current_present": true,
+      "old_present": false,
+      "symbol": "_reject_json_constant"
+    },
+    {
+      "ast_equal": false,
+      "current_present": true,
+      "old_present": false,
+      "symbol": "_finite_json_float"
+    }
+  ],
+  "evidence_limits": [
+    "Runtime image/source observations are parent-provided. This report records source-level comparisons and contains no host identifiers or credential values.",
+    "This does not establish captured pool equivalence, all W0 runtime branches, quality, adoption, timing, or study admission."
+  ],
+  "file_hashes": {
+    "8f3577d022e2d98fcd405d915b5c3b9b16e899bf": {
+      "slopsearx/jev.py": {
+        "git_blob_sha": "581cf1b0c8a6e11818c9ac4e4f5a527dd94e6547",
+        "sha256": "7bc21ab9da8b10e9d60a50d54efaa81c2c1ea9cc76042320b6108015daac1cc8"
+      },
+      "slopsearx/merger.py": {
+        "git_blob_sha": "75585f5a7b285c9db5e7aee2c67b7ce177b636ee",
+        "sha256": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda"
+      },
+      "slopsearx/rerank.py": {
+        "git_blob_sha": "aab38edc92b2ca7e8e796e8a1af07edc7c55ad81",
+        "sha256": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078"
+      },
+      "slopsearx/service.py": {
+        "git_blob_sha": "15b3c5beda53e7b4a13417c461a6927f53d51645",
+        "sha256": "dd690ecb2a1ce120e23255bbfb47cfbe190907155287bd73882f55f9f4badb5e"
+      }
+    },
+    "cb6c82ac262617a3ced892ac17925fb7fda430ac": {
+      "slopsearx/jev.py": {
+        "git_blob_sha": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23",
+        "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03"
+      },
+      "slopsearx/merger.py": {
+        "git_blob_sha": "75585f5a7b285c9db5e7aee2c67b7ce177b636ee",
+        "sha256": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda"
+      },
+      "slopsearx/rerank.py": {
+        "git_blob_sha": "0e462dbfe0520683e4b37980b8407f320b87a7d6",
+        "sha256": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e"
+      },
+      "slopsearx/service.py": {
+        "git_blob_sha": "8b45ce71efc3c7cc4a72b962968e146a63e135be",
+        "sha256": "aed455ccbefcfee5ffcf099876dc7230cead27527313269edc0f69b504c20922"
+      }
+    }
+  },
+  "production_control": {
+    "code_parity": "SearchService projection/reordering helpers and Score MODEL/LEVELS/INSTRUCTIONS are AST-identical across the source commits. JevReranker.rerank is not AST-identical: current main has additional input validation, streamed response handling and strict bounded JSON parsing. Do not call current main parser the deployed W0 parser.",
+    "configured_w0": "Read-only runtime observation: source modules match public revision 8f3577d022e2d98fcd405d915b5c3b9b16e899bf; stable configuration uses presence ranking without a Jev provider, experimental configuration uses presence plus Jev V1. Only configuration and credential-presence metadata was reported; credential values were not disclosed or stored.",
+    "w0_order": "W0 projection remains the first 40 candidate objects; valid V1 score order is mapped onto original objects with Python stable descending-score ties, then untouched tail is appended. Any W0 replay must use the original V1 parser/source, or separately prove archived-response equivalence before credit."
+  },
+  "replay_adapter_requirements": [
+    "Use the immutable V1 blob above in an isolated test-only replay adapter; preserve its response parser and descending ordinal score sort, and never call TypeSafe.",
+    "Require independently archived expected request and response SHA-256 values. Reject response digest mismatch before V1 parser invocation; detect request mismatch outside the production fail-open boundary.",
+    "Keep exact original candidate projection and ID-to-SearchResult mapping; append the original unprojected tail and preserve stable tie order. Do not replace parser or ordering with manual score sorting in the adapter.",
+    "Enforce the current study stage response-byte guard of 2,000,000 before parser exposure; record request bytes and provider usage exactly when present. Missing/invalid usage remains unknown and must not be inferred. Unknown raw response size/digest is inconclusive; do not replay it.",
+    "No credentials/environment lookup, live transport, provider calls, acquisition changes, or runtime/source qualification claims."
+  ],
+  "schema": "coverage-w0-source-parity/1",
+  "source_revisions": {
+    "current_main_commit": "cb6c82ac262617a3ced892ac17925fb7fda430ac",
+    "w0_source_commit": "8f3577d022e2d98fcd405d915b5c3b9b16e899bf"
+  },
+  "status": "read_only_source_comparison",
+  "v1_parser_source": {
+    "expected_sha256": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+    "git_blob_sha": "aab38edc92b2ca7e8e796e8a1af07edc7c55ad81",
+    "path": "slopsearx/rerank.py",
+    "sha256": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+    "sha256_matches_requested": true
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "jev_model": "jev-1.13.0",
+  "limitations": [
+    "Image label alone was not used as source proof; module bytes were independently hashed.",
+    "This observation does not validate inference or ranking quality.",
+    "No deployment or provider configuration changed.",
+    "Canonical acquisition is a shared controlled pool, not evidence of identical live retrieval outcomes."
+  ],
+  "observation_date": "2026-10-09",
+  "observed_configurations": [
+    {
+      "ranking_strategy": "presence",
+      "rerank_provider_configured": false,
+      "role": "stable"
+    },
+    {
+      "ranking_strategy": "presence",
+      "rerank_provider_configured": true,
+      "role": "experimental"
+    }
+  ],
+  "observed_revision": "8f3577d022e2d98fcd405d915b5c3b9b16e899bf",
+  "observed_source_hashes_match_git": {
+    "slopsearx/merger.py": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda",
+    "slopsearx/rerank.py": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+    "slopsearx/scholarly.py": "8443732adee9065de3b7ab3d0a2c11b0e903538a8dc474d1ec6a3785cd10de7f",
+    "slopsearx/service.py": "dd690ecb2a1ce120e23255bbfb47cfbe190907155287bd73882f55f9f4badb5e"
+  },
+  "schema": "coverage-observed-control-baseline/1",
+  "scope_requirement": "Fixed explicit engine scopes; no automatic specialist routing in study",
+  "selected_primary_control": "experimental_configured_query_only_jev",
+  "stable_order_role": "diagnostic_only_no_extra_provider_calls",
+  "status": "read_only_source_and_configuration_observation_not_qualification"
+}
