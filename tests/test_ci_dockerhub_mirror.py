@@ -88,7 +88,7 @@ def test_docker_runtime_diagnostics_are_bounded_and_allowlisted() -> None:
         "{{.Server.Version}}": "28.0.4\n",
         "{{.Driver}}": "overlay2\n",
         "{{json .DriverStatus}}": '[["Backing Filesystem","extfs"],["driver-type","io.containerd.snapshotter.v1"]]\n',
-        "{{json .RegistryConfig.Mirrors}}": '["https://user:secret@mirror.gcr.io/cache?token=private"]\n',
+        "{{json .RegistryConfig.Mirrors}}": '["https://user:secret@mirror.gcr.io/cache?token=private","https://mirror.gcr.io"]\n',
     }
     commands: list[list[str]] = []
     options: list[dict[str, object]] = []
@@ -116,6 +116,31 @@ def test_docker_runtime_diagnostics_are_bounded_and_allowlisted() -> None:
         "containerd_snapshotter",
         "public_mirror_configured",
     }
+
+
+@pytest.mark.parametrize(
+    "mirror_value",
+    [
+        "https://user@mirror.gcr.io",
+        "https://mirror.gcr.io:444",
+        "https://mirror.gcr.io/private",
+        "https://mirror.gcr.io/?token=secret",
+        "https://mirror.gcr.io/#fragment",
+        "http://mirror.gcr.io",
+    ],
+)
+def test_runtime_diagnostics_reject_noncanonical_mirror(mirror_value: str) -> None:
+    outputs = {
+        "{{.Server.Version}}": "28.0.4\n",
+        "{{.Driver}}": "overlay2\n",
+        "{{json .DriverStatus}}": "null\n",
+        "{{json .RegistryConfig.Mirrors}}": json.dumps([mirror_value]),
+    }
+
+    def fake_run(command, **kwargs):
+        return subprocess.CompletedProcess(command, 0, outputs[command[-1]], "")
+
+    assert mirror.docker_runtime_info(run=fake_run)["public_mirror_configured"] is False
 
 
 def test_buildkit_and_workflow_ordering() -> None:

@@ -12,7 +12,6 @@ import sys
 import tempfile
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from urllib.parse import urlsplit
 
 MIRROR = "https://mirror.gcr.io"
 DAEMON_CONFIG = Path("/etc/docker/daemon.json")
@@ -159,16 +158,19 @@ def docker_runtime_info(
         mirrors = []
     if type(mirrors) is not list or any(type(item) is not str for item in mirrors):
         raise RuntimeError("Docker mirror diagnostics were malformed")
-    public_mirror_configured = False
-    for mirror in mirrors:
-        try:
-            parsed = urlsplit(mirror)
-            if parsed.scheme == "https" and parsed.hostname == "mirror.gcr.io":
-                public_mirror_configured = True
-        except ValueError:
-            # This diagnostic reports only whether the expected public mirror
-            # is present; malformed/unrelated entries are never echoed.
-            continue
+    # Match only the exact public daemon endpoint. Explicit :443 is equivalent
+    # to HTTPS default; credentials, custom paths, query strings, and fragments
+    # must not be reported as the expected cache.
+    public_mirror_configured = any(
+        mirror
+        in {
+            "https://mirror.gcr.io",
+            "https://mirror.gcr.io/",
+            "https://mirror.gcr.io:443",
+            "https://mirror.gcr.io:443/",
+        }
+        for mirror in mirrors
+    )
     return {
         "server_version": version,
         "storage_driver": driver,
