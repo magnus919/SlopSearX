@@ -200,8 +200,27 @@ class RegistrationPreflightTests(unittest.TestCase):
         self.assertEqual(prepared.acquisition_calls, 26)
         self.assertEqual(prepared.scraper_calls, 13)
         self.assertEqual(prepared.health_calls, 1)
+        self.assertFalse(prepared.selector_input_map_required)
         self.assertFalse(hasattr(prepared, "clock"))
         self.assertFalse(hasattr(prepared, "permit"))
+
+    def test_versioned_v2_protocol_persistently_requires_selector_input_map(self):
+        args, materials, _, _ = make_fixture()
+        materials["protocol"] = canonical(
+            {
+                "schema": "coverage-first-study-protocol/2-draft",
+                "selector_input_map_schema": "coverage-selector-input-map/2-draft",
+            }
+        )
+        reseal_fixture(args, materials)
+        prepared = core.preflight_stage(**args)
+        self.assertTrue(prepared.selector_input_map_required)
+
+        args, materials, _, _ = make_fixture()
+        materials["protocol"] = canonical({"selector_input_map_schema": "unsupported-map/99"})
+        reseal_fixture(args, materials)
+        with self.assertRaisesRegex(core.StudyError, "selector-input-map-schema-unsupported"):
+            core.preflight_stage(**args)
 
     def test_registration_and_materials_require_external_hashes(self):
         args, materials, _, _ = make_fixture()

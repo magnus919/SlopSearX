@@ -57,10 +57,50 @@ _LEDGER_ACTIVITY: weakref.WeakKeyDictionary[core.StudyRun, _LedgerActivity] = we
 _LEDGER_RESOURCE_OBSERVATIONS: weakref.WeakKeyDictionary[core.StudyRun, dict[str, dict[str, object]]] = (
     weakref.WeakKeyDictionary()
 )
+_BOUND_SELECTOR_INPUT_MAPS: dict[int, tuple[weakref.ReferenceType[core.PreparedStage], str]] = {}
 
 
 class JevExecutionError(RuntimeError):
     """Execution refused or a durable artifact could not be verified."""
+
+
+def _bind_selector_input_map(
+    prepared: core.PreparedStage, selector_input_map_bytes: bytes, expected_sha256: str
+) -> None:
+    """Bind the coordinator-verified v2 map to this exact prepared object.
+
+    The stage coordinator calls this only after rebuilding and durably sealing
+    the map. This process-local guard prevents an executor from accidentally
+    falling back to the legacy single-call API for the prepared v2 stage.
+    """
+    if (
+        type(prepared) is not core.PreparedStage
+        or prepared.selector_input_map_required is not True
+        or type(selector_input_map_bytes) is not bytes
+        or type(expected_sha256) is not str
+        or not _SHA256.fullmatch(expected_sha256)
+        or _sha(selector_input_map_bytes) != expected_sha256
+    ):
+        raise JevExecutionError("selector-input-map-binding-invalid")
+    key = id(prepared)
+    reference = weakref.ref(prepared, lambda ref, object_id=key: _discard_bound_map(object_id, ref))
+    _BOUND_SELECTOR_INPUT_MAPS[key] = (reference, expected_sha256)
+
+
+def _discard_bound_map(object_id: int, reference: weakref.ReferenceType[core.PreparedStage]) -> None:
+    current = _BOUND_SELECTOR_INPUT_MAPS.get(object_id)
+    if current is not None and current[0] is reference:
+        _BOUND_SELECTOR_INPUT_MAPS.pop(object_id, None)
+
+
+def _bound_selector_input_map_sha256(prepared: core.PreparedStage) -> str | None:
+    current = _BOUND_SELECTOR_INPUT_MAPS.get(id(prepared))
+    if current is None:
+        return None
+    if current[0]() is not prepared:
+        _BOUND_SELECTOR_INPUT_MAPS.pop(id(prepared), None)
+        return None
+    return current[1]
 
 
 @dataclass(frozen=True)
@@ -127,6 +167,55 @@ def _canonical(value: object) -> bytes:
         )
     except (TypeError, ValueError, UnicodeEncodeError) as exc:
         raise JevExecutionError("artifact-json-invalid") from exc
+
+
+def _execution_provenance(
+    *,
+    prepared: core.PreparedStage,
+    operation_id: str,
+    operation_input_sha256: str,
+    request_body: bytes,
+    parser_mode: str,
+    transport_injected: bool,
+    legacy_control: Mapping[str, object] | None,
+    selector_input_map_sha256: str | None,
+) -> dict[str, object]:
+    """Bind the request to its registered operation and pinned source family."""
+    try:
+        request = json.loads(request_body.decode("utf-8"), object_pairs_hook=_unique_pairs)
+    except Exception as exc:
+        raise JevExecutionError("execution-provenance-request-invalid") from exc
+    if type(request) is not dict or type(request.get("model")) is not str or not request["model"]:
+        raise JevExecutionError("execution-provenance-model-invalid")
+    if parser_mode == "original-v1":
+        source_sha256 = prepared.pins.get("production_rerank_source")
+        service = legacy_control.get("service") if legacy_control is not None else None
+        context = getattr(service, "_ctx", None)
+        ranking_strategy = getattr(context, "ranking_strategy", None)
+        if type(ranking_strategy) is not str or not ranking_strategy:
+            raise JevExecutionError("execution-provenance-ranking-strategy-invalid")
+    else:
+        source_sha256 = prepared.pins.get("coverage_source")
+        ranking_strategy = None
+    if type(source_sha256) is not str or not _SHA256.fullmatch(source_sha256):
+        raise JevExecutionError("execution-provenance-source-pin-invalid")
+    provenance = {
+        "schema": "coverage-selector-execution-provenance/1",
+        "registration_sha256": prepared.registration_sha256,
+        "stage_uuid": prepared.stage_uuid,
+        "source_revision": prepared.source_revision,
+        "operation_id": operation_id,
+        "operation_input_sha256": operation_input_sha256,
+        "request_body_sha256": _sha(request_body),
+        "parser_mode": parser_mode,
+        "source_sha256": source_sha256,
+        "requested_model": request["model"],
+        "transport_kind": "injected" if transport_injected else "default-httpx",
+        "ranking_strategy": ranking_strategy,
+    }
+    if selector_input_map_sha256 is not None:
+        provenance["selector_input_map_sha256"] = selector_input_map_sha256
+    return provenance
 
 
 def _write_exclusive(root: Path, name: str, body: bytes) -> str:
@@ -238,6 +327,252 @@ def _permit(
     if value != expected:
         raise JevExecutionError("external-permit-binding-mismatch")
     return value
+
+
+def _verify_registered_operation_input(
+    *,
+    selector_input_map_bytes: bytes | None,
+    expected_selector_input_map_sha256: str | None,
+    prepared: core.PreparedStage,
+    operation_id: str,
+    operation_input_sha256: str,
+    request_body_sha256: str,
+) -> None:
+    """Check the actual serialized request against the pre-dispatch v2 map.
+
+    This helper is intentionally opt-in so EXP-100 registrations and their
+    receipts keep their original meaning. A future v2 executor must call
+    ``execute_selector_call`` with both map arguments; the separate v2 draft
+    protocol requires that wiring before any selector dispatch.
+    """
+    if (
+        type(selector_input_map_bytes) is not bytes
+        or len(selector_input_map_bytes) > 4_000_000
+        or type(expected_selector_input_map_sha256) is not str
+        or not _SHA256.fullmatch(expected_selector_input_map_sha256)
+        or _sha(selector_input_map_bytes) != expected_selector_input_map_sha256
+    ):
+        raise JevExecutionError("selector-input-map-pin-invalid")
+    try:
+        document = json.loads(
+            selector_input_map_bytes.decode("utf-8"),
+            object_pairs_hook=_unique_pairs,
+            parse_constant=lambda value: (_ for _ in ()).throw(ValueError(value)),
+        )
+    except (UnicodeDecodeError, ValueError, RecursionError) as exc:
+        raise JevExecutionError("selector-input-map-invalid") from exc
+    map_fields = {
+        "schema",
+        "status",
+        "stage_uuid",
+        "source_revision",
+        "original_registration_sha256",
+        "coverage_source_sha256",
+        "production_rerank_source_sha256",
+        "execution_source_sha256",
+        "legacy_control_source_sha256",
+        "current_service_source_sha256",
+        "acquisition_snapshot_index_sha256",
+        "acquisition_manifest_sha256",
+        "task_input_manifest_sha256",
+        "neutral_fixture_sha256",
+        "builder_source_sha256",
+        "operations",
+    }
+    if type(document) is not dict or set(document) != map_fields or type(document.get("operations")) is not list:
+        raise JevExecutionError("selector-input-map-binding")
+    if (
+        document.get("schema") != "coverage-selector-input-map/2-draft"
+        or document.get("status") != "draft-unadmitted"
+        or document.get("stage_uuid") != prepared.stage_uuid
+        or document.get("source_revision") != prepared.source_revision
+        or document.get("original_registration_sha256") != prepared.registration_sha256
+        or document.get("coverage_source_sha256") != prepared.pins.get("coverage_source")
+        or document.get("production_rerank_source_sha256") != prepared.pins.get("production_rerank_source")
+        or any(
+            type(document.get(name)) is not str or not _SHA256.fullmatch(document[name])
+            for name in map_fields
+            if name.endswith("_sha256")
+        )
+        or [row.get("operation_id") if type(row) is dict else None for row in document["operations"]]
+        != list(prepared.operation_ids)
+        or _canonical(document) != selector_input_map_bytes
+    ):
+        raise JevExecutionError("selector-input-map-binding")
+    for item in document["operations"]:
+        if (
+            type(item) is not dict
+            or set(item) != {"operation_id", "parser_mode", "operation_input_sha256", "request_body_sha256"}
+            or type(item.get("operation_id")) is not str
+            or item.get("parser_mode") != ("coverage" if "candidate" in item["operation_id"] else "original-v1")
+            or type(item.get("operation_input_sha256")) is not str
+            or not _SHA256.fullmatch(item["operation_input_sha256"])
+            or type(item.get("request_body_sha256")) is not str
+            or not _SHA256.fullmatch(item["request_body_sha256"])
+        ):
+            raise JevExecutionError("selector-input-map-operation-invalid")
+    operations = document["operations"]
+    if type(operations) is not list:
+        raise JevExecutionError("selector-input-map-operations-invalid")
+    matches = [row for row in operations if type(row) is dict and row.get("operation_id") == operation_id]
+    if len(matches) != 1:
+        raise JevExecutionError("selector-input-map-operation-missing")
+    row = matches[0]
+    expected_mode = "coverage" if "candidate" in operation_id else "original-v1"
+    if (
+        set(row) != {"operation_id", "parser_mode", "operation_input_sha256", "request_body_sha256"}
+        or row.get("parser_mode") != expected_mode
+        or row.get("operation_input_sha256") != operation_input_sha256
+        or row.get("request_body_sha256") != request_body_sha256
+    ):
+        raise JevExecutionError("selector-input-map-operation-mismatch")
+
+
+async def execute_registered_selector_call(
+    *,
+    selector_input_map_bytes: bytes,
+    expected_selector_input_map_sha256: str,
+    **kwargs: Any,
+) -> CallResult:
+    """v2-draft entrypoint requiring an independently pinned input map.
+
+    The existing executor remains for already-registered v1 stages. New v2
+    coordinators should use this entrypoint so omission of the map cannot
+    silently fall back to the legacy path.
+    """
+    return await execute_selector_call(
+        selector_input_map_bytes=selector_input_map_bytes,
+        expected_selector_input_map_sha256=expected_selector_input_map_sha256,
+        **kwargs,
+    )
+
+
+async def execute_registered_selector_schedule(
+    *,
+    prepared: core.PreparedStage,
+    ledger: core.StudyRun,
+    selector_input_map_bytes: bytes,
+    expected_selector_input_map_sha256: str,
+    operation_materials: Mapping[str, Mapping[str, object]],
+    permits: Mapping[str, tuple[bytes, str]],
+    api_key: str,
+    lease_root: str | os.PathLike[str],
+    archive_root: str | os.PathLike[str],
+    result_root: str | os.PathLike[str],
+    transport_factory: Any | None = None,
+) -> tuple[CallResult, ...]:
+    """Preflight and serially execute the complete registered selector schedule.
+
+    Every operation input, generated request, and externally supplied permit
+    is checked against the map before the first transport is created. The
+    per-operation executor repeats its own map check immediately before the
+    one-shot claim. The first terminal call stops the loop; remaining slots
+    stay uninvoked in the ledger.
+    """
+    if (
+        type(prepared) is not core.PreparedStage
+        or prepared.selector_input_map_required is not True
+        or type(ledger) is not core.StudyRun
+        or ledger.prepared is not prepared
+        or _bound_selector_input_map_sha256(prepared) != expected_selector_input_map_sha256
+        or type(operation_materials) is not dict
+        or set(operation_materials) != set(prepared.operation_ids)
+        or type(permits) is not dict
+        or set(permits) != set(prepared.operation_ids)
+    ):
+        raise JevExecutionError("registered-selector-schedule-binding-invalid")
+    if type(api_key) is not str or not api_key or api_key != api_key.strip() or "\r" in api_key or "\n" in api_key:
+        raise JevExecutionError("explicit-api-key-invalid")
+    try:
+        api_key_bytes = api_key.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise JevExecutionError("explicit-api-key-invalid") from exc
+
+    # Preflight all 39 scheduled calls so a malformed late slot cannot leave a
+    # partly dispatched stage. W0 request generation is checked through the
+    # frozen request compiler without invoking its network transport.
+    for operation_id in prepared.operation_ids:
+        material = operation_materials[operation_id]
+        permit = permits[operation_id]
+        if (
+            type(material) is not dict
+            or set(material) != {"operation_input_bytes", "legacy_control"}
+            or type(material.get("operation_input_bytes")) is not bytes
+            or len(material["operation_input_bytes"]) > MAX_OPERATION_INPUT_BYTES
+            or (material.get("legacy_control") is not None and type(material.get("legacy_control")) is not dict)
+            or type(permit) is not tuple
+            or len(permit) != 2
+            or type(permit[0]) is not bytes
+            or type(permit[1]) is not str
+        ):
+            raise JevExecutionError("registered-selector-operation-material-invalid")
+        input_bytes = material["operation_input_bytes"]
+        legacy_control = cast(Mapping[str, object] | None, material["legacy_control"])
+        request_body, compiled = build_selector_request(
+            operation_id=operation_id,
+            operation_input_bytes=input_bytes,
+            legacy_control=legacy_control,
+        )
+        parser_mode = "coverage" if "candidate" in operation_id else "original-v1"
+        if parser_mode == "original-v1":
+            if compiled is not None or legacy_control is None:
+                raise JevExecutionError("registered-selector-original-v1-material-invalid")
+            generated_body = await _capture_frozen_v1_generated_request(
+                frozen_source=cast(bytes, legacy_control["frozen_v1_source_bytes"]),
+                query=cast(str, legacy_control["query"]),
+                operation_input_bytes=input_bytes,
+            )
+            if generated_body != request_body:
+                raise JevExecutionError("original-v1-generator-body-mismatch")
+        elif compiled is None or legacy_control is not None:
+            raise JevExecutionError("registered-selector-candidate-material-invalid")
+        if api_key_bytes in input_bytes or api_key_bytes in request_body:
+            raise JevExecutionError("api-key-in-request-material")
+        input_sha = _sha(input_bytes)
+        request_sha = _sha(request_body)
+        _verify_registered_operation_input(
+            selector_input_map_bytes=selector_input_map_bytes,
+            expected_selector_input_map_sha256=expected_selector_input_map_sha256,
+            prepared=prepared,
+            operation_id=operation_id,
+            operation_input_sha256=input_sha,
+            request_body_sha256=request_sha,
+        )
+        _permit(
+            permit[0],
+            permit[1],
+            prepared=prepared,
+            operation_id=operation_id,
+            operation_input_sha256=input_sha,
+            request_sha256=request_sha,
+            parser_mode=parser_mode,
+        )
+
+    results: list[CallResult] = []
+    for operation_id in prepared.operation_ids:
+        material = operation_materials[operation_id]
+        permit_bytes, permit_sha = permits[operation_id]
+        transport = transport_factory(operation_id) if transport_factory is not None else None
+        result = await execute_registered_selector_call(
+            prepared=prepared,
+            ledger=ledger,
+            operation_id=operation_id,
+            operation_input_bytes=cast(bytes, material["operation_input_bytes"]),
+            permit_bytes=permit_bytes,
+            expected_permit_sha256=permit_sha,
+            api_key=api_key,
+            lease_root=lease_root,
+            archive_root=archive_root,
+            result_root=result_root,
+            transport=transport,
+            legacy_control=cast(Mapping[str, object] | None, material["legacy_control"]),
+            selector_input_map_bytes=selector_input_map_bytes,
+            expected_selector_input_map_sha256=expected_selector_input_map_sha256,
+        )
+        results.append(result)
+        if result.terminal_reason is not None or ledger.terminal_reason is not None:
+            break
+    return tuple(results)
 
 
 def _unique_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -459,10 +794,21 @@ async def execute_selector_call(
     result_root: str | os.PathLike[str],
     transport: httpx.AsyncBaseTransport | None = None,
     legacy_control: Mapping[str, object] | None = None,
+    selector_input_map_bytes: bytes | None = None,
+    expected_selector_input_map_sha256: str | None = None,
 ) -> CallResult:
     """Serialize use of a stage ledger and execute exactly one slot."""
     if type(ledger) is not core.StudyRun:
         raise JevExecutionError("study-ledger-required")
+    bound_map_sha = _bound_selector_input_map_sha256(prepared) if type(prepared) is core.PreparedStage else None
+    has_map = selector_input_map_bytes is not None or expected_selector_input_map_sha256 is not None
+    map_required = type(prepared) is core.PreparedStage and prepared.selector_input_map_required is True
+    if (
+        (map_required and bound_map_sha is None)
+        or (bound_map_sha is not None and (not has_map or expected_selector_input_map_sha256 != bound_map_sha))
+        or (bound_map_sha is None and has_map)
+    ):
+        raise JevExecutionError("selector-input-map-required-or-unexpected")
     lock = _LEDGER_LOCKS.get(ledger)
     if lock is None:
         lock = asyncio.Lock()
@@ -493,6 +839,8 @@ async def execute_selector_call(
                 result_root=result_root,
                 transport=transport,
                 legacy_control=legacy_control,
+                selector_input_map_bytes=selector_input_map_bytes,
+                expected_selector_input_map_sha256=expected_selector_input_map_sha256,
                 serialized_operation_sequence=sequence,
                 max_concurrent_operations_observed=activity.maximum_active,
             )
@@ -514,6 +862,8 @@ async def _execute_selector_call_once(
     result_root: str | os.PathLike[str],
     transport: httpx.AsyncBaseTransport | None = None,
     legacy_control: Mapping[str, object] | None = None,
+    selector_input_map_bytes: bytes | None = None,
+    expected_selector_input_map_sha256: str | None = None,
     serialized_operation_sequence: int = 1,
     max_concurrent_operations_observed: int = 1,
 ) -> CallResult:
@@ -554,6 +904,24 @@ async def _execute_selector_call_once(
     if type(request_body) is not bytes or not request_body or len(request_body) > MAX_REQUEST_BYTES:
         raise JevExecutionError("request-size-or-type-invalid")
     request_sha = _sha(request_body)
+    bound_map_sha = _bound_selector_input_map_sha256(prepared)
+    if prepared.selector_input_map_required and bound_map_sha is None:
+        raise JevExecutionError("selector-input-map-required-or-unexpected")
+    if bound_map_sha is not None and expected_selector_input_map_sha256 != bound_map_sha:
+        raise JevExecutionError("selector-input-map-required-or-unexpected")
+    if bound_map_sha is None and (
+        selector_input_map_bytes is not None or expected_selector_input_map_sha256 is not None
+    ):
+        raise JevExecutionError("selector-input-map-not-coordinator-bound")
+    if selector_input_map_bytes is not None or expected_selector_input_map_sha256 is not None:
+        _verify_registered_operation_input(
+            selector_input_map_bytes=selector_input_map_bytes,
+            expected_selector_input_map_sha256=expected_selector_input_map_sha256,
+            prepared=prepared,
+            operation_id=operation_id,
+            operation_input_sha256=input_sha,
+            request_body_sha256=request_sha,
+        )
     _permit(
         permit_bytes,
         expected_permit_sha256,
@@ -837,6 +1205,16 @@ async def _execute_selector_call_once(
         "timed_out": timed_out,
         "provider_dispatch": dispatch_transport.dispatch_count > 0,
         "parser_mode": parser_mode,
+        "execution_provenance": _execution_provenance(
+            prepared=prepared,
+            operation_id=operation_id,
+            operation_input_sha256=input_sha,
+            request_body=request_body,
+            parser_mode=parser_mode,
+            transport_injected=transport is not None,
+            legacy_control=legacy_control,
+            selector_input_map_sha256=expected_selector_input_map_sha256,
+        ),
         "ranking_status": ranking.status if ranking is not None else None,
         "ordered_ids": (
             list(ranking.ordered_ids)

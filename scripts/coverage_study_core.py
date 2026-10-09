@@ -231,6 +231,7 @@ class PreparedStage:
     health_calls: int
     status: str = "preflight-verified-not-admitted"
     fresh_execution_authorized: bool = False
+    selector_input_map_required: bool = False
 
 
 def _verify_input_manifest(raw: bytes, *, stage_uuid: str, expected_tasks: tuple[str, ...]) -> None:
@@ -568,6 +569,18 @@ def preflight_stage(
         # Input manifest bytes are canonical by contract; this avoids accepting
         # two byte encodings for a single registered task inventory.
         raise StudyError("input-manifest-not-canonical")
+    selector_input_map_required = False
+    try:
+        protocol_document = _strict_json(materials["protocol"], "protocol")
+    except StudyError:
+        # Pre-existing v1 test and replay fixtures may pin opaque protocol
+        # bytes. Only a successfully parsed, explicitly versioned extension
+        # changes the selector dispatch contract.
+        protocol_document = None
+    if type(protocol_document) is dict and "selector_input_map_schema" in protocol_document:
+        if protocol_document["selector_input_map_schema"] != "coverage-selector-input-map/2-draft":
+            raise StudyError("selector-input-map-schema-unsupported")
+        selector_input_map_required = True
     _verify_input_manifest(materials["task_input_manifest"], stage_uuid=stage_uuid, expected_tasks=tuple(task_ids))
     for material_name in ("source_capture_manifest", "reference_manifest", "answer_assessment_plan"):
         _verify_stage_bound_manifest(materials[material_name], label=material_name, stage_uuid=stage_uuid)
@@ -635,6 +648,7 @@ def preflight_stage(
         acquisition_calls=acquisition_calls,
         scraper_calls=capture_calls,
         health_calls=HEALTH_CALLS,
+        selector_input_map_required=selector_input_map_required,
     )
 
 
@@ -659,6 +673,7 @@ class StudyRun:
     def __init__(self, prepared: PreparedStage):
         if type(prepared) is not PreparedStage or prepared.fresh_execution_authorized is not False:
             raise StudyError("prepared-stage-required")
+        self.prepared = prepared
         self.operation_ids = tuple(call.operation_id for call in selector_inventory(prepared.navigation_skip_reasons))
         if prepared.operation_ids != self.operation_ids:
             raise StudyError("prepared-operation-inventory-mismatch")
