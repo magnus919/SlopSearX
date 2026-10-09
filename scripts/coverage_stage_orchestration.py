@@ -1004,6 +1004,8 @@ async def coordinate_coverage_stage(
         "acquisition_manifest_sha256": identity["acquisition_manifest_sha256"],
         "candidate_identity_sha256": identity["candidate_identity_sha256"],
         "candidate_endpoint_sha256": identity["candidate_endpoint_sha256"],
+        "thresholds_sha256": identity["thresholds_sha256"],
+        "stage_started_monotonic": plan.stage_started_monotonic,
         "scope": "mixed-workload-only",
         "per_band_qualification": "diagnostic-only",
         "product_authorized": False,
@@ -1011,8 +1013,9 @@ async def coordinate_coverage_stage(
         "scientific_calls_made_by_coordinator": False,
         "status": "in-progress",
         "terminal_reason": None,
-        # A result gains authority only after the frozen gate calculation is
-        # validated. All earlier and terminal-failure inventories are explicit.
+        # Gate outputs remain non-authoritative in the inventory. The v2
+        # independent finalizer is the only component that can report the
+        # complete, under-deadline result after verifying closeout pins.
         "gate_result_authoritative": False,
         "phases": phase_rows,
     }
@@ -1364,7 +1367,7 @@ async def coordinate_coverage_stage(
                     selector_input_map_sha256 if verified_selector_map is not None else None
                 ),
             )
-            receipt_bytes = _canonical(
+            collector_receipt_bytes = _canonical(
                 {
                     "schema": "coverage-resource-evidence/1",
                     "stage_uuid": report.stage_uuid,
@@ -1372,12 +1375,25 @@ async def coordinate_coverage_stage(
                     "provenance": dict(report.configuration_provenance),
                 }
             )
-            if _sha(receipt_bytes) != report.source_receipt_sha256:
+            if _sha(collector_receipt_bytes) != report.source_receipt_sha256:
                 raise OrchestrationError("resource-evidence-receipt-pin-mismatch")
+            receipt_bytes = _canonical(
+                {
+                    "schema": "coverage-resource-evidence/2",
+                    "stage_uuid": report.stage_uuid,
+                    "source_revision": plan.source_revision,
+                    "protocol_sha256": identity["protocol_sha256"],
+                    "cohorts_sha256": identity["cohorts_sha256"],
+                    "collector_receipt_sha256": report.source_receipt_sha256,
+                    "observations": dict(report.observations),
+                    "provenance": dict(report.configuration_provenance),
+                }
+            )
             resource_path = stage_dir / "resource-evidence.json"
             _write_new(resource_path, receipt_bytes)
             inventory["resource_evidence_receipt_sha256"] = _sha(receipt_bytes)
             inventory["resource_evidence_receipt_file"] = resource_path.name
+            artifacts["resource_evidence_receipt_sha256"] = inventory["resource_evidence_receipt_sha256"]
             _write_inventory(inventory_path, inventory)
             artifacts["resource_evidence_receipt_bytes"] = receipt_bytes
             artifacts["resource_evidence_report"] = report
@@ -1390,6 +1406,39 @@ async def coordinate_coverage_stage(
             lambda value: value.source_receipt_sha256,
         )
         resource_evidence = dict(resource_report.observations)
+        # The resource gate needs an elapsed-time observation before the
+        # calculation can run. This durable sample is explicitly a lower
+        # bound: calculation, final decision inventory fsync, and the final
+        # elapsed observation still occur afterward and are covered by the
+        # independent finalizer below.
+        pending_observed_at = _monotonic()
+        pending_elapsed = pending_observed_at - plan.stage_started_monotonic
+        if not math.isfinite(pending_elapsed) or pending_elapsed < 0:
+            raise OrchestrationError("stage-pending-clock-invalid")
+        pending_time_bytes = _canonical(
+            {
+                "schema": "coverage-stage-pending-time/1",
+                "stage_uuid": plan.stage_uuid,
+                "stage_kind": plan.stage_kind,
+                "source_revision": plan.source_revision,
+                "protocol_sha256": identity["protocol_sha256"],
+                "cohorts_sha256": identity["cohorts_sha256"],
+                "preacquisition_binding_sha256": inventory["preacquisition_binding_sha256"],
+                "observed_monotonic": pending_observed_at,
+                "stage_started_monotonic": plan.stage_started_monotonic,
+                "stage_deadline_seconds": plan.stage_deadline_monotonic - plan.stage_started_monotonic,
+                "pending_elapsed_seconds": pending_elapsed,
+                "meaning": "lower bound only; later calculation and final inventory fsync are excluded",
+            }
+        )
+        pending_time_path = stage_dir / "stage-pending-time.json"
+        pending_time_sha = _write_new(pending_time_path, pending_time_bytes)
+        inventory["pending_time_receipt_file"] = pending_time_path.name
+        inventory["pending_time_receipt_sha256"] = pending_time_sha
+        inventory["pending_elapsed_seconds"] = pending_elapsed
+        inventory["stage_deadline_seconds"] = plan.stage_deadline_monotonic - plan.stage_started_monotonic
+        inventory["pending_elapsed_meaning"] = "lower-bound-only"
+        resource_evidence["stage_elapsed_seconds"] = pending_elapsed
         gate_inputs = {
             "stage_uuid": plan.stage_uuid,
             "protocol_sha256": identity["protocol_sha256"],
@@ -1417,9 +1466,15 @@ async def coordinate_coverage_stage(
             },
             "navigation_observations": navigation_observations,
             "resource_evidence": resource_evidence,
-            "resource_evidence_receipt_sha256": resource_report.source_receipt_sha256,
+            "resource_evidence_receipt_sha256": artifacts["resource_evidence_receipt_sha256"],
+            "pending_time_receipt_sha256": pending_time_sha,
         }
-        gate_input_sha = _sha(_canonical(gate_inputs))
+        gate_input_bytes = _canonical(gate_inputs)
+        gate_input_sha = _sha(gate_input_bytes)
+        inventory["gate_input_manifest_sha256"] = gate_input_sha
+        gate_input_path = stage_dir / "gate-input-manifest.json"
+        _write_new(gate_input_path, gate_input_bytes)
+        inventory["gate_input_manifest_file"] = gate_input_path.name
 
         async def calculate_frozen_gates() -> GateEvaluation:
             from scripts.coverage_gate_calculation import calculate_coverage_gate_report
@@ -1458,14 +1513,10 @@ async def coordinate_coverage_stage(
                 or _phase_digest(value.metrics_sha256, value.calculation_receipt_sha256)
             ),
         )
-        inventory["status"] = {
-            "pass": "gates-pass-awaiting-independent-decision",
-            "fail": "gates-failed",
-            "inconclusive": "gates-inconclusive",
-        }[gates.status]
+        inventory["status"] = "pending-independent-closeout"
         inventory["terminal_reason"] = None if gates.status == "pass" else f"gate-{gates.status}"
         inventory["gate_status"] = gates.status
-        inventory["gate_result_authoritative"] = True
+        inventory["gate_result_authoritative"] = False
         inventory["gate_scope"] = gates.scope
         inventory["band_diagnostics_sha256"] = _sha(_canonical(gates.band_diagnostics))
         inventory["gate_calculation_receipt_sha256"] = gates.calculation_receipt_sha256
@@ -1507,7 +1558,7 @@ async def coordinate_coverage_stage(
         raise OrchestrationError("stage-closeout-clock-invalid")
     closeout_path = stage_dir / "stage-closeout.json"
     closeout = {
-        "schema": "coverage-stage-closeout/1",
+        "schema": "coverage-stage-closeout/2",
         "stage_uuid": plan.stage_uuid,
         "stage_kind": plan.stage_kind,
         "source_revision": plan.source_revision,
@@ -1522,7 +1573,7 @@ async def coordinate_coverage_stage(
         "stage_elapsed_seconds": elapsed,
         "stage_deadline_seconds": plan.stage_deadline_monotonic - plan.stage_started_monotonic,
         "measurement_basis": (
-            "stage start through final inventory file and directory fsync; closeout receipt fsync excluded"
+            "stage start through final decision inventory file and directory fsync; closeout receipt fsync excluded"
         ),
     }
     try:
