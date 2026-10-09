@@ -593,3 +593,20 @@ def test_inconclusive_packet_status_precedes_known_failed_gate_but_preserves_bot
     assert result.status == "inconclusive"
     assert result.gates["candidate_complete_pool_permutation"] is False
     assert result.gates["exact_navigation_top1"] is None
+
+
+def test_acquired_navigation_target_ranked_below_first_is_known_failure():
+    inputs = _fixture()
+    inputs["navigation_observations"]["N01"]["candidate_top1_url"] = "https://example.org/other"
+    report = gates.calculate_coverage_gate_report(**inputs)
+    assert report.evaluation.gates["exact_navigation_top1"] is False
+    assert report.metrics["navigation"]["N01"] is False
+    assert report.evaluation.status == "fail"
+
+
+def test_missing_navigation_rank_observation_remains_inconclusive():
+    inputs = _fixture()
+    inputs["navigation_observations"]["N01"].pop("candidate_top1_url")
+    report = gates.calculate_coverage_gate_report(**inputs)
+    assert report.evaluation.gates["exact_navigation_top1"] is None
+    assert report.evaluation.status == "inconclusive"
