@@ -676,8 +676,9 @@ class StageOrchestrationTests(unittest.TestCase):
                     fake_now[0] = plan.stage_deadline_monotonic + 1
                 return result_sha
 
-            with mock.patch.object(stage, "_monotonic", side_effect=lambda: fake_now[0]), mock.patch.object(
-                stage, "_write_inventory", side_effect=write_inventory
+            with (
+                mock.patch.object(stage, "_monotonic", side_effect=lambda: fake_now[0]),
+                mock.patch.object(stage, "_write_inventory", side_effect=write_inventory),
             ):
                 result = asyncio.run(
                     stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)

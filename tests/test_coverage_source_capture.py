@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import os
 import stat
+import zlib
 from pathlib import Path
 from typing import Mapping
 
@@ -17,6 +19,7 @@ from scripts.coverage_source_capture import (
     MAX_RESPONSE_BYTES,
     SourceCaptureError,
     VerifiedSourceCapturePermit,
+    _BoundedContentDecoder,
     capture_sources_once,
 )
 
@@ -178,6 +181,19 @@ def _healthy_response() -> httpx.Response:
     return httpx.Response(200, json={"status": "ok", "runtime": {"revision": "c" * 40, "model": "free"}})
 
 
+class _RawAsyncBody(httpx.AsyncByteStream):
+    def __init__(self, body: bytes):
+        self.body = body
+
+    async def __aiter__(self):
+        midpoint = max(1, len(self.body) // 2)
+        yield self.body[:midpoint]
+        yield self.body[midpoint:]
+
+    async def aclose(self) -> None:
+        return None
+
+
 @pytest.mark.asyncio
 async def test_reflected_operator_key_is_not_persisted_in_error_body(tmp_path: Path) -> None:
     token = "synthetic-operator-secret-never-persist"
@@ -201,6 +217,8 @@ async def test_reflected_operator_key_is_not_persisted_in_error_body(tmp_path: P
     assert result.status == "terminal-incomplete"
     assert len(calls) == 2
     assert result.private_inventory[0]["failure_code"] == "credential-reflection-suppressed"
+    assert result.private_inventory[0]["observed_response_body_bytes"] == len(f"Rejected key: {token}".encode())
+    assert result.private_inventory[0]["response_body_bytes"] == 0
     assert result.private_inventory[1]["status"] == "not_attempted_terminal_failure"
     for path in result.receipt_directory.parent.rglob("*"):
         if path.is_file():
@@ -226,9 +244,246 @@ async def test_credential_prefix_at_response_cap_is_suppressed(tmp_path: Path) -
     )
     assert result.status == "terminal-incomplete"
     assert result.private_inventory[0]["failure_code"] == "credential-reflection-suppressed"
+    assert result.private_inventory[0]["observed_response_body_bytes"] == len(body)
+    assert result.private_inventory[0]["response_body_bytes"] == 0
     for path in result.receipt_directory.parent.rglob("*"):
         if path.is_file():
             assert prefix not in path.read_bytes()
+
+
+@pytest.mark.asyncio
+async def test_gzip_reflected_operator_key_is_suppressed_before_context_persistence(tmp_path: Path) -> None:
+    token = "synthetic-gzip-operator-secret"
+    reflected = json.dumps(
+        {"success": True, "data": {"markdown": f"Reflected value: {token}"}}, separators=(",", ":")
+    ).encode()
+    compressed = gzip.compress(reflected)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(
+            200,
+            stream=_RawAsyncBody(compressed),
+            headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+            request=request,
+        )
+
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(handler),
+        token=token,
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+
+    row = result.private_inventory[0]
+    assert result.status == "terminal-incomplete"
+    assert row["failure_code"] == "credential-reflection-suppressed"
+    assert row["response_body_bytes"] == 0
+    assert row["observed_response_body_bytes"] == len(compressed)
+    assert not row.get("context_artifact")
+    for path in result.receipt_directory.parent.rglob("*"):
+        if path.is_file():
+            assert token.encode() not in path.read_bytes()
+
+
+@pytest.mark.asyncio
+async def test_gzip_response_is_archived_encoded_and_decoded_once_with_decoded_cap(tmp_path: Path) -> None:
+    markdown = "compressed content is preserved"
+    body = json.dumps({"success": True, "data": {"markdown": markdown}}, separators=(",", ":")).encode()
+    compressed = gzip.compress(body)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(
+            200,
+            stream=_RawAsyncBody(compressed),
+            headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+            request=request,
+        )
+
+    (tmp_path / "normal").mkdir()
+    result = await _capture(
+        tmp_path=tmp_path / "normal",
+        transport=httpx.MockTransport(handler),
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+    row = result.private_inventory[0]
+    assert result.status == "complete"
+    assert row["status"] == "captured"
+    assert row["response_body_bytes"] == len(compressed)
+    assert row["observed_response_body_bytes"] == len(compressed)
+    assert row["context_artifact"]
+    receipt_path = result.receipt_directory / "source-0001" / "response.bin"
+    assert receipt_path.read_bytes() == compressed
+
+    oversized = gzip.compress(b"x" * (MAX_RESPONSE_BYTES + 1))
+
+    def oversized_handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(
+            200,
+            stream=_RawAsyncBody(oversized),
+            headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+            request=request,
+        )
+
+    (tmp_path / "oversized").mkdir()
+    capped = await _capture(
+        tmp_path=tmp_path / "oversized",
+        transport=httpx.MockTransport(oversized_handler),
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+    assert capped.status == "terminal-incomplete"
+    assert capped.private_inventory[0]["failure_code"] == "capture-decoded-response-byte-cap"
+    assert capped.private_inventory[0]["response_body_bytes"] == 0
+
+
+@pytest.mark.asyncio
+async def test_gzip_decoded_body_at_exact_cap_is_valid_and_only_supported_codecs_are_advertised(tmp_path: Path) -> None:
+    prefix = b'{"success":true,"data":{"markdown":"'
+    suffix = b'"}}'
+    decoded = prefix + (b"x" * (MAX_RESPONSE_BYTES - len(prefix) - len(suffix))) + suffix
+    encoded = gzip.compress(decoded)
+    request_encodings: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        request_encodings.append(request.headers["accept-encoding"])
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(
+            200,
+            content=encoded,
+            headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+            request=request,
+        )
+
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(handler),
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+    assert result.status == "complete"
+    assert result.private_inventory[0]["status"] == "captured"
+    assert request_encodings == ["gzip, deflate, identity", "gzip, deflate, identity"]
+
+
+@pytest.mark.asyncio
+async def test_truncated_gzip_is_archived_incomplete_without_context(tmp_path: Path) -> None:
+    decoded = b'{"success":true,"data":{"markdown":"partial but valid JSON'
+    truncated = gzip.compress(decoded)[:-5]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(
+            200,
+            content=truncated,
+            headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+            request=request,
+        )
+
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(handler),
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+    row = result.private_inventory[0]
+    assert result.status == "terminal-incomplete"
+    assert row["failure_code"] == "capture-content-encoding-invalid"
+    assert not row.get("context_artifact")
+    assert (result.receipt_directory / "source-0001" / "response.bin").read_bytes() == truncated
+
+
+@pytest.mark.asyncio
+async def test_buffered_gzip_response_keeps_encoded_archive_and_decodes_once(tmp_path: Path) -> None:
+    markdown = "buffered compressed content"
+    decoded = json.dumps({"success": True, "data": {"markdown": markdown}}, separators=(",", ":")).encode()
+    encoded = gzip.compress(decoded)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        # Supplying content creates an already-consumed/buffered HTTPX response.
+        return httpx.Response(
+            200,
+            content=encoded,
+            headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+            request=request,
+        )
+
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(handler),
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+    row = result.private_inventory[0]
+    assert result.status == "complete"
+    assert row["status"] == "captured"
+    assert (result.receipt_directory / "source-0001" / "response.bin").read_bytes() == encoded
+    context = json.loads((result.receipt_directory / row["context_artifact"]).read_text())
+    assert context["context"] == markdown
+
+
+@pytest.mark.asyncio
+async def test_buffered_deflate_response_keeps_encoded_archive_and_decodes_once(tmp_path: Path) -> None:
+    markdown = "deflate compressed content"
+    decoded = json.dumps({"success": True, "data": {"markdown": markdown}}, separators=(",", ":")).encode()
+    encoded = zlib.compress(decoded)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(
+            200,
+            content=encoded,
+            headers={"Content-Encoding": "deflate", "Content-Type": "application/json"},
+            request=request,
+        )
+
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(handler),
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+    row = result.private_inventory[0]
+    assert result.status == "complete"
+    assert row["status"] == "captured"
+    assert (result.receipt_directory / "source-0001" / "response.bin").read_bytes() == encoded
+    context = json.loads((result.receipt_directory / row["context_artifact"]).read_text())
+    assert context["context"] == markdown
+
+
+def test_compression_bomb_decoder_never_requests_output_above_decoded_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    import scripts.coverage_source_capture as capture
+
+    original = capture.zlib.decompressobj
+    limits: list[int] = []
+
+    class TrackingDecoder:
+        def __init__(self, *args: object, **kwargs: object):
+            self._inner = original(*args, **kwargs)
+
+        def decompress(self, data: bytes, max_length: int = 0) -> bytes:
+            limits.append(max_length)
+            return self._inner.decompress(data, max_length)
+
+        def flush(self, *args: object, **kwargs: object) -> bytes:
+            raise AssertionError("decoder.flush() is unbounded and must not be used")
+
+        def __getattr__(self, name: str) -> object:
+            return getattr(self._inner, name)
+
+    monkeypatch.setattr(capture.zlib, "decompressobj", TrackingDecoder)
+    decoder = _BoundedContentDecoder("gzip")
+    bomb = gzip.compress(b"z" * (MAX_RESPONSE_BYTES * 40))
+    decoded_probe = decoder.decode(bomb, MAX_RESPONSE_BYTES)
+    assert limits
+    assert max(limits) <= MAX_RESPONSE_BYTES + 1
+    assert all(limit > 0 for limit in limits)
+    assert len(decoded_probe) == MAX_RESPONSE_BYTES + 1
 
 
 async def test_captures_once_with_private_provenance_and_bounded_shared_context(tmp_path: Path) -> None:
@@ -415,6 +670,8 @@ async def test_response_over_cap_is_archived_partial_and_stops_remaining_slots(t
     assert receipt["complete"] is False
     assert receipt["status"] == "response-byte-cap"
     assert len(body) == MAX_RESPONSE_BYTES
+    assert result.private_inventory[0]["observed_response_body_bytes"] == MAX_RESPONSE_BYTES + 1
+    assert result.private_inventory[0]["response_body_bytes"] == MAX_RESPONSE_BYTES
     assert result.private_inventory[1]["status"] == "not_attempted_terminal_failure"
 
 
