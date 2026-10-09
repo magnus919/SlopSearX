@@ -111,7 +111,7 @@ class StageFinalizationTests(unittest.TestCase):
     def test_non_private_stage_parent_is_rejected_before_inventory_read(self):
         with tempfile.TemporaryDirectory() as temporary:
             paths, plan = self._fixture(Path(temporary), elapsed=7.5)
-            stage_parent = paths["inventory"].parent
+            stage_parent = paths["inventory"].parent.parent
             os.chmod(stage_parent, 0o755)
             with mock.patch.object(Path, "read_bytes", side_effect=AssertionError("inventory read")):
                 with self.assertRaisesRegex(finalization.StageFinalizationError, "private-directory-invalid"):
@@ -123,6 +123,9 @@ class StageFinalizationTests(unittest.TestCase):
                 finalization._strict_loads(raw)
 
     def _fixture(self, root: Path, *, elapsed: float, late: bool = False, stage_deadline: float = 28_800.0):
+        os.chmod(root, 0o700)
+        root = root / "stage"
+        root.mkdir(mode=0o700)
         os.chmod(root, 0o700)
         evidence_dir = Path(gate_calculation.__file__).parents[1] / "docs/experiments/evidence/coverage-first-study"
         protocol_bytes = (evidence_dir / "protocol.json").read_bytes()
