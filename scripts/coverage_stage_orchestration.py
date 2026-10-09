@@ -1205,7 +1205,7 @@ async def coordinate_coverage_stage(
                 selector_expected_operation_ids=prepared.operation_ids,
                 selector_operation_rows=selector.operation_rows,
             )
-            receipt_bytes = _canonical(
+            collector_receipt_bytes = _canonical(
                 {
                     "schema": "coverage-resource-evidence/1",
                     "stage_uuid": report.stage_uuid,
@@ -1213,12 +1213,25 @@ async def coordinate_coverage_stage(
                     "provenance": dict(report.configuration_provenance),
                 }
             )
-            if _sha(receipt_bytes) != report.source_receipt_sha256:
+            if _sha(collector_receipt_bytes) != report.source_receipt_sha256:
                 raise OrchestrationError("resource-evidence-receipt-pin-mismatch")
+            receipt_bytes = _canonical(
+                {
+                    "schema": "coverage-resource-evidence/2",
+                    "stage_uuid": report.stage_uuid,
+                    "source_revision": plan.source_revision,
+                    "protocol_sha256": identity["protocol_sha256"],
+                    "cohorts_sha256": identity["cohorts_sha256"],
+                    "collector_receipt_sha256": report.source_receipt_sha256,
+                    "observations": dict(report.observations),
+                    "provenance": dict(report.configuration_provenance),
+                }
+            )
             resource_path = stage_dir / "resource-evidence.json"
             _write_new(resource_path, receipt_bytes)
             inventory["resource_evidence_receipt_sha256"] = _sha(receipt_bytes)
             inventory["resource_evidence_receipt_file"] = resource_path.name
+            artifacts["resource_evidence_receipt_sha256"] = inventory["resource_evidence_receipt_sha256"]
             _write_inventory(inventory_path, inventory)
             artifacts["resource_evidence_receipt_bytes"] = receipt_bytes
             artifacts["resource_evidence_report"] = report
@@ -1291,7 +1304,7 @@ async def coordinate_coverage_stage(
             },
             "navigation_observations": navigation_observations,
             "resource_evidence": resource_evidence,
-            "resource_evidence_receipt_sha256": resource_report.source_receipt_sha256,
+            "resource_evidence_receipt_sha256": artifacts["resource_evidence_receipt_sha256"],
             "pending_time_receipt_sha256": pending_time_sha,
         }
         gate_input_bytes = _canonical(gate_inputs)

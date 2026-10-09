@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 import stat
 from dataclasses import dataclass
@@ -16,8 +17,13 @@ from pathlib import Path
 from typing import Mapping
 
 from scripts import coverage_resource_evidence
+from scripts import intent_ranking_receipts as receipts
 
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
+
+
+def _effective_uid() -> int:
+    return os.geteuid()
 
 
 class StageFinalizationError(RuntimeError):
@@ -41,27 +47,61 @@ def _sha(raw: bytes) -> str:
 
 def _read(path: Path, limit: int) -> bytes:
     try:
-        info = path.lstat()
-        if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600:
+        before = path.lstat()
+        if (
+            stat.S_ISLNK(before.st_mode)
+            or not stat.S_ISREG(before.st_mode)
+            or stat.S_IMODE(before.st_mode) != 0o600
+            or before.st_uid != _effective_uid()
+        ):
             raise StageFinalizationError("finalization-artifact-unsafe")
-        raw = path.read_bytes()
+        raw = receipts._read_private(path, max_bytes=limit)
+        after = path.lstat()
+        if (
+            after.st_dev != before.st_dev
+            or after.st_ino != before.st_ino
+            or after.st_uid != before.st_uid
+            or after.st_mode != before.st_mode
+        ):
+            raise StageFinalizationError("finalization-artifact-changed")
+    except receipts.ReceiptError as exc:
+        raise StageFinalizationError("finalization-artifact-unsafe-or-oversize") from exc
     except OSError as exc:
         raise StageFinalizationError("finalization-artifact-unavailable") from exc
-    if len(raw) > limit:
-        raise StageFinalizationError("finalization-artifact-oversize")
     return raw
 
 
 def _json(raw: bytes) -> dict:
-    try:
-        value = json.loads(raw)
-    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-        raise StageFinalizationError("finalization-json-invalid") from exc
+    value = _strict_loads(raw)
     if (
         type(value) is not dict
-        or json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode() != raw
+        or json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode() != raw
     ):
         raise StageFinalizationError("finalization-json-noncanonical")
+    return value
+
+
+def _reject_json_constant(value: str):
+    raise ValueError(f"non-finite-json-number:{value}")
+
+
+def _strict_loads(raw: bytes) -> object:
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate-json-key")
+            result[key] = value
+        return result
+
+    try:
+        value = json.loads(
+            raw,
+            object_pairs_hook=pairs,
+            parse_constant=_reject_json_constant,
+        )
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as exc:
+        raise StageFinalizationError("finalization-json-invalid") from exc
     return value
 
 
@@ -111,8 +151,8 @@ def verify_stage_finalization(
     if _sha(protocol_bytes) != expected_protocol_sha256 or _sha(cohorts_bytes) != expected_cohorts_sha256:
         raise StageFinalizationError("finalization-source-pin-mismatch")
     try:
-        protocol = json.loads(protocol_bytes)
-    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        protocol = _strict_loads(protocol_bytes)
+    except StageFinalizationError as exc:
         raise StageFinalizationError("finalization-protocol-invalid") from exc
     if type(protocol) is not dict:
         raise StageFinalizationError("finalization-protocol-invalid")
@@ -122,24 +162,45 @@ def verify_stage_finalization(
     }:
         raise StageFinalizationError("finalization-protocol-not-v2")
     deadline = protocol.get("phase_limits", {}).get("stage_wall_seconds")
-    if type(deadline) not in (int, float) or not math.isfinite(deadline) or deadline <= 0:
+    if (
+        type(deadline) not in (int, float)
+        or not math.isfinite(deadline)
+        or deadline <= 0
+        or type(protocol.get("quality")) is not dict
+        or type(protocol.get("task_use")) is not dict
+    ):
         raise StageFinalizationError("finalization-deadline-invalid")
+    thresholds_sha = _sha(
+        json.dumps(
+            {"quality": protocol.get("quality"), "task_use": protocol.get("task_use")},
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode()
+    )
+
+    stage_dir = inventory_path.parent
+    expected_names = (
+        (inventory_path, "inventory.json"),
+        (closeout_receipt_path, "stage-closeout.json"),
+        (pending_time_receipt_path, "stage-pending-time.json"),
+        (gate_input_manifest_path, "gate-input-manifest.json"),
+        (gate_calculation_receipt_path, "gate-calculation-receipt.json"),
+        (stage_dir / "resource-evidence.json", "resource-evidence.json"),
+    )
+    if any(path.parent != stage_dir or path.name != name for path, name in expected_names):
+        raise StageFinalizationError("finalization-artifact-path-mismatch")
+    try:
+        coverage_resource_evidence._require_private_directory(stage_dir.parent)
+        coverage_resource_evidence._require_private_directory(stage_dir)
+    except coverage_resource_evidence.ResourceEvidenceError as exc:
+        raise StageFinalizationError("finalization-private-directory-invalid") from exc
 
     inventory_raw = _read(inventory_path, 4_000_000)
     if _sha(inventory_raw) != expected_inventory_sha256:
         raise StageFinalizationError("finalization-inventory-pin-mismatch")
     inventory = _json(inventory_raw)
-    stage_dir = inventory_path.parent
-    if any(
-        path.parent != stage_dir
-        for path in (
-            closeout_receipt_path,
-            pending_time_receipt_path,
-            gate_input_manifest_path,
-            gate_calculation_receipt_path,
-        )
-    ):
-        raise StageFinalizationError("finalization-artifact-path-mismatch")
     if (
         pending_time_receipt_path.name != inventory.get("pending_time_receipt_file")
         or gate_input_manifest_path.name != inventory.get("gate_input_manifest_file")
@@ -177,7 +238,7 @@ def verify_stage_finalization(
         or inventory.get("stage_deadline_seconds") != stage_deadline
         or pending_elapsed != pending_observed - pending_started
         or pending_started != inventory.get("stage_started_monotonic")
-        or pending_elapsed >= deadline
+        or pending_elapsed >= stage_deadline
     ):
         raise StageFinalizationError("finalization-pending-time-invalid")
 
@@ -190,17 +251,20 @@ def verify_stage_finalization(
         raise StageFinalizationError("finalization-gate-input-pin-mismatch")
     gate_input = _json(gate_input_raw)
     gates = gate.get("gates")
+    from scripts.coverage_gate_calculation import GATE_NAMES
+
     if (
         gate.get("schema") != "coverage-first-gate-calculation-receipt/1"
         or gate.get("source_stage_uuid") != expected_stage_uuid
         or gate.get("input_manifest_sha256") != inventory.get("gate_input_manifest_sha256")
         or gate.get("input_manifest_sha256") != expected_gate_input_manifest_sha256
         or inventory.get("gate_input_manifest_file") != gate_input_manifest_path.name
-        or gate.get("threshold_sha256") != inventory.get("thresholds_sha256")
+        or gate.get("threshold_sha256") != thresholds_sha
+        or inventory.get("thresholds_sha256") != thresholds_sha
         or inventory.get("gate_calculation_receipt_sha256") != expected_gate_calculation_receipt_sha256
         or inventory.get("gate_calculation_receipt_file") != gate_calculation_receipt_path.name
         or type(gates) is not dict
-        or not gates
+        or set(gates) != GATE_NAMES
         or gate.get("status") != inventory.get("gate_status")
     ):
         raise StageFinalizationError("finalization-gate-binding-mismatch")
@@ -245,6 +309,45 @@ def verify_stage_finalization(
     ):
         raise StageFinalizationError("finalization-gate-input-binding-mismatch")
 
+    resource_path = stage_dir / "resource-evidence.json"
+    resource_raw = _read(resource_path, 2_000_000)
+    resource_sha = _sha(resource_raw)
+    if resource_sha != inventory.get("resource_evidence_receipt_sha256"):
+        raise StageFinalizationError("finalization-resource-receipt-pin-mismatch")
+    resource = _json(resource_raw)
+    collector_observations = resource.get("observations")
+    expected_gate_resource_observations = (
+        {**collector_observations, "stage_elapsed_seconds": pending_elapsed}
+        if type(collector_observations) is dict
+        else None
+    )
+    collector_receipt = {
+        "schema": "coverage-resource-evidence/1",
+        "stage_uuid": resource.get("stage_uuid"),
+        "observations": resource.get("observations"),
+        "provenance": resource.get("provenance"),
+    }
+    if (
+        resource.get("schema") != "coverage-resource-evidence/2"
+        or resource.get("stage_uuid") != expected_stage_uuid
+        or resource.get("source_revision") != expected_source_revision
+        or resource.get("protocol_sha256") != expected_protocol_sha256
+        or resource.get("cohorts_sha256") != expected_cohorts_sha256
+        or type(collector_observations) is not dict
+        or input_resources != expected_gate_resource_observations
+        or type(resource.get("provenance")) is not dict
+        or inventory.get("resource_evidence_receipt_file") != resource_path.name
+        or gate_input.get("resource_evidence_receipt_sha256") != resource_sha
+        or not _SHA.fullmatch(resource.get("collector_receipt_sha256", ""))
+        or _sha(
+            json.dumps(
+                collector_receipt, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+            ).encode()
+        )
+        != resource.get("collector_receipt_sha256")
+    ):
+        raise StageFinalizationError("finalization-resource-evidence-binding-mismatch")
+
     closeout = coverage_resource_evidence.verify_stage_closeout(
         inventory_path=inventory_path,
         expected_inventory_sha256=expected_inventory_sha256,
@@ -267,7 +370,7 @@ def verify_stage_finalization(
         raise StageFinalizationError("finalization-closeout-deadline-or-order-mismatch")
     if closeout.stage_elapsed_seconds < pending_elapsed:
         raise StageFinalizationError("finalization-time-order-invalid")
-    if closeout.stage_elapsed_seconds >= deadline:
+    if closeout.stage_elapsed_seconds >= stage_deadline:
         raise StageFinalizationError("finalization-late-stage")
     if (
         inventory.get("status") != "pending-independent-closeout"

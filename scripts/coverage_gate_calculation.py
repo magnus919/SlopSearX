@@ -23,6 +23,19 @@ from scripts.coverage_study_core import selector_inventory
 SCHEMA = "coverage-first-gate-calculation/1"
 FROZEN_QUALITY_TASK_USE_SHA256 = "b6353b480fd88543da530ef6b03129d26743f8f273e8a80d543320167399f7dd"
 FROZEN_EXECUTION_CONTRACT_SHA256 = "44cee41bc453581d4d0e00e9d3081332dc0467d64a73b9fd70a1ef3515548858"
+GATE_NAMES = frozenset(
+    {
+        "complete_eligible_membership",
+        "candidate_complete_pool_permutation",
+        "reference_A_ranking",
+        "reference_B_ranking",
+        "answer_R1_task_use",
+        "answer_R2_task_use",
+        "candidate_repeat_rotation_overlap",
+        "exact_navigation_top1",
+        "resource_and_terminal_guards",
+    }
+)
 
 
 class GateCalculationError(ValueError):

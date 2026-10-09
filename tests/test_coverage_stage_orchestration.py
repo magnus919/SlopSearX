@@ -1061,7 +1061,7 @@ class StageOrchestrationTests(unittest.TestCase):
         self.assertEqual(json.loads(receipt_bytes)["status"], "inconclusive")
         resource_receipt = json.loads(resource_bytes)
         self.assertEqual(digest(resource_bytes), inventory["resource_evidence_receipt_sha256"])
-        self.assertEqual(resource_receipt["schema"], "coverage-resource-evidence/1")
+        self.assertEqual(resource_receipt["schema"], "coverage-resource-evidence/2")
         self.assertIsNone(resource_receipt["observations"].get("selector_elapsed_ms"))
         # The callback's plausible token claims have no archived terminal/result
         # chain and therefore remain unknown; resource collection ignores them.
