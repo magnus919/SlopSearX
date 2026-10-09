@@ -411,13 +411,24 @@ def _operation_snapshot(operation: object, manifest: Mapping[str, object], manif
     }
 
 
-def _read_canonical_artifact(path: Path, *, max_bytes: int) -> tuple[dict, bytes]:
+def _read_canonical_artifact(
+    path: Path,
+    *,
+    max_bytes: int,
+    check_deadline: Callable[[], None] | None = None,
+) -> tuple[dict, bytes]:
+    if check_deadline is not None:
+        check_deadline()
     if path.is_symlink() or not path.is_file():
         raise LiveAcquisitionError("pool-snapshot-artifact-path-invalid")
     mode = path.stat(follow_symlinks=False).st_mode & 0o777
     if mode != 0o600:
         raise LiveAcquisitionError("pool-snapshot-artifact-mode-invalid")
+    if check_deadline is not None:
+        check_deadline()
     raw = path.read_bytes()
+    if check_deadline is not None:
+        check_deadline()
     if not raw or len(raw) > max_bytes:
         raise LiveAcquisitionError("pool-snapshot-artifact-size-invalid")
 
@@ -430,6 +441,8 @@ def _read_canonical_artifact(path: Path, *, max_bytes: int) -> tuple[dict, bytes
         return result
 
     try:
+        if check_deadline is not None:
+            check_deadline()
         value = json.loads(
             raw.decode("utf-8"),
             object_pairs_hook=no_duplicates,
@@ -437,8 +450,12 @@ def _read_canonical_artifact(path: Path, *, max_bytes: int) -> tuple[dict, bytes
         )
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         raise LiveAcquisitionError("pool-snapshot-artifact-json-invalid") from exc
+    if check_deadline is not None:
+        check_deadline()
     if type(value) is not dict or _canonical(value) != raw:
         raise LiveAcquisitionError("pool-snapshot-artifact-not-canonical")
+    if check_deadline is not None:
+        check_deadline()
     return value, raw
 
 
@@ -449,13 +466,31 @@ def verify_pool_snapshot_index(
     expected_stage_manifest_sha256: str,
     expected_stage_uuid: str,
     expected_source_revision: str,
+    deadline_monotonic: float | None = None,
 ) -> dict[str, object]:
     """Verify a complete durable pool index against externally supplied pins."""
+    if deadline_monotonic is not None and (
+        type(deadline_monotonic) not in {int, float}
+        or not math.isfinite(deadline_monotonic)
+        or deadline_monotonic <= 0
+    ):
+        raise LiveAcquisitionError("pool-snapshot-deadline-invalid")
+
+    def check_deadline() -> None:
+        if deadline_monotonic is not None and time.monotonic() >= deadline_monotonic:
+            raise LiveAcquisitionError("pool-snapshot-deadline-exceeded")
+
     root = Path(receipt_directory)
+    check_deadline()
     if root.is_symlink() or not root.is_dir() or (root.stat(follow_symlinks=False).st_mode & 0o777) != 0o700:
         raise LiveAcquisitionError("pool-snapshot-directory-invalid")
-    index, raw_index = _read_canonical_artifact(root / "pool-snapshot-index.json", max_bytes=MAX_POOL_SNAPSHOT_BYTES)
-    if _sha(raw_index) != _valid_sha(expected_index_sha256, "pool-snapshot-index"):
+    index, raw_index = _read_canonical_artifact(
+        root / "pool-snapshot-index.json", max_bytes=MAX_POOL_SNAPSHOT_BYTES, check_deadline=check_deadline
+    )
+    check_deadline()
+    index_digest = _sha(raw_index)
+    check_deadline()
+    if index_digest != _valid_sha(expected_index_sha256, "pool-snapshot-index"):
         raise LiveAcquisitionError("pool-snapshot-index-digest-mismatch")
     if index.get("schema") != POOL_INDEX_SCHEMA or index.get("status") != "complete":
         raise LiveAcquisitionError("pool-snapshot-index-incomplete")
@@ -487,6 +522,7 @@ def verify_pool_snapshot_index(
     ids: set[str] = set()
     loaded: dict[str, object] = {}
     for row in rows:
+        check_deadline()
         if (
             type(row) is not dict
             or set(row) != {"operation_id", "kind", "status", "file", "sha256", "bytes", "card_count"}
@@ -504,8 +540,13 @@ def verify_pool_snapshot_index(
             raise LiveAcquisitionError("pool-snapshot-operation-row-invalid")
         if type(row.get("sha256")) is not str or not _SHA256.fullmatch(row["sha256"]):
             raise LiveAcquisitionError("pool-snapshot-operation-row-invalid")
-        artifact, raw = _read_canonical_artifact(root / filename, max_bytes=MAX_POOL_SNAPSHOT_BYTES)
-        if _sha(raw) != row.get("sha256") or len(raw) != row.get("bytes"):
+        artifact, raw = _read_canonical_artifact(
+            root / filename, max_bytes=MAX_POOL_SNAPSHOT_BYTES, check_deadline=check_deadline
+        )
+        check_deadline()
+        artifact_digest = _sha(raw)
+        check_deadline()
+        if artifact_digest != row.get("sha256") or len(raw) != row.get("bytes"):
             raise LiveAcquisitionError("pool-snapshot-operation-digest-mismatch")
         if (
             set(artifact)
@@ -559,6 +600,7 @@ def verify_pool_snapshot_index(
         ):
             raise LiveAcquisitionError("pool-snapshot-native-order-invalid")
         loaded[operation_id] = artifact
+    check_deadline()
     if len(ids) != 13:
         raise LiveAcquisitionError("pool-snapshot-index-inventory-invalid")
     return {"index": index, "operations": loaded}

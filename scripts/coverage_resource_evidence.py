@@ -373,6 +373,7 @@ def collect_acquisition_observations(
     cohorts_sha256: str,
     source_closure_sha256: str,
     acquisition_plan_sha256: str,
+    deadline_monotonic: float | None = None,
 ) -> dict[str, object]:
     try:
         verified = coverage_live_acquire.verify_pool_snapshot_index(
@@ -381,6 +382,7 @@ def collect_acquisition_observations(
             expected_stage_manifest_sha256=expected_manifest_sha256,
             expected_stage_uuid=stage_uuid,
             expected_source_revision=source_revision,
+            deadline_monotonic=deadline_monotonic,
         )
     except Exception as exc:
         raise ResourceEvidenceError("acquisition-snapshot-verification-failed") from exc
@@ -590,6 +592,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             cohorts_sha256=cohorts_sha256,
             source_closure_sha256=kwargs["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan_bytes),
+            deadline_monotonic=deadline,
         )
         capture = _capture_observations(
             capture_result=kwargs["capture_result"],
