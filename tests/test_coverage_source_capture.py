@@ -142,8 +142,9 @@ async def _capture(
     qualification_receipt_bytes: bytes | None = None,
     qualification_verifier=None,
     expected_qualification_receipt_sha256: str | None = None,
+    protocol_bytes_override: bytes | None = None,
 ):
-    protocol_bytes = _protocol_bytes()
+    protocol_bytes = protocol_bytes_override or _protocol_bytes()
     candidate_identity_bytes = candidate_identity_bytes or _candidate_identity()
     manifest_bytes = _manifest(
         protocol_bytes,
@@ -728,6 +729,84 @@ async def test_owned_transport_requires_current_external_qualification_before_le
         )
     assert verifier.calls == 0
     assert lease.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_protocol_one_remains_https_only_before_lease_or_dispatch(tmp_path: Path) -> None:
+    lease = _Lease()
+    protocol = json.loads(_protocol_bytes())
+    protocol["schema"] = "coverage-first-study-protocol/1"
+    protocol_bytes = _canonical(protocol)
+    called = False
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return _healthy_response()
+
+    with pytest.raises(SourceCaptureError, match="candidate-endpoint-invalid"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=httpx.MockTransport(handler),
+            sources=[],
+            candidate_base_url="http://capture.example",
+            protocol_bytes_override=protocol_bytes,
+            lease=lease,
+        )
+    assert lease.calls == 0
+    assert called is False
+
+
+@pytest.mark.asyncio
+async def test_protocol_two_http_requires_owned_qualified_transport(tmp_path: Path) -> None:
+    lease = _Lease()
+    called = False
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return _healthy_response()
+
+    with pytest.raises(SourceCaptureError, match="http-candidate-endpoint-requires-owned-qualified-transport"):
+        await _capture(
+            tmp_path=tmp_path,
+            transport=httpx.MockTransport(handler),
+            sources=[],
+            candidate_base_url="http://capture.example",
+            lease=lease,
+        )
+    assert lease.calls == 0
+    assert called is False
+
+
+@pytest.mark.asyncio
+async def test_qualified_protocol_two_binds_http_scheme_and_uses_http_endpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.coverage_source_capture as capture
+
+    receipt = b"independently-verified-protected-profile"
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.scheme + "://" + request.url.host + request.url.path)
+        return _healthy_response()
+
+    monkeypatch.setattr(capture, "_owned_httpx_transport", lambda: httpx.MockTransport(handler))
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=None,
+        sources=[],
+        candidate_base_url="http://capture.example",
+        qualification_receipt_bytes=receipt,
+        expected_qualification_receipt_sha256=_sha(receipt),
+        qualification_verifier=_QualificationVerifier(),
+    )
+    inventory = json.loads((result.receipt_directory / "inventory.json").read_bytes())
+    qualification = inventory["protected_capture_qualification"]
+    assert result.status == "complete"
+    assert seen == ["http://capture.example/health"]
+    assert qualification["bindings"]["candidate_endpoint_scheme"] == "http"
 
 
 @pytest.mark.asyncio

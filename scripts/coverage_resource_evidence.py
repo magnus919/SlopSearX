@@ -312,6 +312,7 @@ def _capture_observations(
     candidate_endpoint_sha256: str,
     timeout_limit_seconds: int | float,
     response_bytes_limit: int,
+    protocol_schema: str = "coverage-first-study-protocol/1",
 ) -> dict[str, object]:
     root = Path(capture_result.receipt_directory)
     _require_private_directory(root)
@@ -581,9 +582,28 @@ def _capture_observations(
                 "protocol_sha256": protocol_sha256,
                 "candidate_identity_sha256": candidate_identity_sha256,
                 "candidate_endpoint_sha256": candidate_endpoint_sha256,
+                "candidate_endpoint_scheme": capture_result.candidate_endpoint_scheme,
                 "candidate_runtime_revision": expected_identity["runtime"]["revision"],
                 "capture_module_sha256": execution_controls.module_source_sha256(source_capture.__file__),
             }
+            qualification_bindings = (
+                protected_qualification.get("bindings") if type(protected_qualification) is dict else None
+            )
+            allowed_endpoint_schemes = (
+                {"https", "http"} if protocol_schema == "coverage-first-study-protocol/2" else {"https"}
+            )
+            if (
+                type(qualification_bindings) is not dict
+                or set(qualification_bindings) != {*expected_qualification_bindings, "candidate_endpoint_scheme"}
+                or type(qualification_bindings.get("candidate_endpoint_scheme")) is not str
+                or qualification_bindings.get("candidate_endpoint_scheme") not in allowed_endpoint_schemes
+                or type(capture_result.candidate_endpoint_scheme) is not str
+                or capture_result.candidate_endpoint_scheme not in allowed_endpoint_schemes
+                or any(
+                    qualification_bindings.get(key) != value for key, value in expected_qualification_bindings.items()
+                )
+            ):
+                raise ResourceEvidenceError("capture-qualification-binding")
             if (
                 type(protected_qualification) is not dict
                 or set(protected_qualification)
@@ -600,7 +620,6 @@ def _capture_observations(
                 }
                 or protected_qualification.get("status") != "verified-qualified"
                 or protected_qualification.get("scope") != "protected-source-capture"
-                or protected_qualification.get("bindings") != expected_qualification_bindings
                 or protected_qualification.get("receipt_file") != "protected-capture-qualification.json"
                 or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(protected_qualification.get("grok_image_digest", "")))
                 or not _SHA.fullmatch(str(protected_qualification.get("grok_config_sha256", "")))
@@ -1273,6 +1292,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             candidate_endpoint_sha256=kwargs["candidate_endpoint_sha256"],
             timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
             response_bytes_limit=protocol["capture"]["response_bytes"],
+            protocol_schema=str(protocol.get("schema", "")),
         )
         answer = _answer_observations(
             stage_uuid=stage_uuid,

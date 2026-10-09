@@ -215,6 +215,7 @@ async def test_owned_capture_controls_require_archived_qualification_binding(tmp
         tmp_path=tmp_path,
         transport=None,
         sources=[_source("D-R01", "source-a", 1, "https://docs.example/a")],
+        candidate_base_url="http://capture.example",
         qualification_receipt_bytes=receipt,
         expected_qualification_receipt_sha256=_sha(receipt),
         qualification_verifier=_QualificationVerifier(),
@@ -235,10 +236,12 @@ async def test_owned_capture_controls_require_archived_qualification_binding(tmp
         candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
         timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
         response_bytes_limit=protocol["capture"]["response_bytes"],
+        protocol_schema=protocol["schema"],
     )
     assert observed["capture_retries"] == 0
     assert observed["capture_application_retries_observed"] == 0
     assert observed["capture_response_bytes_limit_applied"] == 2_000_000
+    assert result.candidate_endpoint_scheme == "http"
 
     qualification_path = root / "protected-capture-qualification.json"
     qualification_path.write_bytes(b"replacement receipt")
@@ -255,6 +258,7 @@ async def test_owned_capture_controls_require_archived_qualification_binding(tmp
             candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
             timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
             response_bytes_limit=protocol["capture"]["response_bytes"],
+            protocol_schema=protocol["schema"],
         )
 
     altered = json.loads(inventory_bytes)
@@ -273,6 +277,7 @@ async def test_owned_capture_controls_require_archived_qualification_binding(tmp
             candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
             timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
             response_bytes_limit=protocol["capture"]["response_bytes"],
+            protocol_schema=protocol["schema"],
         )
 
 
