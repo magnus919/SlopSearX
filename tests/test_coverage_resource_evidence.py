@@ -418,8 +418,8 @@ def test_acquisition_collector_reports_short_measured_query_gap_not_configured_l
         configured_query_pacing_seconds=7,
         configured_arxiv_pacing_seconds=3,
     )
-    assert observed["acquisition_pacing_seconds"] == 0.0
-    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] == 0
+    assert observed["acquisition_pacing_seconds"] == -0.000001
+    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] == -1
 
 
 def test_acquisition_collector_derives_arxiv_physical_gap_from_dispatch_receipts(tmp_path: Path):
@@ -452,6 +452,21 @@ def test_acquisition_collector_derives_arxiv_physical_gap_from_dispatch_receipts
     assert observed["acquisition_engine_calls"]["arxiv"] == 2
     assert observed["arxiv_pacing_seconds"] == 3.0
     assert observed["acquisition_arxiv_min_gap_microseconds_observed"] == 3_000_000
+
+
+@pytest.mark.parametrize("threshold_seconds", [3, 7])
+def test_rounded_gap_lower_bound_rejects_submicrosecond_shortfall(threshold_seconds: int):
+    threshold_us = threshold_seconds * 1_000_000
+    # A real interval that is 0.5 microseconds short can round to the exact
+    # threshold when its two endpoints are persisted independently in us.
+    rounded_earlier_us = round(0.0)
+    rounded_later_us = round(threshold_us - 0.5)
+    assert rounded_later_us == threshold_us
+    lower_bound = resource_evidence._conservative_rounded_gap_lower_bound_us(
+        rounded_earlier_us, rounded_later_us
+    )
+    assert lower_bound == threshold_us - 1
+    assert lower_bound < threshold_us
 
 
 def test_answer_observations_replay_mock_archives_and_reject_wrong_stage(tmp_path: Path):

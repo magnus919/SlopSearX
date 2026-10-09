@@ -917,6 +917,17 @@ def coverage_source_capture_normalize(url: str) -> str:
     return _normalise_url(url)
 
 
+def _conservative_rounded_gap_lower_bound_us(earlier_us: int, later_us: int) -> int:
+    """Lower-bound a gap computed from independently rounded microsecond offsets.
+
+    Two nearest-microsecond samples can overstate their interval by almost one
+    microsecond. Remove that full quantization interval before comparison with
+    a frozen pacing threshold. An exact-looking boundary is therefore rejected
+    when the underlying sub-microsecond interval cannot be distinguished.
+    """
+    return later_us - earlier_us - 1
+
+
 def collect_acquisition_observations(
     *,
     snapshots_directory: Path,
@@ -1118,6 +1129,7 @@ def collect_acquisition_observations(
             "control_identity": "coverage-acquisition-one-shot/1",
             "query_pacing_seconds_enforced": coverage_live_acquire.QUERY_PACING_SECONDS,
             "arxiv_physical_pacing_seconds_enforced": coverage_live_acquire.ARXIV_PHYSICAL_PACING_SECONDS,
+            "offset_quantization_guard_seconds": coverage_live_acquire.OFFSET_QUANTIZATION_GUARD_SECONDS,
             "application_retry_policy": "one-search-invocation-per-planned-operation",
         }
         control_keys = {
@@ -1191,13 +1203,19 @@ def collect_acquisition_observations(
         if summary.get("status") == "complete" and len(invoked_rows) != len(expected_ids):
             raise ResourceEvidenceError("acquisition-operation-invocation-incomplete")
         if len(invoked_rows) >= 2:
-            idle_gaps = [
+            raw_idle_gaps = [
                 int(next_row["start_offset_us"]) - int(previous_row["end_offset_us"])
                 for previous_row, next_row in zip(invoked_rows, invoked_rows[1:])
             ]
-            query_min_gap_us = min(idle_gaps)
-            if query_min_gap_us < 0:
+            if any(gap < 0 for gap in raw_idle_gaps):
                 raise ResourceEvidenceError("acquisition-query-time-order-invalid")
+            idle_gaps = [
+                _conservative_rounded_gap_lower_bound_us(
+                    int(previous_row["end_offset_us"]), int(next_row["start_offset_us"])
+                )
+                for previous_row, next_row in zip(invoked_rows, invoked_rows[1:])
+            ]
+            query_min_gap_us = min(idle_gaps)
             query_bound_us = int(float(configured_query_pacing_seconds) * 1_000_000)
             acquisition_pacing = (
                 float(configured_query_pacing_seconds)
@@ -1223,9 +1241,13 @@ def collect_acquisition_observations(
             if row.get("engine") == "arxiv":
                 arxiv_offsets.append(offset)
         if len(arxiv_offsets) >= 2:
-            arxiv_min_gap_us = min(right - left for left, right in zip(arxiv_offsets, arxiv_offsets[1:]))
-            if arxiv_min_gap_us < 0:
+            raw_arxiv_gaps = [right - left for left, right in zip(arxiv_offsets, arxiv_offsets[1:])]
+            if any(gap < 0 for gap in raw_arxiv_gaps):
                 raise ResourceEvidenceError("acquisition-arxiv-time-order-invalid")
+            arxiv_min_gap_us = min(
+                _conservative_rounded_gap_lower_bound_us(left, right)
+                for left, right in zip(arxiv_offsets, arxiv_offsets[1:])
+            )
             arxiv_bound_us = int(float(configured_arxiv_pacing_seconds) * 1_000_000)
             arxiv_pacing = (
                 float(configured_arxiv_pacing_seconds)

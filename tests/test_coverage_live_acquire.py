@@ -243,7 +243,9 @@ async def test_full_synthetic_stage_uses_pinned_scope_and_durable_private_receip
     assert len(result.stage.operations) == 13
     assert result.stage.physical_request_count == 21
     assert len(calls) == 21
-    assert pacer.sleeps == [7.0] * 12
+    assert pacer.sleeps == [
+        live.QUERY_PACING_SECONDS + live.OFFSET_QUANTIZATION_GUARD_SECONDS
+    ] * 12
     assert [item.status for item in result.stage.operations] == ["complete"] * 13
     assert [item.band_valid for item in result.stage.operations[:8]] == [True] * 8
     assert [item.target_found_at_rank1 for item in result.stage.operations[8:]] == [True] * 5
@@ -337,12 +339,12 @@ async def test_arxiv_redirect_dispatches_are_physically_paced_within_request_dea
     assert transport.exchanges[0].redirect_allowed is True
     assert dispatched_at[1] - dispatched_at[0] >= live.ARXIV_PHYSICAL_PACING_SECONDS
     assert dispatched_at[2] - dispatched_at[1] >= live.QUERY_PACING_SECONDS
-    assert dispatched_at == [0.0, 3.0, 10.0]
+    assert dispatched_at == pytest.approx([0.0, 3.000001, 10.000001])
     dispatch_receipts = [
         json.loads((sink.path / f"http-{index:04d}-final.json").read_bytes()) for index in range(1, 4)
     ]
     offsets = [row["dispatch_offset_us"] for row in dispatch_receipts]
-    assert offsets == [0, 3_000_000, 10_000_000]
+    assert offsets == [0, 3_000_001, 10_000_001]
 
 
 @pytest.mark.asyncio

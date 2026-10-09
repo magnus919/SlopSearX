@@ -44,6 +44,10 @@ POOL_INDEX_SCHEMA = "coverage-native-pool-snapshot-index/1"
 REQUEST_TIMEOUT_SECONDS = 10.0
 QUERY_PACING_SECONDS = 7.0
 ARXIV_PHYSICAL_PACING_SECONDS = 3.0
+# Persisted dispatch and operation offsets are rounded to microseconds. Keep
+# one extra microsecond in owned waits so the conservative measured lower bound
+# can still establish the frozen threshold at an exact nominal interval.
+OFFSET_QUANTIZATION_GUARD_SECONDS = 0.000001
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _SOURCE_REVISION = re.compile(r"[0-9a-f]{40}\Z")
 _MANIFEST_KEYS = {
@@ -702,6 +706,7 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
             "transport_identity": "owned-httpx" if self._owned_transport else "injected-mocktransport",
             "query_pacing_seconds_enforced": QUERY_PACING_SECONDS,
             "arxiv_physical_pacing_seconds_enforced": ARXIV_PHYSICAL_PACING_SECONDS,
+            "offset_quantization_guard_seconds": OFFSET_QUANTIZATION_GUARD_SECONDS,
             "transport_retry_policy": (
                 "configured-zero-owned-httpx-transport"
                 if self._owned_transport
@@ -813,7 +818,11 @@ class _BoundedTransport(httpx.AsyncBaseTransport):
             async with asyncio.timeout(REQUEST_TIMEOUT_SECONDS):
                 if engine == "arxiv" and self._last_arxiv_dispatch is not None:
                     elapsed = self._monotonic() - self._last_arxiv_dispatch
-                    remaining = ARXIV_PHYSICAL_PACING_SECONDS - elapsed
+                    remaining = (
+                        ARXIV_PHYSICAL_PACING_SECONDS
+                        + OFFSET_QUANTIZATION_GUARD_SECONDS
+                        - elapsed
+                    )
                     if remaining > 0:
                         await self._pacer.sleep(remaining)
                 dispatch_at = self._monotonic()
