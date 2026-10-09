@@ -16,8 +16,10 @@ reported as zero.
 
 from __future__ import annotations
 
+import ast
 import copy
 import hashlib
+import inspect
 import json
 import math
 import re
@@ -39,12 +41,13 @@ FROZEN_V1_COMMIT = "8f3577d022e2d98fcd405d915b5c3b9b16e899bf"
 FROZEN_V1_BLOB_SHA1 = "aab38edc92b2ca7e8e796e8a1af07edc7c55ad81"
 FROZEN_V1_SOURCE_SHA256 = "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078"
 MAX_REPLAY_RESPONSE_BYTES = 2_000_000
+MAX_SERVICE_SOURCE_BYTES = 2_000_000
 
 # These fingerprints were derived from the read-only AST parity check against
-# FROZEN_V1_COMMIT. The AST digest records the reviewed source equivalence;
-# the code fingerprint makes the loaded service fail closed if it later drifts.
+# FROZEN_V1_COMMIT. The source bytes are supplied by the caller so this helper
+# does not read the filesystem; AST serialization explicitly includes empty
+# fields on Python versions that otherwise omit them by default.
 SERVICE_METHODS_PARITY_AST_SHA256 = "b3b14635045a511b98b21e74181b03f50becd92691ba1ae2e4e13cffe0ee347a"
-SERVICE_METHODS_RUNTIME_SHA256 = "70a86be3a128014eea9b3096b37cb755765c305154f55128bf701b37d446f534"
 
 
 class LegacyReplayIntegrityError(RuntimeError):
@@ -92,39 +95,203 @@ class LegacyControlReceipt:
     output_tokens: int | None
 
 
+def _canonical_ast_dump(node: ast.AST) -> str:
+    kwargs: dict[str, object] = {"include_attributes": False}
+    if "show_empty" in inspect.signature(ast.dump).parameters:
+        kwargs["show_empty"] = True
+    return ast.dump(node, **kwargs)  # type: ignore[arg-type]
+
+
+def _method_fingerprint(service_source_bytes: bytes) -> str:
+    """Hash the reviewed method ASTs using cross-version canonical dumping."""
+    if not isinstance(service_source_bytes, bytes):
+        raise TypeError("current_service_source_bytes must be exact bytes")
+    try:
+        source = service_source_bytes.decode("utf-8")
+        tree = ast.parse(source)
+    except (UnicodeDecodeError, SyntaxError) as exc:
+        raise LegacyReplayAdmissionError("current service source is not valid Python UTF-8") from exc
+
+    service_class = next(
+        (node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "SearchService"),
+        None,
+    )
+    if service_class is None:
+        raise LegacyReplayAdmissionError("current service source is missing SearchService")
+    rerank_results = next(
+        (
+            node
+            for node in service_class.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "_rerank_results"
+        ),
+        None,
+    )
+    top_level_functions = {
+        node.name: node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    methods = (
+        ("SearchService._rerank_results", rerank_results),
+        ("_rerank_text", top_level_functions.get("_rerank_text")),
+        ("_rerank_url", top_level_functions.get("_rerank_url")),
+    )
+    if any(node is None for _, node in methods):
+        raise LegacyReplayAdmissionError("current service source is missing a reviewed rerank method")
+    # The reviewed fingerprint was produced from ``ast.parse(dedent(source))``
+    # for each individual method, which yields an ``ast.Module`` wrapper. Keep
+    # that shape so its established digest stays stable across Python versions.
+    material = [
+        {
+            "name": name,
+            "ast": _canonical_ast_dump(ast.Module(body=[node], type_ignores=[])),
+        }
+        for name, node in methods
+        if isinstance(node, ast.stmt)
+    ]
+    encoded = json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def _runtime_value(value: object) -> object:
     if isinstance(value, types.CodeType):
         return {
+            "type": "code",
             "bytecode": value.co_code.hex(),
             "constants": [_runtime_value(item) for item in value.co_consts],
             "names": value.co_names,
             "varnames": value.co_varnames,
             "argcount": value.co_argcount,
+            "posonlyargcount": value.co_posonlyargcount,
             "kwonly": value.co_kwonlyargcount,
+            "nlocals": value.co_nlocals,
+            "stacksize": value.co_stacksize,
             "flags": value.co_flags,
+            "freevars": value.co_freevars,
+            "cellvars": value.co_cellvars,
+            "exceptiontable": value.co_exceptiontable.hex(),
         }
-    if isinstance(value, (tuple, list)):
-        return [_runtime_value(item) for item in value]
-    if isinstance(value, (set, frozenset)):
-        return sorted((_runtime_value(item) for item in value), key=repr)
+    if isinstance(value, tuple):
+        return {"type": "tuple", "items": [_runtime_value(item) for item in value]}
+    if isinstance(value, frozenset):
+        items = [_runtime_value(item) for item in value]
+        return {"type": "frozenset", "items": sorted(items, key=repr)}
     if isinstance(value, bytes):
-        return {"bytes": value.hex()}
-    if isinstance(value, (str, int, float, bool, type(None))):
-        return value
-    return repr(value)
+        return {"type": "bytes", "hex": value.hex()}
+    if isinstance(value, str):
+        return {"type": "str", "value": value}
+    if value is None:
+        return {"type": "NoneType"}
+    if value is Ellipsis:
+        return {"type": "ellipsis"}
+    if isinstance(value, bool):
+        return {"type": "bool", "value": value}
+    if isinstance(value, int):
+        return {"type": "int", "value": str(value)}
+    if isinstance(value, float):
+        return {"type": "float", "hex": value.hex()}
+    if isinstance(value, complex):
+        return {"type": "complex", "real": value.real.hex(), "imag": value.imag.hex()}
+    raise TypeError(f"unsupported code constant type: {type(value).__name__}")
 
 
-def _service_runtime_fingerprint() -> str:
-    import json as json_module
-
-    functions = (
-        ("SearchService._rerank_results", SearchService._rerank_results),
-        ("_rerank_text", _rerank_text),
-        ("_rerank_url", _rerank_url),
+def _loaded_methods_match_reviewed_source(service_source_bytes: bytes) -> bool:
+    """Compare loaded code to reviewed functions compiled without execution."""
+    if not isinstance(service_source_bytes, bytes) or len(service_source_bytes) > MAX_SERVICE_SOURCE_BYTES:
+        return False
+    try:
+        tree = ast.parse(service_source_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, SyntaxError):
+        return False
+    service_class = next(
+        (node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "SearchService"),
+        None,
     )
-    material = [(name, _runtime_value(function.__code__)) for name, function in functions]
-    encoded = json_module.dumps(material, sort_keys=True, separators=(",", ":")).encode()
-    return hashlib.sha256(encoded).hexdigest()
+    if service_class is None:
+        return False
+    methods: tuple[tuple[str, ast.AST | None, object], ...] = (
+        (
+            "SearchService._rerank_results",
+            next(
+                (
+                    node
+                    for node in service_class.body
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "_rerank_results"
+                ),
+                None,
+            ),
+            SearchService._rerank_results,
+        ),
+        (
+            "_rerank_text",
+            next(
+                (
+                    node
+                    for node in tree.body
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "_rerank_text"
+                ),
+                None,
+            ),
+            _rerank_text,
+        ),
+        (
+            "_rerank_url",
+            next(
+                (
+                    node
+                    for node in tree.body
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "_rerank_url"
+                ),
+                None,
+            ),
+            _rerank_url,
+        ),
+    )
+    if any(node is None for _, node, _ in methods):
+        return False
+
+    try:
+        # Compilation does not execute/import the supplied module. Preserve
+        # exact module and class compiler context for bytecode equivalence.
+        compiled = compile(tree, "<reviewed-service-source>", "exec", dont_inherit=True)
+    except (SyntaxError, ValueError, TypeError):
+        return False
+    class_code = next(
+        (code for code in compiled.co_consts if isinstance(code, types.CodeType) and code.co_name == "SearchService"),
+        None,
+    )
+    if class_code is None:
+        return False
+    expected_method = next(
+        (
+            code
+            for code in class_code.co_consts
+            if isinstance(code, types.CodeType) and code.co_name == "_rerank_results"
+        ),
+        None,
+    )
+    if expected_method is None:
+        return False
+    expected = {"_rerank_results": expected_method}
+    expected.update(
+        {
+            code.co_name: code
+            for code in compiled.co_consts
+            if isinstance(code, types.CodeType) and code.co_name in {"_rerank_text", "_rerank_url"}
+        }
+    )
+    for name, node, loaded in methods:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return False
+        method_name = node.name
+        expected_code = expected.get(method_name)
+        loaded_code = getattr(loaded, "__code__", None)
+        if expected_code is None or not isinstance(loaded_code, types.CodeType):
+            return False
+        try:
+            if _runtime_value(expected_code) != _runtime_value(loaded_code):
+                return False
+        except TypeError:
+            return False
+    return True
 
 
 def _validate_digest(label: str, value: str) -> None:
@@ -206,6 +373,7 @@ async def replay_legacy_v1_control(
     canonical_pool: tuple[SearchResult, ...],
     *,
     frozen_v1_source_bytes: bytes,
+    current_service_source_bytes: bytes,
     expected_request_sha256: str,
     expected_response_sha256: str,
     archived_response_bytes: bytes,
@@ -225,7 +393,9 @@ async def replay_legacy_v1_control(
         raise LegacyReplayIntegrityError("response", expected_response_sha256, observed_response_sha256)
     if len(archived_response_bytes) > MAX_REPLAY_RESPONSE_BYTES:
         raise LegacyReplayAdmissionError("archived response exceeds the 2,000,000-byte stage guard")
-    if _service_runtime_fingerprint() != SERVICE_METHODS_RUNTIME_SHA256:
+    if _method_fingerprint(
+        current_service_source_bytes
+    ) != SERVICE_METHODS_PARITY_AST_SHA256 or not _loaded_methods_match_reviewed_source(current_service_source_bytes):
         raise LegacyReplayAdmissionError("current service projection code differs from AST-reviewed W0 methods")
     if not isinstance(canonical_pool, tuple) or not all(isinstance(item, SearchResult) for item in canonical_pool):
         raise TypeError("canonical_pool must be a tuple of full SearchResult objects")

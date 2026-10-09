@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import sys
+import types
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -13,8 +15,12 @@ import pytest
 
 from scripts.coverage_legacy_control import (
     FROZEN_V1_SOURCE_SHA256,
+    SERVICE_METHODS_PARITY_AST_SHA256,
     LegacyReplayAdmissionError,
     LegacyReplayIntegrityError,
+    _canonical_ast_dump,
+    _method_fingerprint,
+    _runtime_value,
     replay_legacy_v1_control,
 )
 from slopsearx.adapter import SearchResult
@@ -30,6 +36,42 @@ def frozen_v1_source() -> bytes:
     source_bytes = source_path.read_bytes()
     assert hashlib.sha256(source_bytes).hexdigest() == FROZEN_V1_SOURCE_SHA256
     return source_bytes
+
+
+@pytest.fixture(scope="module")
+def current_service_source() -> bytes:
+    source_path = Path(__file__).resolve().parents[1] / "slopsearx/service.py"
+    return source_path.read_bytes()
+
+
+def test_ast_dump_includes_empty_fields_on_versions_that_support_show_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    original_dump = ast.dump
+    seen_show_empty: list[bool] = []
+
+    def python_313_dump(
+        node: ast.AST,
+        annotate_fields: bool = True,
+        include_attributes: bool = False,
+        indent: int | None = None,
+        show_empty: bool = False,
+    ) -> str:
+        seen_show_empty.append(show_empty)
+        return original_dump(
+            node,
+            annotate_fields=annotate_fields,
+            include_attributes=include_attributes,
+            indent=indent,
+        )
+
+    monkeypatch.setattr(ast, "dump", python_313_dump)
+    dumped = _canonical_ast_dump(ast.parse("def stable():\n    pass\n"))
+
+    assert seen_show_empty == [True]
+    assert dumped == original_dump(ast.parse("def stable():\n    pass\n"), include_attributes=False)
+
+
+def test_current_service_ast_fingerprint_matches_reviewed_constant(current_service_source: bytes) -> None:
+    assert _method_fingerprint(current_service_source) == SERVICE_METHODS_PARITY_AST_SHA256
 
 
 def _pool(count: int) -> tuple[SearchResult, ...]:
@@ -93,7 +135,9 @@ def _service() -> SearchService:
 
 
 @pytest.mark.parametrize("count", [20, 45])
-async def test_v1_control_reorders_real_objects_stable_ties_and_full_tail(count: int, frozen_v1_source: bytes) -> None:
+async def test_v1_control_reorders_real_objects_stable_ties_and_full_tail(
+    count: int, frozen_v1_source: bytes, current_service_source: bytes
+) -> None:
     query = "offline frozen task"
     pool = _pool(count)
     shortlist_count = min(count, MAX_CANDIDATES)
@@ -108,6 +152,7 @@ async def test_v1_control_reorders_real_objects_stable_ties_and_full_tail(count:
         query,
         pool,
         frozen_v1_source_bytes=frozen_v1_source,
+        current_service_source_bytes=current_service_source,
         expected_request_sha256=_expected_request_sha(query, pool),
         expected_response_sha256=hashlib.sha256(body).hexdigest(),
         archived_response_bytes=body,
@@ -128,7 +173,7 @@ async def test_v1_control_reorders_real_objects_stable_ties_and_full_tail(count:
 
 
 async def test_invalid_v1_response_falls_back_and_reports_strict_compatibility(
-    frozen_v1_source: bytes,
+    frozen_v1_source: bytes, current_service_source: bytes
 ) -> None:
     query = "offline frozen task"
     pool = _pool(4)
@@ -146,6 +191,7 @@ async def test_invalid_v1_response_falls_back_and_reports_strict_compatibility(
         query,
         pool,
         frozen_v1_source_bytes=frozen_v1_source,
+        current_service_source_bytes=current_service_source,
         expected_request_sha256=_expected_request_sha(query, pool),
         expected_response_sha256=hashlib.sha256(body).hexdigest(),
         archived_response_bytes=body,
@@ -161,7 +207,7 @@ async def test_invalid_v1_response_falls_back_and_reports_strict_compatibility(
 
 
 async def test_v1_accepts_duplicate_score_key_but_current_strict_parser_is_separately_false(
-    frozen_v1_source: bytes,
+    frozen_v1_source: bytes, current_service_source: bytes
 ) -> None:
     query = "offline frozen task"
     pool = _pool(2)
@@ -175,6 +221,7 @@ async def test_v1_accepts_duplicate_score_key_but_current_strict_parser_is_separ
         query,
         pool,
         frozen_v1_source_bytes=frozen_v1_source,
+        current_service_source_bytes=current_service_source,
         expected_request_sha256=_expected_request_sha(query, pool),
         expected_response_sha256=hashlib.sha256(body).hexdigest(),
         archived_response_bytes=body,
@@ -187,7 +234,7 @@ async def test_v1_accepts_duplicate_score_key_but_current_strict_parser_is_separ
 
 
 async def test_request_mismatch_is_integrity_failure_after_v1_fail_open(
-    frozen_v1_source: bytes,
+    frozen_v1_source: bytes, current_service_source: bytes
 ) -> None:
     query = "offline frozen task"
     pool = _pool(3)
@@ -200,6 +247,7 @@ async def test_request_mismatch_is_integrity_failure_after_v1_fail_open(
             query,
             pool,
             frozen_v1_source_bytes=frozen_v1_source,
+            current_service_source_bytes=current_service_source,
             expected_request_sha256="0" * 64,
             expected_response_sha256=hashlib.sha256(body).hexdigest(),
             archived_response_bytes=body,
@@ -212,7 +260,7 @@ async def test_request_mismatch_is_integrity_failure_after_v1_fail_open(
 
 
 async def test_source_and_response_digest_failures_happen_before_execution(
-    frozen_v1_source: bytes,
+    frozen_v1_source: bytes, current_service_source: bytes
 ) -> None:
     query = "offline frozen task"
     pool = _pool(2)
@@ -226,6 +274,7 @@ async def test_source_and_response_digest_failures_happen_before_execution(
             query,
             pool,
             frozen_v1_source_bytes=frozen_v1_source + b"#tampered",
+            current_service_source_bytes=current_service_source,
             expected_request_sha256=_expected_request_sha(query, pool),
             expected_response_sha256=hashlib.sha256(body).hexdigest(),
             archived_response_bytes=body,
@@ -238,6 +287,7 @@ async def test_source_and_response_digest_failures_happen_before_execution(
             query,
             pool,
             frozen_v1_source_bytes=frozen_v1_source,
+            current_service_source_bytes=current_service_source,
             expected_request_sha256=_expected_request_sha(query, pool),
             expected_response_sha256="0" * 64,
             archived_response_bytes=body,
@@ -247,7 +297,9 @@ async def test_source_and_response_digest_failures_happen_before_execution(
     assert after_modules == before_modules
 
 
-async def test_response_byte_limit_is_enforced_before_v1_parser(frozen_v1_source: bytes) -> None:
+async def test_response_byte_limit_is_enforced_before_v1_parser(
+    frozen_v1_source: bytes, current_service_source: bytes
+) -> None:
     query = "offline frozen task"
     pool = _pool(2)
     body = b" " * 2_000_001
@@ -259,14 +311,40 @@ async def test_response_byte_limit_is_enforced_before_v1_parser(frozen_v1_source
             query,
             pool,
             frozen_v1_source_bytes=frozen_v1_source,
+            current_service_source_bytes=current_service_source,
             expected_request_sha256=_expected_request_sha(query, pool),
             expected_response_sha256=hashlib.sha256(body).hexdigest(),
             archived_response_bytes=body,
         )
 
 
-async def test_service_method_drift_is_rejected_before_loading_v1(
-    frozen_v1_source: bytes, monkeypatch: pytest.MonkeyPatch
+async def test_supplied_service_source_drift_is_rejected_before_loading_v1(
+    frozen_v1_source: bytes, current_service_source: bytes
+) -> None:
+    query = "offline frozen task"
+    pool = _pool(2)
+    body = _response({"c0": 1, "c1": 2})
+    before_modules = {name for name in sys.modules if name.startswith("_coverage_frozen_jev_v1_")}
+
+    changed_source = current_service_source.replace(b'return ranked, "skipped"', b'return ranked, "changed"', 1)
+    assert changed_source != current_service_source
+    with pytest.raises(LegacyReplayAdmissionError, match="projection code differs"):
+        await replay_legacy_v1_control(
+            _service(),
+            query,
+            pool,
+            frozen_v1_source_bytes=frozen_v1_source,
+            current_service_source_bytes=changed_source,
+            expected_request_sha256=_expected_request_sha(query, pool),
+            expected_response_sha256=hashlib.sha256(body).hexdigest(),
+            archived_response_bytes=body,
+        )
+    after_modules = {name for name in sys.modules if name.startswith("_coverage_frozen_jev_v1_")}
+    assert after_modules == before_modules
+
+
+async def test_loaded_method_drift_is_rejected_even_with_unchanged_source(
+    frozen_v1_source: bytes, current_service_source: bytes, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     query = "offline frozen task"
     pool = _pool(2)
@@ -283,9 +361,61 @@ async def test_service_method_drift_is_rejected_before_loading_v1(
             query,
             pool,
             frozen_v1_source_bytes=frozen_v1_source,
+            current_service_source_bytes=current_service_source,
             expected_request_sha256=_expected_request_sha(query, pool),
             expected_response_sha256=hashlib.sha256(body).hexdigest(),
             archived_response_bytes=body,
         )
     after_modules = {name for name in sys.modules if name.startswith("_coverage_frozen_jev_v1_")}
     assert after_modules == before_modules
+
+
+@pytest.mark.parametrize("mutation", ["exceptiontable", "bytecode"])
+async def test_loaded_code_object_changes_are_rejected(
+    mutation: str,
+    frozen_v1_source: bytes,
+    current_service_source: bytes,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    query = "offline frozen task"
+    pool = _pool(2)
+    body = _response({"c0": 1, "c1": 2})
+    original = SearchService._rerank_results
+    original_code = original.__code__
+    if mutation == "exceptiontable":
+        assert original_code.co_exceptiontable
+        changed_code = original_code.replace(co_exceptiontable=b"")
+    else:
+        changed_bytecode = bytearray(original_code.co_code)
+        changed_bytecode[-1] ^= 1
+        changed_code = original_code.replace(co_code=bytes(changed_bytecode))
+    changed_function = types.FunctionType(
+        changed_code,
+        original.__globals__,
+        original.__name__,
+        original.__defaults__,
+        original.__closure__,
+    )
+    monkeypatch.setattr(SearchService, "_rerank_results", changed_function)
+
+    with pytest.raises(LegacyReplayAdmissionError, match="projection code differs"):
+        await replay_legacy_v1_control(
+            _service(),
+            query,
+            pool,
+            frozen_v1_source_bytes=frozen_v1_source,
+            current_service_source_bytes=current_service_source,
+            expected_request_sha256=_expected_request_sha(query, pool),
+            expected_response_sha256=hashlib.sha256(body).hexdigest(),
+            archived_response_bytes=body,
+        )
+
+
+def test_code_constant_fingerprint_distinguishes_integer_one_from_true() -> None:
+    original_code = SearchService._rerank_results.__code__
+    integer_constants = tuple(1 if type(item) is int and item == 1000 else item for item in original_code.co_consts)
+    boolean_constants = tuple(True if type(item) is int and item == 1000 else item for item in original_code.co_consts)
+    integer_code = original_code.replace(co_consts=integer_constants)
+    boolean_code = original_code.replace(co_consts=boolean_constants)
+
+    assert _runtime_value(integer_code) != _runtime_value(boolean_code)
