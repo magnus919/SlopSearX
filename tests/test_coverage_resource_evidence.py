@@ -19,6 +19,7 @@ from tests.test_coverage_source_capture import (
     _candidate_identity,
     _capture,
     _healthy_response,
+    _QualificationVerifier,
     _source,
 )
 from tests.test_coverage_source_capture import (
@@ -173,6 +174,88 @@ async def test_capture_observations_replay_actual_mock_response_receipts(tmp_pat
     )
     assert legacy_observed["capture_timeout_seconds"] is None
     assert legacy_observed["capture_retries"] is None
+
+    pre_owned_inventory = json.loads(inventory_bytes)
+    pre_owned_inventory["execution_control_attestation"].pop("transport_configuration")
+    pre_owned_bytes = resource_evidence.source_capture._canonical_json(pre_owned_inventory)
+    (root / "inventory.json").write_bytes(pre_owned_bytes)
+    pre_owned_observed = resource_evidence._capture_observations(
+        capture_result=result,
+        expected_inventory_sha256=_sha(pre_owned_bytes),
+        expected_manifest_sha256=_sha(manifest_bytes),
+        protocol_sha256=_sha(protocol_bytes),
+        cohorts_sha256=protocol["cohorts_sha256"],
+        source_revision=manifest["source_revision"],
+        candidate_identity_bytes=identity,
+        candidate_identity_sha256=_sha(identity),
+        candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+        timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+        response_bytes_limit=protocol["capture"]["response_bytes"],
+    )
+    assert pre_owned_observed["capture_retries"] is None
+
+
+@pytest.mark.asyncio
+async def test_owned_capture_controls_require_archived_qualification_binding(tmp_path: Path, monkeypatch):
+    from scripts import coverage_source_capture as capture_module
+
+    protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"
+    protocol_bytes = protocol_path.read_bytes()
+    protocol = json.loads(protocol_bytes)
+    identity = _candidate_identity()
+    receipt = b"independently-verified-protected-profile"
+
+    def handler(request: httpx.Request):
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(200, content=capture_response("Bounded local fixture."))
+
+    monkeypatch.setattr(capture_module, "_owned_httpx_transport", lambda: httpx.MockTransport(handler))
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=None,
+        sources=[_source("D-R01", "source-a", 1, "https://docs.example/a")],
+        qualification_receipt_bytes=receipt,
+        expected_qualification_receipt_sha256=_sha(receipt),
+        qualification_verifier=_QualificationVerifier(),
+    )
+    root = result.receipt_directory
+    inventory_bytes = (root / "inventory.json").read_bytes()
+    manifest_bytes = (root / "source-manifest.json").read_bytes()
+    manifest = json.loads(manifest_bytes)
+    observed = resource_evidence._capture_observations(
+        capture_result=result,
+        expected_inventory_sha256=_sha(inventory_bytes),
+        expected_manifest_sha256=_sha(manifest_bytes),
+        protocol_sha256=_sha(protocol_bytes),
+        cohorts_sha256=protocol["cohorts_sha256"],
+        source_revision=manifest["source_revision"],
+        candidate_identity_bytes=identity,
+        candidate_identity_sha256=_sha(identity),
+        candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+        timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+        response_bytes_limit=protocol["capture"]["response_bytes"],
+    )
+    assert observed["capture_retries"] == 0
+    assert observed["capture_application_retries_observed"] == 0
+    assert observed["capture_response_bytes_limit_applied"] == 2_000_000
+
+    qualification_path = root / "protected-capture-qualification.json"
+    qualification_path.write_bytes(b"replacement receipt")
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="capture-qualification-receipt-mismatch"):
+        resource_evidence._capture_observations(
+            capture_result=result,
+            expected_inventory_sha256=_sha(inventory_bytes),
+            expected_manifest_sha256=_sha(manifest_bytes),
+            protocol_sha256=_sha(protocol_bytes),
+            cohorts_sha256=protocol["cohorts_sha256"],
+            source_revision=manifest["source_revision"],
+            candidate_identity_bytes=identity,
+            candidate_identity_sha256=_sha(identity),
+            candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+            timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+            response_bytes_limit=protocol["capture"]["response_bytes"],
+        )
 
     altered = json.loads(inventory_bytes)
     altered["owned_http_calls"] = 0
