@@ -561,3 +561,8 @@ error. They return no captured evidence and never re-run the query or modify
 the invalid record. Healthy, expired, missing, tenant-mismatched and unavailable
 store behavior remains unchanged; legacy snapshots without `expires_at` remain
 readable. Diagnostic logs include only the failure class, never stored contents.
+
+Persisted result scores must be finite numbers. Non-finite numeric values or
+legacy numeric strings are rejected during shared result rehydration. Search
+cache reads recover by fetching fresh results; malformed snapshot reads retain
+the existing invalid-handle behavior. Finite legacy scores remain compatible.

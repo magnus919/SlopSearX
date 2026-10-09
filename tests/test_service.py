@@ -1435,6 +1435,10 @@ async def test_deep_and_cyclic_answer_values_are_bounded() -> None:
         {"dispatched_engine_count": "broken"},
         {"scope": {"jev_scores": {"okeng": "broken"}}},
         {"response_time_ms": float("inf")},
+        *[
+            {"results": [{"score": value}]}
+            for value in (float("nan"), float("inf"), float("-inf"), "NaN", "Infinity", "-Infinity")
+        ],
     ],
 )
 async def test_malformed_cached_response_recovers_and_repairs(
@@ -1456,3 +1460,11 @@ async def test_malformed_cached_response_recovers_and_repairs(
     assert engine.calls == 2
     assert "Ignoring malformed search cache entry" in caplog.text
     assert "broken" not in caplog.text
+
+
+@pytest.mark.parametrize("score", [None, 0, -1.25, 2.5, "0", "-1.25", "2.5"])
+def test_finite_result_score_rehydration_remains_compatible(score: Any) -> None:
+    from slopsearx.service import search_result_from_dict
+
+    result = search_result_from_dict({"score": score})
+    assert result.score == (0.0 if score is None else float(score))
