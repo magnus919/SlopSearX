@@ -22,7 +22,7 @@ from scripts.coverage_study_core import selector_inventory
 
 SCHEMA = "coverage-first-gate-calculation/1"
 FROZEN_QUALITY_TASK_USE_SHA256 = "b6353b480fd88543da530ef6b03129d26743f8f273e8a80d543320167399f7dd"
-FROZEN_EXECUTION_CONTRACT_SHA256 = "2e14f2dcb1d62c2db7da9d6071615cc5c518dc3ab046490468fe456596b72661"
+FROZEN_EXECUTION_CONTRACT_SHA256 = "44cee41bc453581d4d0e00e9d3081332dc0467d64a73b9fd70a1ef3515548858"
 
 
 class GateCalculationError(ValueError):
@@ -617,7 +617,10 @@ def calculate_coverage_gate_report(
     each of the four frozen task IDs to W0/candidate base/repeat/rotate full
     orders. Resource evidence keys are exported as RESOURCE_EVIDENCE_FIELDS.
     """
-    if type(protocol) is not dict or protocol.get("schema") != "coverage-first-study-protocol/1":
+    if type(protocol) is not dict or protocol.get("schema") not in {
+        "coverage-first-study-protocol/1",
+        "coverage-first-study-protocol/2",
+    }:
         raise GateCalculationError("frozen-protocol-required")
     if protocol.get("status") not in {"draft_not_registered_not_admitted", "registered"}:
         raise GateCalculationError("protocol-status-invalid")

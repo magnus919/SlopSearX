@@ -18,6 +18,7 @@ from scripts import coverage_live_acquire as live_acquire
 from scripts import coverage_resource_evidence
 from scripts import coverage_resource_evidence as resource_evidence
 from scripts import coverage_source_capture as source_capture
+from scripts import coverage_stage_finalization as stage_finalization
 from scripts import coverage_stage_orchestration as stage
 from scripts import coverage_study_acquire as acquisition
 from scripts import coverage_study_core as core
@@ -938,7 +939,7 @@ class StageOrchestrationTests(unittest.TestCase):
 
             def write_inventory(path, value):
                 result_sha = original_write_inventory(path, value)
-                if deadline_cross and value.get("status") == "gates-inconclusive":
+                if deadline_cross and value.get("gate_status") == "inconclusive":
                     fake_now[0] = plan.stage_deadline_monotonic + 1
                 return result_sha
 
@@ -969,6 +970,28 @@ class StageOrchestrationTests(unittest.TestCase):
             closeout_document = json.loads(closeout_bytes)
             self.assertEqual(closeout_document["final_inventory_sha256"], result.inventory_sha256)
             self.assertIn("closeout receipt fsync excluded", closeout_document["measurement_basis"])
+            if not deadline_cross and not poison_receipts and not tamper_closeout:
+                finalization = stage_finalization.verify_stage_finalization(
+                    inventory_path=result.inventory_path,
+                    expected_inventory_sha256=result.inventory_sha256,
+                    closeout_receipt_path=result.closeout_receipt_path,
+                    expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                    pending_time_receipt_path=result.inventory_path.parent / inventory["pending_time_receipt_file"],
+                    expected_pending_time_receipt_sha256=inventory["pending_time_receipt_sha256"],
+                    gate_input_manifest_path=result.inventory_path.parent / inventory["gate_input_manifest_file"],
+                    expected_gate_input_manifest_sha256=inventory["gate_input_manifest_sha256"],
+                    gate_calculation_receipt_path=result.inventory_path.parent
+                    / inventory["gate_calculation_receipt_file"],
+                    expected_gate_calculation_receipt_sha256=inventory["gate_calculation_receipt_sha256"],
+                    expected_stage_uuid=plan.stage_uuid,
+                    expected_source_revision=plan.source_revision,
+                    protocol_bytes=plan.protocol_bytes,
+                    cohorts_bytes=plan.cohorts_bytes,
+                    expected_protocol_sha256=digest(plan.protocol_bytes),
+                    expected_cohorts_sha256=digest(plan.cohorts_bytes),
+                )
+                self.assertEqual(finalization.status, "gates-inconclusive")
+                self.assertFalse(finalization.eligible_for_independent_decision)
             if tamper_closeout:
                 result.closeout_receipt_path.write_bytes(closeout_bytes + b" ")
                 with self.assertRaisesRegex(resource_evidence.ResourceEvidenceError, "receipt-pin-mismatch"):
@@ -1023,9 +1046,9 @@ class StageOrchestrationTests(unittest.TestCase):
                 plan.stage_deadline_monotonic - plan.stage_started_monotonic,
             )
         else:
-            self.assertEqual(result.status, "gates-inconclusive", inventory)
+            self.assertEqual(result.status, "pending-independent-closeout", inventory)
             self.assertEqual(result.terminal_reason, "gate-inconclusive")
-            self.assertTrue(inventory["gate_result_authoritative"])
+            self.assertFalse(inventory["gate_result_authoritative"])
         self.assertFalse(result.product_authorized)
         self.assertFalse(result.admission_created)
         self.assertFalse(result.scientific_calls_made_by_coordinator)

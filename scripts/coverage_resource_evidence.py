@@ -205,7 +205,7 @@ def verify_stage_closeout(
     if set(closeout) != expected_keys:
         raise ResourceEvidenceError("stage-closeout-fields-invalid")
     if (
-        closeout["schema"] != "coverage-stage-closeout/1"
+        closeout["schema"] not in {"coverage-stage-closeout/1", "coverage-stage-closeout/2"}
         or closeout["stage_uuid"] != expected_stage_uuid
         or closeout["source_revision"] != expected_source_revision
         or closeout["protocol_sha256"] != expected_protocol_sha256
@@ -232,9 +232,12 @@ def verify_stage_closeout(
         raise ResourceEvidenceError("stage-closeout-time-range-invalid")
     if elapsed != stopped - started:
         raise ResourceEvidenceError("stage-closeout-elapsed-mismatch")
-    if closeout["measurement_basis"] != (
+    expected_measurement = (
         "stage start through final inventory file and directory fsync; closeout receipt fsync excluded"
-    ):
+        if closeout["schema"] == "coverage-stage-closeout/1"
+        else "stage start through final decision inventory file and directory fsync; closeout receipt fsync excluded"
+    )
+    if closeout["measurement_basis"] != expected_measurement:
         raise ResourceEvidenceError("stage-closeout-measurement-basis-invalid")
     if elapsed >= deadline and inventory.get("status") != "terminal-incomplete":
         raise ResourceEvidenceError("stage-closeout-late-stage-not-invalidated")
