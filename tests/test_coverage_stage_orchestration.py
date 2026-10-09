@@ -25,6 +25,9 @@ from tests.test_coverage_answer_execution import _answer_content, _response
 from tests.test_coverage_answer_execution import _Lease as AnswerLease
 from tests.test_coverage_answer_execution import _Verifier as AnswerVerifier
 from tests.test_coverage_grade_closure import _answer_outputs, _pre_submissions
+from tests.test_coverage_live_acquire import FakePacer, FakePermitVerifier, OneShot
+from tests.test_coverage_source_capture import _Lease as CaptureLease
+from tests.test_coverage_source_capture import _Verifier as CaptureVerifier
 
 
 def canonical(value: object) -> bytes:
@@ -67,7 +70,13 @@ def plan_fixture() -> stage.StagePlan:
                 {
                     "task_id": row["task_id"],
                     "engine_calls": {
-                        engine: (1 if engine in row["pool_plan"]["engines"] else 0)
+                        engine: (
+                            2
+                            if engine == "wikipedia" and engine in row["pool_plan"]["engines"]
+                            else 1
+                            if engine in row["pool_plan"]["engines"]
+                            else 0
+                        )
                         for engine in ("wikipedia", "arxiv", "github", "openalex")
                     },
                 }
@@ -107,7 +116,7 @@ def plan_fixture() -> stage.StagePlan:
         "research_cases": cases,
         "navigation_targets": navigation,
     }
-    acquisition_manifest_bytes = canonical(acq_manifest)
+    acquisition_manifest_bytes = live_acquire._canonical(acq_manifest)
     now = time.monotonic()
     return stage.StagePlan(
         stage_uuid=stage_id,
@@ -120,8 +129,10 @@ def plan_fixture() -> stage.StagePlan:
         source_closure_sha256=source_closure_sha,
         research_cases=tuple(cases),
         navigation_targets=tuple(navigation),
-        candidate_identity_bytes=b'{"runtime":{"model":"free","revision":"cccccccccccccccccccccccccccccccccccccccc"}}',
-        candidate_endpoint_sha256="d" * 64,
+        candidate_identity_bytes=(
+            b'{"runtime":{"model":"free","revision":"cccccccccccccccccccccccccccccccccccccccc"}}\n'
+        ),
+        candidate_endpoint_sha256=digest(b"https://capture.example"),
         packet_stage_uuid=packet_id,
         stage_started_monotonic=now - 0.1,
         stage_deadline_monotonic=now + 300,
@@ -521,10 +532,13 @@ class StageOrchestrationTests(unittest.TestCase):
     def test_integrated_synthetic_stage_completes_inconclusive_without_live_authority(self):
         self._run_integrated_synthetic_stage(deadline_cross=False)
 
+    def test_acquisition_receipts_replaced_after_phase_seal_stop_collection(self):
+        self._run_integrated_synthetic_stage(deadline_cross=False, poison_receipts=True)
+
     def test_stage_deadline_overrun_after_final_fsync_corrects_inventory(self):
         self._run_integrated_synthetic_stage(deadline_cross=True)
 
-    def _run_integrated_synthetic_stage(self, *, deadline_cross: bool):
+    def _run_integrated_synthetic_stage(self, *, deadline_cross: bool, poison_receipts: bool = False):
         plan = plan_fixture()
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
@@ -537,7 +551,126 @@ class StageOrchestrationTests(unittest.TestCase):
 
             async def acquire(_plan):
                 calls.append("acquisition")
-                return _write_synthetic_pool_snapshots(plan, snapshot_root)
+
+                navigation = {row["search_query"]: row["target_url"] for row in plan.navigation_targets}
+                research_by_query = {row["search_query"]: row for row in plan.research_cases}
+
+                def count_for(query, engine):
+                    task = next(
+                        (row for original, row in research_by_query.items() if original == query or original in query),
+                        None,
+                    )
+                    if task is None:
+                        return 2
+                    engines = task["pool_plan"]["engines"]
+                    target = 40 if task["pool_plan"]["band"] == "research_le_40" else 41
+                    index = engines.index(engine)
+                    quotient, remainder = divmod(target, len(engines))
+                    return quotient + (1 if index < remainder else 0)
+
+                def handler(request):
+                    host = request.url.host
+                    params = dict(request.url.params)
+                    if host == "api.github.com":
+                        query = params.get("q", "")
+                        items = []
+                        if query in navigation:
+                            target = navigation[query]
+                            name = target.removeprefix("https://github.com/")
+                            items.append(
+                                {
+                                    "full_name": name,
+                                    "html_url": target,
+                                    "description": "Synthetic target repository",
+                                    "stargazers_count": 100,
+                                    "language": "Python",
+                                }
+                            )
+                        count = 20 if query in navigation else count_for(query, "github")
+                        for index in range(count - len(items)):
+                            name = f"fixture/repository-{index}"
+                            items.append(
+                                {
+                                    "full_name": name,
+                                    "html_url": f"https://github.com/{name}",
+                                    "description": "Synthetic repository evidence",
+                                    "stargazers_count": index,
+                                    "language": "Python",
+                                }
+                            )
+                        return httpx.Response(200, json={"total_count": len(items), "items": items})
+                    if host == "api.openalex.org":
+                        count = count_for(params.get("search", ""), "openalex")
+                        items = [
+                            {
+                                "id": f"https://openalex.org/W{index}",
+                                "doi": f"https://doi.org/10.9999/fixture-{index}",
+                                "title": f"Synthetic OpenAlex paper {index}",
+                                "publication_date": "2025-01-01",
+                                "relevance_score": 20 - index / 100,
+                                "abstract_inverted_index": None,
+                            }
+                            for index in range(count)
+                        ]
+                        return httpx.Response(200, json={"results": items})
+                    if host == "export.arxiv.org":
+                        count = count_for(params.get("search_query", ""), "arxiv")
+                        entries = "".join(
+                            f"<entry><id>https://arxiv.org/abs/2610.{index:05d}</id>"
+                            f"<title>Synthetic arXiv paper {index}</title><summary>Fixture abstract</summary>"
+                            f"<published>2026-10-01T00:00:00Z</published></entry>"
+                            for index in range(count)
+                        )
+                        return httpx.Response(
+                            200,
+                            content=(
+                                "<?xml version='1.0'?><feed xmlns='http://www.w3.org/2005/Atom'>" + entries + "</feed>"
+                            ).encode(),
+                            headers={"Content-Type": "application/atom+xml"},
+                        )
+                    if host == "en.wikipedia.org":
+                        if params.get("action") == "opensearch":
+                            query = params.get("search", "fixture")
+                            count = count_for(query, "wikipedia")
+                            titles = [f"{query} topic {i}" for i in range(count)]
+                            return httpx.Response(200, json=[query, titles, [""] * count, [""] * count])
+                        titles = params.get("titles", "").split("|")
+                        pages = {
+                            str(index + 1): {"title": title, "extract": "Synthetic encyclopedia passage."}
+                            for index, title in enumerate(titles)
+                        }
+                        return httpx.Response(200, json={"query": {"pages": pages}})
+                    raise AssertionError(f"unexpected mock host: {host}")
+
+                permit = b"synthetic-test-permit"
+                acquired = await live_acquire.acquire_live_coverage_stage(
+                    stage_manifest=json.loads(plan.acquisition_manifest_bytes),
+                    acquisition_plan_bytes=plan.acquisition_plan_bytes,
+                    permit_receipt_bytes=permit,
+                    expected_permit_receipt_sha256=digest(permit),
+                    permit_verifier=FakePermitVerifier(),
+                    one_shot_lease=OneShot(),
+                    receipt_directory=snapshot_root,
+                    test_transport=httpx.MockTransport(handler),
+                    pacer=FakePacer(),
+                )
+                evidence = stage.AcquisitionEvidence(
+                    result=acquired.stage,
+                    snapshots_directory=acquired.receipt_directory,
+                    snapshot_index_sha256=acquired.pool_snapshot_index_sha256,
+                    acquisition_manifest_sha256=acquired.stage_manifest_sha256,
+                    receipt_sha256=acquired.permit_receipt_sha256,
+                    source_bound_receipt_status="synthetic-test-only",
+                )
+                try:
+                    stage._validate_acquisition(plan, evidence)
+                except Exception as exc:
+                    statuses = [
+                        (op.operation_id, op.status, op.failure_reasons, op.pool_count)
+                        for op in acquired.stage.operations
+                    ]
+                    raise AssertionError(statuses) from exc
+                return evidence
 
             async def verify_acquisition(_plan, evidence):
                 calls.append("verify_acquisition")
@@ -555,10 +688,56 @@ class StageOrchestrationTests(unittest.TestCase):
                 calls.append("capture")
                 capture_root.mkdir(mode=0o700)
                 os.chmod(capture_root, 0o700)
-                return _synthetic_capture(plan_arg, pipeline_inputs, capture_root)
+                manifest_bytes = pipeline_inputs["capture_manifest_bytes"]
+                permit = b"external-permit-receipt"
+
+                def capture_handler(request):
+                    if request.method == "GET":
+                        return httpx.Response(
+                            200,
+                            json={
+                                "status": "ok",
+                                "runtime": {"revision": "c" * 40, "model": "free"},
+                            },
+                        )
+                    return httpx.Response(
+                        200,
+                        json={"success": True, "data": {"markdown": "Synthetic source passage."}},
+                    )
+
+                result = await source_capture.capture_sources_once(
+                    protocol_bytes=plan_arg.protocol_bytes,
+                    source_manifest_bytes=manifest_bytes,
+                    candidate_identity_bytes=plan_arg.candidate_identity_bytes,
+                    candidate_base_url="https://capture.example",
+                    operator_token="synthetic-capture-token",
+                    permit_receipt_bytes=permit,
+                    expected_permit_receipt_sha256=digest(permit),
+                    permit_verifier=CaptureVerifier(),
+                    one_shot_lease=CaptureLease(),
+                    receipt_root=capture_root,
+                    transport=httpx.MockTransport(capture_handler),
+                    stage_started_monotonic=plan_arg.stage_started_monotonic,
+                    stage_deadline_monotonic=plan_arg.stage_deadline_monotonic,
+                )
+                inventory_bytes = (result.receipt_directory / "inventory.json").read_bytes()
+                contexts = {}
+                for row in result.private_inventory:
+                    artifact_name = row.get("context_artifact")
+                    if artifact_name:
+                        contexts[artifact_name] = (result.receipt_directory / artifact_name).read_bytes()
+                return stage.CaptureEvidence(
+                    result=result,
+                    inventory_bytes=inventory_bytes,
+                    context_artifacts=contexts,
+                    receipt_sha256=digest(inventory_bytes),
+                )
 
             async def selectors(plan_arg, prepared, pipeline_inputs, closed_references):
                 calls.append("selector")
+                if poison_receipts:
+                    receipt = snapshot_root / "http-0001-start.json"
+                    receipt.write_bytes(receipt.read_bytes() + b" ")
                 orders = {}
                 for task in pipeline_inputs["tasks"]:
                     ids = list(task["native_order"])
@@ -684,7 +863,16 @@ class StageOrchestrationTests(unittest.TestCase):
                     stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)
                 )
             inventory = json.loads(result.inventory_path.read_bytes())
+            if poison_receipts:
+                self.assertEqual(result.status, "terminal-incomplete", inventory)
+                self.assertEqual(result.terminal_reason, "resource_evidence_collection-failed")
+                self.assertEqual(inventory["phases"][14]["status"], "terminal-failure")
+                self.assertRegex(inventory["acquisition_receipt_inventory_sha256"], r"^[0-9a-f]{64}$")
+                self.assertFalse((result.inventory_path.parent / "gate-calculation-receipt.json").exists())
+                self.assertFalse(result.product_authorized)
+                return
             receipt_bytes = (result.inventory_path.parent / inventory["gate_calculation_receipt_file"]).read_bytes()
+            resource_bytes = (result.inventory_path.parent / inventory["resource_evidence_receipt_file"]).read_bytes()
 
         if deadline_cross:
             self.assertEqual(result.status, "terminal-incomplete", inventory)
@@ -700,13 +888,17 @@ class StageOrchestrationTests(unittest.TestCase):
         self.assertFalse(result.product_authorized)
         self.assertFalse(result.admission_created)
         self.assertFalse(result.scientific_calls_made_by_coordinator)
-        self.assertEqual([row["status"] for row in inventory["phases"]], ["complete"] * 15)
+        self.assertEqual([row["status"] for row in inventory["phases"]], ["complete"] * 16)
         self.assertEqual(inventory["per_band_qualification"], "diagnostic-only")
         self.assertEqual(len(calls), 9)
         self.assertEqual(inventory["gate_metrics"]["navigation"], {f"D-N0{i}": True for i in range(1, 6)})
         self.assertIsNone(inventory["gate_metrics"]["resources"].get("pass"))
         self.assertEqual(digest(receipt_bytes), inventory["gate_calculation_receipt_sha256"])
         self.assertEqual(json.loads(receipt_bytes)["status"], "inconclusive")
+        resource_receipt = json.loads(resource_bytes)
+        self.assertEqual(digest(resource_bytes), inventory["resource_evidence_receipt_sha256"])
+        self.assertEqual(resource_receipt["schema"], "coverage-resource-evidence/1")
+        self.assertIsNone(resource_receipt["observations"].get("selector_elapsed_ms"))
 
     def test_gate_threshold_binding_uses_frozen_gate_subset(self):
         plan = plan_fixture()

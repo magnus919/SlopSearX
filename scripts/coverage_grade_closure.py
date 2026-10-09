@@ -17,12 +17,18 @@ from typing import Mapping
 from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
 
 from scripts.coverage_assessment_packets import (
+    MAX_GRADER_SUBMISSIONS,
     MAX_PACKET_BYTES,
     PreparedAnswerPackets,
     PreparedAssessmentPackets,
 )
 
 MAX_RESPONSE_BYTES = 2_000_000
+# A closed view combines responses and, for answer closure, the previously
+# closed references. Source grades occur in both chunk and consolidated views;
+# restored identities come from bounded input packets. The provider limit above
+# remains per submission, not a limit on this derived aggregate.
+MAX_CLOSED_OUTPUT_BYTES = MAX_GRADER_SUBMISSIONS * (2 * MAX_RESPONSE_BYTES + MAX_PACKET_BYTES)
 MAX_JSON_DEPTH = 64
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 
@@ -66,7 +72,7 @@ class GradeClosure:
 
     def outputs(self) -> dict[str, object]:
         """Return a fresh copy of closed grades with identities restored."""
-        value = _strict_json(self._outputs_bytes, "closed-output")
+        value = _strict_json(self._outputs_bytes, "closed-output", max_bytes=MAX_CLOSED_OUTPUT_BYTES)
         if type(value) is not dict:
             raise GradeClosureError("closed-output-shape")
         return value
@@ -75,7 +81,7 @@ class GradeClosure:
         """Expose complete closed R1/R2 chunk outputs for answer-packet joining."""
         if self.phase != "preassessment" or self._source_outputs_bytes is None:
             raise GradeClosureError("preassessment-closure-required")
-        value = _strict_json(self._source_outputs_bytes, "closed-source-output")
+        value = _strict_json(self._source_outputs_bytes, "closed-source-output", max_bytes=MAX_CLOSED_OUTPUT_BYTES)
         if type(value) is not dict:
             raise GradeClosureError("closed-source-output-shape")
         return value  # freshly parsed, caller mutations cannot change closure receipts
@@ -120,8 +126,8 @@ def _depth_guard(raw: bytes) -> None:
         raise GradeClosureError("submission-json-invalid")
 
 
-def _strict_json(raw: bytes, label: str) -> object:
-    if type(raw) is not bytes or not raw or len(raw) > MAX_RESPONSE_BYTES:
+def _strict_json(raw: bytes, label: str, *, max_bytes: int = MAX_RESPONSE_BYTES) -> object:
+    if type(raw) is not bytes or not raw or len(raw) > max_bytes:
         raise GradeClosureError(f"{label}-bytes-invalid")
     _depth_guard(raw)
 
@@ -647,6 +653,10 @@ def _closure(
 ) -> GradeClosure:
     exposed_bytes = _canonical(exposed_outputs)
     source_bytes = _canonical(source_outputs) if source_outputs is not None else None
+    if len(exposed_bytes) > MAX_CLOSED_OUTPUT_BYTES or (
+        source_bytes is not None and len(source_bytes) > MAX_CLOSED_OUTPUT_BYTES
+    ):
+        raise GradeClosureError("closed-output-bytes-invalid")
     receipt_body = {
         "schema": "coverage-grade-closure-receipt/1",
         "phase": phase,

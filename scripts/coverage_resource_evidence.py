@@ -10,10 +10,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import stat
+import time
 from collections import Counter
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
@@ -26,10 +29,26 @@ from scripts import intent_ranking_receipts as receipts
 
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _ENGINE_NAMES = ("wikipedia", "arxiv", "github", "openalex", "brave")
+_DEADLINE: ContextVar[float | None] = ContextVar("coverage_resource_deadline", default=None)
 
 
 class ResourceEvidenceError(ValueError):
     """An observation could not be bound to the supplied stage artifacts."""
+
+
+def _check_deadline() -> None:
+    deadline = _DEADLINE.get()
+    if deadline is not None and time.monotonic() >= deadline:
+        raise ResourceEvidenceError("resource-collection-deadline-exceeded")
+
+
+def _read_private(path: Path, *, max_bytes: int) -> bytes:
+    # Stop between bounded reads; an OS filesystem call already in progress
+    # cannot be interrupted here. The coordinator also checks final fsync.
+    _check_deadline()
+    raw = receipts._read_private(path, max_bytes=max_bytes)
+    _check_deadline()
+    return raw
 
 
 @dataclass(frozen=True)
@@ -41,6 +60,7 @@ class ResourceEvidenceReport:
 
 
 def _sha(raw: bytes) -> str:
+    _check_deadline()
     return hashlib.sha256(raw).hexdigest()
 
 
@@ -49,6 +69,8 @@ def _canonical(value: object) -> bytes:
 
 
 def _strict_json(raw: bytes, label: str) -> object:
+    _check_deadline()
+
     def pairs(items):
         result = {}
         for key, value in items:
@@ -63,6 +85,26 @@ def _strict_json(raw: bytes, label: str) -> object:
         )
     except Exception as exc:
         raise ResourceEvidenceError(f"{label}-invalid") from exc
+
+
+def _decode_capture_body(raw: bytes, content_encoding: object, label: str) -> bytes:
+    """Replay the source-capture decoder against its pinned encoded archive."""
+    encoding = "identity" if content_encoding is None else content_encoding
+    if type(encoding) is not str:
+        raise ResourceEvidenceError(f"{label}-content-encoding-invalid")
+    try:
+        decoder = source_capture._BoundedContentDecoder(encoding)
+        decoded = decoder.decode(raw, source_capture.MAX_RESPONSE_BYTES)
+        if len(decoded) > source_capture.MAX_RESPONSE_BYTES:
+            raise ResourceEvidenceError(f"{label}-decoded-response-too-large")
+        tail = decoder.finish(source_capture.MAX_RESPONSE_BYTES - len(decoded))
+        if len(decoded) + len(tail) > source_capture.MAX_RESPONSE_BYTES:
+            raise ResourceEvidenceError(f"{label}-decoded-response-too-large")
+        return decoded + tail
+    except ResourceEvidenceError:
+        raise
+    except Exception as exc:
+        raise ResourceEvidenceError(f"{label}-content-encoding-invalid") from exc
 
 
 def _require_private_directory(path: Path) -> None:
@@ -91,7 +133,7 @@ def _receipt_any(root: Path, *, bindings: dict, expected_sha256: str) -> tuple[d
         slot = receipts._private_dir(stage_dir, bound["operation_id"], create=False)
         if {path.name for path in slot.iterdir()} != receipts._FILES:
             raise ResourceEvidenceError("receipt-slot-inventory")
-        raw_receipt = receipts._read_private(slot / "receipt.json", max_bytes=16_384)
+        raw_receipt = _read_private(slot / "receipt.json", max_bytes=16_384)
         if _sha(raw_receipt) != expected_sha256:
             raise ResourceEvidenceError("receipt-digest-mismatch")
         receipt = receipts._strict_json(raw_receipt)
@@ -108,7 +150,7 @@ def _receipt_any(root: Path, *, bindings: dict, expected_sha256: str) -> tuple[d
         }
         if receipt != expected or type(receipt["complete"]) is not bool:
             raise ResourceEvidenceError("receipt-binding-mismatch")
-        body = receipts._read_private(slot / "response.bin", max_bytes=receipts.MAX_BODY_BYTES)
+        body = _read_private(slot / "response.bin", max_bytes=receipts.MAX_BODY_BYTES)
         if len(body) != receipt["response_body_bytes"] or _sha(body) != receipt["response_body_sha256"]:
             raise ResourceEvidenceError("receipt-body-mismatch")
         return receipt, body
@@ -133,8 +175,8 @@ def _capture_observations(
     root = Path(capture_result.receipt_directory)
     _require_private_directory(root)
     try:
-        inventory_bytes = receipts._read_private(root / "inventory.json", max_bytes=4_000_000)
-        manifest_bytes = receipts._read_private(root / "source-manifest.json", max_bytes=2_000_000)
+        inventory_bytes = _read_private(root / "inventory.json", max_bytes=4_000_000)
+        manifest_bytes = _read_private(root / "source-manifest.json", max_bytes=2_000_000)
     except Exception as exc:
         raise ResourceEvidenceError("capture-artifact-unreadable") from exc
     if _sha(inventory_bytes) != expected_inventory_sha256 or _sha(manifest_bytes) != expected_manifest_sha256:
@@ -200,7 +242,7 @@ def _capture_observations(
             request_body = source_capture._canonical_json(
                 {"url": source["url"], "formats": ["markdown"], "onlyMainContent": True}
             )
-            receipt, _body = _receipt_any(
+            receipt, response_body = _receipt_any(
                 root.parent,
                 bindings={
                     "stage_uuid": capture_result.stage_uuid,
@@ -225,13 +267,30 @@ def _capture_observations(
             else:
                 response_sizes.append(observed_bytes)
             archived_sizes.append(receipt["response_body_bytes"])
+            encoding = row.get("response_content_encoding", "identity")
+            if encoding is None:
+                encoding = "identity"
+            decoded_payload = None
+            if row.get("status") == "captured":
+                if receipt["complete"] is not True:
+                    raise ResourceEvidenceError("capture-context-from-incomplete-response")
+                decoded_response = _decode_capture_body(response_body, encoding, "capture-source")
+                decoded_payload = _strict_json(decoded_response, "capture-source-response")
+                data = decoded_payload.get("data", decoded_payload) if type(decoded_payload) is dict else None
+                if (
+                    type(decoded_payload) is not dict
+                    or decoded_payload.get("success") is not True
+                    or type(data) is not dict
+                    or type(data.get("markdown")) is not str
+                ):
+                    raise ResourceEvidenceError("capture-source-payload-invalid")
         elif row.get("receipt_sha256") is not None or row.get("response_body_bytes") is not None:
             raise ResourceEvidenceError("capture-unattempted-source-has-response")
         if row.get("status") == "captured":
             context_name = row.get("context_artifact")
             if type(context_name) is not str or Path(context_name).name != context_name:
                 raise ResourceEvidenceError("capture-context-path-invalid")
-            context_doc = _strict_json(receipts._read_private(root / context_name, max_bytes=128_000), "context")
+            context_doc = _strict_json(_read_private(root / context_name, max_bytes=128_000), "context")
             context = context_doc.get("context") if type(context_doc) is dict else None
             if (
                 type(context) is not str
@@ -241,12 +300,15 @@ def _capture_observations(
                 or context_doc.get("task_id") != source.get("task_id")
                 or context_doc.get("result_index") != source.get("result_index")
                 or context_doc.get("source_url") != source.get("url")
-                or source_capture._canonical_json(context_doc)
-                != receipts._read_private(root / context_name, max_bytes=128_000)
+                or source_capture._canonical_json(context_doc) != _read_private(root / context_name, max_bytes=128_000)
                 or _sha(context.encode("utf-8")) != row.get("context_sha256")
                 or len(context) != row.get("context_characters")
             ):
                 raise ResourceEvidenceError("capture-context-binding-mismatch")
+            if attempted and decoded_payload is not None:
+                decoded_markdown = data["markdown"]
+                if context != decoded_markdown[: source_capture.MAX_SOURCE_CHARS]:
+                    raise ResourceEvidenceError("capture-context-response-mismatch")
             contexts.append(len(context))
     state = {
         key: inventory.get(key)
@@ -258,6 +320,7 @@ def _capture_observations(
             "health_receipt_sha256",
             "health_response_body_bytes",
             "health_observed_response_body_bytes",
+            "health_response_content_encoding",
             "internal_scraper_fanout",
             "status",
         )
@@ -298,7 +361,10 @@ def _capture_observations(
             response_sizes.append(observed_health_bytes)
         archived_sizes.append(health_receipt["response_body_bytes"])
         try:
-            health = _strict_json(health_body, "health")
+            decoded_health_body = _decode_capture_body(
+                health_body, state["health_response_content_encoding"], "capture-health"
+            )
+            health = _strict_json(decoded_health_body, "health")
         except ResourceEvidenceError:
             health = None
         state["health_runtime_match"] = bool(
@@ -352,6 +418,7 @@ def collect_acquisition_observations(
     cohorts_sha256: str,
     source_closure_sha256: str,
     acquisition_plan_sha256: str,
+    deadline_monotonic: float | None = None,
 ) -> dict[str, object]:
     try:
         verified = coverage_live_acquire.verify_pool_snapshot_index(
@@ -360,6 +427,7 @@ def collect_acquisition_observations(
             expected_stage_manifest_sha256=expected_manifest_sha256,
             expected_stage_uuid=stage_uuid,
             expected_source_revision=source_revision,
+            deadline_monotonic=deadline_monotonic,
         )
     except Exception as exc:
         raise ResourceEvidenceError("acquisition-snapshot-verification-failed") from exc
@@ -499,7 +567,7 @@ def _read_pinned_receipt_directory(root: Path, expected_sha256: str) -> dict[str
     for path in sorted(root.iterdir(), key=lambda item: item.name):
         if path.is_symlink() or not path.is_file():
             raise ResourceEvidenceError("receipt-inventory-entry-invalid")
-        raw = receipts._read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
+        raw = _read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
         digests.append({"name": path.name, "sha256": _sha(raw), "bytes": len(raw)})
         if path.suffix == ".json":
             document = _strict_json(raw, path.name)
@@ -518,7 +586,7 @@ def receipt_inventory_sha256(root: Path) -> str:
     for path in sorted(root.iterdir(), key=lambda item: item.name):
         if path.is_symlink() or not path.is_file():
             raise ResourceEvidenceError("receipt-inventory-entry-invalid")
-        raw = receipts._read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
+        raw = _read_private(path, max_bytes=coverage_live_acquire.MAX_POOL_SNAPSHOT_BYTES)
         rows.append({"name": path.name, "sha256": _sha(raw), "bytes": len(raw)})
     return _sha(_canonical(rows))
 
@@ -539,7 +607,12 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
     prepared_answers, answer_submissions, answer_closure, and the three grade
     closure pin hashes from their packet-preparation boundaries.
     """
+    deadline = kwargs.get("deadline_monotonic")
+    if deadline is not None and (type(deadline) not in {int, float} or not math.isfinite(deadline) or deadline <= 0):
+        raise ResourceEvidenceError("resource-collection-deadline-invalid")
+    token = _DEADLINE.set(deadline)
     try:
+        _check_deadline()
         stage_uuid = kwargs["stage_uuid"]
         source_revision = kwargs["source_revision"]
         protocol_bytes = kwargs["protocol_bytes"]
@@ -564,6 +637,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             cohorts_sha256=cohorts_sha256,
             source_closure_sha256=kwargs["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan_bytes),
+            deadline_monotonic=deadline,
         )
         capture = _capture_observations(
             capture_result=kwargs["capture_result"],
@@ -642,6 +716,8 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         raise
     except (KeyError, TypeError, ValueError, OSError) as exc:
         raise ResourceEvidenceError("resource-evidence-input-invalid") from exc
+    finally:
+        _DEADLINE.reset(token)
 
 
 def _answer_observations(**kwargs) -> dict[str, object]:
@@ -653,7 +729,7 @@ def _answer_observations(**kwargs) -> dict[str, object]:
     try:
         _require_private_directory(kwargs["answer_result_root"])
         _require_private_directory(kwargs["answer_archive_root"])
-        terminal_bytes = receipts._read_private(terminal_path, max_bytes=4_000_000)
+        terminal_bytes = _read_private(terminal_path, max_bytes=4_000_000)
     except OSError as exc:
         raise ResourceEvidenceError("answer-terminal-unreadable") from exc
     if (

@@ -492,6 +492,36 @@ async def test_pool_snapshot_write_failure_is_terminal_before_next_operation(tmp
 
 
 @pytest.mark.asyncio
+async def test_snapshot_verifier_stops_reading_when_deadline_expires(tmp_path, monkeypatch):
+    result, _verifier, _lease, _pacer, _calls = await _run(tmp_path)
+    clock = [0.0]
+    monkeypatch.setattr(live.time, "monotonic", lambda: clock[0])
+    original = live._read_canonical_artifact
+    reads = []
+
+    def expire_after_first_snapshot(path, *, max_bytes, check_deadline=None):
+        value = original(path, max_bytes=max_bytes, check_deadline=check_deadline)
+        reads.append(path.name)
+        if path.name != "pool-snapshot-index.json" and len(reads) == 2:
+            clock[0] = 10.0
+        return value
+
+    monkeypatch.setattr(live, "_read_canonical_artifact", expire_after_first_snapshot)
+    with pytest.raises(live.LiveAcquisitionError, match="pool-snapshot-deadline-exceeded"):
+        live.verify_pool_snapshot_index(
+            result.receipt_directory,
+            expected_index_sha256=result.pool_snapshot_index_sha256,
+            expected_stage_manifest_sha256=result.stage_manifest_sha256,
+            expected_stage_uuid=make_manifest()[0]["stage_uuid"],
+            expected_source_revision="b" * 40,
+            deadline_monotonic=10.0,
+        )
+    assert reads[0] == "pool-snapshot-index.json"
+    assert len(reads) == 2
+    assert reads[1].startswith("pool-")
+
+
+@pytest.mark.asyncio
 async def test_source_scope_drift_and_plan_scope_drift_fail_before_lease(tmp_path):
     manifest, plan = make_manifest()
     manifest["research_cases"][0]["pool_plan"]["engines"] = ["github", "brave"]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import gzip
 import hashlib
 import json
 from pathlib import Path
@@ -27,6 +28,39 @@ from tests.test_coverage_source_capture import (
 
 def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
+
+
+def test_expired_collection_stops_before_artifact_access_and_restores_context(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(resource_evidence, "time", SimpleNamespace(monotonic=lambda: 10.0))
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="resource-collection-deadline-exceeded"):
+        resource_evidence.collect_resource_evidence(deadline_monotonic=9.0)
+    assert resource_evidence._DEADLINE.get() is None
+
+
+def test_collection_checks_deadline_after_each_bounded_read(monkeypatch):
+    from types import SimpleNamespace
+
+    now = [1.0]
+    reads = []
+    monkeypatch.setattr(resource_evidence, "time", SimpleNamespace(monotonic=lambda: now[0]))
+
+    def slow_read(path, *, max_bytes):
+        reads.append((path, max_bytes))
+        now[0] = 3.0
+        return b"{}"
+
+    monkeypatch.setattr(resource_evidence.receipts, "_read_private", slow_read)
+    token = resource_evidence._DEADLINE.set(2.0)
+    try:
+        with pytest.raises(resource_evidence.ResourceEvidenceError, match="resource-collection-deadline-exceeded"):
+            resource_evidence._read_private(Path("synthetic.json"), max_bytes=10)
+        with pytest.raises(resource_evidence.ResourceEvidenceError, match="resource-collection-deadline-exceeded"):
+            resource_evidence._read_private(Path("must-not-read.json"), max_bytes=10)
+        assert reads == [(Path("synthetic.json"), 10)]
+    finally:
+        resource_evidence._DEADLINE.reset(token)
 
 
 @pytest.mark.asyncio
@@ -74,6 +108,74 @@ async def test_capture_observations_replay_actual_mock_response_receipts(tmp_pat
     altered = json.loads(inventory_bytes)
     altered["owned_http_calls"] = 0
     (root / "inventory.json").write_text(json.dumps(altered))
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="capture-artifact-pin-mismatch"):
+        resource_evidence._capture_observations(
+            capture_result=result,
+            expected_inventory_sha256=_sha(inventory_bytes),
+            expected_manifest_sha256=_sha(manifest_bytes),
+            protocol_sha256=_sha(protocol_bytes),
+            cohorts_sha256=protocol["cohorts_sha256"],
+            source_revision=manifest["source_revision"],
+            candidate_identity_bytes=identity,
+            candidate_identity_sha256=_sha(identity),
+            candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+        )
+
+
+@pytest.mark.asyncio
+async def test_capture_observations_replay_pinned_gzip_health_and_source(tmp_path: Path):
+    protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"
+    protocol_bytes = protocol_path.read_bytes()
+    protocol = json.loads(protocol_bytes)
+    sources = [_source("D-R01", "source-a", 1, "https://docs.example/a")]
+    health_body = gzip.compress(_healthy_response().content)
+    source_body = gzip.compress(capture_response("Compressed implementation passage."))
+
+    def handler(request: httpx.Request):
+        if request.method == "GET":
+            return httpx.Response(
+                200,
+                content=health_body,
+                headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+            )
+        return httpx.Response(
+            200,
+            content=source_body,
+            headers={"Content-Encoding": "gzip", "Content-Type": "application/json"},
+        )
+
+    result = await _capture(tmp_path=tmp_path, transport=httpx.MockTransport(handler), sources=sources)
+    root = result.receipt_directory
+    inventory_bytes = (root / "inventory.json").read_bytes()
+    manifest_bytes = (root / "source-manifest.json").read_bytes()
+    identity = _candidate_identity()
+    manifest = json.loads(manifest_bytes)
+
+    observed = resource_evidence._capture_observations(
+        capture_result=result,
+        expected_inventory_sha256=_sha(inventory_bytes),
+        expected_manifest_sha256=_sha(manifest_bytes),
+        protocol_sha256=_sha(protocol_bytes),
+        cohorts_sha256=protocol["cohorts_sha256"],
+        source_revision=manifest["source_revision"],
+        candidate_identity_bytes=identity,
+        candidate_identity_sha256=_sha(identity),
+        candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+    )
+
+    inventory = json.loads(inventory_bytes)
+    assert inventory["health_response_content_encoding"] == "gzip"
+    assert inventory["sources"][0]["response_content_encoding"] == "gzip"
+    assert inventory["health_response_body_bytes"] == len(health_body)
+    assert inventory["sources"][0]["response_body_bytes"] == len(source_body)
+    assert (root / "health" / "response.bin").read_bytes() == health_body
+    assert (root / "source-0001" / "response.bin").read_bytes() == source_body
+    assert observed["capture_health_runtime_match_observed"] is True
+    assert observed["capture_max_context_characters_observed"] == len("Compressed implementation passage.")
+    assert (root / str(inventory["sources"][0]["context_artifact"])).is_file()
+
+    inventory["sources"][0]["response_content_encoding"] = "identity"
+    (root / "inventory.json").write_text(json.dumps(inventory))
     with pytest.raises(resource_evidence.ResourceEvidenceError, match="capture-artifact-pin-mismatch"):
         resource_evidence._capture_observations(
             capture_result=result,

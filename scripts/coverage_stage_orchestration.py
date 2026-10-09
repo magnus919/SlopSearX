@@ -24,7 +24,7 @@ from typing import Any, Awaitable, Callable, Mapping, Sequence
 from scripts import coverage_answer_execution as answer_execution
 from scripts import coverage_assessment_packets as packets
 from scripts import coverage_consumer_inputs as consumer
-from scripts import coverage_live_acquire
+from scripts import coverage_live_acquire, coverage_resource_evidence
 from scripts import coverage_pipeline_inputs as pipeline
 from scripts import coverage_source_capture as source_capture
 from scripts import coverage_study_acquire as acquisition
@@ -50,6 +50,7 @@ PHASES = (
     "answer_packet_preparation",
     "answer_grading",
     "answer_grade_closure",
+    "resource_evidence_collection",
     "gate_calculation",
 )
 
@@ -950,13 +951,25 @@ async def coordinate_coverage_stage(
             _validate_acquisition(plan, evidence)
             if await _await(executors.verify_acquisition(plan, evidence)) is not True:
                 raise OrchestrationError("acquisition-source-bound-receipt-unverified")
+            from scripts.coverage_resource_evidence import receipt_inventory_sha256
+
+            # Seal at acquisition completion, before capture/grading can run.
+            # A freshly recomputed expected pin during collection would accept
+            # receipt replacement between those two phase boundaries.
+            sealed_inventory = receipt_inventory_sha256(evidence.snapshots_directory)
+            artifacts["acquisition_receipt_inventory_sha256"] = sealed_inventory
+            inventory["acquisition_receipt_inventory_sha256"] = sealed_inventory
             return evidence
 
         acq = await phase(
             0,
             "acquisition",
             acquire_and_verify,
-            lambda value: _phase_digest(value.receipt_sha256, value.snapshot_index_sha256),
+            lambda value: _phase_digest(
+                value.receipt_sha256,
+                value.snapshot_index_sha256,
+                artifacts["acquisition_receipt_inventory_sha256"],
+            ),
         )
         pipeline_inputs = await phase(
             1,
@@ -1124,12 +1137,80 @@ async def coordinate_coverage_stage(
             for row in navigation_inputs
             if row["task_id"] in selector.navigation_rank_one
         }
-        # Only measurements with an explicit source are supplied. In
-        # particular, a hash string alone is not a terminal-inventory receipt,
-        # and unavailable provider usage is not a zero-token observation.
-        resource_evidence: dict[str, object] = {}
-        # A pre-calculation elapsed sample would omit calculation, receipt and
-        # final inventory fsync. It is not supplied as completed-stage timing.
+        # Collect only observations reconstructed from the verified stage
+        # artifacts. A caller cannot supply an observation dictionary or set
+        # resource gate flags.
+        answer_terminal = _strict_json(answer_evidence.terminal_inventory_bytes, "answer-terminal")
+        if type(answer_terminal) is not dict:
+            raise OrchestrationError("answer-terminal-inventory-invalid")
+
+        def collect_resources():
+            report = coverage_resource_evidence.collect_resource_evidence(
+                deadline_monotonic=plan.stage_deadline_monotonic,
+                stage_uuid=plan.stage_uuid,
+                source_revision=plan.source_revision,
+                protocol_bytes=plan.protocol_bytes,
+                cohorts_bytes=plan.cohorts_bytes,
+                source_closure_sha256=plan.source_closure_sha256,
+                acquisition_plan_bytes=plan.acquisition_plan_bytes,
+                snapshots_directory=acq.snapshots_directory,
+                receipt_directory=acq.snapshots_directory,
+                expected_receipt_inventory_sha256=artifacts["acquisition_receipt_inventory_sha256"],
+                acquisition_manifest_bytes=plan.acquisition_manifest_bytes,
+                expected_snapshot_index_sha256=acq.snapshot_index_sha256,
+                acquisition_manifest_sha256=acq.acquisition_manifest_sha256,
+                capture_result=captured.result,
+                expected_capture_manifest_sha256=capture_inventory.get("source_manifest_sha256"),
+                expected_capture_inventory_sha256=_sha(captured.inventory_bytes),
+                candidate_identity_bytes=plan.candidate_identity_bytes,
+                candidate_identity_sha256=identity["candidate_identity_sha256"],
+                candidate_endpoint_sha256=plan.candidate_endpoint_sha256,
+                answer_result=answer_evidence.result,
+                answer_tasks=answer_tasks,
+                answer_archive_root=answer_evidence.archive_root,
+                answer_result_root=answer_evidence.result_root,
+                expected_answer_terminal_sha256=_sha(answer_evidence.terminal_inventory_bytes),
+                expected_answer_operation_manifest_sha256=answer_terminal.get("answer_manifest_sha256"),
+                prepared_references=prepared_references,
+                reference_submissions=reference_submissions,
+                reference_closure=closed_references,
+                expected_preassessment_manifest_sha256=preassessment_manifest_pin,
+                expected_private_binding_sha256=private_binding_pin,
+                prepared_answers=prepared_answer_packets,
+                answer_submissions=answer_submissions,
+                answer_closure=closed_answers,
+                expected_answer_assessment_manifest_sha256=answer_manifest_pin,
+                expected_reference_closure_sha256=closed_references.receipt_sha256,
+                expected_answer_closure_sha256=closed_answers.receipt_sha256,
+            )
+            receipt_bytes = _canonical(
+                {
+                    "schema": "coverage-resource-evidence/1",
+                    "stage_uuid": report.stage_uuid,
+                    "observations": dict(report.observations),
+                    "provenance": dict(report.configuration_provenance),
+                }
+            )
+            if _sha(receipt_bytes) != report.source_receipt_sha256:
+                raise OrchestrationError("resource-evidence-receipt-pin-mismatch")
+            resource_path = stage_dir / "resource-evidence.json"
+            _write_new(resource_path, receipt_bytes)
+            inventory["resource_evidence_receipt_sha256"] = _sha(receipt_bytes)
+            inventory["resource_evidence_receipt_file"] = resource_path.name
+            _write_inventory(inventory_path, inventory)
+            artifacts["resource_evidence_receipt_bytes"] = receipt_bytes
+            artifacts["resource_evidence_report"] = report
+            return report
+
+        resource_report = await phase(
+            14,
+            "resource_evidence_collection",
+            collect_resources,
+            lambda value: value.source_receipt_sha256,
+        )
+        resource_evidence = dict(resource_report.observations)
+        # Usage is accepted only from the selector's validated per-operation
+        # rows and remains separate from resource values reconstructed above.
         if selector.usage_status == "known":
             usage_rows = []
             for row in selector.operation_rows:
@@ -1173,6 +1254,7 @@ async def coordinate_coverage_stage(
             },
             "navigation_observations": navigation_observations,
             "resource_evidence": resource_evidence,
+            "resource_evidence_receipt_sha256": resource_report.source_receipt_sha256,
         }
         gate_input_sha = _sha(_canonical(gate_inputs))
 
@@ -1205,7 +1287,7 @@ async def coordinate_coverage_stage(
             return report.evaluation
 
         gates = await phase(
-            14,
+            15,
             "gate_calculation",
             calculate_frozen_gates,
             lambda value: (

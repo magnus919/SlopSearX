@@ -542,6 +542,7 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                     # buffered HTTPX responses. Decode it ourselves so the same
                     # output cap applies before allocation on both response paths.
                     decoder = _BoundedContentDecoder(response.headers.get("content-encoding"))
+                    operation["response_content_encoding"] = decoder.encoding
 
                     def inspect_decoded(decoded: bytes, *, enforce_cap: bool = True) -> None:
                         nonlocal status
@@ -550,15 +551,23 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                         forbidden = self._forbidden_response_bytes
                         if forbidden:
                             candidate = bytes(decoded_body) + decoded
-                            reflected_prefix = any(
-                                candidate.endswith(forbidden[:size])
-                                for size in range(1, min(len(forbidden) - 1, len(candidate)) + 1)
-                            )
-                            if forbidden in candidate or reflected_prefix:
+                            if forbidden in candidate:
                                 body.clear()
                                 operation["failure"] = "credential-reflection-suppressed"
                                 raise SourceCaptureError("credential-reflection-suppressed")
                         decoded_too_large = len(decoded_body) + len(decoded) > MAX_RESPONSE_BYTES
+                        if forbidden and decoded_too_large:
+                            # The archived body stops at the decoded cap. Do
+                            # not persist a partial key suffix at that boundary.
+                            remaining = max(0, MAX_RESPONSE_BYTES - len(decoded_body))
+                            archived_view = bytes(decoded_body) + decoded[:remaining]
+                            if any(
+                                archived_view.endswith(forbidden[:size])
+                                for size in range(1, min(len(forbidden) - 1, len(archived_view)) + 1)
+                            ):
+                                body.clear()
+                                operation["failure"] = "credential-reflection-suppressed"
+                                raise SourceCaptureError("credential-reflection-suppressed")
                         if enforce_cap and decoded_too_large:
                             body.clear()
                             status = "decoded-response-byte-cap"
@@ -615,6 +624,15 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
         except BaseException as exc:
             if isinstance(exc, (KeyboardInterrupt, SystemExit, asyncio.CancelledError)):
                 raise
+            forbidden = self._forbidden_response_bytes
+            if forbidden and operation.get("failure") != "credential-reflection-suppressed":
+                partial = bytes(decoded_body)
+                if any(
+                    partial.endswith(forbidden[:size]) for size in range(1, min(len(forbidden) - 1, len(partial)) + 1)
+                ):
+                    body.clear()
+                    operation["failure"] = "credential-reflection-suppressed"
+                    exc = SourceCaptureError("credential-reflection-suppressed")
             operation["http_status"] = response_status
             operation["response_complete"] = False
             operation["observed_response_body_bytes"] = observed_body_bytes
@@ -764,6 +782,7 @@ async def capture_sources_once(
                 "response_sha256": None,
                 "response_body_bytes": None,
                 "observed_response_body_bytes": None,
+                "response_content_encoding": None,
                 "context_sha256": None,
                 "failure_code": None,
             }
@@ -782,6 +801,7 @@ async def capture_sources_once(
         "scrape_calls": 0,
         "health_response_body_bytes": None,
         "health_observed_response_body_bytes": None,
+        "health_response_content_encoding": None,
         "internal_scraper_fanout": "unknown unless independently exposed; not counted as zero",
         "quality_credit": False,
     }
@@ -849,6 +869,7 @@ async def capture_sources_once(
             if type(health_receipt) is dict:
                 state["health_response_body_bytes"] = health_receipt.get("response_body_bytes")
             state["health_observed_response_body_bytes"] = health_operation.get("observed_response_body_bytes")
+            state["health_response_content_encoding"] = health_operation.get("response_content_encoding")
             if not terminal:
                 for sequence, (source, row) in enumerate(zip(sources, inventory), start=1):
                     if row["status"] != "pending":
@@ -890,6 +911,7 @@ async def capture_sources_once(
                         row["response_sha256"] = receipt_info.get("response_body_sha256")
                         row["response_body_bytes"] = receipt_info.get("response_body_bytes")
                         row["observed_response_body_bytes"] = operation.get("observed_response_body_bytes")
+                        row["response_content_encoding"] = operation.get("response_content_encoding")
                         payload = _strict_json(raw_body) if 200 <= response.status_code < 300 else None
                         data = payload.get("data", payload) if type(payload) is dict else None
                         markdown = data.get("markdown") if type(data) is dict else None
@@ -921,6 +943,7 @@ async def capture_sources_once(
                         row["response_sha256"] = receipt_info.get("response_body_sha256")
                         row["response_body_bytes"] = receipt_info.get("response_body_bytes")
                         row["observed_response_body_bytes"] = operation.get("observed_response_body_bytes")
+                        row["response_content_encoding"] = operation.get("response_content_encoding")
                         row["status"] = "terminal_capture_failure"
                         row["failure_code"] = str(operation.get("failure") or type(exc).__name__)
                         terminal = True

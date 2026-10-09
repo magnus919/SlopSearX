@@ -182,6 +182,41 @@ def _closed_prepared():
     return prepared, pre, prepared_answers
 
 
+def test_combined_closed_view_does_not_reuse_individual_response_ceiling():
+    from dataclasses import replace
+
+    _, closed, _ = _closed_prepared()
+    # This test exercises the reader's distinct aggregate framing limit; the
+    # coordinator fixture separately produces a real multi-submission closure.
+    combined = _output_bytes({"combined": "x" * closure.MAX_RESPONSE_BYTES})
+    assert len(combined) > closure.MAX_RESPONSE_BYTES
+    restored = replace(closed, _outputs_bytes=combined, _source_outputs_bytes=combined)
+    assert restored.outputs()["combined"] == "x" * closure.MAX_RESPONSE_BYTES
+    assert restored.source_outputs_for_answer()["combined"] == "x" * closure.MAX_RESPONSE_BYTES
+    with pytest.raises(closure.GradeClosureError, match="submission-bytes-invalid"):
+        closure._strict_json(combined, "submission")
+
+
+def test_combined_closed_view_remains_bounded(monkeypatch):
+    from dataclasses import replace
+
+    _, closed, _ = _closed_prepared()
+    monkeypatch.setattr(closure, "MAX_CLOSED_OUTPUT_BYTES", 100)
+    combined = _output_bytes({"combined": "x" * 100})
+    restored = replace(closed, _outputs_bytes=combined, _source_outputs_bytes=combined)
+    with pytest.raises(closure.GradeClosureError, match="closed-output-bytes-invalid"):
+        restored.outputs()
+    with pytest.raises(closure.GradeClosureError, match="closed-source-output-bytes-invalid"):
+        restored.source_outputs_for_answer()
+    with pytest.raises(closure.GradeClosureError, match="closed-output-bytes-invalid"):
+        closure._closure(
+            phase=closed.phase,
+            stage_uuid=closed.stage_uuid,
+            receipts=list(closed.submission_receipts),
+            exposed_outputs={"combined": "x" * 100},
+        )
+
+
 def test_preassessment_closes_exact_cards_sources_and_restores_card_ids_after_phase():
     prepared, _ = _fixture()
     submissions = _pre_submissions(prepared)
