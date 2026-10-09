@@ -3,7 +3,10 @@
 This module does not execute providers, grant admission, or infer quality. It
 returns only values supported by pinned snapshots, response archives, packet
 bytes, and grade-closure receipts. Protocol limits are reported separately as
-configuration provenance, never substituted for measured values.
+configuration provenance, never substituted for measured values. Capture and
+answer execution settings require source-hashed producer attestations;
+historical inventories without them remain unknown. Injected transport retry
+behavior is not inferred from the executor's own call count.
 """
 
 from __future__ import annotations
@@ -22,6 +25,7 @@ from pathlib import Path
 from typing import Mapping
 
 from scripts import coverage_answer_execution as answer_execution
+from scripts import coverage_execution_controls as execution_controls
 from scripts import coverage_live_acquire
 from scripts import coverage_source_capture as source_capture
 from scripts import coverage_study_acquire as offline_acquisition
@@ -303,6 +307,8 @@ def _capture_observations(
     candidate_identity_bytes: bytes,
     candidate_identity_sha256: str,
     candidate_endpoint_sha256: str,
+    timeout_limit_seconds: int | float,
+    response_bytes_limit: int,
 ) -> dict[str, object]:
     root = Path(capture_result.receipt_directory)
     _require_private_directory(root)
@@ -506,6 +512,100 @@ def _capture_observations(
         )
     else:
         state["health_runtime_match"] = None
+
+    control_attestation = inventory.get("execution_control_attestation")
+    capture_timeout_seconds = None
+    capture_application_retries = None
+    capture_response_limit_applied = None
+    capture_concurrency_observed = None
+    if control_attestation is not None:
+        expected_control_bindings = {
+            "schema": "coverage-capture-execution-controls/1",
+            "stage_uuid": capture_result.stage_uuid,
+            "source_revision": source_revision,
+            "protocol_sha256": protocol_sha256,
+            "cohorts_sha256": cohorts_sha256,
+            "operation_plan_sha256": expected_manifest_sha256,
+            "producer_module_sha256": execution_controls.module_source_sha256(source_capture.__file__),
+            "execution_controls_module_sha256": execution_controls.module_source_sha256(execution_controls.__file__),
+            "timeout_limit_seconds_configured": timeout_limit_seconds,
+            "response_bytes_limit_applied": response_bytes_limit,
+            "application_retry_policy": "one-dispatch-per-operation",
+            "transport_retry_policy": "unknown-injected-transport",
+        }
+        control_keys = {
+            *expected_control_bindings,
+            "max_concurrent_requests_observed",
+            "operations",
+        }
+        if (
+            type(control_attestation) is not dict
+            or set(control_attestation) != control_keys
+            or any(control_attestation.get(key) != value for key, value in expected_control_bindings.items())
+        ):
+            raise ResourceEvidenceError("capture-control-attestation-binding")
+        operation_controls = control_attestation.get("operations")
+        expected_operation_ids = ["health", *(f"source-{index:04d}" for index in range(1, len(rows) + 1))]
+        if (
+            type(operation_controls) is not list
+            or [row.get("operation_id") if type(row) is dict else None for row in operation_controls]
+            != expected_operation_ids
+        ):
+            raise ResourceEvidenceError("capture-control-operation-inventory")
+        timeout_values = []
+        dispatched_operations = 0
+        expected_capture_dispatches = state["health_calls"] + state["scrape_calls"]
+        for control_index, control_row in enumerate(operation_controls):
+            if type(control_row) is not dict or set(control_row) != {
+                "operation_id",
+                "timeout_seconds_applied",
+                "transport_dispatch_count",
+                "response_bytes_limit_applied",
+            }:
+                raise ResourceEvidenceError("capture-control-operation-shape")
+            dispatch_count = control_row["transport_dispatch_count"]
+            timeout_value = control_row["timeout_seconds_applied"]
+            response_limit = control_row["response_bytes_limit_applied"]
+            expected_attempted = (
+                state["health_calls"] == 1 if control_index == 0 else rows[control_index - 1].get("attempted") is True
+            )
+            if dispatch_count is None:
+                if expected_attempted or timeout_value is not None or response_limit is not None:
+                    raise ResourceEvidenceError("capture-control-uninvoked-operation")
+                continue
+            if type(dispatch_count) is not int or dispatch_count not in {0, 1}:
+                raise ResourceEvidenceError("capture-control-dispatch-count")
+            if dispatch_count == 0:
+                if expected_attempted or timeout_value is not None or response_limit is not None:
+                    raise ResourceEvidenceError("capture-control-undispatched-operation")
+                continue
+            if not expected_attempted:
+                raise ResourceEvidenceError("capture-control-attempt-binding")
+            if (
+                type(timeout_value) not in {int, float}
+                or isinstance(timeout_value, bool)
+                or not math.isfinite(float(timeout_value))
+                or not 0 < float(timeout_value) <= float(timeout_limit_seconds)
+                or response_limit != response_bytes_limit
+            ):
+                raise ResourceEvidenceError("capture-control-applied-bound-invalid")
+            timeout_values.append(float(timeout_value))
+            dispatched_operations += 1
+        max_concurrency = control_attestation.get("max_concurrent_requests_observed")
+        if (
+            type(max_concurrency) is not int
+            or max_concurrency < 0
+            or (dispatched_operations and max_concurrency != 1)
+            or (not dispatched_operations and max_concurrency not in {0, 1})
+            or dispatched_operations != expected_capture_dispatches
+        ):
+            raise ResourceEvidenceError("capture-control-observation-invalid")
+        if timeout_values and len(set(timeout_values)) == 1:
+            capture_timeout_seconds = timeout_values[0]
+        if dispatched_operations:
+            capture_application_retries = 0
+            capture_response_limit_applied = response_bytes_limit
+            capture_concurrency_observed = max_concurrency
     observed = {
         "capture_owned_http_calls": state["owned_http_calls"],
         "capture_health_calls": state["health_calls"],
@@ -525,6 +625,13 @@ def _capture_observations(
         "capture_internal_fanout": None,
         "capture_health_runtime_match_observed": state["health_runtime_match"],
         "capture_status": state["status"],
+        "capture_timeout_seconds": capture_timeout_seconds,
+        # The injected transport can retry internally; its policy is not
+        # attested by this producer, so aggregate transport retries stay unknown.
+        "capture_retries": None,
+        "capture_application_retries_observed": capture_application_retries,
+        "capture_response_bytes_limit_applied": capture_response_limit_applied,
+        "capture_concurrency_observed": capture_concurrency_observed,
     }
     return observed
 
@@ -983,9 +1090,7 @@ def collect_acquisition_observations(
         "acquisition_response_bytes_total": response_total,
         "acquisition_max_response_body_bytes_observed": max_response,
         "acquisition_timeout_seconds": (
-            dispatched_timeouts[0]
-            if dispatched_timeouts and len(set(dispatched_timeouts)) == 1
-            else None
+            dispatched_timeouts[0] if dispatched_timeouts and len(set(dispatched_timeouts)) == 1 else None
         ),
         "acquisition_timeout_seconds_by_exchange": dispatched_timeouts,
         "acquisition_timeout_observation_state": (
@@ -1095,6 +1200,8 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             candidate_identity_bytes=kwargs["candidate_identity_bytes"],
             candidate_identity_sha256=kwargs["candidate_identity_sha256"],
             candidate_endpoint_sha256=kwargs["candidate_endpoint_sha256"],
+            timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+            response_bytes_limit=protocol["capture"]["response_bytes"],
         )
         answer = _answer_observations(
             stage_uuid=stage_uuid,
@@ -1134,14 +1241,10 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         observations["w0_parser_parity_verified"] = None
         observations["candidate_source_sha256"] = None
         observations["stage_elapsed_seconds"] = None
-        observations["capture_timeout_seconds"] = None
-        observations["capture_retries"] = None
-        observations["answerer_timeout_seconds"] = None
-        observations["answerer_retries"] = None
         observations["grader_concurrency"] = None
         observations["atomic_fallback_verified"] = None
         observations["capture_internal_fanout"] = None
-        observations["capture_response_bytes_limit"] = None
+        observations["capture_response_bytes_limit"] = capture.get("capture_response_bytes_limit_applied")
         observations["acquisition_retries"] = None
         observations["acquisition_pacing_seconds"] = None
         observations["arxiv_pacing_seconds"] = None
@@ -1230,6 +1333,81 @@ def _answer_observations(**kwargs) -> dict[str, object]:
     rows = terminal.get("operations")
     if type(rows) is not list or len(rows) != 18 or list(result.operations) != rows:
         raise ResourceEvidenceError("answer-operation-inventory-mismatch")
+    control_attestation = terminal.get("execution_control_attestation")
+    control_operations = None
+    answerer_timeout = None
+    answerer_retries = None
+    answerer_application_retries = None
+    answerer_concurrency = None
+    if control_attestation is not None:
+        expected_control_bindings = {
+            "schema": "coverage-answer-execution-controls/1",
+            "stage_uuid": stage_uuid,
+            "source_revision": kwargs["source_revision"],
+            "protocol_sha256": kwargs["protocol_sha256"],
+            "cohorts_sha256": kwargs["cohorts_sha256"],
+            "operation_plan_sha256": kwargs["expected_manifest_sha256"],
+            "producer_module_sha256": execution_controls.module_source_sha256(answer_execution.__file__),
+            "execution_controls_module_sha256": execution_controls.module_source_sha256(execution_controls.__file__),
+            "timeout_seconds_limit_configured": answer_execution.REQUEST_TIMEOUT_SECONDS,
+            "response_bytes_limit_applied": answer_execution.MAX_RESPONSE_BYTES,
+            "request_bytes_limit_applied": answer_execution.MAX_REQUEST_BYTES,
+            "output_tokens_limit_applied": answer_execution.MAX_OUTPUT_TOKENS,
+        }
+        retry_policy = control_attestation.get("transport_retry_policy") if type(control_attestation) is dict else None
+        expected_retry_fields = (
+            {"transport_retry_policy": "configured-zero-owned-httpx-transport", "transport_retries_configured": 0}
+            if retry_policy == "configured-zero-owned-httpx-transport"
+            else {"transport_retry_policy": "unknown-injected-transport", "transport_retries_configured": None}
+        )
+        control_keys = {
+            *expected_control_bindings,
+            *expected_retry_fields,
+            "application_retries_observed",
+            "max_concurrent_requests_observed",
+            "operations",
+        }
+        if (
+            type(control_attestation) is not dict
+            or set(control_attestation) != control_keys
+            or any(control_attestation.get(key) != value for key, value in expected_control_bindings.items())
+            or any(control_attestation.get(key) != value for key, value in expected_retry_fields.items())
+        ):
+            raise ResourceEvidenceError("answer-control-attestation-binding")
+        control_operations = control_attestation.get("operations")
+        if type(control_operations) is not list or len(control_operations) != len(requests):
+            raise ResourceEvidenceError("answer-control-operation-inventory")
+        for index, (request, row, control_row) in enumerate(
+            zip(requests, rows, control_operations, strict=True), start=1
+        ):
+            if (
+                type(control_row) is not dict
+                or set(control_row)
+                != {
+                    "operation_id",
+                    "sequence",
+                    "request_sha256",
+                    "timeout_seconds_applied",
+                    "transport_dispatch_count",
+                }
+                or control_row.get("operation_id") != request.operation_id
+                or control_row.get("sequence") != index
+                or control_row.get("request_sha256") != _sha(request.body)
+                or control_row.get("transport_dispatch_count") != 1
+                or control_row.get("timeout_seconds_applied") != answer_execution.REQUEST_TIMEOUT_SECONDS
+                or len(request.body) > answer_execution.MAX_REQUEST_BYTES
+            ):
+                raise ResourceEvidenceError("answer-control-operation-binding")
+        max_concurrency = control_attestation.get("max_concurrent_requests_observed")
+        if type(max_concurrency) is not int or max_concurrency != 1:
+            raise ResourceEvidenceError("answer-control-concurrency-invalid")
+        if control_attestation.get("application_retries_observed") != 0:
+            raise ResourceEvidenceError("answer-control-application-retries-invalid")
+        answerer_timeout = float(answer_execution.REQUEST_TIMEOUT_SECONDS)
+        answerer_application_retries = 0
+        answerer_concurrency = max_concurrency
+        if retry_policy == "configured-zero-owned-httpx-transport":
+            answerer_retries = 0
     max_request = max_response = max_words = 0
     total_response = 0
     for request, row in zip(requests, rows, strict=True):
@@ -1245,7 +1423,11 @@ def _answer_observations(**kwargs) -> dict[str, object]:
             },
             expected_receipt_sha256=row["archive_receipt_sha256"],
         )
-        if row.get("response_bytes") != len(body) or row.get("response_sha256") != _sha(body):
+        if (
+            row.get("response_bytes") != len(body)
+            or row.get("response_sha256") != _sha(body)
+            or len(body) > answer_execution.MAX_RESPONSE_BYTES
+        ):
             raise ResourceEvidenceError("answer-response-binding")
         max_request = max(max_request, len(request.body))
         max_response = max(max_response, len(body))
@@ -1280,6 +1462,10 @@ def _answer_observations(**kwargs) -> dict[str, object]:
         "answerer_output_tokens_requested": _uniform_request_integer(requests, "max_tokens"),
         "max_sources_per_task": _max_delivered_sources(requests),
         "answerer_usage_status": terminal.get("usage_status"),
+        "answerer_timeout_seconds": answerer_timeout,
+        "answerer_retries": answerer_retries,
+        "answerer_application_retries_observed": answerer_application_retries,
+        "answerer_concurrency_observed": answerer_concurrency,
     }
 
 
