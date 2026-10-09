@@ -6,11 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Callable, Mapping
+from urllib.parse import urlsplit
 
 MIRROR = "https://mirror.gcr.io"
 DAEMON_CONFIG = Path("/etc/docker/daemon.json")
@@ -109,6 +111,72 @@ def _has_running_containers() -> bool:
     return bool(result.stdout.strip())
 
 
+def docker_runtime_info(
+    run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> dict[str, object]:
+    """Return bounded nonsecret runtime labels and one expected-mirror flag."""
+    def read_label(command: list[str]) -> str:
+        value = run(command, check=True, capture_output=True, text=True, timeout=5).stdout.strip()
+        if type(value) is not str or not value or len(value) > 64 or not re.fullmatch(
+            r"[A-Za-z0-9._+-]+", value
+        ):
+            raise RuntimeError("Docker runtime diagnostics were incomplete")
+        return value
+
+    version = read_label(["docker", "version", "--format", "{{.Server.Version}}"])
+    driver = read_label(["docker", "info", "--format", "{{.Driver}}"])
+    driver_status_raw = run(
+        ["docker", "info", "--format", "{{json .DriverStatus}}"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    ).stdout.strip()
+    mirrors_raw = run(
+        ["docker", "info", "--format", "{{json .RegistryConfig.Mirrors}}"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    ).stdout.strip()
+    driver_status = json.loads(driver_status_raw or "null")
+    mirrors = json.loads(mirrors_raw or "null")
+    if driver_status is not None and type(driver_status) is not list:
+        raise RuntimeError("Docker driver diagnostics were malformed")
+    snapshotter = None
+    for row in driver_status or []:
+        if (
+            type(row) is list
+            and len(row) == 2
+            and row[0] == "driver-type"
+            and type(row[1]) is str
+            and len(row[1]) <= 64
+            and re.fullmatch(r"[A-Za-z0-9._+-]+", row[1])
+        ):
+            snapshotter = row[1]
+            break
+    if mirrors is None:
+        mirrors = []
+    if type(mirrors) is not list or any(type(item) is not str for item in mirrors):
+        raise RuntimeError("Docker mirror diagnostics were malformed")
+    public_mirror_configured = False
+    for mirror in mirrors:
+        try:
+            parsed = urlsplit(mirror)
+            if parsed.scheme == "https" and parsed.hostname == "mirror.gcr.io":
+                public_mirror_configured = True
+        except ValueError:
+            # This diagnostic reports only whether the expected public mirror
+            # is present; malformed/unrelated entries are never echoed.
+            continue
+    return {
+        "server_version": version,
+        "storage_driver": driver,
+        "containerd_snapshotter": snapshotter,
+        "public_mirror_configured": public_mirror_configured,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--as-root", action="store_true")
@@ -135,6 +203,7 @@ def main() -> int:
         has_running_containers=_has_running_containers,
     )
     print("Docker Hub mirror configured." if changed else "Docker Hub mirror already configured.")
+    print(json.dumps({"docker_runtime": docker_runtime_info()}, sort_keys=True))
     return 0
 
 

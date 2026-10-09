@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -80,6 +81,41 @@ def test_running_container_refuses_change_before_write_or_restart(tmp_path: Path
         )
     assert path.read_bytes() == original
     assert restarts == []
+
+
+def test_docker_runtime_diagnostics_are_bounded_and_allowlisted() -> None:
+    outputs = {
+        "{{.Server.Version}}": "28.0.4\n",
+        "{{.Driver}}": "overlay2\n",
+        "{{json .DriverStatus}}": '[["Backing Filesystem","extfs"],["driver-type","io.containerd.snapshotter.v1"]]\n',
+        "{{json .RegistryConfig.Mirrors}}": '["https://user:secret@mirror.gcr.io/cache?token=private"]\n',
+    }
+    commands: list[list[str]] = []
+    options: list[dict[str, object]] = []
+
+    def fake_run(command, **kwargs):
+        commands.append(command)
+        options.append(kwargs)
+        return subprocess.CompletedProcess(command, 0, outputs[command[-1]], "")
+
+    observed = mirror.docker_runtime_info(run=fake_run)
+    assert observed == {
+        "server_version": "28.0.4",
+        "storage_driver": "overlay2",
+        "containerd_snapshotter": "io.containerd.snapshotter.v1",
+        "public_mirror_configured": True,
+    }
+    assert all("--format" in command for command in commands)
+    assert all(command[-1] in outputs for command in commands)
+    assert all(option == {"check": True, "capture_output": True, "text": True, "timeout": 5} for option in options)
+    assert "secret" not in json.dumps(observed)
+    assert "token" not in json.dumps(observed)
+    assert set(observed) == {
+        "server_version",
+        "storage_driver",
+        "containerd_snapshotter",
+        "public_mirror_configured",
+    }
 
 
 def test_buildkit_and_workflow_ordering() -> None:
