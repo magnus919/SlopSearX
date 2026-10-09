@@ -9,9 +9,11 @@ source/dependency/runtime path is independently reviewed.
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import hashlib
 import ipaddress
 import json
+import math
 import os
 import re
 import socket
@@ -21,13 +23,16 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Mapping, Protocol, Sequence
+from typing import AsyncIterator, Callable, Mapping, Protocol, Sequence
 from urllib.parse import urlsplit
 
 import httpx
 
 from scripts import coverage_consumer_inputs as consumer
+from scripts import coverage_execution_controls as execution_controls
 from scripts import intent_ranking_receipts as receipts
+
+SOURCE_MODULE_SHA256 = execution_controls.module_source_sha256(__file__)
 
 PROMPT_PATH = Path(__file__).resolve().parents[1] / "docs/experiments/evidence/EXP-100/answerer-prompt.txt"
 PROMPT_SHA256 = "6b32ce442150ee69531ed5f440619b616ed08187d89dac7d756acadedbace425"
@@ -43,6 +48,9 @@ MAX_STAGE_WALL_SECONDS = 28_800.0
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _GIT_SHA = re.compile(r"[0-9a-f]{40}\Z")
 _OP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
+_ACTIVE_ANSWER_OPERATION: contextvars.ContextVar[dict[str, object] | None] = contextvars.ContextVar(
+    "coverage_answer_operation", default=None
+)
 
 
 class AnswerExecutionError(RuntimeError):
@@ -117,8 +125,79 @@ class _Request:
     task: AnswerTask | None
 
 
+class _ObservedAnswerStream(httpx.AsyncByteStream):
+    def __init__(self, inner: httpx.AsyncByteStream, release: Callable[[], None]) -> None:
+        self._inner = inner
+        self._release = release
+        self._released = False
+
+    async def __aiter__(self) -> AsyncIterator[bytes]:
+        try:
+            async for chunk in self._inner:
+                yield chunk
+        finally:
+            await self.aclose()
+
+    async def aclose(self) -> None:
+        if self._released:
+            return
+        self._released = True
+        try:
+            await self._inner.aclose()
+        finally:
+            self._release()
+
+
+class _AnswerControlTransport(httpx.AsyncBaseTransport):
+    """Observe request dispatch and full streamed-response concurrency."""
+
+    def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
+        self.inner = inner
+        self.active = 0
+        self.max_active = 0
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        operation = _ACTIVE_ANSWER_OPERATION.get()
+        if operation is None or operation.get("transport_dispatch_count") != 0:
+            raise AnswerExecutionError("answer-operation-transport-context-invalid")
+        timeout = execution_controls.request_timeout_seconds(request)
+        if timeout != REQUEST_TIMEOUT_SECONDS:
+            raise AnswerExecutionError("answer-httpx-timeout-observation-unavailable")
+        operation["timeout_seconds_applied"] = timeout
+        operation["transport_dispatch_count"] = 1
+        self.active += 1
+        self.max_active = max(self.max_active, self.active)
+
+        def release() -> None:
+            self.active -= 1
+
+        try:
+            response = await self.inner.handle_async_request(request)
+        except BaseException:
+            release()
+            raise
+        stream = _ObservedAnswerStream(response.stream, release)
+        return httpx.Response(
+            response.status_code,
+            headers=response.headers,
+            stream=stream,
+            extensions=response.extensions,
+            request=request,
+        )
+
+    async def aclose(self) -> None:
+        await self.inner.aclose()
+
+
 def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
+
+
+def _timeout_matches(value: object, expected: float) -> bool:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    number = float(value)
+    return math.isfinite(number) and number == expected
 
 
 def _canonical(value: object) -> bytes:
@@ -634,13 +713,17 @@ async def execute_answer_stage(
     rows: list[dict[str, object]] = []
     lease_receipts: list[str] = []
     owned_http_calls = 0
+    owned_transport = transport is None
+    inner_transport = transport or httpx.AsyncHTTPTransport(retries=0, trust_env=False)
+    observed_transport = _AnswerControlTransport(inner_transport)
     client = httpx.AsyncClient(
-        transport=transport,
+        transport=observed_transport,
         timeout=httpx.Timeout(REQUEST_TIMEOUT_SECONDS),
         follow_redirects=False,
         trust_env=False,
     )
     terminal_reason = None
+    execution_operations: list[dict[str, object]] = []
     try:
         for index, request in enumerate(requests):
             remaining = deadline - time.monotonic()
@@ -697,6 +780,15 @@ async def execute_answer_stage(
             credential_reflection = False
             status_code = None
             call_status = "transport-error"
+            operation_control: dict[str, object] = {
+                "operation_id": request.operation_id,
+                "sequence": index + 1,
+                "request_sha256": request_sha,
+                "timeout_seconds_applied": None,
+                "transport_dispatch_count": 0,
+            }
+            execution_operations.append(operation_control)
+            operation_token = _ACTIVE_ANSWER_OPERATION.set(operation_control)
             try:
                 owned_http_calls += 1
                 async with asyncio.timeout(min(REQUEST_TIMEOUT_SECONDS, remaining)):
@@ -728,6 +820,7 @@ async def execute_answer_stage(
                     raise AnswerExecutionError("answer-http-status")
                 call_status = "complete"
             except Exception as exc:
+                _ACTIVE_ANSWER_OPERATION.reset(operation_token)
                 if credential_reflection or _contains_secret(bytes(body), key_bytes):
                     body.clear()
                     call_status = "credential-reflection-suppressed"
@@ -765,6 +858,11 @@ async def execute_answer_stage(
                 )
                 _mark_uninvoked(rows, requests, index + 1, terminal_reason)
                 break
+            except BaseException:
+                _ACTIVE_ANSWER_OPERATION.reset(operation_token)
+                raise
+            else:
+                _ACTIVE_ANSWER_OPERATION.reset(operation_token)
 
             # Exact successful bytes are durable before strict parsing or validation.
             archived = receipts.archive_response(
@@ -854,6 +952,33 @@ async def execute_answer_stage(
         if any(row.get("usage_status") == "invalid" for row in rows)
         else "unavailable"
     )
+    timeouts = [row.get("timeout_seconds_applied") for row in execution_operations]
+    all_observed_dispatches = (
+        len(execution_operations) == len(requests)
+        and all(row.get("transport_dispatch_count") == 1 for row in execution_operations)
+        and all(_timeout_matches(value, REQUEST_TIMEOUT_SECONDS) for value in timeouts)
+    )
+    execution_control_attestation = {
+        "schema": "coverage-answer-execution-controls/1",
+        "stage_uuid": stage_uuid,
+        "source_revision": source_revision,
+        "protocol_sha256": protocol_sha256,
+        "cohorts_sha256": cohorts_sha256,
+        "operation_plan_sha256": answer_manifest_sha256,
+        "producer_module_sha256": SOURCE_MODULE_SHA256,
+        "execution_controls_module_sha256": execution_controls.MODULE_SOURCE_SHA256,
+        "timeout_seconds_limit_configured": REQUEST_TIMEOUT_SECONDS,
+        "response_bytes_limit_applied": MAX_RESPONSE_BYTES,
+        "request_bytes_limit_applied": MAX_REQUEST_BYTES,
+        "output_tokens_limit_applied": MAX_OUTPUT_TOKENS,
+        "transport_retry_policy": (
+            "configured-zero-owned-httpx-transport" if owned_transport else "unknown-injected-transport"
+        ),
+        "transport_retries_configured": 0 if owned_transport else None,
+        "application_retries_observed": 0 if all_observed_dispatches else None,
+        "max_concurrent_requests_observed": observed_transport.max_active if execution_operations else None,
+        "operations": execution_operations,
+    }
     result_doc = {
         "schema": RESULT_SCHEMA,
         "status": "complete-structurally-valid-not-semantically-graded" if successful else "terminal-incomplete",
@@ -870,6 +995,7 @@ async def execute_answer_stage(
         "operation_lease_receipt_sha256": lease_receipts,
         "owned_http_calls": owned_http_calls,
         "usage_status": usage_status,
+        "execution_control_attestation": execution_control_attestation,
         "semantic_grade": False,
         "terminal_reason": terminal_reason,
         "operations": rows,

@@ -210,6 +210,39 @@ async def test_executes_two_readiness_and_sixteen_paired_answers_serially(tmp_pa
 
 
 @pytest.mark.asyncio
+async def test_owned_transport_is_constructed_with_zero_retries_and_attested(tmp_path, monkeypatch):
+    args = _stage_inputs(tmp_path)
+    args.pop("transport")
+    transport_options = []
+    task_by_id = {task.task_id: task for task in args["tasks"]}
+
+    async def handler(request):
+        body = json.loads(request.content)
+        user = body["messages"][1]["content"]
+        if user.startswith("This is a synthetic endpoint readiness check"):
+            return _response('{"ready":true}')
+        task_id = json.loads(user)["task_id"]
+        return _response(_answer_content(task_by_id[task_id]))
+
+    def owned_transport(*, retries, trust_env):
+        transport_options.append({"retries": retries, "trust_env": trust_env})
+        return httpx.MockTransport(handler)
+
+    monkeypatch.setattr(execution.httpx, "AsyncHTTPTransport", owned_transport)
+    result = await execution.execute_answer_stage(**args)
+    terminal_path = args["result_root"] / f"{args['stage_uuid']}.answer-terminal-inventory.json"
+    controls = json.loads(terminal_path.read_bytes())["execution_control_attestation"]
+    assert transport_options == [{"retries": 0, "trust_env": False}]
+    assert controls["transport_retry_policy"] == "configured-zero-owned-httpx-transport"
+    assert controls["transport_retries_configured"] == 0
+    assert controls["application_retries_observed"] == 0
+    assert controls["max_concurrent_requests_observed"] == 1
+    assert len(controls["operations"]) == 18
+    assert all(row["transport_dispatch_count"] == 1 for row in controls["operations"])
+    assert result.status == "complete-structurally-valid-not-semantically-graded"
+
+
+@pytest.mark.asyncio
 async def test_http_failure_is_archived_and_stops_all_later_slots(tmp_path):
     args = _stage_inputs(tmp_path)
     calls = 0
