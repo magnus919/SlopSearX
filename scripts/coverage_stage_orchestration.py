@@ -925,6 +925,9 @@ async def coordinate_coverage_stage(
         "scientific_calls_made_by_coordinator": False,
         "status": "in-progress",
         "terminal_reason": None,
+        # A result gains authority only after the frozen gate calculation is
+        # validated. All earlier and terminal-failure inventories are explicit.
+        "gate_result_authoritative": False,
         "phases": phase_rows,
     }
     inventory_path = stage_dir / "inventory.json"
