@@ -13,8 +13,8 @@ def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def _materials(tmp_path):
-    args, materials, *_ = make_fixture()
+def _materials(tmp_path, *, navigation_skips=(None,) * 5):
+    args, materials, *_ = make_fixture(navigation_skips=navigation_skips)
     repo = Path(__file__).parents[1]
     materials["coverage_source"] = (repo / "scripts/intent_ranking_coverage.py").read_bytes()
     materials["production_rerank_source"] = (
@@ -28,7 +28,7 @@ def _materials(tmp_path):
             "material_pins": pins,
         }
     )
-    args = reseal_fixture(args, materials)
+    args = reseal_fixture(args, materials, nav_skips=navigation_skips)
     prepared = core.preflight_stage(**args)
     manifest = json.loads(materials["task_input_manifest"])
     tasks = [
@@ -146,6 +146,21 @@ def _materials(tmp_path):
         "expected_builder_source_sha256": _sha(Path(input_map.__file__).read_bytes()),
     }
     return kwargs
+
+
+@pytest.mark.parametrize("reason", sorted(core.NAVIGATION_SKIP_REASONS))
+@pytest.mark.parametrize("skip_all", [False, True])
+def test_map_and_materials_omit_registered_navigation_skips(tmp_path, reason, skip_all):
+    skips = (reason,) * 5 if skip_all else (reason, None, None, None, None)
+    kwargs = _materials(tmp_path, navigation_skips=skips)
+    operation_materials = {}
+    raw = input_map.build_selector_input_map(**kwargs, operation_materials=operation_materials)
+    document = json.loads(raw)
+    expected = set(kwargs["prepared"].operation_ids)
+    assert {row["operation_id"] for row in document["operations"]} == expected
+    assert set(operation_materials) == expected
+    assert "navigation-01-w0" not in expected
+    assert len(document["operations"]) == (34 if skip_all else 38)
 
 
 def test_builds_complete_draft_map_from_pinned_inputs_without_authority(tmp_path):
