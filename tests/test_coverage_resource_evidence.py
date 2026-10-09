@@ -413,13 +413,27 @@ def test_grade_resource_totals_exclude_prepared_no_call_packets():
 
 
 @pytest.mark.asyncio
-async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path: Path):
+async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path: Path, monkeypatch):
+    from scripts import coverage_jev_execution as selector_execution
+    from scripts import coverage_study_core as study_core
+    from tests import test_coverage_study_core as study_fixtures
+    from tests.test_coverage_jev_execution import PrivateRoots, compile_small, invoke_w0_kwargs, valid_response
+    from tests.test_coverage_jev_resource_observations import _call_kwargs as candidate_call_kwargs
+    from tests.test_coverage_legacy_control import _response as legacy_response
+    from tests.test_coverage_study_core import make_fixture, reseal_fixture
+
     protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"
     protocol_bytes = protocol_path.read_bytes()
     cohort_path = protocol_path.with_name("cohorts.json")
     cohorts_bytes = cohort_path.read_bytes()
     source_revision = "8f3577d022e2d98fcd405d915b5c3b9b16e899bf"
     stage_uuid = "f611a79a-9eef-46f4-b211-3d4d394e9e21"
+    monkeypatch.setattr(study_fixtures, "SOURCE_REVISION", source_revision)
+    selector_args, selector_materials, *_ = make_fixture(stage_uuid=stage_uuid)
+    selector_materials["protocol"] = protocol_bytes
+    selector_args = reseal_fixture(selector_args, selector_materials, stage_uuid=stage_uuid)
+    prepared_selector = study_core.preflight_stage(**selector_args)
+    source_closure_sha256 = prepared_selector.pins["qualified_source_closure"]
     identity = _candidate_identity()
     source_rows = [_source("D-R01", "source-a", 1, "https://docs.example/a")]
 
@@ -442,7 +456,7 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         stage_uuid=stage_uuid,
         protocol_sha256=_sha(protocol_bytes),
         cohorts_sha256=_sha(cohorts_bytes),
-        source_closure_sha256="1" * 64,
+        source_closure_sha256=source_closure_sha256,
     )
     plan_doc = json.loads(acquisition_plan)
     plan_doc["stage_uuid"] = stage_uuid
@@ -499,6 +513,49 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         expected_private_binding_sha256=prepared.private_binding_sha256,
         expected_answer_manifest_sha256=prepared_answers.manifest_sha256,
     )
+
+    # Execute the registered selector schedule against response bytes carried
+    # by an in-process mock transport; the full collector must derive usage and
+    # elapsed values from these archived receipts, ignoring lookalike caller
+    # fields passed below.
+    selector_ledger = study_core.StudyRun(prepared_selector)
+    selector_roots = PrivateRoots()
+    candidate_compiled = compile_small()
+    candidate_body = valid_response(candidate_compiled, input_tokens=17, output_tokens=6)
+    w0_body = legacy_response({"c0": 7, "c1": 8, "c2": 6, "c3": 9})
+
+    async def selector_handler(request):
+        body = candidate_body if request.content == candidate_compiled.body else w0_body
+        return httpx.Response(200, content=body, request=request)
+
+    for operation_id in prepared_selector.operation_ids:
+        transport = httpx.MockTransport(selector_handler)
+        if "-w0" in operation_id:
+            call = invoke_w0_kwargs(prepared_selector, selector_ledger, selector_roots, operation_id, transport)
+        else:
+            call = candidate_call_kwargs(
+                prepared_selector,
+                selector_ledger,
+                selector_roots,
+                operation_id,
+                candidate_compiled,
+                transport,
+            )
+        await selector_execution.execute_selector_call(**call)
+    selector_terminal = selector_execution.close_stage(
+        prepared=prepared_selector, ledger=selector_ledger, result_root=selector_roots.result
+    )
+    selector_terminal_bytes = (
+        selector_roots.result / f"{prepared_selector.stage_uuid}.terminal-inventory.json"
+    ).read_bytes()
+    selector_operation_rows = tuple(
+        {
+            "operation_id": operation_id,
+            "state": "complete-success",
+            "caller_usage": {"input_tokens": 999_999, "output_tokens": 999_999},
+        }
+        for operation_id in prepared_selector.operation_ids
+    )
     acquisition_bytes = resource_evidence.coverage_live_acquire._canonical(acquisition_manifest)
     capture_inventory_bytes = (capture.receipt_directory / "inventory.json").read_bytes()
     capture_endpoint_sha = capture_manifest["candidate_endpoint_sha256"]
@@ -507,7 +564,7 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         source_revision=source_revision,
         protocol_bytes=protocol_bytes,
         cohorts_bytes=cohorts_bytes,
-        source_closure_sha256="1" * 64,
+        source_closure_sha256=source_closure_sha256,
         acquisition_plan_bytes=acquisition_plan,
         snapshots_directory=acquisition.receipt_directory,
         receipt_directory=acquisition.receipt_directory,
@@ -538,15 +595,45 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         expected_answer_assessment_manifest_sha256=prepared_answers.manifest_sha256,
         expected_reference_closure_sha256=reference_closure.receipt_sha256,
         expected_answer_closure_sha256=answer_closure.receipt_sha256,
+        expected_selector_terminal_sha256=selector_terminal["sha256"],
+        selector_terminal_inventory_bytes=selector_terminal_bytes,
+        selector_result_root=selector_roots.result,
+        selector_archive_root=selector_roots.archive,
+        selector_expected_operation_ids=prepared_selector.operation_ids,
+        selector_operation_rows=selector_operation_rows,
+        selector_usage=[{"input_tokens": 999_999, "output_tokens": 999_999}],
+        selector_elapsed_ms=999_999,
+        selector_concurrency=999,
+        selector_retries=999,
     )
     assert report.stage_uuid == stage_uuid
     assert report.observations["acquisition_engine_calls"]["brave"] == 0
     assert report.observations["answerer_calls"] == 18
     assert report.observations["grader_submissions"] > 0
     assert report.observations["capture_internal_fanout"] is None
-    assert report.observations["selector_elapsed_ms"] is None
+    selector_terminal_doc = json.loads(selector_terminal_bytes)
+    selector_expected_elapsed = max(
+        row["elapsed_ms_through_final_receipt_fsync"]
+        for row in selector_terminal_doc["resource_observations"]
+        if row.get("status") == "observed"
+    )
+    assert report.observations["terminal_inventory_complete"] is True
+    assert report.observations["selector_elapsed_ms"] == selector_expected_elapsed
+    assert report.observations["selector_usage"] == [
+        {
+            "operation_id": operation_id,
+            "status": "reported",
+            "input_tokens": 123 if "-w0" in operation_id else 17,
+            "output_tokens": 12 if "-w0" in operation_id else 6,
+        }
+        for operation_id in prepared_selector.operation_ids
+    ]
+    assert report.observations["selector_concurrency"] == 1
+    assert report.observations["selector_retries"] == 0
+    assert report.observations["selector_provider_dispatches"] == len(prepared_selector.operation_ids)
     assert report.observations["stage_elapsed_seconds"] is None
     assert report.configuration_provenance["quality_credit"] is False
+    selector_roots.close()
 
 
 @pytest.mark.asyncio

@@ -1094,11 +1094,7 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         observations["w0_ranking_strategy"] = None
         observations["w0_parser_parity_verified"] = None
         observations["candidate_source_sha256"] = None
-        observations["selector_elapsed_ms"] = None
         observations["stage_elapsed_seconds"] = None
-        observations["selector_usage"] = None
-        observations["selector_concurrency"] = None
-        observations["selector_retries"] = None
         observations["capture_timeout_seconds"] = None
         observations["capture_retries"] = None
         observations["answerer_timeout_seconds"] = None
