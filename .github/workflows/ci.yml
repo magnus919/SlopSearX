@@ -243,6 +243,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Configure hosted-runner Docker Hub cache
+        run: python3 scripts/configure_ci_dockerhub_mirror.py
       - name: Validate Prometheus rules and firing behavior
         run: |
           docker run --rm --entrypoint /bin/promtool -v "$PWD/docs/alerting:/rules:ro" prom/prometheus:v3.2.1 check rules /rules/rules.yml
