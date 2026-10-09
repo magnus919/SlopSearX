@@ -5,6 +5,11 @@ This document registers no acquisition or model run. It changes future release
 acceptance only; historical studies retain their original contracts.
 The full production objective and implementation scope remain unchanged.
 
+The sole-candidate constraint below was prospectively superseded by the
+maintainer-approved [coverage-first amendment](coverage-first-release-decision.md)
+on 2026-10-09. The originally designated candidate and its historical outcomes
+retain the contract below; all other release gates remain in effect.
+
 ## Candidate and decision boundary
 
 Freeze the exact EXP-076 canonical complete-pool query/purpose transaction and

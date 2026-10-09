@@ -3,6 +3,11 @@
 Status: **NO-CALL DESIGN CHECKPOINT / NOT REGISTERED / NOT ADMITTED**.
 Related to [#516](https://github.com/magnus919/SlopSearX/issues/516).
 
+The maintainer approved the [coverage-first candidate amendment](coverage-first-release-decision.md)
+on 2026-10-09. This resolves the candidate-decision dependency below; exact
+registration, source qualification and admission remain outstanding. This
+historical no-call checkpoint is not itself an invocation permit.
+
 The previous complete-pool development comparison did not qualify its candidate.
 Its [published results](intent-ranking-development-results.md) remain unchanged.
 The [coverage prototype](intent-ranking-coverage-prototype.md) is a different
@@ -114,9 +119,10 @@ remains open.
 
 ## Five blockers before preregistration or invocation
 
-1. The approved 2026-10-05 decision freezes EXP-076 equal-weight RRF as its sole
-   candidate. Coverage-first needs an explicit amended maintainer decision
-   before preregistration; approval of an offline prototype is not that amendment.
+1. **Resolved by the 2026-10-09 amendment.** The approved 2026-10-05 decision
+   designated EXP-076 equal-weight RRF as its sole candidate. The linked
+   maintainer amendment now satisfies the candidate-decision prerequisite for
+   coverage-first; registration and admission still require the other gates.
 2. The exposed eight development pools are historical evidence. Qualifying
    development requires eight new tasks/pools plus eight distinct untouched
    confirmation tasks/pools. Existing pools may be used only for exploratory,
