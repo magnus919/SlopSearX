@@ -1,0 +1,880 @@
+[
+  {
+    "fault": "results",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 1,
+        "cached": false,
+        "query_id": "ssx-814fabc5",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "jev_score",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 1,
+        "cached": false,
+        "query_id": "ssx-fa1d94b6",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "scope",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 1,
+        "cached": false,
+        "query_id": "ssx-9f0be656",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "elapsed",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 1,
+        "cached": false,
+        "query_id": "ssx-72a23b9a",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "list",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 0,
+        "cached": false,
+        "query_id": "ssx-37d8ecb2",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "string",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 0,
+        "cached": false,
+        "query_id": "ssx-e00f8365",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "score_ninf_text",
+    "rep": 0,
+    "status": 500,
+    "recovered": false,
+    "dispatches": 0,
+    "repaired_hit": null,
+    "body": "Internal Server Error"
+  },
+  {
+    "fault": "score_nan",
+    "rep": 0,
+    "status": 500,
+    "recovered": false,
+    "dispatches": 0,
+    "repaired_hit": null,
+    "body": "Internal Server Error"
+  },
+  {
+    "fault": "number",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 0,
+        "cached": false,
+        "query_id": "ssx-b3043687",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "dispatch_count",
+    "rep": 0,
+    "status": 200,
+    "recovered": true,
+    "dispatches": 1,
+    "repaired_hit": true,
+    "body": {
+      "query": "cache recovery task",
+      "results": [
+        {
+          "url": "https://example.test/evidence",
+          "title": "Retained evidence",
+          "content": "Fixed cache recovery result",
+          "engine": "recovery",
+          "engines": [
+            "recovery"
+          ],
+          "score": 1.0,
+          "positions": [
+            1
+          ],
+          "category": "general",
+          "publishedDate": null,
+          "pubdate": null,
+          "tier": 2,
+          "length": null,
+          "thumbnail": null,
+          "img_src": null,
+          "media": null,
+          "payload": null,
+          "iframe_src": null,
+          "audio_src": null,
+          "views": null,
+          "author": null,
+          "metadata": null,
+          "template": "default.html",
+          "parsed_url": [
+            "https",
+            "example.test",
+            "/evidence",
+            "",
+            "",
+            ""
+          ],
+          "open_group": false,
+          "close_group": false,
+          "priority": ""
+        }
+      ],
+      "engines": [
+        {
+          "engine": "recovery",
+          "results": 1
+        }
+      ],
+      "number_of_results": 1,
+      "answers": [],
+      "corrections": [],
+      "infoboxes": [],
+      "suggestions": [],
+      "unresponsive_engines": [],
+      "meta": {
+        "response_time_ms": 0,
+        "cached": false,
+        "query_id": "ssx-04eeb0d6",
+        "engine_status": {
+          "recovery": {
+            "results": 1,
+            "latency_ms": 0.0,
+            "status": "ok"
+          }
+        },
+        "partial": false,
+        "deadline_exceeded": false,
+        "advisories": [
+          {
+            "code": "optional_routing_unavailable",
+            "capability": "jev_specialist_routing",
+            "reason": "not_available",
+            "message": "Optional Jev specialist routing was unavailable for this request. The operator reports excellent production results from Jev specialist query planning; benefit for this query has not been measured.",
+            "action": {
+              "actor": "operator",
+              "kind": "review_optional_routing"
+            },
+            "quality_evidence": "operator_reported_production",
+            "expected_quality_gain": "unmeasured"
+          },
+          {
+            "code": "relevant_source_unavailable",
+            "engine": "brave",
+            "reason": "credentials_missing",
+            "message": "Required credentials for Brave Search API are not configured. Configuration belongs to an operator.",
+            "action": {
+              "actor": "operator",
+              "kind": "configure_credentials"
+            },
+            "expected_quality_gain": "unmeasured"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "fault": "score_inf_text",
+    "rep": 0,
+    "status": 500,
+    "recovered": false,
+    "dispatches": 0,
+    "repaired_hit": null,
+    "body": "Internal Server Error"
+  },
+  {
+    "fault": "score_ninf",
+    "rep": 0,
+    "status": 500,
+    "recovered": false,
+    "dispatches": 0,
+    "repaired_hit": null,
+    "body": "Internal Server Error"
+  },
+  {
+    "fault": "score_nan_text",
+    "rep": 0,
+    "status": 500,
+    "recovered": false,
+    "dispatches": 0,
+    "repaired_hit": null,
+    "body": "Internal Server Error"
+  },
+  {
+    "fault": "score_inf",
+    "rep": 0,
+    "status": 500,
+    "recovered": false,
+    "dispatches": 0,
+    "repaired_hit": null,
+    "body": "Internal Server Error"
+  }
+]

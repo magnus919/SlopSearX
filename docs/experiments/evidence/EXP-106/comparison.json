@@ -1,0 +1,33 @@
+{
+  "cycle_start": "2026-10-09T13:00:44.820Z",
+  "baseline": "e3eb6b4",
+  "registration": "0fcce7e",
+  "candidate": "e14cf3b87668604b94a7bc19c314cbecb9be91e0",
+  "python": "3.12.11",
+  "dependencies": {
+    "fastapi": "0.136.3",
+    "starlette": "1.2.1",
+    "httpx": "0.28.1",
+    "pytest": "9.0.3",
+    "valkey": "6.1.1"
+  },
+  "primary_baseline": {
+    "recovered": 0,
+    "total": 6
+  },
+  "primary_candidate": {
+    "recovered": 6,
+    "total": 6
+  },
+  "absolute_effect_percentage_points": 100,
+  "candidate_all_faults": {
+    "recovered": 14,
+    "total": 14
+  },
+  "controls": 3,
+  "provider_calls": 0,
+  "paid_calls": 0,
+  "subscription_usage": "unknown",
+  "production_frequency": "unmeasured",
+  "release_status": "unverified"
+}
