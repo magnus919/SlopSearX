@@ -67,6 +67,7 @@ class _Verifier:
             cohorts_sha256=bindings["cohorts_sha256"],
             operation_manifest_sha256=bindings["operation_manifest_sha256"],
             endpoint_sha256=bindings["endpoint_sha256"],
+            resolved_destination_sha256=bindings["resolved_destination_sha256"],
             endpoint_security_mode=bindings["endpoint_security_mode"],
             operation_ids=bindings["operation_ids"],
             max_calls=18,
@@ -327,6 +328,13 @@ async def test_explicit_private_http_mode_is_bound_into_permit_and_lease(tmp_pat
     args = _stage_inputs(tmp_path)
     args["endpoint"] = "http://answer-svc/v1"
     args["allow_trusted_private_http"] = True
+    resolutions = []
+
+    async def resolver(host, port):
+        resolutions.append((host, port))
+        return [(2, 1, 6, "", ("192.168.10.8", port))]
+
+    args["resolver"] = resolver
     args["answer_manifest_sha256"] = execution._request_manifest(
         execution._make_requests(args["tasks"]), endpoint_security_mode="trusted-private-http"
     )[1]
@@ -335,6 +343,8 @@ async def test_explicit_private_http_mode_is_bound_into_permit_and_lease(tmp_pat
     async def handler(request):
         nonlocal dispatches
         dispatches += 1
+        assert request.url.host == "192.168.10.8"
+        assert request.headers["host"] == "answer-svc"
         body = json.loads(request.content)
         if body["messages"][1]["content"].startswith("This is a synthetic endpoint readiness check"):
             return _response('{"ready":true}')
@@ -347,6 +357,82 @@ async def test_explicit_private_http_mode_is_bound_into_permit_and_lease(tmp_pat
     assert result.status == "complete-structurally-valid-not-semantically-graded"
     assert dispatches == 18
     assert args["permit_verifier"].bindings["endpoint_security_mode"] == "trusted-private-http"
+    assert args["permit_verifier"].bindings["resolved_destination_sha256"]
+    assert resolutions == [("answer-svc", 80)]
+    terminal = json.loads((args["result_root"] / f"{args['stage_uuid']}.answer-terminal-inventory.json").read_bytes())
+    assert terminal["resolved_destination_sha256"] == args["permit_verifier"].bindings["resolved_destination_sha256"]
+    assert "192.168.10.8" not in json.dumps(terminal)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "answers",
+    [
+        [(2, 1, 6, "", ("203.0.113.9", 80))],
+        [(2, 1, 6, "", ("10.0.0.8", 80)), (2, 1, 6, "", ("8.8.8.8", 80))],
+        [],
+    ],
+)
+async def test_public_mixed_or_empty_private_resolution_rejected_before_permit_lease_or_request(tmp_path, answers):
+    args = _stage_inputs(tmp_path)
+    args["endpoint"] = "http://answer-svc/v1"
+    args["allow_trusted_private_http"] = True
+    args["answer_manifest_sha256"] = execution._request_manifest(
+        execution._make_requests(args["tasks"]), endpoint_security_mode="trusted-private-http"
+    )[1]
+    events = []
+    args["permit_verifier"] = type("Verifier", (), {"verify": lambda *_args: events.append("permit")})()
+    args["one_shot_lease"] = type("Lease", (), {"consume_once": lambda *_args, **_kw: events.append("lease")})()
+    requests = []
+
+    async def resolver(_host, _port):
+        return answers
+
+    async def handler(request):
+        requests.append(request)
+        return _response('{"ready":true}')
+
+    args["resolver"] = resolver
+    args["transport"] = httpx.MockTransport(handler)
+    with pytest.raises(
+        execution.AnswerExecutionError,
+        match="answer-private-http-(address-not-allowed|resolution-empty)",
+    ):
+        await execution.execute_answer_stage(**args)
+    assert events == []
+    assert requests == []
+    assert list(args["lease_root"].iterdir()) == []
+
+
+@pytest.mark.asyncio
+async def test_private_http_numeric_dial_does_not_resolve_again(tmp_path):
+    args = _stage_inputs(tmp_path)
+    args["endpoint"] = "http://answer-svc/v1"
+    args["allow_trusted_private_http"] = True
+    args["answer_manifest_sha256"] = execution._request_manifest(
+        execution._make_requests(args["tasks"]), endpoint_security_mode="trusted-private-http"
+    )[1]
+    resolver_calls = []
+
+    async def resolver(host, port):
+        resolver_calls.append((host, port))
+        return [(2, 1, 6, "", ("10.2.3.4", port))]
+
+    async def handler(request):
+        assert request.url.host == "10.2.3.4"
+        assert request.headers["host"] == "answer-svc"
+        body = json.loads(request.content)
+        user = body["messages"][1]["content"]
+        if user.startswith("This is a synthetic endpoint readiness check"):
+            return _response('{"ready":true}')
+        task = next(task for task in args["tasks"] if task.task_id == json.loads(user)["task_id"])
+        return _response(_answer_content(task))
+
+    args["resolver"] = resolver
+    args["transport"] = httpx.MockTransport(handler)
+    result = await execution.execute_answer_stage(**args)
+    assert result.owned_http_calls == 18
+    assert resolver_calls == [("answer-svc", 80)]
 
 
 @pytest.mark.asyncio
@@ -402,3 +488,9 @@ def test_provider_usage_preserves_only_reported_strict_nonnegative_integers():
     )
     assert execution._reported_usage({"usage": {"prompt_tokens": True}}) == ("invalid", {})
     assert execution._reported_usage({"usage": {"total_tokens": -1}}) == ("invalid", {})
+
+
+@pytest.mark.parametrize("port", ["0", "65536", "invalid"])
+def test_private_http_rejects_invalid_port_instead_of_changing_authority(port):
+    with pytest.raises(execution.AnswerExecutionError, match="answer-endpoint-invalid"):
+        execution._chat_url(f"http://answer-svc:{port}", allow_trusted_private_http=True)

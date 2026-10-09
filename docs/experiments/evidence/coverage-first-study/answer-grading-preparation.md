@@ -13,6 +13,12 @@ question, captured contexts, opening budget and citation catalog. Requests and
 responses are archived and verified before independent answer grading. A valid
 JSON answer is not evidence that the answer is correct or useful.
 
+Model transport defaults to HTTPS. The explicit LAN HTTP exception resolves
+once, rejects empty, public or mixed address answers, then dials a verified
+numeric private address while retaining the original HTTP host authority.
+The permit binds a destination digest; literal deployment addresses are not
+written to receipts. DNS cannot change the connection destination afterward.
+
 Independent graders receive complete shuffled card inventories, source chunks
 of at most twenty, and anonymous paired answers. Ranking judgments use the two
 caller facets; source and answer judgments use their four critical checks.

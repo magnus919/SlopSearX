@@ -14,6 +14,7 @@ import ipaddress
 import json
 import os
 import re
+import socket
 import stat
 import time
 import uuid
@@ -37,6 +38,7 @@ MAX_REQUEST_BYTES = 384_000
 MAX_RESPONSE_BYTES = 2_000_000
 MAX_OUTPUT_TOKENS = 8192
 REQUEST_TIMEOUT_SECONDS = 30.0
+PRIVATE_HTTP_DNS_TIMEOUT_SECONDS = 3.0
 MAX_STAGE_WALL_SECONDS = 28_800.0
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _GIT_SHA = re.compile(r"[0-9a-f]{40}\Z")
@@ -72,6 +74,7 @@ class VerifiedAnswerPermit:
     cohorts_sha256: str
     operation_manifest_sha256: str
     endpoint_sha256: str
+    resolved_destination_sha256: str
     endpoint_security_mode: str
     operation_ids: tuple[str, ...]
     max_calls: int
@@ -196,6 +199,12 @@ def _chat_url(endpoint: str, *, allow_trusted_private_http: bool = False) -> tup
     if type(endpoint) is not str or len(endpoint.encode("utf-8")) > 2048:
         raise AnswerExecutionError("answer-endpoint-invalid")
     parsed = urlsplit(endpoint)
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise AnswerExecutionError("answer-endpoint-invalid") from exc
+    if port is not None and not 1 <= port <= 65535:
+        raise AnswerExecutionError("answer-endpoint-invalid")
     if (
         parsed.scheme not in {"https", "http"}
         or not parsed.hostname
@@ -227,6 +236,73 @@ def _is_trusted_private_http_host(host: str) -> bool:
     except ValueError:
         return False
     return address.is_loopback or address.is_private
+
+
+def _is_allowed_private_address(value: str) -> bool:
+    try:
+        address = ipaddress.ip_address(value)
+    except ValueError:
+        return False
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
+        address = address.ipv4_mapped
+    if isinstance(address, ipaddress.IPv4Address):
+        return (
+            address.is_loopback
+            or address in ipaddress.ip_network("10.0.0.0/8")
+            or address in ipaddress.ip_network("172.16.0.0/12")
+            or address in ipaddress.ip_network("192.168.0.0/16")
+        )
+    return address.is_loopback or address in ipaddress.ip_network("fc00::/7")
+
+
+async def _resolve_private_http_destination(
+    endpoint_url: str,
+    *,
+    resolver=None,
+) -> tuple[str, str, str]:
+    """Resolve once, pin the dial URL to a private numeric address, and hash it."""
+    parsed = urlsplit(endpoint_url)
+    if parsed.scheme != "http" or not parsed.hostname:
+        raise AnswerExecutionError("answer-private-http-resolution-required")
+    port = 80 if parsed.port is None else parsed.port
+    if resolver is None:
+        loop = asyncio.get_running_loop()
+
+        async def resolver(host: str, port_number: int):
+            return await loop.getaddrinfo(host, port_number, type=socket.SOCK_STREAM)
+
+    try:
+        answers = await asyncio.wait_for(resolver(parsed.hostname, port), timeout=PRIVATE_HTTP_DNS_TIMEOUT_SECONDS)
+    except Exception as exc:
+        raise AnswerExecutionError("answer-private-http-resolution-failed") from exc
+    addresses = []
+    try:
+        for answer in answers:
+            # asyncio getaddrinfo tuples end in sockaddr; test resolvers may
+            # return address strings directly.
+            address = answer[4][0] if isinstance(answer, tuple) and len(answer) >= 5 else answer
+            if type(address) is not str or not _is_allowed_private_address(address):
+                raise AnswerExecutionError("answer-private-http-address-not-allowed")
+            parsed_address = ipaddress.ip_address(address.split("%", 1)[0])
+            if isinstance(parsed_address, ipaddress.IPv6Address) and parsed_address.ipv4_mapped is not None:
+                parsed_address = parsed_address.ipv4_mapped
+            addresses.append(parsed_address)
+    except AnswerExecutionError:
+        raise
+    except Exception as exc:
+        raise AnswerExecutionError("answer-private-http-resolution-invalid") from exc
+    if not addresses:
+        raise AnswerExecutionError("answer-private-http-resolution-empty")
+
+    selected = addresses[0]
+    numeric_host = f"[{selected.compressed}]" if selected.version == 6 else selected.compressed
+    netloc = numeric_host if parsed.port is None else f"{numeric_host}:{parsed.port}"
+    dial_url = parsed._replace(netloc=netloc).geturl()
+    # Preserve the authority exactly as supplied, including case and an
+    # explicitly written default port, while the URL itself dials the IP.
+    host_header = parsed.netloc
+    destination_sha256 = _sha(_canonical({"address": selected.compressed, "port": port}))
+    return dial_url, host_header, destination_sha256
 
 
 def _prompt_bytes() -> bytes:
@@ -353,6 +429,7 @@ def _verify_permit(
         "cohorts_sha256": bindings["cohorts_sha256"],
         "operation_manifest_sha256": bindings["operation_manifest_sha256"],
         "endpoint_sha256": bindings["endpoint_sha256"],
+        "resolved_destination_sha256": bindings["resolved_destination_sha256"],
         "endpoint_security_mode": bindings["endpoint_security_mode"],
         "operation_ids": bindings["operation_ids"],
         "max_calls": MAX_CALLS,
@@ -466,6 +543,7 @@ async def execute_answer_stage(
     archive_root: str | os.PathLike[str],
     result_root: str | os.PathLike[str],
     transport: httpx.AsyncBaseTransport | None = None,
+    resolver=None,
 ) -> AnswerStageResult:
     """Execute 2 neutral checks and 16 paired answers once, in fixed order.
 
@@ -494,12 +572,26 @@ async def execute_answer_stage(
 
     requests = _make_requests(tasks)
     endpoint_url, endpoint_security_mode = _chat_url(endpoint, allow_trusted_private_http=allow_trusted_private_http)
+    host_header = None
+    resolved_destination_sha = _sha(_canonical({"mode": "https-required"}))
+    if endpoint_security_mode == "trusted-private-http":
+        endpoint_url, host_header, resolved_destination_sha = await _resolve_private_http_destination(
+            endpoint_url, resolver=resolver
+        )
     operation_manifest, operation_manifest_sha = _request_manifest(
         requests, endpoint_security_mode=endpoint_security_mode
     )
     if operation_manifest_sha != answer_manifest_sha256:
         raise AnswerExecutionError("answer-operation-manifest-pin-mismatch")
-    endpoint_sha = _sha(_canonical({"endpoint": endpoint_url, "security_mode": endpoint_security_mode}))
+    endpoint_sha = _sha(
+        _canonical(
+            {
+                "endpoint": endpoint,
+                "security_mode": endpoint_security_mode,
+                "resolved_destination_sha256": resolved_destination_sha,
+            }
+        )
+    )
     started, deadline = _stage_times(stage_started_utc, stage_deadline_utc)
     bindings = {
         "stage_uuid": stage_uuid,
@@ -508,6 +600,7 @@ async def execute_answer_stage(
         "cohorts_sha256": cohorts_sha256,
         "operation_manifest_sha256": operation_manifest_sha,
         "endpoint_sha256": endpoint_sha,
+        "resolved_destination_sha256": resolved_destination_sha,
         "endpoint_security_mode": endpoint_security_mode,
         "operation_ids": tuple(row.operation_id for row in requests),
     }
@@ -611,7 +704,11 @@ async def execute_answer_stage(
                         "POST",
                         endpoint_url,
                         content=request.body,
-                        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json",
+                            **({"Host": host_header} if host_header is not None else {}),
+                        },
                     ) as response:
                         status_code = response.status_code
                         async for chunk in response.aiter_bytes(65_536):
@@ -766,6 +863,7 @@ async def execute_answer_stage(
         "cohorts_sha256": cohorts_sha256,
         "answer_manifest_sha256": answer_manifest_sha256,
         "endpoint_sha256": endpoint_sha,
+        "resolved_destination_sha256": resolved_destination_sha,
         "endpoint_security_mode": endpoint_security_mode,
         "permit_sha256": expected_permit_sha256,
         "stage_claim_sha256": lease_sha,
