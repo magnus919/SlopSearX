@@ -9,6 +9,7 @@ import time
 import unittest
 import uuid
 from pathlib import Path
+from unittest import mock
 
 import httpx
 
@@ -518,6 +519,12 @@ class StageOrchestrationTests(unittest.TestCase):
                 stage._sealed_navigation_observations(plan, evidence, selector)
 
     def test_integrated_synthetic_stage_completes_inconclusive_without_live_authority(self):
+        self._run_integrated_synthetic_stage(deadline_cross=False)
+
+    def test_stage_deadline_overrun_after_final_fsync_corrects_inventory(self):
+        self._run_integrated_synthetic_stage(deadline_cross=True)
+
+    def _run_integrated_synthetic_stage(self, *, deadline_cross: bool):
         plan = plan_fixture()
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
@@ -660,14 +667,35 @@ class StageOrchestrationTests(unittest.TestCase):
                 answerer=answerer,
                 grade_answers=grade_answers,
             )
-            result = asyncio.run(
-                stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)
-            )
+            fake_now = [plan.stage_started_monotonic + 1]
+            original_write_inventory = stage._write_inventory
+
+            def write_inventory(path, value):
+                result_sha = original_write_inventory(path, value)
+                if deadline_cross and value.get("status") == "gates-inconclusive":
+                    fake_now[0] = plan.stage_deadline_monotonic + 1
+                return result_sha
+
+            with mock.patch.object(stage, "_monotonic", side_effect=lambda: fake_now[0]), mock.patch.object(
+                stage, "_write_inventory", side_effect=write_inventory
+            ):
+                result = asyncio.run(
+                    stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)
+                )
             inventory = json.loads(result.inventory_path.read_bytes())
             receipt_bytes = (result.inventory_path.parent / inventory["gate_calculation_receipt_file"]).read_bytes()
 
-        self.assertEqual(result.status, "gates-inconclusive", inventory)
-        self.assertEqual(result.terminal_reason, "gate-inconclusive")
+        if deadline_cross:
+            self.assertEqual(result.status, "terminal-incomplete", inventory)
+            self.assertEqual(result.terminal_reason, "stage-deadline-exceeded-after-final-fsync")
+            self.assertFalse(inventory["gate_result_authoritative"])
+            original_sha = inventory["deadline_overrun_correction"]["original_inventory_sha256"]
+            self.assertRegex(original_sha, r"^[0-9a-f]{64}$")
+            self.assertNotEqual(original_sha, result.inventory_sha256)
+        else:
+            self.assertEqual(result.status, "gates-inconclusive", inventory)
+            self.assertEqual(result.terminal_reason, "gate-inconclusive")
+            self.assertTrue(inventory["gate_result_authoritative"])
         self.assertFalse(result.product_authorized)
         self.assertFalse(result.admission_created)
         self.assertFalse(result.scientific_calls_made_by_coordinator)

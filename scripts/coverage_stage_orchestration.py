@@ -178,6 +178,11 @@ def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _monotonic() -> float:
+    """Module-local clock seam for deterministic stage-deadline tests."""
+    return time.monotonic()
+
+
 def _canonical(value: object) -> bytes:
     try:
         return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode(
@@ -252,7 +257,7 @@ def _validate_plan(plan: StagePlan) -> dict[str, object]:
         or plan.stage_deadline_monotonic - plan.stage_started_monotonic > MAX_STAGE_WALL_SECONDS
     ):
         raise OrchestrationError("stage-deadline-invalid")
-    if not plan.stage_started_monotonic <= time.monotonic() < plan.stage_deadline_monotonic:
+    if not plan.stage_started_monotonic <= _monotonic() < plan.stage_deadline_monotonic:
         raise OrchestrationError("stage-deadline-inactive")
 
     protocol = _strict_json(plan.protocol_bytes, "protocol")
@@ -919,7 +924,11 @@ async def coordinate_coverage_stage(
         _record_phase(inventory, index, status="in-flight")
         _write_inventory(inventory_path, inventory)
         try:
+            if _monotonic() >= plan.stage_deadline_monotonic:
+                raise OrchestrationError("stage-deadline-exceeded-before-phase")
             value = await _await(invoke())
+            if _monotonic() >= plan.stage_deadline_monotonic:
+                raise OrchestrationError("stage-deadline-exceeded-during-phase")
             output_sha = summarize(value)
             if type(output_sha) is not str or not _SHA256.fullmatch(output_sha):
                 raise OrchestrationError(f"{name}-output-receipt-invalid")
@@ -1119,7 +1128,8 @@ async def coordinate_coverage_stage(
         # particular, a hash string alone is not a terminal-inventory receipt,
         # and unavailable provider usage is not a zero-token observation.
         resource_evidence: dict[str, object] = {}
-        resource_evidence["stage_elapsed_seconds"] = max(0.0, time.monotonic() - plan.stage_started_monotonic)
+        # A pre-calculation elapsed sample would omit calculation, receipt and
+        # final inventory fsync. It is not supplied as completed-stage timing.
         if selector.usage_status == "known":
             usage_rows = []
             for row in selector.operation_rows:
@@ -1210,6 +1220,7 @@ async def coordinate_coverage_stage(
         }[gates.status]
         inventory["terminal_reason"] = None if gates.status == "pass" else f"gate-{gates.status}"
         inventory["gate_status"] = gates.status
+        inventory["gate_result_authoritative"] = True
         inventory["gate_scope"] = gates.scope
         inventory["band_diagnostics_sha256"] = _sha(_canonical(gates.band_diagnostics))
         inventory["gate_calculation_receipt_sha256"] = gates.calculation_receipt_sha256
@@ -1231,6 +1242,18 @@ async def coordinate_coverage_stage(
         _write_inventory(inventory_path, inventory)
 
     final_sha = _write_inventory(inventory_path, inventory)
+    completed_at = _monotonic()
+    if completed_at >= plan.stage_deadline_monotonic and inventory.get("status") != "terminal-incomplete":
+        original_inventory_sha256 = final_sha
+        inventory["status"] = "terminal-incomplete"
+        inventory["terminal_reason"] = "stage-deadline-exceeded-after-final-fsync"
+        inventory["gate_result_authoritative"] = False
+        inventory["deadline_overrun_correction"] = {
+            "original_inventory_sha256": original_inventory_sha256,
+            "observed_after_final_fsync": completed_at,
+            "deadline_monotonic": plan.stage_deadline_monotonic,
+        }
+        final_sha = _write_inventory(inventory_path, inventory)
     terminal_reason = inventory.get("terminal_reason")
     return StageResult(
         status=str(inventory["status"]),
