@@ -226,6 +226,37 @@ async def test_reflected_operator_key_is_not_persisted_in_error_body(tmp_path: P
 
 
 @pytest.mark.asyncio
+async def test_safe_chunk_ending_in_operator_key_prefix_is_not_rejected(tmp_path: Path) -> None:
+    token = "synthetic-operator-secret"
+    body = _response("safe public response")
+    split = body.index(b"safe") + 1
+
+    class PrefixChunkStream(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            yield body[:split]
+            yield body[split:]
+
+        async def aclose(self) -> None:
+            return None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return _healthy_response()
+        return httpx.Response(200, stream=PrefixChunkStream(), request=request)
+
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(handler),
+        token=token,
+        sources=[_source("task-a", "source-a", 1, "https://docs.example/a")],
+    )
+
+    assert result.status == "complete"
+    assert result.private_inventory[0]["status"] == "captured"
+    assert result.private_inventory[0]["context_characters"] == len("safe public response")
+
+
+@pytest.mark.asyncio
 async def test_credential_prefix_at_response_cap_is_suppressed(tmp_path: Path) -> None:
     token = "synthetic-boundary-operator-secret"
     prefix = token[:12].encode()

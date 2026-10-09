@@ -87,6 +87,26 @@ def _strict_json(raw: bytes, label: str) -> object:
         raise ResourceEvidenceError(f"{label}-invalid") from exc
 
 
+def _decode_capture_body(raw: bytes, content_encoding: object, label: str) -> bytes:
+    """Replay the source-capture decoder against its pinned encoded archive."""
+    encoding = "identity" if content_encoding is None else content_encoding
+    if type(encoding) is not str:
+        raise ResourceEvidenceError(f"{label}-content-encoding-invalid")
+    try:
+        decoder = source_capture._BoundedContentDecoder(encoding)
+        decoded = decoder.decode(raw, source_capture.MAX_RESPONSE_BYTES)
+        if len(decoded) > source_capture.MAX_RESPONSE_BYTES:
+            raise ResourceEvidenceError(f"{label}-decoded-response-too-large")
+        tail = decoder.finish(source_capture.MAX_RESPONSE_BYTES - len(decoded))
+        if len(decoded) + len(tail) > source_capture.MAX_RESPONSE_BYTES:
+            raise ResourceEvidenceError(f"{label}-decoded-response-too-large")
+        return decoded + tail
+    except ResourceEvidenceError:
+        raise
+    except Exception as exc:
+        raise ResourceEvidenceError(f"{label}-content-encoding-invalid") from exc
+
+
 def _require_private_directory(path: Path) -> None:
     try:
         info = path.lstat()
@@ -222,7 +242,7 @@ def _capture_observations(
             request_body = source_capture._canonical_json(
                 {"url": source["url"], "formats": ["markdown"], "onlyMainContent": True}
             )
-            receipt, _body = _receipt_any(
+            receipt, response_body = _receipt_any(
                 root.parent,
                 bindings={
                     "stage_uuid": capture_result.stage_uuid,
@@ -247,6 +267,23 @@ def _capture_observations(
             else:
                 response_sizes.append(observed_bytes)
             archived_sizes.append(receipt["response_body_bytes"])
+            encoding = row.get("response_content_encoding", "identity")
+            if encoding is None:
+                encoding = "identity"
+            decoded_payload = None
+            if row.get("status") == "captured":
+                if receipt["complete"] is not True:
+                    raise ResourceEvidenceError("capture-context-from-incomplete-response")
+                decoded_response = _decode_capture_body(response_body, encoding, "capture-source")
+                decoded_payload = _strict_json(decoded_response, "capture-source-response")
+                data = decoded_payload.get("data", decoded_payload) if type(decoded_payload) is dict else None
+                if (
+                    type(decoded_payload) is not dict
+                    or decoded_payload.get("success") is not True
+                    or type(data) is not dict
+                    or type(data.get("markdown")) is not str
+                ):
+                    raise ResourceEvidenceError("capture-source-payload-invalid")
         elif row.get("receipt_sha256") is not None or row.get("response_body_bytes") is not None:
             raise ResourceEvidenceError("capture-unattempted-source-has-response")
         if row.get("status") == "captured":
@@ -268,6 +305,10 @@ def _capture_observations(
                 or len(context) != row.get("context_characters")
             ):
                 raise ResourceEvidenceError("capture-context-binding-mismatch")
+            if attempted and decoded_payload is not None:
+                decoded_markdown = data["markdown"]
+                if context != decoded_markdown[: source_capture.MAX_SOURCE_CHARS]:
+                    raise ResourceEvidenceError("capture-context-response-mismatch")
             contexts.append(len(context))
     state = {
         key: inventory.get(key)
@@ -279,6 +320,7 @@ def _capture_observations(
             "health_receipt_sha256",
             "health_response_body_bytes",
             "health_observed_response_body_bytes",
+            "health_response_content_encoding",
             "internal_scraper_fanout",
             "status",
         )
@@ -319,7 +361,10 @@ def _capture_observations(
             response_sizes.append(observed_health_bytes)
         archived_sizes.append(health_receipt["response_body_bytes"])
         try:
-            health = _strict_json(health_body, "health")
+            decoded_health_body = _decode_capture_body(
+                health_body, state["health_response_content_encoding"], "capture-health"
+            )
+            health = _strict_json(decoded_health_body, "health")
         except ResourceEvidenceError:
             health = None
         state["health_runtime_match"] = bool(

@@ -470,9 +470,7 @@ def verify_pool_snapshot_index(
 ) -> dict[str, object]:
     """Verify a complete durable pool index against externally supplied pins."""
     if deadline_monotonic is not None and (
-        type(deadline_monotonic) not in {int, float}
-        or not math.isfinite(deadline_monotonic)
-        or deadline_monotonic <= 0
+        type(deadline_monotonic) not in {int, float} or not math.isfinite(deadline_monotonic) or deadline_monotonic <= 0
     ):
         raise LiveAcquisitionError("pool-snapshot-deadline-invalid")
 
