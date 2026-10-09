@@ -15,6 +15,7 @@ import httpx
 
 from scripts import coverage_answer_execution as answer_execution
 from scripts import coverage_live_acquire as live_acquire
+from scripts import coverage_resource_evidence as resource_evidence
 from scripts import coverage_source_capture as source_capture
 from scripts import coverage_stage_orchestration as stage
 from scripts import coverage_study_acquire as acquisition
@@ -538,7 +539,12 @@ class StageOrchestrationTests(unittest.TestCase):
     def test_stage_deadline_overrun_after_final_fsync_corrects_inventory(self):
         self._run_integrated_synthetic_stage(deadline_cross=True)
 
-    def _run_integrated_synthetic_stage(self, *, deadline_cross: bool, poison_receipts: bool = False):
+    def test_stage_closeout_receipt_and_inventory_pins_reject_tampering(self):
+        self._run_integrated_synthetic_stage(deadline_cross=False, tamper_closeout=True)
+
+    def _run_integrated_synthetic_stage(
+        self, *, deadline_cross: bool, poison_receipts: bool = False, tamper_closeout: bool = False
+    ):
         plan = plan_fixture()
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
@@ -868,6 +874,56 @@ class StageOrchestrationTests(unittest.TestCase):
                     stage.coordinate_coverage_stage(plan=plan, executors=executors, inventory_root=inventory_root)
                 )
             inventory = json.loads(result.inventory_path.read_bytes())
+            closeout = resource_evidence.verify_stage_closeout(
+                inventory_path=result.inventory_path,
+                expected_inventory_sha256=result.inventory_sha256,
+                closeout_receipt_path=result.closeout_receipt_path,
+                expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                expected_stage_uuid=plan.stage_uuid,
+                expected_source_revision=plan.source_revision,
+                protocol_bytes=plan.protocol_bytes,
+                cohorts_bytes=plan.cohorts_bytes,
+                expected_protocol_sha256=digest(plan.protocol_bytes),
+                expected_cohorts_sha256=digest(plan.cohorts_bytes),
+            )
+            self.assertEqual(closeout.stage_elapsed_seconds, result.stage_elapsed_seconds)
+            self.assertEqual(closeout.inventory_sha256, result.inventory_sha256)
+            self.assertEqual(closeout.terminal_status, result.status)
+            closeout_bytes = result.closeout_receipt_path.read_bytes()
+            closeout_document = json.loads(closeout_bytes)
+            self.assertEqual(closeout_document["final_inventory_sha256"], result.inventory_sha256)
+            self.assertIn("closeout receipt fsync excluded", closeout_document["measurement_basis"])
+            if tamper_closeout:
+                result.closeout_receipt_path.write_bytes(closeout_bytes + b" ")
+                with self.assertRaisesRegex(resource_evidence.ResourceEvidenceError, "receipt-pin-mismatch"):
+                    resource_evidence.verify_stage_closeout(
+                        inventory_path=result.inventory_path,
+                        expected_inventory_sha256=result.inventory_sha256,
+                        closeout_receipt_path=result.closeout_receipt_path,
+                        expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                        expected_stage_uuid=plan.stage_uuid,
+                        expected_source_revision=plan.source_revision,
+                        protocol_bytes=plan.protocol_bytes,
+                        cohorts_bytes=plan.cohorts_bytes,
+                        expected_protocol_sha256=digest(plan.protocol_bytes),
+                        expected_cohorts_sha256=digest(plan.cohorts_bytes),
+                    )
+                result.closeout_receipt_path.write_bytes(closeout_bytes)
+                result.inventory_path.write_bytes(result.inventory_path.read_bytes() + b" ")
+                with self.assertRaisesRegex(resource_evidence.ResourceEvidenceError, "inventory-pin-mismatch"):
+                    resource_evidence.verify_stage_closeout(
+                        inventory_path=result.inventory_path,
+                        expected_inventory_sha256=result.inventory_sha256,
+                        closeout_receipt_path=result.closeout_receipt_path,
+                        expected_closeout_receipt_sha256=result.closeout_receipt_sha256,
+                        expected_stage_uuid=plan.stage_uuid,
+                        expected_source_revision=plan.source_revision,
+                        protocol_bytes=plan.protocol_bytes,
+                        cohorts_bytes=plan.cohorts_bytes,
+                        expected_protocol_sha256=digest(plan.protocol_bytes),
+                        expected_cohorts_sha256=digest(plan.cohorts_bytes),
+                    )
+                return
             if poison_receipts:
                 self.assertEqual(result.status, "terminal-incomplete", inventory)
                 self.assertEqual(result.terminal_reason, "resource_evidence_collection-failed")
@@ -886,6 +942,10 @@ class StageOrchestrationTests(unittest.TestCase):
             original_sha = inventory["deadline_overrun_correction"]["original_inventory_sha256"]
             self.assertRegex(original_sha, r"^[0-9a-f]{64}$")
             self.assertNotEqual(original_sha, result.inventory_sha256)
+            self.assertGreaterEqual(
+                closeout.stage_elapsed_seconds,
+                plan.stage_deadline_monotonic - plan.stage_started_monotonic,
+            )
         else:
             self.assertEqual(result.status, "gates-inconclusive", inventory)
             self.assertEqual(result.terminal_reason, "gate-inconclusive")
