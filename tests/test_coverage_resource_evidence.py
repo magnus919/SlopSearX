@@ -198,6 +198,7 @@ async def test_capture_observations_replay_pinned_gzip_health_and_source(tmp_pat
     protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"
     protocol_bytes = protocol_path.read_bytes()
     protocol = json.loads(protocol_bytes)
+    protocol = json.loads(protocol_bytes)
     sources = [_source("D-R01", "source-a", 1, "https://docs.example/a")]
     health_body = gzip.compress(_healthy_response().content)
     source_body = gzip.compress(capture_response("Compressed implementation passage."))
@@ -577,6 +578,7 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
 
     protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"
     protocol_bytes = protocol_path.read_bytes()
+    protocol = json.loads(protocol_bytes)
     cohort_path = protocol_path.with_name("cohorts.json")
     cohorts_bytes = cohort_path.read_bytes()
     source_revision = "8f3577d022e2d98fcd405d915b5c3b9b16e899bf"
@@ -584,6 +586,23 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     monkeypatch.setattr(study_fixtures, "SOURCE_REVISION", source_revision)
     selector_args, selector_materials, *_ = make_fixture(stage_uuid=stage_uuid)
     selector_materials["protocol"] = protocol_bytes
+    selector_materials["coverage_source"] = (
+        Path(__file__).parents[1] / "scripts/intent_ranking_coverage.py"
+    ).read_bytes()
+    selector_materials["production_rerank_source"] = (
+        Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/w0-rerank-v1.py.txt"
+    ).read_bytes()
+    source_pins = {
+        name: _sha(selector_materials[name])
+        for name in ("coverage_source", "production_rerank_source", "dependency_lock")
+    }
+    selector_materials["qualified_source_closure"] = study_core._canonical(
+        {
+            "schema": "coverage-study-qualified-source-closure/1",
+            "source_revision": source_revision,
+            "material_pins": source_pins,
+        }
+    )
     selector_args = reseal_fixture(selector_args, selector_materials, stage_uuid=stage_uuid)
     prepared_selector = study_core.preflight_stage(**selector_args)
     source_closure_sha256 = prepared_selector.pins["qualified_source_closure"]
@@ -754,10 +773,16 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         selector_archive_root=selector_roots.archive,
         selector_expected_operation_ids=prepared_selector.operation_ids,
         selector_operation_rows=selector_operation_rows,
+        selector_registration_sha256=prepared_selector.registration_sha256,
         selector_usage=[{"input_tokens": 999_999, "output_tokens": 999_999}],
         selector_elapsed_ms=999_999,
         selector_concurrency=999,
         selector_retries=999,
+        w0_control_source_sha256="caller-fake-source",
+        w0_provider_configured=True,
+        w0_parser_parity_verified=True,
+        candidate_source_sha256="caller-fake-candidate",
+        atomic_fallback_verified=True,
     )
     report = resource_evidence.collect_resource_evidence(**collector_kwargs)
     assert report.stage_uuid == stage_uuid
@@ -793,6 +818,19 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     assert report.observations["selector_retries"] == 0
     assert report.observations["selector_provider_dispatches"] == len(prepared_selector.operation_ids)
     assert report.observations["stage_elapsed_seconds"] is None
+    # Complete archived calls are measurable, but source/registry identity
+    # remains unknown until a separately sealed v2 pre-dispatch input map is
+    # supplied and recomputed by the coordinator.
+    assert report.observations["w0_control_source_sha256"] is None
+    assert report.observations["w0_source_revision"] is None
+    assert report.observations["w0_model"] is None
+    assert report.observations["w0_provider_configured"] is None
+    assert report.observations["w0_ranking_strategy"] is None
+    assert report.observations["candidate_source_sha256"] is None
+    assert report.observations["w0_parser_parity_verified"] is None
+    assert report.observations["atomic_fallback_verified"] is None
+    assert report.observations["selector_transaction_proof"] is None
+    assert report.configuration_provenance["selector_transaction_proof_sha256"] is None
     assert report.configuration_provenance["quality_credit"] is False
 
     # A full collection over historical inventory bytes without the new
@@ -811,6 +849,74 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     legacy_report = resource_evidence.collect_resource_evidence(**collector_kwargs)
     assert legacy_report.observations["capture_response_bytes_limit"] is None
     assert legacy_report.observations["capture_response_bytes_limit_applied"] is None
+    # Exercise the collector's map join with a synthetic, externally pinned
+    # map assembled from the just-created immutable operation receipts. The
+    # independent builder/recomputation path is covered separately.
+    map_rows = []
+    for operation_id in prepared_selector.operation_ids:
+        receipt = json.loads((selector_roots.result / f"{stage_uuid}.{operation_id}.result.json").read_bytes())
+        provenance = receipt["execution_provenance"]
+        map_rows.append(
+            {
+                "operation_id": operation_id,
+                "parser_mode": provenance["parser_mode"],
+                "operation_input_sha256": provenance["operation_input_sha256"],
+                "request_body_sha256": provenance["request_body_sha256"],
+            }
+        )
+    selector_map = selector_execution._canonical(
+        {
+            "schema": "coverage-selector-input-map/2-draft",
+            "status": "draft-unadmitted",
+            "stage_uuid": stage_uuid,
+            "source_revision": source_revision,
+            "original_registration_sha256": prepared_selector.registration_sha256,
+            "coverage_source_sha256": protocol["candidate_source_sha256"],
+            "production_rerank_source_sha256": protocol["primary_control"]["rerank_source_sha256"],
+            "execution_source_sha256": "a" * 64,
+            "legacy_control_source_sha256": "b" * 64,
+            "current_service_source_sha256": "c" * 64,
+            "acquisition_snapshot_index_sha256": "a" * 64,
+            "acquisition_manifest_sha256": "b" * 64,
+            "task_input_manifest_sha256": "c" * 64,
+            "neutral_fixture_sha256": "d" * 64,
+            "builder_source_sha256": "e" * 64,
+            "operations": map_rows,
+        }
+    )
+    selector_map_sha = _sha(selector_map)
+    terminal_doc = json.loads(selector_terminal_bytes)
+    for observation in terminal_doc["resource_observations"]:
+        operation_id = observation["operation_id"]
+        result_path = selector_roots.result / f"{stage_uuid}.{operation_id}.result.json"
+        result_doc = json.loads(result_path.read_bytes())
+        result_doc["execution_provenance"]["selector_input_map_sha256"] = selector_map_sha
+        result_bytes = selector_execution._canonical(result_doc)
+        result_path.write_bytes(result_bytes)
+        observation["result_receipt_sha256"] = _sha(result_bytes)
+    selector_terminal_bytes = selector_execution._canonical(terminal_doc)
+    (selector_roots.result / f"{stage_uuid}.terminal-inventory.json").write_bytes(selector_terminal_bytes)
+    mapped = resource_evidence._selector_observations(
+        stage_uuid=stage_uuid,
+        source_revision=source_revision,
+        protocol_sha256=prepared_selector.pins["protocol"],
+        source_closure_sha256=source_closure_sha256,
+        expected_terminal_sha256=_sha(selector_terminal_bytes),
+        terminal_inventory_bytes=selector_terminal_bytes,
+        result_root=selector_roots.result,
+        archive_root=selector_roots.archive,
+        expected_operation_ids=prepared_selector.operation_ids,
+        operation_rows=selector_operation_rows,
+        expected_registration_sha256=prepared_selector.registration_sha256,
+        expected_primary_control=protocol["primary_control"],
+        expected_candidate_source_sha256=protocol["candidate_source_sha256"],
+        selector_input_map_bytes=selector_map,
+        expected_selector_input_map_sha256=selector_map_sha,
+    )
+    mapped_proof = mapped["selector_transaction_proof"]
+    assert mapped_proof["input_map_sha256"] == selector_map_sha
+    assert len(mapped_proof["transactions"]) == len(prepared_selector.operation_ids)
+    assert mapped["w0_control_source_sha256"] == protocol["primary_control"]["rerank_source_sha256"]
     selector_roots.close()
 
 
@@ -887,6 +993,13 @@ async def test_selector_resources_replay_terminal_result_and_archive_chain(monke
         "archive_root": roots.archive,
         "expected_operation_ids": prepared.operation_ids,
         "operation_rows": operation_rows,
+        "expected_registration_sha256": prepared.registration_sha256,
+        "expected_primary_control": {
+            "rerank_source_sha256": prepared.pins["production_rerank_source"],
+            "model": "jev-1.13.0",
+            "ranking_strategy": "presence",
+        },
+        "expected_candidate_source_sha256": prepared.pins["coverage_source"],
     }
     observed = resource_evidence._selector_observations(**kwargs)
     terminal_doc = json.loads(terminal_bytes)
@@ -984,6 +1097,45 @@ async def test_selector_resources_replay_terminal_result_and_archive_chain(monke
         )
     result_path.write_bytes(saved_result)
     terminal_path.write_bytes(saved_terminal)
+    forged_result = json.loads(saved_result)
+    forged_result["execution_provenance"]["source_sha256"] = "0" * 64
+    forged_result_bytes = execution._canonical(forged_result)
+    result_path.write_bytes(forged_result_bytes)
+    forged_terminal_doc = json.loads(saved_terminal)
+    forged_terminal_doc["resource_observations"][0]["result_receipt_sha256"] = _sha(forged_result_bytes)
+    forged_terminal_bytes = execution._canonical(forged_terminal_doc)
+    terminal_path.write_bytes(forged_terminal_bytes)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="selector-execution-provenance-binding"):
+        resource_evidence._selector_observations(
+            **{
+                **kwargs,
+                "expected_terminal_sha256": _sha(forged_terminal_bytes),
+                "terminal_inventory_bytes": forged_terminal_bytes,
+            }
+        )
+    result_path.write_bytes(saved_result)
+    terminal_path.write_bytes(saved_terminal)
+
+    # A forged W0 model remains invalid even if the result and terminal files
+    # are re-canonicalized and their local digest chain is recomputed.
+    forged_result = json.loads(saved_result)
+    forged_result["execution_provenance"]["requested_model"] = "caller-selected-model"
+    forged_result_bytes = execution._canonical(forged_result)
+    result_path.write_bytes(forged_result_bytes)
+    forged_terminal_doc = json.loads(saved_terminal)
+    forged_terminal_doc["resource_observations"][0]["result_receipt_sha256"] = _sha(forged_result_bytes)
+    forged_terminal_bytes = execution._canonical(forged_terminal_doc)
+    terminal_path.write_bytes(forged_terminal_bytes)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="selector-execution-provenance-binding"):
+        resource_evidence._selector_observations(
+            **{
+                **kwargs,
+                "expected_terminal_sha256": _sha(forged_terminal_bytes),
+                "terminal_inventory_bytes": forged_terminal_bytes,
+            }
+        )
+    result_path.write_bytes(saved_result)
+    terminal_path.write_bytes(saved_terminal)
     roots.close()
 
 
@@ -1010,4 +1162,13 @@ def test_missing_selector_terminal_proof_remains_unknown():
         "selector_concurrency": None,
         "selector_retries": None,
         "selector_provider_dispatches": None,
+        "selector_transaction_proof": None,
+        "w0_control_source_sha256": None,
+        "w0_source_revision": None,
+        "w0_model": None,
+        "w0_provider_configured": None,
+        "w0_ranking_strategy": None,
+        "w0_parser_parity_verified": None,
+        "candidate_source_sha256": None,
+        "atomic_fallback_verified": None,
     }
