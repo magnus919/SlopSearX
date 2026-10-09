@@ -215,6 +215,101 @@ def test_grade_observations_reclose_actual_mock_submissions():
     assert values["max_grader_response_body_bytes_observed"] > 0
 
 
+def test_grade_resource_totals_exclude_prepared_no_call_packets():
+    from dataclasses import replace
+
+    from scripts import coverage_assessment_packets as packet_prep
+    from scripts import coverage_grade_closure as closure
+    from tests.test_coverage_assessment_packets import _answer_stage, _fixture
+
+    prepared, captures = _fixture()
+    base = next(row for row in prepared.preassessment_packets if row["role"] == "source")
+    envelope = json.loads(base["bytes"])
+    envelope["packet_id"] = "synthetic-unavailable-no-call"
+    envelope["model_input"]["chunk_id"] = "synthetic-unavailable-chunk"
+    envelope["model_input"]["model_call_required"] = False
+    envelope["model_input"]["source_inventory"] = [{"source_id": "s-missing", "state": "not_acquired"}]
+    envelope["model_input"]["sources"] = []
+    envelope["output_schema"] = closure._derive_preassessment_schema(envelope, "source")
+    raw = json.dumps(envelope, sort_keys=True).encode()
+    no_call = {
+        "packet_id": envelope["packet_id"],
+        "task_id": base["task_id"],
+        "assessor_id": base["assessor_id"],
+        "role": "source",
+        "bytes": raw,
+        "sha256": _sha(raw),
+        "byte_count": len(raw),
+    }
+    manifest = json.loads(prepared.preassessment_manifest_bytes)
+    manifest["packets"].append(
+        {key: no_call[key] for key in ("packet_id", "task_id", "assessor_id", "role", "sha256", "byte_count")}
+    )
+    manifest["grader_packet_count"] += 1
+    manifest_bytes = json.dumps(manifest, sort_keys=True).encode()
+    binding = json.loads(prepared.private_binding_bytes)
+    binding["manifest_sha256"] = _sha(manifest_bytes)
+    binding_bytes = json.dumps(binding, sort_keys=True).encode()
+    prepared = replace(
+        prepared,
+        preassessment_packets=(*prepared.preassessment_packets, no_call),
+        preassessment_manifest_bytes=manifest_bytes,
+        private_binding_bytes=binding_bytes,
+        private_binding_sha256=_sha(binding_bytes),
+    )
+    pre_submissions = _pre_submissions(prepared)
+    pins = {
+        "expected_preassessment_manifest_sha256": _sha(manifest_bytes),
+        "expected_private_binding_sha256": _sha(binding_bytes),
+    }
+    pre = closure.close_preassessment(
+        prepared,
+        pre_submissions,
+        expected_manifest_sha256=_sha(manifest_bytes),
+        expected_private_binding_sha256=_sha(binding_bytes),
+    )
+    inputs, outputs, _ = _answer_stage(prepared, captures)
+    answers = packet_prep.prepare_answer_assessment_packets(
+        prepared=prepared,
+        answer_inputs=inputs,
+        answer_outputs=outputs,
+        source_outputs=pre.source_outputs_for_answer(),
+    )
+    answer_submissions = _answer_outputs(answers, prepared)
+    closed_answers = closure.close_answer_assessments(
+        prepared,
+        answers,
+        pre,
+        answer_submissions,
+        **pins,
+        expected_answer_manifest_sha256=answers.manifest_sha256,
+    )
+    observed = resource_evidence._grade_observations(
+        {
+            **pins,
+            "prepared_references": prepared,
+            "reference_submissions": pre_submissions,
+            "reference_closure": pre,
+            "expected_reference_closure_sha256": pre.receipt_sha256,
+            "prepared_answers": answers,
+            "answer_submissions": answer_submissions,
+            "answer_closure": closed_answers,
+            "expected_answer_closure_sha256": closed_answers.receipt_sha256,
+            "expected_answer_assessment_manifest_sha256": answers.manifest_sha256,
+        }
+    )
+    submitted_ids = {row.packet_id for row in (*pre.submission_receipts, *closed_answers.submission_receipts)}
+    sizes = [
+        len(row["bytes"])
+        for row in (*prepared.preassessment_packets, *answers.packets)
+        if row["packet_id"] in submitted_ids
+    ]
+    assert no_call["packet_id"] not in submitted_ids
+    assert observed["grader_request_bytes_total"] == sum(sizes)
+    assert observed["max_grader_request_body_bytes_observed"] == max(sizes)
+    assert observed["grader_submissions"] == len(sizes)
+
+
 @pytest.mark.asyncio
 async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path: Path):
     protocol_path = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/protocol.json"

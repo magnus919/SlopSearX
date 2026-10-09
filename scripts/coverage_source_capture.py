@@ -17,6 +17,7 @@ import re
 import stat
 import time
 import uuid
+import zlib
 from collections.abc import Mapping
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -46,6 +47,63 @@ _ACTIVE_OPERATION: ContextVar[dict[str, object] | None] = ContextVar("coverage_c
 
 class SourceCaptureError(RuntimeError):
     """A bounded capture stopped; exception messages intentionally omit inputs."""
+
+
+class _BoundedContentDecoder:
+    """Decode supported HTTP content encodings without unbounded output allocation."""
+
+    def __init__(self, content_encoding: str | None):
+        tokens = [item.strip().lower() for item in (content_encoding or "identity").split(",")]
+        if len(tokens) != 1 or tokens[0] not in {"identity", "gzip", "x-gzip", "deflate"}:
+            raise SourceCaptureError("capture-content-encoding-unsupported")
+        self.encoding = tokens[0]
+        self.decoder = None
+        if self.encoding in {"gzip", "x-gzip"}:
+            self.decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+        elif self.encoding == "deflate":
+            self.decoder = zlib.decompressobj(zlib.MAX_WBITS)
+
+    def decode(self, chunk: bytes, remaining: int) -> bytes:
+        if self.decoder is None:
+            return chunk[: remaining + 1]
+        try:
+            output = bytearray()
+            pending = chunk
+            while pending:
+                # The extra byte distinguishes an exact-cap response from an
+                # oversized one while bounding each zlib allocation.
+                part = self.decoder.decompress(pending, remaining - len(output) + 1)
+                output.extend(part)
+                if len(output) > remaining:
+                    return bytes(output)
+                pending = self.decoder.unconsumed_tail
+            if self.decoder.unused_data:
+                # Reject concatenated members/trailing data rather than silently
+                # archiving bytes the decoded view did not consume.
+                raise SourceCaptureError("capture-content-encoding-invalid")
+            return bytes(output)
+        except zlib.error as exc:
+            raise SourceCaptureError("capture-content-encoding-invalid") from exc
+
+    def finish(self, remaining: int) -> bytes:
+        if self.decoder is None:
+            return b""
+        try:
+            output = bytearray()
+            pending = self.decoder.unconsumed_tail
+            while True:
+                part = self.decoder.decompress(pending, remaining - len(output) + 1)
+                output.extend(part)
+                if len(output) > remaining:
+                    return bytes(output)
+                pending = self.decoder.unconsumed_tail
+                if not pending:
+                    break
+        except zlib.error as exc:
+            raise SourceCaptureError("capture-content-encoding-invalid") from exc
+        if self.decoder.unused_data or not self.decoder.eof:
+            raise SourceCaptureError("capture-content-encoding-invalid")
+        return bytes(output)
 
 
 @dataclass(frozen=True)
@@ -480,14 +538,13 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                     # transport body: it is the archived/replayed representation,
                     # and the replacement Response below lets HTTPX decode it once
                     # for the normal caller path.
-                    # Mock/custom transports may return a buffered Response;
-                    # HTTPX has already decoded its `_content` in that case.
-                    # A network transport returns an unconsumed stream and needs
-                    # a fresh decoder here.
-                    already_decoded = response.content if response.is_stream_consumed else None
-                    decoder = None if already_decoded is not None else response._get_content_decoder()
+                    # `Response.content` is the encoded representation even for
+                    # buffered HTTPX responses. Decode it ourselves so the same
+                    # output cap applies before allocation on both response paths.
+                    decoder = _BoundedContentDecoder(response.headers.get("content-encoding"))
 
                     def inspect_decoded(decoded: bytes, *, enforce_cap: bool = True) -> None:
+                        nonlocal status
                         if not decoded:
                             return
                         forbidden = self._forbidden_response_bytes
@@ -504,6 +561,7 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                         decoded_too_large = len(decoded_body) + len(decoded) > MAX_RESPONSE_BYTES
                         if enforce_cap and decoded_too_large:
                             body.clear()
+                            status = "decoded-response-byte-cap"
                             operation["failure"] = "capture-decoded-response-byte-cap"
                             raise SourceCaptureError("capture-decoded-response-byte-cap")
                         if not decoded_too_large:
@@ -512,20 +570,19 @@ class _CaptureTransport(httpx.AsyncBaseTransport):
                     async for chunk in response.stream:
                         observed_body_bytes += len(chunk)
                         operation["observed_response_body_bytes"] = observed_body_bytes
-                        if decoder is not None:
-                            inspect_decoded(decoder.decode(chunk))
                         room = MAX_RESPONSE_BYTES - len(body)
+                        decoded = decoder.decode(chunk, MAX_RESPONSE_BYTES - len(decoded_body))
+                        raw_over_cap = len(chunk) > room
+                        inspect_decoded(
+                            decoded,
+                            enforce_cap=not (decoder.encoding == "identity" and raw_over_cap),
+                        )
                         if room > 0:
                             body.extend(chunk[:room])
                         if len(chunk) > room:
-                            if already_decoded is not None:
-                                inspect_decoded(already_decoded, enforce_cap=False)
                             status = "response-byte-cap"
                             raise SourceCaptureError("capture-response-byte-cap")
-                    if already_decoded is not None:
-                        inspect_decoded(already_decoded)
-                    if decoder is not None:
-                        inspect_decoded(decoder.flush())
+                    inspect_decoded(decoder.finish(MAX_RESPONSE_BYTES - len(decoded_body)))
                     complete = True
                     status = (
                         "complete" if response_status is not None and 200 <= response_status < 300 else "http-failure"
@@ -738,7 +795,7 @@ async def capture_sources_once(
         str(manifest["source_revision"]),
         operator_token.encode("utf-8") if operator_token else None,
     )
-    headers = {"Accept": "application/json", **auth_headers}
+    headers = {"Accept": "application/json", "Accept-Encoding": "gzip, deflate, identity", **auth_headers}
     health_operation: dict[str, object] = {
         "operation_id": "health",
         "kind": "health",

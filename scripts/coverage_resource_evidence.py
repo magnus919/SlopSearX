@@ -799,13 +799,29 @@ def _grade_observations(kwargs: Mapping[str, object]) -> dict[str, object]:
         or answers.receipt_sha256 != kwargs["expected_answer_closure_sha256"]
     ):
         raise ResourceEvidenceError("grade-closure-replay-mismatch")
-    packet_rows = [*prepared_refs.preassessment_packets, *prepared_answers.packets]
     request_sizes = []
-    for packet in packet_rows:
-        raw = packet.get("bytes")
-        if type(raw) is not bytes or packet.get("byte_count") != len(raw) or packet.get("sha256") != _sha(raw):
+    for packet_rows, submitted in (
+        (prepared_refs.preassessment_packets, reference.submission_receipts),
+        (prepared_answers.packets, answers.submission_receipts),
+    ):
+        packets_by_id = {packet["packet_id"]: packet for packet in packet_rows}
+        if len(packets_by_id) != len(packet_rows):
             raise ResourceEvidenceError("grader-request-packet-binding")
-        request_sizes.append(len(raw))
+        # No-call source packets remain part of the prepared manifest but
+        # have no submission receipt. Count only requests actually submitted.
+        for submission in submitted:
+            packet = packets_by_id.get(submission.packet_id)
+            if packet is None:
+                raise ResourceEvidenceError("grader-request-packet-binding")
+            raw = packet.get("bytes")
+            if (
+                type(raw) is not bytes
+                or packet.get("byte_count") != len(raw)
+                or packet.get("sha256") != _sha(raw)
+                or submission.input_sha256 != _sha(raw)
+            ):
+                raise ResourceEvidenceError("grader-request-packet-binding")
+            request_sizes.append(len(raw))
     response_sizes = [row.response_byte_count for row in (*reference.submission_receipts, *answers.submission_receipts)]
     return {
         "grader_submissions": len(response_sizes),
