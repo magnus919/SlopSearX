@@ -10,6 +10,7 @@ import tempfile
 import time
 from dataclasses import asdict
 from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -575,11 +576,17 @@ async def test_phase_deadline_archives_partial_and_stops_without_retry(monkeypat
     ledger = core.StudyRun(prepared)
     roots = PrivateRoots()
     monkeypatch.setattr(execution, "SELECTOR_PHASE_SECONDS", 0.02)
+    # Keep request preparation outside the simulated elapsed interval. Hosted
+    # runners with coverage can spend the entire short test deadline compiling
+    # the frozen control before transport is reached.
+    elapsed = [0.0]
+    monkeypatch.setattr(execution, "time", SimpleNamespace(monotonic=lambda: elapsed[0]))
     calls = 0
 
     async def slow(request: httpx.Request) -> httpx.Response:
         nonlocal calls
         calls += 1
+        elapsed[0] = 0.03
         await asyncio.sleep(0.1)
         return httpx.Response(200, content=_response({f"c{i}": 4 for i in range(4)}), request=request)
 
