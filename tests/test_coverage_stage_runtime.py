@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from scripts import coverage_answer_execution as answer_execution
+from scripts import coverage_operator_runner as operator_runner
 from scripts import coverage_stage_orchestration as orchestration
 from scripts import coverage_stage_runtime as runtime
 from scripts.coverage_native_grader_handoff import NativeGraderHandoff
@@ -51,6 +54,79 @@ def _bindings(root: Path, *, acquisition_authority=None, capture_authority=None,
 
 
 class StageRuntimeWiringTests(unittest.IsolatedAsyncioTestCase):
+    async def test_capture_optional_ca_bundle_is_forwarded_without_widening_authority(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            plan = plan_fixture()
+            root = Path(temporary)
+            token_path = root / "candidate-token"
+            token_path.write_bytes(b"synthetic-token\n")
+            token_path.chmod(0o600)
+            for configured_ca in (False, True):
+                if configured_ca:
+                    from tests.test_coverage_source_capture import _local_ca_files
+
+                    ca_bytes, _cert_path, _key_path = _local_ca_files(root, "runner-ca")
+                else:
+                    ca_bytes = None
+                ca_path = root / "capture-ca.pem"
+                private_paths = {"candidate_operator_token": str(token_path)}
+                ca_sha = None
+                if configured_ca:
+                    ca_path.write_bytes(ca_bytes)
+                    ca_path.chmod(0o600)
+                    private_paths["capture_ca_bundle"] = str(ca_path)
+                    ca_sha = hashlib.sha256(ca_bytes).hexdigest()
+                handoff = object.__new__(operator_runner.OperatorStageRunner)
+                handoff.config = {"candidate_base_url": "https://candidate.invalid"}
+                handoff.private_paths = private_paths
+                handoff.directories = {
+                    "capture_receipts": root / "capture-receipts",
+                    "lease_root": root / "leases",
+                }
+                handoff.candidate_identity = {"runtime": {"revision": "c" * 40}}
+                handoff._request = mock.AsyncMock(return_value=(b"synthetic-receipt", "3" * 64))
+                candidate_identity_bytes = plan.candidate_identity_bytes
+                capture_manifest = json.dumps(
+                    {
+                        "stage_uuid": plan.stage_uuid,
+                        "protocol_sha256": hashlib.sha256(plan.protocol_bytes).hexdigest(),
+                        "source_revision": plan.source_revision,
+                        "cohorts_sha256": hashlib.sha256(plan.cohorts_bytes).hexdigest(),
+                        "candidate_identity_sha256": hashlib.sha256(candidate_identity_bytes).hexdigest(),
+                        "candidate_endpoint_sha256": operator_runner.capture._candidate_endpoints(
+                            "https://candidate.invalid"
+                        )[2],
+                        "sources": [],
+                    },
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ).encode()
+                authority = await operator_runner.OperatorStageRunner._capture_authority(
+                    handoff,
+                    plan,
+                    {"capture_manifest_bytes": capture_manifest},
+                )
+                executors = runtime.build_stage_executors(
+                    plan,
+                    _bindings(root, capture_authority=lambda _plan, _inputs: authority),
+                )
+                captured = {}
+
+                async def stop_before_capture(**kwargs):
+                    captured.update(kwargs)
+                    raise RuntimeError("capture boundary reached")
+
+                with mock.patch.object(
+                    runtime.coverage_source_capture, "capture_sources_once", side_effect=stop_before_capture
+                ) as capture:
+                    with self.assertRaisesRegex(RuntimeError, "capture boundary reached"):
+                        await executors.capture(plan, {"capture_manifest_bytes": capture_manifest})
+                capture.assert_awaited_once()
+                self.assertEqual(captured["ca_bundle_pem_bytes"], ca_bytes)
+                self.assertEqual(captured["expected_ca_bundle_sha256"], ca_sha if configured_ca else None)
+                self.assertEqual(authority["ca_bundle_pem_bytes"], ca_bytes)
+                self.assertEqual(authority["expected_ca_bundle_sha256"], ca_sha if configured_ca else None)
+
     async def test_operator_receipt_authority_callbacks_may_wait_asynchronously(self):
         with tempfile.TemporaryDirectory() as temporary:
             plan = plan_fixture()

@@ -168,6 +168,8 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
                 "qualification_receipt_bytes",
                 "expected_qualification_receipt_sha256",
                 "qualification_verifier",
+                "ca_bundle_pem_bytes",
+                "expected_ca_bundle_sha256",
             },
             "capture",
         )
@@ -188,6 +190,8 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
             qualification_receipt_bytes=authority.get("qualification_receipt_bytes"),
             expected_qualification_receipt_sha256=authority.get("expected_qualification_receipt_sha256"),
             qualification_verifier=authority.get("qualification_verifier"),
+            ca_bundle_pem_bytes=authority.get("ca_bundle_pem_bytes"),
+            expected_ca_bundle_sha256=authority.get("expected_ca_bundle_sha256"),
         )
         inventory_path = result.receipt_directory / "inventory.json"
         inventory_bytes = _read_private(inventory_path, maximum_bytes=4_000_000)
