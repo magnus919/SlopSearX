@@ -124,6 +124,7 @@ class OperatorReceiptHandoffTests(unittest.TestCase):
                 {"request_id": "../escape"},
                 {"deadline_monotonic": time.monotonic() + handoff.MAX_WAIT_SECONDS + 1},
                 {"bindings": {"bad": float("nan")}},
+                {"bindings": {"api_key": "never-persist"}},
             ):
                 with self.subTest(change=change), self.assertRaises(handoff.OperatorHandoffError):
                     exchange.request(**(base | change))

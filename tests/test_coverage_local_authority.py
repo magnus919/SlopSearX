@@ -50,6 +50,9 @@ class PinnedReceiptAuthorityTests(unittest.TestCase):
         raw = receipt("source-acquisition", bindings)
         permit = authority.PinnedReceiptAuthorities.acquisition(manifest, manifest_sha, raw, digest(raw))
         self.assertIsInstance(permit, acquisition.VerifiedAcquisitionPermit)
+        self.assertEqual(
+            authority.AcquisitionReceiptVerifier().verify(manifest, manifest_sha, raw, digest(raw)), permit
+        )
         self.assertEqual(permit.receipt_sha256, digest(raw))
         changed = dict(bindings, protocol_sha256="f" * 64)
         changed_raw = receipt("source-acquisition", changed)
@@ -88,6 +91,7 @@ class PinnedReceiptAuthorityTests(unittest.TestCase):
         raw = receipt("source-capture", bindings)
         permit = authority.PinnedReceiptAuthorities.source_capture(manifest_bytes, raw, digest(raw))
         self.assertEqual(permit.source_count, 1)
+        self.assertEqual(authority.SourceCaptureReceiptVerifier().verify(manifest_bytes, raw, digest(raw)), permit)
         changed = dict(bindings, response_bytes=capture.MAX_RESPONSE_BYTES - 1)
         with self.assertRaisesRegex(authority.LocalAuthorityError, "receipt-claims-mismatch"):
             authority.PinnedReceiptAuthorities.source_capture(
@@ -117,6 +121,7 @@ class PinnedReceiptAuthorityTests(unittest.TestCase):
         verified = authority.PinnedReceiptAuthorities.protected_capture_qualification(raw, digest(raw), bindings)
         self.assertEqual(verified.status, "verified-qualified")
         self.assertEqual(verified.bindings, bindings)
+        self.assertEqual(authority.ProtectedCaptureReceiptVerifier().verify(raw, digest(raw), bindings), verified)
         modified = dict(bindings.__dict__, candidate_endpoint_scheme="http")
         changed_raw = receipt("protected-source-capture", modified, evidence=evidence)
         with self.assertRaisesRegex(authority.LocalAuthorityError, "receipt-claims-mismatch"):
@@ -150,6 +155,7 @@ class PinnedReceiptAuthorityTests(unittest.TestCase):
         raw = receipt("answer-execution", bindings, evidence=evidence)
         permit = authority.PinnedReceiptAuthorities.answer(raw, digest(raw), bindings)
         self.assertIsInstance(permit, answer.VerifiedAnswerPermit)
+        self.assertEqual(authority.AnswerReceiptVerifier().verify(raw, digest(raw), bindings), permit)
         self.assertEqual(permit.operation_ids, tuple(bindings["operation_ids"]))
         changed = dict(bindings, resolved_destination_sha256="f" * 64)
         with self.assertRaisesRegex(authority.LocalAuthorityError, "receipt-claims-mismatch"):

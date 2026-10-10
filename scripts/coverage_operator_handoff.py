@@ -8,6 +8,7 @@ evidence; the caller still runs the relevant source-bound verifier.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import os
@@ -80,6 +81,19 @@ def _private_root(value: str | os.PathLike[str]) -> Path:
     ):
         raise OperatorHandoffError("handoff-root-not-private")
     return root
+
+
+def _check_no_secret_keys(value: object) -> None:
+    if type(value) is dict:
+        for key, child in value.items():
+            if type(key) is not str or any(
+                marker in key.casefold() for marker in ("token", "password", "secret", "api_key", "authorization")
+            ):
+                raise OperatorHandoffError("handoff-request-secret-field")
+            _check_no_secret_keys(child)
+    elif type(value) is list:
+        for child in value:
+            _check_no_secret_keys(child)
 
 
 def _write_new(path: Path, raw: bytes) -> None:
@@ -155,6 +169,7 @@ class OperatorReceiptHandoff:
         binding_bytes = _canonical(dict(bindings))
         if len(binding_bytes) > MAX_REQUEST_BYTES:
             raise OperatorHandoffError("handoff-request-over-cap")
+        _check_no_secret_keys(dict(bindings))
         stage_root = self.root / stage_uuid
         stage_root.mkdir(mode=0o700, exist_ok=True)
         if stage_root.is_symlink() or stat.S_IMODE(stage_root.stat(follow_symlinks=False).st_mode) != 0o700:
@@ -197,3 +212,7 @@ class OperatorReceiptHandoff:
                 return receipt_bytes, pinned
             time.sleep(min(self.poll_interval, max(0.0, deadline_monotonic - time.monotonic())))
         raise OperatorHandoffError("handoff-receipt-timeout-no-resume")
+
+    async def request_async(self, **kwargs) -> tuple[bytes, str]:
+        """Wait without blocking the coordinator's event loop."""
+        return await asyncio.to_thread(self.request, **kwargs)

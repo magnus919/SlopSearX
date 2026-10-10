@@ -221,6 +221,38 @@ class PinnedReceiptAuthorities:
         )
 
 
+class AcquisitionReceiptVerifier:
+    """Fixed verifier adapter accepted by the acquisition executor."""
+
+    def verify(self, manifest, manifest_sha256, receipt_bytes, expected_receipt_sha256):
+        return PinnedReceiptAuthorities.acquisition(manifest, manifest_sha256, receipt_bytes, expected_receipt_sha256)
+
+
+class SourceCaptureReceiptVerifier:
+    """Fixed verifier adapter accepted by the source-capture executor."""
+
+    def verify(self, manifest_bytes, receipt_bytes, expected_receipt_sha256):
+        return PinnedReceiptAuthorities.source_capture(manifest_bytes, receipt_bytes, expected_receipt_sha256)
+
+
+class ProtectedCaptureReceiptVerifier:
+    """Fixed verifier adapter for externally pinned capture qualification."""
+
+    def verify(self, receipt_bytes, expected_receipt_sha256, bindings):
+        if type(bindings) is not capture.ProtectedCaptureQualificationBindings:
+            raise LocalAuthorityError("capture-qualification-bindings-invalid")
+        return PinnedReceiptAuthorities.protected_capture_qualification(
+            receipt_bytes, expected_receipt_sha256, bindings
+        )
+
+
+class AnswerReceiptVerifier:
+    """Fixed verifier adapter accepted by the paired-answer executor."""
+
+    def verify(self, receipt_bytes, expected_receipt_sha256, bindings):
+        return PinnedReceiptAuthorities.answer(receipt_bytes, expected_receipt_sha256, bindings)
+
+
 class FileOneShotLease:
     """Durable O_EXCL local consumption of an already pinned permit."""
 
