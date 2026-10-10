@@ -81,6 +81,21 @@ class OperatorRunnerConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(runner.OperatorRunnerError, "configured-secret-file-not-private"):
                 runner._secret(str(secret))
 
+    def test_optional_ca_bundle_is_an_explicit_private_config_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path, _pin = self._config(root, b"{}")
+            config = json.loads(config_path.read_bytes())
+            ca_path = root / "capture-ca.pem"
+            ca_path.write_text("-----BEGIN CERTIFICATE-----\nsynthetic\n", encoding="ascii")
+            ca_path.chmod(0o600)
+            config["private_paths"]["capture_ca_bundle"] = str(ca_path)
+            raw = canonical(config)
+            config_path.write_bytes(raw)
+            config_path.chmod(0o600)
+            loaded = runner._load_config(config_path, digest(raw))
+            self.assertEqual(loaded["private_paths"]["capture_ca_bundle"], str(ca_path))
+
     def test_acquisition_plan_matches_fixed_cohort_engine_schedule(self):
         plan = plan_fixture()
         self.assertEqual(

@@ -87,11 +87,21 @@ class PinnedReceiptAuthorityTests(unittest.TestCase):
             "timeout_seconds": capture.REQUEST_TIMEOUT_SECONDS,
             "response_bytes": capture.MAX_RESPONSE_BYTES,
             "source_context_characters": capture.MAX_SOURCE_CHARS,
+            "ca_bundle_sha256": None,
         }
         raw = receipt("source-capture", bindings)
         permit = authority.PinnedReceiptAuthorities.source_capture(manifest_bytes, raw, digest(raw))
         self.assertEqual(permit.source_count, 1)
         self.assertEqual(authority.SourceCaptureReceiptVerifier().verify(manifest_bytes, raw, digest(raw)), permit)
+        custom_ca = "a" * 64
+        custom_bindings = dict(bindings, ca_bundle_sha256=custom_ca)
+        custom_raw = receipt("source-capture", custom_bindings)
+        custom_permit = authority.PinnedReceiptAuthorities.source_capture(
+            manifest_bytes, custom_raw, digest(custom_raw), custom_ca
+        )
+        self.assertEqual(custom_permit.ca_bundle_sha256, custom_ca)
+        with self.assertRaisesRegex(authority.LocalAuthorityError, "receipt-claims-mismatch"):
+            authority.PinnedReceiptAuthorities.source_capture(manifest_bytes, custom_raw, digest(custom_raw), None)
         changed = dict(bindings, response_bytes=capture.MAX_RESPONSE_BYTES - 1)
         with self.assertRaisesRegex(authority.LocalAuthorityError, "receipt-claims-mismatch"):
             authority.PinnedReceiptAuthorities.source_capture(

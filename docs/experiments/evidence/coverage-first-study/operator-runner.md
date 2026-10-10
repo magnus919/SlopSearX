@@ -25,7 +25,8 @@ The config schema is `coverage-operator-stage-config/1`. Its exact top-level key
   },
   "private_paths": {
     "candidate_operator_token": "absolute path", "selector_api_key": "absolute path",
-    "answer_api_key": "absolute path"
+    "answer_api_key": "absolute path",
+    "capture_ca_bundle": "optional absolute path to a public PEM CA bundle"
   },
   "directories": {
     "operator_handoff": "absolute private directory", "stage_inventory": "absolute private directory",
@@ -40,6 +41,8 @@ The config schema is `coverage-operator-stage-config/1`. Its exact top-level key
 Before starting the stage clock or creating handoff directories, the loader verifies the external config pin, registered protocol status, cohort/protocol binding, qualified-source-closure file against the exact source bytes, initial registration SHA, and its immutable static material pins. It generates the acquisition plan and manifest from the registered development cohort and refuses a draft or mismatched registration.
 
 The local operator handoff is a request/receipt/pin exchange under `<operator_handoff>/<stage_uuid>/<scope>/`. The runner writes `requests/<request_id>.json`; the trusted operator writes exact response bytes to `responses/<request_id>.receipt` and a separate lowercase SHA-256 plus newline to `pins/<request_id>.sha256`. The required request slots are acquisition/permit, protected-source-capture/permit, source-capture/permit, late-registration/registration-1, selector-map-admission/map, selector-operation-permits/batch, and answer-execution/permit. Each returned object is then passed to its existing typed verifier. Missing or bad receipts, or an existing stage inventory, stop without resumption. Native assessor packets use the existing grader handoff and require native tool-result records; the runner never invokes a model.
+
+`capture_ca_bundle` is optional. When present, it must be an owner-only file containing a bounded public CA PEM bundle (never a private key); its digest is included in both capture authority requests and the protected-capture qualification binding. Without it, the capture client uses the platform's normal certificate trust store.
 
 The current checked-in protocol is still draft, so the command intentionally refuses before the stage clock, handoff directory creation, or provider dispatch. An operator must supply a separately reviewed and registered protocol/material bundle, plus actual protected-capture qualification evidence for the exact HTTPS endpoint, before this launch path can proceed. The operator handoff itself is not proof of qualification. No test fixture or mocked transport is production evidence.
 

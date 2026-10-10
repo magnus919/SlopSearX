@@ -161,7 +161,7 @@ class ProtectedCaptureQualificationBindings:
     candidate_endpoint_scheme: str
     candidate_runtime_revision: str
     capture_module_sha256: str
-    ca_bundle_sha256: str | None
+    ca_bundle_sha256: str | None = None
 
 
 @dataclass(frozen=True)

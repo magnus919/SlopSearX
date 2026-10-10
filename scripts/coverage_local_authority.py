@@ -129,7 +129,10 @@ class PinnedReceiptAuthorities:
 
     @staticmethod
     def source_capture(
-        manifest_bytes: bytes, receipt_bytes: bytes, expected_receipt_sha256: str
+        manifest_bytes: bytes,
+        receipt_bytes: bytes,
+        expected_receipt_sha256: str,
+        ca_bundle_sha256: str | None = None,
     ) -> capture.VerifiedSourceCapturePermit:
         manifest = _strict_json(manifest_bytes)
         if type(manifest) is not dict or type(manifest.get("sources")) is not list:
@@ -149,6 +152,7 @@ class PinnedReceiptAuthorities:
             "timeout_seconds": capture.REQUEST_TIMEOUT_SECONDS,
             "response_bytes": capture.MAX_RESPONSE_BYTES,
             "source_context_characters": capture.MAX_SOURCE_CHARS,
+            "ca_bundle_sha256": ca_bundle_sha256,
         }
         _pinned_document(receipt_bytes, expected_receipt_sha256, scope="source-capture", bindings=bindings)
         return capture.VerifiedSourceCapturePermit(
@@ -231,8 +235,10 @@ class AcquisitionReceiptVerifier:
 class SourceCaptureReceiptVerifier:
     """Fixed verifier adapter accepted by the source-capture executor."""
 
-    def verify(self, manifest_bytes, receipt_bytes, expected_receipt_sha256):
-        return PinnedReceiptAuthorities.source_capture(manifest_bytes, receipt_bytes, expected_receipt_sha256)
+    def verify(self, manifest_bytes, receipt_bytes, expected_receipt_sha256, ca_bundle_sha256=None):
+        return PinnedReceiptAuthorities.source_capture(
+            manifest_bytes, receipt_bytes, expected_receipt_sha256, ca_bundle_sha256
+        )
 
 
 class ProtectedCaptureReceiptVerifier:

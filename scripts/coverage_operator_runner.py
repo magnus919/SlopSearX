@@ -64,6 +64,7 @@ _PATH_KEYS = {
     "initial_registration",
 }
 _PRIVATE_PATH_KEYS = {"candidate_operator_token", "selector_api_key", "answer_api_key"}
+_OPTIONAL_PRIVATE_PATH_KEYS = {"capture_ca_bundle"}
 _DIRECTORY_KEYS = {
     "operator_handoff",
     "stage_inventory",
@@ -156,18 +157,21 @@ def _load_config(path: str | os.PathLike[str], expected_sha256: str) -> dict[str
         raise OperatorRunnerError("config-schema-invalid")
     if (
         set(value["paths"]) != _PATH_KEYS
-        or set(value["private_paths"]) != _PRIVATE_PATH_KEYS
+        or not _PRIVATE_PATH_KEYS <= set(value["private_paths"])
+        or set(value["private_paths"]) - _PRIVATE_PATH_KEYS - _OPTIONAL_PRIVATE_PATH_KEYS
         or set(value["directories"]) != _DIRECTORY_KEYS
     ):
         raise OperatorRunnerError("config-path-inventory-invalid")
-    for key in (*_PATH_KEYS, *_PRIVATE_PATH_KEYS, *_DIRECTORY_KEYS):
+    for key in (*_PATH_KEYS, *_PRIVATE_PATH_KEYS, *_OPTIONAL_PRIVATE_PATH_KEYS, *_DIRECTORY_KEYS):
         collection = (
             value["paths"]
             if key in _PATH_KEYS
             else value["private_paths"]
-            if key in _PRIVATE_PATH_KEYS
+            if key in _PRIVATE_PATH_KEYS or key in _OPTIONAL_PRIVATE_PATH_KEYS
             else value["directories"]
         )
+        if key in _OPTIONAL_PRIVATE_PATH_KEYS and key not in collection:
+            continue
         if type(collection[key]) is not str or not collection[key]:
             raise OperatorRunnerError("config-path-invalid")
         if not Path(collection[key]).is_absolute():
@@ -404,6 +408,12 @@ class OperatorStageRunner:
         endpoint = self.config["candidate_base_url"]
         _health, _scrape, endpoint_sha = capture._candidate_endpoints(endpoint)
         candidate = self.candidate_identity["runtime"]["revision"]
+        ca_bundle_bytes = None
+        ca_bundle_sha256 = None
+        ca_bundle_path = self.private_paths.get("capture_ca_bundle")
+        if ca_bundle_path is not None:
+            ca_bundle_bytes = _read_file(ca_bundle_path, 262_144, private=True)
+            ca_bundle_sha256, _ssl_context = capture._validated_ca_bundle(ca_bundle_bytes, _sha(ca_bundle_bytes))
         qual_bindings = capture.ProtectedCaptureQualificationBindings(
             stage_uuid=plan.stage_uuid,
             source_revision=plan.source_revision,
@@ -413,6 +423,7 @@ class OperatorStageRunner:
             candidate_endpoint_scheme="https",
             candidate_runtime_revision=candidate,
             capture_module_sha256=hashlib.sha256(Path(capture.__file__).read_bytes()).hexdigest(),
+            ca_bundle_sha256=ca_bundle_sha256,
         )
         qual_receipt, qual_pin = await self._request("protected-source-capture", "permit", asdict(qual_bindings))
         capture_bindings = {
@@ -430,6 +441,7 @@ class OperatorStageRunner:
             "timeout_seconds": capture.REQUEST_TIMEOUT_SECONDS,
             "response_bytes": capture.MAX_RESPONSE_BYTES,
             "source_context_characters": capture.MAX_SOURCE_CHARS,
+            "ca_bundle_sha256": ca_bundle_sha256,
         }
         permit, permit_pin = await self._request("source-capture", "permit", capture_bindings)
         return {
@@ -443,6 +455,8 @@ class OperatorStageRunner:
             "qualification_receipt_bytes": qual_receipt,
             "expected_qualification_receipt_sha256": qual_pin,
             "qualification_verifier": local_authority.ProtectedCaptureReceiptVerifier(),
+            "ca_bundle_pem_bytes": ca_bundle_bytes,
+            "expected_ca_bundle_sha256": ca_bundle_sha256,
         }
 
     async def _prepare_late(self, plan, acquisition_evidence, pipeline_inputs):
