@@ -99,6 +99,28 @@ class OperatorRunnerConfigTests(unittest.TestCase):
             loaded = runner._load_config(config_path, digest(raw))
             self.assertEqual(loaded["private_paths"]["capture_ca_bundle"], str(ca_path))
 
+    def test_fresh_runtime_handoff_requires_native_host_transcripts(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            secret = root / "selector.key"
+            secret.write_bytes(b"synthetic-test-only\n")
+            secret.chmod(0o600)
+            instance = object.__new__(runner.OperatorStageRunner)
+            instance.directories = {
+                key: str(root / key)
+                for key in {
+                    "grader_handoff",
+                    "lease_root",
+                    "selector_archive",
+                    "selector_results",
+                }
+            }
+            instance.private_paths = {"selector_api_key": str(secret)}
+
+            bindings = instance.runtime_bindings()
+
+            self.assertTrue(bindings.native_handoff.require_native_host_transcripts)
+
     def test_checkout_audit_rejects_revision_dirty_tree_and_poisoned_material(self):
         revision = subprocess.run(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"],

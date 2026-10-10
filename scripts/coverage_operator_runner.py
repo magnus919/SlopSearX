@@ -29,6 +29,7 @@ from scripts import coverage_answer_execution as answer
 from scripts import coverage_grade_closure, coverage_jev_execution, coverage_legacy_control, coverage_selector_input_map
 from scripts import coverage_local_authority as local_authority
 from scripts import coverage_native_grader_handoff as native_handoff
+from scripts import coverage_native_host_dispatch as native_host_dispatch
 from scripts import coverage_operator_handoff as operator_handoff
 from scripts import coverage_runtime_environment as runtime_environment
 from scripts import coverage_selector_admission as selector_admission
@@ -295,15 +296,17 @@ def _verify_checkout_sources(
             raise OperatorRunnerError(f"checkout-source-path-mismatch:{name}")
         if material_bytes[name] != actual_bytes:
             raise OperatorRunnerError(f"checkout-source-material-mismatch:{name}")
-    for module in (coverage_impl, production_rerank_impl):
+    critical_modules = (
+        (coverage_impl, _CHECKOUT_SOURCE_PATHS["coverage_source"]),
+        (production_rerank_impl, _CHECKOUT_SOURCE_PATHS["production_rerank_source"]),
+        (native_host_dispatch, _REPOSITORY_ROOT / "scripts" / "coverage_native_host_dispatch.py"),
+    )
+    for module, expected_path in critical_modules:
         try:
             module_path = Path(module.__file__).resolve(strict=True)
         except (AttributeError, OSError) as exc:
             raise OperatorRunnerError("loaded-source-path-unavailable") from exc
-        if (
-            module_path
-            != _CHECKOUT_SOURCE_PATHS["coverage_source" if module is coverage_impl else "production_rerank_source"]
-        ):
+        if module_path != expected_path.resolve(strict=True):
             raise OperatorRunnerError("loaded-source-path-mismatch")
     critical_modules = (
         coverage_grade_closure,
@@ -925,7 +928,9 @@ class OperatorStageRunner:
             selector_lease_root=self.directories["lease_root"],
             selector_archive_root=self.directories["selector_archive"],
             selector_result_root=self.directories["selector_results"],
-            native_handoff=native_handoff.NativeGraderHandoff(self.directories["grader_handoff"]),
+            native_handoff=native_handoff.NativeGraderHandoff(
+                self.directories["grader_handoff"], require_native_host_transcripts=True
+            ),
         )
 
     async def run(self) -> orchestration.StageResult:
