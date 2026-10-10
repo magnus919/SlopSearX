@@ -67,9 +67,13 @@ def test_native_tool_results_round_trip_exact_packet_and_call_bindings(tmp_path)
             )
         )
         requests = await wait_for_requests(scope, 2)
+        expected_packets = {row["packet_id"]: row for row in packets}
+        # Directory enumeration is unordered; return the second packet first
+        # and prove collection still binds and orders results by packet identity.
+        requests.sort(key=lambda path: json.loads(path.read_bytes())["packet_id"], reverse=True)
         for index, request_path in enumerate(requests):
             request = json.loads(request_path.read_bytes())
-            assert base64.b64decode(request["packet_bytes_base64"]) == packets[index]["bytes"]
+            assert base64.b64decode(request["packet_bytes_base64"]) == expected_packets[request["packet_id"]]["bytes"]
             handoff.publish_native_tool_result(
                 scope=scope,
                 packet_id=request["packet_id"],
