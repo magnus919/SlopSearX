@@ -67,6 +67,7 @@ class OperatorRunnerConfigTests(unittest.TestCase):
                     runner.operator_handoff, "OperatorReceiptHandoff", side_effect=AssertionError("no handoff")
                 ),
                 mock.patch.object(runner, "_verify_checkout_sources"),
+                mock.patch.object(runner, "_require_source_bootstrap"),
             ):
                 with self.assertRaisesRegex(runner.OperatorRunnerError, "registered-source-materials-required"):
                     runner.OperatorStageRunner.from_file(config, pin)
@@ -158,6 +159,7 @@ class OperatorRunnerConfigTests(unittest.TestCase):
                 mock.patch.object(
                     runner.operator_handoff, "OperatorReceiptHandoff", side_effect=AssertionError("no handoff")
                 ),
+                mock.patch.object(runner, "_require_source_bootstrap"),
             ):
                 with self.assertRaisesRegex(runner.OperatorRunnerError, "checkout-source-path-mismatch"):
                     runner.OperatorStageRunner.from_file(config_path, pin)

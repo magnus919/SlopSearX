@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import importlib.machinery
 import json
 import os
 import re
@@ -17,6 +18,7 @@ import stat
 import subprocess
 import sys
 import time
+import types
 import uuid
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
@@ -24,9 +26,11 @@ from pathlib import Path
 from typing import Any
 
 from scripts import coverage_answer_execution as answer
+from scripts import coverage_grade_closure, coverage_jev_execution, coverage_legacy_control, coverage_selector_input_map
 from scripts import coverage_local_authority as local_authority
 from scripts import coverage_native_grader_handoff as native_handoff
 from scripts import coverage_operator_handoff as operator_handoff
+from scripts import coverage_runtime_environment as runtime_environment
 from scripts import coverage_selector_admission as selector_admission
 from scripts import coverage_source_capture as capture
 from scripts import coverage_stage_orchestration as orchestration
@@ -99,6 +103,29 @@ def _sha(raw: bytes) -> str:
 
 def _canonical(value: object) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _source_bootstrap_ready() -> bool:
+    marker = getattr(sys, "_coverage_operator_source_bootstrap", None)
+    prefix = getattr(sys, "pycache_prefix", None)
+    if marker != "coverage-source-bootstrap/1" or not sys.dont_write_bytecode or type(prefix) is not str:
+        return False
+    try:
+        directory = Path(prefix)
+        info = directory.stat(follow_symlinks=False)
+        return (
+            stat.S_ISDIR(info.st_mode)
+            and info.st_uid == os.geteuid()
+            and stat.S_IMODE(info.st_mode) == 0o700
+            and not any(directory.iterdir())
+        )
+    except OSError:
+        return False
+
+
+def _require_source_bootstrap() -> None:
+    if not _source_bootstrap_ready():
+        raise OperatorRunnerError("source-bootstrap-required")
 
 
 def _pairs(pairs):
@@ -227,7 +254,7 @@ def _verify_checkout_sources(
     paths: dict[str, str],
     material_bytes: dict[str, bytes],
 ) -> None:
-    """Bind supplied material pins to the clean checkout and loaded modules."""
+    """Bind supplied material pins and loaded Python code to the clean checkout."""
     try:
         revision = subprocess.run(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"],
@@ -278,6 +305,14 @@ def _verify_checkout_sources(
             != _CHECKOUT_SOURCE_PATHS["coverage_source" if module is coverage_impl else "production_rerank_source"]
         ):
             raise OperatorRunnerError("loaded-source-path-mismatch")
+    critical_modules = (
+        coverage_grade_closure,
+        coverage_jev_execution,
+        coverage_legacy_control,
+        coverage_selector_input_map,
+    )
+    if any(module.__name__ not in sys.modules for module in critical_modules):
+        raise OperatorRunnerError("critical-loaded-source-module-missing")
     for name, module in tuple(sys.modules.items()):
         if not name.startswith(("scripts.", "slopsearx.", "engines.")):
             continue
@@ -285,9 +320,110 @@ def _verify_checkout_sources(
         if module_file is None:
             continue
         try:
-            Path(module_file).resolve(strict=True).relative_to(_REPOSITORY_ROOT)
+            module_path = Path(module_file).resolve(strict=True)
+            module_path.relative_to(_REPOSITORY_ROOT)
         except (OSError, ValueError) as exc:
             raise OperatorRunnerError("loaded-project-module-outside-checkout") from exc
+        if module_path.suffix != ".py":
+            raise OperatorRunnerError("loaded-project-module-source-unverifiable")
+        _verify_loaded_module_code(name, module, module_path)
+
+
+def _code_fingerprint(code: types.CodeType) -> tuple[object, ...]:
+    """Return executable code structure without source-location metadata."""
+    constants = tuple(
+        _code_fingerprint(item) if isinstance(item, types.CodeType) else (type(item).__name__, item)
+        for item in code.co_consts
+    )
+    return (
+        code.co_argcount,
+        code.co_posonlyargcount,
+        code.co_kwonlyargcount,
+        code.co_nlocals,
+        code.co_stacksize,
+        code.co_flags,
+        code.co_code,
+        code.co_exceptiontable,
+        constants,
+        code.co_names,
+        code.co_varnames,
+        code.co_freevars,
+        code.co_cellvars,
+        code.co_name,
+        code.co_qualname,
+    )
+
+
+def _function_code(value: object) -> types.CodeType | None:
+    if isinstance(value, (staticmethod, classmethod)):
+        value = value.__func__
+    if isinstance(value, property):
+        return None
+    wrapped = getattr(value, "__wrapped__", None)
+    if wrapped is not None:
+        value = wrapped
+    return value.__code__ if isinstance(value, types.FunctionType) else None
+
+
+def _verify_runtime_callables(module: types.ModuleType, expected: types.CodeType) -> None:
+    """Require every source-defined top-level function/method to remain loaded."""
+    namespace = vars(module)
+    for definition in expected.co_consts:
+        if not isinstance(definition, types.CodeType) or "." in definition.co_qualname:
+            continue
+        if definition.co_name.startswith("<"):
+            continue
+        value = namespace.get(definition.co_name)
+        if definition.co_name == "<lambda>":
+            continue
+        if isinstance(value, type):
+            for method in definition.co_consts:
+                if (
+                    not isinstance(method, types.CodeType)
+                    or method.co_qualname.count(".") != 1
+                    or method.co_name.startswith("<")
+                ):
+                    continue
+                member = vars(value).get(method.co_name)
+                actual = _function_code(member)
+                if isinstance(member, property):
+                    actuals = [
+                        accessor.__code__
+                        for accessor in (member.fget, member.fset, member.fdel)
+                        if accessor is not None
+                    ]
+                else:
+                    actuals = [] if actual is None else [actual]
+                if not any(_code_fingerprint(code) == _code_fingerprint(method) for code in actuals):
+                    raise OperatorRunnerError("loaded-source-function-mismatch")
+        else:
+            actual = _function_code(value)
+            if actual is None or _code_fingerprint(actual) != _code_fingerprint(definition):
+                raise OperatorRunnerError("loaded-source-function-mismatch")
+
+
+def _verify_loaded_module_code(name: str, module: types.ModuleType, source_path: Path) -> None:
+    """Reject stale/poisoned pyc and runtime function code that differs from source."""
+    try:
+        source = _read_file(source_path, 64_000_000)
+        expected = compile(source, str(source_path), "exec", dont_inherit=True, optimize=sys.flags.optimize)
+        spec = getattr(module, "__spec__", None)
+        loader = getattr(spec, "loader", None)
+        origin = getattr(spec, "origin", None)
+        if (
+            not isinstance(loader, importlib.machinery.SourceFileLoader)
+            or type(origin) is not str
+            or Path(origin).resolve(strict=True) != source_path
+        ):
+            raise OperatorRunnerError("loaded-source-loader-mismatch")
+        loaded = loader.get_code(name) if loader is not None else None
+    except OperatorRunnerError:
+        raise
+    except (OSError, SyntaxError, ValueError, ImportError, AttributeError) as exc:
+        raise OperatorRunnerError("loaded-source-code-unavailable") from exc
+    if not isinstance(loaded, types.CodeType) or _code_fingerprint(loaded) != _code_fingerprint(expected):
+        raise OperatorRunnerError("loaded-source-bytecode-mismatch")
+    _verify_runtime_callables(module, expected)
 
 
 def _build_acquisition_plan(stage_uuid: str, cases: list[dict[str, Any]], targets: list[dict[str, Any]]) -> bytes:
@@ -324,6 +460,7 @@ class OperatorStageRunner:
     """Loads a pinned registered bundle and invokes only the fixed phase graph."""
 
     def __init__(self, config: dict[str, Any], *, config_sha256: str):
+        _require_source_bootstrap()
         self.config = config
         self.config_sha256 = config_sha256
         self.paths = config["paths"]
@@ -379,6 +516,13 @@ class OperatorStageRunner:
             )
         except Exception as exc:
             raise OperatorRunnerError("source-closure-preflight-failed") from exc
+        try:
+            self.active_environment_receipt_bytes = runtime_environment.verify_active_environment(
+                path_bytes["dependency_lock"],
+                expected_lock_sha256=closure["material_pins"]["dependency_lock"],
+            )
+        except runtime_environment.RuntimeEnvironmentError as exc:
+            raise OperatorRunnerError("active-environment-preflight-failed") from exc
         endpoint = self.config["candidate_base_url"]
         _health_url, _scrape_url, endpoint_sha = capture._candidate_endpoints(endpoint)
         preacq = _canonical(
@@ -461,6 +605,13 @@ class OperatorStageRunner:
         orchestration._validate_plan(self.plan)
 
     async def _request(self, scope: str, request_id: str, bindings: dict[str, object]) -> tuple[bytes, str]:
+        if "active_python_environment" in bindings or "active_python_environment_sha256" in bindings:
+            raise OperatorRunnerError("active-environment-binding-collision")
+        bindings = {
+            **bindings,
+            "active_python_environment": json.loads(self.active_environment_receipt_bytes),
+            "active_python_environment_sha256": _sha(self.active_environment_receipt_bytes),
+        }
         return await self.handoff.request_async(
             stage_uuid=self.plan.stage_uuid,
             scope=scope,
@@ -788,6 +939,10 @@ class OperatorStageRunner:
 def main(argv: list[str] | None = None) -> int:
     import argparse
     import asyncio
+
+    if not _source_bootstrap_ready():
+        print(json.dumps({"status": "refused-or-terminal", "error_class": "source-bootstrap-required"}, sort_keys=True))
+        return 1
 
     parser = argparse.ArgumentParser(description="Run one externally registered coverage development stage.")
     parser.add_argument("--config", required=True, help="private operator JSON config")
