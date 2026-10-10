@@ -1085,7 +1085,7 @@ def _local_ca_files(tmp_path: Path, name: str) -> tuple[bytes, Path, Path]:
 async def test_owned_tls_verifies_explicit_ca_chain_and_hostname(tmp_path: Path) -> None:
     import scripts.coverage_source_capture as capture
 
-    ca_pem, cert_path, key_path = _local_ca_files(tmp_path, "localhost")
+    ca_pem, cert_path, key_path = _local_ca_files(tmp_path, "fixture.test")
     wrong_pem, _wrong_cert, _wrong_key = _local_ca_files(tmp_path, "wrong-ca")
     ca_sha = _sha(ca_pem)
     pinned_sha, client_context = capture._validated_ca_bundle(ca_pem, ca_sha)

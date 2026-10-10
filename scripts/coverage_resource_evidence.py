@@ -1247,6 +1247,17 @@ def coverage_source_capture_normalize(url: str) -> str:
     return _normalise_url(url)
 
 
+def _conservative_rounded_gap_lower_bound_us(earlier_us: int, later_us: int) -> int:
+    """Lower-bound a gap computed from independently rounded microsecond offsets.
+
+    Two nearest-microsecond samples can overstate their interval by almost one
+    microsecond. Remove that full quantization interval before comparison with
+    a frozen pacing threshold. An exact-looking boundary is therefore rejected
+    when the underlying sub-microsecond interval cannot be distinguished.
+    """
+    return later_us - earlier_us - 1
+
+
 def collect_acquisition_observations(
     *,
     snapshots_directory: Path,
@@ -1263,6 +1274,8 @@ def collect_acquisition_observations(
     source_closure_sha256: str,
     acquisition_plan_sha256: str,
     configured_timeout_seconds: int | float,
+    configured_query_pacing_seconds: int | float | None = None,
+    configured_arxiv_pacing_seconds: int | float | None = None,
     deadline_monotonic: float | None = None,
 ) -> dict[str, object]:
     try:
@@ -1310,6 +1323,7 @@ def collect_acquisition_observations(
             "source_closure_sha256": source_closure_sha256,
             "protocol_sha256": protocol_sha256,
             "cohorts_sha256": cohorts_sha256,
+            "input_manifest_sha256": manifest.get("input_manifest_sha256"),
             "acquisition_plan_sha256": acquisition_plan_sha256,
             "stage_manifest_sha256": expected_manifest_sha256,
         }.items()
@@ -1339,6 +1353,7 @@ def collect_acquisition_observations(
     unknown_engine = False
     request_total = response_total = max_response = 0
     dispatched_timeouts: list[float] = []
+    dispatched_receipt_offsets: list[dict[str, object]] = []
     for sequence in sorted(starts):
         start, final = starts[sequence], finals[sequence]
         if type(start) is not dict or type(final) is not dict:
@@ -1355,6 +1370,8 @@ def collect_acquisition_observations(
         )
         if any(start.get(key) != final.get(key) for key in common) or start.get("status") != "attempted":
             raise ResourceEvidenceError("acquisition-exchange-request-binding")
+        if start.get("sequence") != int(sequence.removeprefix("http-")):
+            raise ResourceEvidenceError("acquisition-exchange-sequence-binding")
         timeout = start.get("timeout_seconds")
         configured_timeout = configured_timeout_seconds
         if (
@@ -1394,8 +1411,18 @@ def collect_acquisition_observations(
             dispatched_timeouts.append(timeout_value)
             if type(engine) is str:
                 counts[engine] += 1
+            dispatched_receipt_offsets.append(
+                {
+                    "sequence": start.get("sequence"),
+                    "operation_id": operation_id,
+                    "engine": engine,
+                    "dispatch_offset_us": final.get("dispatch_offset_us"),
+                }
+            )
         elif final.get("dispatched") is not False:
             unknown_engine = True
+        elif final.get("dispatch_offset_us") is not None:
+            raise ResourceEvidenceError("acquisition-undispatched-offset-invalid")
         request_bytes, response_bytes = start.get("request_bytes"), final.get("response_bytes")
         if type(request_bytes) is not int or request_bytes < 0 or type(response_bytes) is not int or response_bytes < 0:
             raise ResourceEvidenceError("acquisition-exchange-byte-count-invalid")
@@ -1413,6 +1440,157 @@ def collect_acquisition_observations(
         or summary.get("physical_request_count") != physical_calls
     ):
         raise ResourceEvidenceError("acquisition-stage-summary-binding")
+    controls = summary.get("execution_control_attestation")
+    acquisition_retries = acquisition_pacing = arxiv_pacing = None
+    query_min_gap_us = arxiv_min_gap_us = None
+    if controls is not None:
+        expected_control_bindings = {
+            "schema": "coverage-acquisition-execution-controls/1",
+            "stage_uuid": stage_uuid,
+            "source_revision": source_revision,
+            "source_closure_sha256": source_closure_sha256,
+            "protocol_sha256": protocol_sha256,
+            "cohorts_sha256": cohorts_sha256,
+            "input_manifest_sha256": manifest.get("input_manifest_sha256"),
+            "acquisition_plan_sha256": acquisition_plan_sha256,
+            "stage_manifest_sha256": expected_manifest_sha256,
+            "producer_module_sha256": execution_controls.module_source_sha256(coverage_live_acquire.__file__),
+            "operation_runner_module_sha256": execution_controls.module_source_sha256(offline_acquisition.__file__),
+            "control_identity": "coverage-acquisition-one-shot/1",
+            "query_pacing_seconds_enforced": coverage_live_acquire.QUERY_PACING_SECONDS,
+            "arxiv_physical_pacing_seconds_enforced": coverage_live_acquire.ARXIV_PHYSICAL_PACING_SECONDS,
+            "offset_quantization_guard_seconds": coverage_live_acquire.OFFSET_QUANTIZATION_GUARD_SECONDS,
+            "application_retry_policy": "one-search-invocation-per-planned-operation",
+        }
+        control_keys = {
+            *expected_control_bindings,
+            "pacer_identity",
+            "transport_identity",
+            "transport_retry_policy",
+            "transport_retries_configured",
+            "operation_invocations",
+            "physical_dispatch_offsets_us",
+        }
+        if (
+            type(controls) is not dict
+            or set(controls) != control_keys
+            or any(controls.get(key) != value for key, value in expected_control_bindings.items())
+        ):
+            raise ResourceEvidenceError("acquisition-control-attestation-binding")
+        if (
+            configured_query_pacing_seconds != coverage_live_acquire.QUERY_PACING_SECONDS
+            or configured_arxiv_pacing_seconds != coverage_live_acquire.ARXIV_PHYSICAL_PACING_SECONDS
+        ):
+            raise ResourceEvidenceError("acquisition-control-protocol-pacing-mismatch")
+        pacer_identity = controls.get("pacer_identity")
+        transport_identity = controls.get("transport_identity")
+        retry_policy = controls.get("transport_retry_policy")
+        retry_config = controls.get("transport_retries_configured")
+        if pacer_identity not in {"owned-asyncio-sleep", "injected-mock-only"}:
+            raise ResourceEvidenceError("acquisition-control-pacer-invalid")
+        if transport_identity == "owned-httpx":
+            if (
+                pacer_identity != "owned-asyncio-sleep"
+                or retry_policy != "configured-zero-owned-httpx-transport"
+                or retry_config != 0
+            ):
+                raise ResourceEvidenceError("acquisition-control-transport-binding")
+            production_transport = True
+        elif transport_identity == "injected-mocktransport":
+            if retry_policy != "mock-transport-single-dispatch" or retry_config != 0:
+                raise ResourceEvidenceError("acquisition-control-transport-binding")
+            # Mock receipts are useful for parser/receipt tests, but their
+            # injected clock and transport do not establish real execution
+            # pacing or retry behavior. Keep the qualification fields unknown.
+            production_transport = False
+        else:
+            raise ResourceEvidenceError("acquisition-control-retry-policy-invalid")
+
+        expected_ids = [
+            row.get("task_id") for row in manifest["research_cases"]
+        ] + [row.get("target_id") for row in manifest["navigation_targets"]]
+        invocations = controls.get("operation_invocations")
+        if type(invocations) is not list or len(invocations) != len(expected_ids):
+            raise ResourceEvidenceError("acquisition-operation-invocation-inventory")
+        invoked_rows: list[dict[str, object]] = []
+        stopped = False
+        for index, (operation_id, row) in enumerate(zip(expected_ids, invocations, strict=True), start=1):
+            if type(row) is not dict or set(row) != {
+                "operation_id", "sequence", "start_offset_us", "end_offset_us"
+            }:
+                raise ResourceEvidenceError("acquisition-operation-invocation-shape")
+            if row.get("operation_id") != operation_id or row.get("sequence") != index:
+                raise ResourceEvidenceError("acquisition-operation-invocation-order")
+            start_offset = row.get("start_offset_us")
+            end_offset = row.get("end_offset_us")
+            if start_offset is None and end_offset is None:
+                stopped = True
+                continue
+            if (
+                stopped
+                or type(start_offset) is not int
+                or type(end_offset) is not int
+                or start_offset < 0
+                or end_offset < start_offset
+            ):
+                raise ResourceEvidenceError("acquisition-operation-invocation-time-invalid")
+            invoked_rows.append(row)
+        if summary.get("status") == "complete" and len(invoked_rows) != len(expected_ids):
+            raise ResourceEvidenceError("acquisition-operation-invocation-incomplete")
+        if production_transport and len(invoked_rows) >= 2:
+            raw_idle_gaps = [
+                int(next_row["start_offset_us"]) - int(previous_row["end_offset_us"])
+                for previous_row, next_row in zip(invoked_rows, invoked_rows[1:])
+            ]
+            if any(gap < 0 for gap in raw_idle_gaps):
+                raise ResourceEvidenceError("acquisition-query-time-order-invalid")
+            idle_gaps = [
+                _conservative_rounded_gap_lower_bound_us(
+                    int(previous_row["end_offset_us"]), int(next_row["start_offset_us"])
+                )
+                for previous_row, next_row in zip(invoked_rows, invoked_rows[1:])
+            ]
+            query_min_gap_us = min(idle_gaps)
+            query_bound_us = int(float(configured_query_pacing_seconds) * 1_000_000)
+            acquisition_pacing = (
+                float(configured_query_pacing_seconds)
+                if query_min_gap_us >= query_bound_us
+                else query_min_gap_us / 1_000_000
+            )
+
+        dispatch_offsets = controls.get("physical_dispatch_offsets_us")
+        if (
+            type(dispatch_offsets) is not list
+            or dispatch_offsets != dispatched_receipt_offsets
+        ):
+            raise ResourceEvidenceError("acquisition-dispatch-offset-receipt-mismatch")
+        arxiv_offsets = []
+        for row in dispatch_offsets:
+            if type(row) is not dict or set(row) != {
+                "sequence", "operation_id", "engine", "dispatch_offset_us"
+            }:
+                raise ResourceEvidenceError("acquisition-dispatch-offset-shape")
+            offset = row.get("dispatch_offset_us")
+            if type(offset) is not int or offset < 0:
+                raise ResourceEvidenceError("acquisition-dispatch-offset-invalid")
+            if row.get("engine") == "arxiv":
+                arxiv_offsets.append(offset)
+        if production_transport and len(arxiv_offsets) >= 2:
+            raw_arxiv_gaps = [right - left for left, right in zip(arxiv_offsets, arxiv_offsets[1:])]
+            if any(gap < 0 for gap in raw_arxiv_gaps):
+                raise ResourceEvidenceError("acquisition-arxiv-time-order-invalid")
+            arxiv_min_gap_us = min(
+                _conservative_rounded_gap_lower_bound_us(left, right)
+                for left, right in zip(arxiv_offsets, arxiv_offsets[1:])
+            )
+            arxiv_bound_us = int(float(configured_arxiv_pacing_seconds) * 1_000_000)
+            arxiv_pacing = (
+                float(configured_arxiv_pacing_seconds)
+                if arxiv_min_gap_us >= arxiv_bound_us
+                else arxiv_min_gap_us / 1_000_000
+            )
+        if production_transport and len(invoked_rows) == len(expected_ids) and retry_config == 0:
+            acquisition_retries = 0
     result: dict[str, object] = {
         "acquisition_physical_http_calls": physical_calls,
         "acquisition_attempted_http_slots": len(starts),
@@ -1430,6 +1608,11 @@ def collect_acquisition_observations(
             if dispatched_timeouts
             else "no-dispatched-exchanges"
         ),
+        "acquisition_retries": acquisition_retries,
+        "acquisition_pacing_seconds": acquisition_pacing,
+        "arxiv_pacing_seconds": arxiv_pacing,
+        "acquisition_query_min_idle_gap_microseconds_observed": query_min_gap_us,
+        "acquisition_arxiv_min_gap_microseconds_observed": arxiv_min_gap_us,
     }
     if not unknown_engine and set(counts) <= set(_ENGINE_NAMES):
         result["acquisition_engine_calls"] = {engine: counts[engine] for engine in _ENGINE_NAMES}
@@ -1518,6 +1701,8 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             source_closure_sha256=kwargs["source_closure_sha256"],
             acquisition_plan_sha256=_sha(acquisition_plan_bytes),
             configured_timeout_seconds=protocol["acquisition"]["timeout_seconds"],
+            configured_query_pacing_seconds=protocol["acquisition"]["pacing_seconds"],
+            configured_arxiv_pacing_seconds=protocol["acquisition"]["arxiv_physical_pacing_seconds"],
             deadline_monotonic=deadline,
         )
         capture = _capture_observations(
@@ -1574,9 +1759,6 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
         observations["grader_concurrency"] = None
         observations["capture_internal_fanout"] = None
         observations["capture_response_bytes_limit"] = capture.get("capture_response_bytes_limit_applied")
-        observations["acquisition_retries"] = None
-        observations["acquisition_pacing_seconds"] = None
-        observations["arxiv_pacing_seconds"] = None
         observations["answerer_max_words"] = answer.get("answerer_max_words")
         provenance = {
             "protocol_sha256": protocol_sha256,
