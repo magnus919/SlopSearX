@@ -445,6 +445,9 @@ mcp_servers:
   gateway's stderr (visible in Hermes' gateway logs) and opens a browser
   on the Hermes host; afterwards tokens persist in the gateway's token
   file and later runs skip re-authorization.
+- The gateway preserves an upstream `structuredContent` object, including an
+  empty object. Text-only tools retain their JSON/plain-text fallback, and
+  remote error flags retain the existing normalized error response.
 - The gateway registers the remote server's tools at startup; if the
   server is unreachable or the credentials are wrong, the gateway fails
   with a clear message and Hermes reports the connection error.
