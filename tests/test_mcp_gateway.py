@@ -180,3 +180,36 @@ class TestGateway:
         with pytest.raises(Exception):
             async with Client(gateway) as client:
                 await client.list_tools()
+
+
+@pytest.mark.parametrize(
+    ("structured", "text", "error", "expected"),
+    [
+        ({"count": 1}, "One reading lead.", False, {"count": 1}),
+        ({"count": 0}, '{"display": "summary"}', False, {"count": 0}),
+        ({"count": 2}, None, False, {"count": 2}),
+        ({}, "No reading leads.", False, {}),
+        (None, '{"count": 1}', False, {"count": 1}),
+        (None, "Unstructured note.", False, {"result": "Unstructured note."}),
+        (None, None, False, {}),
+        (
+            {"ignored": "data"},
+            "Remote rejected request.",
+            True,
+            {"error": {"code": "remote_error", "message": "Remote rejected request."}},
+        ),
+    ],
+)
+def test_gateway_structured_results_and_legacy_precedence(structured, text, error, expected):
+    from mcp.types import CallToolResult, TextContent
+
+    from slopsearx.mcp.gateway import _extract_tool_result
+
+    result = CallToolResult.model_validate(
+        {
+            "content": [] if text is None else [TextContent(type="text", text=text)],
+            "structuredContent": structured,
+            "isError": error,
+        }
+    )
+    assert _extract_tool_result(result) == expected

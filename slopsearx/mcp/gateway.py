@@ -81,9 +81,9 @@ def _get_session() -> ClientSession:
 def _extract_tool_result(result: CallToolResult) -> Any:
     """Recover the remote tool's structured result from MCP content blocks.
 
-    SlopSearX tools return JSON-serializable dicts, which FastMCP serializes
-    to JSON text content; parse it back so the gateway's own envelope is
-    identical to the remote's.
+    Prefer the remote structured object when supplied, including an empty
+    object. Legacy text-only results retain their JSON/plain-text fallbacks;
+    remote errors keep their existing precedence and normalized envelope.
     """
     texts: list[str] = []
     for block in result.content:
@@ -96,6 +96,9 @@ def _extract_tool_result(result: CallToolResult) -> Any:
 
     if _field(result, "is_error", "isError"):
         return {"error": {"code": "remote_error", "message": joined or "remote tool failed"}}
+    structured = _field(result, "structured_content", "structuredContent")
+    if structured is not None:
+        return structured
     if not joined:
         return {}
     try:
