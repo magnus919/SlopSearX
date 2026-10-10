@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import subprocess
 import tempfile
 import unittest
 import uuid
@@ -13,7 +14,7 @@ from unittest import mock
 
 from scripts import coverage_answer_execution as answer
 from scripts import coverage_operator_runner as runner
-from tests.test_coverage_answer_execution import _tasks
+from tests.test_coverage_answer_execution import _stage_inputs, _tasks
 from tests.test_coverage_stage_orchestration import plan_fixture
 
 
@@ -65,6 +66,7 @@ class OperatorRunnerConfigTests(unittest.TestCase):
                 mock.patch.object(
                     runner.operator_handoff, "OperatorReceiptHandoff", side_effect=AssertionError("no handoff")
                 ),
+                mock.patch.object(runner, "_verify_checkout_sources"),
             ):
                 with self.assertRaisesRegex(runner.OperatorRunnerError, "registered-source-materials-required"):
                     runner.OperatorStageRunner.from_file(config, pin)
@@ -95,6 +97,195 @@ class OperatorRunnerConfigTests(unittest.TestCase):
             config_path.chmod(0o600)
             loaded = runner._load_config(config_path, digest(raw))
             self.assertEqual(loaded["private_paths"]["capture_ca_bundle"], str(ca_path))
+
+    def test_checkout_audit_rejects_revision_dirty_tree_and_poisoned_material(self):
+        revision = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+            cwd=runner._REPOSITORY_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        paths = {key: str(path) for key, path in runner._CHECKOUT_SOURCE_PATHS.items()}
+        materials = {key: path.read_bytes() for key, path in runner._CHECKOUT_SOURCE_PATHS.items()}
+        clean = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+        current = subprocess.CompletedProcess([], 0, stdout=revision + "\n", stderr="")
+        with mock.patch.object(runner.subprocess, "run", side_effect=[current, clean]):
+            runner._verify_checkout_sources(revision, paths, materials)
+
+        with mock.patch.object(
+            runner.subprocess,
+            "run",
+            return_value=subprocess.CompletedProcess([], 0, stdout="f" * 40, stderr=""),
+        ):
+            with self.assertRaisesRegex(runner.OperatorRunnerError, "checkout-revision-mismatch"):
+                runner._verify_checkout_sources(revision, paths, materials)
+
+        dirty = subprocess.CompletedProcess([], 0, stdout=" M tracked.py\n", stderr="")
+        with mock.patch.object(runner.subprocess, "run", side_effect=[current, dirty]):
+            with self.assertRaisesRegex(runner.OperatorRunnerError, "checkout-not-clean"):
+                runner._verify_checkout_sources(revision, paths, materials)
+
+        poisoned = dict(materials, coverage_source=b"caller-supplied old source")
+        with mock.patch.object(runner.subprocess, "run", side_effect=[current, clean]):
+            with self.assertRaisesRegex(
+                runner.OperatorRunnerError, "checkout-source-material-mismatch:coverage_source"
+            ):
+                runner._verify_checkout_sources(revision, paths, poisoned)
+
+    def test_source_preflight_failure_precedes_clock_and_handoff_creation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            current_revision = subprocess.run(
+                ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+                cwd=runner._REPOSITORY_ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            config_path, _old_pin = self._config(root, b"{}")
+            config = json.loads(config_path.read_bytes())
+            config["source_revision"] = current_revision
+            raw = canonical(config)
+            config_path.write_bytes(raw)
+            config_path.chmod(0o600)
+            pin = digest(raw)
+            current = subprocess.CompletedProcess([], 0, stdout=current_revision + "\n", stderr="")
+            clean = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+            with (
+                mock.patch.object(runner.subprocess, "run", side_effect=[current, clean]),
+                mock.patch.object(runner.time, "monotonic", side_effect=AssertionError("clock must not start")),
+                mock.patch.object(
+                    runner.operator_handoff, "OperatorReceiptHandoff", side_effect=AssertionError("no handoff")
+                ),
+            ):
+                with self.assertRaisesRegex(runner.OperatorRunnerError, "checkout-source-path-mismatch"):
+                    runner.OperatorStageRunner.from_file(config_path, pin)
+            self.assertFalse((root / "operator_handoff").exists())
+
+    def test_confirmation_selects_only_its_explicit_stage_cohort(self):
+        cohorts = {
+            "stages": [
+                {"stage": "development", "research_cases": [{"task_id": "dev"}], "navigation_targets": []},
+                {
+                    "stage": "confirmation",
+                    "research_cases": [{"task_id": "confirm"}],
+                    "navigation_targets": [],
+                },
+            ]
+        }
+        self.assertEqual(runner._stage_cohort(cohorts, "development")["research_cases"][0]["task_id"], "dev")
+        self.assertEqual(runner._stage_cohort(cohorts, "confirmation")["research_cases"][0]["task_id"], "confirm")
+        with self.assertRaisesRegex(runner.OperatorRunnerError, "configured-stage-cohort-not-unique"):
+            runner._stage_cohort({"stages": [{"stage": "development"}]}, "confirmation")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path, _pin = self._config(root, b"{}")
+            config = json.loads(config_path.read_bytes())
+            config["stage_kind"] = "confirmation"
+            config["forbidden_stage_uuids"].append(config["packet_stage_uuid"])
+            raw = canonical(config)
+            config_path.write_bytes(raw)
+            config_path.chmod(0o600)
+            with self.assertRaisesRegex(runner.OperatorRunnerError, "config-forbidden-stage-inventory-invalid"):
+                runner._load_config(config_path, digest(raw))
+
+    def test_answer_authority_allows_only_explicitly_opted_in_private_http(self):
+        async def scenario(endpoint: str, allow: bool):
+            temporary = tempfile.TemporaryDirectory()
+            root = Path(temporary.name)
+            secret = root / "answer.key"
+            secret.write_text("synthetic-test-only\n", encoding="utf-8")
+            secret.chmod(0o600)
+            instance = object.__new__(runner.OperatorStageRunner)
+            instance._test_temporary_directory = temporary
+            instance.config = {"answer_endpoint": endpoint, "allow_trusted_private_http": allow}
+            instance.private_paths = {"answer_api_key": str(secret)}
+            instance.directories = {
+                "lease_root": str(root / "leases"),
+                "answer_archive": str(root / "archive"),
+                "answer_results": str(root / "results"),
+            }
+            instance.plan = SimpleNamespace(
+                stage_uuid=str(uuid.UUID(int=802)),
+                source_revision="a" * 40,
+                protocol_bytes=b"protocol",
+                cohorts_bytes=b"cohorts",
+            )
+            instance.started_utc = datetime.now(timezone.utc)
+            instance.deadline_utc = instance.started_utc + timedelta(hours=8)
+            captured = {}
+
+            async def request(scope, request_id, bindings):
+                captured.update(scope=scope, request_id=request_id, bindings=bindings)
+                return b"synthetic-receipt", "b" * 64
+
+            instance._request = request
+            return instance, captured
+
+        async def run_private():
+            instance, captured = await scenario("http://llm-svc:4000/v1", True)
+
+            async def resolve(_url):
+                return "http://10.0.0.8:4000/v1/chat/completions", "llm-svc:4000", "c" * 64
+
+            with mock.patch.object(answer, "_resolve_private_http_destination", side_effect=resolve):
+                authority = await instance._answer_authority(instance.plan, _tasks())
+            self.assertTrue(authority["allow_trusted_private_http"])
+            self.assertEqual(authority["endpoint"], "http://llm-svc:4000/v1")
+            self.assertEqual(captured["bindings"]["endpoint_security_mode"], "trusted-private-http")
+            self.assertEqual(captured["bindings"]["resolved_destination_sha256"], "c" * 64)
+
+        async def run_public():
+            instance, captured = await scenario("http://public.example/v1", True)
+            with self.assertRaisesRegex(answer.AnswerExecutionError, "answer-plaintext-endpoint-not-permitted"):
+                await instance._answer_authority(instance.plan, _tasks())
+            self.assertEqual(captured, {})
+
+        asyncio.run(run_private())
+        asyncio.run(run_public())
+
+    def test_wrong_answer_security_mode_is_rejected_before_lease(self):
+        import pytest
+
+        async def scenario(tmp_path):
+            args = _stage_inputs(tmp_path)
+            events = []
+
+            class WrongModeVerifier:
+                def verify(self, receipt_bytes, expected_receipt_sha256, bindings):
+                    events.append("verify")
+                    return answer.VerifiedAnswerPermit(
+                        status="verified-admitted",
+                        stage_uuid=bindings["stage_uuid"],
+                        source_revision=bindings["source_revision"],
+                        protocol_sha256=bindings["protocol_sha256"],
+                        cohorts_sha256=bindings["cohorts_sha256"],
+                        operation_manifest_sha256=bindings["operation_manifest_sha256"],
+                        endpoint_sha256=bindings["endpoint_sha256"],
+                        resolved_destination_sha256=bindings["resolved_destination_sha256"],
+                        endpoint_security_mode="trusted-private-http",
+                        operation_ids=tuple(bindings["operation_ids"]),
+                        max_calls=answer.MAX_CALLS,
+                        request_bytes_maximum=answer.MAX_REQUEST_BYTES,
+                        response_bytes_maximum=answer.MAX_RESPONSE_BYTES,
+                        receipt_sha256=expected_receipt_sha256,
+                    )
+
+            class CountLease:
+                def consume_once(self, *_args, **_kwargs):
+                    events.append("lease")
+
+            args["permit_verifier"] = WrongModeVerifier()
+            args["one_shot_lease"] = CountLease()
+            with pytest.raises(answer.AnswerExecutionError, match="answer-permit-binding-mismatch"):
+                await answer.execute_answer_stage(**args)
+            self.assertEqual(events, ["verify"])
+            self.assertEqual(list(args["lease_root"].iterdir()), [])
+
+        with tempfile.TemporaryDirectory() as temporary:
+            asyncio.run(scenario(Path(temporary)))
 
     def test_acquisition_plan_matches_fixed_cohort_engine_schedule(self):
         plan = plan_fixture()

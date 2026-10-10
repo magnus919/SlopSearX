@@ -14,6 +14,8 @@ import json
 import os
 import re
 import stat
+import subprocess
+import sys
 import time
 import uuid
 from dataclasses import asdict
@@ -30,7 +32,9 @@ from scripts import coverage_source_capture as capture
 from scripts import coverage_stage_orchestration as orchestration
 from scripts import coverage_stage_runtime as runtime
 from scripts import coverage_study_core as core
+from scripts import intent_ranking_coverage as coverage_impl
 from scripts.coverage_late_registration import request_late_registration
+from slopsearx import rerank as production_rerank_impl
 
 CONFIG_SCHEMA = "coverage-operator-stage-config/1"
 _BATCH_SCHEMA = "coverage-selector-permit-batch/1"
@@ -50,6 +54,7 @@ _CONFIG_KEYS = {
     "private_paths",
     "directories",
 }
+_OPTIONAL_CONFIG_KEYS = {"allow_trusted_private_http"}
 _PATH_KEYS = {
     "cohorts",
     "protocol",
@@ -75,6 +80,12 @@ _DIRECTORY_KEYS = {
     "answer_archive",
     "answer_results",
     "grader_handoff",
+}
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+_CHECKOUT_SOURCE_PATHS = {
+    "coverage_source": Path(coverage_impl.__file__).resolve(),
+    "production_rerank_source": Path(production_rerank_impl.__file__).resolve(),
+    "dependency_lock": _REPOSITORY_ROOT / "uv.lock",
 }
 
 
@@ -150,7 +161,8 @@ def _load_config(path: str | os.PathLike[str], expected_sha256: str) -> dict[str
     value = _strict(raw, "config")
     if (
         type(value) is not dict
-        or set(value) != _CONFIG_KEYS
+        or not _CONFIG_KEYS <= set(value)
+        or set(value) - _CONFIG_KEYS - _OPTIONAL_CONFIG_KEYS
         or value.get("schema") != CONFIG_SCHEMA
         or _canonical(value) != raw
     ):
@@ -162,6 +174,8 @@ def _load_config(path: str | os.PathLike[str], expected_sha256: str) -> dict[str
         or set(value["directories"]) != _DIRECTORY_KEYS
     ):
         raise OperatorRunnerError("config-path-inventory-invalid")
+    if "allow_trusted_private_http" in value and type(value["allow_trusted_private_http"]) is not bool:
+        raise OperatorRunnerError("config-private-http-option-invalid")
     for key in (*_PATH_KEYS, *_PRIVATE_PATH_KEYS, *_OPTIONAL_PRIVATE_PATH_KEYS, *_DIRECTORY_KEYS):
         collection = (
             value["paths"]
@@ -188,7 +202,10 @@ def _load_config(path: str | os.PathLike[str], expected_sha256: str) -> dict[str
         value["initial_registration_sha256"]
     ):
         raise OperatorRunnerError("config-registration-pin-invalid")
-    if value["stage_uuid"] == value["packet_stage_uuid"] or value["stage_kind"] != "development":
+    if value["stage_uuid"] == value["packet_stage_uuid"] or value["stage_kind"] not in {
+        "development",
+        "confirmation",
+    }:
         raise OperatorRunnerError("config-stage-identity-invalid")
     forbidden = value["forbidden_stage_uuids"]
     try:
@@ -197,11 +214,80 @@ def _load_config(path: str | os.PathLike[str], expected_sha256: str) -> dict[str
             or not forbidden
             or any(type(item) is not str or str(uuid.UUID(item)) != item for item in forbidden)
             or value["stage_uuid"] in forbidden
+            or value["packet_stage_uuid"] in forbidden
         ):
             raise ValueError
     except ValueError as exc:
         raise OperatorRunnerError("config-forbidden-stage-inventory-invalid") from exc
     return value
+
+
+def _verify_checkout_sources(
+    source_revision: str,
+    paths: dict[str, str],
+    material_bytes: dict[str, bytes],
+) -> None:
+    """Bind supplied material pins to the clean checkout and loaded modules."""
+    try:
+        revision = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+            cwd=_REPOSITORY_ROOT,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        ).stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=_REPOSITORY_ROOT,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        ).stdout
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise OperatorRunnerError("checkout-audit-unavailable") from exc
+    if revision != source_revision:
+        raise OperatorRunnerError("checkout-revision-mismatch")
+    if status.strip():
+        raise OperatorRunnerError("checkout-not-clean")
+    if not set(_CHECKOUT_SOURCE_PATHS) <= set(paths):
+        raise OperatorRunnerError("checkout-source-path-inventory")
+    if not set(_CHECKOUT_SOURCE_PATHS) <= set(material_bytes):
+        raise OperatorRunnerError("checkout-source-material-inventory")
+    for name, expected_path in _CHECKOUT_SOURCE_PATHS.items():
+        try:
+            configured_path = Path(paths[name]).resolve(strict=True)
+            actual_path = expected_path.resolve(strict=True)
+            actual_bytes = actual_path.read_bytes()
+        except OSError as exc:
+            raise OperatorRunnerError("checkout-source-path-unavailable") from exc
+        if configured_path != actual_path:
+            raise OperatorRunnerError(f"checkout-source-path-mismatch:{name}")
+        if material_bytes[name] != actual_bytes:
+            raise OperatorRunnerError(f"checkout-source-material-mismatch:{name}")
+    for module in (coverage_impl, production_rerank_impl):
+        try:
+            module_path = Path(module.__file__).resolve(strict=True)
+        except (AttributeError, OSError) as exc:
+            raise OperatorRunnerError("loaded-source-path-unavailable") from exc
+        if (
+            module_path
+            != _CHECKOUT_SOURCE_PATHS["coverage_source" if module is coverage_impl else "production_rerank_source"]
+        ):
+            raise OperatorRunnerError("loaded-source-path-mismatch")
+    for name, module in tuple(sys.modules.items()):
+        if not name.startswith(("scripts.", "slopsearx.", "engines.")):
+            continue
+        module_file = getattr(module, "__file__", None)
+        if module_file is None:
+            continue
+        try:
+            Path(module_file).resolve(strict=True).relative_to(_REPOSITORY_ROOT)
+        except (OSError, ValueError) as exc:
+            raise OperatorRunnerError("loaded-project-module-outside-checkout") from exc
 
 
 def _build_acquisition_plan(stage_uuid: str, cases: list[dict[str, Any]], targets: list[dict[str, Any]]) -> bytes:
@@ -222,6 +308,18 @@ def _build_acquisition_plan(stage_uuid: str, cases: list[dict[str, Any]], target
     return _canonical({"schema": core.ACQUISITION_SCHEMA, "stage_uuid": stage_uuid, "tasks": tasks})
 
 
+def _stage_cohort(cohorts: object, stage_kind: str) -> dict[str, Any]:
+    if stage_kind not in {"development", "confirmation"} or type(cohorts) is not dict:
+        raise OperatorRunnerError("configured-stage-cohort-invalid")
+    stage_rows = cohorts.get("stages")
+    if type(stage_rows) is not list:
+        raise OperatorRunnerError("configured-stage-cohort-invalid")
+    rows = [row for row in stage_rows if type(row) is dict and row.get("stage") == stage_kind]
+    if len(rows) != 1:
+        raise OperatorRunnerError("configured-stage-cohort-not-unique")
+    return rows[0]
+
+
 class OperatorStageRunner:
     """Loads a pinned registered bundle and invokes only the fixed phase graph."""
 
@@ -240,6 +338,7 @@ class OperatorStageRunner:
 
     def _build_plan(self) -> None:
         path_bytes = {key: _read_file(value, 64_000_000) for key, value in self.paths.items()}
+        _verify_checkout_sources(self.config["source_revision"], self.paths, path_bytes)
         cohorts = core._strict_json(path_bytes["cohorts"], "cohorts")
         protocol = core._strict_json(path_bytes["protocol"], "protocol")
         closure = core._strict_json(path_bytes["qualified_source_closure"], "source-closure")
@@ -260,12 +359,7 @@ class OperatorStageRunner:
             or type(identity["runtime"].get("revision")) is not str
         ):
             raise OperatorRunnerError("registered-source-materials-required")
-        stage_rows = [
-            row for row in cohorts.get("stages", []) if type(row) is dict and row.get("stage") == "development"
-        ]
-        if len(stage_rows) != 1:
-            raise OperatorRunnerError("development-cohort-not-unique")
-        stage_row = stage_rows[0]
+        stage_row = _stage_cohort(cohorts, self.config["stage_kind"])
         cases = stage_row.get("research_cases")
         targets = stage_row.get("navigation_targets")
         if type(cases) is not list or type(targets) is not list:
@@ -299,7 +393,7 @@ class OperatorStageRunner:
         acquisition_manifest = _canonical(
             {
                 "schema": "coverage-live-acquisition-manifest/1",
-                "stage": "development",
+                "stage": self.config["stage_kind"],
                 "stage_uuid": self.config["stage_uuid"],
                 "source_revision": self.config["source_revision"],
                 "source_closure_sha256": _sha(path_bytes["qualified_source_closure"]),
@@ -348,7 +442,7 @@ class OperatorStageRunner:
         self.deadline_utc = self.started_utc + timedelta(seconds=orchestration.MAX_STAGE_WALL_SECONDS)
         self.plan = orchestration.StagePlan(
             stage_uuid=self.config["stage_uuid"],
-            stage_kind="development",
+            stage_kind=self.config["stage_kind"],
             source_revision=self.config["source_revision"],
             protocol_bytes=path_bytes["protocol"],
             cohorts_bytes=path_bytes["cohorts"],
@@ -618,10 +712,14 @@ class OperatorStageRunner:
 
     async def _answer_authority(self, plan, tasks):
         endpoint = self.config["answer_endpoint"]
-        endpoint_url, mode = answer._chat_url(endpoint, allow_trusted_private_http=False)
+        allow_private_http = self.config.get("allow_trusted_private_http", False)
+        endpoint_url, mode = answer._chat_url(endpoint, allow_trusted_private_http=allow_private_http)
         requests = answer._make_requests(tasks)
         _manifest, manifest_sha = answer._request_manifest(requests, endpoint_security_mode=mode)
-        resolved_sha = answer._sha(answer._canonical({"mode": "https-required"}))
+        if mode == "trusted-private-http":
+            _dial_url, _host_header, resolved_sha = await answer._resolve_private_http_destination(endpoint_url)
+        else:
+            resolved_sha = answer._sha(answer._canonical({"mode": "https-required"}))
         endpoint_sha = answer._sha(
             answer._canonical(
                 {"endpoint": endpoint, "security_mode": mode, "resolved_destination_sha256": resolved_sha}
@@ -645,6 +743,7 @@ class OperatorStageRunner:
             # that value here would make its endpoint digest differ for a
             # base URL or a `/v1` URL even though both resolve to this path.
             "endpoint": endpoint,
+            "allow_trusted_private_http": allow_private_http,
             "api_key": _secret(self.private_paths["answer_api_key"]),
             "permit_bytes": receipt,
             "expected_permit_sha256": pin,

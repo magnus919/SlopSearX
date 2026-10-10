@@ -13,6 +13,7 @@ The config schema is `coverage-operator-stage-config/1`. Its exact top-level key
   "source_revision": "40 lowercase hex characters",
   "candidate_base_url": "qualified HTTPS capture base URL",
   "answer_endpoint": "qualified HTTPS /v1/chat/completions URL",
+  "allow_trusted_private_http": false,
   "initial_registration_sha256": "externally pinned 64 lowercase hex characters",
   "forbidden_stage_uuids": ["previously consumed stage UUID"],
   "paths": {
@@ -38,7 +39,9 @@ The config schema is `coverage-operator-stage-config/1`. Its exact top-level key
 }
 ```
 
-Before starting the stage clock or creating handoff directories, the loader verifies the external config pin, registered protocol status, cohort/protocol binding, qualified-source-closure file against the exact source bytes, initial registration SHA, and its immutable static material pins. It generates the acquisition plan and manifest from the registered development cohort and refuses a draft or mismatched registration.
+`allow_trusted_private_http` is optional and defaults to `false`. Set it to `true` only for an explicitly approved private-network answer endpoint; the runner resolves the endpoint and binds the private numeric destination and `trusted-private-http` mode into the permit. Public HTTP remains rejected. Capture endpoints remain HTTPS-only. A confirmation stage requires its own registered confirmation cohort and registration bundle; running development never launches confirmation automatically. Both stage UUIDs must be fresh and absent from the consumed-stage inventory.
+
+Before starting the stage clock or creating handoff directories, the loader verifies the external config pin, current clean checkout revision, actual loaded candidate and production reranker source paths, dependency lock bytes, registered protocol status, cohort/protocol binding, qualified-source-closure file against the exact source bytes, initial registration SHA, and its immutable static material pins. The three source materials must point to `scripts/intent_ranking_coverage.py`, `slopsearx/rerank.py`, and `uv.lock` in this checkout. It generates the acquisition plan and manifest from only the explicitly configured registered stage cohort and refuses a draft or mismatched registration.
 
 The local operator handoff is a request/receipt/pin exchange under `<operator_handoff>/<stage_uuid>/<scope>/`. The runner writes `requests/<request_id>.json`; the trusted operator writes exact response bytes to `responses/<request_id>.receipt` and a separate lowercase SHA-256 plus newline to `pins/<request_id>.sha256`. The required request slots are acquisition/permit, protected-source-capture/permit, source-capture/permit, late-registration/registration-1, selector-map-admission/map, selector-operation-permits/batch, and answer-execution/permit. Each returned object is then passed to its existing typed verifier. Missing or bad receipts, or an existing stage inventory, stop without resumption. Native assessor packets use the existing grader handoff and require native tool-result records; the runner never invokes a model.
 
