@@ -28,6 +28,7 @@ MAX_RESPONSE_BYTES = 2_000_000
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _PACKET_ID = re.compile(r"[0-9a-f]{64}\Z")
 _PHASE = {"references": "reference", "answers": "answer"}
+PHASE_DEADLINE_SCHEMA = "coverage-native-phase-deadline/1"
 
 
 class NativeHandoffError(RuntimeError):
@@ -121,6 +122,73 @@ def _private_directory(path: Path) -> None:
     metadata = path.stat(follow_symlinks=False)
     if path.is_symlink() or not stat.S_ISDIR(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) & 0o077:
         raise NativeHandoffError("handoff-directory-not-private")
+
+
+def _validate_failed_dispatch_summary(
+    *,
+    summary_bytes: bytes,
+    summary: object,
+    stage_uuid: str,
+    phase: str,
+    expected_ids: set[str],
+    result_ids: set[str],
+) -> None:
+    expected_keys = {
+        "schema",
+        "stage_uuid",
+        "phase",
+        "model",
+        "model_list_response_sha256",
+        "model_catalog_advertised_exact_model",
+        "cli_executable_sha256",
+        "cli_version",
+        "maximum_concurrent_calls",
+        "packet_count",
+        "claimed_packet_ids",
+        "completed_packet_ids",
+        "unstarted_packet_ids",
+        "failure_reasons",
+        "status",
+    }
+    if type(summary) is not dict or set(summary) != expected_keys or _canonical(summary) != summary_bytes:
+        raise NativeHandoffError("grader-native-host-failed-summary-invalid")
+    if (
+        summary.get("schema") != "coverage-native-host-dispatch-summary/1"
+        or summary.get("stage_uuid") != stage_uuid
+        or summary.get("phase") != phase
+        or summary.get("model") != "gpt-6.1-sol"
+        or summary.get("status") != "failed-terminal"
+        or summary.get("packet_count") != len(expected_ids)
+        or not _SHA256.fullmatch(str(summary.get("model_list_response_sha256")))
+        or type(summary.get("model_catalog_advertised_exact_model")) is not bool
+        or not _SHA256.fullmatch(str(summary.get("cli_executable_sha256")))
+        or type(summary.get("cli_version")) is not str
+        or not summary["cli_version"]
+        or type(summary.get("maximum_concurrent_calls")) is not int
+        or not 0 <= summary["maximum_concurrent_calls"] <= 2
+    ):
+        raise NativeHandoffError("grader-native-host-failed-summary-binding-invalid")
+    claimed = summary.get("claimed_packet_ids")
+    completed = summary.get("completed_packet_ids")
+    unstarted = summary.get("unstarted_packet_ids")
+    failures = summary.get("failure_reasons")
+    if (
+        type(claimed) is not list
+        or type(completed) is not list
+        or type(unstarted) is not list
+        or any(type(packet_id) is not str for rows in (claimed, completed, unstarted) for packet_id in rows)
+        or claimed != sorted(set(claimed))
+        or completed != sorted(set(completed))
+        or unstarted != sorted(set(unstarted))
+        or not set(claimed) <= expected_ids
+        or not set(completed) <= set(claimed)
+        or unstarted != sorted(expected_ids - set(claimed))
+        or type(failures) is not dict
+        or set(failures) != set(claimed) - set(completed)
+        or any(type(reason) is not str or not reason for reason in failures.values())
+        or set(completed) != result_ids
+    ):
+        raise NativeHandoffError("grader-native-host-failed-summary-inventory-invalid")
 
 
 def _packet_rows(prepared_packets: object) -> tuple[HandoffRequest, ...]:
@@ -250,6 +318,17 @@ class NativeGraderHandoff:
         except FileExistsError as exc:
             raise NativeHandoffError("grader-handoff-already-created-no-resume") from exc
         os.chmod(scope, 0o700)
+        _write_new(
+            scope / "phase-deadline.json",
+            _canonical(
+                {
+                    "schema": PHASE_DEADLINE_SCHEMA,
+                    "stage_uuid": stage_uuid,
+                    "phase": phase,
+                    "deadline_monotonic": float(deadline_monotonic),
+                }
+            ),
+        )
         request_root = scope / "requests"
         result_root = scope / "results"
         request_root.mkdir(mode=0o700)
@@ -303,7 +382,8 @@ class NativeGraderHandoff:
                     _private_directory(audit_root)
                     summary_path = audit_root / "dispatch-summary.json"
                     if summary_path.exists():
-                        summary = _strict(_read_private(summary_path, max_bytes=1_000_000))
+                        summary_bytes = _read_private(summary_path, max_bytes=1_000_000)
+                        summary = _strict(summary_bytes)
                         if (
                             type(summary) is not dict
                             or summary.get("stage_uuid") != stage_uuid
@@ -311,6 +391,14 @@ class NativeGraderHandoff:
                         ):
                             raise NativeHandoffError("grader-native-host-summary-binding-invalid")
                         if summary.get("status") == "failed-terminal":
+                            _validate_failed_dispatch_summary(
+                                summary_bytes=summary_bytes,
+                                summary=summary,
+                                stage_uuid=stage_uuid,
+                                phase=phase,
+                                expected_ids=expected_ids,
+                                result_ids=present,
+                            )
                             raise NativeHandoffError("grader-native-host-dispatch-failed-terminal")
                         if summary.get("status") != "complete":
                             raise NativeHandoffError("grader-native-host-summary-status-invalid")

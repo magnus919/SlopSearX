@@ -412,3 +412,91 @@ def test_required_host_transcript_missing_is_terminal_without_submission(tmp_pat
     with pytest.raises(handoff.NativeHandoffError, match="host-inventory-incomplete-terminal"):
         asyncio.run(run())
     assert not (scope / "results-closed.json").exists()
+
+
+def test_failed_terminal_dispatch_summary_stops_collection_promptly_and_retains_artifacts(tmp_path):
+    root = tmp_path / "private"
+    stage_uuid = "00000000-0000-0000-0000-000000000326"
+    packets = (packet("3" * 64, "task-1"), packet("4" * 64, "task-2"))
+    queue = handoff.NativeGraderHandoff(root, require_native_host_transcripts=True)
+    scope = root / stage_uuid / "references"
+
+    async def run():
+        collecting = asyncio.create_task(
+            queue.collect(
+                stage_uuid=stage_uuid,
+                phase="references",
+                prepared_packets=inputs(*packets),
+                deadline_monotonic=time.monotonic() + 30,
+                poll_interval=0.01,
+            )
+        )
+        await wait_for_requests(scope, 2)
+        manifest = json.loads((scope / "handoff-manifest.json").read_bytes())
+        rows = manifest["packets"]
+        failed_id = rows[0]["packet_id"]
+        unstarted_ids = sorted({row["packet_id"] for row in rows} - {failed_id})
+        request_path = scope / "requests" / f"{failed_id}.request.json"
+        request_bytes = request_path.read_bytes()
+        request = json.loads(request_bytes)
+        audit_root = scope / "native-host"
+        claim_root = audit_root / "claims"
+        failure_root = audit_root / "failures"
+        transcript_root = audit_root / "transcripts"
+        for directory in (audit_root, claim_root, failure_root, transcript_root):
+            directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+            directory.chmod(0o700)
+        cli_sha = "e" * 64
+        reason = "native-turn-start-rejected"
+        model_list = {"id": 2, "result": {"data": [], "nextCursor": None}}
+        model_list_bytes = canonical(model_list)
+        _write_private(audit_root / "model-list.response.json", model_list_bytes)
+        _write_private(
+            claim_root / f"{failed_id}.claim.json",
+            canonical(
+                {
+                    "schema": "coverage-native-host-claim/1",
+                    "stage_uuid": stage_uuid,
+                    "phase": "references",
+                    "packet_id": failed_id,
+                    "packet_sha256": request["packet_sha256"],
+                    "request_sha256": sha(request_bytes),
+                    "cli_executable_sha256": cli_sha,
+                    "model": "gpt-6.1-sol",
+                    "reserved_before_dispatch": True,
+                }
+            ),
+        )
+        _write_private(
+            failure_root / f"{failed_id}.failure.json",
+            canonical({"schema": "coverage-native-host-failure/1", "packet_id": failed_id, "reason": reason}),
+        )
+        summary = {
+            "schema": "coverage-native-host-dispatch-summary/1",
+            "stage_uuid": stage_uuid,
+            "phase": "references",
+            "model": "gpt-6.1-sol",
+            "model_list_response_sha256": sha(model_list_bytes),
+            "model_catalog_advertised_exact_model": False,
+            "cli_executable_sha256": cli_sha,
+            "cli_version": "codex-cli synthetic",
+            "maximum_concurrent_calls": 1,
+            "packet_count": 2,
+            "claimed_packet_ids": [failed_id],
+            "completed_packet_ids": [],
+            "unstarted_packet_ids": unstarted_ids,
+            "failure_reasons": {failed_id: reason},
+            "status": "failed-terminal",
+        }
+        summary_path = audit_root / "dispatch-summary.json"
+        _write_private(summary_path, canonical(summary))
+        started = time.monotonic()
+        with pytest.raises(handoff.NativeHandoffError, match="dispatch-failed-terminal"):
+            await asyncio.wait_for(collecting, timeout=1)
+        assert time.monotonic() - started < 1
+        assert summary_path.exists()
+        assert (claim_root / f"{failed_id}.claim.json").exists()
+        assert (failure_root / f"{failed_id}.failure.json").exists()
+        assert not (scope / "results-closed.json").exists()
+
+    asyncio.run(run())

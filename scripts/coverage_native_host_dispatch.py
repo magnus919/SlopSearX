@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import math
 import os
 import re
 import stat
@@ -444,6 +445,8 @@ async def _invoke_codex(
                 },
             ]
             for request in requests:
+                if time.monotonic() >= deadline:
+                    raise NativeHostError("native-stage-deadline-expired")
                 events.append({"direction": "client", "message": request})
                 await _write_request(process.stdin, request)
                 if "id" not in request:
@@ -469,6 +472,8 @@ async def _invoke_codex(
                 "method": "turn/start",
                 "params": {"threadId": thread_id, "model": MODEL, "input": [{"type": "text", "text": packet_text}]},
             }
+            if time.monotonic() >= deadline:
+                raise NativeHostError("native-stage-deadline-expired-before-turn")
             events.append({"direction": "client", "message": turn_start})
             await _write_request(process.stdin, turn_start)
             turn_id = None
@@ -595,6 +600,24 @@ def _cli_identity(executable: str, expected_sha256: str) -> tuple[str, str]:
     if result.returncode != 0 or not version or len(version) > 128:
         raise NativeHostError("native-cli-version-invalid")
     return str(path), version
+
+
+def _read_phase_deadline(scope: Path, *, stage_uuid: str, phase: str) -> float:
+    raw = _read_private(scope / "phase-deadline.json", maximum=16_384)
+    value = _strict(raw, maximum=16_384)
+    if (
+        type(value) is not dict
+        or set(value) != {"schema", "stage_uuid", "phase", "deadline_monotonic"}
+        or _canonical(value) != raw
+        or value.get("schema") != "coverage-native-phase-deadline/1"
+        or value.get("stage_uuid") != stage_uuid
+        or value.get("phase") != phase
+        or type(value.get("deadline_monotonic")) not in {int, float}
+        or not math.isfinite(value["deadline_monotonic"])
+        or value["deadline_monotonic"] <= 0
+    ):
+        raise NativeHostError("native-phase-deadline-binding-invalid")
+    return float(value["deadline_monotonic"])
 
 
 def _load_scope(
@@ -724,6 +747,10 @@ async def dispatch_handoff_scope(
     existing_results = list((scope / "results").glob("*.result.json"))
     if existing_results:
         raise NativeHostError("native-result-inventory-not-empty")
+    phase_deadline = _read_phase_deadline(scope, stage_uuid=stage_uuid, phase=phase)
+    deadline_monotonic = min(float(deadline_monotonic), phase_deadline)
+    if time.monotonic() >= deadline_monotonic:
+        raise NativeHostError("native-stage-deadline-expired")
     executable_path, cli_version = _cli_identity(codex_executable, expected_cli_sha256)
     manifest_raw, _manifest, requests = _load_scope(scope, stage_uuid=stage_uuid, phase=phase)
     catalog = await _request_model_catalog(executable_path, deadline=deadline_monotonic)
@@ -756,6 +783,9 @@ async def dispatch_handoff_scope(
             async with index_lock:
                 if stop.is_set() or next_index >= len(requests):
                     return
+                if time.monotonic() >= deadline_monotonic:
+                    stop.set()
+                    return
                 request = requests[next_index]
                 next_index += 1
             row = request["row"]
@@ -775,6 +805,8 @@ async def dispatch_handoff_scope(
             try:
                 _write_exclusive(claim_root / f"{packet_id}.claim.json", _canonical(claim))
                 claimed.add(packet_id)
+                if time.monotonic() >= deadline_monotonic:
+                    raise NativeHostError("native-stage-deadline-expired-before-call")
                 async with activity_lock:
                     active_calls += 1
                     maximum_concurrent_calls = max(maximum_concurrent_calls, active_calls)

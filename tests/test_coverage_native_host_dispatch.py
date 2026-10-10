@@ -33,6 +33,21 @@ def packet(packet_id: str, *, task_id: str = "D1E0001") -> bytes:
     )
 
 
+def write_phase_deadline(scope: Path, stage_uuid: str, phase: str, deadline: float) -> None:
+    path = scope / "phase-deadline.json"
+    path.write_bytes(
+        canonical(
+            {
+                "schema": "coverage-native-phase-deadline/1",
+                "stage_uuid": stage_uuid,
+                "phase": phase,
+                "deadline_monotonic": deadline,
+            }
+        )
+    )
+    path.chmod(0o600)
+
+
 def write_scope(root: Path, count: int = 1) -> tuple[Path, str, list[str]]:
     stage_uuid = str(uuid.uuid4())
     scope = root / stage_uuid / "references"
@@ -80,6 +95,7 @@ def write_scope(root: Path, count: int = 1) -> tuple[Path, str, list[str]]:
     }
     (scope / "handoff-manifest.json").write_bytes(canonical(manifest))
     (scope / "handoff-manifest.json").chmod(0o600)
+    write_phase_deadline(scope, stage_uuid, "references", time.monotonic() + 3600)
     return scope, stage_uuid, packet_ids
 
 
@@ -138,6 +154,7 @@ def write_prepared_answer_scope(root: Path) -> tuple[Path, str, list[str]]:
     manifest_path = scope / "handoff-manifest.json"
     manifest_path.write_bytes(canonical(manifest))
     manifest_path.chmod(0o600)
+    write_phase_deadline(scope, stage_uuid, "answers", time.monotonic() + 3600)
     return scope, stage_uuid, packet_ids
 
 
@@ -497,6 +514,35 @@ async def test_bad_cli_pin_fails_before_native_scope_or_results(tmp_path: Path) 
             expected_cli_sha256="0" * 64,
             deadline_monotonic=time.monotonic() + 30,
         )
+    assert not (scope / "native-host").exists()
+    assert not list((scope / "results").glob("*.result.json"))
+
+
+@pytest.mark.asyncio
+async def test_expired_registered_phase_deadline_blocks_even_with_fresh_cli_budget(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, _ = write_scope(tmp_path)
+    write_phase_deadline(scope, stage_uuid, "references", time.monotonic() - 1)
+    codex, digest = fake_codex(tmp_path)
+    catalog_called = False
+
+    async def forbidden_catalog(*_args, **_kwargs):
+        nonlocal catalog_called
+        catalog_called = True
+        raise AssertionError("expired stage must fail before app-server access")
+
+    monkeypatch.setattr(native, "_request_model_catalog", forbidden_catalog)
+    with pytest.raises(native.NativeHostError, match="stage-deadline-expired"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 28_800,
+        )
+    assert not catalog_called
     assert not (scope / "native-host").exists()
     assert not list((scope / "results").glob("*.result.json"))
 
