@@ -4,6 +4,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
@@ -49,11 +50,19 @@ def _bindings(root: Path, *, acquisition_authority=None, capture_authority=None,
         selector_lease_root=root / "selector-leases",
         selector_archive_root=root / "selector-archives",
         selector_result_root=root / "selector-results",
-        native_handoff=NativeGraderHandoff(root / "grader-handoff"),
+        native_handoff=NativeGraderHandoff(root / "grader-handoff", require_native_host_transcripts=True),
     )
 
 
 class StageRuntimeWiringTests(unittest.IsolatedAsyncioTestCase):
+    async def test_production_runtime_rejects_metadata_only_handoff(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            bindings = _bindings(root)
+            legacy_handoff = NativeGraderHandoff(root / "legacy-handoff", require_native_host_transcripts=False)
+            with self.assertRaisesRegex(runtime.RuntimeWiringError, "runtime-binding-member-invalid"):
+                runtime.build_stage_executors(plan_fixture(), replace(bindings, native_handoff=legacy_handoff))
+
     async def test_capture_optional_ca_bundle_is_forwarded_without_widening_authority(self):
         with tempfile.TemporaryDirectory() as temporary:
             plan = plan_fixture()

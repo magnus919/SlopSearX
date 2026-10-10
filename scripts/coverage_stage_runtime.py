@@ -113,6 +113,7 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
         or type(bindings.selector_api_key) is not str
         or not bindings.selector_api_key
         or type(bindings.native_handoff) is not coverage_native_grader_handoff.NativeGraderHandoff
+        or not bindings.native_handoff.require_native_host_transcripts
     ):
         raise RuntimeWiringError("runtime-binding-member-invalid")
 

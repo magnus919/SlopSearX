@@ -27,7 +27,9 @@ RESULT_SCHEMA = "coverage-native-tool-result/1"
 MAX_RESPONSE_BYTES = 2_000_000
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _PACKET_ID = re.compile(r"[0-9a-f]{64}\Z")
+_MCP_SERVER_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z")
 _PHASE = {"references": "reference", "answers": "answer"}
+PHASE_DEADLINE_SCHEMA = "coverage-native-phase-deadline/1"
 
 
 class NativeHandoffError(RuntimeError):
@@ -117,10 +119,126 @@ def _read_private(path: Path, *, max_bytes: int) -> bytes:
         os.close(descriptor)
 
 
+def _validate_native_tool_policy_evidence(
+    audit_root: Path, summary: object, *, stage_uuid: str, phase: str
+) -> list[str]:
+    """Bind per-server disable proof from the sanitized local CLI inventory."""
+    if type(summary) is not dict:
+        raise NativeHandoffError("grader-native-tool-policy-summary-invalid")
+    raw = _read_private(audit_root / "tool-policy-evidence.json", max_bytes=128_000)
+    evidence = _strict(raw)
+    expected_keys = {
+        "schema",
+        "stage_uuid",
+        "phase",
+        "cli_executable_sha256",
+        "cli_version",
+        "configured_server_ids",
+        "configured_inventory_sha256",
+        "effective_inventory_sha256",
+        "effective_statuses",
+    }
+    if (
+        type(evidence) is not dict
+        or set(evidence) != expected_keys
+        or _canonical(evidence) != raw
+        or evidence.get("schema") != "coverage-native-tool-policy-evidence/1"
+        or evidence.get("stage_uuid") != stage_uuid
+        or evidence.get("phase") != phase
+        or evidence.get("cli_executable_sha256") != summary.get("cli_executable_sha256")
+        or evidence.get("cli_version") != summary.get("cli_version")
+        or _sha(raw) != summary.get("tool_policy_evidence_sha256")
+        or not _SHA256.fullmatch(str(evidence.get("configured_inventory_sha256")))
+        or not _SHA256.fullmatch(str(evidence.get("effective_inventory_sha256")))
+    ):
+        raise NativeHandoffError("grader-native-tool-policy-evidence-binding-invalid")
+    ids = evidence.get("configured_server_ids")
+    statuses = evidence.get("effective_statuses")
+    if (
+        type(ids) is not list
+        or any(type(server_id) is not str or not _MCP_SERVER_ID.fullmatch(server_id) for server_id in ids)
+        or ids != sorted(set(ids))
+        or type(statuses) is not dict
+        or set(statuses) != set(ids)
+        or any(statuses[server_id] != "disabled" for server_id in ids)
+    ):
+        raise NativeHandoffError("grader-native-tool-policy-inventory-invalid")
+    return ids
+
+
 def _private_directory(path: Path) -> None:
     metadata = path.stat(follow_symlinks=False)
     if path.is_symlink() or not stat.S_ISDIR(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) & 0o077:
         raise NativeHandoffError("handoff-directory-not-private")
+
+
+def _validate_failed_dispatch_summary(
+    *,
+    summary_bytes: bytes,
+    summary: object,
+    stage_uuid: str,
+    phase: str,
+    expected_ids: set[str],
+    result_ids: set[str],
+) -> None:
+    expected_keys = {
+        "schema",
+        "stage_uuid",
+        "phase",
+        "model",
+        "model_list_response_sha256",
+        "tool_policy_evidence_sha256",
+        "model_catalog_advertised_exact_model",
+        "cli_executable_sha256",
+        "cli_version",
+        "maximum_concurrent_calls",
+        "packet_count",
+        "claimed_packet_ids",
+        "completed_packet_ids",
+        "unstarted_packet_ids",
+        "failure_reasons",
+        "status",
+    }
+    if type(summary) is not dict or set(summary) != expected_keys or _canonical(summary) != summary_bytes:
+        raise NativeHandoffError("grader-native-host-failed-summary-invalid")
+    if (
+        summary.get("schema") != "coverage-native-host-dispatch-summary/2"
+        or summary.get("stage_uuid") != stage_uuid
+        or summary.get("phase") != phase
+        or summary.get("model") != "gpt-6.1-sol"
+        or summary.get("status") != "failed-terminal"
+        or summary.get("packet_count") != len(expected_ids)
+        or not _SHA256.fullmatch(str(summary.get("model_list_response_sha256")))
+        or not _SHA256.fullmatch(str(summary.get("tool_policy_evidence_sha256")))
+        or type(summary.get("model_catalog_advertised_exact_model")) is not bool
+        or not _SHA256.fullmatch(str(summary.get("cli_executable_sha256")))
+        or type(summary.get("cli_version")) is not str
+        or not summary["cli_version"]
+        or type(summary.get("maximum_concurrent_calls")) is not int
+        or not 0 <= summary["maximum_concurrent_calls"] <= 2
+    ):
+        raise NativeHandoffError("grader-native-host-failed-summary-binding-invalid")
+    claimed = summary.get("claimed_packet_ids")
+    completed = summary.get("completed_packet_ids")
+    unstarted = summary.get("unstarted_packet_ids")
+    failures = summary.get("failure_reasons")
+    if (
+        type(claimed) is not list
+        or type(completed) is not list
+        or type(unstarted) is not list
+        or any(type(packet_id) is not str for rows in (claimed, completed, unstarted) for packet_id in rows)
+        or claimed != sorted(set(claimed))
+        or completed != sorted(set(completed))
+        or unstarted != sorted(set(unstarted))
+        or not set(claimed) <= expected_ids
+        or not set(completed) <= set(claimed)
+        or unstarted != sorted(expected_ids - set(claimed))
+        or type(failures) is not dict
+        or set(failures) != set(claimed) - set(completed)
+        or any(type(reason) is not str or not reason for reason in failures.values())
+        or set(completed) != result_ids
+    ):
+        raise NativeHandoffError("grader-native-host-failed-summary-inventory-invalid")
 
 
 def _packet_rows(prepared_packets: object) -> tuple[HandoffRequest, ...]:
@@ -188,11 +306,20 @@ def _packet_rows(prepared_packets: object) -> tuple[HandoffRequest, ...]:
 class NativeGraderHandoff:
     """One-shot durable packet queue, with bounded collection of host results."""
 
-    def __init__(self, root: str | os.PathLike[str], *, model: str = "gpt-6.1-sol") -> None:
+    def __init__(
+        self,
+        root: str | os.PathLike[str],
+        *,
+        model: str = "gpt-6.1-sol",
+        require_native_host_transcripts: bool = True,
+    ) -> None:
         if model != "gpt-6.1-sol":
             raise NativeHandoffError("native-grader-model-mismatch")
+        if type(require_native_host_transcripts) is not bool:
+            raise NativeHandoffError("native-transcript-requirement-invalid")
         self.root = _private_root(root)
         self.model = model
+        self.require_native_host_transcripts = require_native_host_transcripts
 
     def __repr__(self) -> str:
         return "<NativeGraderHandoff>"
@@ -241,6 +368,17 @@ class NativeGraderHandoff:
         except FileExistsError as exc:
             raise NativeHandoffError("grader-handoff-already-created-no-resume") from exc
         os.chmod(scope, 0o700)
+        _write_new(
+            scope / "phase-deadline.json",
+            _canonical(
+                {
+                    "schema": PHASE_DEADLINE_SCHEMA,
+                    "stage_uuid": stage_uuid,
+                    "phase": phase,
+                    "deadline_monotonic": float(deadline_monotonic),
+                }
+            ),
+        )
         request_root = scope / "requests"
         result_root = scope / "results"
         request_root.mkdir(mode=0o700)
@@ -280,16 +418,87 @@ class NativeGraderHandoff:
         expected_ids = {request.packet_id for request in requests}
         while True:
             if time.monotonic() >= deadline_monotonic:
+                if self.require_native_host_transcripts:
+                    raise NativeHandoffError("grader-native-host-inventory-incomplete-terminal")
                 raise NativeHandoffError("grader-native-handoff-deadline-expired")
             present = {path.stem.removesuffix(".result") for path in result_root.glob("*.result.json")}
             unexpected = present - expected_ids
             if unexpected:
                 raise NativeHandoffError("grader-native-result-inventory-invalid")
-            if present == expected_ids:
+            host_complete = True
+            if self.require_native_host_transcripts:
+                audit_root = scope / "native-host"
+                if audit_root.exists() or audit_root.is_symlink():
+                    _private_directory(audit_root)
+                    summary_path = audit_root / "dispatch-summary.json"
+                    if summary_path.exists():
+                        summary_bytes = _read_private(summary_path, max_bytes=1_000_000)
+                        summary = _strict(summary_bytes)
+                        if (
+                            type(summary) is not dict
+                            or summary.get("stage_uuid") != stage_uuid
+                            or summary.get("phase") != phase
+                        ):
+                            raise NativeHandoffError("grader-native-host-summary-binding-invalid")
+                        _validate_native_tool_policy_evidence(audit_root, summary, stage_uuid=stage_uuid, phase=phase)
+                        if summary.get("status") == "failed-terminal":
+                            _validate_failed_dispatch_summary(
+                                summary_bytes=summary_bytes,
+                                summary=summary,
+                                stage_uuid=stage_uuid,
+                                phase=phase,
+                                expected_ids=expected_ids,
+                                result_ids=present,
+                            )
+                            raise NativeHandoffError("grader-native-host-dispatch-failed-terminal")
+                        if summary.get("status") != "complete":
+                            raise NativeHandoffError("grader-native-host-summary-status-invalid")
+                        expected_summary = {
+                            "schema": "coverage-native-host-dispatch-summary/2",
+                            "stage_uuid": stage_uuid,
+                            "phase": phase,
+                            "model": self.model,
+                            "packet_count": len(requests),
+                            "claimed_packet_ids": sorted(expected_ids),
+                            "completed_packet_ids": sorted(expected_ids),
+                            "unstarted_packet_ids": [],
+                            "failure_reasons": {},
+                        }
+                        for name, expected in expected_summary.items():
+                            if summary.get(name) != expected:
+                                raise NativeHandoffError("grader-native-host-summary-inventory-invalid")
+                        if (
+                            type(summary.get("maximum_concurrent_calls")) is not int
+                            or not 1 <= summary["maximum_concurrent_calls"] <= 2
+                            or type(summary.get("cli_executable_sha256")) is not str
+                            or not _SHA256.fullmatch(summary["cli_executable_sha256"])
+                            or type(summary.get("cli_version")) is not str
+                            or not summary["cli_version"]
+                        ):
+                            raise NativeHandoffError("grader-native-host-summary-metadata-invalid")
+                        transcript_root = audit_root / "transcripts"
+                        _private_directory(transcript_root)
+                        transcript_ids = {
+                            path.name.removesuffix(".transcript.json")
+                            for path in transcript_root.glob("*.transcript.json")
+                        }
+                        if transcript_ids != expected_ids:
+                            raise NativeHandoffError("grader-native-host-transcript-inventory-invalid")
+                        failure_root = audit_root / "failures"
+                        _private_directory(failure_root)
+                        if list(failure_root.iterdir()):
+                            raise NativeHandoffError("grader-native-host-failure-inventory-invalid")
+                        host_complete = True
+                    else:
+                        host_complete = False
+                else:
+                    host_complete = False
+            if present == expected_ids and host_complete:
                 break
             await asyncio.sleep(min(float(poll_interval), max(0.0, deadline_monotonic - time.monotonic())))
         submissions = []
         tool_call_ids = set()
+        result_bindings: dict[str, tuple[str, bytes]] = {}
         for request in requests:
             path = result_root / f"{request.packet_id}.result.json"
             try:
@@ -351,6 +560,7 @@ class NativeGraderHandoff:
             ):
                 raise NativeHandoffError("grader-native-result-binding-invalid")
             tool_call_ids.add(value["tool_call_id"])
+            result_bindings[request.packet_id] = (value["tool_call_id"], response_bytes)
             submissions.append(
                 GradeSubmission(
                     packet_id=request.packet_id,
@@ -361,6 +571,15 @@ class NativeGraderHandoff:
                     input_sha256=request.packet_sha256,
                     response_bytes=response_bytes,
                 )
+            )
+        native_host_evidence: dict[str, object] = {}
+        if self.require_native_host_transcripts:
+            native_host_evidence = self._verify_native_host_evidence(
+                scope=scope,
+                stage_uuid=stage_uuid,
+                phase=phase,
+                requests=requests,
+                result_bindings=result_bindings,
             )
         _write_new(
             scope / "results-closed.json",
@@ -375,10 +594,155 @@ class NativeGraderHandoff:
                         row.packet_id: _sha((result_root / f"{row.packet_id}.result.json").read_bytes())
                         for row in submissions
                     },
+                    **(
+                        {
+                            "native_host_transcript_schema": "coverage-native-host-transcript/2",
+                            **native_host_evidence,
+                        }
+                        if self.require_native_host_transcripts
+                        else {}
+                    ),
                 }
             ),
         )
         return tuple(submissions)
+
+    def _verify_native_host_evidence(
+        self,
+        *,
+        scope: Path,
+        stage_uuid: str,
+        phase: str,
+        requests: tuple[HandoffRequest, ...],
+        result_bindings: dict[str, tuple[str, bytes]],
+    ) -> dict[str, object]:
+        """Require an exact app-server transcript for every accepted result."""
+        from scripts import coverage_native_host_dispatch as native_host
+
+        audit_root = scope / "native-host"
+        claim_root = audit_root / "claims"
+        transcript_root = audit_root / "transcripts"
+        _private_directory(audit_root)
+        _private_directory(claim_root)
+        _private_directory(transcript_root)
+        summary_bytes = _read_private(audit_root / "dispatch-summary.json", max_bytes=1_000_000)
+        summary = _strict(summary_bytes)
+        expected_summary_keys = {
+            "schema",
+            "stage_uuid",
+            "phase",
+            "model",
+            "model_list_response_sha256",
+            "tool_policy_evidence_sha256",
+            "model_catalog_advertised_exact_model",
+            "cli_executable_sha256",
+            "cli_version",
+            "maximum_concurrent_calls",
+            "packet_count",
+            "claimed_packet_ids",
+            "completed_packet_ids",
+            "unstarted_packet_ids",
+            "failure_reasons",
+            "status",
+        }
+        if type(summary) is not dict or set(summary) != expected_summary_keys or _canonical(summary) != summary_bytes:
+            raise NativeHandoffError("grader-native-host-summary-invalid")
+        model_list_path = audit_root / "model-list.response.json"
+        model_list_bytes = _read_private(model_list_path, max_bytes=1_000_000)
+        model_list = _strict(model_list_bytes)
+        catalog_row_sha, catalog_response_sha = native_host.inspect_model_catalog(model_list)
+        if (
+            summary.get("schema") != "coverage-native-host-dispatch-summary/2"
+            or _canonical(model_list) != model_list_bytes
+            or _sha(model_list_bytes) != summary["model_list_response_sha256"]
+            or _sha(_canonical(model_list)) != catalog_response_sha
+            or summary["model_catalog_advertised_exact_model"] is not (catalog_row_sha is not None)
+        ):
+            raise NativeHandoffError("grader-native-host-model-list-canonical-invalid")
+        expected_mcp_server_ids = _validate_native_tool_policy_evidence(
+            audit_root, summary, stage_uuid=stage_uuid, phase=phase
+        )
+        expected_ids = {request.packet_id for request in requests}
+        claim_files = list(claim_root.iterdir())
+        if {path.name for path in claim_files} != {f"{packet_id}.claim.json" for packet_id in expected_ids}:
+            raise NativeHandoffError("grader-native-host-claim-inventory-invalid")
+        cli_sha = summary["cli_executable_sha256"]
+        cli_version = summary["cli_version"]
+        transcript_hashes: dict[str, str] = {}
+        claim_hashes: dict[str, str] = {}
+        for request in requests:
+            request_bytes = _read_private(
+                scope / "requests" / f"{request.packet_id}.request.json",
+                max_bytes=MAX_RESPONSE_BYTES + 32_768,
+            )
+            claim_bytes = _read_private(claim_root / f"{request.packet_id}.claim.json", max_bytes=16_384)
+            claim = _strict(claim_bytes)
+            if claim != {
+                "schema": "coverage-native-host-claim/1",
+                "stage_uuid": stage_uuid,
+                "phase": phase,
+                "packet_id": request.packet_id,
+                "packet_sha256": request.packet_sha256,
+                "request_sha256": _sha(request_bytes),
+                "cli_executable_sha256": cli_sha,
+                "model": self.model,
+                "reserved_before_dispatch": True,
+            }:
+                raise NativeHandoffError("grader-native-host-claim-binding-invalid")
+            if _canonical(claim) != claim_bytes:
+                raise NativeHandoffError("grader-native-host-claim-canonical-invalid")
+            transcript_path = transcript_root / f"{request.packet_id}.transcript.json"
+            transcript_bytes = _read_private(transcript_path, max_bytes=12_000_000)
+            transcript = _strict(transcript_bytes)
+            if (
+                type(transcript) is not dict
+                or transcript.get("cli_executable_sha256") != cli_sha
+                or transcript.get("cli_version") != cli_version
+            ):
+                raise NativeHandoffError("grader-native-host-transcript-host-binding-invalid")
+            verified = native_host.verify_transcript(
+                transcript_bytes,
+                stage_uuid=stage_uuid,
+                phase=phase,
+                packet_id=request.packet_id,
+                packet_sha256=request.packet_sha256,
+                expected_catalog_row_sha256=catalog_row_sha,
+                expected_catalog_response_sha256=catalog_response_sha,
+                expected_mcp_server_ids=expected_mcp_server_ids,
+                expected_model=self.model,
+            )
+            result_tool_call_id, result_bytes = result_bindings[request.packet_id]
+            if verified.turn_id != result_tool_call_id or verified.response_bytes != result_bytes:
+                raise NativeHandoffError("grader-native-host-transcript-result-mismatch")
+            transcript_hashes[request.packet_id] = _sha(transcript_bytes)
+            claim_hashes[request.packet_id] = _sha(claim_bytes)
+        expected_transcript_files = {f"{packet_id}.transcript.json" for packet_id in expected_ids}
+        expected_claim_files = {f"{packet_id}.claim.json" for packet_id in expected_ids}
+        if {path.name for path in transcript_root.iterdir()} != expected_transcript_files:
+            raise NativeHandoffError("grader-native-host-transcript-inventory-invalid")
+        if {path.name for path in claim_root.iterdir()} != expected_claim_files:
+            raise NativeHandoffError("grader-native-host-claim-inventory-invalid")
+        failure_root = audit_root / "failures"
+        _private_directory(failure_root)
+        if list(failure_root.iterdir()):
+            raise NativeHandoffError("grader-native-host-failure-inventory-invalid")
+        if {path.name for path in audit_root.iterdir()} != {
+            "claims",
+            "dispatch-summary.json",
+            "failures",
+            "model-list.response.json",
+            "tool-policy-evidence.json",
+            "transcripts",
+        }:
+            raise NativeHandoffError("grader-native-host-audit-inventory-invalid")
+        return {
+            "native_host_transcript_sha256": transcript_hashes,
+            "native_host_claim_sha256": claim_hashes,
+            "native_host_dispatch_summary_sha256": _sha(summary_bytes),
+            "model_list_response_sha256": _sha(model_list_bytes),
+            "tool_policy_evidence_sha256": summary["tool_policy_evidence_sha256"],
+            "disabled_mcp_server_ids": expected_mcp_server_ids,
+        }
 
 
 def publish_native_tool_result(
@@ -453,7 +817,11 @@ def with_native_grader_handoff(
     """Wire native tool-result collection into the existing phase executor set."""
     from scripts.coverage_stage_orchestration import StageExecutors
 
-    if type(executors) is not StageExecutors or type(handoff) is not NativeGraderHandoff:
+    if (
+        type(executors) is not StageExecutors
+        or type(handoff) is not NativeGraderHandoff
+        or not handoff.require_native_host_transcripts
+    ):
         raise NativeHandoffError("stage-executors-and-handoff-required")
 
     async def grade_references(prepared_packets):
