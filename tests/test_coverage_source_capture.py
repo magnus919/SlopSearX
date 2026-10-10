@@ -1406,3 +1406,26 @@ async def test_safe_public_http_source_is_eligible_without_rewriting_url(tmp_pat
     assert seen == ["/health", "/v2/scrape"]
     assert result.private_inventory[0]["status"] == "captured"
     assert result.private_inventory[0]["url"] == "http://docs.example/a"
+
+
+@pytest.mark.asyncio
+async def test_system_trust_preserves_three_argument_permit_verifier(tmp_path: Path) -> None:
+    class LegacyVerifier(_Verifier):
+        calls = 0
+
+        def verify(self, manifest_bytes, receipt_bytes, expected_receipt_sha256):
+            self.calls += 1
+            return super().verify(manifest_bytes, receipt_bytes, expected_receipt_sha256)
+
+    verifier = LegacyVerifier()
+    lease = _Lease()
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(lambda _request: _healthy_response()),
+        sources=[],
+        verifier=verifier,
+        lease=lease,
+    )
+    assert verifier.calls == 1
+    assert lease.calls == 1
+    assert result.ca_bundle_sha256 is None

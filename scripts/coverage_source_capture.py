@@ -141,7 +141,7 @@ class PermitVerifier(Protocol):
         manifest_bytes: bytes,
         receipt_bytes: bytes,
         expected_receipt_sha256: str,
-        ca_bundle_sha256: str | None,
+        ca_bundle_sha256: str | None = None,
     ) -> VerifiedSourceCapturePermit: ...
 
 
@@ -382,7 +382,10 @@ def _verify_permit(
         raise SourceCaptureError("capture-permit-digest-mismatch")
     if verifier is None or not callable(getattr(verifier, "verify", None)):
         raise SourceCaptureError("external-capture-permit-verifier-required")
-    permit = verifier.verify(manifest_bytes, permit_receipt_bytes, expected_permit_receipt_sha256, ca_bundle_sha256)
+    if ca_bundle_sha256 is None:
+        permit = verifier.verify(manifest_bytes, permit_receipt_bytes, expected_permit_receipt_sha256)
+    else:
+        permit = verifier.verify(manifest_bytes, permit_receipt_bytes, expected_permit_receipt_sha256, ca_bundle_sha256)
     expected = {
         "status": "verified-admitted",
         "scope": "source-capture",
