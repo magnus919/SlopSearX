@@ -313,6 +313,7 @@ def _verify_checkout_sources(
         coverage_jev_execution,
         coverage_legacy_control,
         coverage_selector_input_map,
+        native_host_dispatch,
     )
     if any(module.__name__ not in sys.modules for module in critical_modules):
         raise OperatorRunnerError("critical-loaded-source-module-missing")
