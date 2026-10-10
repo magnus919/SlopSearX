@@ -517,6 +517,10 @@ def _capture_observations(
         state["health_runtime_match"] = None
 
     control_attestation = inventory.get("execution_control_attestation")
+    protected_qualification = inventory.get("protected_capture_qualification")
+    owned_capture_transport = protected_qualification is not None
+    if owned_capture_transport and control_attestation is None:
+        raise ResourceEvidenceError("capture-qualification-without-control-attestation")
     capture_timeout_seconds = None
     capture_application_retries = None
     capture_response_limit_applied = None
@@ -534,19 +538,101 @@ def _capture_observations(
             "timeout_limit_seconds_configured": timeout_limit_seconds,
             "response_bytes_limit_applied": response_bytes_limit,
             "application_retry_policy": "one-dispatch-per-operation",
-            "transport_retry_policy": "unknown-injected-transport",
+            "transport_retry_policy": (
+                "httpx-owned-retries-zero" if owned_capture_transport else "unknown-injected-transport"
+            ),
+        }
+        transport_configuration = (
+            {
+                "trust_env": False,
+                "retries": 0,
+                "max_connections": 1,
+                "max_keepalive_connections": 0,
+            }
+            if owned_capture_transport
+            else None
+        )
+        legacy_control_keys = {
+            *expected_control_bindings,
+            "max_concurrent_requests_observed",
+            "operations",
         }
         control_keys = {
             *expected_control_bindings,
+            "transport_configuration",
             "max_concurrent_requests_observed",
             "operations",
         }
         if (
             type(control_attestation) is not dict
-            or set(control_attestation) != control_keys
+            or frozenset(control_attestation) not in {frozenset(control_keys), frozenset(legacy_control_keys)}
+            or (owned_capture_transport and set(control_attestation) != control_keys)
             or any(control_attestation.get(key) != value for key, value in expected_control_bindings.items())
+            or (
+                set(control_attestation) == control_keys
+                and control_attestation.get("transport_configuration") != transport_configuration
+            )
         ):
             raise ResourceEvidenceError("capture-control-attestation-binding")
+        if owned_capture_transport:
+            expected_qualification_bindings = {
+                "stage_uuid": capture_result.stage_uuid,
+                "source_revision": source_revision,
+                "protocol_sha256": protocol_sha256,
+                "candidate_identity_sha256": candidate_identity_sha256,
+                "candidate_endpoint_sha256": candidate_endpoint_sha256,
+                "candidate_endpoint_scheme": capture_result.candidate_endpoint_scheme,
+                "candidate_runtime_revision": expected_identity["runtime"]["revision"],
+                "capture_module_sha256": execution_controls.module_source_sha256(source_capture.__file__),
+            }
+            qualification_bindings = (
+                protected_qualification.get("bindings") if type(protected_qualification) is dict else None
+            )
+            # Qualification pins the application endpoint, but does not itself
+            # protect bearer credentials on the network hop. All owned capture
+            # modes therefore require an HTTPS endpoint across protocol versions.
+            allowed_endpoint_schemes = {"https"}
+            if (
+                type(qualification_bindings) is not dict
+                or set(qualification_bindings) != {*expected_qualification_bindings, "candidate_endpoint_scheme"}
+                or type(qualification_bindings.get("candidate_endpoint_scheme")) is not str
+                or qualification_bindings.get("candidate_endpoint_scheme") not in allowed_endpoint_schemes
+                or type(capture_result.candidate_endpoint_scheme) is not str
+                or capture_result.candidate_endpoint_scheme not in allowed_endpoint_schemes
+                or any(
+                    qualification_bindings.get(key) != value for key, value in expected_qualification_bindings.items()
+                )
+            ):
+                raise ResourceEvidenceError("capture-qualification-binding")
+            if (
+                type(protected_qualification) is not dict
+                or set(protected_qualification)
+                != {
+                    "status",
+                    "scope",
+                    "receipt_file",
+                    "receipt_sha256",
+                    "grok_image_digest",
+                    "grok_config_sha256",
+                    "protected_profile_sha256",
+                    "full_boundary_evidence_sha256",
+                    "bindings",
+                }
+                or protected_qualification.get("status") != "verified-qualified"
+                or protected_qualification.get("scope") != "protected-source-capture"
+                or protected_qualification.get("receipt_file") != "protected-capture-qualification.json"
+                or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(protected_qualification.get("grok_image_digest", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("grok_config_sha256", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("protected_profile_sha256", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("full_boundary_evidence_sha256", "")))
+                or not _SHA.fullmatch(str(protected_qualification.get("receipt_sha256", "")))
+            ):
+                raise ResourceEvidenceError("capture-qualification-binding")
+            qualification_bytes = _read_private(root / protected_qualification["receipt_file"], max_bytes=65_536)
+            if _sha(qualification_bytes) != protected_qualification["receipt_sha256"]:
+                raise ResourceEvidenceError("capture-qualification-receipt-mismatch")
+        elif inventory.get("protected_capture_qualification") is not None:
+            raise ResourceEvidenceError("capture-qualification-shape")
         operation_controls = control_attestation.get("operations")
         expected_operation_ids = ["health", *(f"source-{index:04d}" for index in range(1, len(rows) + 1))]
         if (
@@ -629,9 +715,10 @@ def _capture_observations(
         "capture_health_runtime_match_observed": state["health_runtime_match"],
         "capture_status": state["status"],
         "capture_timeout_seconds": capture_timeout_seconds,
-        # The injected transport can retry internally; its policy is not
-        # attested by this producer, so aggregate transport retries stay unknown.
-        "capture_retries": None,
+        # Only the source-owned transport has an independently source-bound
+        # retries=0 constructor. Mock/injected transport retry behavior remains
+        # unknown and is not collapsed to zero.
+        "capture_retries": 0 if owned_capture_transport else None,
         "capture_application_retries_observed": capture_application_retries,
         "capture_response_bytes_limit_applied": capture_response_limit_applied,
         "capture_concurrency_observed": capture_concurrency_observed,
