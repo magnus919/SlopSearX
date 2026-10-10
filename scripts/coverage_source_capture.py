@@ -411,13 +411,13 @@ def _consume_lease(lease: OneShotLease | None, permit: VerifiedSourceCapturePerm
     return result["receipt_sha256"]
 
 
-def _candidate_endpoints(base_url: str, *, allow_http: bool = False) -> tuple[str, str, str]:
+def _candidate_endpoints(base_url: str) -> tuple[str, str, str]:
     if type(base_url) is not str or len(base_url) > 2048:
         raise SourceCaptureError("candidate-endpoint-invalid")
     try:
         parsed = urlsplit(base_url)
         if (
-            parsed.scheme not in ({"https", "http"} if allow_http else {"https"})
+            parsed.scheme != "https"
             or not parsed.hostname
             or parsed.username is not None
             or parsed.password is not None
@@ -429,7 +429,7 @@ def _candidate_endpoints(base_url: str, *, allow_http: bool = False) -> tuple[st
     except ValueError as exc:
         raise SourceCaptureError("candidate-endpoint-invalid") from exc
     prefix = parsed.path.rstrip("/")
-    origin = f"{parsed.scheme}://{parsed.netloc}{prefix}"
+    origin = f"https://{parsed.netloc}{prefix}"
     return origin + "/health", origin + "/v2/scrape", _sha(origin.encode("utf-8"))
 
 
@@ -837,11 +837,8 @@ async def capture_sources_once(
     candidate_identity = _validate_candidate_identity(
         candidate_identity_bytes, str(manifest["candidate_identity_sha256"])
     )
-    protocol_v2 = protocol.get("schema") == "coverage-first-study-protocol/2"
-    health_url, scrape_url, candidate_endpoint_sha256 = _candidate_endpoints(candidate_base_url, allow_http=protocol_v2)
+    health_url, scrape_url, candidate_endpoint_sha256 = _candidate_endpoints(candidate_base_url)
     endpoint_scheme = urlsplit(candidate_base_url).scheme
-    if endpoint_scheme == "http" and transport is not None:
-        raise SourceCaptureError("http-candidate-endpoint-requires-owned-qualified-transport")
     if manifest["candidate_endpoint_sha256"] != candidate_endpoint_sha256:
         raise SourceCaptureError("capture-candidate-endpoint-binding-mismatch")
     if operator_token is not None and (
