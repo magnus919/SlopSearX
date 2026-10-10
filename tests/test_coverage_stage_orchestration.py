@@ -18,8 +18,11 @@ from scripts import coverage_live_acquire as live_acquire
 from scripts import coverage_resource_evidence
 from scripts import coverage_resource_evidence as resource_evidence
 from scripts import coverage_source_capture as source_capture
+from scripts import coverage_selector_admission
+from scripts import coverage_selector_input_map
 from scripts import coverage_stage_finalization as stage_finalization
 from scripts import coverage_stage_orchestration as stage
+from scripts import coverage_jev_execution
 from scripts import coverage_study_acquire as acquisition
 from scripts import coverage_study_core as core
 from slopsearx.adapter import SearchResult
@@ -28,6 +31,10 @@ from tests.test_coverage_answer_execution import _answer_content, _response
 from tests.test_coverage_answer_execution import _Lease as AnswerLease
 from tests.test_coverage_answer_execution import _Verifier as AnswerVerifier
 from tests.test_coverage_grade_closure import _answer_outputs, _pre_submissions
+from tests.test_coverage_jev_execution import PrivateRoots as SelectorRoots
+from tests.test_coverage_jev_execution import permit_for as selector_permit_for
+from tests.test_coverage_jev_execution import valid_response as selector_valid_response
+from tests.test_coverage_legacy_control import _response as legacy_selector_response
 from tests.test_coverage_live_acquire import FakePacer, FakePermitVerifier, OneShot
 from tests.test_coverage_source_capture import _Lease as CaptureLease
 from tests.test_coverage_source_capture import _Verifier as CaptureVerifier
@@ -41,12 +48,25 @@ def digest(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
-def _source_closure_bytes(source_revision: str) -> bytes:
-    materials = {
-        "coverage_source": b"synthetic coverage code",
-        "production_rerank_source": b"synthetic production source",
-        "dependency_lock": b"synthetic dependency lock",
+def _source_materials(*, registered: bool = False) -> dict[str, bytes]:
+    if not registered:
+        return {
+            "coverage_source": b"synthetic coverage code",
+            "production_rerank_source": b"synthetic production source",
+            "dependency_lock": b"synthetic dependency lock",
+        }
+    repo = Path(__file__).parents[1]
+    return {
+        "coverage_source": (repo / "scripts/intent_ranking_coverage.py").read_bytes(),
+        "production_rerank_source": (
+            repo / "docs/experiments/evidence/coverage-first-study/w0-rerank-v1.py.txt"
+        ).read_bytes(),
+        "dependency_lock": (repo / "uv.lock").read_bytes(),
     }
+
+
+def _source_closure_bytes(source_revision: str, *, registered: bool = False) -> bytes:
+    materials = _source_materials(registered=registered)
     return canonical(
         {
             "schema": "coverage-study-qualified-source-closure/1",
@@ -56,11 +76,16 @@ def _source_closure_bytes(source_revision: str) -> bytes:
     )
 
 
-def plan_fixture() -> stage.StagePlan:
+def plan_fixture(*, selector_map_registered: bool = False) -> stage.StagePlan:
     stage_id = str(uuid.UUID(int=8001))
     packet_id = str(uuid.UUID(int=8002))
     evidence_dir = Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study"
     protocol_bytes = (evidence_dir / "protocol.json").read_bytes()
+    if selector_map_registered:
+        protocol_value = json.loads(protocol_bytes)
+        protocol_value["selector_input_map_schema"] = "coverage-selector-input-map/2-registered"
+        protocol_value["selector_input_map_status"] = "registered"
+        protocol_bytes = canonical(protocol_value)
     cohorts_bytes = (evidence_dir / "cohorts.json").read_bytes()
     cohort_doc = json.loads(cohorts_bytes)
     dev = next(row for row in cohort_doc["stages"] if row["stage"] == "development")
@@ -94,7 +119,7 @@ def plan_fixture() -> stage.StagePlan:
             ],
         }
     )
-    source_closure_sha = digest(_source_closure_bytes("a" * 40))
+    source_closure_sha = digest(_source_closure_bytes("a" * 40, registered=selector_map_registered))
     preacquisition_input_sha = digest(
         canonical(
             {
@@ -321,12 +346,11 @@ def _late_preflight(plan: stage.StagePlan, evidence: stage.AcquisitionEvidence, 
             "navigation_tasks": navigation_rows,
         }
     )
-    source_closure = _source_closure_bytes(plan.source_revision)
-    source_materials = {
-        "coverage_source": b"synthetic coverage code",
-        "production_rerank_source": b"synthetic production source",
-        "dependency_lock": b"synthetic dependency lock",
-    }
+    registered = json.loads(plan.protocol_bytes).get("selector_input_map_schema") == (
+        "coverage-selector-input-map/2-registered"
+    )
+    source_closure = _source_closure_bytes(plan.source_revision, registered=registered)
+    source_materials = _source_materials(registered=registered)
     capture_manifest = pipeline_inputs["capture_manifest_bytes"]
     materials = {
         "protocol": plan.protocol_bytes,
@@ -620,9 +644,15 @@ class StageOrchestrationTests(unittest.TestCase):
         self._run_integrated_synthetic_stage(deadline_cross=False, tamper_closeout=True)
 
     def _run_integrated_synthetic_stage(
-        self, *, deadline_cross: bool, poison_receipts: bool = False, tamper_closeout: bool = False
+        self,
+        *,
+        deadline_cross: bool,
+        poison_receipts: bool = False,
+        tamper_closeout: bool = False,
+        selector_map_registered: bool = False,
+        admission_mode: str = "valid",
     ):
-        plan = plan_fixture()
+        plan = plan_fixture(selector_map_registered=selector_map_registered)
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
             inventory_root = base / "inventory"
@@ -923,6 +953,140 @@ class StageOrchestrationTests(unittest.TestCase):
                 calls.append("reference_grading")
                 return _pre_submissions(prepared)
 
+            selector_callback = selectors
+            verify_admission = None
+            selector_roots = None
+            if selector_map_registered:
+                from scripts import coverage_selector_admission as admission_module
+
+                selector_roots = SelectorRoots()
+                response_by_operation = {}
+                selector_transport_dispatches = []
+
+                async def resolve_selector_permits(plan_arg, prepared, _map_bytes, _map_sha, operation_materials):
+                    permits = {}
+                    for operation_id in prepared.operation_ids:
+                        material = operation_materials[operation_id]
+                        input_bytes = material["operation_input_bytes"]
+                        legacy_control = material["legacy_control"]
+                        request_body, compiled = coverage_jev_execution.build_selector_request(
+                            operation_id=operation_id,
+                            operation_input_bytes=input_bytes,
+                            legacy_control=legacy_control,
+                        )
+                        parser_mode = "coverage" if compiled is not None else "original-v1"
+                        permits[operation_id] = selector_permit_for(
+                            prepared, operation_id, input_bytes, request_body, parser_mode=parser_mode
+                        )
+                        response_by_operation[operation_id] = (
+                            selector_valid_response(compiled)
+                            if compiled is not None
+                            else legacy_selector_response(
+                                {f"c{index}": 7 for index, _ in enumerate(legacy_control["canonical_pool"])}
+                            )
+                        )
+                    return permits
+
+                def selector_transport_factory(operation_id):
+                    async def handler(request):
+                        selector_transport_dispatches.append(operation_id)
+                        return httpx.Response(200, content=response_by_operation[operation_id], request=request)
+
+                    return httpx.MockTransport(handler)
+
+                def selector_evidence_builder(
+                    plan_arg, prepared, pipeline_inputs, closed_references, results, terminal
+                ):
+                    calls.append("selector")
+                    terminal_bytes = (selector_roots.result / f"{plan_arg.stage_uuid}.terminal-inventory.json").read_bytes()
+                    by_operation = {row.operation_id: row for row in results}
+                    research_orders = {}
+                    for task_index, task in enumerate(pipeline_inputs["tasks"], start=1):
+                        candidate = by_operation[f"research-{task_index:02d}-base-candidate"]
+                        w0 = by_operation[f"research-{task_index:02d}-base-w0"]
+                        candidate_order = candidate.ranking.ordered_ids if candidate.ranking is not None else ()
+                        frozen_order = (
+                            w0.native_ordered_ids
+                            if w0.native_ordered_ids is not None
+                            else w0.ranking.ordered_ids if w0.ranking is not None else ()
+                        )
+                        # W0's frozen 40-card request uses local cN identifiers;
+                        # restore those ranks to the sealed pool IDs and append
+                        # the untouched pool tail for 41–80-card tasks.
+                        w0_order = tuple(
+                            task["native_order"][int(card_id.removeprefix("c"))]
+                            for card_id in frozen_order
+                        ) + tuple(task["native_order"][len(frozen_order) :])
+                        research_orders[task["task_id"]] = {
+                            "w0": list(w0_order),
+                            "candidate": list(candidate_order),
+                        }
+                        if any(
+                            len(research_orders[task["task_id"]][arm]) != len(task["native_order"])
+                            or set(research_orders[task["task_id"]][arm]) != set(task["native_order"])
+                            for arm in ("w0", "candidate")
+                        ):
+                            raise AssertionError(
+                                f"synthetic selector response did not produce full permutation for {task['task_id']}"
+                            )
+                    navigation_rank_one = {}
+                    navigation_top1_urls = {}
+                    for target in plan_arg.navigation_targets:
+                        target_id = target["target_id"]
+                        navigation_rank_one[target_id] = True
+                        navigation_top1_urls[target_id] = target["target_url"]
+                    return stage.SelectorEvidence(
+                        stage_uuid=plan_arg.stage_uuid,
+                        terminal_inventory_sha256=terminal["sha256"],
+                        operation_rows=tuple(
+                            {"operation_id": operation_id, "state": "complete-success"}
+                            for operation_id in prepared.operation_ids
+                        ),
+                        research_orders=research_orders,
+                        navigation_rank_one=navigation_rank_one,
+                        reference_grade_receipt_sha256=closed_references.receipt_sha256,
+                        usage_status="known",
+                        navigation_top1_urls=navigation_top1_urls,
+                        terminal_inventory_bytes=terminal_bytes,
+                        result_root=selector_roots.result,
+                        archive_root=selector_roots.archive,
+                    )
+
+                selector_callback = stage.registered_selector_executor_factory(
+                    permit_resolver=resolve_selector_permits,
+                    api_key="synthetic-registered-selector-key",
+                    lease_root=selector_roots.lease,
+                    archive_root=selector_roots.archive,
+                    result_root=selector_roots.result,
+                    evidence_builder=selector_evidence_builder,
+                    transport_factory=selector_transport_factory,
+                )
+
+                async def verify_admission(plan_arg, prepared, map_bytes, map_sha):
+                    calls.append("verify_selector_admission")
+                    expected = {
+                        "schema": admission_module.SCHEMA,
+                        "status": "admitted",
+                        "stage_uuid": prepared.stage_uuid,
+                        "source_revision": prepared.source_revision,
+                        "protocol_sha256": digest(plan_arg.protocol_bytes),
+                        "registration_sha256": prepared.registration_sha256,
+                        "source_closure_sha256": prepared.pins["qualified_source_closure"],
+                        "selector_input_map_sha256": map_sha,
+                    }
+                    if admission_mode == "wrong":
+                        expected["selector_input_map_sha256"] = "0" * 64
+                    receipt_bytes = canonical(expected)
+                    return admission_module.verify_selector_map_admission(
+                        receipt_bytes=receipt_bytes,
+                        expected_receipt_sha256=digest(receipt_bytes),
+                        protocol_bytes=plan_arg.protocol_bytes,
+                        prepared=prepared,
+                        selector_input_map_sha256=map_sha,
+                    )
+
+                verify_admission = None if admission_mode == "missing" else verify_admission
+
             executors = stage.StageExecutors(
                 acquire=acquire,
                 verify_acquisition=verify_acquisition,
@@ -930,9 +1094,10 @@ class StageOrchestrationTests(unittest.TestCase):
                 prepare_after_acquisition=prepare_after_acquisition,
                 verify_late_preflight=verify_late_preflight,
                 grade_references=grading_refs,
-                selectors=selectors,
+                selectors=selector_callback,
                 answerer=answerer,
                 grade_answers=grade_answers,
+                verify_selector_admission=verify_admission,
             )
             fake_now = [plan.stage_started_monotonic + 1]
             original_write_inventory = stage._write_inventory
@@ -970,6 +1135,16 @@ class StageOrchestrationTests(unittest.TestCase):
             closeout_document = json.loads(closeout_bytes)
             self.assertEqual(closeout_document["final_inventory_sha256"], result.inventory_sha256)
             self.assertIn("closeout receipt fsync excluded", closeout_document["measurement_basis"])
+            if selector_map_registered and admission_mode != "valid":
+                self.assertEqual(result.status, "terminal-incomplete", inventory)
+                self.assertEqual(inventory["phases"][7]["status"], "not-invoked")
+                self.assertEqual(inventory["terminal_reason"], "orchestration-binding-failed")
+                self.assertEqual(selector_transport_dispatches, [])
+                self.assertEqual(list(selector_roots.lease.iterdir()), [])
+                self.assertNotIn("answerer", calls)
+                return
+            if selector_map_registered:
+                self.assertEqual(result.status, "pending-independent-closeout", inventory)
             if not deadline_cross and not poison_receipts and not tamper_closeout:
                 finalization = stage_finalization.verify_stage_finalization(
                     inventory_path=result.inventory_path,
@@ -1054,7 +1229,7 @@ class StageOrchestrationTests(unittest.TestCase):
         self.assertFalse(result.scientific_calls_made_by_coordinator)
         self.assertEqual([row["status"] for row in inventory["phases"]], ["complete"] * 16)
         self.assertEqual(inventory["per_band_qualification"], "diagnostic-only")
-        self.assertEqual(len(calls), 9)
+        self.assertEqual(len(calls), 10 if selector_map_registered else 9)
         self.assertEqual(inventory["gate_metrics"]["navigation"], {f"D-N0{i}": True for i in range(1, 6)})
         self.assertIsNone(inventory["gate_metrics"]["resources"].get("pass"))
         self.assertEqual(digest(receipt_bytes), inventory["gate_calculation_receipt_sha256"])
@@ -1062,10 +1237,24 @@ class StageOrchestrationTests(unittest.TestCase):
         resource_receipt = json.loads(resource_bytes)
         self.assertEqual(digest(resource_bytes), inventory["resource_evidence_receipt_sha256"])
         self.assertEqual(resource_receipt["schema"], "coverage-resource-evidence/2")
-        self.assertIsNone(resource_receipt["observations"].get("selector_elapsed_ms"))
+        if not selector_map_registered:
+            self.assertIsNone(resource_receipt["observations"].get("selector_elapsed_ms"))
         # The callback's plausible token claims have no archived terminal/result
         # chain and therefore remain unknown; resource collection ignores them.
-        self.assertIsNone(resource_receipt["observations"].get("selector_usage"))
+        if not selector_map_registered:
+            self.assertIsNone(resource_receipt["observations"].get("selector_usage"))
+
+    def test_registered_map_executes_full_offline_graph_after_external_admission(self):
+        self._run_integrated_synthetic_stage(deadline_cross=False, selector_map_registered=True)
+
+    def test_registered_map_missing_or_wrong_admission_has_zero_selector_dispatch(self):
+        for mode in ("missing", "wrong"):
+            with self.subTest(mode=mode):
+                self._run_integrated_synthetic_stage(
+                    deadline_cross=False,
+                    selector_map_registered=True,
+                    admission_mode=mode,
+                )
 
     def test_gate_threshold_binding_uses_frozen_gate_subset(self):
         plan = plan_fixture()

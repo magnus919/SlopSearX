@@ -738,6 +738,12 @@ def _selector_observations(
     archive_root: Path | None,
     expected_operation_ids: tuple[str, ...],
     operation_rows: tuple[Mapping[str, object], ...],
+    expected_registration_sha256: str | None = None,
+    expected_primary_control: Mapping[str, object] | None = None,
+    expected_candidate_source_sha256: str | None = None,
+    expected_selector_input_map_schema: str | None = None,
+    selector_input_map_bytes: bytes | None = None,
+    expected_selector_input_map_sha256: str | None = None,
 ) -> dict[str, object]:
     """Consume selector measurements only from a pinned terminal/result/archive chain.
 
@@ -783,6 +789,66 @@ def _selector_observations(
         raise ResourceEvidenceError("selector-terminal-inventory-not-canonical")
     if type(terminal) is not dict:
         raise ResourceEvidenceError("selector-terminal-inventory-shape")
+    if selector_input_map_bytes is not None or expected_selector_input_map_sha256 is not None:
+        if (
+            type(selector_input_map_bytes) is not bytes
+            or type(expected_selector_input_map_sha256) is not str
+            or not _SHA.fullmatch(expected_selector_input_map_sha256)
+            or _sha(selector_input_map_bytes) != expected_selector_input_map_sha256
+        ):
+            raise ResourceEvidenceError("selector-input-map-pin-invalid")
+        input_map = _strict_json(selector_input_map_bytes, "selector-input-map")
+        if (
+            type(input_map) is not dict
+            or set(input_map)
+            != {
+                "schema", "status", "stage_uuid", "source_revision", "original_registration_sha256",
+                "coverage_source_sha256", "production_rerank_source_sha256", "execution_source_sha256",
+                "legacy_control_source_sha256", "current_service_source_sha256",
+                "acquisition_snapshot_index_sha256", "acquisition_manifest_sha256",
+                "task_input_manifest_sha256", "neutral_fixture_sha256", "builder_source_sha256", "operations",
+            }
+            or input_map.get("schema") != (expected_selector_input_map_schema or "coverage-selector-input-map/2-draft")
+            or input_map.get("status")
+            != (
+                "complete-awaiting-external-admission"
+                if expected_selector_input_map_schema == "coverage-selector-input-map/2-registered"
+                else "draft-unadmitted"
+            )
+            or input_map.get("stage_uuid") != stage_uuid
+            or input_map.get("source_revision") != source_revision
+            or input_map.get("original_registration_sha256") != expected_registration_sha256
+            or input_map.get("coverage_source_sha256") != expected_candidate_source_sha256
+            or expected_primary_control is None
+            or input_map.get("production_rerank_source_sha256") != expected_primary_control.get("rerank_source_sha256")
+            or (
+                json.dumps(input_map, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+                + "\n"
+            ).encode("utf-8")
+            != selector_input_map_bytes
+            or type(input_map.get("operations")) is not list
+            or [row.get("operation_id") if type(row) is dict else None for row in input_map["operations"]]
+            != list(expected_operation_ids)
+        ):
+            raise ResourceEvidenceError("selector-input-map-binding")
+        for name in (
+            "coverage_source_sha256", "production_rerank_source_sha256", "execution_source_sha256",
+            "legacy_control_source_sha256", "current_service_source_sha256", "acquisition_snapshot_index_sha256",
+            "acquisition_manifest_sha256", "task_input_manifest_sha256", "neutral_fixture_sha256", "builder_source_sha256",
+        ):
+            if type(input_map.get(name)) is not str or not _SHA.fullmatch(input_map[name]):
+                raise ResourceEvidenceError("selector-input-map-material-pin-invalid")
+        for operation_id, row in zip(expected_operation_ids, input_map["operations"], strict=True):
+            is_w0 = operation_id.endswith("-w0") or operation_id == "neutral-w0-first40"
+            if (
+                type(row) is not dict
+                or set(row) != {"operation_id", "parser_mode", "operation_input_sha256", "request_body_sha256"}
+                or row.get("operation_id") != operation_id
+                or row.get("parser_mode") != ("original-v1" if is_w0 else "coverage")
+                or type(row.get("operation_input_sha256")) is not str or not _SHA.fullmatch(row["operation_input_sha256"])
+                or type(row.get("request_body_sha256")) is not str or not _SHA.fullmatch(row["request_body_sha256"])
+            ):
+                raise ResourceEvidenceError("selector-input-map-operation-invalid")
     expected_bindings = {
         "schema": "coverage-jev-terminal-inventory/1",
         "stage_uuid": stage_uuid,
@@ -1322,6 +1388,14 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             ),
             expected_operation_ids=tuple(kwargs.get("selector_expected_operation_ids", ())),
             operation_rows=tuple(kwargs.get("selector_operation_rows", ())),
+            expected_registration_sha256=kwargs.get("selector_registration_sha256"),
+            expected_primary_control=protocol.get("primary_control") if type(protocol) is dict else None,
+            expected_candidate_source_sha256=protocol.get("candidate_source_sha256") if type(protocol) is dict else None,
+            expected_selector_input_map_schema=(
+                protocol.get("selector_input_map_schema") if type(protocol) is dict else None
+            ),
+            selector_input_map_bytes=kwargs.get("selector_input_map_bytes"),
+            expected_selector_input_map_sha256=kwargs.get("expected_selector_input_map_sha256"),
         )
         observations = {**acq, **capture, **answer, **grader, **selector}
         observations["w0_control_source_sha256"] = None

@@ -222,6 +222,29 @@ class RegistrationPreflightTests(unittest.TestCase):
         with self.assertRaisesRegex(core.StudyError, "selector-input-map-schema-unsupported"):
             core.preflight_stage(**args)
 
+    def test_registered_map_schema_requires_registered_status_and_external_pin(self):
+        args, materials, _, _ = make_fixture()
+        materials["protocol"] = canonical(
+            {
+                "schema": "coverage-first-study-protocol/2",
+                "selector_input_map_schema": "coverage-selector-input-map/2-registered",
+                "selector_input_map_status": "registered",
+            }
+        )
+        reseal_fixture(args, materials)
+        prepared = core.preflight_stage(**args)
+        self.assertTrue(prepared.selector_input_map_required)
+        self.assertEqual(prepared.selector_input_map_schema, "coverage-selector-input-map/2-registered")
+        self.assertFalse(prepared.fresh_execution_authorized)
+
+        args, materials, _, _ = make_fixture()
+        materials["protocol"] = canonical(
+            {"selector_input_map_schema": "coverage-selector-input-map/2-registered"}
+        )
+        reseal_fixture(args, materials)
+        with self.assertRaisesRegex(core.StudyError, "selector-input-map-registration-status-required"):
+            core.preflight_stage(**args)
+
     def test_registration_and_materials_require_external_hashes(self):
         args, materials, _, _ = make_fixture()
         changed = dict(materials)
