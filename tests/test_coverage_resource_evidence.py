@@ -1138,6 +1138,8 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     mapped_proof = mapped["selector_transaction_proof"]
     assert mapped_proof["input_map_sha256"] == selector_map_sha
     assert len(mapped_proof["transactions"]) == len(prepared_selector.operation_ids)
+    mapped_input_hashes = {item["operation_input_sha256"] for item in map_rows}
+    assert all(row["operation_input_sha256"] in mapped_input_hashes for row in mapped_proof["transactions"])
     assert mapped["w0_control_source_sha256"] == protocol["primary_control"]["rerank_source_sha256"]
     # Keep the later full-collector pass bound to the same newly sealed
     # terminal bytes used by the direct map-join assertion above.
@@ -1161,6 +1163,49 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     legacy_report = resource_evidence.collect_resource_evidence(**collector_kwargs)
     assert legacy_report.observations["capture_response_bytes_limit"] is None
     assert legacy_report.observations["capture_response_bytes_limit_applied"] is None
+
+    # The registered v2 map uses the same operation inputs, but its status is
+    # externally admitted. The collector must keep the original result/map,
+    # archive, producer, and W0 control joins intact for that schema as well.
+    registered_map_doc = json.loads(selector_map)
+    registered_map_doc["schema"] = "coverage-selector-input-map/2-registered"
+    registered_map_doc["status"] = "complete-awaiting-external-admission"
+    registered_map = selector_execution._canonical(registered_map_doc)
+    registered_map_sha = _sha(registered_map)
+    registered_terminal = json.loads(selector_terminal_bytes)
+    for observation in registered_terminal["resource_observations"]:
+        operation_id = observation["operation_id"]
+        result_path = selector_roots.result / f"{stage_uuid}.{operation_id}.result.json"
+        result_doc = json.loads(result_path.read_bytes())
+        result_doc["execution_provenance"]["selector_input_map_sha256"] = registered_map_sha
+        result_bytes = selector_execution._canonical(result_doc)
+        result_path.write_bytes(result_bytes)
+        observation["result_receipt_sha256"] = _sha(result_bytes)
+    registered_terminal_bytes = selector_execution._canonical(registered_terminal)
+    (selector_roots.result / f"{stage_uuid}.terminal-inventory.json").write_bytes(registered_terminal_bytes)
+    registered_observed = resource_evidence._selector_observations(
+        stage_uuid=stage_uuid,
+        source_revision=source_revision,
+        protocol_sha256=prepared_selector.pins["protocol"],
+        source_closure_sha256=source_closure_sha256,
+        expected_terminal_sha256=_sha(registered_terminal_bytes),
+        terminal_inventory_bytes=registered_terminal_bytes,
+        result_root=selector_roots.result,
+        archive_root=selector_roots.archive,
+        expected_operation_ids=prepared_selector.operation_ids,
+        operation_rows=selector_operation_rows,
+        expected_registration_sha256=prepared_selector.registration_sha256,
+        expected_primary_control=protocol["primary_control"],
+        expected_candidate_source_sha256=protocol["candidate_source_sha256"],
+        expected_selector_input_map_schema="coverage-selector-input-map/2-registered",
+        selector_input_map_bytes=registered_map,
+        expected_selector_input_map_sha256=registered_map_sha,
+    )
+    assert registered_observed["selector_transaction_proof"]["input_map_sha256"] == registered_map_sha
+    assert len(registered_observed["selector_transaction_proof"]["transactions"]) == len(
+        prepared_selector.operation_ids
+    )
+    assert registered_observed["w0_control_source_sha256"] == protocol["primary_control"]["rerank_source_sha256"]
     selector_roots.close()
 
 

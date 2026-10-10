@@ -754,6 +754,7 @@ def _selector_observations(
     expected_registration_sha256: str | None = None,
     expected_primary_control: Mapping[str, object] | None = None,
     expected_candidate_source_sha256: str | None = None,
+    expected_selector_input_map_schema: str | None = None,
     selector_input_map_bytes: bytes | None = None,
     expected_selector_input_map_sha256: str | None = None,
 ) -> dict[str, object]:
@@ -812,6 +813,12 @@ def _selector_observations(
         raise ResourceEvidenceError("selector-terminal-inventory-shape")
     registered_input_rows: dict[str, Mapping[str, object]] | None = None
     if selector_input_map_bytes is not None or expected_selector_input_map_sha256 is not None:
+        if expected_selector_input_map_schema not in {
+            None,
+            "coverage-selector-input-map/2-draft",
+            "coverage-selector-input-map/2-registered",
+        }:
+            raise ResourceEvidenceError("selector-input-map-schema-unsupported")
         if (
             type(selector_input_map_bytes) is not bytes
             or type(expected_selector_input_map_sha256) is not str
@@ -841,8 +848,14 @@ def _selector_observations(
                 "builder_source_sha256",
                 "operations",
             }
-            or input_map.get("schema") != "coverage-selector-input-map/2-draft"
-            or input_map.get("status") != "draft-unadmitted"
+            or input_map.get("schema")
+            != (expected_selector_input_map_schema or "coverage-selector-input-map/2-draft")
+            or input_map.get("status")
+            != (
+                "complete-awaiting-external-admission"
+                if expected_selector_input_map_schema == "coverage-selector-input-map/2-registered"
+                else "draft-unadmitted"
+            )
             or input_map.get("stage_uuid") != stage_uuid
             or input_map.get("source_revision") != source_revision
             or input_map.get("original_registration_sha256") != expected_registration_sha256
@@ -1013,6 +1026,8 @@ def _selector_observations(
         ):
             raise ResourceEvidenceError("selector-result-observation-binding")
         provenance = result.get("execution_provenance")
+        if registered_input_rows is not None and type(provenance) is not dict:
+            raise ResourceEvidenceError("selector-execution-provenance-required")
         provenance_states.append(provenance is not None)
         elapsed = observation.get("elapsed_ms_through_final_receipt_fsync")
         dispatches = observation.get("provider_dispatch_count")
@@ -1750,6 +1765,9 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             expected_primary_control=protocol.get("primary_control") if type(protocol) is dict else None,
             expected_candidate_source_sha256=(
                 protocol.get("candidate_source_sha256") if type(protocol) is dict else None
+            ),
+            expected_selector_input_map_schema=(
+                protocol.get("selector_input_map_schema") if type(protocol) is dict else None
             ),
             selector_input_map_bytes=kwargs.get("selector_input_map_bytes"),
             expected_selector_input_map_sha256=kwargs.get("expected_selector_input_map_sha256"),

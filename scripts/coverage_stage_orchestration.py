@@ -31,6 +31,7 @@ from scripts import coverage_source_capture as source_capture
 from scripts import coverage_study_acquire as acquisition
 from scripts import coverage_study_core as core
 from scripts import intent_ranking_receipts as receipts
+from scripts.coverage_selector_admission import VerifiedSelectorAdmission
 
 SCHEMA = "coverage-stage-orchestration-inventory/1"
 MAX_STAGE_WALL_SECONDS = 28_800.0
@@ -142,7 +143,8 @@ class RegisteredSelectorStageExecutor:
     def __init__(
         self,
         *,
-        permits: Mapping[str, tuple[bytes, str]],
+        permits: Mapping[str, tuple[bytes, str]] | None = None,
+        permit_resolver: Callable[..., Awaitable[Mapping[str, tuple[bytes, str]]]] | None = None,
         api_key: str,
         lease_root: str | os.PathLike[str],
         archive_root: str | os.PathLike[str],
@@ -152,7 +154,10 @@ class RegisteredSelectorStageExecutor:
     ) -> None:
         if not callable(evidence_builder):
             raise OrchestrationError("registered-selector-evidence-builder-required")
-        self._permits = dict(permits)
+        if (permits is None) == (permit_resolver is None):
+            raise OrchestrationError("registered-selector-external-permit-source-required")
+        self._permits = dict(permits or {})
+        self._permit_resolver = permit_resolver
         self._api_key = api_key
         self._lease_root = lease_root
         self._archive_root = archive_root
@@ -177,6 +182,14 @@ class RegisteredSelectorStageExecutor:
         operation_materials = pipeline_inputs.get("selector_operation_materials")
         if type(map_bytes) is not bytes or type(map_sha) is not str or type(operation_materials) is not dict:
             raise OrchestrationError("registered-selector-map-inputs-required")
+        permits = self._permits
+        if self._permit_resolver is not None:
+            try:
+                permits = await _await(self._permit_resolver(plan, prepared, map_bytes, map_sha, operation_materials))
+            except Exception as exc:
+                raise OrchestrationError("registered-selector-external-permits-invalid") from exc
+            if type(permits) is not dict:
+                raise OrchestrationError("registered-selector-external-permits-invalid")
         ledger = core.StudyRun(prepared)
         results = await coverage_jev_execution.execute_registered_selector_schedule(
             prepared=prepared,
@@ -184,7 +197,7 @@ class RegisteredSelectorStageExecutor:
             selector_input_map_bytes=map_bytes,
             expected_selector_input_map_sha256=map_sha,
             operation_materials=operation_materials,
-            permits=self._permits,
+            permits=permits,
             api_key=self._api_key,
             lease_root=self._lease_root,
             archive_root=self._archive_root,
@@ -254,6 +267,9 @@ class StageExecutors:
     selectors: Callable[[StagePlan, core.PreparedStage, Mapping[str, object], Any], Awaitable[SelectorEvidence]]
     answerer: Callable[[StagePlan, Sequence[answer_execution.AnswerTask]], Awaitable[AnswerEvidence]]
     grade_answers: Callable[[packets.PreparedAnswerPackets], Awaitable[Sequence[Any]]]
+    # The issuer/verifier is external and must validate its sealed receipt
+    # against current source, registration, protocol, and post-acquisition map.
+    verify_selector_admission: Callable[..., Awaitable[VerifiedSelectorAdmission]] | None = None
 
 
 @dataclass(frozen=True)
@@ -361,6 +377,9 @@ def _validate_plan(plan: StagePlan) -> dict[str, object]:
     cohorts = _strict_json(plan.cohorts_bytes, "cohorts")
     if type(protocol) is not dict or type(cohorts) is not dict:
         raise OrchestrationError("study-material-shape")
+    if protocol.get("selector_input_map_schema") == "coverage-selector-input-map/2-registered":
+        if protocol.get("selector_input_map_status") != "registered":
+            raise OrchestrationError("selector-map-registration-status-required")
     # Fresh pool membership does not exist yet: only cohort and acquisition
     # material may be pinned before the first acquisition operation.
     if protocol.get("cohorts_sha256") != cohorts_sha:
@@ -1161,9 +1180,16 @@ async def coordinate_coverage_stage(
         selector_input_map_sha256: str | None = None
         selector_map_kwargs: dict[str, object] | None = None
         draft_protocol = _strict_json(plan.protocol_bytes, "selector-map-protocol")
+        map_schema = (
+            draft_protocol.get("selector_input_map_schema") if type(draft_protocol) is dict else None
+        )
         if (
             type(draft_protocol) is dict
-            and draft_protocol.get("selector_input_map_schema") == "coverage-selector-input-map/2-draft"
+            and map_schema
+            in {
+                "coverage-selector-input-map/2-draft",
+                "coverage-selector-input-map/2-registered",
+            }
         ):
             if not isinstance(executors.selectors, RegisteredSelectorStageExecutor):
                 raise OrchestrationError("registered-selector-stage-executor-required")
@@ -1197,20 +1223,48 @@ async def coordinate_coverage_stage(
             selector_input_map_sha256 = _write_new(stage_dir / "selector-input-map.json", selector_input_map_bytes)
             from scripts import coverage_jev_execution
 
+            admission = None
+            if map_schema == "coverage-selector-input-map/2-registered":
+                verifier = executors.verify_selector_admission
+                if not callable(verifier):
+                    raise OrchestrationError("selector-map-external-admission-verifier-required")
+                try:
+                    admission = await _await(
+                        verifier(plan, prepared, selector_input_map_bytes, selector_input_map_sha256)
+                    )
+                except Exception as exc:
+                    raise OrchestrationError("selector-map-external-admission-invalid") from exc
+                expected_admission = {
+                    "stage_uuid": prepared.stage_uuid,
+                    "source_revision": prepared.source_revision,
+                    "protocol_sha256": identity["protocol_sha256"],
+                    "registration_sha256": prepared.registration_sha256,
+                    "source_closure_sha256": prepared.pins["qualified_source_closure"],
+                    "selector_input_map_sha256": selector_input_map_sha256,
+                }
+                if (
+                    type(admission) is not VerifiedSelectorAdmission
+                    or admission.receipt_sha256 is None
+                    or not _SHA256.fullmatch(admission.receipt_sha256)
+                    or any(getattr(admission, name) != value for name, value in expected_admission.items())
+                ):
+                    raise OrchestrationError("selector-map-external-admission-binding-invalid")
             coverage_jev_execution._bind_selector_input_map(
-                prepared, selector_input_map_bytes, selector_input_map_sha256
+                prepared,
+                selector_input_map_bytes,
+                selector_input_map_sha256,
+                admission=admission,
             )
             inventory["selector_input_map_sha256"] = selector_input_map_sha256
             _write_inventory(inventory_path, inventory)
             selector_pipeline_inputs["selector_input_map_bytes"] = selector_input_map_bytes
             selector_pipeline_inputs["selector_input_map_sha256"] = selector_input_map_sha256
             selector_pipeline_inputs["selector_operation_materials"] = operation_materials
-            # The /2-draft map is not a registration or provider-call permit.
-            # Keep this path buildable for offline review, but stop before the
-            # injected selector executor until a separately sealed protocol
-            # admits the map and the concrete executor is wired to the guarded
-            # registered-call entrypoint.
-            raise OrchestrationError("selector-input-map-draft-not-admitted")
+            if map_schema == "coverage-selector-input-map/2-draft":
+                # Preserve the original draft hard stop. Only the new
+                # registered schema can proceed, after its externally pinned
+                # admission receipt has been checked above.
+                raise OrchestrationError("selector-input-map-draft-not-admitted")
 
         selector = await phase(
             7,

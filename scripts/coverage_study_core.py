@@ -232,6 +232,7 @@ class PreparedStage:
     status: str = "preflight-verified-not-admitted"
     fresh_execution_authorized: bool = False
     selector_input_map_required: bool = False
+    selector_input_map_schema: str | None = None
 
 
 def _verify_input_manifest(raw: bytes, *, stage_uuid: str, expected_tasks: tuple[str, ...]) -> None:
@@ -570,6 +571,7 @@ def preflight_stage(
         # two byte encodings for a single registered task inventory.
         raise StudyError("input-manifest-not-canonical")
     selector_input_map_required = False
+    selector_input_map_schema = None
     try:
         protocol_document = _strict_json(materials["protocol"], "protocol")
     except StudyError:
@@ -578,9 +580,17 @@ def preflight_stage(
         # changes the selector dispatch contract.
         protocol_document = None
     if type(protocol_document) is dict and "selector_input_map_schema" in protocol_document:
-        if protocol_document["selector_input_map_schema"] != "coverage-selector-input-map/2-draft":
+        selector_input_map_schema = protocol_document["selector_input_map_schema"]
+        if selector_input_map_schema not in {
+            "coverage-selector-input-map/2-draft",
+            "coverage-selector-input-map/2-registered",
+        }:
             raise StudyError("selector-input-map-schema-unsupported")
         selector_input_map_required = True
+        if selector_input_map_schema.endswith("/2-registered") and protocol_document.get(
+            "selector_input_map_status"
+        ) != "registered":
+            raise StudyError("selector-input-map-registration-status-required")
     _verify_input_manifest(materials["task_input_manifest"], stage_uuid=stage_uuid, expected_tasks=tuple(task_ids))
     for material_name in ("source_capture_manifest", "reference_manifest", "answer_assessment_plan"):
         _verify_stage_bound_manifest(materials[material_name], label=material_name, stage_uuid=stage_uuid)
@@ -649,6 +659,7 @@ def preflight_stage(
         scraper_calls=capture_calls,
         health_calls=HEALTH_CALLS,
         selector_input_map_required=selector_input_map_required,
+        selector_input_map_schema=selector_input_map_schema,
     )
 
 

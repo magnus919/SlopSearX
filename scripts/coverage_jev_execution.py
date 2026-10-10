@@ -57,7 +57,7 @@ _LEDGER_ACTIVITY: weakref.WeakKeyDictionary[core.StudyRun, _LedgerActivity] = we
 _LEDGER_RESOURCE_OBSERVATIONS: weakref.WeakKeyDictionary[core.StudyRun, dict[str, dict[str, object]]] = (
     weakref.WeakKeyDictionary()
 )
-_BOUND_SELECTOR_INPUT_MAPS: dict[int, tuple[weakref.ReferenceType[core.PreparedStage], str]] = {}
+_BOUND_SELECTOR_INPUT_MAPS: dict[int, tuple[weakref.ReferenceType[core.PreparedStage], str, str | None]] = {}
 
 
 class JevExecutionError(RuntimeError):
@@ -65,7 +65,11 @@ class JevExecutionError(RuntimeError):
 
 
 def _bind_selector_input_map(
-    prepared: core.PreparedStage, selector_input_map_bytes: bytes, expected_sha256: str
+    prepared: core.PreparedStage,
+    selector_input_map_bytes: bytes,
+    expected_sha256: str,
+    *,
+    admission: Any | None = None,
 ) -> None:
     """Bind the coordinator-verified v2 map to this exact prepared object.
 
@@ -80,11 +84,32 @@ def _bind_selector_input_map(
         or type(expected_sha256) is not str
         or not _SHA256.fullmatch(expected_sha256)
         or _sha(selector_input_map_bytes) != expected_sha256
+        or (
+            prepared.selector_input_map_schema == "coverage-selector-input-map/2-registered"
+            and not _valid_selector_admission(admission, prepared, expected_sha256)
+        )
     ):
         raise JevExecutionError("selector-input-map-binding-invalid")
     key = id(prepared)
     reference = weakref.ref(prepared, lambda ref, object_id=key: _discard_bound_map(object_id, ref))
-    _BOUND_SELECTOR_INPUT_MAPS[key] = (reference, expected_sha256)
+    receipt_sha = admission.receipt_sha256 if admission is not None else None
+    _BOUND_SELECTOR_INPUT_MAPS[key] = (reference, expected_sha256, receipt_sha)
+
+
+def _valid_selector_admission(admission: Any, prepared: core.PreparedStage, map_sha: str) -> bool:
+    from scripts.coverage_selector_admission import VerifiedSelectorAdmission
+
+    return (
+        type(admission) is VerifiedSelectorAdmission
+        and type(admission.receipt_sha256) is str
+        and _SHA256.fullmatch(admission.receipt_sha256) is not None
+        and admission.stage_uuid == prepared.stage_uuid
+        and admission.source_revision == prepared.source_revision
+        and admission.protocol_sha256 == prepared.pins.get("protocol")
+        and admission.registration_sha256 == prepared.registration_sha256
+        and admission.source_closure_sha256 == prepared.pins.get("qualified_source_closure")
+        and admission.selector_input_map_sha256 == map_sha
+    )
 
 
 def _discard_bound_map(object_id: int, reference: weakref.ReferenceType[core.PreparedStage]) -> None:
@@ -101,6 +126,13 @@ def _bound_selector_input_map_sha256(prepared: core.PreparedStage) -> str | None
         _BOUND_SELECTOR_INPUT_MAPS.pop(id(prepared), None)
         return None
     return current[1]
+
+
+def _bound_selector_admission_sha256(prepared: core.PreparedStage) -> str | None:
+    current = _BOUND_SELECTOR_INPUT_MAPS.get(id(prepared))
+    if current is None or current[0]() is not prepared:
+        return None
+    return current[2]
 
 
 @dataclass(frozen=True)
@@ -382,8 +414,14 @@ def _verify_registered_operation_input(
     if type(document) is not dict or set(document) != map_fields or type(document.get("operations")) is not list:
         raise JevExecutionError("selector-input-map-binding")
     if (
-        document.get("schema") != "coverage-selector-input-map/2-draft"
-        or document.get("status") != "draft-unadmitted"
+        document.get("schema")
+        != (prepared.selector_input_map_schema or "coverage-selector-input-map/2-draft")
+        or document.get("status")
+        != (
+            "complete-awaiting-external-admission"
+            if prepared.selector_input_map_schema == "coverage-selector-input-map/2-registered"
+            else "draft-unadmitted"
+        )
         or document.get("stage_uuid") != prepared.stage_uuid
         or document.get("source_revision") != prepared.source_revision
         or document.get("original_registration_sha256") != prepared.registration_sha256
@@ -481,6 +519,11 @@ async def execute_registered_selector_schedule(
         or set(permits) != set(prepared.operation_ids)
     ):
         raise JevExecutionError("registered-selector-schedule-binding-invalid")
+    if (
+        prepared.selector_input_map_schema == "coverage-selector-input-map/2-registered"
+        and _bound_selector_admission_sha256(prepared) is None
+    ):
+        raise JevExecutionError("selector-map-external-admission-required")
     if type(api_key) is not str or not api_key or api_key != api_key.strip() or "\r" in api_key or "\n" in api_key:
         raise JevExecutionError("explicit-api-key-invalid")
     try:
@@ -805,6 +848,11 @@ async def execute_selector_call(
     map_required = type(prepared) is core.PreparedStage and prepared.selector_input_map_required is True
     if (
         (map_required and bound_map_sha is None)
+        or (
+            type(prepared) is core.PreparedStage
+            and prepared.selector_input_map_schema == "coverage-selector-input-map/2-registered"
+            and _bound_selector_admission_sha256(prepared) is None
+        )
         or (bound_map_sha is not None and (not has_map or expected_selector_input_map_sha256 != bound_map_sha))
         or (bound_map_sha is None and has_map)
     ):
@@ -907,6 +955,11 @@ async def _execute_selector_call_once(
     bound_map_sha = _bound_selector_input_map_sha256(prepared)
     if prepared.selector_input_map_required and bound_map_sha is None:
         raise JevExecutionError("selector-input-map-required-or-unexpected")
+    if (
+        prepared.selector_input_map_schema == "coverage-selector-input-map/2-registered"
+        and _bound_selector_admission_sha256(prepared) is None
+    ):
+        raise JevExecutionError("selector-map-external-admission-required")
     if bound_map_sha is not None and expected_selector_input_map_sha256 != bound_map_sha:
         raise JevExecutionError("selector-input-map-required-or-unexpected")
     if bound_map_sha is None and (

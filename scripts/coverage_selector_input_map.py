@@ -22,7 +22,9 @@ from scripts import coverage_study_core as core
 from slopsearx.adapter import SearchResult
 from slopsearx.service import SearchService, _rerank_text, _rerank_url
 
-SCHEMA = "coverage-selector-input-map/2-draft"
+DRAFT_SCHEMA = "coverage-selector-input-map/2-draft"
+REGISTERED_SCHEMA = "coverage-selector-input-map/2-registered"
+SCHEMA = DRAFT_SCHEMA
 NEUTRAL_FIXTURE_SHA256 = "59e7622cdaf7381d4c0797d57e4bc00af6d5fea23153525e23e35351fa87f09f"
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 
@@ -409,8 +411,14 @@ def build_selector_input_map(
         raise SelectorInputMapError("operation-material-inventory-mismatch")
     ordered_entries = [rows_by_id[operation_id] for operation_id in prepared.operation_ids]
     document = {
-        "schema": SCHEMA,
-        "status": "draft-unadmitted",
+        "schema": prepared.selector_input_map_schema or SCHEMA,
+        # The registration mode is externally pinned, but the map itself is
+        # only a deterministic predispatch artifact and never grants authority.
+        "status": (
+            "complete-awaiting-external-admission"
+            if prepared.selector_input_map_schema == REGISTERED_SCHEMA
+            else "draft-unadmitted"
+        ),
         "stage_uuid": prepared.stage_uuid,
         "source_revision": prepared.source_revision,
         "original_registration_sha256": prepared.registration_sha256,

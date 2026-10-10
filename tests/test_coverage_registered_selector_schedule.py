@@ -94,6 +94,60 @@ async def test_all_registered_operations_are_preflighted_then_serially_dispatche
 
 
 @pytest.mark.asyncio
+async def test_registered_map_schema_without_external_admission_cannot_reach_transport(tmp_path):
+    kwargs = _materials(tmp_path)
+    prepared = replace(
+        kwargs["prepared"],
+        selector_input_map_required=True,
+        selector_input_map_schema="coverage-selector-input-map/2-registered",
+    )
+    kwargs["prepared"] = prepared
+    materials = {}
+    kwargs["operation_materials"] = materials
+    map_bytes = input_map.build_selector_input_map(**kwargs)
+    map_sha = _sha(map_bytes)
+    ledger = core.StudyRun(prepared)
+    roots = PrivateRoots()
+    dispatches = []
+
+    def transport_factory(_operation_id):
+        dispatches.append(_operation_id)
+        return httpx.MockTransport(lambda request: httpx.Response(200, content=b"{}", request=request))
+
+    with pytest.raises(execution.JevExecutionError, match="registered-selector-schedule-binding-invalid"):
+        await execution.execute_registered_selector_schedule(
+            prepared=prepared,
+            ledger=ledger,
+            selector_input_map_bytes=map_bytes,
+            expected_selector_input_map_sha256=map_sha,
+            operation_materials=materials,
+            permits={},
+            api_key="synthetic-map-test-key",
+            lease_root=roots.lease,
+            archive_root=roots.archive,
+            result_root=roots.result,
+            transport_factory=transport_factory,
+        )
+    assert dispatches == []
+    assert not list(roots.lease.iterdir())
+    roots.close()
+
+
+def test_registered_map_cannot_be_bound_without_verified_admission(tmp_path):
+    kwargs = _materials(tmp_path)
+    prepared = replace(
+        kwargs["prepared"],
+        selector_input_map_required=True,
+        selector_input_map_schema="coverage-selector-input-map/2-registered",
+    )
+    kwargs["prepared"] = prepared
+    kwargs["operation_materials"] = {}
+    map_bytes = input_map.build_selector_input_map(**kwargs)
+    with pytest.raises(execution.JevExecutionError, match="selector-input-map-binding-invalid"):
+        execution._bind_selector_input_map(prepared, map_bytes, _sha(map_bytes))
+
+
+@pytest.mark.asyncio
 async def test_late_bad_permit_fails_entire_schedule_before_any_transport_or_claim(tmp_path):
     prepared, ledger, materials, map_bytes, map_sha, permits, _responses = _schedule(tmp_path)
     roots = PrivateRoots()
