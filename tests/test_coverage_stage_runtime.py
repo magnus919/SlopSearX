@@ -13,7 +13,7 @@ from tests.test_coverage_answer_execution import _tasks
 from tests.test_coverage_stage_orchestration import plan_fixture
 
 
-def _bindings(root: Path, *, acquisition_authority=None, answer_authority=None):
+def _bindings(root: Path, *, acquisition_authority=None, capture_authority=None, answer_authority=None):
     async def verify_acquisition(_plan, _evidence):
         return True
 
@@ -35,7 +35,7 @@ def _bindings(root: Path, *, acquisition_authority=None, answer_authority=None):
     return runtime.RuntimeBindings(
         acquisition_authority=acquisition_authority or (lambda _plan: {}),
         verify_acquisition=verify_acquisition,
-        capture_authority=lambda _plan, _inputs: {},
+        capture_authority=capture_authority or (lambda _plan, _inputs: {}),
         prepare_after_acquisition=prepare_after_acquisition,
         verify_late_preflight=verify_late_preflight,
         selector_permit_resolver=selector_permit_resolver,
@@ -75,6 +75,68 @@ class StageRuntimeWiringTests(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaisesRegex(runtime.RuntimeWiringError, "acquisition-authority-shape-invalid"):
                     await executors.acquire(plan)
                 acquire.assert_not_called()
+
+    async def test_runtime_rejects_injected_transport_and_resolver_overrides(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            plan = plan_fixture()
+            root = Path(temporary)
+            acq_fields = {
+                "permit_receipt_bytes": b"",
+                "expected_permit_receipt_sha256": "0" * 64,
+                "permit_verifier": object(),
+                "one_shot_lease": object(),
+                "receipt_directory": root / "acquisition",
+                "test_transport": object(),
+            }
+            capture_fields = {
+                "candidate_base_url": "https://candidate.invalid",
+                "operator_token": None,
+                "permit_receipt_bytes": b"",
+                "expected_permit_receipt_sha256": "0" * 64,
+                "permit_verifier": object(),
+                "one_shot_lease": object(),
+                "receipt_root": root / "capture",
+                "transport": object(),
+            }
+            tasks = _tasks()
+            answer_fields = {
+                "endpoint": "https://model.invalid/v1/chat/completions",
+                "api_key": "synthetic-only",
+                "permit_bytes": b"",
+                "expected_permit_sha256": "0" * 64,
+                "permit_verifier": object(),
+                "one_shot_lease": object(),
+                "lease_root": root / "answer-lease",
+                "archive_root": root / "answer-archive",
+                "result_root": root / "answer-result",
+                "stage_started_utc": "2026-01-01T00:00:00Z",
+                "stage_deadline_utc": "2026-01-01T01:00:00Z",
+                "answer_manifest_sha256": "0" * 64,
+                "resolver": object(),
+            }
+            bindings = _bindings(
+                root,
+                acquisition_authority=lambda _plan: acq_fields,
+                capture_authority=lambda _plan, _inputs: capture_fields,
+                answer_authority=lambda _plan, _tasks: answer_fields,
+            )
+            executors = runtime.build_stage_executors(plan, bindings)
+            with (
+                mock.patch.object(runtime.coverage_live_acquire, "acquire_live_coverage_stage") as acquire,
+                mock.patch.object(runtime.coverage_source_capture, "capture_sources_once") as capture,
+                mock.patch.object(answer_execution, "execute_answer_stage") as answer,
+            ):
+                with self.assertRaisesRegex(runtime.RuntimeWiringError, "acquisition-authority-shape-invalid"):
+                    await executors.acquire(plan)
+                acquire.assert_not_called()
+
+                with self.assertRaisesRegex(runtime.RuntimeWiringError, "capture-authority-shape-invalid"):
+                    await executors.capture(plan, {})
+                capture.assert_not_called()
+
+                with self.assertRaisesRegex(runtime.RuntimeWiringError, "answer-authority-shape-invalid"):
+                    await executors.answerer(plan, tasks)
+                answer.assert_not_called()
 
     async def test_reference_grader_handoff_uses_packet_stage_identity(self):
         with tempfile.TemporaryDirectory() as temporary:

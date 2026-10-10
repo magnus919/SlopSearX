@@ -64,7 +64,7 @@ class RuntimeBindings:
 
     Callbacks must read already qualified, externally issued artifacts. This
     factory does not mint permits, leases, selector admissions, or health proof.
-    Test transports are optional and validated by each underlying module.
+    The production factory never accepts injected transports or resolvers.
     """
 
     acquisition_authority: Callable[[orchestration.StagePlan], Mapping[str, object]]
@@ -84,7 +84,6 @@ class RuntimeBindings:
     selector_archive_root: str | os.PathLike[str]
     selector_result_root: str | os.PathLike[str]
     native_handoff: coverage_native_grader_handoff.NativeGraderHandoff
-    selector_transport_factory: Callable[[str], Any] | None = None
 
 
 def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindings) -> orchestration.StageExecutors:
@@ -117,7 +116,7 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
                 "one_shot_lease",
                 "receipt_directory",
             },
-            {"test_transport", "pacer"},
+            set(),
             "acquisition",
         )
         manifest = json.loads(plan.acquisition_manifest_bytes)
@@ -129,8 +128,6 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
             permit_verifier=authority["permit_verifier"],
             one_shot_lease=authority["one_shot_lease"],
             receipt_directory=authority["receipt_directory"],
-            test_transport=authority.get("test_transport"),
-            pacer=authority.get("pacer"),
         )
         evidence = orchestration.AcquisitionEvidence(
             result=result.stage,
@@ -158,7 +155,6 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
                 "receipt_root",
             },
             {
-                "transport",
                 "qualification_receipt_bytes",
                 "expected_qualification_receipt_sha256",
                 "qualification_verifier",
@@ -176,7 +172,7 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
             permit_verifier=authority["permit_verifier"],
             one_shot_lease=authority["one_shot_lease"],
             receipt_root=Path(authority["receipt_root"]),
-            transport=authority.get("transport"),
+            transport=None,
             stage_started_monotonic=plan.stage_started_monotonic,
             stage_deadline_monotonic=plan.stage_deadline_monotonic,
             qualification_receipt_bytes=authority.get("qualification_receipt_bytes"),
@@ -220,7 +216,7 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
                 "stage_deadline_utc",
                 "answer_manifest_sha256",
             },
-            {"allow_trusted_private_http", "transport", "resolver"},
+            {"allow_trusted_private_http"},
             "answer",
         )
         endpoint_mode = answer_execution._chat_url(
@@ -250,8 +246,6 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
             lease_root=authority["lease_root"],
             archive_root=authority["archive_root"],
             result_root=authority["result_root"],
-            transport=authority.get("transport"),
-            resolver=authority.get("resolver"),
         )
         archive_root = Path(authority["archive_root"])
         result_root = Path(authority["result_root"])
@@ -299,7 +293,6 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
         archive_root=bindings.selector_archive_root,
         result_root=bindings.selector_result_root,
         evidence_builder=bindings.selector_evidence_builder,
-        transport_factory=bindings.selector_transport_factory,
     )
     return orchestration.StageExecutors(
         acquire=acquire,
