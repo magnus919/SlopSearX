@@ -9,7 +9,8 @@ import tempfile
 from pathlib import Path
 
 
-def main() -> int:
+def configure_source_import() -> Path:
+    """Set the source-only import boundary used by the documented launcher."""
     repository = Path(__file__).resolve().parents[1]
     cache_prefix = tempfile.mkdtemp(prefix="coverage-source-pycache-")
     os.chmod(cache_prefix, 0o700)
@@ -17,6 +18,11 @@ def main() -> int:
     sys.dont_write_bytecode = True
     sys._coverage_operator_source_bootstrap = "coverage-source-bootstrap/1"
     sys.path.insert(0, str(repository))
+    return Path(cache_prefix)
+
+
+def main() -> int:
+    cache_prefix = configure_source_import()
     try:
         from scripts.coverage_operator_runner import main as run_operator
 

@@ -15,9 +15,10 @@ import os
 import platform
 import re
 import sys
+import sysconfig
 import tomllib
 from collections import deque
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
 
@@ -153,6 +154,71 @@ def _locked_active_packages(lock: Mapping[str, Any], *, environment: Mapping[str
     return active
 
 
+def _inside(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+    except ValueError:
+        return False
+    return True
+
+
+def _observed_distributions(
+    active_prefix: Path, project_root: Path, *, search_path: Sequence[str] | None = None
+) -> dict[str, str]:
+    """Read only venv packages; permit the pinned checkout's own metadata separately."""
+    base = Path(sys.base_prefix).resolve()
+    approved = [active_prefix, project_root]
+    for key in ("stdlib", "platstdlib"):
+        value = sysconfig.get_path(key)
+        if value:
+            approved.append(Path(value).resolve())
+    approved.append(base / "lib" / f"python{sys.version_info.major}{sys.version_info.minor}.zip")
+    if (base / "Lib").exists():
+        approved.append((base / "Lib").resolve())
+
+    search_paths: list[Path] = []
+    non_venv_paths: list[Path] = []
+    for value in sys.path if search_path is None else search_path:
+        if type(value) is not str:
+            raise RuntimeEnvironmentError("active-environment-import-path-invalid")
+        candidate = Path(value or os.getcwd()).resolve()
+        if not any(_inside(candidate, parent) for parent in approved):
+            raise RuntimeEnvironmentError("active-environment-import-path-unexpected")
+        if _inside(candidate, active_prefix):
+            search_paths.append(candidate)
+        elif candidate != project_root:
+            non_venv_paths.append(candidate)
+
+    observed: dict[str, str] = {}
+    duplicates: set[str] = set()
+    try:
+        for distribution in importlib.metadata.distributions(path=[str(path) for path in search_paths]):
+            name = distribution.metadata.get("Name")
+            if not name:
+                continue
+            normalized = canonicalize_name(name)
+            if normalized in observed:
+                duplicates.add(normalized)
+            observed[normalized] = distribution.version
+
+        # The editable/source tree may contain SlopSearX's own .egg-info. It is
+        # the already source-pinned project, not an installed runtime package.
+        for distribution in importlib.metadata.distributions(path=[str(project_root)]):
+            name = distribution.metadata.get("Name")
+            if not name or canonicalize_name(name) != PROJECT_NAME:
+                raise RuntimeEnvironmentError("active-environment-source-metadata-unexpected")
+            if Path(distribution.locate_file("")).resolve() != project_root:
+                raise RuntimeEnvironmentError("active-environment-source-metadata-unexpected")
+        for path in non_venv_paths:
+            if next(importlib.metadata.distributions(path=[str(path)]), None) is not None:
+                raise RuntimeEnvironmentError("active-environment-distribution-outside-venv")
+    except (OSError, ValueError) as exc:
+        raise RuntimeEnvironmentError("active-environment-distribution-read-failed") from exc
+    if duplicates:
+        raise RuntimeEnvironmentError("active-environment-duplicate-distribution")
+    return observed
+
+
 def verify_active_environment(
     lock_bytes: bytes,
     *,
@@ -207,21 +273,7 @@ def verify_active_environment(
     environment["platform_python_implementation"] = platform.python_implementation()
     expected = _locked_active_packages(lock, environment=environment)
     if installed_distributions is None:
-        observed: dict[str, str] = {}
-        duplicates: set[str] = set()
-        try:
-            for distribution in importlib.metadata.distributions():
-                name = distribution.metadata.get("Name")
-                if not name:
-                    continue
-                normalized = canonicalize_name(name)
-                if normalized in observed:
-                    duplicates.add(normalized)
-                observed[normalized] = distribution.version
-        except (OSError, ValueError) as exc:
-            raise RuntimeEnvironmentError("active-environment-distribution-read-failed") from exc
-        if duplicates:
-            raise RuntimeEnvironmentError("active-environment-duplicate-distribution")
+        observed = _observed_distributions(active_prefix, Path(__file__).resolve().parents[1])
     else:
         observed = {canonicalize_name(name): version for name, version in installed_distributions.items()}
     if set(observed) != set(expected):
