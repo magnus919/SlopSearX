@@ -1,0 +1,48 @@
+import asyncio,json,sys
+from pathlib import Path
+import uvicorn
+from fastmcp import FastMCP,Client
+from fastmcp.tools.tool import ToolResult
+from mcp.types import TextContent
+from slopsearx.mcp.gateway import create_gateway,_field
+from slopsearx.mcp.security import make_http_app
+from tests.test_mcp_gateway import _free_port,_wait_for_port,_gateway_client,TOKEN
+CASES=[
+ ('narrative',{'results':[{'url':'https://example.org/a','title':'A'}],'count':1},'One reading lead.',False,True),
+ ('different_json',{'results':[],'count':0},'{"display":"summary"}',False,True),
+ ('structured_only',{'count':2},None,False,True),
+ ('empty_structured',{},'No reading leads.',False,True),
+ ('json_fallback',None,'{"count":1}',False,False),
+ ('text_fallback',None,'Unstructured note.',False,False),
+ ('empty_fallback',None,None,False,False),
+ ('error_precedence',{'ignored':'remote data'},'Remote rejected request.',True,False),
+]
+EXPECTED={'json_fallback':{'count':1},'text_fallback':{'result':'Unstructured note.'},'empty_fallback':{},'error_precedence':{'error':{'code':'remote_error','message':'Remote rejected request.'}}}
+async def main():
+ remote=FastMCP('EXP107 fixture')
+ for name,data,text,error,primary in CASES:
+  def make(data,text,error):
+   async def run():return ToolResult(content=[] if text is None else [TextContent(type='text',text=text)],structured_content=data,is_error=error)
+   return run
+  remote.tool(name=name)(make(data,text,error))
+ port=_free_port();server=uvicorn.Server(uvicorn.Config(make_http_app(remote,TOKEN),host='127.0.0.1',port=port,log_level='warning'))
+ task=asyncio.create_task(server.serve());rows=[]
+ try:
+  assert await _wait_for_port(port)
+  url=f'http://127.0.0.1:{port}/mcp'
+  async with Client(url,auth=TOKEN) as direct:
+   direct_results={name:await direct.call_tool_mcp(name,{}) for name,*_ in CASES}
+  gateway=create_gateway(remote_url=url,token=TOKEN)
+  async with _gateway_client(gateway) as client:
+   for name,data,text,error,primary in CASES:
+    result=await client.call_tool_mcp(name,{})
+    actual=_field(result,'structured_content','structuredContent')
+    expected=data if primary else EXPECTED[name]
+    rows.append({'case':name,'primary':primary,'expected':expected,'actual':actual,'passed':actual==expected,'upstream':direct_results[name].model_dump(mode='json',by_alias=True),'gateway':result.model_dump(mode='json',by_alias=True)})
+ finally:
+  server.should_exit=True;await asyncio.wait_for(task,timeout=10)
+ out=Path(sys.argv[1]);out.mkdir(parents=True,exist_ok=False)
+ (out/'rows.json').write_text(json.dumps(rows,indent=2)+'\n')
+ summary={'primary_passed':sum(r['passed'] for r in rows if r['primary']),'primary_total':4,'controls_passed':sum(r['passed'] for r in rows if not r['primary']),'controls_total':4,'provider_calls':0}
+ (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary))
+asyncio.run(main())
