@@ -6,6 +6,7 @@ import importlib._bootstrap_external
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -83,6 +84,128 @@ def test_locked_environment_rejects_missing_extra_or_drifted_distribution(mutati
         observed["fastapi"] = "0.0.1"
     with pytest.raises(runtime_environment.RuntimeEnvironmentError, match=error):
         _receipt(observed)
+
+
+def _write_dist_info(site: Path, name: str, version: str, suffix: str = "dist-info") -> None:
+    metadata = site / f"{name}-{version}.{suffix}"
+    metadata.mkdir(parents=True)
+    (metadata / "METADATA").write_text(f"Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n", encoding="utf-8")
+
+
+def test_runtime_inventory_ignores_only_pinned_checkout_metadata_and_rejects_external_paths(
+    tmp_path: Path,
+) -> None:
+    prefix = tmp_path / "venv"
+    site = prefix / "lib" / "python3.12" / "site-packages"
+    site.mkdir(parents=True)
+    project = tmp_path / "checkout"
+    project.mkdir()
+    _write_dist_info(site, "allowed-package", "1.0")
+    _write_dist_info(project, runtime_environment.PROJECT_NAME, "0.6.0", "egg-info")
+    assert runtime_environment._observed_distributions(prefix, project, search_path=[str(site), str(project)]) == {
+        "allowed-package": "1.0"
+    }
+
+    external = tmp_path / "unexpected-site"
+    external.mkdir()
+    with pytest.raises(runtime_environment.RuntimeEnvironmentError, match="active-environment-import-path-unexpected"):
+        runtime_environment._observed_distributions(
+            prefix, project, search_path=[str(site), str(project), str(external)]
+        )
+
+
+def test_runtime_inventory_rejects_duplicate_installed_package_in_venv(
+    tmp_path: Path,
+) -> None:
+    prefix = tmp_path / "venv"
+    first = prefix / "lib" / "python3.12" / "site-packages"
+    second = prefix / "lib" / "python3.12" / "extra-packages"
+    first.mkdir(parents=True)
+    second.mkdir(parents=True)
+    project = tmp_path / "checkout"
+    project.mkdir()
+    _write_dist_info(first, "duplicate-package", "1.0")
+    _write_dist_info(second, "duplicate-package", "1.0")
+    with pytest.raises(runtime_environment.RuntimeEnvironmentError, match="active-environment-duplicate-distribution"):
+        runtime_environment._observed_distributions(
+            prefix, project, search_path=[str(first), str(second), str(project)]
+        )
+
+
+def test_runtime_inventory_rejects_distributions_on_global_site_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    base = tmp_path / "base-python"
+    stdlib = base / "lib" / "python3.12"
+    global_site = stdlib / "site-packages"
+    global_site.mkdir(parents=True)
+    prefix = tmp_path / "venv"
+    venv_site = prefix / "lib" / "python3.12" / "site-packages"
+    venv_site.mkdir(parents=True)
+    project = tmp_path / "checkout"
+    project.mkdir()
+    _write_dist_info(global_site, "unlocked-global-package", "1.0")
+    monkeypatch.setattr(sys, "base_prefix", str(base))
+    monkeypatch.setattr(runtime_environment.sysconfig, "get_path", lambda _key: str(stdlib))
+
+    with pytest.raises(
+        runtime_environment.RuntimeEnvironmentError, match="active-environment-distribution-outside-venv"
+    ):
+        runtime_environment._observed_distributions(
+            prefix, project, search_path=[str(venv_site), str(project), str(stdlib), str(global_site)]
+        )
+
+
+def test_runtime_inventory_rejects_extra_metadata_in_source_subpath(tmp_path: Path) -> None:
+    prefix = tmp_path / "venv"
+    site = prefix / "lib" / "python3.12" / "site-packages"
+    site.mkdir(parents=True)
+    project = tmp_path / "checkout"
+    project.mkdir()
+    scripts = project / "scripts"
+    scripts.mkdir()
+    _write_dist_info(scripts, "unlocked-source-package", "1.0")
+
+    with pytest.raises(
+        runtime_environment.RuntimeEnvironmentError, match="active-environment-distribution-outside-venv"
+    ):
+        runtime_environment._observed_distributions(
+            prefix, project, search_path=[str(site), str(project), str(scripts)]
+        )
+
+
+def test_documented_source_launcher_accepts_real_locked_venv_with_source_egg_info(tmp_path: Path) -> None:
+    if Path(sys.prefix).resolve() == Path(sys.base_prefix).resolve():
+        pytest.skip("requires the uv-synced study venv; the default CI test interpreter is not a venv")
+    python = Path(sys.executable)
+    source_metadata = REPOSITORY / "slopsearx.egg-info"
+    assert not source_metadata.exists(), "do not overwrite pre-existing source metadata"
+    source_metadata.mkdir()
+    (source_metadata / "PKG-INFO").write_text(
+        "Metadata-Version: 2.1\nName: slopsearx\nVersion: 0.6.0\n", encoding="utf-8"
+    )
+    try:
+        script = r"""
+import hashlib, json, sys
+from pathlib import Path
+from scripts.coverage_operator_launcher import configure_source_import
+cache = configure_source_import()
+try:
+    from scripts.coverage_runtime_environment import verify_active_environment
+    lock = (Path.cwd() / "uv.lock").read_bytes()
+    receipt = verify_active_environment(lock, expected_lock_sha256=hashlib.sha256(lock).hexdigest())
+    print(json.dumps({"status": "verified", "receipt_sha256": hashlib.sha256(receipt).hexdigest()}))
+finally:
+    import shutil
+    shutil.rmtree(cache, ignore_errors=True)
+"""
+        completed = subprocess.run(
+            [str(python), "-c", script], cwd=REPOSITORY, check=False, capture_output=True, text=True, timeout=15
+        )
+        assert completed.returncode == 0, completed.stderr
+        assert json.loads(completed.stdout)["status"] == "verified"
+    finally:
+        shutil.rmtree(source_metadata, ignore_errors=True)
 
 
 def test_locked_environment_rejects_changed_lock_even_with_its_new_digest() -> None:
