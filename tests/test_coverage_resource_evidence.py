@@ -19,6 +19,7 @@ from tests.test_coverage_source_capture import (
     _candidate_identity,
     _capture,
     _healthy_response,
+    _local_ca_files,
     _QualificationVerifier,
     _source,
 )
@@ -204,13 +205,19 @@ async def test_owned_capture_controls_require_archived_qualification_binding(tmp
     protocol = json.loads(protocol_bytes)
     identity = _candidate_identity()
     receipt = b"independently-verified-protected-profile"
+    ca_pem, _ca_cert, _ca_key = _local_ca_files(tmp_path, "resource-capture-ca")
+    ca_sha = _sha(ca_pem)
 
     def handler(request: httpx.Request):
         if request.method == "GET":
             return _healthy_response()
         return httpx.Response(200, content=capture_response("Bounded local fixture."))
 
-    monkeypatch.setattr(capture_module, "_owned_httpx_transport", lambda: httpx.MockTransport(handler))
+    def owned_transport(ssl_context=None):
+        assert ssl_context is not None
+        return httpx.MockTransport(handler)
+
+    monkeypatch.setattr(capture_module, "_owned_httpx_transport", owned_transport)
     result = await _capture(
         tmp_path=tmp_path,
         transport=None,
@@ -219,6 +226,8 @@ async def test_owned_capture_controls_require_archived_qualification_binding(tmp
         qualification_receipt_bytes=receipt,
         expected_qualification_receipt_sha256=_sha(receipt),
         qualification_verifier=_QualificationVerifier(),
+        ca_bundle_pem_bytes=ca_pem,
+        expected_ca_bundle_sha256=ca_sha,
     )
     root = result.receipt_directory
     inventory_bytes = (root / "inventory.json").read_bytes()
@@ -240,7 +249,24 @@ async def test_owned_capture_controls_require_archived_qualification_binding(tmp
     assert observed["capture_retries"] == 0
     assert observed["capture_application_retries_observed"] == 0
     assert observed["capture_response_bytes_limit_applied"] == 2_000_000
+    assert observed["capture_tls_verification"] == "pinned-public-ca"
+    assert observed["capture_ca_bundle_sha256"] == ca_sha
     assert result.candidate_endpoint_scheme == "https"
+
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="capture-control-attestation-binding"):
+        resource_evidence._capture_observations(
+            capture_result=__import__("dataclasses").replace(result, ca_bundle_sha256="0" * 64),
+            expected_inventory_sha256=_sha(inventory_bytes),
+            expected_manifest_sha256=_sha(manifest_bytes),
+            protocol_sha256=_sha(protocol_bytes),
+            cohorts_sha256=protocol["cohorts_sha256"],
+            source_revision=manifest["source_revision"],
+            candidate_identity_bytes=identity,
+            candidate_identity_sha256=_sha(identity),
+            candidate_endpoint_sha256=manifest["candidate_endpoint_sha256"],
+            timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
+            response_bytes_limit=protocol["capture"]["response_bytes"],
+        )
 
     qualification_path = root / "protected-capture-qualification.json"
     qualification_path.write_bytes(b"replacement receipt")
