@@ -27,6 +27,7 @@ RESULT_SCHEMA = "coverage-native-tool-result/1"
 MAX_RESPONSE_BYTES = 2_000_000
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _PACKET_ID = re.compile(r"[0-9a-f]{64}\Z")
+_MCP_SERVER_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z")
 _PHASE = {"references": "reference", "answers": "answer"}
 PHASE_DEADLINE_SCHEMA = "coverage-native-phase-deadline/1"
 
@@ -118,6 +119,53 @@ def _read_private(path: Path, *, max_bytes: int) -> bytes:
         os.close(descriptor)
 
 
+def _validate_native_tool_policy_evidence(
+    audit_root: Path, summary: object, *, stage_uuid: str, phase: str
+) -> list[str]:
+    """Bind per-server disable proof from the sanitized local CLI inventory."""
+    if type(summary) is not dict:
+        raise NativeHandoffError("grader-native-tool-policy-summary-invalid")
+    raw = _read_private(audit_root / "tool-policy-evidence.json", max_bytes=128_000)
+    evidence = _strict(raw)
+    expected_keys = {
+        "schema",
+        "stage_uuid",
+        "phase",
+        "cli_executable_sha256",
+        "cli_version",
+        "configured_server_ids",
+        "configured_inventory_sha256",
+        "effective_inventory_sha256",
+        "effective_statuses",
+    }
+    if (
+        type(evidence) is not dict
+        or set(evidence) != expected_keys
+        or _canonical(evidence) != raw
+        or evidence.get("schema") != "coverage-native-tool-policy-evidence/1"
+        or evidence.get("stage_uuid") != stage_uuid
+        or evidence.get("phase") != phase
+        or evidence.get("cli_executable_sha256") != summary.get("cli_executable_sha256")
+        or evidence.get("cli_version") != summary.get("cli_version")
+        or _sha(raw) != summary.get("tool_policy_evidence_sha256")
+        or not _SHA256.fullmatch(str(evidence.get("configured_inventory_sha256")))
+        or not _SHA256.fullmatch(str(evidence.get("effective_inventory_sha256")))
+    ):
+        raise NativeHandoffError("grader-native-tool-policy-evidence-binding-invalid")
+    ids = evidence.get("configured_server_ids")
+    statuses = evidence.get("effective_statuses")
+    if (
+        type(ids) is not list
+        or any(type(server_id) is not str or not _MCP_SERVER_ID.fullmatch(server_id) for server_id in ids)
+        or ids != sorted(set(ids))
+        or type(statuses) is not dict
+        or set(statuses) != set(ids)
+        or any(statuses[server_id] != "disabled" for server_id in ids)
+    ):
+        raise NativeHandoffError("grader-native-tool-policy-inventory-invalid")
+    return ids
+
+
 def _private_directory(path: Path) -> None:
     metadata = path.stat(follow_symlinks=False)
     if path.is_symlink() or not stat.S_ISDIR(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) & 0o077:
@@ -139,6 +187,7 @@ def _validate_failed_dispatch_summary(
         "phase",
         "model",
         "model_list_response_sha256",
+        "tool_policy_evidence_sha256",
         "model_catalog_advertised_exact_model",
         "cli_executable_sha256",
         "cli_version",
@@ -153,13 +202,14 @@ def _validate_failed_dispatch_summary(
     if type(summary) is not dict or set(summary) != expected_keys or _canonical(summary) != summary_bytes:
         raise NativeHandoffError("grader-native-host-failed-summary-invalid")
     if (
-        summary.get("schema") != "coverage-native-host-dispatch-summary/1"
+        summary.get("schema") != "coverage-native-host-dispatch-summary/2"
         or summary.get("stage_uuid") != stage_uuid
         or summary.get("phase") != phase
         or summary.get("model") != "gpt-6.1-sol"
         or summary.get("status") != "failed-terminal"
         or summary.get("packet_count") != len(expected_ids)
         or not _SHA256.fullmatch(str(summary.get("model_list_response_sha256")))
+        or not _SHA256.fullmatch(str(summary.get("tool_policy_evidence_sha256")))
         or type(summary.get("model_catalog_advertised_exact_model")) is not bool
         or not _SHA256.fullmatch(str(summary.get("cli_executable_sha256")))
         or type(summary.get("cli_version")) is not str
@@ -390,6 +440,7 @@ class NativeGraderHandoff:
                             or summary.get("phase") != phase
                         ):
                             raise NativeHandoffError("grader-native-host-summary-binding-invalid")
+                        _validate_native_tool_policy_evidence(audit_root, summary, stage_uuid=stage_uuid, phase=phase)
                         if summary.get("status") == "failed-terminal":
                             _validate_failed_dispatch_summary(
                                 summary_bytes=summary_bytes,
@@ -403,7 +454,7 @@ class NativeGraderHandoff:
                         if summary.get("status") != "complete":
                             raise NativeHandoffError("grader-native-host-summary-status-invalid")
                         expected_summary = {
-                            "schema": "coverage-native-host-dispatch-summary/1",
+                            "schema": "coverage-native-host-dispatch-summary/2",
                             "stage_uuid": stage_uuid,
                             "phase": phase,
                             "model": self.model,
@@ -545,7 +596,7 @@ class NativeGraderHandoff:
                     },
                     **(
                         {
-                            "native_host_transcript_schema": "coverage-native-host-transcript/1",
+                            "native_host_transcript_schema": "coverage-native-host-transcript/2",
                             **native_host_evidence,
                         }
                         if self.require_native_host_transcripts
@@ -582,6 +633,7 @@ class NativeGraderHandoff:
             "phase",
             "model",
             "model_list_response_sha256",
+            "tool_policy_evidence_sha256",
             "model_catalog_advertised_exact_model",
             "cli_executable_sha256",
             "cli_version",
@@ -600,13 +652,16 @@ class NativeGraderHandoff:
         model_list = _strict(model_list_bytes)
         catalog_row_sha, catalog_response_sha = native_host.inspect_model_catalog(model_list)
         if (
-            summary.get("schema") != "coverage-native-host-dispatch-summary/1"
+            summary.get("schema") != "coverage-native-host-dispatch-summary/2"
             or _canonical(model_list) != model_list_bytes
             or _sha(model_list_bytes) != summary["model_list_response_sha256"]
             or _sha(_canonical(model_list)) != catalog_response_sha
             or summary["model_catalog_advertised_exact_model"] is not (catalog_row_sha is not None)
         ):
             raise NativeHandoffError("grader-native-host-model-list-canonical-invalid")
+        expected_mcp_server_ids = _validate_native_tool_policy_evidence(
+            audit_root, summary, stage_uuid=stage_uuid, phase=phase
+        )
         expected_ids = {request.packet_id for request in requests}
         claim_files = list(claim_root.iterdir())
         if {path.name for path in claim_files} != {f"{packet_id}.claim.json" for packet_id in expected_ids}:
@@ -653,6 +708,7 @@ class NativeGraderHandoff:
                 packet_sha256=request.packet_sha256,
                 expected_catalog_row_sha256=catalog_row_sha,
                 expected_catalog_response_sha256=catalog_response_sha,
+                expected_mcp_server_ids=expected_mcp_server_ids,
                 expected_model=self.model,
             )
             result_tool_call_id, result_bytes = result_bindings[request.packet_id]
@@ -670,11 +726,22 @@ class NativeGraderHandoff:
         _private_directory(failure_root)
         if list(failure_root.iterdir()):
             raise NativeHandoffError("grader-native-host-failure-inventory-invalid")
+        if {path.name for path in audit_root.iterdir()} != {
+            "claims",
+            "dispatch-summary.json",
+            "failures",
+            "model-list.response.json",
+            "tool-policy-evidence.json",
+            "transcripts",
+        }:
+            raise NativeHandoffError("grader-native-host-audit-inventory-invalid")
         return {
             "native_host_transcript_sha256": transcript_hashes,
             "native_host_claim_sha256": claim_hashes,
             "native_host_dispatch_summary_sha256": _sha(summary_bytes),
             "model_list_response_sha256": _sha(model_list_bytes),
+            "tool_policy_evidence_sha256": summary["tool_policy_evidence_sha256"],
+            "disabled_mcp_server_ids": expected_mcp_server_ids,
         }
 
 

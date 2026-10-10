@@ -165,6 +165,7 @@ def fake_codex(tmp_path: Path) -> tuple[Path, str]:
             """\
             #!/usr/bin/env python3
             import json, os, sys, time, uuid
+            from pathlib import Path
 
             def emit(value):
                 print(json.dumps(value, separators=(",", ":")), flush=True)
@@ -172,8 +173,19 @@ def fake_codex(tmp_path: Path) -> tuple[Path, str]:
             if sys.argv[1:] == ["--version"]:
                 print("codex-cli synthetic-test")
                 raise SystemExit(0)
+            if sys.argv[1:3] == ["mcp", "list"]:
+                inventory = os.environ.get("FAKE_MCP_LIST", "No MCP servers configured yet.")
+                if any(arg.endswith(".enabled=false") for arg in sys.argv) and not os.environ.get(
+                    "FAKE_MCP_IGNORE_DISABLE"
+                ):
+                    inventory = inventory.replace(" enabled  ", " disabled  ")
+                print(inventory)
+                raise SystemExit(0)
             if sys.argv[1:3] != ["app-server", "--listen"]:
                 raise SystemExit(2)
+            args_log = os.environ.get("FAKE_CODEX_ARGS_LOG")
+            if args_log:
+                Path(args_log).write_text(json.dumps(sys.argv[1:]))
             for line in sys.stdin:
                 request = json.loads(line)
                 method = request.get("method")
@@ -366,10 +378,13 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
         "model": native.MODEL,
         "model_catalog_row_sha256": hashlib.sha256(canonical(catalog_row)).hexdigest(),
         "model_catalog_response_sha256": "b" * 64,
+        "tool_policy": native._tool_policy([]),
         "cli_executable_sha256": "c" * 64,
         "cli_version": "codex-cli synthetic",
         "events": events,
     }
+    if tamper == "tool-policy":
+        value["tool_policy"]["config_tool_controls"]["tools.view_image"] = True
     value["_test_identity"] = {"stage_uuid": stage_uuid, "thread_id": thread_id}
     return canonical(value)
 
@@ -400,6 +415,7 @@ def test_model_catalog_absence_is_metadata_not_dispatch_gate() -> None:
         "tool",
         "incomplete",
         "extra-tool-policy",
+        "tool-policy",
         "experimental-api-optin",
         "summary",
         "notLoaded",
@@ -419,6 +435,7 @@ def test_transcript_rejects_mismatched_or_nonterminal_invocation(tamper: str) ->
             packet_sha256=hashlib.sha256(raw_packet).hexdigest(),
             expected_catalog_row_sha256=transcript["model_catalog_row_sha256"],
             expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
+            expected_mcp_server_ids=[],
         )
 
 
@@ -435,6 +452,7 @@ def test_transcript_roundtrip_binds_packet_and_returns_exact_final_text() -> Non
         packet_sha256=hashlib.sha256(raw_packet).hexdigest(),
         expected_catalog_row_sha256=transcript["model_catalog_row_sha256"],
         expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
+        expected_mcp_server_ids=[],
     )
     assert verified.response_bytes == b'{"result":"synthetic"}'
     assert verified.thread_id == identity["thread_id"]
@@ -454,6 +472,7 @@ def test_transcript_roundtrip_binds_packet_and_returns_exact_final_text() -> Non
         packet_sha256=hashlib.sha256(raw_packet).hexdigest(),
         expected_catalog_row_sha256=transcript["model_catalog_row_sha256"],
         expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
+        expected_mcp_server_ids=[],
     )
     assert defaulted.response_bytes == verified.response_bytes
 
@@ -499,6 +518,98 @@ async def test_fake_app_server_dispatch_is_two_wide_and_one_shot(
             expected_cli_sha256=digest,
             deadline_monotonic=time.monotonic() + 30,
         )
+
+
+@pytest.mark.asyncio
+async def test_dispatch_disables_builtin_tools_and_each_configured_mcp_before_turn(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, packet_ids = write_scope(tmp_path)
+    codex, digest = fake_codex(tmp_path)
+    args_log = tmp_path / "app-server-argv.json"
+    monkeypatch.setenv(
+        "FAKE_MCP_LIST",
+        "Name  Command  Args  Env  Cwd  Status  Auth\nfixture_mcp  /bin/echo  -  -  -  enabled  Unsupported",
+    )
+    monkeypatch.setenv("FAKE_CODEX_ARGS_LOG", str(args_log))
+    await native.dispatch_handoff_scope(
+        scope_path=scope,
+        stage_uuid=stage_uuid,
+        phase="references",
+        codex_executable=str(codex),
+        expected_cli_sha256=digest,
+        deadline_monotonic=time.monotonic() + 30,
+    )
+    command = json.loads(args_log.read_bytes())
+    assert command[:4] == ["app-server", "--listen", "stdio://", "--disable"]
+    disabled = [command[index + 1] for index, value in enumerate(command[:-1]) if value == "--disable"]
+    assert disabled == list(native.DISABLED_FEATURES)
+    assert command[command.index("-c") + 1] == 'web_search="disabled"'
+    assert command[command.index("tools.view_image=false") - 1] == "-c"
+    assert command[-2:] == ["-c", "mcp_servers.fixture_mcp.enabled=false"]
+    transcript = json.loads(next((scope / "native-host" / "transcripts").glob("*.json")).read_bytes())
+    assert transcript["packet_id"] in packet_ids
+    assert transcript["tool_policy"] == native._tool_policy(["fixture_mcp"])
+
+
+@pytest.mark.asyncio
+async def test_unrecognized_mcp_inventory_fails_before_catalog_or_turn(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, _ = write_scope(tmp_path)
+    codex, digest = fake_codex(tmp_path)
+    monkeypatch.setenv("FAKE_MCP_LIST", "unexpected output format")
+    catalog_called = False
+
+    async def forbidden_catalog(*_args, **_kwargs):
+        nonlocal catalog_called
+        catalog_called = True
+        raise AssertionError("unverified MCP inventory must stop before app-server")
+
+    monkeypatch.setattr(native, "_request_model_catalog", forbidden_catalog)
+    with pytest.raises(native.NativeHostError, match="mcp-inventory-format-invalid"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 30,
+        )
+    assert not catalog_called
+    assert not (scope / "native-host").exists()
+
+
+@pytest.mark.asyncio
+async def test_mcp_server_still_enabled_after_override_fails_before_catalog(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, _ = write_scope(tmp_path)
+    codex, digest = fake_codex(tmp_path)
+    monkeypatch.setenv(
+        "FAKE_MCP_LIST",
+        "Name  Command  Args  Env  Cwd  Status  Auth\nfixture_mcp  /bin/echo  -  -  -  enabled  Unsupported",
+    )
+    monkeypatch.setenv("FAKE_MCP_IGNORE_DISABLE", "1")
+    catalog_called = False
+
+    async def forbidden_catalog(*_args, **_kwargs):
+        nonlocal catalog_called
+        catalog_called = True
+        raise AssertionError("MCP must be disabled before app-server startup")
+
+    monkeypatch.setattr(native, "_request_model_catalog", forbidden_catalog)
+    with pytest.raises(native.NativeHostError, match="mcp-disable-policy-not-effective"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 30,
+        )
+    assert not catalog_called
+    assert not (scope / "native-host").exists()
 
 
 @pytest.mark.asyncio

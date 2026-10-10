@@ -64,7 +64,15 @@ def _write_private(path: Path, raw: bytes) -> None:
     path.chmod(0o600)
 
 
-def publish_synthetic_host_evidence(scope: Path, stage_uuid: str, request_path: Path, *, tamper=False) -> None:
+def publish_synthetic_host_evidence(
+    scope: Path,
+    stage_uuid: str,
+    request_path: Path,
+    *,
+    tamper=False,
+    mcp_enabled=False,
+    extra_artifact=False,
+) -> None:
     from scripts import coverage_native_host_dispatch as host
 
     request_raw = request_path.read_bytes()
@@ -167,6 +175,7 @@ def publish_synthetic_host_evidence(scope: Path, stage_uuid: str, request_path: 
         "model": "gpt-6.1-sol",
         "model_catalog_row_sha256": None,
         "model_catalog_response_sha256": hashlib.sha256(catalog_raw).hexdigest(),
+        "tool_policy": host._tool_policy(["fixture_mcp"] if mcp_enabled else []),
         "cli_executable_sha256": "d" * 64,
         "cli_version": "codex-cli synthetic",
         "events": events,
@@ -176,6 +185,21 @@ def publish_synthetic_host_evidence(scope: Path, stage_uuid: str, request_path: 
         directory.mkdir(mode=0o700, parents=True, exist_ok=True)
         directory.chmod(0o700)
     _write_private(audit / "model-list.response.json", catalog_raw)
+    tool_policy_evidence = {
+        "schema": "coverage-native-tool-policy-evidence/1",
+        "stage_uuid": stage_uuid,
+        "phase": phase,
+        "cli_executable_sha256": "d" * 64,
+        "cli_version": "codex-cli synthetic",
+        "configured_server_ids": ["fixture_mcp"] if mcp_enabled else [],
+        "configured_inventory_sha256": "e" * 64,
+        "effective_inventory_sha256": "e" * 64,
+        "effective_statuses": {"fixture_mcp": "enabled"} if mcp_enabled else {},
+    }
+    tool_policy_evidence_raw = canonical(tool_policy_evidence)
+    _write_private(audit / "tool-policy-evidence.json", tool_policy_evidence_raw)
+    if extra_artifact:
+        _write_private(audit / "unexpected.json", b"{}")
     _write_private(
         audit / "claims" / f"{packet_id}.claim.json",
         canonical(
@@ -197,11 +221,12 @@ def publish_synthetic_host_evidence(scope: Path, stage_uuid: str, request_path: 
         audit / "dispatch-summary.json",
         canonical(
             {
-                "schema": "coverage-native-host-dispatch-summary/1",
+                "schema": "coverage-native-host-dispatch-summary/2",
                 "stage_uuid": stage_uuid,
                 "phase": phase,
                 "model": "gpt-6.1-sol",
                 "model_list_response_sha256": hashlib.sha256(catalog_raw).hexdigest(),
+                "tool_policy_evidence_sha256": hashlib.sha256(tool_policy_evidence_raw).hexdigest(),
                 "model_catalog_advertised_exact_model": False,
                 "cli_executable_sha256": "d" * 64,
                 "cli_version": "codex-cli synthetic",
@@ -343,8 +368,13 @@ def test_invalid_model_stage_or_packet_prevents_handoff_creation(tmp_path):
     assert not (root / ".." / "escape").exists()
 
 
-@pytest.mark.parametrize("tamper", [False, True])
-def test_required_host_transcripts_bind_complete_fake_protocol_before_submission(tmp_path, tamper):
+@pytest.mark.parametrize(
+    ("tamper", "mcp_enabled", "extra_artifact"),
+    [(False, False, False), (True, False, False), (False, True, False), (False, False, True)],
+)
+def test_required_host_transcripts_bind_complete_fake_protocol_before_submission(
+    tmp_path, tamper, mcp_enabled, extra_artifact
+):
     root = tmp_path / "private"
     stage_uuid = "00000000-0000-0000-0000-000000000324"
     row = packet("1" * 64)
@@ -361,10 +391,25 @@ def test_required_host_transcripts_bind_complete_fake_protocol_before_submission
             )
         )
         requests = await wait_for_requests(scope, 1)
-        publish_synthetic_host_evidence(scope, stage_uuid, requests[0], tamper=tamper)
+        publish_synthetic_host_evidence(
+            scope,
+            stage_uuid,
+            requests[0],
+            tamper=tamper,
+            mcp_enabled=mcp_enabled,
+            extra_artifact=extra_artifact,
+        )
         return await collecting
 
-    if tamper:
+    if mcp_enabled:
+        with pytest.raises(handoff.NativeHandoffError, match="tool-policy-inventory-invalid"):
+            asyncio.run(run())
+        assert not (scope / "results-closed.json").exists()
+    elif extra_artifact:
+        with pytest.raises(handoff.NativeHandoffError, match="audit-inventory-invalid"):
+            asyncio.run(run())
+        assert not (scope / "results-closed.json").exists()
+    elif tamper:
         with pytest.raises(handoff.NativeHandoffError, match="transcript-result-mismatch"):
             asyncio.run(run())
         assert not (scope / "results-closed.json").exists()
@@ -373,7 +418,7 @@ def test_required_host_transcripts_bind_complete_fake_protocol_before_submission
         assert len(submissions) == 1
         assert submissions[0].response_bytes == b'{"synthetic":"grade"}'
         closed = json.loads((scope / "results-closed.json").read_bytes())
-        assert closed["native_host_transcript_schema"] == "coverage-native-host-transcript/1"
+        assert closed["native_host_transcript_schema"] == "coverage-native-host-transcript/2"
         assert set(closed["native_host_transcript_sha256"]) == {row["packet_id"]}
         assert (
             stat.S_IMODE((scope / "native-host" / "transcripts" / f"{row['packet_id']}.transcript.json").stat().st_mode)
@@ -451,6 +496,19 @@ def test_failed_terminal_dispatch_summary_stops_collection_promptly_and_retains_
         model_list = {"id": 2, "result": {"data": [], "nextCursor": None}}
         model_list_bytes = canonical(model_list)
         _write_private(audit_root / "model-list.response.json", model_list_bytes)
+        tool_policy_evidence = {
+            "schema": "coverage-native-tool-policy-evidence/1",
+            "stage_uuid": stage_uuid,
+            "phase": "references",
+            "cli_executable_sha256": cli_sha,
+            "cli_version": "codex-cli synthetic",
+            "configured_server_ids": [],
+            "configured_inventory_sha256": "f" * 64,
+            "effective_inventory_sha256": "f" * 64,
+            "effective_statuses": {},
+        }
+        tool_policy_evidence_raw = canonical(tool_policy_evidence)
+        _write_private(audit_root / "tool-policy-evidence.json", tool_policy_evidence_raw)
         _write_private(
             claim_root / f"{failed_id}.claim.json",
             canonical(
@@ -472,11 +530,12 @@ def test_failed_terminal_dispatch_summary_stops_collection_promptly_and_retains_
             canonical({"schema": "coverage-native-host-failure/1", "packet_id": failed_id, "reason": reason}),
         )
         summary = {
-            "schema": "coverage-native-host-dispatch-summary/1",
+            "schema": "coverage-native-host-dispatch-summary/2",
             "stage_uuid": stage_uuid,
             "phase": "references",
             "model": "gpt-6.1-sol",
             "model_list_response_sha256": sha(model_list_bytes),
+            "tool_policy_evidence_sha256": sha(tool_policy_evidence_raw),
             "model_catalog_advertised_exact_model": False,
             "cli_executable_sha256": cli_sha,
             "cli_version": "codex-cli synthetic",

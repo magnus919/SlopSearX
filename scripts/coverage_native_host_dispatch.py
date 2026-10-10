@@ -26,13 +26,39 @@ from typing import Any
 from scripts.coverage_native_grader_handoff import publish_native_tool_result
 
 MODEL = "gpt-6.1-sol"
-TRANSCRIPT_SCHEMA = "coverage-native-host-transcript/1"
+TRANSCRIPT_SCHEMA = "coverage-native-host-transcript/2"
 MAX_PACKET_BYTES = 384_000
 MAX_TRANSCRIPT_BYTES = 12_000_000
 MAX_EVENT_LINE_BYTES = 3_000_000
 MAX_IN_FLIGHT = 2
+DISABLED_FEATURES = (
+    "apps",
+    "browser_use",
+    "browser_use_external",
+    "browser_use_full_cdp_access",
+    "code_mode",
+    "code_mode_host",
+    "computer_use",
+    "goals",
+    "hooks",
+    "image_generation",
+    "in_app_browser",
+    "memories",
+    "multi_agent",
+    "plugins",
+    "remote_plugin",
+    "shell_snapshot",
+    "shell_tool",
+    "skill_mcp_dependency_install",
+    "skill_search",
+    "tool_call_mcp_elicitation",
+    "tool_suggest",
+    "unified_exec",
+    "workspace_dependencies",
+)
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\Z")
+_MCP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z")
 
 
 class NativeHostError(RuntimeError):
@@ -58,6 +84,28 @@ def _canonical(value: object) -> bytes:
         )
     except (TypeError, ValueError, UnicodeEncodeError) as exc:
         raise NativeHostError("native-transcript-canonical-json-invalid") from exc
+
+
+def _tool_policy(mcp_server_ids: list[str]) -> dict[str, object]:
+    return {
+        "schema": "coverage-native-tool-policy/1",
+        "disabled_features": list(DISABLED_FEATURES),
+        "config_tool_controls": {"web_search": "disabled", "tools.view_image": False},
+        "disabled_mcp_server_ids": mcp_server_ids,
+        "dynamic_tools": [],
+    }
+
+
+def _app_server_command(codex_executable: str, mcp_server_ids: list[str]) -> list[str]:
+    command = [codex_executable, "app-server", "--listen", "stdio://"]
+    for feature in DISABLED_FEATURES:
+        command.extend(("--disable", feature))
+    command.extend(("-c", 'web_search="disabled"', "-c", "tools.view_image=false"))
+    for server_id in mcp_server_ids:
+        if not _MCP_ID.fullmatch(server_id):
+            raise NativeHostError("native-mcp-server-id-unsupported")
+        command.extend(("-c", f"mcp_servers.{server_id}.enabled=false"))
+    return command
 
 
 def _strict(raw: bytes, *, maximum: int = MAX_TRANSCRIPT_BYTES) -> object:
@@ -153,6 +201,7 @@ def verify_transcript(
     packet_sha256: str,
     expected_catalog_row_sha256: str | None,
     expected_catalog_response_sha256: str,
+    expected_mcp_server_ids: list[str],
     expected_model: str = MODEL,
 ) -> VerifiedTranscript:
     """Verify a complete app-server event transcript against one frozen packet."""
@@ -167,6 +216,7 @@ def verify_transcript(
         "model",
         "model_catalog_row_sha256",
         "model_catalog_response_sha256",
+        "tool_policy",
         "cli_executable_sha256",
         "cli_version",
         "events",
@@ -188,6 +238,7 @@ def verify_transcript(
         or (expected_catalog_row_sha256 is not None and not _SHA.fullmatch(expected_catalog_row_sha256))
         or value.get("model_catalog_response_sha256") != expected_catalog_response_sha256
         or not _SHA.fullmatch(str(value.get("model_catalog_response_sha256")))
+        or value.get("tool_policy") != _tool_policy(expected_mcp_server_ids)
         or not _SHA.fullmatch(str(value.get("cli_executable_sha256")))
         or type(value.get("events")) is not list
     ):
@@ -396,6 +447,7 @@ async def _invoke_codex(
     expected_catalog_response_sha256: str,
     cli_executable_sha256: str,
     cli_version: str,
+    mcp_server_ids: list[str],
     deadline: float,
 ) -> tuple[bytes, VerifiedTranscript]:
     try:
@@ -405,10 +457,7 @@ async def _invoke_codex(
     events: list[dict[str, object]] = []
     with tempfile.TemporaryDirectory(prefix="coverage-native-grader-") as cwd:
         process = await asyncio.create_subprocess_exec(
-            codex_executable,
-            "app-server",
-            "--listen",
-            "stdio://",
+            *_app_server_command(codex_executable, mcp_server_ids),
             cwd=cwd,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
@@ -502,6 +551,7 @@ async def _invoke_codex(
                 "model": MODEL,
                 "model_catalog_row_sha256": expected_catalog_row_sha256,
                 "model_catalog_response_sha256": expected_catalog_response_sha256,
+                "tool_policy": _tool_policy(mcp_server_ids),
                 "cli_executable_sha256": cli_executable_sha256,
                 "cli_version": cli_version,
                 "events": events,
@@ -515,6 +565,7 @@ async def _invoke_codex(
                 packet_sha256=_sha(packet_bytes),
                 expected_catalog_row_sha256=expected_catalog_row_sha256,
                 expected_catalog_response_sha256=expected_catalog_response_sha256,
+                expected_mcp_server_ids=mcp_server_ids,
             )
             return transcript_bytes, verified
         finally:
@@ -528,14 +579,13 @@ async def _invoke_codex(
                     await process.wait()
 
 
-async def _request_model_catalog(codex_executable: str, *, deadline: float) -> dict[str, object]:
+async def _request_model_catalog(
+    codex_executable: str, *, deadline: float, mcp_server_ids: list[str]
+) -> dict[str, object]:
     """Read local catalog metadata. It does not invoke a model or gate dispatch."""
     with tempfile.TemporaryDirectory(prefix="coverage-native-catalog-") as cwd:
         process = await asyncio.create_subprocess_exec(
-            codex_executable,
-            "app-server",
-            "--listen",
-            "stdio://",
+            *_app_server_command(codex_executable, mcp_server_ids),
             cwd=cwd,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
@@ -600,6 +650,89 @@ def _cli_identity(executable: str, expected_sha256: str) -> tuple[str, str]:
     if result.returncode != 0 or not version or len(version) > 128:
         raise NativeHostError("native-cli-version-invalid")
     return str(path), version
+
+
+async def _run_mcp_list(
+    codex_executable: str,
+    *,
+    deadline: float,
+    disabled_server_ids: tuple[str, ...] | list[str] = (),
+) -> tuple[dict[str, str], str]:
+    """Read only server names and status; never persist or report config rows."""
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise NativeHostError("native-stage-deadline-expired")
+    command = [codex_executable, "mcp", "list"]
+    for feature in DISABLED_FEATURES:
+        command.extend(("--disable", feature))
+    command.extend(("-c", 'web_search="disabled"', "-c", "tools.view_image=false"))
+    for server_id in disabled_server_ids:
+        if not _MCP_ID.fullmatch(server_id):
+            raise NativeHostError("native-mcp-server-id-unsupported")
+        command.extend(("-c", f"mcp_servers.{server_id}.enabled=false"))
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=remaining)
+    except TimeoutError as exc:
+        if "process" in locals() and process.returncode is None:
+            process.kill()
+            await process.wait()
+        raise NativeHostError("native-mcp-inventory-deadline-expired") from exc
+    except OSError as exc:
+        raise NativeHostError("native-mcp-inventory-unavailable") from exc
+    if process.returncode != 0 or len(stdout) > 1_000_000:
+        raise NativeHostError("native-mcp-inventory-unavailable")
+    try:
+        lines = stdout.decode("utf-8", "strict").splitlines()
+    except UnicodeDecodeError as exc:
+        raise NativeHostError("native-mcp-inventory-format-invalid") from exc
+    if not lines:
+        raise NativeHostError("native-mcp-inventory-format-invalid")
+    if lines[0].startswith("No MCP servers configured yet."):
+        return {}, _sha(stdout)
+    if not lines[0].split() or lines[0].split()[0] != "Name":
+        raise NativeHostError("native-mcp-inventory-format-invalid")
+    rows = {}
+    for line in lines[1:]:
+        if not line.strip():
+            continue
+        columns = line.split()
+        name = columns[0]
+        if not _MCP_ID.fullmatch(name) or len(columns) < 3 or columns[-2] not in {"enabled", "disabled"}:
+            raise NativeHostError("native-mcp-server-id-unsupported")
+        rows[name] = columns[-2]
+    if len(rows) != sum(1 for line in lines[1:] if line.strip()):
+        raise NativeHostError("native-mcp-inventory-duplicate")
+    return rows, _sha(stdout)
+
+
+async def _configured_mcp_server_ids(codex_executable: str, *, deadline: float) -> tuple[list[str], dict[str, object]]:
+    """Discover server IDs, then prove each effective local status is disabled."""
+    configured, configured_sha256 = await _run_mcp_list(codex_executable, deadline=deadline)
+    names = sorted(configured)
+    if not names:
+        return [], {
+            "schema": "coverage-native-tool-policy-evidence/1",
+            "configured_server_ids": [],
+            "configured_inventory_sha256": configured_sha256,
+            "effective_inventory_sha256": configured_sha256,
+            "effective_statuses": {},
+        }
+    effective, effective_sha256 = await _run_mcp_list(codex_executable, deadline=deadline, disabled_server_ids=names)
+    if set(effective) != set(names) or any(effective[name] != "disabled" for name in names):
+        raise NativeHostError("native-mcp-disable-policy-not-effective")
+    return names, {
+        "schema": "coverage-native-tool-policy-evidence/1",
+        "configured_server_ids": names,
+        "configured_inventory_sha256": configured_sha256,
+        "effective_inventory_sha256": effective_sha256,
+        "effective_statuses": effective,
+    }
 
 
 def _read_phase_deadline(scope: Path, *, stage_uuid: str, phase: str) -> float:
@@ -753,7 +886,10 @@ async def dispatch_handoff_scope(
         raise NativeHostError("native-stage-deadline-expired")
     executable_path, cli_version = _cli_identity(codex_executable, expected_cli_sha256)
     manifest_raw, _manifest, requests = _load_scope(scope, stage_uuid=stage_uuid, phase=phase)
-    catalog = await _request_model_catalog(executable_path, deadline=deadline_monotonic)
+    mcp_server_ids, tool_policy_evidence = await _configured_mcp_server_ids(
+        executable_path, deadline=deadline_monotonic
+    )
+    catalog = await _request_model_catalog(executable_path, deadline=deadline_monotonic, mcp_server_ids=mcp_server_ids)
     catalog_row_sha256, catalog_response_sha256 = inspect_model_catalog(catalog)
     try:
         audit_root.mkdir(mode=0o700)
@@ -766,6 +902,16 @@ async def dispatch_handoff_scope(
     failure_root = audit_root / "failures"
     for root in (claim_root, transcript_root, failure_root):
         root.mkdir(mode=0o700)
+    tool_policy_evidence.update(
+        {
+            "stage_uuid": stage_uuid,
+            "phase": phase,
+            "cli_executable_sha256": expected_cli_sha256,
+            "cli_version": cli_version,
+        }
+    )
+    tool_policy_evidence_bytes = _canonical(tool_policy_evidence)
+    _write_exclusive(audit_root / "tool-policy-evidence.json", tool_policy_evidence_bytes)
     _ = manifest_raw
     claimed: set[str] = set()
     completed: set[str] = set()
@@ -821,6 +967,7 @@ async def dispatch_handoff_scope(
                     expected_catalog_response_sha256=catalog_response_sha256,
                     cli_executable_sha256=expected_cli_sha256,
                     cli_version=cli_version,
+                    mcp_server_ids=mcp_server_ids,
                     deadline=deadline_monotonic,
                 )
                 async with activity_lock:
@@ -863,11 +1010,12 @@ async def dispatch_handoff_scope(
     await asyncio.gather(*(worker() for _ in range(MAX_IN_FLIGHT)))
     status = "complete" if len(completed) == len(requests) else "failed-terminal"
     summary = {
-        "schema": "coverage-native-host-dispatch-summary/1",
+        "schema": "coverage-native-host-dispatch-summary/2",
         "stage_uuid": stage_uuid,
         "phase": phase,
         "model": MODEL,
         "model_list_response_sha256": catalog_file_sha256,
+        "tool_policy_evidence_sha256": _sha(tool_policy_evidence_bytes),
         "model_catalog_advertised_exact_model": catalog_row_sha256 is not None,
         "cli_executable_sha256": expected_cli_sha256,
         "cli_version": cli_version,
