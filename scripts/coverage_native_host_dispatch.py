@@ -686,8 +686,12 @@ def _load_scope(
             or payload.get("packet_id") != row["packet_id"]
             or payload.get("task_id") != row["task_id"]
             or payload.get("assessor_id") != row["assessor_id"]
-            or payload.get("role") != row["role"]
         ):
+            raise NativeHostError("native-request-packet-identity")
+        if phase == "answers":
+            if payload.get("packet_kind") != "answer" or "role" in payload:
+                raise NativeHostError("native-request-packet-identity")
+        elif payload.get("role") != row["role"]:
             raise NativeHostError("native-request-packet-identity")
         requests.append({"row": row, "bytes": packet_bytes, "request_sha256": _sha(request_raw)})
     return manifest_raw, manifest, requests

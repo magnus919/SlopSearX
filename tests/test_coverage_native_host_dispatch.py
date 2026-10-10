@@ -11,7 +11,10 @@ from pathlib import Path
 
 import pytest
 
+from scripts import coverage_assessment_packets
 from scripts import coverage_native_host_dispatch as native
+from tests.test_coverage_assessment_packets import _answer_stage
+from tests.test_coverage_assessment_packets import _fixture as answer_packet_fixture
 
 
 def canonical(value: object) -> bytes:
@@ -77,6 +80,64 @@ def write_scope(root: Path, count: int = 1) -> tuple[Path, str, list[str]]:
     }
     (scope / "handoff-manifest.json").write_bytes(canonical(manifest))
     (scope / "handoff-manifest.json").chmod(0o600)
+    return scope, stage_uuid, packet_ids
+
+
+def write_prepared_answer_scope(root: Path) -> tuple[Path, str, list[str]]:
+    prepared, captures = answer_packet_fixture()
+    answer_inputs, answer_outputs, source_outputs = _answer_stage(prepared, captures)
+    prepared_answers = coverage_assessment_packets.prepare_answer_assessment_packets(
+        prepared=prepared,
+        answer_inputs=answer_inputs,
+        answer_outputs=answer_outputs,
+        source_outputs=source_outputs,
+    )
+    stage_uuid = prepared.packet_stage_uuid
+    scope = root / stage_uuid / "answers"
+    requests_dir = scope / "requests"
+    results_dir = scope / "results"
+    requests_dir.mkdir(mode=0o700, parents=True)
+    (root / stage_uuid).chmod(0o700)
+    scope.chmod(0o700)
+    requests_dir.chmod(0o700)
+    results_dir.mkdir(mode=0o700)
+    rows = []
+    packet_ids = []
+    for packet_row in prepared_answers.packets:
+        packet_id = packet_row["packet_id"]
+        packet_ids.append(packet_id)
+        row = {
+            "packet_id": packet_id,
+            "task_id": packet_row["task_id"],
+            "assessor_id": packet_row["assessor_id"],
+            "role": packet_row["role"],
+            "packet_sha256": packet_row["sha256"],
+            "byte_count": packet_row["byte_count"],
+        }
+        rows.append(row)
+        envelope = {
+            "schema": "coverage-native-grader-handoff/1",
+            "stage_uuid": stage_uuid,
+            "phase": "answers",
+            "model": native.MODEL,
+            **row,
+            "packet_bytes_base64": __import__("base64").b64encode(packet_row["bytes"]).decode(),
+        }
+        path = requests_dir / f"{packet_id}.request.json"
+        path.write_bytes(canonical(envelope))
+        path.chmod(0o600)
+    manifest = {
+        "schema": "coverage-native-grader-handoff/1",
+        "stage_uuid": stage_uuid,
+        "phase": "answers",
+        "model": native.MODEL,
+        "status": "awaiting-native-tool-results",
+        "packet_count": len(rows),
+        "packets": rows,
+    }
+    manifest_path = scope / "handoff-manifest.json"
+    manifest_path.write_bytes(canonical(manifest))
+    manifest_path.chmod(0o600)
     return scope, stage_uuid, packet_ids
 
 
@@ -378,6 +439,17 @@ def test_transcript_roundtrip_binds_packet_and_returns_exact_final_text() -> Non
         expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
     )
     assert defaulted.response_bytes == verified.response_bytes
+
+
+def test_actual_prepared_answer_packet_shape_loads_without_inner_role(tmp_path: Path) -> None:
+    scope, stage_uuid, packet_ids = write_prepared_answer_scope(tmp_path)
+    _, manifest, requests = native._load_scope(scope, stage_uuid=stage_uuid, phase="answers")
+    assert manifest["packet_count"] == 32
+    assert [request["row"]["packet_id"] for request in requests] == [row["packet_id"] for row in manifest["packets"]]
+    first_payload = json.loads(requests[0]["bytes"])
+    assert first_payload["packet_kind"] == "answer"
+    assert "role" not in first_payload
+    assert len(packet_ids) == 32
 
 
 @pytest.mark.asyncio
