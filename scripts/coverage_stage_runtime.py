@@ -9,6 +9,7 @@ implementations remain the execution and validation boundaries.
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import os
 import stat
@@ -23,6 +24,10 @@ from scripts import coverage_stage_orchestration as orchestration
 
 class RuntimeWiringError(RuntimeError):
     """Explicit stage inputs or a typed execution result failed validation."""
+
+
+async def _await(value: Any) -> Any:
+    return await value if inspect.isawaitable(value) else value
 
 
 def _sha(raw: bytes) -> str:
@@ -67,9 +72,11 @@ class RuntimeBindings:
     The production factory never accepts injected transports or resolvers.
     """
 
-    acquisition_authority: Callable[[orchestration.StagePlan], Mapping[str, object]]
+    acquisition_authority: Callable[[orchestration.StagePlan], Mapping[str, object] | Awaitable[Mapping[str, object]]]
     verify_acquisition: Callable[[orchestration.StagePlan, orchestration.AcquisitionEvidence], Awaitable[bool]]
-    capture_authority: Callable[[orchestration.StagePlan, Mapping[str, object]], Mapping[str, object]]
+    capture_authority: Callable[
+        [orchestration.StagePlan, Mapping[str, object]], Mapping[str, object] | Awaitable[Mapping[str, object]]
+    ]
     prepare_after_acquisition: Callable[
         [orchestration.StagePlan, orchestration.AcquisitionEvidence, Mapping[str, object]],
         Awaitable[orchestration.LatePreparationEvidence],
@@ -78,7 +85,10 @@ class RuntimeBindings:
     selector_permit_resolver: Callable[..., Awaitable[Mapping[str, tuple[bytes, str]]]]
     selector_admission_verifier: Callable[..., Awaitable[Any]]
     selector_evidence_builder: Callable[..., orchestration.SelectorEvidence]
-    answer_authority: Callable[[orchestration.StagePlan, tuple[answer_execution.AnswerTask, ...]], Mapping[str, object]]
+    answer_authority: Callable[
+        [orchestration.StagePlan, tuple[answer_execution.AnswerTask, ...]],
+        Mapping[str, object] | Awaitable[Mapping[str, object]],
+    ]
     selector_api_key: str
     selector_lease_root: str | os.PathLike[str]
     selector_archive_root: str | os.PathLike[str]
@@ -108,7 +118,7 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
 
     async def acquire(plan: orchestration.StagePlan) -> orchestration.AcquisitionEvidence:
         authority = _authority(
-            bindings.acquisition_authority(plan),
+            await _await(bindings.acquisition_authority(plan)),
             {
                 "permit_receipt_bytes",
                 "expected_permit_receipt_sha256",
@@ -144,7 +154,7 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
         plan: orchestration.StagePlan, pipeline_inputs: Mapping[str, object]
     ) -> orchestration.CaptureEvidence:
         authority = _authority(
-            bindings.capture_authority(plan, pipeline_inputs),
+            await _await(bindings.capture_authority(plan, pipeline_inputs)),
             {
                 "candidate_base_url",
                 "operator_token",
@@ -201,7 +211,7 @@ def build_stage_executors(plan: orchestration.StagePlan, bindings: RuntimeBindin
         plan: orchestration.StagePlan, tasks: tuple[answer_execution.AnswerTask, ...]
     ) -> orchestration.AnswerEvidence:
         authority = _authority(
-            bindings.answer_authority(plan, tasks),
+            await _await(bindings.answer_authority(plan, tuple(tasks))),
             {
                 "endpoint",
                 "api_key",

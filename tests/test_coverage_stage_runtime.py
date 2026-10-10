@@ -51,6 +51,48 @@ def _bindings(root: Path, *, acquisition_authority=None, capture_authority=None,
 
 
 class StageRuntimeWiringTests(unittest.IsolatedAsyncioTestCase):
+    async def test_operator_receipt_authority_callbacks_may_wait_asynchronously(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            plan = plan_fixture()
+            calls = []
+
+            async def acquisition_authority(_plan):
+                calls.append("acquisition")
+                return {"one_shot_lease": object()}
+
+            async def capture_authority(_plan, _inputs):
+                calls.append("capture")
+                return {"transport": object()}
+
+            async def answer_authority(_plan, _tasks):
+                calls.append("answer")
+                return {"resolver": object()}
+
+            executors = runtime.build_stage_executors(
+                plan,
+                _bindings(
+                    Path(temporary),
+                    acquisition_authority=acquisition_authority,
+                    capture_authority=capture_authority,
+                    answer_authority=answer_authority,
+                ),
+            )
+            with (
+                mock.patch.object(runtime.coverage_live_acquire, "acquire_live_coverage_stage") as acquire,
+                mock.patch.object(runtime.coverage_source_capture, "capture_sources_once") as capture,
+                mock.patch.object(answer_execution, "execute_answer_stage") as answer,
+            ):
+                with self.assertRaisesRegex(runtime.RuntimeWiringError, "acquisition-authority-shape-invalid"):
+                    await executors.acquire(plan)
+                with self.assertRaisesRegex(runtime.RuntimeWiringError, "capture-authority-shape-invalid"):
+                    await executors.capture(plan, {})
+                with self.assertRaisesRegex(runtime.RuntimeWiringError, "answer-authority-shape-invalid"):
+                    await executors.answerer(plan, _tasks())
+            self.assertEqual(calls, ["acquisition", "capture", "answer"])
+            acquire.assert_not_called()
+            capture.assert_not_called()
+            answer.assert_not_called()
+
     async def test_factory_wires_ordered_executors_without_minting_authority(self):
         with tempfile.TemporaryDirectory() as temporary:
             plan = plan_fixture(selector_map_registered=True)
