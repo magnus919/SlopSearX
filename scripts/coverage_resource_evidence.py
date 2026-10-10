@@ -1324,9 +1324,14 @@ def collect_acquisition_observations(
                 or retry_config != 0
             ):
                 raise ResourceEvidenceError("acquisition-control-transport-binding")
+            production_transport = True
         elif transport_identity == "injected-mocktransport":
             if retry_policy != "mock-transport-single-dispatch" or retry_config != 0:
                 raise ResourceEvidenceError("acquisition-control-transport-binding")
+            # Mock receipts are useful for parser/receipt tests, but their
+            # injected clock and transport do not establish real execution
+            # pacing or retry behavior. Keep the qualification fields unknown.
+            production_transport = False
         else:
             raise ResourceEvidenceError("acquisition-control-retry-policy-invalid")
 
@@ -1361,7 +1366,7 @@ def collect_acquisition_observations(
             invoked_rows.append(row)
         if summary.get("status") == "complete" and len(invoked_rows) != len(expected_ids):
             raise ResourceEvidenceError("acquisition-operation-invocation-incomplete")
-        if len(invoked_rows) >= 2:
+        if production_transport and len(invoked_rows) >= 2:
             raw_idle_gaps = [
                 int(next_row["start_offset_us"]) - int(previous_row["end_offset_us"])
                 for previous_row, next_row in zip(invoked_rows, invoked_rows[1:])
@@ -1399,7 +1404,7 @@ def collect_acquisition_observations(
                 raise ResourceEvidenceError("acquisition-dispatch-offset-invalid")
             if row.get("engine") == "arxiv":
                 arxiv_offsets.append(offset)
-        if len(arxiv_offsets) >= 2:
+        if production_transport and len(arxiv_offsets) >= 2:
             raw_arxiv_gaps = [right - left for left, right in zip(arxiv_offsets, arxiv_offsets[1:])]
             if any(gap < 0 for gap in raw_arxiv_gaps):
                 raise ResourceEvidenceError("acquisition-arxiv-time-order-invalid")
@@ -1413,7 +1418,7 @@ def collect_acquisition_observations(
                 if arxiv_min_gap_us >= arxiv_bound_us
                 else arxiv_min_gap_us / 1_000_000
             )
-        if len(invoked_rows) == len(expected_ids) and retry_config == 0:
+        if production_transport and len(invoked_rows) == len(expected_ids) and retry_config == 0:
             acquisition_retries = 0
     result: dict[str, object] = {
         "acquisition_physical_http_calls": physical_calls,
