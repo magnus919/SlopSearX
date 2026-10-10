@@ -221,6 +221,8 @@ def fake_codex(tmp_path: Path) -> tuple[Path, str]:
                         "method": "turn/started",
                         "params": {"threadId": thread_id, "turn": {"id": turn_id, "status": "inProgress", "items": []}},
                     })
+                    for index in range(int(os.environ.get("FAKE_CODEX_PROGRESS_COUNT", "0"))):
+                        emit({"method": "turn/progress", "params": {"index": index}})
                     time.sleep(0.04)
                     text = request["params"]["input"][0]["text"]
                     items = [
@@ -550,6 +552,31 @@ async def test_dispatch_disables_builtin_tools_and_each_configured_mcp_before_tu
     transcript = json.loads(next((scope / "native-host" / "transcripts").glob("*.json")).read_bytes())
     assert transcript["packet_id"] in packet_ids
     assert transcript["tool_policy"] == native._tool_policy(["fixture_mcp"])
+
+
+@pytest.mark.asyncio
+async def test_cumulative_progress_events_fail_before_transcript_buffer_exceeds_cap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, _ = write_scope(tmp_path)
+    codex, digest = fake_codex(tmp_path)
+    monkeypatch.setenv("FAKE_CODEX_PROGRESS_COUNT", "200")
+    monkeypatch.setattr(native, "MAX_TRANSCRIPT_BYTES", 128_000)
+
+    with pytest.raises(native.NativeHostError, match="dispatch-incomplete-terminal"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 30,
+        )
+
+    summary = json.loads((scope / "native-host" / "dispatch-summary.json").read_bytes())
+    packet_id = summary["claimed_packet_ids"][0]
+    assert summary["failure_reasons"][packet_id] == "native-transcript-size-cap"
+    assert not (scope / "native-host" / "transcripts" / f"{packet_id}.transcript.json").exists()
 
 
 @pytest.mark.asyncio

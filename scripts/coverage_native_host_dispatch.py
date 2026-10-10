@@ -30,6 +30,8 @@ TRANSCRIPT_SCHEMA = "coverage-native-host-transcript/2"
 MAX_PACKET_BYTES = 384_000
 MAX_TRANSCRIPT_BYTES = 12_000_000
 MAX_EVENT_LINE_BYTES = 3_000_000
+_TRANSCRIPT_ENVELOPE_RESERVE_BYTES = 64_000
+_EVENT_MEMORY_OVERHEAD_BYTES = 512
 MAX_IN_FLIGHT = 2
 DISABLED_FEATURES = (
     "apps",
@@ -63,6 +65,25 @@ _MCP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z")
 
 class NativeHostError(RuntimeError):
     """Native host dispatch failed; the reserved packet must not be retried."""
+
+
+class _TranscriptEvents:
+    """Bound retained event bytes and per-event Python object overhead."""
+
+    def __init__(self, *, maximum_bytes: int | None = None) -> None:
+        self.events: list[dict[str, object]] = []
+        self._budget = (MAX_TRANSCRIPT_BYTES if maximum_bytes is None else maximum_bytes) - (
+            _TRANSCRIPT_ENVELOPE_RESERVE_BYTES
+        )
+        self._charged_bytes = 0
+
+    def append(self, event: dict[str, object]) -> None:
+        event_bytes = _canonical(event)
+        charge = len(event_bytes) + _EVENT_MEMORY_OVERHEAD_BYTES
+        if charge > self._budget - self._charged_bytes:
+            raise NativeHostError("native-transcript-size-cap")
+        self.events.append(event)
+        self._charged_bytes += charge
 
 
 @dataclass(frozen=True)
@@ -454,7 +475,7 @@ async def _invoke_codex(
         packet_text = packet_bytes.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise NativeHostError("native-packet-not-utf8") from exc
-    events: list[dict[str, object]] = []
+    events = _TranscriptEvents()
     with tempfile.TemporaryDirectory(prefix="coverage-native-grader-") as cwd:
         process = await asyncio.create_subprocess_exec(
             *_app_server_command(codex_executable, mcp_server_ids),
@@ -554,9 +575,11 @@ async def _invoke_codex(
                 "tool_policy": _tool_policy(mcp_server_ids),
                 "cli_executable_sha256": cli_executable_sha256,
                 "cli_version": cli_version,
-                "events": events,
+                "events": events.events,
             }
             transcript_bytes = _canonical(transcript)
+            if len(transcript_bytes) > MAX_TRANSCRIPT_BYTES:
+                raise NativeHostError("native-transcript-size-cap")
             verified = verify_transcript(
                 transcript_bytes,
                 stage_uuid=stage_uuid,
