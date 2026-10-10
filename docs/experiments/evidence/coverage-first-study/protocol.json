@@ -96,8 +96,9 @@
     "run registered provider schedule once, archive before parsing, replay original parsers",
     "create equal-budget paired answers; freeze anonymous assessor packets",
     "fresh independent answer grading; close all outputs before unblinding",
-    "evaluate all unchanged endpoints separately; publish result regardless of outcome",
-    "only a complete development pass admits already registered untouched confirmation"
+    "evaluate all unchanged endpoints separately from closed evidence; use a durable pre-calculation elapsed sample only as a lower bound",
+    "fsync the non-authoritative gate inventory, sample actual elapsed through that fsync, then require separate pin verifier before any development-pass decision",
+    "only a complete development pass admitted by the independent verifier can admit already registered untouched confirmation"
   ],
   "outstanding_before_registration": [
     "executable guarded live acquisition/capture/provider/answer/assessment driver",
@@ -106,7 +107,7 @@
     "independent source qualification and new admissions"
   ],
   "phase_limits": {
-    "includes": "construction, serialization, exchange, archival fsync, original parsing/selection and final receipt fsync",
+    "includes": "stage wall includes construction, serialization, exchange, archival fsync, original parsing/selection, gate calculation, and final decision inventory fsync; post-end closeout receipt fsync is excluded and independently bound",
     "selector_phase_ms": 1000,
     "stage_wall_seconds": 28800
   },
@@ -156,7 +157,16 @@
     "useful_facet_loss_allowed": 0,
     "useful_lead_grade_minimum": 2
   },
-  "schema": "coverage-first-study-protocol/1",
+  "schema": "coverage-first-study-protocol/2",
+  "stage_finalization": {
+    "status": "draft_not_registered_not_admitted",
+    "deadline_seconds": 28800,
+    "pending_elapsed": "A source-bound lower-bound sample is fsynced before calculation and supplied to the unchanged stage-wall predicate.",
+    "final_decision": "All unchanged numeric gates are calculated once from closed evidence and the pending lower bound; the non-authoritative decision inventory is durably fsynced before sampling actual elapsed time.",
+    "actual_elapsed": "A source-bound closeout receipt measures stage start through final decision inventory file and directory fsync. Its own fsync is excluded.",
+    "independent_verifier": "Only a separate verifier may report gates-pass-awaiting-independent-decision, and only when all artifact pins match, every frozen gate is true, and verified actual elapsed is strictly below the unchanged deadline. Any actual elapsed at or above the deadline terminal-invalidates the stage, regardless of the preliminary gate status.",
+    "historical_stages": "This forward-only protocol version cannot rescue, reinterpret, or regrade prior terminal or inconclusive stages. New registration and authorization are required before any calls."
+  },
   "status": "draft_not_registered_not_admitted",
   "stop": "one invocation per declared stage; failure or inconclusive result terminates this fixed study; no rescue, retry, tuning, replacement or automatic product implementation; both stages must pass before optional product delivery",
   "task_use": {
