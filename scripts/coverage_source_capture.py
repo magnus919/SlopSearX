@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 import re
+import ssl
 import stat
 import time
 import uuid
@@ -131,11 +132,16 @@ class VerifiedSourceCapturePermit:
     response_bytes: int
     source_context_characters: int
     receipt_sha256: str
+    ca_bundle_sha256: str | None = None
 
 
 class PermitVerifier(Protocol):
     def verify(
-        self, manifest_bytes: bytes, receipt_bytes: bytes, expected_receipt_sha256: str
+        self,
+        manifest_bytes: bytes,
+        receipt_bytes: bytes,
+        expected_receipt_sha256: str,
+        ca_bundle_sha256: str | None = None,
     ) -> VerifiedSourceCapturePermit: ...
 
 
@@ -155,6 +161,7 @@ class ProtectedCaptureQualificationBindings:
     candidate_endpoint_scheme: str
     candidate_runtime_revision: str
     capture_module_sha256: str
+    ca_bundle_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -194,6 +201,7 @@ class SourceCaptureResult:
     receipt_directory: Path
     private_inventory: tuple[Mapping[str, object], ...]
     candidate_endpoint_scheme: str = "https"
+    ca_bundle_sha256: str | None = None
     internal_scraper_fanout: str = "unknown unless independently exposed; not counted as zero"
     quality_credit: bool = False
 
@@ -364,6 +372,7 @@ def _verify_permit(
     permit_receipt_bytes: bytes,
     expected_permit_receipt_sha256: str,
     verifier: PermitVerifier | None,
+    ca_bundle_sha256: str | None,
 ) -> VerifiedSourceCapturePermit:
     if type(permit_receipt_bytes) is not bytes or not permit_receipt_bytes:
         raise SourceCaptureError("external-capture-permit-required")
@@ -373,7 +382,10 @@ def _verify_permit(
         raise SourceCaptureError("capture-permit-digest-mismatch")
     if verifier is None or not callable(getattr(verifier, "verify", None)):
         raise SourceCaptureError("external-capture-permit-verifier-required")
-    permit = verifier.verify(manifest_bytes, permit_receipt_bytes, expected_permit_receipt_sha256)
+    if ca_bundle_sha256 is None:
+        permit = verifier.verify(manifest_bytes, permit_receipt_bytes, expected_permit_receipt_sha256)
+    else:
+        permit = verifier.verify(manifest_bytes, permit_receipt_bytes, expected_permit_receipt_sha256, ca_bundle_sha256)
     expected = {
         "status": "verified-admitted",
         "scope": "source-capture",
@@ -392,6 +404,7 @@ def _verify_permit(
         "response_bytes": MAX_RESPONSE_BYTES,
         "source_context_characters": MAX_SOURCE_CHARS,
         "receipt_sha256": expected_permit_receipt_sha256,
+        "ca_bundle_sha256": ca_bundle_sha256,
     }
     if type(permit) is not VerifiedSourceCapturePermit or _canonical_json(permit.__dict__) != _canonical_json(expected):
         raise SourceCaptureError("external-capture-permit-binding-mismatch")
@@ -504,13 +517,56 @@ def _verify_protected_capture_qualification(
     return qualification
 
 
-def _owned_httpx_transport() -> httpx.AsyncHTTPTransport:
-    """Build the production transport with environment proxies and retries disabled."""
-    return httpx.AsyncHTTPTransport(
-        trust_env=False,
-        retries=0,
-        limits=httpx.Limits(max_connections=1, max_keepalive_connections=0),
-    )
+def _validated_ca_bundle(
+    ca_bundle_pem_bytes: bytes | None, expected_sha256: str | None
+) -> tuple[str | None, ssl.SSLContext | None]:
+    """Validate an exactly pinned, public-CA-only PEM bundle before dispatch."""
+    if ca_bundle_pem_bytes is None and expected_sha256 is None:
+        return None, None
+    if (
+        type(ca_bundle_pem_bytes) is not bytes
+        or not ca_bundle_pem_bytes
+        or len(ca_bundle_pem_bytes) > 262_144
+        or type(expected_sha256) is not str
+        or not _SHA256.fullmatch(expected_sha256)
+        or _sha(ca_bundle_pem_bytes) != expected_sha256
+    ):
+        raise SourceCaptureError("capture-ca-bundle-pin-invalid")
+    if b"PRIVATE KEY" in ca_bundle_pem_bytes:
+        raise SourceCaptureError("capture-ca-private-key-rejected")
+    try:
+        pem = ca_bundle_pem_bytes.decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise SourceCaptureError("capture-ca-pem-invalid") from exc
+    blocks = re.findall(r"-----BEGIN CERTIFICATE-----[A-Za-z0-9+/=\r\n\t ]+?-----END CERTIFICATE-----", pem)
+
+    def compact(text: str) -> str:
+        return re.sub(r"\s+", "", text)
+
+    if not blocks or compact("".join(blocks)) != compact(pem):
+        raise SourceCaptureError("capture-ca-pem-invalid")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+    try:
+        context.load_verify_locations(cadata=pem)
+    except (ssl.SSLError, ValueError) as exc:
+        raise SourceCaptureError("capture-ca-pem-invalid") from exc
+    if context.verify_mode != ssl.CERT_REQUIRED or not context.check_hostname:
+        raise SourceCaptureError("capture-ca-verification-disabled")
+    return expected_sha256, context
+
+
+def _owned_httpx_transport(ssl_context: ssl.SSLContext | None = None) -> httpx.AsyncHTTPTransport:
+    """Build the owned no-retry transport, preserving TLS chain and hostname checks."""
+    options: dict[str, object] = {
+        "trust_env": False,
+        "retries": 0,
+        "limits": httpx.Limits(max_connections=1, max_keepalive_connections=0),
+    }
+    if ssl_context is not None:
+        options["verify"] = ssl_context
+    return httpx.AsyncHTTPTransport(**options)
 
 
 def _write_once(path: Path, raw: bytes) -> None:
@@ -817,6 +873,8 @@ async def capture_sources_once(
     qualification_receipt_bytes: bytes | None = None,
     expected_qualification_receipt_sha256: str | None = None,
     qualification_verifier: ProtectedCaptureQualificationVerifier | None = None,
+    ca_bundle_pem_bytes: bytes | None = None,
+    expected_ca_bundle_sha256: str | None = None,
     clock=time.monotonic,
 ) -> SourceCaptureResult:
     """Capture one exact source inventory through an injected HTTPX transport.
@@ -838,6 +896,7 @@ async def capture_sources_once(
         candidate_identity_bytes, str(manifest["candidate_identity_sha256"])
     )
     health_url, scrape_url, candidate_endpoint_sha256 = _candidate_endpoints(candidate_base_url)
+    ca_bundle_sha256, ssl_context = _validated_ca_bundle(ca_bundle_pem_bytes, expected_ca_bundle_sha256)
     endpoint_scheme = urlsplit(candidate_base_url).scheme
     if manifest["candidate_endpoint_sha256"] != candidate_endpoint_sha256:
         raise SourceCaptureError("capture-candidate-endpoint-binding-mismatch")
@@ -862,6 +921,8 @@ async def capture_sources_once(
             )
         ):
             raise SourceCaptureError("mock-transport-qualification-unexpected")
+        if ca_bundle_sha256 is not None:
+            raise SourceCaptureError("mock-transport-ca-trust-unexpected")
     if (
         type(stage_started_monotonic) not in {int, float}
         or type(stage_deadline_monotonic) not in {int, float}
@@ -884,6 +945,7 @@ async def capture_sources_once(
             candidate_endpoint_scheme=endpoint_scheme,
             candidate_runtime_revision=str(candidate_identity["runtime"]["revision"]),
             capture_module_sha256=execution_controls.module_source_sha256(__file__),
+            ca_bundle_sha256=ca_bundle_sha256,
         )
         qualification = _verify_protected_capture_qualification(
             receipt_bytes=qualification_receipt_bytes,
@@ -898,12 +960,13 @@ async def capture_sources_once(
         permit_receipt_bytes,
         expected_permit_receipt_sha256,
         permit_verifier,
+        ca_bundle_sha256,
     )
     if transport is None:
         # Construction is local and occurs only after the external boundary
         # qualification and capture permit pass, but before consuming the
         # one-shot lease so a constructor error cannot burn an unused slot.
-        transport = _owned_httpx_transport()
+        transport = _owned_httpx_transport(ssl_context) if ssl_context is not None else _owned_httpx_transport()
     lease_sha = _consume_lease(one_shot_lease, permit)
     stage_uuid = str(manifest["stage_uuid"])
     stage_dir = receipt_root / stage_uuid
@@ -1007,6 +1070,8 @@ async def capture_sources_once(
                     "retries": 0,
                     "max_connections": 1,
                     "max_keepalive_connections": 0,
+                    "tls_verification": "pinned-public-ca" if ca_bundle_sha256 is not None else "system-default",
+                    "ca_bundle_sha256": ca_bundle_sha256,
                 }
                 if qualification is not None
                 else None
@@ -1241,6 +1306,7 @@ async def capture_sources_once(
         receipt_directory=stage_dir,
         private_inventory=tuple(inventory),
         candidate_endpoint_scheme=endpoint_scheme,
+        ca_bundle_sha256=ca_bundle_sha256,
     )
 
 

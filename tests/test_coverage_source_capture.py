@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import gzip
 import hashlib
 import json
 import os
+import ssl
 import stat
+import subprocess
 import zlib
 from dataclasses import replace
 from pathlib import Path
@@ -81,7 +84,7 @@ def _source(task: str, source_id: str, index: int, url: str | None) -> dict[str,
 
 
 class _Verifier:
-    def verify(self, manifest_bytes: bytes, receipt_bytes: bytes, expected_receipt_sha256: str):
+    def verify(self, manifest_bytes: bytes, receipt_bytes: bytes, expected_receipt_sha256: str, ca_bundle_sha256=None):
         assert receipt_bytes == b"external-permit-receipt"
         assert expected_receipt_sha256 == _sha(receipt_bytes)
         manifest = json.loads(manifest_bytes)
@@ -103,6 +106,7 @@ class _Verifier:
             response_bytes=2_000_000,
             source_context_characters=8_000,
             receipt_sha256=expected_receipt_sha256,
+            ca_bundle_sha256=ca_bundle_sha256,
         )
 
 
@@ -143,6 +147,8 @@ async def _capture(
     qualification_verifier=None,
     expected_qualification_receipt_sha256: str | None = None,
     protocol_bytes_override: bytes | None = None,
+    ca_bundle_pem_bytes: bytes | None = None,
+    expected_ca_bundle_sha256: str | None = None,
 ):
     protocol_bytes = protocol_bytes_override or _protocol_bytes()
     candidate_identity_bytes = candidate_identity_bytes or _candidate_identity()
@@ -176,6 +182,8 @@ async def _capture(
         qualification_receipt_bytes=qualification_receipt_bytes,
         expected_qualification_receipt_sha256=expected_qualification_receipt_sha256,
         qualification_verifier=qualification_verifier,
+        ca_bundle_pem_bytes=ca_bundle_pem_bytes,
+        expected_ca_bundle_sha256=expected_ca_bundle_sha256,
         clock=clock,
     )
 
@@ -904,14 +912,19 @@ async def test_qualified_owned_transport_records_exact_controls_and_receipt(
     import scripts.coverage_source_capture as capture
 
     receipt = b"independently-verified-protected-profile"
+    ca_pem, _ca_cert, _ca_key = _local_ca_files(tmp_path, "qualified-capture-ca")
+    ca_sha = _sha(ca_pem)
     seen = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         seen.append((request.method, request.url.path))
         return _healthy_response()
 
-    def owned_transport():
+    def owned_transport(ssl_context=None):
         # This factory stands in for the owned constructor to keep the test offline.
+        assert ssl_context is not None
+        assert ssl_context.verify_mode == ssl.CERT_REQUIRED
+        assert ssl_context.check_hostname is True
         return httpx.MockTransport(handler)
 
     monkeypatch.setattr(capture, "_owned_httpx_transport", owned_transport)
@@ -923,6 +936,8 @@ async def test_qualified_owned_transport_records_exact_controls_and_receipt(
         qualification_receipt_bytes=receipt,
         expected_qualification_receipt_sha256=_sha(receipt),
         qualification_verifier=verifier,
+        ca_bundle_pem_bytes=ca_pem,
+        expected_ca_bundle_sha256=ca_sha,
     )
     inventory = json.loads((result.receipt_directory / "inventory.json").read_bytes())
     qualification = inventory["protected_capture_qualification"]
@@ -934,12 +949,15 @@ async def test_qualified_owned_transport_records_exact_controls_and_receipt(
     assert qualification["receipt_sha256"] == _sha(receipt)
     assert qualification["grok_image_digest"] == "sha256:" + "a" * 64
     assert qualification["grok_config_sha256"] == "d" * 64
+    assert qualification["bindings"]["ca_bundle_sha256"] == ca_sha
     assert controls["transport_retry_policy"] == "httpx-owned-retries-zero"
     assert controls["transport_configuration"] == {
         "trust_env": False,
         "retries": 0,
         "max_connections": 1,
         "max_keepalive_connections": 0,
+        "tls_verification": "pinned-public-ca",
+        "ca_bundle_sha256": ca_sha,
     }
 
 
@@ -961,6 +979,164 @@ def test_owned_transport_factory_sets_no_proxy_retry_or_connection_reuse(
         "retries": 0,
         "limits": httpx.Limits(max_connections=1, max_keepalive_connections=0),
     }
+
+
+@pytest.mark.asyncio
+async def test_ca_pin_and_private_key_fail_before_lease_or_dispatch(tmp_path: Path) -> None:
+    lease = _Lease()
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        return _healthy_response()
+
+    first = tmp_path / "bad-pin"
+    second = tmp_path / "malformed-pem"
+    third = tmp_path / "private-key"
+    fourth = tmp_path / "mock-ca"
+    first.mkdir()
+    second.mkdir()
+    third.mkdir()
+    fourth.mkdir()
+    pem = b"-----BEGIN CERTIFICATE-----\nZm9v\n-----END CERTIFICATE-----\n"
+    with pytest.raises(SourceCaptureError, match="ca-bundle-pin-invalid"):
+        await _capture(
+            tmp_path=first,
+            transport=None,
+            sources=[],
+            lease=lease,
+            ca_bundle_pem_bytes=pem,
+            expected_ca_bundle_sha256="0" * 64,
+        )
+    assert lease.calls == 0 and calls == []
+
+    with pytest.raises(SourceCaptureError, match="ca-pem-invalid"):
+        await _capture(
+            tmp_path=second,
+            transport=None,
+            sources=[],
+            lease=lease,
+            ca_bundle_pem_bytes=pem,
+            expected_ca_bundle_sha256=_sha(pem),
+        )
+    assert lease.calls == 0 and calls == []
+
+    private = b"-----BEGIN PRIVATE KEY-----\nZm9v\n-----END PRIVATE KEY-----\n"
+    with pytest.raises(SourceCaptureError, match="ca-private-key-rejected"):
+        await _capture(
+            tmp_path=third,
+            transport=None,
+            sources=[],
+            lease=lease,
+            ca_bundle_pem_bytes=private,
+            expected_ca_bundle_sha256=_sha(private),
+        )
+    assert lease.calls == 0 and calls == []
+
+    actual_pem, _cert, _key = _local_ca_files(fourth, "mock-ca")
+    with pytest.raises(SourceCaptureError, match="mock-transport-ca-trust-unexpected"):
+        await _capture(
+            tmp_path=fourth,
+            transport=httpx.MockTransport(handler),
+            sources=[],
+            lease=lease,
+            ca_bundle_pem_bytes=actual_pem,
+            expected_ca_bundle_sha256=_sha(actual_pem),
+        )
+    assert lease.calls == 0 and calls == []
+
+
+def _local_ca_files(tmp_path: Path, name: str) -> tuple[bytes, Path, Path]:
+    import shutil
+
+    openssl = shutil.which("openssl")
+    if openssl is None:
+        pytest.skip("openssl is required for local TLS fixtures")
+    cert = tmp_path / f"{name}.pem"
+    key = tmp_path / f"{name}.key"
+    subprocess.run(
+        [
+            openssl,
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-nodes",
+            "-keyout",
+            str(key),
+            "-out",
+            str(cert),
+            "-days",
+            "1",
+            "-subj",
+            f"/CN={name}",
+            "-addext",
+            "subjectAltName=IP:127.0.0.1",
+            "-addext",
+            "basicConstraints=critical,CA:TRUE",
+        ],
+        check=True,
+        capture_output=True,
+    )
+    return cert.read_bytes(), cert, key
+
+
+@pytest.mark.asyncio
+async def test_owned_tls_verifies_explicit_ca_chain_and_hostname(tmp_path: Path) -> None:
+    import scripts.coverage_source_capture as capture
+
+    ca_pem, cert_path, key_path = _local_ca_files(tmp_path, "fixture.test")
+    wrong_pem, _wrong_cert, _wrong_key = _local_ca_files(tmp_path, "wrong-ca")
+    ca_sha = _sha(ca_pem)
+    pinned_sha, client_context = capture._validated_ca_bundle(ca_pem, ca_sha)
+    assert pinned_sha == ca_sha
+    assert client_context is not None
+    assert client_context.verify_mode == ssl.CERT_REQUIRED
+    assert client_context.check_hostname is True
+
+    server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    server_context.load_cert_chain(cert_path, key_path)
+
+    async def serve(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        try:
+            await reader.read(4096)
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
+            await writer.drain()
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+    try:
+        server = await asyncio.start_server(serve, "127.0.0.1", 0, ssl=server_context)
+    except PermissionError:
+        pytest.skip("sandbox disallows binding a localhost TLS fixture")
+    port = server.sockets[0].getsockname()[1]
+    try:
+        client = httpx.AsyncClient(transport=capture._owned_httpx_transport(client_context))
+        try:
+            response = await client.get(f"https://127.0.0.1:{port}/health")
+            assert response.text == "ok"
+        finally:
+            await client.aclose()
+
+        _, wrong_context = capture._validated_ca_bundle(wrong_pem, _sha(wrong_pem))
+        assert wrong_context is not None
+        client = httpx.AsyncClient(transport=capture._owned_httpx_transport(wrong_context))
+        try:
+            with pytest.raises(httpx.ConnectError):
+                await client.get(f"https://127.0.0.1:{port}/health")
+        finally:
+            await client.aclose()
+
+        client = httpx.AsyncClient(transport=capture._owned_httpx_transport(client_context))
+        try:
+            with pytest.raises(httpx.ConnectError):
+                await client.get(f"https://localhost:{port}/health")
+        finally:
+            await client.aclose()
+    finally:
+        server.close()
+        await server.wait_closed()
 
 
 @pytest.mark.asyncio
@@ -1070,7 +1246,9 @@ async def test_permit_failure_happens_before_lease_or_transport(tmp_path: Path) 
         return httpx.Response(200)
 
     class WrongVerifier:
-        def verify(self, manifest_bytes: bytes, receipt_bytes: bytes, expected_receipt_sha256: str):
+        def verify(
+            self, manifest_bytes: bytes, receipt_bytes: bytes, expected_receipt_sha256: str, ca_bundle_sha256=None
+        ):
             return VerifiedSourceCapturePermit(
                 status="verified-admitted",
                 scope="other-scope",
@@ -1089,6 +1267,7 @@ async def test_permit_failure_happens_before_lease_or_transport(tmp_path: Path) 
                 response_bytes=2_000_000,
                 source_context_characters=8_000,
                 receipt_sha256="0" * 64,
+                ca_bundle_sha256=ca_bundle_sha256,
             )
 
     with pytest.raises(SourceCaptureError, match="permit-binding-mismatch"):
@@ -1227,3 +1406,26 @@ async def test_safe_public_http_source_is_eligible_without_rewriting_url(tmp_pat
     assert seen == ["/health", "/v2/scrape"]
     assert result.private_inventory[0]["status"] == "captured"
     assert result.private_inventory[0]["url"] == "http://docs.example/a"
+
+
+@pytest.mark.asyncio
+async def test_system_trust_preserves_three_argument_permit_verifier(tmp_path: Path) -> None:
+    class LegacyVerifier(_Verifier):
+        calls = 0
+
+        def verify(self, manifest_bytes, receipt_bytes, expected_receipt_sha256):
+            self.calls += 1
+            return super().verify(manifest_bytes, receipt_bytes, expected_receipt_sha256)
+
+    verifier = LegacyVerifier()
+    lease = _Lease()
+    result = await _capture(
+        tmp_path=tmp_path,
+        transport=httpx.MockTransport(lambda _request: _healthy_response()),
+        sources=[],
+        verifier=verifier,
+        lease=lease,
+    )
+    assert verifier.calls == 1
+    assert lease.calls == 1
+    assert result.ca_bundle_sha256 is None
