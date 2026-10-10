@@ -1,0 +1,319 @@
+[
+  {
+    "case": "narrative",
+    "primary": true,
+    "expected": {
+      "results": [
+        {
+          "url": "https://example.org/a",
+          "title": "A"
+        }
+      ],
+      "count": 1
+    },
+    "actual": {
+      "result": "One reading lead."
+    },
+    "passed": false,
+    "upstream": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "One reading lead.",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "results": [
+          {
+            "url": "https://example.org/a",
+            "title": "A"
+          }
+        ],
+        "count": 1
+      },
+      "isError": false
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"result\":\"One reading lead.\"}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "result": "One reading lead."
+      },
+      "isError": false
+    }
+  },
+  {
+    "case": "different_json",
+    "primary": true,
+    "expected": {
+      "results": [],
+      "count": 0
+    },
+    "actual": {
+      "display": "summary"
+    },
+    "passed": false,
+    "upstream": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"display\":\"summary\"}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "results": [],
+        "count": 0
+      },
+      "isError": false
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"display\":\"summary\"}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "display": "summary"
+      },
+      "isError": false
+    }
+  },
+  {
+    "case": "structured_only",
+    "primary": true,
+    "expected": {
+      "count": 2
+    },
+    "actual": {},
+    "passed": false,
+    "upstream": {
+      "_meta": null,
+      "content": [],
+      "structuredContent": {
+        "count": 2
+      },
+      "isError": false
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {},
+      "isError": false
+    }
+  },
+  {
+    "case": "empty_structured",
+    "primary": true,
+    "expected": {},
+    "actual": {
+      "result": "No reading leads."
+    },
+    "passed": false,
+    "upstream": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "No reading leads.",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {},
+      "isError": false
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"result\":\"No reading leads.\"}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "result": "No reading leads."
+      },
+      "isError": false
+    }
+  },
+  {
+    "case": "json_fallback",
+    "primary": false,
+    "expected": {
+      "count": 1
+    },
+    "actual": {
+      "count": 1
+    },
+    "passed": true,
+    "upstream": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"count\":1}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": null,
+      "isError": false
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"count\":1}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "count": 1
+      },
+      "isError": false
+    }
+  },
+  {
+    "case": "text_fallback",
+    "primary": false,
+    "expected": {
+      "result": "Unstructured note."
+    },
+    "actual": {
+      "result": "Unstructured note."
+    },
+    "passed": true,
+    "upstream": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "Unstructured note.",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": null,
+      "isError": false
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"result\":\"Unstructured note.\"}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "result": "Unstructured note."
+      },
+      "isError": false
+    }
+  },
+  {
+    "case": "empty_fallback",
+    "primary": false,
+    "expected": {},
+    "actual": {},
+    "passed": true,
+    "upstream": {
+      "_meta": null,
+      "content": [],
+      "structuredContent": null,
+      "isError": false
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {},
+      "isError": false
+    }
+  },
+  {
+    "case": "error_precedence",
+    "primary": false,
+    "expected": {
+      "error": {
+        "code": "remote_error",
+        "message": "Remote rejected request."
+      }
+    },
+    "actual": {
+      "error": {
+        "code": "remote_error",
+        "message": "Remote rejected request."
+      }
+    },
+    "passed": true,
+    "upstream": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "Remote rejected request.",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "ignored": "remote data"
+      },
+      "isError": true
+    },
+    "gateway": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"error\":{\"code\":\"remote_error\",\"message\":\"Remote rejected request.\"}}",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "error": {
+          "code": "remote_error",
+          "message": "Remote rejected request."
+        }
+      },
+      "isError": false
+    }
+  }
+]
