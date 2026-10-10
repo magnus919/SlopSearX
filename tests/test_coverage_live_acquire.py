@@ -80,13 +80,16 @@ def _pool_plan(engines: list[str], band: str | None = None) -> dict:
     return plan
 
 
-def make_manifest(*, source_revision: str = "b" * 40) -> tuple[dict, bytes]:
+def make_manifest(*, source_revision: str = "b" * 40, include_arxiv: bool = False) -> tuple[dict, bytes]:
     stage_uuid = str(uuid.UUID(int=98765))
     research = [
         {
             "task_id": f"R{index:02d}",
             "search_query": f"synthetic query {index}",
-            "pool_plan": _pool_plan(["github", "openalex"], "research_le_40"),
+            "pool_plan": _pool_plan(
+                ["arxiv", "openalex"] if include_arxiv and index == 1 else ["github", "openalex"],
+                "research_le_40",
+            ),
         }
         for index in range(1, 9)
     ]
@@ -117,7 +120,12 @@ def make_manifest(*, source_revision: str = "b" * 40) -> tuple[dict, bytes]:
         rows.append(
             {
                 "task_id": row["task_id"],
-                "engine_calls": {"arxiv": 0, "github": 1, "openalex": 1, "wikipedia": 0},
+                "engine_calls": {
+                    "arxiv": 2 if include_arxiv and row["task_id"] == "R01" else 0,
+                    "github": 0 if include_arxiv and row["task_id"] == "R01" else 1,
+                    "openalex": 1,
+                    "wikipedia": 0,
+                },
             }
         )
     for row in navigation:
@@ -132,7 +140,7 @@ def make_manifest(*, source_revision: str = "b" * 40) -> tuple[dict, bytes]:
     return manifest, plan
 
 
-def _mock_handler(*, status=200, oversized=False, large=False, calls=None):
+def _mock_handler(*, status=200, oversized=False, large=False, calls=None, arxiv_redirect=False):
     def handle(request: httpx.Request) -> httpx.Response:
         if calls is not None:
             calls.append(request)
@@ -142,6 +150,20 @@ def _mock_handler(*, status=200, oversized=False, large=False, calls=None):
             return httpx.Response(200, content=b"x" * (2_000_001), request=request)
         query = parse_qs(request.url.query.decode())
         term = query.get("q", query.get("search", query.get("action", [""])))[0]
+        if request.url.host == "export.arxiv.org":
+            if arxiv_redirect and query.get("redirected") != ["1"]:
+                return httpx.Response(
+                    302,
+                    headers={"location": "/api/query?redirected=1"},
+                    request=request,
+                )
+            body = (
+                '<feed xmlns="http://www.w3.org/2005/Atom">'
+                "<entry><id>https://arxiv.org/abs/2601.12345</id>"
+                "<title>Synthetic paper</title><summary>Evidence</summary>"
+                "<published>2026-01-01T00:00:00Z</published></entry></feed>"
+            )
+            return httpx.Response(200, content=body.encode(), request=request)
         if request.url.host == "api.github.com":
             if term.startswith("synthetic nav "):
                 number = term.removeprefix("synthetic nav ")
@@ -182,13 +204,22 @@ def _mock_handler(*, status=200, oversized=False, large=False, calls=None):
     return handle
 
 
-async def _run(tmp_path, *, handler=None, verifier=None, lease=None, receipt=b"sealed fixture"):
-    manifest, plan = make_manifest()
+async def _run(
+    tmp_path,
+    *,
+    handler=None,
+    verifier=None,
+    lease=None,
+    receipt=b"sealed fixture",
+    pacer=None,
+    include_arxiv=False,
+):
+    manifest, plan = make_manifest(include_arxiv=include_arxiv)
     verifier = verifier or FakePermitVerifier()
     lease = lease or OneShot()
     response_calls = []
     transport = httpx.MockTransport(handler or _mock_handler(calls=response_calls))
-    pacer = FakePacer()
+    pacer = pacer or FakePacer()
     receipt_hash = sha(receipt)
     result = await live.acquire_live_coverage_stage(
         stage_manifest=manifest,
@@ -212,7 +243,9 @@ async def test_full_synthetic_stage_uses_pinned_scope_and_durable_private_receip
     assert len(result.stage.operations) == 13
     assert result.stage.physical_request_count == 21
     assert len(calls) == 21
-    assert pacer.sleeps == [7.0] * 12
+    assert pacer.sleeps == [
+        live.QUERY_PACING_SECONDS + live.OFFSET_QUANTIZATION_GUARD_SECONDS
+    ] * 12
     assert [item.status for item in result.stage.operations] == ["complete"] * 13
     assert [item.band_valid for item in result.stage.operations[:8]] == [True] * 8
     assert [item.target_found_at_rank1 for item in result.stage.operations[8:]] == [True] * 5
@@ -243,6 +276,17 @@ async def test_full_synthetic_stage_uses_pinned_scope_and_durable_private_receip
     assert b"synthetic query" not in receipt_text
     assert b"response_sha256" in receipt_text
     assert all(path.stat().st_mode & 0o777 == 0o600 for path in root.glob("http-*.json"))
+    controls = summary["execution_control_attestation"]
+    assert controls["control_identity"] == "coverage-acquisition-one-shot/1"
+    assert controls["transport_retries_configured"] == 0
+    assert controls["pacer_identity"] == "injected-mock-only"
+    invocations = controls["operation_invocations"]
+    assert len(invocations) == 13
+    assert all(row["end_offset_us"] >= row["start_offset_us"] for row in invocations)
+    assert all(
+        right["start_offset_us"] - left["start_offset_us"] >= 7_000_000
+        for left, right in zip(invocations, invocations[1:])
+    )
 
 
 @pytest.mark.asyncio
@@ -295,7 +339,12 @@ async def test_arxiv_redirect_dispatches_are_physically_paced_within_request_dea
     assert transport.exchanges[0].redirect_allowed is True
     assert dispatched_at[1] - dispatched_at[0] >= live.ARXIV_PHYSICAL_PACING_SECONDS
     assert dispatched_at[2] - dispatched_at[1] >= live.QUERY_PACING_SECONDS
-    assert dispatched_at == [0.0, 3.0, 10.0]
+    assert dispatched_at == pytest.approx([0.0, 3.000001, 10.000001])
+    dispatch_receipts = [
+        json.loads((sink.path / f"http-{index:04d}-final.json").read_bytes()) for index in range(1, 4)
+    ]
+    offsets = [row["dispatch_offset_us"] for row in dispatch_receipts]
+    assert offsets == [0, 3_000_001, 10_000_001]
 
 
 @pytest.mark.asyncio
@@ -408,6 +457,41 @@ async def test_bad_external_receipt_stops_before_verifier_lease_sink_or_transpor
     assert verifier.calls == lease.calls == 0
     assert calls == []
     assert not (tmp_path / "should-not-exist").exists()
+
+
+@pytest.mark.asyncio
+async def test_production_path_rejects_custom_pacer_before_consuming_lease(tmp_path):
+    manifest, plan = make_manifest()
+    lease = OneShot()
+    receipt = b"sealed fixture"
+    with pytest.raises(live.LiveAcquisitionError, match="pacer-injection-requires-mock-transport"):
+        await live.acquire_live_coverage_stage(
+            stage_manifest=manifest,
+            acquisition_plan_bytes=plan,
+            permit_receipt_bytes=receipt,
+            expected_permit_receipt_sha256=sha(receipt),
+            permit_verifier=FakePermitVerifier(),
+            one_shot_lease=lease,
+            receipt_directory=tmp_path / "no-custom-production-pacer",
+            pacer=FakePacer(),
+        )
+    assert lease.calls == 0
+    assert not (tmp_path / "no-custom-production-pacer").exists()
+
+
+def test_transport_operation_ledger_rejects_duplicate_invocation(tmp_path):
+    sink = live.PrivateReceiptSink(tmp_path / "duplicate-operation")
+    transport = live._BoundedTransport(
+        httpx.MockTransport(_mock_handler()),
+        sink,
+        {"R01": {"github": 1}},
+        FakePacer(),
+        monotonic=FakePacer().monotonic,
+        expected_operation_ids=("R01",),
+    )
+    transport.begin_operation("R01")
+    with pytest.raises(live.LiveAcquisitionError, match="acquisition-operation-not-one-shot"):
+        transport.begin_operation("R01")
 
 
 @pytest.mark.asyncio
