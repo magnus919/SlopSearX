@@ -452,9 +452,16 @@ async def _read_message(reader: asyncio.StreamReader, *, deadline: float) -> dic
     return value
 
 
-async def _write_request(writer: asyncio.StreamWriter, request: dict[str, object]) -> None:
-    writer.write(_canonical(request) + b"\n")
-    await writer.drain()
+async def _write_request(writer: asyncio.StreamWriter, request: dict[str, object], *, deadline: float) -> None:
+    request_bytes = _canonical(request) + b"\n"
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise NativeHostError("native-stage-deadline-expired")
+    writer.write(request_bytes)
+    try:
+        await asyncio.wait_for(writer.drain(), timeout=remaining)
+    except TimeoutError as exc:
+        raise NativeHostError("native-stage-deadline-expired") from exc
 
 
 async def _invoke_codex(
@@ -518,7 +525,7 @@ async def _invoke_codex(
                 if time.monotonic() >= deadline:
                     raise NativeHostError("native-stage-deadline-expired")
                 events.append({"direction": "client", "message": request})
-                await _write_request(process.stdin, request)
+                await _write_request(process.stdin, request, deadline=deadline)
                 if "id" not in request:
                     continue
                 while True:
@@ -545,7 +552,7 @@ async def _invoke_codex(
             if time.monotonic() >= deadline:
                 raise NativeHostError("native-stage-deadline-expired-before-turn")
             events.append({"direction": "client", "message": turn_start})
-            await _write_request(process.stdin, turn_start)
+            await _write_request(process.stdin, turn_start, deadline=deadline)
             turn_id = None
             turn_start_response = False
             while True:
@@ -623,18 +630,22 @@ async def _request_model_catalog(
                 "method": "initialize",
                 "params": {"clientInfo": {"name": "coverage-native-grader", "version": "1"}},
             }
-            await _write_request(process.stdin, initialize)
+            await _write_request(process.stdin, initialize, deadline=deadline)
             response = await _read_message(process.stdout, deadline=deadline)
             if response.get("id") != 1 or "error" in response:
                 raise NativeHostError("native-app-server-initialize-failed")
-            await _write_request(process.stdin, {"jsonrpc": "2.0", "method": "initialized", "params": {}})
+            await _write_request(
+                process.stdin,
+                {"jsonrpc": "2.0", "method": "initialized", "params": {}},
+                deadline=deadline,
+            )
             request = {
                 "jsonrpc": "2.0",
                 "id": 2,
                 "method": "model/list",
                 "params": {"includeHidden": True, "limit": 500},
             }
-            await _write_request(process.stdin, request)
+            await _write_request(process.stdin, request, deadline=deadline)
             while True:
                 response = await _read_message(process.stdout, deadline=deadline)
                 if response.get("id") == 2:

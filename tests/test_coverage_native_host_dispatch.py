@@ -408,6 +408,29 @@ def test_model_catalog_absence_is_metadata_not_dispatch_gate() -> None:
         native.inspect_model_catalog({"jsonrpc": "1.0", **response})
 
 
+@pytest.mark.asyncio
+async def test_request_drain_stall_is_bounded_by_stage_deadline() -> None:
+    class StalledWriter:
+        def __init__(self) -> None:
+            self.written = b""
+
+        def write(self, data: bytes) -> None:
+            self.written += data
+
+        async def drain(self) -> None:
+            await asyncio.Event().wait()
+
+    writer = StalledWriter()
+    deadline = time.monotonic() + 0.05
+    started = time.monotonic()
+    with pytest.raises(native.NativeHostError, match="stage-deadline-expired"):
+        await native._write_request(
+            writer, {"method": "turn/start", "params": {"input": "synthetic"}}, deadline=deadline
+        )
+    assert time.monotonic() - started < 0.5
+    assert writer.written.endswith(b"\n")
+
+
 @pytest.mark.parametrize(
     "tamper",
     [
