@@ -8,7 +8,7 @@ import json
 import stat
 import tempfile
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -408,6 +408,169 @@ async def test_external_permit_mismatch_precedes_claim_and_dispatch() -> None:
     kwargs["expected_permit_sha256"] = "0" * 64
     with pytest.raises(execution.JevExecutionError, match="external-permit-pin-mismatch"):
         await execution.execute_selector_call(**kwargs)
+    assert list(roots.lease.iterdir()) == []
+    assert list(roots.archive.iterdir()) == []
+    roots.close()
+
+
+@pytest.mark.asyncio
+async def test_registered_map_accepts_matching_actual_request() -> None:
+    prepared = replace(prepared_stage(), selector_input_map_required=True)
+    ledger = core.StudyRun(prepared)
+    roots = PrivateRoots()
+    operation_id = prepared.operation_ids[0]
+    calls = []
+    kwargs = invoke_w0_kwargs(
+        prepared,
+        ledger,
+        roots,
+        operation_id,
+        httpx.MockTransport(
+            lambda request: calls.append(request) or httpx.Response(200, content=b"{}", request=request)
+        ),
+    )
+    request_body, _ = execution.build_selector_request(
+        operation_id=operation_id,
+        operation_input_bytes=kwargs["operation_input_bytes"],
+        legacy_control=kwargs["legacy_control"],
+    )
+    rows = [
+        {
+            "operation_id": item,
+            "parser_mode": "coverage" if "candidate" in item else "original-v1",
+            "operation_input_sha256": "0" * 64,
+            "request_body_sha256": "1" * 64,
+        }
+        for item in prepared.operation_ids
+    ]
+    selected = next(row for row in rows if row["operation_id"] == operation_id)
+    selected["operation_input_sha256"] = sha(kwargs["operation_input_bytes"])
+    selected["request_body_sha256"] = sha(request_body)
+    map_bytes = canonical(
+        {
+            "schema": "coverage-selector-input-map/2-draft",
+            "status": "draft-unadmitted",
+            "stage_uuid": prepared.stage_uuid,
+            "source_revision": prepared.source_revision,
+            "original_registration_sha256": prepared.registration_sha256,
+            "coverage_source_sha256": prepared.pins["coverage_source"],
+            "production_rerank_source_sha256": prepared.pins["production_rerank_source"],
+            "execution_source_sha256": "a" * 64,
+            "legacy_control_source_sha256": "b" * 64,
+            "current_service_source_sha256": "c" * 64,
+            "acquisition_snapshot_index_sha256": "d" * 64,
+            "acquisition_manifest_sha256": "e" * 64,
+            "task_input_manifest_sha256": "f" * 64,
+            "neutral_fixture_sha256": "1" * 64,
+            "builder_source_sha256": "2" * 64,
+            "operations": rows,
+        }
+    )
+    kwargs["selector_input_map_bytes"] = map_bytes
+    kwargs["expected_selector_input_map_sha256"] = sha(map_bytes)
+    execution._bind_selector_input_map(prepared, map_bytes, sha(map_bytes))
+    result = await execution.execute_registered_selector_call(**kwargs)
+    assert result.operation_id == operation_id
+    assert len(calls) == 1
+    assert (roots.lease / f"{prepared.stage_uuid}.{operation_id}.claim.json").exists()
+    roots.close()
+
+
+@pytest.mark.asyncio
+async def test_registered_input_map_mismatch_precedes_claim_and_dispatch() -> None:
+    prepared = replace(prepared_stage(), selector_input_map_required=True)
+    ledger = core.StudyRun(prepared)
+    roots = PrivateRoots()
+    operation_id = prepared.operation_ids[0]
+    calls = []
+    kwargs = invoke_w0_kwargs(
+        prepared,
+        ledger,
+        roots,
+        operation_id,
+        httpx.MockTransport(
+            lambda request: calls.append(request) or httpx.Response(200, content=b"{}", request=request)
+        ),
+    )
+    request_body, _ = execution.build_selector_request(
+        operation_id=operation_id,
+        operation_input_bytes=kwargs["operation_input_bytes"],
+        legacy_control=kwargs["legacy_control"],
+    )
+    rows = [
+        {
+            "operation_id": item,
+            "parser_mode": "coverage" if "candidate" in item else "original-v1",
+            "operation_input_sha256": "0" * 64,
+            "request_body_sha256": "1" * 64,
+        }
+        for item in prepared.operation_ids
+    ]
+    selected = next(row for row in rows if row["operation_id"] == operation_id)
+    selected["operation_input_sha256"] = sha(kwargs["operation_input_bytes"])
+    selected["request_body_sha256"] = "f" * 64  # Deliberately differs from actual compiled request.
+    map_bytes = canonical(
+        {
+            "schema": "coverage-selector-input-map/2-draft",
+            "status": "draft-unadmitted",
+            "stage_uuid": prepared.stage_uuid,
+            "source_revision": prepared.source_revision,
+            "original_registration_sha256": prepared.registration_sha256,
+            "coverage_source_sha256": prepared.pins["coverage_source"],
+            "production_rerank_source_sha256": prepared.pins["production_rerank_source"],
+            "execution_source_sha256": "a" * 64,
+            "legacy_control_source_sha256": "b" * 64,
+            "current_service_source_sha256": "c" * 64,
+            "acquisition_snapshot_index_sha256": "d" * 64,
+            "acquisition_manifest_sha256": "e" * 64,
+            "task_input_manifest_sha256": "f" * 64,
+            "neutral_fixture_sha256": "1" * 64,
+            "builder_source_sha256": "2" * 64,
+            "operations": rows,
+        }
+    )
+    kwargs["selector_input_map_bytes"] = map_bytes
+    kwargs["expected_selector_input_map_sha256"] = sha(map_bytes)
+    execution._bind_selector_input_map(prepared, map_bytes, sha(map_bytes))
+    with pytest.raises(execution.JevExecutionError, match="selector-input-map-required-or-unexpected"):
+        await execution.execute_selector_call(
+            **{
+                key: value
+                for key, value in kwargs.items()
+                if key not in {"selector_input_map_bytes", "expected_selector_input_map_sha256"}
+            }
+        )
+    assert calls == []
+    assert list(roots.lease.iterdir()) == []
+    with pytest.raises(execution.JevExecutionError, match="selector-input-map-operation-mismatch"):
+        await execution.execute_registered_selector_call(**kwargs)
+    assert calls == []
+    assert list(roots.lease.iterdir()) == []
+    assert list(roots.archive.iterdir()) == []
+    roots.close()
+
+
+@pytest.mark.asyncio
+async def test_reconstructed_v2_prepared_object_cannot_bypass_map_guard() -> None:
+    pinned = replace(prepared_stage(), selector_input_map_required=True)
+    reconstructed = replace(pinned)
+    assert reconstructed is not pinned
+    ledger = core.StudyRun(reconstructed)
+    roots = PrivateRoots()
+    calls = []
+    kwargs = invoke_w0_kwargs(
+        pinned,
+        ledger,
+        roots,
+        reconstructed.operation_ids[0],
+        httpx.MockTransport(
+            lambda request: calls.append(request) or httpx.Response(200, content=b"{}", request=request)
+        ),
+    )
+    kwargs["prepared"] = reconstructed
+    with pytest.raises(execution.JevExecutionError, match="selector-input-map-required-or-unexpected"):
+        await execution.execute_selector_call(**kwargs)
+    assert calls == []
     assert list(roots.lease.iterdir()) == []
     assert list(roots.archive.iterdir()) == []
     roots.close()

@@ -39,6 +39,14 @@ def _call_kwargs(prepared, ledger, roots, operation_id, compiled, transport):
         "archive_root": roots.archive,
         "result_root": roots.result,
         "transport": transport,
+        # This resource-only fixture stubs the request compiler. Supply the
+        # original slot's synthetic strategy context without claiming native
+        # W0 parser or request parity (those have separate contract tests).
+        "legacy_control": (
+            {"service": SimpleNamespace(_ctx=SimpleNamespace(ranking_strategy="presence"))}
+            if parser_mode == "original-v1"
+            else None
+        ),
     }
 
 
@@ -48,6 +56,32 @@ def _monkeypatch_candidate_builder(monkeypatch, compiled):
         "build_selector_request",
         lambda **_kwargs: (compiled.body, compiled),
     )
+
+
+@pytest.mark.asyncio
+async def test_missing_strategy_context_rejects_before_claim_and_dispatch(monkeypatch) -> None:
+    prepared = prepared_stage()
+    ledger = core.StudyRun(prepared)
+    compiled = compile_small()
+    _monkeypatch_candidate_builder(monkeypatch, compiled)
+    dispatched = []
+    roots = PrivateRoots()
+    try:
+        kwargs = _call_kwargs(
+            prepared,
+            ledger,
+            roots,
+            prepared.operation_ids[0],
+            compiled,
+            httpx.MockTransport(lambda request: dispatched.append(request)),
+        )
+        kwargs["legacy_control"] = None
+        with pytest.raises(execution.JevExecutionError, match="ranking-strategy-invalid"):
+            await execution.execute_selector_call(**kwargs)
+        assert dispatched == []
+        assert list(roots.lease.iterdir()) == []
+    finally:
+        roots.close()
 
 
 @pytest.mark.asyncio
