@@ -1,6 +1,6 @@
 # Operator runner (registered development stage)
 
-`python -m scripts.coverage_operator_runner --config ABSOLUTE_CONFIG_PATH --config-sha256 OUT_OF_BAND_SHA256` loads a fixed JSON config and runs the existing ordered stage coordinator. There are no callback import names, environment-variable credential lookups, or status-only overrides. The config must be a canonical JSON file owned by the current user with mode `0600`; all referenced paths are absolute. Secret paths point to separate owner-only files with mode `0600`.
+First create the isolated, lock-matched environment with `uv sync --locked --extra dev`. Then invoke `.venv/bin/python scripts/coverage_operator_launcher.py --config ABSOLUTE_CONFIG_PATH --config-sha256 OUT_OF_BAND_SHA256`. Preflight verifies the running CPython and complete active distribution inventory against `uv.lock` before starting the stage clock, then carries that environment receipt in each phase handoff. The launcher creates a fresh owner-only bytecode-cache namespace and disables bytecode writes before importing project code; direct invocation of `coverage_operator_runner` is refused. There are no callback import names, environment-variable credential lookups, or status-only overrides. The config must be a canonical JSON file owned by the current user with mode `0600`; all referenced paths are absolute. Secret paths point to separate owner-only files with mode `0600`.
 
 The config schema is `coverage-operator-stage-config/1`. Its exact top-level keys are:
 
