@@ -14,15 +14,15 @@ from unittest import mock
 import httpx
 
 from scripts import coverage_answer_execution as answer_execution
+from scripts import (
+    coverage_jev_execution,
+    coverage_resource_evidence,
+)
 from scripts import coverage_live_acquire as live_acquire
-from scripts import coverage_resource_evidence
 from scripts import coverage_resource_evidence as resource_evidence
 from scripts import coverage_source_capture as source_capture
-from scripts import coverage_selector_admission
-from scripts import coverage_selector_input_map
 from scripts import coverage_stage_finalization as stage_finalization
 from scripts import coverage_stage_orchestration as stage
-from scripts import coverage_jev_execution
 from scripts import coverage_study_acquire as acquisition
 from scripts import coverage_study_core as core
 from slopsearx.adapter import SearchResult
@@ -998,7 +998,9 @@ class StageOrchestrationTests(unittest.TestCase):
                     plan_arg, prepared, pipeline_inputs, closed_references, results, terminal
                 ):
                     calls.append("selector")
-                    terminal_bytes = (selector_roots.result / f"{plan_arg.stage_uuid}.terminal-inventory.json").read_bytes()
+                    terminal_bytes = (
+                        selector_roots.result / f"{plan_arg.stage_uuid}.terminal-inventory.json"
+                    ).read_bytes()
                     by_operation = {row.operation_id: row for row in results}
                     research_orders = {}
                     for task_index, task in enumerate(pipeline_inputs["tasks"], start=1):

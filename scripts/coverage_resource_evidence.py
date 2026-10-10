@@ -834,7 +834,8 @@ def _selector_observations(
         for name in (
             "coverage_source_sha256", "production_rerank_source_sha256", "execution_source_sha256",
             "legacy_control_source_sha256", "current_service_source_sha256", "acquisition_snapshot_index_sha256",
-            "acquisition_manifest_sha256", "task_input_manifest_sha256", "neutral_fixture_sha256", "builder_source_sha256",
+            "acquisition_manifest_sha256", "task_input_manifest_sha256", "neutral_fixture_sha256",
+            "builder_source_sha256",
         ):
             if type(input_map.get(name)) is not str or not _SHA.fullmatch(input_map[name]):
                 raise ResourceEvidenceError("selector-input-map-material-pin-invalid")
@@ -845,7 +846,8 @@ def _selector_observations(
                 or set(row) != {"operation_id", "parser_mode", "operation_input_sha256", "request_body_sha256"}
                 or row.get("operation_id") != operation_id
                 or row.get("parser_mode") != ("original-v1" if is_w0 else "coverage")
-                or type(row.get("operation_input_sha256")) is not str or not _SHA.fullmatch(row["operation_input_sha256"])
+                or type(row.get("operation_input_sha256")) is not str
+                or not _SHA.fullmatch(row["operation_input_sha256"])
                 or type(row.get("request_body_sha256")) is not str or not _SHA.fullmatch(row["request_body_sha256"])
             ):
                 raise ResourceEvidenceError("selector-input-map-operation-invalid")
@@ -1570,7 +1572,9 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             operation_rows=tuple(kwargs.get("selector_operation_rows", ())),
             expected_registration_sha256=kwargs.get("selector_registration_sha256"),
             expected_primary_control=protocol.get("primary_control") if type(protocol) is dict else None,
-            expected_candidate_source_sha256=protocol.get("candidate_source_sha256") if type(protocol) is dict else None,
+            expected_candidate_source_sha256=(
+                protocol.get("candidate_source_sha256") if type(protocol) is dict else None
+            ),
             expected_selector_input_map_schema=(
                 protocol.get("selector_input_map_schema") if type(protocol) is dict else None
             ),
