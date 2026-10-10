@@ -549,6 +549,10 @@ def _capture_observations(
                 "retries": 0,
                 "max_connections": 1,
                 "max_keepalive_connections": 0,
+                "tls_verification": "pinned-public-ca"
+                if capture_result.ca_bundle_sha256 is not None
+                else "system-default",
+                "ca_bundle_sha256": capture_result.ca_bundle_sha256,
             }
             if owned_capture_transport
             else None
@@ -585,6 +589,7 @@ def _capture_observations(
                 "candidate_endpoint_scheme": capture_result.candidate_endpoint_scheme,
                 "candidate_runtime_revision": expected_identity["runtime"]["revision"],
                 "capture_module_sha256": execution_controls.module_source_sha256(source_capture.__file__),
+                "ca_bundle_sha256": capture_result.ca_bundle_sha256,
             }
             qualification_bindings = (
                 protected_qualification.get("bindings") if type(protected_qualification) is dict else None
@@ -723,6 +728,14 @@ def _capture_observations(
         "capture_application_retries_observed": capture_application_retries,
         "capture_response_bytes_limit_applied": capture_response_limit_applied,
         "capture_concurrency_observed": capture_concurrency_observed,
+        "capture_tls_verification": (
+            "pinned-public-ca"
+            if owned_capture_transport and capture_result.ca_bundle_sha256 is not None
+            else "system-default"
+            if owned_capture_transport
+            else None
+        ),
+        "capture_ca_bundle_sha256": capture_result.ca_bundle_sha256 if owned_capture_transport else None,
     }
     return observed
 
