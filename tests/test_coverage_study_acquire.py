@@ -14,6 +14,8 @@ from engines.wikipedia import WikipediaAdapter
 from scripts.coverage_study_acquire import (
     ENGINE_TIMEOUT_MS,
     MAX_RESULTS_PER_ENGINE,
+    OFFSET_QUANTIZATION_GUARD_SECONDS,
+    QUERY_PACING_SECONDS,
     MockResponseFixture,
     RecordedMockTransport,
     acquire_coverage_stage,
@@ -177,7 +179,7 @@ async def test_four_engine_pool_over_40_is_kept_and_operation_pacing_is_fixed() 
     assert 41 <= op.pool_count <= 80
     assert receipt.physical_request_count == 8
     assert receipt.reserved_worst_case_requests == 12
-    assert clock.sleeps == [7.0]
+    assert clock.sleeps == [QUERY_PACING_SECONDS + OFFSET_QUANTIZATION_GUARD_SECONDS]
 
 
 @pytest.mark.asyncio
