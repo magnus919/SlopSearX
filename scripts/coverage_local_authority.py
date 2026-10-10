@@ -278,7 +278,9 @@ class FileOneShotLease:
             "permit_sha256": permit_sha,
         }
         raw = _canonical(claims)
-        name_key = _sha(_canonical([self.scope, stage_uuid, operation_id, request_sha256, permit_sha]))
+        # The logical slot is the identity. Binding the filename to the request
+        # or permit digest would let a changed request claim a fresh lease.
+        name_key = _sha(_canonical([self.scope, stage_uuid, operation_id]))
         filename = f"{name_key}.lease.json"
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
         try:

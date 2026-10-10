@@ -179,6 +179,18 @@ class FileOneShotLeaseTests(unittest.TestCase):
             lease.consume_once(permit, operation_id="answer-D-R01-candidate", request_sha256="c" * 64)
             self.assertEqual(len(list(root.glob("*.lease.json"))), 2)
 
+    def test_changed_request_or_permit_cannot_reclaim_logical_operation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            lease = authority.FileOneShotLease(Path(temporary) / "leases", scope="selector")
+            stage = str(uuid.UUID(int=1007))
+            first = type("Permit", (), {"stage_uuid": stage, "receipt_sha256": "e" * 64})()
+            changed = type("Permit", (), {"stage_uuid": stage, "receipt_sha256": "f" * 64})()
+            lease.consume_once(first, operation_id="research-D1", request_sha256="1" * 64)
+            for permit, request_sha in ((first, "2" * 64), (changed, "1" * 64)):
+                with self.subTest(permit=permit.receipt_sha256, request=request_sha):
+                    with self.assertRaisesRegex(authority.LocalAuthorityError, "lease-already-consumed"):
+                        lease.consume_once(permit, operation_id="research-D1", request_sha256=request_sha)
+
     def test_symlinked_lease_root_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
