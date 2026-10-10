@@ -266,7 +266,7 @@ async def test_capture_observations_replay_pinned_gzip_health_and_source(tmp_pat
         )
 
 
-def test_acquisition_observations_bind_real_mock_exchange_receipts_and_stage(tmp_path: Path):
+def test_mock_acquisition_receipts_do_not_qualify_execution_controls(tmp_path: Path):
     manifest, acquisition_plan = make_manifest()
     evidence, _verifier, _lease, _pacer, _calls = asyncio.run(_run_acquisition(tmp_path))
     receipt_sha = resource_evidence.receipt_inventory_sha256(evidence.receipt_directory)
@@ -295,9 +295,9 @@ def test_acquisition_observations_bind_real_mock_exchange_receipts_and_stage(tmp
     assert observed["acquisition_timeout_seconds"] == 10.0
     assert set(observed["acquisition_timeout_seconds_by_exchange"]) == {10.0}
     assert observed["acquisition_timeout_observation_state"] == "observed-uniform"
-    assert observed["acquisition_retries"] == 0
-    assert observed["acquisition_pacing_seconds"] == 7.0
-    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] == 7_000_000
+    assert observed["acquisition_retries"] is None
+    assert observed["acquisition_pacing_seconds"] is None
+    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] is None
     assert observed["arxiv_pacing_seconds"] is None
     assert observed["acquisition_arxiv_min_gap_microseconds_observed"] is None
 
@@ -385,7 +385,7 @@ def test_acquisition_timeout_observation_rejects_receipt_value_above_bound(tmp_p
         )
 
 
-def test_acquisition_collector_reports_short_measured_query_gap_not_configured_limit(tmp_path: Path):
+def test_mock_fake_clock_cannot_qualify_or_report_pacing(tmp_path: Path):
     class NoWaitPacer:
         def __init__(self):
             self.elapsed = 0.0
@@ -418,8 +418,8 @@ def test_acquisition_collector_reports_short_measured_query_gap_not_configured_l
         configured_query_pacing_seconds=7,
         configured_arxiv_pacing_seconds=3,
     )
-    assert observed["acquisition_pacing_seconds"] == -0.000001
-    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] == -1
+    assert observed["acquisition_pacing_seconds"] is None
+    assert observed["acquisition_query_min_idle_gap_microseconds_observed"] is None
 
 
 def test_acquisition_collector_derives_arxiv_physical_gap_from_dispatch_receipts(tmp_path: Path):
@@ -450,8 +450,8 @@ def test_acquisition_collector_derives_arxiv_physical_gap_from_dispatch_receipts
         configured_arxiv_pacing_seconds=3,
     )
     assert observed["acquisition_engine_calls"]["arxiv"] == 2
-    assert observed["arxiv_pacing_seconds"] == 3.0
-    assert observed["acquisition_arxiv_min_gap_microseconds_observed"] == 3_000_000
+    assert observed["arxiv_pacing_seconds"] is None
+    assert observed["acquisition_arxiv_min_gap_microseconds_observed"] is None
 
 
 @pytest.mark.parametrize("threshold_seconds", [3, 7])
