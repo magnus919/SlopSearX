@@ -131,6 +131,92 @@ class SelectorEvidence:
     archive_root: Path | None = None
 
 
+class RegisteredSelectorStageExecutor:
+    """Factory-owned StageExecutors callback for a map-bound selector run.
+
+    The evidence builder only interprets already archived results; all 39
+    requests are preflighted and dispatched by the guarded serial executor
+    before that callback is invoked.
+    """
+
+    def __init__(
+        self,
+        *,
+        permits: Mapping[str, tuple[bytes, str]],
+        api_key: str,
+        lease_root: str | os.PathLike[str],
+        archive_root: str | os.PathLike[str],
+        result_root: str | os.PathLike[str],
+        evidence_builder: Callable[..., SelectorEvidence],
+        transport_factory: Callable[[str], Any] | None = None,
+    ) -> None:
+        if not callable(evidence_builder):
+            raise OrchestrationError("registered-selector-evidence-builder-required")
+        self._permits = dict(permits)
+        self._api_key = api_key
+        self._lease_root = lease_root
+        self._archive_root = archive_root
+        self._result_root = result_root
+        self._evidence_builder = evidence_builder
+        self._transport_factory = transport_factory
+
+    def __repr__(self) -> str:
+        return "<RegisteredSelectorStageExecutor>"
+
+    async def __call__(
+        self,
+        plan: StagePlan,
+        prepared: core.PreparedStage,
+        pipeline_inputs: Mapping[str, object],
+        reference_closure: Any,
+    ) -> SelectorEvidence:
+        from scripts import coverage_jev_execution
+
+        map_bytes = pipeline_inputs.get("selector_input_map_bytes")
+        map_sha = pipeline_inputs.get("selector_input_map_sha256")
+        operation_materials = pipeline_inputs.get("selector_operation_materials")
+        if type(map_bytes) is not bytes or type(map_sha) is not str or type(operation_materials) is not dict:
+            raise OrchestrationError("registered-selector-map-inputs-required")
+        ledger = core.StudyRun(prepared)
+        results = await coverage_jev_execution.execute_registered_selector_schedule(
+            prepared=prepared,
+            ledger=ledger,
+            selector_input_map_bytes=map_bytes,
+            expected_selector_input_map_sha256=map_sha,
+            operation_materials=operation_materials,
+            permits=self._permits,
+            api_key=self._api_key,
+            lease_root=self._lease_root,
+            archive_root=self._archive_root,
+            result_root=self._result_root,
+            transport_factory=self._transport_factory,
+        )
+        terminal = coverage_jev_execution.close_stage(prepared=prepared, ledger=ledger, result_root=self._result_root)
+        if terminal.get("all_calls_complete") is not True:
+            raise OrchestrationError("registered-selector-terminal-failure")
+        terminal_path = Path(self._result_root) / f"{prepared.stage_uuid}.terminal-inventory.json"
+        terminal_bytes = terminal_path.read_bytes()
+        evidence = await _await(
+            self._evidence_builder(plan, prepared, pipeline_inputs, reference_closure, results, terminal)
+        )
+        if (
+            type(evidence) is not SelectorEvidence
+            or evidence.stage_uuid != prepared.stage_uuid
+            or evidence.terminal_inventory_sha256 != terminal.get("sha256")
+            or evidence.terminal_inventory_bytes != terminal_bytes
+            or evidence.result_root != Path(self._result_root)
+            or evidence.archive_root != Path(self._archive_root)
+            or evidence.reference_grade_receipt_sha256 != getattr(reference_closure, "receipt_sha256", None)
+        ):
+            raise OrchestrationError("registered-selector-evidence-binding-invalid")
+        return evidence
+
+
+def registered_selector_executor_factory(**kwargs: Any) -> RegisteredSelectorStageExecutor:
+    """Create the only supported StageExecutors selector callback for v2 maps."""
+    return RegisteredSelectorStageExecutor(**kwargs)
+
+
 @dataclass(frozen=True)
 class AnswerEvidence:
     result: answer_execution.AnswerStageResult
@@ -1069,10 +1155,67 @@ async def coordinate_coverage_stage(
             ),
             lambda value: _phase_digest(value.receipt_sha256),
         )
+
+        selector_pipeline_inputs = dict(pipeline_inputs)
+        selector_input_map_bytes: bytes | None = None
+        selector_input_map_sha256: str | None = None
+        selector_map_kwargs: dict[str, object] | None = None
+        draft_protocol = _strict_json(plan.protocol_bytes, "selector-map-protocol")
+        if (
+            type(draft_protocol) is dict
+            and draft_protocol.get("selector_input_map_schema") == "coverage-selector-input-map/2-draft"
+        ):
+            if not isinstance(executors.selectors, RegisteredSelectorStageExecutor):
+                raise OrchestrationError("registered-selector-stage-executor-required")
+            # Forward-only v2 map: v1 registrations and old terminal records
+            # remain untouched and continue to report these fields unknown.
+            from scripts import coverage_selector_input_map
+
+            repository_root = Path(__file__).parents[1]
+            operation_materials: dict[str, dict[str, object]] = {}
+            selector_map_kwargs = {
+                "prepared": prepared,
+                "task_input_manifest_bytes": late_preparation.input_manifest_bytes,
+                "pipeline_tasks": pipeline_inputs["tasks"],
+                "navigation_targets": plan.navigation_targets,
+                "snapshots_directory": acq.snapshots_directory,
+                "acquisition_snapshot_index_sha256": acq.snapshot_index_sha256,
+                "acquisition_manifest_bytes": plan.acquisition_manifest_bytes,
+                "acquisition_manifest_sha256": acq.acquisition_manifest_sha256,
+                "neutral_fixture_bytes": (
+                    repository_root
+                    / "docs/experiments/evidence/coverage-first-study/draft-v2/selector-readiness-inputs.json"
+                ).read_bytes(),
+                "frozen_v1_source_bytes": (
+                    repository_root / "docs/experiments/evidence/coverage-first-study/w0-rerank-v1.py.txt"
+                ).read_bytes(),
+                "current_service_source_bytes": (repository_root / "slopsearx/service.py").read_bytes(),
+                "expected_builder_source_sha256": _sha(Path(coverage_selector_input_map.__file__).read_bytes()),
+                "operation_materials": operation_materials,
+            }
+            selector_input_map_bytes = coverage_selector_input_map.build_selector_input_map(**selector_map_kwargs)
+            selector_input_map_sha256 = _write_new(stage_dir / "selector-input-map.json", selector_input_map_bytes)
+            from scripts import coverage_jev_execution
+
+            coverage_jev_execution._bind_selector_input_map(
+                prepared, selector_input_map_bytes, selector_input_map_sha256
+            )
+            inventory["selector_input_map_sha256"] = selector_input_map_sha256
+            _write_inventory(inventory_path, inventory)
+            selector_pipeline_inputs["selector_input_map_bytes"] = selector_input_map_bytes
+            selector_pipeline_inputs["selector_input_map_sha256"] = selector_input_map_sha256
+            selector_pipeline_inputs["selector_operation_materials"] = operation_materials
+            # The /2-draft map is not a registration or provider-call permit.
+            # Keep this path buildable for offline review, but stop before the
+            # injected selector executor until a separately sealed protocol
+            # admits the map and the concrete executor is wired to the guarded
+            # registered-call entrypoint.
+            raise OrchestrationError("selector-input-map-draft-not-admitted")
+
         selector = await phase(
             7,
             "selector",
-            lambda: executors.selectors(plan, prepared, pipeline_inputs, closed_references),
+            lambda: executors.selectors(plan, prepared, selector_pipeline_inputs, closed_references),
             lambda value: (
                 _check_selector(value, plan, prepared, pipeline_inputs, closed_references.receipt_sha256)
                 or _phase_digest(value.terminal_inventory_sha256)
@@ -1161,6 +1304,20 @@ async def coordinate_coverage_stage(
             raise OrchestrationError("answer-terminal-inventory-invalid")
 
         def collect_resources():
+            verified_selector_map: dict[str, object] | None = None
+            if selector_input_map_bytes is not None:
+                if selector_map_kwargs is None or selector_input_map_sha256 is None:
+                    raise OrchestrationError("selector-input-map-verification-material-missing")
+                from scripts import coverage_selector_input_map
+
+                try:
+                    verified_selector_map = coverage_selector_input_map.verify_selector_input_map(
+                        input_map_bytes=selector_input_map_bytes,
+                        expected_sha256=selector_input_map_sha256,
+                        **selector_map_kwargs,
+                    )
+                except Exception as exc:
+                    raise OrchestrationError("selector-input-map-reverification-failed") from exc
             report = coverage_resource_evidence.collect_resource_evidence(
                 deadline_monotonic=plan.stage_deadline_monotonic,
                 stage_uuid=plan.stage_uuid,
@@ -1204,6 +1361,11 @@ async def coordinate_coverage_stage(
                 selector_archive_root=selector.archive_root,
                 selector_expected_operation_ids=prepared.operation_ids,
                 selector_operation_rows=selector.operation_rows,
+                selector_registration_sha256=prepared.registration_sha256,
+                selector_input_map_bytes=(selector_input_map_bytes if verified_selector_map is not None else None),
+                expected_selector_input_map_sha256=(
+                    selector_input_map_sha256 if verified_selector_map is not None else None
+                ),
             )
             collector_receipt_bytes = _canonical(
                 {

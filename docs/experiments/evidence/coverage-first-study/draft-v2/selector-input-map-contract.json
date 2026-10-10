@@ -1,0 +1,67 @@
+{
+  "schema": "coverage-first-selector-input-map-contract/2-draft",
+  "protocol_v2_extension": {
+    "schema": "coverage-first-study-protocol/2-draft",
+    "selector_input_map_schema": "coverage-selector-input-map/2-draft"
+  },
+  "status": "draft_not_registered_not_admitted",
+  "supersedes_for_future_stages_only": "coverage-first-study-protocol/1",
+  "old_registrations_or_terminal_receipts_reinterpreted": false,
+  "operation_inventory_unchanged": true,
+  "provider_calls_authorized": false,
+  "quality_credit": false,
+  "selector_input_map": {
+    "schema": "coverage-selector-input-map/2-draft",
+    "binds": [
+      "stage_uuid",
+      "source_revision",
+      "original_registration_sha256",
+      "coverage_source_sha256",
+      "production_rerank_source_sha256",
+      "execution_source_sha256",
+      "legacy_control_source_sha256",
+      "current_service_source_sha256",
+      "acquisition_snapshot_index_sha256",
+      "acquisition_manifest_sha256",
+      "task_input_manifest_sha256",
+      "neutral_fixture_sha256",
+      "builder_source_sha256",
+      "ordered_operation_ids_and_input_hashes"
+    ],
+    "operation_entry_fields": [
+      "operation_id",
+      "parser_mode",
+      "operation_input_sha256",
+      "request_body_sha256"
+    ],
+    "dispatcher": "coverage_jev_execution.execute_registered_selector_schedule",
+    "stage_callback_factory": "coverage_stage_orchestration.registered_selector_executor_factory",
+    "prevalidates_all_operation_materials_and_permits_before_first_transport": true,
+    "serial_operation_order": "prepared.operation_ids",
+    "must_be_durably_sealed_before_selector_dispatch": true,
+    "producer_and_collector_recompute_from_same_pinned_inputs": true,
+    "dispatch_must_reject_input_or_request_hash_mismatch_before_transport": true,
+    "each_execution_receipt_must_bind_selector_input_map_sha256": true,
+    "draft_map_must_stop_before_selector_dispatch_until_separately_registered": true
+  },
+  "neutral_readiness_fixtures": {
+    "path": "selector-readiness-inputs.json",
+    "sha256": "59e7622cdaf7381d4c0797d57e4bc00af6d5fea23153525e23e35351fa87f09f",
+    "w0_card_count": 40,
+    "candidate_card_count": 80,
+    "synthetic_domain": "example.invalid",
+    "meaning": "Request and response path readiness only; no source, ranking, quality, or fallback credit."
+  },
+  "variants": {
+    "repeat": "byte-identical registered operation input",
+    "candidate_rotate": "rotate candidate card array left one; preserve base incumbent order",
+    "w0_rotate": "rotate only first 40 W0 cards left one; preserve fixed pool tail and positional request ids",
+    "navigation": "use task_input_manifest query and w0_order joined to the exact acquisition snapshot; no caller-supplied pool"
+  },
+  "prohibited_inferences": [
+    "parser parity from matching outputs or strict-JSON compatibility",
+    "atomic fallback from agreement or a boolean assertion",
+    "provider configuration from a caller field",
+    "quality or production authority from readiness fixtures"
+  ]
+}
