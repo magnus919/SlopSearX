@@ -312,7 +312,6 @@ def _capture_observations(
     candidate_endpoint_sha256: str,
     timeout_limit_seconds: int | float,
     response_bytes_limit: int,
-    protocol_schema: str = "coverage-first-study-protocol/1",
 ) -> dict[str, object]:
     root = Path(capture_result.receipt_directory)
     _require_private_directory(root)
@@ -589,9 +588,10 @@ def _capture_observations(
             qualification_bindings = (
                 protected_qualification.get("bindings") if type(protected_qualification) is dict else None
             )
-            allowed_endpoint_schemes = (
-                {"https", "http"} if protocol_schema == "coverage-first-study-protocol/2" else {"https"}
-            )
+            # Qualification pins the application endpoint, but does not itself
+            # protect bearer credentials on the network hop. All owned capture
+            # modes therefore require an HTTPS endpoint across protocol versions.
+            allowed_endpoint_schemes = {"https"}
             if (
                 type(qualification_bindings) is not dict
                 or set(qualification_bindings) != {*expected_qualification_bindings, "candidate_endpoint_scheme"}
@@ -1292,7 +1292,6 @@ def collect_resource_evidence(**kwargs) -> ResourceEvidenceReport:
             candidate_endpoint_sha256=kwargs["candidate_endpoint_sha256"],
             timeout_limit_seconds=protocol["capture"]["timeout_seconds"],
             response_bytes_limit=protocol["capture"]["response_bytes"],
-            protocol_schema=str(protocol.get("schema", "")),
         )
         answer = _answer_observations(
             stage_uuid=stage_uuid,
