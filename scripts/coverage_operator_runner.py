@@ -1,0 +1,708 @@
+"""Fixed-config operator launcher for a registered coverage-study stage.
+
+The config contains paths and immutable identities, never Python import names or
+callbacks. Source, admission, permit, qualification, and grading receipts arrive
+through the private operator handoff and are still checked by their existing
+source-bound verifiers. This module does not create authority.
+"""
+
+from __future__ import annotations
+
+import base64
+import hashlib
+import json
+import os
+import re
+import stat
+import time
+import uuid
+from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any
+
+from scripts import coverage_answer_execution as answer
+from scripts import coverage_local_authority as local_authority
+from scripts import coverage_native_grader_handoff as native_handoff
+from scripts import coverage_operator_handoff as operator_handoff
+from scripts import coverage_selector_admission as selector_admission
+from scripts import coverage_source_capture as capture
+from scripts import coverage_stage_orchestration as orchestration
+from scripts import coverage_stage_runtime as runtime
+from scripts import coverage_study_core as core
+from scripts.coverage_late_registration import request_late_registration
+
+CONFIG_SCHEMA = "coverage-operator-stage-config/1"
+_BATCH_SCHEMA = "coverage-selector-permit-batch/1"
+_SHA = re.compile(r"[0-9a-f]{64}\Z")
+_GIT = re.compile(r"[0-9a-f]{40}\Z")
+_CONFIG_KEYS = {
+    "schema",
+    "stage_uuid",
+    "packet_stage_uuid",
+    "stage_kind",
+    "source_revision",
+    "candidate_base_url",
+    "answer_endpoint",
+    "initial_registration_sha256",
+    "forbidden_stage_uuids",
+    "paths",
+    "private_paths",
+    "directories",
+}
+_PATH_KEYS = {
+    "cohorts",
+    "protocol",
+    "qualified_source_closure",
+    "coverage_source",
+    "production_rerank_source",
+    "dependency_lock",
+    "reference_manifest",
+    "answer_assessment_plan",
+    "capture_plan",
+    "candidate_identity",
+    "initial_registration",
+}
+_PRIVATE_PATH_KEYS = {"candidate_operator_token", "selector_api_key", "answer_api_key"}
+_DIRECTORY_KEYS = {
+    "operator_handoff",
+    "stage_inventory",
+    "lease_root",
+    "capture_receipts",
+    "selector_archive",
+    "selector_results",
+    "answer_archive",
+    "answer_results",
+    "grader_handoff",
+}
+
+
+class OperatorRunnerError(RuntimeError):
+    """The explicit operator config or its verified bindings are invalid."""
+
+
+def _sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _canonical(value: object) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise OperatorRunnerError("config-duplicate-key")
+        result[key] = value
+    return result
+
+
+def _strict(raw: bytes, label: str) -> object:
+    try:
+        return json.loads(
+            raw.decode("utf-8"), object_pairs_hook=_pairs, parse_constant=lambda _: (_ for _ in ()).throw(ValueError())
+        )
+    except OperatorRunnerError:
+        raise
+    except (UnicodeDecodeError, ValueError, RecursionError) as exc:
+        raise OperatorRunnerError(f"{label}-json-invalid") from exc
+
+
+def _read_file(path: str | os.PathLike[str], maximum: int, *, private: bool = False) -> bytes:
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError as exc:
+        raise OperatorRunnerError("configured-file-unavailable") from exc
+    try:
+        info = os.fstat(fd)
+        mode = stat.S_IMODE(info.st_mode)
+        if not stat.S_ISREG(info.st_mode) or info.st_size > maximum:
+            raise OperatorRunnerError("configured-file-invalid")
+        if private and (mode & 0o077 or info.st_uid != os.geteuid()):
+            raise OperatorRunnerError("configured-secret-file-not-private")
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            data = stream.read(maximum + 1)
+        if len(data) > maximum:
+            raise OperatorRunnerError("configured-file-over-cap")
+        return data
+    finally:
+        os.close(fd)
+
+
+def _secret(path: str) -> str:
+    raw = _read_file(path, 16_384, private=True)
+    try:
+        value = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise OperatorRunnerError("configured-secret-invalid") from exc
+    value = value.rstrip("\r\n")
+    if not value or value != value.strip() or "\n" in value or "\r" in value:
+        raise OperatorRunnerError("configured-secret-invalid")
+    return value
+
+
+def _load_config(path: str | os.PathLike[str], expected_sha256: str) -> dict[str, Any]:
+    raw = _read_file(path, 1_000_000, private=True)
+    if type(expected_sha256) is not str or not _SHA.fullmatch(expected_sha256) or _sha(raw) != expected_sha256:
+        raise OperatorRunnerError("config-external-pin-mismatch")
+    value = _strict(raw, "config")
+    if (
+        type(value) is not dict
+        or set(value) != _CONFIG_KEYS
+        or value.get("schema") != CONFIG_SCHEMA
+        or _canonical(value) != raw
+    ):
+        raise OperatorRunnerError("config-schema-invalid")
+    if (
+        set(value["paths"]) != _PATH_KEYS
+        or set(value["private_paths"]) != _PRIVATE_PATH_KEYS
+        or set(value["directories"]) != _DIRECTORY_KEYS
+    ):
+        raise OperatorRunnerError("config-path-inventory-invalid")
+    for key in (*_PATH_KEYS, *_PRIVATE_PATH_KEYS, *_DIRECTORY_KEYS):
+        collection = (
+            value["paths"]
+            if key in _PATH_KEYS
+            else value["private_paths"]
+            if key in _PRIVATE_PATH_KEYS
+            else value["directories"]
+        )
+        if type(collection[key]) is not str or not collection[key]:
+            raise OperatorRunnerError("config-path-invalid")
+        if not Path(collection[key]).is_absolute():
+            raise OperatorRunnerError("config-path-must-be-absolute")
+    if type(value["source_revision"]) is not str or not _GIT.fullmatch(value["source_revision"]):
+        raise OperatorRunnerError("config-source-revision-invalid")
+    for key in ("stage_uuid", "packet_stage_uuid"):
+        try:
+            if type(value[key]) is not str or str(uuid.UUID(value[key])) != value[key]:
+                raise ValueError
+        except ValueError as exc:
+            raise OperatorRunnerError("config-stage-uuid-invalid") from exc
+    if type(value["initial_registration_sha256"]) is not str or not _SHA.fullmatch(
+        value["initial_registration_sha256"]
+    ):
+        raise OperatorRunnerError("config-registration-pin-invalid")
+    if value["stage_uuid"] == value["packet_stage_uuid"] or value["stage_kind"] != "development":
+        raise OperatorRunnerError("config-stage-identity-invalid")
+    forbidden = value["forbidden_stage_uuids"]
+    try:
+        if (
+            type(forbidden) is not list
+            or not forbidden
+            or any(type(item) is not str or str(uuid.UUID(item)) != item for item in forbidden)
+            or value["stage_uuid"] in forbidden
+        ):
+            raise ValueError
+    except ValueError as exc:
+        raise OperatorRunnerError("config-forbidden-stage-inventory-invalid") from exc
+    return value
+
+
+def _build_acquisition_plan(stage_uuid: str, cases: list[dict[str, Any]], targets: list[dict[str, Any]]) -> bytes:
+    tasks = []
+    for row in cases:
+        engines = row.get("pool_plan", {}).get("engines")
+        if type(engines) is not list:
+            raise OperatorRunnerError("cohort-pool-plan-invalid")
+        calls = {
+            engine: (2 if engine == "wikipedia" and engine in engines else 1 if engine in engines else 0)
+            for engine in ("wikipedia", "arxiv", "github", "openalex")
+        }
+        tasks.append({"task_id": row["task_id"], "engine_calls": calls})
+    for row in targets:
+        tasks.append(
+            {"task_id": row["target_id"], "engine_calls": {"wikipedia": 0, "arxiv": 0, "github": 1, "openalex": 0}}
+        )
+    return _canonical({"schema": core.ACQUISITION_SCHEMA, "stage_uuid": stage_uuid, "tasks": tasks})
+
+
+class OperatorStageRunner:
+    """Loads a pinned registered bundle and invokes only the fixed phase graph."""
+
+    def __init__(self, config: dict[str, Any], *, config_sha256: str):
+        self.config = config
+        self.config_sha256 = config_sha256
+        self.paths = config["paths"]
+        self.private_paths = config["private_paths"]
+        self.directories = config["directories"]
+        self._build_plan()
+        self.handoff = operator_handoff.OperatorReceiptHandoff(self.directories["operator_handoff"])
+
+    @classmethod
+    def from_file(cls, path: str | os.PathLike[str], expected_sha256: str) -> "OperatorStageRunner":
+        return cls(_load_config(path, expected_sha256), config_sha256=expected_sha256)
+
+    def _build_plan(self) -> None:
+        path_bytes = {key: _read_file(value, 64_000_000) for key, value in self.paths.items()}
+        cohorts = core._strict_json(path_bytes["cohorts"], "cohorts")
+        protocol = core._strict_json(path_bytes["protocol"], "protocol")
+        closure = core._strict_json(path_bytes["qualified_source_closure"], "source-closure")
+        identity = core._strict_json(path_bytes["candidate_identity"], "candidate-identity")
+        if (
+            type(cohorts) is not dict
+            or type(protocol) is not dict
+            or type(closure) is not dict
+            or type(identity) is not dict
+        ):
+            raise OperatorRunnerError("static-material-shape-invalid")
+        if (
+            protocol.get("selector_input_map_schema") != "coverage-selector-input-map/2-registered"
+            or protocol.get("selector_input_map_status") != "registered"
+            or closure.get("source_revision") != self.config["source_revision"]
+            or closure.get("schema") != "coverage-study-qualified-source-closure/1"
+            or type(identity.get("runtime")) is not dict
+            or type(identity["runtime"].get("revision")) is not str
+        ):
+            raise OperatorRunnerError("registered-source-materials-required")
+        stage_rows = [
+            row for row in cohorts.get("stages", []) if type(row) is dict and row.get("stage") == "development"
+        ]
+        if len(stage_rows) != 1:
+            raise OperatorRunnerError("development-cohort-not-unique")
+        stage_row = stage_rows[0]
+        cases = stage_row.get("research_cases")
+        targets = stage_row.get("navigation_targets")
+        if type(cases) is not list or type(targets) is not list:
+            raise OperatorRunnerError("cohort-inventory-invalid")
+        acquisition_plan = _build_acquisition_plan(self.config["stage_uuid"], cases, targets)
+        if protocol.get("cohorts_sha256") != _sha(path_bytes["cohorts"]):
+            raise OperatorRunnerError("protocol-cohort-pin-mismatch")
+        try:
+            core._verify_qualified_source_closure(
+                path_bytes["qualified_source_closure"],
+                expected_revision=self.config["source_revision"],
+                expected_pins={
+                    "coverage_source": _sha(path_bytes["coverage_source"]),
+                    "production_rerank_source": _sha(path_bytes["production_rerank_source"]),
+                    "dependency_lock": _sha(path_bytes["dependency_lock"]),
+                },
+            )
+        except Exception as exc:
+            raise OperatorRunnerError("source-closure-preflight-failed") from exc
+        endpoint = self.config["candidate_base_url"]
+        _health_url, _scrape_url, endpoint_sha = capture._candidate_endpoints(endpoint)
+        preacq = _canonical(
+            {
+                "schema": "coverage-preacquisition-input-manifest/1",
+                "stage_uuid": self.config["stage_uuid"],
+                "protocol_sha256": _sha(path_bytes["protocol"]),
+                "cohorts_sha256": _sha(path_bytes["cohorts"]),
+                "task_ids": [row["task_id"] for row in cases] + [row["target_id"] for row in targets],
+            }
+        )
+        acquisition_manifest = _canonical(
+            {
+                "schema": "coverage-live-acquisition-manifest/1",
+                "stage": "development",
+                "stage_uuid": self.config["stage_uuid"],
+                "source_revision": self.config["source_revision"],
+                "source_closure_sha256": _sha(path_bytes["qualified_source_closure"]),
+                "protocol_sha256": _sha(path_bytes["protocol"]),
+                "cohorts_sha256": _sha(path_bytes["cohorts"]),
+                "input_manifest_sha256": _sha(preacq),
+                "acquisition_plan_sha256": _sha(acquisition_plan),
+                "research_cases": cases,
+                "navigation_targets": targets,
+            }
+        )
+        self.static_materials = {
+            "protocol": path_bytes["protocol"],
+            "qualified_source_closure": path_bytes["qualified_source_closure"],
+            "coverage_source": path_bytes["coverage_source"],
+            "production_rerank_source": path_bytes["production_rerank_source"],
+            "dependency_lock": path_bytes["dependency_lock"],
+            "reference_manifest": path_bytes["reference_manifest"],
+            "answer_assessment_plan": path_bytes["answer_assessment_plan"],
+            "acquisition_plan": acquisition_plan,
+            "capture_plan": path_bytes["capture_plan"],
+        }
+        self.initial_registration = path_bytes["initial_registration"]
+        self.initial_registration_sha256 = _sha(self.initial_registration)
+        if self.initial_registration_sha256 != self.config["initial_registration_sha256"]:
+            raise OperatorRunnerError("initial-registration-config-pin-mismatch")
+        self.candidate_identity = identity
+        # Verify every static registration pin before taking the stage clock or
+        # creating operator/lease directories. Dynamic pins are replaced only
+        # by the separately pinned late registration after acquisition.
+        self.initial_doc = core._strict_json(self.initial_registration, "initial-registration")
+        if type(self.initial_doc) is not dict or self.initial_doc.get("stage_uuid") != self.config["stage_uuid"]:
+            raise OperatorRunnerError("initial-registration-stage-mismatch")
+        pins = self.initial_doc.get("pins")
+        if type(pins) is not dict:
+            raise OperatorRunnerError("initial-registration-pins-invalid")
+        for name, body in self.static_materials.items():
+            if pins.get(name) != _sha(body):
+                raise OperatorRunnerError(f"initial-registration-static-pin-mismatch:{name}")
+        for name in ("task_input_manifest", "source_capture_manifest"):
+            if type(pins.get(name)) is not str or not _SHA.fullmatch(pins[name]):
+                raise OperatorRunnerError(f"initial-registration-dynamic-pin-invalid:{name}")
+        self.started_monotonic = time.monotonic()
+        self.started_utc = datetime.now(timezone.utc)
+        self.deadline_monotonic = self.started_monotonic + orchestration.MAX_STAGE_WALL_SECONDS
+        self.deadline_utc = self.started_utc + timedelta(seconds=orchestration.MAX_STAGE_WALL_SECONDS)
+        self.plan = orchestration.StagePlan(
+            stage_uuid=self.config["stage_uuid"],
+            stage_kind="development",
+            source_revision=self.config["source_revision"],
+            protocol_bytes=path_bytes["protocol"],
+            cohorts_bytes=path_bytes["cohorts"],
+            acquisition_plan_bytes=acquisition_plan,
+            acquisition_manifest_bytes=acquisition_manifest,
+            source_closure_sha256=_sha(path_bytes["qualified_source_closure"]),
+            research_cases=tuple(cases),
+            navigation_targets=tuple(targets),
+            candidate_identity_bytes=path_bytes["candidate_identity"],
+            candidate_endpoint_sha256=endpoint_sha,
+            packet_stage_uuid=self.config["packet_stage_uuid"],
+            stage_started_monotonic=self.started_monotonic,
+            stage_deadline_monotonic=self.deadline_monotonic,
+            expected_acquisition_manifest_sha256=_sha(acquisition_manifest),
+        )
+        orchestration._validate_plan(self.plan)
+
+    async def _request(self, scope: str, request_id: str, bindings: dict[str, object]) -> tuple[bytes, str]:
+        return await self.handoff.request_async(
+            stage_uuid=self.plan.stage_uuid,
+            scope=scope,
+            request_id=request_id,
+            bindings=bindings,
+            deadline_monotonic=self.plan.stage_deadline_monotonic,
+        )
+
+    async def _acquisition_authority(self, plan):
+        manifest = core._strict_json(plan.acquisition_manifest_bytes, "acquisition-manifest")
+        receipt, pin = await self._request(
+            "acquisition",
+            "permit",
+            {
+                "stage_uuid": plan.stage_uuid,
+                "source_revision": plan.source_revision,
+                "source_closure_sha256": plan.source_closure_sha256,
+                "protocol_sha256": _sha(plan.protocol_bytes),
+                "cohorts_sha256": _sha(plan.cohorts_bytes),
+                "input_manifest_sha256": manifest["input_manifest_sha256"],
+                "acquisition_manifest_sha256": plan.expected_acquisition_manifest_sha256,
+                "acquisition_plan_sha256": _sha(plan.acquisition_plan_bytes),
+            },
+        )
+        return {
+            "permit_receipt_bytes": receipt,
+            "expected_permit_receipt_sha256": pin,
+            "permit_verifier": local_authority.AcquisitionReceiptVerifier(),
+            "one_shot_lease": local_authority.FileOneShotLease(self.directories["lease_root"], scope="acquisition"),
+            "receipt_directory": str(Path(self.directories["stage_inventory"]) / plan.stage_uuid / "acquisition"),
+        }
+
+    async def _verify_acquisition(self, _plan, evidence):
+        return evidence.source_bound_receipt_status == "externally-verified"
+
+    async def _capture_authority(self, plan, pipeline_inputs):
+        manifest_bytes = pipeline_inputs["capture_manifest_bytes"]
+        manifest = core._strict_json(manifest_bytes, "capture-manifest")
+        endpoint = self.config["candidate_base_url"]
+        _health, _scrape, endpoint_sha = capture._candidate_endpoints(endpoint)
+        candidate = self.candidate_identity["runtime"]["revision"]
+        qual_bindings = capture.ProtectedCaptureQualificationBindings(
+            stage_uuid=plan.stage_uuid,
+            source_revision=plan.source_revision,
+            protocol_sha256=_sha(plan.protocol_bytes),
+            candidate_identity_sha256=_sha(plan.candidate_identity_bytes),
+            candidate_endpoint_sha256=endpoint_sha,
+            candidate_endpoint_scheme="https",
+            candidate_runtime_revision=candidate,
+            capture_module_sha256=hashlib.sha256(Path(capture.__file__).read_bytes()).hexdigest(),
+        )
+        qual_receipt, qual_pin = await self._request("protected-source-capture", "permit", asdict(qual_bindings))
+        capture_bindings = {
+            "stage_uuid": manifest["stage_uuid"],
+            "manifest_sha256": _sha(manifest_bytes),
+            "protocol_sha256": manifest["protocol_sha256"],
+            "source_revision": manifest["source_revision"],
+            "cohorts_sha256": manifest["cohorts_sha256"],
+            "candidate_identity_sha256": manifest["candidate_identity_sha256"],
+            "candidate_endpoint_sha256": manifest["candidate_endpoint_sha256"],
+            "source_count": len(manifest["sources"]),
+            "max_owned_calls": capture.MAX_OWNED_CALLS,
+            "max_health_calls": capture.MAX_HEALTH_CALLS,
+            "max_scrape_calls": capture.MAX_SCRAPE_CALLS,
+            "timeout_seconds": capture.REQUEST_TIMEOUT_SECONDS,
+            "response_bytes": capture.MAX_RESPONSE_BYTES,
+            "source_context_characters": capture.MAX_SOURCE_CHARS,
+        }
+        permit, permit_pin = await self._request("source-capture", "permit", capture_bindings)
+        return {
+            "candidate_base_url": endpoint,
+            "operator_token": _secret(self.private_paths["candidate_operator_token"]),
+            "permit_receipt_bytes": permit,
+            "expected_permit_receipt_sha256": permit_pin,
+            "permit_verifier": local_authority.SourceCaptureReceiptVerifier(),
+            "one_shot_lease": local_authority.FileOneShotLease(self.directories["lease_root"], scope="source-capture"),
+            "receipt_root": self.directories["capture_receipts"],
+            "qualification_receipt_bytes": qual_receipt,
+            "expected_qualification_receipt_sha256": qual_pin,
+            "qualification_verifier": local_authority.ProtectedCaptureReceiptVerifier(),
+        }
+
+    async def _prepare_late(self, plan, acquisition_evidence, pipeline_inputs):
+        return await request_late_registration(
+            exchange=self.handoff,
+            plan=plan,
+            acquisition_evidence=acquisition_evidence,
+            pipeline_inputs=pipeline_inputs,
+            static_materials=self.static_materials,
+            initial_registration_bytes=self.initial_registration,
+            expected_initial_registration_sha256=self.initial_registration_sha256,
+            forbidden_stage_uuids=tuple(self.config["forbidden_stage_uuids"]),
+            task_ids=tuple(row["task_id"] for row in plan.research_cases)
+            + tuple(row["target_id"] for row in plan.navigation_targets),
+            navigation_skip_reasons=tuple(row.get("skip_reason") for row in plan.navigation_targets),
+        )
+
+    async def _verify_late(self, plan, evidence):
+        return (
+            evidence.prepared.stage_uuid == plan.stage_uuid
+            and not evidence.prepared.fresh_execution_authorized
+            and evidence.prepared.selector_input_map_schema == "coverage-selector-input-map/2-registered"
+        )
+
+    async def _selector_admission(self, plan, prepared, map_bytes, map_sha, _operation_materials):
+        bindings = {
+            "stage_uuid": plan.stage_uuid,
+            "source_revision": plan.source_revision,
+            "protocol_sha256": _sha(plan.protocol_bytes),
+            "registration_sha256": prepared.registration_sha256,
+            "source_closure_sha256": plan.source_closure_sha256,
+            "selector_input_map_sha256": map_sha,
+        }
+        receipt, pin = await self._request("selector-map-admission", "map", bindings)
+        return selector_admission.verify_selector_map_admission(
+            receipt_bytes=receipt,
+            expected_receipt_sha256=pin,
+            protocol_bytes=plan.protocol_bytes,
+            prepared=prepared,
+            selector_input_map_sha256=map_sha,
+        )
+
+    async def _selector_permits(self, plan, prepared, map_bytes, map_sha, operation_materials):
+        map_doc = core._strict_json(map_bytes, "selector-map")
+        entries = map_doc.get("operations") if type(map_doc) is dict else None
+        if type(entries) is not list:
+            raise OperatorRunnerError("selector-map-operation-list-invalid")
+        bindings = {
+            "stage_uuid": plan.stage_uuid,
+            "registration_sha256": prepared.registration_sha256,
+            "selector_input_map_sha256": map_sha,
+            "operations": entries,
+        }
+        raw, pin = await self._request("selector-operation-permits", "batch", bindings)
+        if _sha(raw) != pin:
+            raise OperatorRunnerError("selector-permit-batch-pin-mismatch")
+        batch = core._strict_json(raw, "selector-permit-batch")
+        if (
+            type(batch) is not dict
+            or set(batch) != {"schema", "stage_uuid", "selector_input_map_sha256", "operations"}
+            or batch.get("schema") != _BATCH_SCHEMA
+            or batch.get("stage_uuid") != plan.stage_uuid
+            or batch.get("selector_input_map_sha256") != map_sha
+            or type(batch.get("operations")) is not list
+        ):
+            raise OperatorRunnerError("selector-permit-batch-binding-invalid")
+        permits = {}
+        for row in batch["operations"]:
+            if type(row) is not dict or set(row) != {"operation_id", "permit_base64", "permit_sha256"}:
+                raise OperatorRunnerError("selector-permit-row-invalid")
+            operation_id = row["operation_id"]
+            if operation_id in permits or operation_id not in operation_materials:
+                raise OperatorRunnerError("selector-permit-operation-invalid")
+            try:
+                permit_bytes = base64.b64decode(row["permit_base64"], validate=True)
+            except Exception as exc:
+                raise OperatorRunnerError("selector-permit-base64-invalid") from exc
+            if _sha(permit_bytes) != row["permit_sha256"]:
+                raise OperatorRunnerError("selector-permit-digest-invalid")
+            permits[operation_id] = (permit_bytes, row["permit_sha256"])
+        if set(permits) != set(prepared.operation_ids):
+            raise OperatorRunnerError("selector-permit-inventory-incomplete")
+        return permits
+
+    def _selector_evidence(self, plan, prepared, pipeline_inputs, reference_closure, results, terminal):
+        by_id = {row.operation_id: row for row in results}
+        orders = {}
+        stability = {}
+        for index, task in enumerate(pipeline_inputs["tasks"], start=1):
+            task_id = task["task_id"]
+            prefix = f"research-{index:02d}-"
+
+            def order(operation_id, is_candidate):
+                result = by_id[operation_id]
+                found = (
+                    result.ranking.ordered_ids
+                    if is_candidate and result.ranking is not None
+                    else result.native_ordered_ids
+                )
+                if found is None:
+                    raise OperatorRunnerError("selector-order-missing")
+                return tuple(found)
+
+            orders[task_id] = {
+                "w0": order(prefix + "base-w0", False),
+                "candidate": order(prefix + "base-candidate", True),
+            }
+            if index in {1, 4, 7, 8}:
+                stability[task_id] = {
+                    variant: {
+                        "w0": order(prefix + variant + "-w0", False),
+                        "candidate": order(prefix + variant + "-candidate", True),
+                    }
+                    for variant in ("repeat", "rotate")
+                }
+        rank_one = {}
+        top_urls = {}
+        for index, target in enumerate(plan.navigation_targets, start=1):
+            operation_id = f"navigation-{index:02d}-w0"
+            row = by_id[operation_id]
+            ordered = row.native_ordered_ids
+            if ordered is None:
+                raise OperatorRunnerError("navigation-order-missing")
+            nav = next(item for item in pipeline_inputs["navigation_tasks"] if item["task_id"] == target["target_id"])
+            rank_one[target["target_id"]] = ordered[0] == nav["target_candidate_id"]
+            material = pipeline_inputs["selector_operation_materials"][operation_id]["operation_input_bytes"]
+            doc = core._strict_json(material, "navigation-operation-input")
+            candidate_by_id = {item["id"]: item["url"] for item in doc.get("candidates", [])}
+            top_urls[target["target_id"]] = candidate_by_id[ordered[0]]
+        terminal_path = Path(self.directories["selector_results"]) / f"{prepared.stage_uuid}.terminal-inventory.json"
+        terminal_bytes = _read_file(terminal_path, 4_000_000, private=True)
+        usage_known = all(
+            type(row.input_tokens_observed) is int and type(row.output_tokens_observed) is int for row in results
+        )
+        return orchestration.SelectorEvidence(
+            stage_uuid=prepared.stage_uuid,
+            terminal_inventory_sha256=terminal["sha256"],
+            operation_rows=tuple(
+                {
+                    "operation_id": row.operation_id,
+                    "state": row.status,
+                    "request_sha256": row.request_sha256,
+                    "response_sha256": row.response_sha256,
+                    "input_tokens_observed": row.input_tokens_observed,
+                    "output_tokens_observed": row.output_tokens_observed,
+                }
+                for row in results
+            ),
+            research_orders=orders,
+            navigation_rank_one=rank_one,
+            reference_grade_receipt_sha256=reference_closure.receipt_sha256,
+            usage_status="known" if usage_known else "unknown",
+            stability_orders=stability,
+            navigation_top1_urls=top_urls,
+            terminal_inventory_bytes=terminal_bytes,
+            result_root=Path(self.directories["selector_results"]),
+            archive_root=Path(self.directories["selector_archive"]),
+        )
+
+    async def _answer_authority(self, plan, tasks):
+        endpoint = self.config["answer_endpoint"]
+        endpoint_url, mode = answer._chat_url(endpoint, allow_trusted_private_http=False)
+        requests = answer._make_requests(tasks)
+        _manifest, manifest_sha = answer._request_manifest(requests, endpoint_security_mode=mode)
+        resolved_sha = answer._sha(answer._canonical({"mode": "https-required"}))
+        endpoint_sha = answer._sha(
+            answer._canonical(
+                {"endpoint": endpoint, "security_mode": mode, "resolved_destination_sha256": resolved_sha}
+            )
+        )
+        bindings = {
+            "stage_uuid": plan.stage_uuid,
+            "source_revision": plan.source_revision,
+            "protocol_sha256": _sha(plan.protocol_bytes),
+            "cohorts_sha256": _sha(plan.cohorts_bytes),
+            "operation_manifest_sha256": manifest_sha,
+            "endpoint_sha256": endpoint_sha,
+            "resolved_destination_sha256": resolved_sha,
+            "endpoint_security_mode": mode,
+            "operation_ids": tuple(row.operation_id for row in requests),
+        }
+        receipt, pin = await self._request("answer-execution", "permit", bindings)
+        return {
+            # The permit binds the configured endpoint string. The executor
+            # canonicalizes it with the same helper before dispatch; returning
+            # that value here would make its endpoint digest differ for a
+            # base URL or a `/v1` URL even though both resolve to this path.
+            "endpoint": endpoint,
+            "api_key": _secret(self.private_paths["answer_api_key"]),
+            "permit_bytes": receipt,
+            "expected_permit_sha256": pin,
+            "permit_verifier": local_authority.AnswerReceiptVerifier(),
+            "one_shot_lease": local_authority.FileOneShotLease(
+                self.directories["lease_root"], scope="answer-execution"
+            ),
+            "lease_root": self.directories["lease_root"],
+            "archive_root": self.directories["answer_archive"],
+            "result_root": self.directories["answer_results"],
+            "stage_started_utc": self.started_utc.isoformat().replace("+00:00", "Z"),
+            "stage_deadline_utc": self.deadline_utc.isoformat().replace("+00:00", "Z"),
+            "answer_manifest_sha256": manifest_sha,
+        }
+
+    def runtime_bindings(self) -> runtime.RuntimeBindings:
+        return runtime.RuntimeBindings(
+            acquisition_authority=self._acquisition_authority,
+            verify_acquisition=self._verify_acquisition,
+            capture_authority=self._capture_authority,
+            prepare_after_acquisition=self._prepare_late,
+            verify_late_preflight=self._verify_late,
+            selector_permit_resolver=self._selector_permits,
+            selector_admission_verifier=self._selector_admission,
+            selector_evidence_builder=self._selector_evidence,
+            answer_authority=self._answer_authority,
+            selector_api_key=_secret(self.private_paths["selector_api_key"]),
+            selector_lease_root=self.directories["lease_root"],
+            selector_archive_root=self.directories["selector_archive"],
+            selector_result_root=self.directories["selector_results"],
+            native_handoff=native_handoff.NativeGraderHandoff(self.directories["grader_handoff"]),
+        )
+
+    async def run(self) -> orchestration.StageResult:
+        return await orchestration.coordinate_coverage_stage(
+            plan=self.plan,
+            executors=runtime.build_stage_executors(self.plan, self.runtime_bindings()),
+            inventory_root=self.directories["stage_inventory"],
+        )
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+    import asyncio
+
+    parser = argparse.ArgumentParser(description="Run one externally registered coverage development stage.")
+    parser.add_argument("--config", required=True, help="private operator JSON config")
+    parser.add_argument("--config-sha256", required=True, help="out-of-band SHA-256 pin for config bytes")
+    args = parser.parse_args(argv)
+    try:
+        runner = OperatorStageRunner.from_file(args.config, args.config_sha256)
+        result = asyncio.run(runner.run())
+    except Exception as exc:
+        # Keep all potentially sensitive details out of the terminal.
+        print(json.dumps({"status": "refused-or-terminal", "error_class": type(exc).__name__}, sort_keys=True))
+        return 1
+    print(
+        json.dumps(
+            {
+                "status": result.status,
+                "stage_uuid": result.stage_uuid,
+                "inventory_sha256": result.inventory_sha256,
+                "closeout_receipt_sha256": result.closeout_receipt_sha256,
+                "product_authorized": False,
+                "admission_created": False,
+                "scientific_calls_made_by_coordinator": False,
+            },
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())

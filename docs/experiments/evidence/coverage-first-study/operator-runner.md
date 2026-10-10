@@ -1,0 +1,46 @@
+# Operator runner (registered development stage)
+
+`python -m scripts.coverage_operator_runner --config ABSOLUTE_CONFIG_PATH --config-sha256 OUT_OF_BAND_SHA256` loads a fixed JSON config and runs the existing ordered stage coordinator. There are no callback import names, environment-variable credential lookups, or status-only overrides. The config must be a canonical JSON file owned by the current user with mode `0600`; all referenced paths are absolute. Secret paths point to separate owner-only files with mode `0600`.
+
+The config schema is `coverage-operator-stage-config/1`. Its exact top-level keys are:
+
+```json
+{
+  "schema": "coverage-operator-stage-config/1",
+  "stage_uuid": "fresh canonical UUID",
+  "packet_stage_uuid": "different fresh canonical UUID",
+  "stage_kind": "development",
+  "source_revision": "40 lowercase hex characters",
+  "candidate_base_url": "qualified HTTPS capture base URL",
+  "answer_endpoint": "qualified HTTPS /v1/chat/completions URL",
+  "initial_registration_sha256": "externally pinned 64 lowercase hex characters",
+  "forbidden_stage_uuids": ["previously consumed stage UUID"],
+  "paths": {
+    "cohorts": "absolute path", "protocol": "absolute path",
+    "qualified_source_closure": "absolute path", "coverage_source": "absolute path",
+    "production_rerank_source": "absolute path", "dependency_lock": "absolute path",
+    "reference_manifest": "absolute path", "answer_assessment_plan": "absolute path",
+    "capture_plan": "absolute path", "candidate_identity": "absolute path",
+    "initial_registration": "absolute path"
+  },
+  "private_paths": {
+    "candidate_operator_token": "absolute path", "selector_api_key": "absolute path",
+    "answer_api_key": "absolute path"
+  },
+  "directories": {
+    "operator_handoff": "absolute private directory", "stage_inventory": "absolute private directory",
+    "lease_root": "absolute private directory", "capture_receipts": "absolute private directory",
+    "selector_archive": "absolute private directory", "selector_results": "absolute private directory",
+    "answer_archive": "absolute private directory", "answer_results": "absolute private directory",
+    "grader_handoff": "absolute private directory"
+  }
+}
+```
+
+Before starting the stage clock or creating handoff directories, the loader verifies the external config pin, registered protocol status, cohort/protocol binding, qualified-source-closure file against the exact source bytes, initial registration SHA, and its immutable static material pins. It generates the acquisition plan and manifest from the registered development cohort and refuses a draft or mismatched registration.
+
+The local operator handoff is a request/receipt/pin exchange under `<operator_handoff>/<stage_uuid>/<scope>/`. The runner writes `requests/<request_id>.json`; the trusted operator writes exact response bytes to `responses/<request_id>.receipt` and a separate lowercase SHA-256 plus newline to `pins/<request_id>.sha256`. The required request slots are acquisition/permit, protected-source-capture/permit, source-capture/permit, late-registration/registration-1, selector-map-admission/map, selector-operation-permits/batch, and answer-execution/permit. Each returned object is then passed to its existing typed verifier. Missing or bad receipts, or an existing stage inventory, stop without resumption. Native assessor packets use the existing grader handoff and require native tool-result records; the runner never invokes a model.
+
+The current checked-in protocol is still draft, so the command intentionally refuses before the stage clock, handoff directory creation, or provider dispatch. An operator must supply a separately reviewed and registered protocol/material bundle, plus actual protected-capture qualification evidence for the exact HTTPS endpoint, before this launch path can proceed. The operator handoff itself is not proof of qualification. No test fixture or mocked transport is production evidence.
+
+Offline phase-graph coverage is exercised by `tests/test_coverage_stage_orchestration.py`; config, draft refusal, private-secret handling, handoff adapters, and late-registration lineage have focused tests in `tests/test_coverage_operator_runner.py`, `tests/test_coverage_stage_runtime.py`, `tests/test_coverage_operator_handoff.py`, and `tests/test_coverage_late_registration.py`.
