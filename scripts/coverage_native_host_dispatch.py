@@ -229,8 +229,15 @@ def verify_transcript(
     if client_notifications != [{"jsonrpc": "2.0", "method": "initialized", "params": {}}]:
         raise NativeHostError("native-client-notification-sequence")
     init, start_thread, start_turn = client_requests
-    if init.get("id") != 1:
-        raise NativeHostError("native-initialize-id")
+    init_params = init.get("params")
+    if (
+        init.get("id") != 1
+        or type(init_params) is not dict
+        or set(init_params) != {"clientInfo", "capabilities"}
+        or init_params.get("clientInfo") != {"name": "coverage-native-grader", "version": "1"}
+        or init_params.get("capabilities") != {"experimentalApi": True}
+    ):
+        raise NativeHostError("native-initialize-capabilities")
     thread_params = start_thread.get("params")
     if (
         start_thread.get("id") != 2
@@ -324,6 +331,9 @@ def verify_transcript(
     turn = completed[0]
     if type(turn) is not dict or turn.get("id") != turn_id or turn.get("status") != "completed":
         raise NativeHostError("native-turn-not-complete")
+    items_view = turn.get("itemsView", "full")
+    if items_view != "full":
+        raise NativeHostError("native-completed-items-not-full")
     items = turn.get("items")
     if type(items) is not list:
         raise NativeHostError("native-completed-items-missing")
@@ -411,7 +421,10 @@ async def _invoke_codex(
                     "jsonrpc": "2.0",
                     "id": 1,
                     "method": "initialize",
-                    "params": {"clientInfo": {"name": "coverage-native-grader", "version": "1"}},
+                    "params": {
+                        "clientInfo": {"name": "coverage-native-grader", "version": "1"},
+                        "capabilities": {"experimentalApi": True},
+                    },
                 },
                 {"jsonrpc": "2.0", "method": "initialized", "params": {}},
                 {

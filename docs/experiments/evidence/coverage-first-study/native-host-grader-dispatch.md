@@ -29,6 +29,14 @@ model to match `gpt-6.1-sol`. An absent exact-model row in `model/list` is retai
 as catalog metadata; it does not substitute a different model. If explicit
 thread setup or a turn fails, the packet remains terminal and cannot be retried.
 
+The app-server client opts into experimental API fields during `initialize`, because the
+selected `thread/start` request uses `allowProviderModelFallback`, `ephemeral`,
+`environments`, and `dynamicTools`. Transcript verification requires that exact
+capability declaration. It also requires a completed turn with a full item view;
+`summary` or `notLoaded` turn items are terminally rejected rather than treated as
+complete transcript evidence. This matches the locally installed app-server's
+generated protocol schema; the CLI version is recorded in each transcript.
+
 The Codex CLI must use the operator's existing authorized host configuration.
 The dispatcher pins the executable bytes but does not inspect or export
 credentials. Tests use only a synthetic app-server executable and make no model

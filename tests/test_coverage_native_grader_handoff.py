@@ -85,7 +85,10 @@ def publish_synthetic_host_evidence(scope: Path, stage_uuid: str, request_path: 
                 "jsonrpc": "2.0",
                 "id": 1,
                 "method": "initialize",
-                "params": {"clientInfo": {"name": "test", "version": "1"}},
+                "params": {
+                    "clientInfo": {"name": "coverage-native-grader", "version": "1"},
+                    "capabilities": {"experimentalApi": True},
+                },
             },
         },
         {"direction": "server", "message": {"id": 1, "result": {}}},

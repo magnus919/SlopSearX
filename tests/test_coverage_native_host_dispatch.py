@@ -142,7 +142,12 @@ def fake_codex(tmp_path: Path) -> tuple[Path, str]:
                         "method": "turn/completed",
                         "params": {
                             "threadId": thread_id,
-                            "turn": {"id": turn_id, "status": completion_status, "items": items},
+                            "turn": {
+                                "id": turn_id,
+                                "status": completion_status,
+                                "items": items,
+                                "itemsView": "full",
+                            },
                         },
                     })
                 else:
@@ -160,7 +165,15 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
     turn_id = str(uuid.uuid4())
     text = packet_bytes.decode()
     requests = [
-        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"clientInfo": {"name": "test", "version": "1"}}},
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "clientInfo": {"name": "coverage-native-grader", "version": "1"},
+                "capabilities": {"experimentalApi": True},
+            },
+        },
         {"jsonrpc": "2.0", "method": "initialized", "params": {}},
         {
             "jsonrpc": "2.0",
@@ -186,6 +199,8 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
     ]
     if tamper == "input":
         requests[-1]["params"]["input"][0]["text"] = "changed"
+    if tamper == "experimental-api-optin":
+        requests[0]["params"]["capabilities"]["experimentalApi"] = False
     if tamper == "extra-tool-policy":
         requests[2]["params"]["tools"] = ["shell"]
     events = [
@@ -233,7 +248,15 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
             "direction": "server",
             "message": {
                 "method": "turn/completed",
-                "params": {"threadId": thread_id, "turn": {"id": turn_id, "status": status, "items": items}},
+                "params": {
+                    "threadId": thread_id,
+                    "turn": {
+                        "id": turn_id,
+                        "status": status,
+                        "items": items,
+                        "itemsView": tamper if tamper in {"summary", "notLoaded"} else "full",
+                    },
+                },
             },
         }
     )
@@ -290,7 +313,20 @@ def test_model_catalog_absence_is_metadata_not_dispatch_gate() -> None:
         native.inspect_model_catalog({"jsonrpc": "1.0", **response})
 
 
-@pytest.mark.parametrize("tamper", ["input", "wrong-model", "rerouted", "tool", "incomplete", "extra-tool-policy"])
+@pytest.mark.parametrize(
+    "tamper",
+    [
+        "input",
+        "wrong-model",
+        "rerouted",
+        "tool",
+        "incomplete",
+        "extra-tool-policy",
+        "experimental-api-optin",
+        "summary",
+        "notLoaded",
+    ],
+)
 def test_transcript_rejects_mismatched_or_nonterminal_invocation(tamper: str) -> None:
     packet_id = "a" * 64
     raw_packet = packet(packet_id)
@@ -324,6 +360,24 @@ def test_transcript_roundtrip_binds_packet_and_returns_exact_final_text() -> Non
     )
     assert verified.response_bytes == b'{"result":"synthetic"}'
     assert verified.thread_id == identity["thread_id"]
+
+    # The installed generated schema defaults Turn.itemsView to "full".
+    completed = next(
+        event["message"]
+        for event in transcript["events"]
+        if event["direction"] == "server" and event["message"].get("method") == "turn/completed"
+    )
+    del completed["params"]["turn"]["itemsView"]
+    defaulted = native.verify_transcript(
+        canonical(transcript),
+        stage_uuid=identity["stage_uuid"],
+        phase="references",
+        packet_id=packet_id,
+        packet_sha256=hashlib.sha256(raw_packet).hexdigest(),
+        expected_catalog_row_sha256=transcript["model_catalog_row_sha256"],
+        expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
+    )
+    assert defaulted.response_bytes == verified.response_bytes
 
 
 @pytest.mark.asyncio
