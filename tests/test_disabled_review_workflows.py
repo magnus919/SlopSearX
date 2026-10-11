@@ -93,7 +93,7 @@ def test_publisher_requires_successful_target_run_and_protected_main_ref() -> No
     assert job["timeout-minutes"] == "5"
 
 
-def test_policy_is_enabled_for_comment_only_canary_and_binds_publisher_hash() -> None:
+def test_final_policy_allows_only_review_dispositions_and_binds_publisher_hash() -> None:
     policy = json.loads((ROOT / ".github/pr-review-publisher-policy.json").read_text())
     assert policy["schema"] == "pr-review-protected-publication-policy.v2"
     assert policy["enabled"] is True
@@ -118,12 +118,23 @@ def test_policy_is_enabled_for_comment_only_canary_and_binds_publisher_hash() ->
             "provider-identity-sha256:c87999815e0c8d35d486803558939375130c79a332ed6d421bbfb7171d4a63b6"
         ),
     }
-    assert policy["publication"]["allowed_dispositions"] == ["COMMENT"]
+    assert policy["publication"]["allowed_dispositions"] == [
+        "COMMENT",
+        "APPROVE",
+        "REQUEST_CHANGES",
+    ]
     assert policy["artifact_redirect_hosts"] == [
         "productionresultssa5.blob.core.windows.net",
         "productionresultssa8.blob.core.windows.net",
     ]
     assert "app" not in policy
+
+
+def test_final_cutover_disables_only_droid_auto_review() -> None:
+    droid_review = _workflow("droid-review.yml")
+    assert droid_review["jobs"]["droid-review"]["if"] in {False, "false", "${{ false }}"}
+    assert (ROOT / ".github/workflows/droid.yml").is_file()
+    assert (ROOT / ".github/workflows/droid-wiki-refresh.yml").is_file()
 
 
 def test_source_context_probe_remains_disabled_and_read_only() -> None:

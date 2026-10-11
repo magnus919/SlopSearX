@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   droid-review:
-    if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
