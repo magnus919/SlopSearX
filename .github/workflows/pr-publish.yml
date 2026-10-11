@@ -55,16 +55,19 @@ jobs:
           import subprocess
           from pathlib import Path
 
+          TRUSTED_HARNESS_SHA = "23852759ed3cfb1e6964b7438141e293508aa178"
           policy = json.loads((Path(os.environ["GITHUB_WORKSPACE"]) / ".github/pr-review-publisher-policy.json").read_text())
           harness = policy["called_harness"]
           if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", harness["repository"]):
               raise SystemExit("protected_harness_repository_invalid")
           if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", harness["sha"]):
               raise SystemExit("protected_harness_revision_invalid")
+          if harness["sha"] != TRUSTED_HARNESS_SHA:
+              raise SystemExit("protected_harness_revision_unreviewed")
           dest = Path(os.environ["RUNNER_TEMP"]) / "trusted-review-harness"
           subprocess.run(["git", "clone", "--no-checkout", "--filter=blob:none", f"https://github.com/{harness['repository']}.git", str(dest)], check=True, stdin=subprocess.DEVNULL, timeout=120)
-          subprocess.run(["git", "-C", str(dest), "checkout", "--detach", harness["sha"]], check=True, stdin=subprocess.DEVNULL, timeout=30)
-          if subprocess.check_output(["git", "-C", str(dest), "rev-parse", "HEAD"], text=True, timeout=10).strip() != harness["sha"]:
+          subprocess.run(["git", "-C", str(dest), "checkout", "--detach", TRUSTED_HARNESS_SHA], check=True, stdin=subprocess.DEVNULL, timeout=30)
+          if subprocess.check_output(["git", "-C", str(dest), "rev-parse", "HEAD"], text=True, timeout=10).strip() != TRUSTED_HARNESS_SHA:
               raise SystemExit("protected_harness_revision_mismatch")
           PY
 

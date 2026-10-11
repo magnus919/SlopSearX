@@ -1,5 +1,5 @@
 {
-  "schema": "pr-review-protected-publication-policy.v2",
+  "schema": "pr-review-protected-publication-policy.v3",
   "authorization_mode": "STANDING_BOUNDED",
   "enabled": true,
   "repository": {
@@ -11,7 +11,7 @@
     "id": 377341907,
     "path": ".github/workflows/pr-publish.yml",
     "ref": "magnus919/SlopSearX/.github/workflows/pr-publish.yml@refs/heads/main",
-    "sha256": "c0e5a51a34605c9ce3270305c4846aac266d221a9d783d1d828d8dcc7e8b655d"
+    "sha256": "b7f13e0fe91b5502617b8c7f28ddff81d33e0f5a0f3e4507db4b9df741cbd3cc"
   },
   "source_workflow": {
     "id": 377341909,
@@ -21,7 +21,7 @@
   "called_harness": {
     "repository": "groktopus/codereview",
     "path": ".github/workflows/pr-analysis.yml",
-    "sha": "537418ca9f542ba403b6bc6b8280eacb52d1ce0f"
+    "sha": "23852759ed3cfb1e6964b7438141e293508aa178"
   },
   "credential": {
     "kind": "ACTIONS_TOKEN",
@@ -46,9 +46,5 @@
     "deadline_seconds": 25
   },
   "artifact_trust_mode": "API_BOUND_SHA256",
-  "artifact_redirect_hosts": [
-    "productionresultssa5.blob.core.windows.net",
-    "productionresultssa8.blob.core.windows.net",
-    "productionresultssa9.blob.core.windows.net"
-  ]
+  "artifact_download_mode": "AUTHENTICATED_API_LOCATION_NO_AUTH"
 }

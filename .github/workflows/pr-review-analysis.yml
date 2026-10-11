@@ -28,7 +28,7 @@ jobs:
       github.repository == 'magnus919/SlopSearX' &&
       github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.draft == false
-    uses: groktopus/codereview/.github/workflows/pr-analysis.yml@537418ca9f542ba403b6bc6b8280eacb52d1ce0f
+    uses: groktopus/codereview/.github/workflows/pr-analysis.yml@23852759ed3cfb1e6964b7438141e293508aa178
     permissions:
       contents: read
       checks: read
@@ -36,7 +36,7 @@ jobs:
       actions: read
     with:
       harness_repository: groktopus/codereview
-      harness_sha: 537418ca9f542ba403b6bc6b8280eacb52d1ce0f
+      harness_sha: 23852759ed3cfb1e6964b7438141e293508aa178
       review_contract: bounded-production-v17
       target_repository: ${{ github.repository }}
       pull_request_number: ${{ github.event.pull_request.number }}
