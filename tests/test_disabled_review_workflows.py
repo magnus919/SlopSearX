@@ -122,6 +122,7 @@ def test_policy_is_enabled_for_comment_only_canary_and_binds_publisher_hash() ->
     assert policy["artifact_redirect_hosts"] == [
         "productionresultssa5.blob.core.windows.net",
         "productionresultssa8.blob.core.windows.net",
+        "productionresultssa9.blob.core.windows.net",
     ]
     assert "app" not in policy
 
