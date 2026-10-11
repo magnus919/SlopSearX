@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-HARNESS_SHA = "537418ca9f542ba403b6bc6b8280eacb52d1ce0f"
+HARNESS_SHA = "23852759ed3cfb1e6964b7438141e293508aa178"
 
 
 def _workflow(filename: str) -> dict:
@@ -95,7 +95,7 @@ def test_publisher_requires_successful_target_run_and_protected_main_ref() -> No
 
 def test_policy_is_enabled_for_comment_only_canary_and_binds_publisher_hash() -> None:
     policy = json.loads((ROOT / ".github/pr-review-publisher-policy.json").read_text())
-    assert policy["schema"] == "pr-review-protected-publication-policy.v2"
+    assert policy["schema"] == "pr-review-protected-publication-policy.v3"
     assert policy["enabled"] is True
     assert policy["authorization_mode"] == "STANDING_BOUNDED"
     assert policy["repository"] == {"name": "magnus919/SlopSearX", "id": 1263452316}
@@ -110,6 +110,13 @@ def test_policy_is_enabled_for_comment_only_canary_and_binds_publisher_hash() ->
     publisher_path = ROOT / policy["publisher_workflow"]["path"]
     assert policy["publisher_workflow"]["sha256"] == hashlib.sha256(publisher_path.read_bytes()).hexdigest()
     assert policy["called_harness"]["sha"] == HARNESS_SHA
+    harness_checkout = next(
+        step
+        for step in _workflow("pr-publish.yml")["jobs"]["publisher"]["steps"]
+        if step.get("name") == "Check out the separately pinned harness"
+    )
+    assert f'TRUSTED_HARNESS_SHA = "{HARNESS_SHA}"' in harness_checkout["run"]
+    assert '"checkout", "--detach", TRUSTED_HARNESS_SHA' in harness_checkout["run"]
     assert policy["credential"] == {"kind": "ACTIONS_TOKEN", "actor_login": "github-actions[bot]"}
     assert policy["profile"] == {
         "version": "slopsearx-production-v17-context-target-manifest-candidate",
@@ -119,10 +126,8 @@ def test_policy_is_enabled_for_comment_only_canary_and_binds_publisher_hash() ->
         ),
     }
     assert policy["publication"]["allowed_dispositions"] == ["COMMENT"]
-    assert policy["artifact_redirect_hosts"] == [
-        "productionresultssa5.blob.core.windows.net",
-        "productionresultssa8.blob.core.windows.net",
-    ]
+    assert policy["artifact_download_mode"] == "AUTHENTICATED_API_LOCATION_NO_AUTH"
+    assert "artifact_redirect_hosts" not in policy
     assert "app" not in policy
 
 
