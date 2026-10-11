@@ -1,5 +1,4 @@
-# Copy to .github/workflows only after reviewing the pinned reusable workflow,
-# target-repository policy, and secret exposure. This template is inert as saved.
+# Protected target-side analysis using the separately pinned central workflow.
 name: PR Review Analysis
 
 on:
@@ -24,9 +23,12 @@ concurrency:
 
 jobs:
   analyze:
-    # Deliberate hard stop. Remove only in a separately reviewed target-repo change.
-    if: false
-    uses: groktopus/codereview/.github/workflows/pr-analysis.yml@6f67aeabb812e6992bd868280698cf1031a75e46
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.repository == 'magnus919/SlopSearX' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.draft == false
+    uses: groktopus/codereview/.github/workflows/pr-analysis.yml@537418ca9f542ba403b6bc6b8280eacb52d1ce0f
     permissions:
       contents: read
       checks: read
@@ -34,7 +36,8 @@ jobs:
       actions: read
     with:
       harness_repository: groktopus/codereview
-      harness_sha: 6f67aeabb812e6992bd868280698cf1031a75e46
+      harness_sha: 537418ca9f542ba403b6bc6b8280eacb52d1ce0f
+      review_contract: bounded-production-v17
       target_repository: ${{ github.repository }}
       pull_request_number: ${{ github.event.pull_request.number }}
       base_ref: ${{ github.event.pull_request.base.ref }}
