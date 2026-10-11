@@ -1,6 +1,5 @@
-# Inert same-repository template. Do not remove the literal hard stop as part
-# of staging; activation requires a separately reviewed, concrete target packet.
-name: Protected PR review publisher (Actions token, disabled template)
+# Same-repository protected PR review publisher using the target Actions token.
+name: Protected PR review publisher (Actions token)
 
 on:
   workflow_run:
@@ -20,8 +19,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publisher-disabled:
-    if: ${{ false }}
+  publisher:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request_target' &&
+      github.repository == 'magnus919/SlopSearX' &&
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment:

@@ -1,7 +1,7 @@
 {
   "schema": "pr-review-protected-publication-policy.v2",
   "authorization_mode": "STANDING_BOUNDED",
-  "enabled": false,
+  "enabled": true,
   "repository": {
     "name": "magnus919/SlopSearX",
     "id": 1263452316
@@ -11,7 +11,7 @@
     "id": 377341907,
     "path": ".github/workflows/pr-publish.yml",
     "ref": "magnus919/SlopSearX/.github/workflows/pr-publish.yml@refs/heads/main",
-    "sha256": "b726bd68c27edfea5985d9e03f178e44ab6f62952f583f826df40f9c32803bbf"
+    "sha256": "c0e5a51a34605c9ce3270305c4846aac266d221a9d783d1d828d8dcc7e8b655d"
   },
   "source_workflow": {
     "id": 377341909,
@@ -21,16 +21,16 @@
   "called_harness": {
     "repository": "groktopus/codereview",
     "path": ".github/workflows/pr-analysis.yml",
-    "sha": "6f67aeabb812e6992bd868280698cf1031a75e46"
+    "sha": "537418ca9f542ba403b6bc6b8280eacb52d1ce0f"
   },
   "credential": {
     "kind": "ACTIONS_TOKEN",
     "actor_login": "github-actions[bot]"
   },
   "profile": {
-    "version": "slopsearx-production-v14-jev-reconciliation-candidate",
-    "sha256": "5e83bc43c615f717df0d3d29722de08dd5990c84c8e69d1705c94f3918d49692",
-    "provider_configuration_identity": "provider-identity-sha256:20692336d9ded3d0c0091ead7d5e9930fa51f0e8aaf319d917881c443e7b1420"
+    "version": "slopsearx-production-v17-context-target-manifest-candidate",
+    "sha256": "28725e806a87812386ff67f5c6e63320cc9f3f2b9c1a79c6942c7cf1be004dac",
+    "provider_configuration_identity": "provider-identity-sha256:c87999815e0c8d35d486803558939375130c79a332ed6d421bbfb7171d4a63b6"
   },
   "publication": {
     "allowed_dispositions": [
@@ -47,6 +47,7 @@
   },
   "artifact_trust_mode": "API_BOUND_SHA256",
   "artifact_redirect_hosts": [
-    "productionresultssa5.blob.core.windows.net"
+    "productionresultssa5.blob.core.windows.net",
+    "productionresultssa8.blob.core.windows.net"
   ]
 }
