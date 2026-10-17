@@ -1,0 +1,31 @@
+{
+  "contract": "slopsearx.rust.w03.stdlib-local-deadline",
+  "version": 1,
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "root_baseline": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+  "original_source_pins": 315,
+  "stdlib_reference": {
+    "path": "/opt/homebrew/opt/python@3.14/Frameworks/Python.framework/Versions/3.14/lib/python3.14/_pydatetime.py",
+    "sha256": "00e8b7b2a3c8a75f15ac016c8f4f97101394d679cba63a055205358ff3df656b",
+    "method": "datetime._mktime lines1979-2018, fold0 algorithm"
+  },
+  "producer_sha256": "e15ac2f887f2f1084b0d5bd68d6425de54ab101f76a2f53bfe3a934ef25357c4",
+  "timezone": "America/New_York",
+  "effective_tzname": [
+    "EST",
+    "EDT"
+  ],
+  "observations": [
+    {
+      "input": "2027-03-14T02:30:00.123456",
+      "timestamp": 1805009400.123456
+    },
+    {
+      "input": "2026-11-01T01:30:00.654321",
+      "timestamp": 1793511000.654321
+    }
+  ],
+  "backend_modules": [],
+  "forbidden_effect_attempts": [],
+  "claim": "Actual CPython datetime primitive observations only; no original backend helper call, provider/store port, task, adapter or state allocation."
+}

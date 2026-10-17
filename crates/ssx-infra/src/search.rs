@@ -599,6 +599,34 @@ impl SearchService {
             .with_revalidated(authority, |_| ())
             .map_err(SearchError::Policy)
     }
+    /// Resolve source default-strategy metadata through the current shared policy.
+    /// Returned names are proposals, never authority; callers must authorize each
+    /// nonempty query before persistence and execution.
+    pub fn research_template_scope(
+        &self,
+        intent: &str,
+    ) -> Result<(Vec<String>, Vec<String>), SearchError> {
+        if self.0.closed.load(Ordering::Acquire) {
+            return Err(SearchError::Closed);
+        }
+        self.current_policy(self.0.deps.clock.capture().0)?
+            .research_template_scope(intent)
+            .map_err(SearchError::Policy)
+    }
+    /// Pure caller-directed planning admission. Uses the same current policy
+    /// authority, without optional routing providers, cache writes or dispatch.
+    /// Research previews and execution admission must not execute Jev advice.
+    pub fn prepare_research_plan(
+        &self,
+        proposal: &ScopeProposal,
+    ) -> Result<ValidatedScope, SearchError> {
+        if self.0.closed.load(Ordering::Acquire) {
+            return Err(SearchError::Closed);
+        }
+        self.current_policy(self.0.deps.clock.capture().0)?
+            .authorize(proposal.clone())
+            .map_err(SearchError::Policy)
+    }
     /// Reuse this opaque authority after a transport's enforcement preview; the
     /// dispatch path revalidates it but never repeats optional routing disclosure.
     pub async fn prepare_scope(

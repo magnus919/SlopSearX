@@ -247,3 +247,5 @@ pub fn compare_descriptor(expected: &Value, actual: &Value) -> Result<()> {
 }
 
 pub mod saved_events;
+
+pub mod research_planning;

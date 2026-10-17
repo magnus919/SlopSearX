@@ -1,0 +1,2405 @@
+{
+  "kind": "Static pinned source branch map, not new original-runtime observations. Actual native service and transport controls assert full JSON; original capture identities unchanged.",
+  "baseline": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+  "source_pins": [
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a"
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "sha256": "5325f687b11c3e77a258a378a59359e48de1501513bd41ca0c9e5b80345c8477"
+    },
+    {
+      "path": "slopsearx/research_planning.py",
+      "sha256": "c0dbe24143cd071ba4e104b1f4fd021e525ee3ec0222af8c4c09bffc2455b4ac"
+    },
+    {
+      "path": "slopsearx/mcp/result_serialization.py",
+      "sha256": "170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    }
+  ],
+  "functions": [
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_error",
+      "start": 245,
+      "end": 251,
+      "sites": [],
+      "function_ast_sha256": "1f7e27b94c7e61c0e31faf699ab60481a81f590d0b5128d2f54cae1546cfb868",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "progress_completion_error_bodies_retain_source_precedence_and_busy_state"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_validate_query",
+      "start": 259,
+      "end": 269,
+      "sites": [
+        {
+          "line": 261,
+          "end": 261,
+          "source": "_error(\"invalid_input\", \"query is required\", field=\"query\")",
+          "id": "_validate_query:261",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 263,
+          "end": 268,
+          "source": "_error(\n            \"invalid_input\",\n            f\"query exceeds the maximum length of {state.policy.max_query_length} characters\",\n            field=\"query\",\n            max_length=state.policy.max_query_length,\n        )",
+          "id": "_validate_query:263",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "7f32626aa6eb09e7a04d2c80646f3be97e26a5097224b6b8033595b971a1c5ad",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "source_direct_extension_errors_keep_policy_details_and_terminal_context"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_enforce_policy",
+      "start": 303,
+      "end": 325,
+      "sites": [
+        {
+          "line": 324,
+          "end": 324,
+          "source": "_error(code, message, field=field, **details)",
+          "id": "_enforce_policy:324",
+          "native_tests": [
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "5e13ccfb20875a2f63fc2008b9b4edb85266a2a43340b753ec87a1b301ca9978",
+      "native_tests": [
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+        "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+        "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_read_result",
+      "start": 1613,
+      "end": 1649,
+      "sites": [
+        {
+          "line": 1623,
+          "end": 1623,
+          "source": "_error(\"invalid_result_id\", \"result_id must be a server-issued snapshot result ID\", field=\"result_id\")",
+          "id": "slopsearx_read_result:1623",
+          "native_tests": [
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1628,
+          "end": 1628,
+          "source": "_error(\"invalid_result_id\", \"malformed result_id\", field=\"result_id\")",
+          "id": "slopsearx_read_result:1628",
+          "native_tests": [
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1630,
+          "end": 1630,
+          "source": "_error(\"invalid_result_id\", \"result index out of range\", field=\"result_id\")",
+          "id": "slopsearx_read_result:1630",
+          "native_tests": [
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1634,
+          "end": 1634,
+          "source": "_error(\"store_unavailable\", \"snapshot store is unavailable\", field=\"result_id\")",
+          "id": "slopsearx_read_result:1634",
+          "native_tests": [
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1636,
+          "end": 1642,
+          "source": "_error(\n            \"expired_handle\",\n            \"snapshot has expired\",\n            handle=result_id,\n            expires_at=_expires_iso(lookup.expires_at),\n            field=\"result_id\",\n        )",
+          "id": "slopsearx_read_result:1636",
+          "native_tests": [
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1645,
+          "end": 1645,
+          "source": "_error(\"invalid_cursor\", \"unknown or expired snapshot\", field=\"result_id\")",
+          "id": "slopsearx_read_result:1645",
+          "native_tests": [
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1647,
+          "end": 1647,
+          "source": "_error(\"invalid_result_id\", \"result index out of range\", field=\"result_id\")",
+          "id": "slopsearx_read_result:1647",
+          "native_tests": [
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "1003942d2960560c7bd45446dc18ccc9bf171f893e855c6f15d59a9c664a760c",
+      "native_tests": [
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_workflow_policy_error",
+      "start": 1657,
+      "end": 1671,
+      "sites": [
+        {
+          "line": 1667,
+          "end": 1667,
+          "source": "_error(\"tool_disabled\", f\"dependency dossier requires {env_name}\", grant=env_name)",
+          "id": "_research_workflow_policy_error:1667",
+          "native_tests": [
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "db057eae964ee98ff495d9a192d85c64b355e2bba0d578d52c175775a96b8c99",
+      "native_tests": [
+        "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_workflow_budget_error",
+      "start": 1674,
+      "end": 1683,
+      "sites": [
+        {
+          "line": 1680,
+          "end": 1680,
+          "source": "_error(\"budget_exceeded\", \"dependency dossier adapter call budget is exhausted\")",
+          "id": "_research_workflow_budget_error:1680",
+          "native_tests": [
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1682,
+          "end": 1682,
+          "source": "_error(\"budget_exceeded\", \"dependency dossier result budget is exhausted\")",
+          "id": "_research_workflow_budget_error:1682",
+          "native_tests": [
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "1bfb9327812e19c336ff28f440ba7ae1884cf753136fb4cd889882533d568400",
+      "native_tests": [
+        "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_dispatch_error",
+      "start": 1686,
+      "end": 1716,
+      "sites": [],
+      "function_ast_sha256": "8d002713e5283d5f22f6100adde3bf00692a94414069427558a06eb534d6cce6",
+      "native_tests": [
+        "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+        "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+        "denied_grants_and_evidence_intent_replay_reject_before_spend",
+        "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+        "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+        "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+      ],
+      "string_refusals": [
+        {
+          "line": 1716,
+          "source": "return str(error[\"error\"][\"message\"]) if error else None",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1688,
+          "source": "return \"research grant is disabled\"",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1697,
+          "source": "return f\"{query.intent} requires the {grant} grant\"",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1699,
+          "source": "return \"research query has no permitted engines\"",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1694,
+          "source": "return str(exc)",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1706,
+          "source": "return \"evidence references have no valid captured source scope\"",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1714,
+          "source": "return str(rejection[\"error\"][\"message\"])",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1709,
+          "source": "return \"evidence references have an invalid captured intent\"",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        },
+        {
+          "line": 1712,
+          "source": "return \"captured evidence intent grant has been revoked\"",
+          "native_tests": [
+            "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "denied_grants_and_evidence_intent_replay_reject_before_spend",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_metadata",
+      "start": 1724,
+      "end": 1729,
+      "sites": [
+        {
+          "line": 1728,
+          "end": 1728,
+          "source": "ResearchMutationError(\"invalid_input\", f\"{name} must be a nonempty string of at most {limit} characters\")",
+          "id": "_research_metadata:1728",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "malformed_decomposition_matrix_is_atomic",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "d1814ab4bbfc32e5ddc37940bc5ed41aeda5add34c3d9e19f8e952b3e7ececd4",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+        "malformed_decomposition_matrix_is_atomic",
+        "malformed_followups_reject_without_budget_or_dispatch"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_prepare_research_query",
+      "start": 1732,
+      "end": 1791,
+      "sites": [
+        {
+          "line": 1744,
+          "end": 1744,
+          "source": "ResearchMutationError(\"invalid_input\", \"invalid research plan entry fields\")",
+          "id": "_prepare_research_query:1744",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1747,
+          "end": 1747,
+          "source": "ResearchMutationError(\"invalid_input\", \"query must be a nonempty bounded string\")",
+          "id": "_prepare_research_query:1747",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1750,
+          "end": 1750,
+          "source": "ResearchMutationError(\"invalid_input\", \"unknown research intent\")",
+          "id": "_prepare_research_query:1750",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1752,
+          "end": 1752,
+          "source": "ResearchMutationError(\"invalid_intent\", \"research subqueries do not support media searches\")",
+          "id": "_prepare_research_query:1752",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1755,
+          "end": 1755,
+          "source": "ResearchMutationError(\"tool_disabled\", f\"intent {intent} requires the {grant} grant\")",
+          "id": "_prepare_research_query:1755",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1759,
+          "end": 1759,
+          "source": "ResearchMutationError(\"invalid_input\", \"engines must be a nonempty list of names\")",
+          "id": "_prepare_research_query:1759",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1762,
+          "end": 1762,
+          "source": "ResearchMutationError(str(error[\"error\"][\"code\"]), str(error[\"error\"][\"message\"]))",
+          "id": "_prepare_research_query:1762",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1787,
+          "end": 1787,
+          "source": "ResearchMutationError(\"invalid_input\", str(exc))",
+          "id": "_prepare_research_query:1787",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1790,
+          "end": 1790,
+          "source": "ResearchMutationError(\"tool_disabled\", rejection)",
+          "id": "_prepare_research_query:1790",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "2fef23b2994a0c38575ac7c3972d8c9a5c36db08138008936f79247384b97264",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+        "complete_actual_source_previews_and_identifier_observations_match",
+        "malformed_followups_reject_without_budget_or_dispatch"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_validate_research_associations",
+      "start": 1794,
+      "end": 1831,
+      "sites": [
+        {
+          "line": 1798,
+          "end": 1798,
+          "source": "ResearchMutationError(\"invalid_input\", \"unknown subquestion_id\")",
+          "id": "_validate_research_associations:1798",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1806,
+          "end": 1806,
+          "source": "ResearchMutationError(\"invalid_input\", \"parent_attempt_id must identify a terminal attempt in this job\")",
+          "id": "_validate_research_associations:1806",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1810,
+          "end": 1810,
+          "source": "ResearchMutationError(\"invalid_input\", \"evidence parent must be a terminal attempt\")",
+          "id": "_validate_research_associations:1810",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1812,
+          "end": 1812,
+          "source": "ResearchMutationError(\"invalid_result_id\", \"evidence must be admitted results of the named parent\")",
+          "id": "_validate_research_associations:1812",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1815,
+          "end": 1815,
+          "source": "ResearchMutationError(\"policy_rejected\", rejection)",
+          "id": "_validate_research_associations:1815",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1824,
+          "end": 1824,
+          "source": "ResearchMutationError(\"invalid_job_state\", \"subquestion is already caller-resolved\")",
+          "id": "_validate_research_associations:1824",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1826,
+          "end": 1826,
+          "source": "ResearchMutationError(\"duplicate_query\", \"query already searched or planned in this scope\")",
+          "id": "_validate_research_associations:1826",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1831,
+          "end": 1831,
+          "source": "ResearchMutationError(\"invalid_input\", str(exc))",
+          "id": "_validate_research_associations:1831",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "53128ce0ec55cc24ad99943ae7d72b8d129f48855b212c27251ea04b71fdc473",
+      "native_tests": [
+        "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+        "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+        "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget",
+        "variant_identifiers_revalidated_after_edited_preview",
+        "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+        "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+        "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_limit",
+      "start": 1834,
+      "end": 1839,
+      "sites": [
+        {
+          "line": 1838,
+          "end": 1838,
+          "source": "ResearchMutationError(\"invalid_input\", f\"{field} must be a positive integer\")",
+          "id": "_research_limit:1838",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "ec669fbabdc32120603799dcf02beb1fa9e7dde6d2fe8a763107fe62e2a6310f",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "complete_actual_source_previews_and_identifier_observations_match",
+        "start_and_preview_preserve_distinct_source_limit_validation_order"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_start_research",
+      "start": 1842,
+      "end": 2055,
+      "sites": [
+        {
+          "line": 1866,
+          "end": 1866,
+          "source": "_error(\"tool_disabled\", \"slopsearx_start_research requires the research grant (MCP_GRANT_RESEARCH=1)\")",
+          "id": "slopsearx_start_research:1866",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1872,
+          "end": 1872,
+          "source": "_error(\"invalid_input\", \"question is required\", field=\"question\")",
+          "id": "slopsearx_start_research:1872",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1874,
+          "end": 1878,
+          "source": "_error(\n            \"invalid_input\",\n            f\"question exceeds the maximum length of {state.policy.max_query_length} characters\",\n            field=\"question\",\n        )",
+          "id": "slopsearx_start_research:1874",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1880,
+          "end": 1885,
+          "source": "_error(\n            \"invalid_input\",\n            f\"unknown strategy '{strategy}'\",\n            field=\"strategy\",\n            valid_alternatives=list(VALID_STRATEGIES),\n        )",
+          "id": "slopsearx_start_research:1880",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1895,
+          "end": 1895,
+          "source": "_error(\"store_unavailable\", \"composed research requires connected Valkey\")",
+          "id": "slopsearx_start_research:1895",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "W03-D06 explicit W08/W09 missing source-composition handoff; no complete source-composition parity claim"
+        },
+        {
+          "line": 1921,
+          "end": 1921,
+          "source": "_error(\"idempotency_conflict\", \"idempotency key refers to a different composed request\")",
+          "id": "slopsearx_start_research:1921",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1945,
+          "end": 1945,
+          "source": "ResearchMutationError(\"invalid_input\", \"subquestions exceeds query budget\")",
+          "id": "slopsearx_start_research:1945",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1948,
+          "end": 1948,
+          "source": "ResearchMutationError(\"invalid_input\", \"subquestion requires exactly id and question\")",
+          "id": "slopsearx_start_research:1948",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1954,
+          "end": 1954,
+          "source": "ResearchMutationError(\"invalid_input\", \"duplicate or missing subquestion\")",
+          "id": "slopsearx_start_research:1954",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1957,
+          "end": 1957,
+          "source": "_error(exc.code, str(exc))",
+          "id": "slopsearx_start_research:1957",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1966,
+          "end": 1966,
+          "source": "ResearchMutationError(\"invalid_input\", \"initial_plan must fit the positive query budget\")",
+          "id": "slopsearx_start_research:1966",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1974,
+          "end": 1974,
+          "source": "ResearchMutationError(\"duplicate_query\", \"plan repeats the same query and source scope\")",
+          "id": "slopsearx_start_research:1974",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1981,
+          "end": 1981,
+          "source": "ResearchMutationError(\"invalid_input\", str(exc))",
+          "id": "slopsearx_start_research:1981",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1983,
+          "end": 1983,
+          "source": "ResearchMutationError(\"invalid_input\", \"initial queries cannot reference parent attempts\")",
+          "id": "slopsearx_start_research:1983",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1985,
+          "end": 1985,
+          "source": "ResearchMutationError(\"invalid_input\", \"unknown subquestion_id\")",
+          "id": "slopsearx_start_research:1985",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 1987,
+          "end": 1987,
+          "source": "ResearchMutationError(\"job_budget_exceeded\", \"initial plan exceeds execution budget\")",
+          "id": "slopsearx_start_research:1987",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2001,
+          "end": 2001,
+          "source": "ResearchMutationError(str(error[\"error\"][\"code\"]), str(error[\"error\"][\"message\"]))",
+          "id": "slopsearx_start_research:2001",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2003,
+          "end": 2003,
+          "source": "_error(exc.code, str(exc))",
+          "id": "slopsearx_start_research:2003",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2005,
+          "end": 2005,
+          "source": "_error(\"invalid_input\", \"; \".join(warnings) or \"no queries could be planned\", field=\"strategy\")",
+          "id": "slopsearx_start_research:2005",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+            "actual_http_default_strategies_deadline_and_idempotent_admission",
+            "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+            "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "Unreachable with the four valid nonempty templates and positive query limit; explicit initial_plan empty rejects earlier. Four complete template records and invalid empty-plan controls preserve this source guard."
+        }
+      ],
+      "function_ast_sha256": "d4edb2f91e47a0b68861bd639e8726fd1a905f35dfc37647b437e3da6fae66ed",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "start_idempotency_keys_preserve_source_opaque_empty_whitespace_and_long_values",
+        "actual_http_default_strategies_deadline_and_idempotent_admission",
+        "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+        "complete_default_template_records_order_bounds_and_warnings_match_actual_source",
+        "start_and_preview_preserve_distinct_source_limit_validation_order"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_resolve_deadline",
+      "start": 2058,
+      "end": 2072,
+      "sites": [
+        {
+          "line": 2065,
+          "end": 2065,
+          "source": "_error(\"invalid_input\", \"deadline must be an ISO 8601 timestamp\", field=\"deadline\")",
+          "id": "_resolve_deadline:2065",
+          "native_tests": [
+            "complete_deadline_iso_formats_clamps_and_errors_match_actual_source",
+            "naive_deadline_gap_and_fold_match_actual_pinned_stdlib_primitives"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "afbb1f74dfc730f24d017e02a847881ce5021bebdc155837a60dcf3b38ed3e04",
+      "native_tests": [
+        "complete_deadline_iso_formats_clamps_and_errors_match_actual_source",
+        "naive_deadline_gap_and_fold_match_actual_pinned_stdlib_primitives"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_get_job",
+      "start": 2075,
+      "end": 2089,
+      "sites": [
+        {
+          "line": 2080,
+          "end": 2080,
+          "source": "_error(\"store_unavailable\", \"job store is unavailable; research jobs are not persisted\", field=\"job_id\")",
+          "id": "slopsearx_get_job:2080",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2083,
+          "end": 2083,
+          "source": "_error(\"invalid_job_id\", \"unknown job id\", field=\"job_id\")",
+          "id": "slopsearx_get_job:2083",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "c79b7a69a87974834a17824ffa2c9afb3bfe0efa352dc661bfa23eab3e9a6926",
+      "native_tests": [
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "unavailable_store_errors_keep_each_method_source_envelope",
+        "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_cancel_job",
+      "start": 2092,
+      "end": 2135,
+      "sites": [
+        {
+          "line": 2101,
+          "end": 2101,
+          "source": "_error(\"store_unavailable\", \"job store is unavailable; research jobs are not persisted\", field=\"job_id\")",
+          "id": "slopsearx_cancel_job:2101",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2104,
+          "end": 2104,
+          "source": "_error(\"invalid_job_id\", \"unknown job id\", field=\"job_id\")",
+          "id": "slopsearx_cancel_job:2104",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "e9a93a42d4112bc29717976b5817e784609dde01cc3768152438cd735bb24cf4",
+      "native_tests": [
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "unavailable_store_errors_keep_each_method_source_envelope",
+        "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+        "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_retry_research",
+      "start": 2138,
+      "end": 2226,
+      "sites": [
+        {
+          "line": 2149,
+          "end": 2149,
+          "source": "_error(\"tool_disabled\", \"slopsearx_retry_research requires the research grant (MCP_GRANT_RESEARCH=1)\")",
+          "id": "slopsearx_retry_research:2149",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2153,
+          "end": 2153,
+          "source": "_error(\"store_unavailable\", \"job store is unavailable; research jobs are not persisted\", field=\"job_id\")",
+          "id": "slopsearx_retry_research:2153",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2156,
+          "end": 2156,
+          "source": "_error(\"invalid_job_id\", \"unknown job id\", field=\"job_id\")",
+          "id": "slopsearx_retry_research:2156",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2176,
+          "end": 2182,
+          "source": "_error(\n            \"no_retryable_work\",\n            \"job has no failed or empty subqueries to retry\",\n            job_id=job.job_id,\n            state=job.state,\n            field=\"job_id\",\n        )",
+          "id": "slopsearx_retry_research:2176",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2202,
+          "end": 2202,
+          "source": "_error(\"invalid_job_id\", \"unknown job id\", field=\"job_id\")",
+          "id": "slopsearx_retry_research:2202",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+            "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+            "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "2e22706f673040223587e27d8cdacfc07467f3ba860763e84b4b930c6eb260bb",
+      "native_tests": [
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "retained_dossier_budget_errors_and_tenant_bound_grantless_cancel_match_source",
+        "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+        "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_extend_research",
+      "start": 2229,
+      "end": 2459,
+      "sites": [
+        {
+          "line": 2250,
+          "end": 2250,
+          "source": "_error(\"tool_disabled\", \"slopsearx_extend_research requires the research grant (MCP_GRANT_RESEARCH=1)\")",
+          "id": "slopsearx_extend_research:2250",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2253,
+          "end": 2253,
+          "source": "_error(\"store_unavailable\", \"job store is unavailable; research jobs are not persisted\", field=\"job_id\")",
+          "id": "slopsearx_extend_research:2253",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2256,
+          "end": 2256,
+          "source": "_error(\"invalid_job_id\", \"unknown job id\", field=\"job_id\")",
+          "id": "slopsearx_extend_research:2256",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2260,
+          "end": 2260,
+          "source": "_error(\"invalid_input\", \"workflow research jobs cannot be extended\", field=\"job_id\")",
+          "id": "slopsearx_extend_research:2260",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2266,
+          "end": 2271,
+          "source": "_error(\n            \"invalid_input\",\n            f\"unknown intent '{intent}'\",\n            field=\"intent\",\n            valid_alternatives=sorted(INTENT_PROFILES),\n        )",
+          "id": "slopsearx_extend_research:2266",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2274,
+          "end": 2279,
+          "source": "_error(\n            \"tool_disabled\",\n            f\"intent '{intent}' requires the {required_grant} grant ({GRANT_ENV[required_grant]}=1)\",\n            field=\"intent\",\n            grant=GRANT_ENV[required_grant],\n        )",
+          "id": "slopsearx_extend_research:2274",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2285,
+          "end": 2289,
+          "source": "_error(\n            \"invalid_intent\",\n            f\"intent '{intent}' selects a media type; research subqueries do not support media searches\",\n            field=\"intent\",\n        )",
+          "id": "slopsearx_extend_research:2285",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2292,
+          "end": 2292,
+          "source": "_error(\"invalid_input\", \"engines must be a nonempty list when supplied\", field=\"engines\")",
+          "id": "slopsearx_extend_research:2292",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2333,
+          "end": 2333,
+          "source": "_error(getattr(exc, \"code\", \"invalid_input\"), str(exc))",
+          "id": "slopsearx_extend_research:2333",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2357,
+          "end": 2357,
+          "source": "_error(\"idempotency_conflict\", \"continuation_key was used for another request\")",
+          "id": "slopsearx_extend_research:2357",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2362,
+          "end": 2362,
+          "source": "_error(exc.code, str(exc))",
+          "id": "slopsearx_extend_research:2362",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2368,
+          "end": 2368,
+          "source": "_error(\"deadline_exceeded\", \"job deadline has passed; cannot extend\", field=\"query\")",
+          "id": "slopsearx_extend_research:2368",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2374,
+          "end": 2380,
+          "source": "_error(\n            \"invalid_job_state\",\n            f\"job is in terminal state '{job.state}'; cannot extend\",\n            job_id=job.job_id,\n            state=job.state,\n            field=\"query\",\n        )",
+          "id": "slopsearx_extend_research:2374",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2387,
+          "end": 2387,
+          "source": "ResearchMutationError(\"invalid_job_state\", \"caller already completed this job\")",
+          "id": "slopsearx_extend_research:2387",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2392,
+          "end": 2392,
+          "source": "ResearchMutationError(\"idempotency_conflict\", \"continuation_key was used for another request\")",
+          "id": "slopsearx_extend_research:2392",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2393,
+          "end": 2393,
+          "source": "ResearchMutationError(\"continuation_replayed\", \"continuation already accepted\")",
+          "id": "slopsearx_extend_research:2393",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2396,
+          "end": 2396,
+          "source": "ResearchMutationError(\"job_budget_exceeded\", \"job query budget is exhausted\")",
+          "id": "slopsearx_extend_research:2396",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2399,
+          "end": 2399,
+          "source": "ResearchMutationError(\"job_budget_exceeded\", f\"job {key} budget is exhausted\")",
+          "id": "slopsearx_extend_research:2399",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2401,
+          "end": 2401,
+          "source": "ResearchMutationError(\"job_budget_exceeded\", \"follow-up exceeds per-query engine budget\")",
+          "id": "slopsearx_extend_research:2401",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2404,
+          "end": 2404,
+          "source": "ResearchMutationError(\"tool_disabled\", rejection)",
+          "id": "slopsearx_extend_research:2404",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2424,
+          "end": 2424,
+          "source": "_error(exc.code, str(exc), field=\"query\")",
+          "id": "slopsearx_extend_research:2424",
+          "native_tests": [
+            "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "evidence_preview_extend_replay_and_history_roundtrip",
+            "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+            "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "9e101b599a11e83b76ea1d5210ec6312791b9c0961bc15b76ebdafd011b9dcf3",
+      "native_tests": [
+        "source_direct_extension_errors_keep_policy_details_and_terminal_context",
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+        "evidence_preview_extend_replay_and_history_roundtrip",
+        "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+        "direct_extension_persisted_engine_cap_rejects_without_trimming_and_nullable_ids_remain_legacy",
+        "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+        "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+        "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_completion_replay_matches",
+      "start": 2462,
+      "end": 2469,
+      "sites": [],
+      "function_ast_sha256": "9c9821f5830f459f64f263c20948b59ec1a33ca53295d62e0011f3a78258524f",
+      "native_tests": [
+        "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+        "nonbudget_late_completion_and_legacy_completion_replay_keep_metadata_contract"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_update_research",
+      "start": 2472,
+      "end": 2545,
+      "sites": [
+        {
+          "line": 2485,
+          "end": 2485,
+          "source": "_error(\"tool_disabled\", \"research grant is required\")",
+          "id": "slopsearx_update_research:2485",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2488,
+          "end": 2488,
+          "source": "_error(\"store_unavailable\", \"job store is unavailable\")",
+          "id": "slopsearx_update_research:2488",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2491,
+          "end": 2491,
+          "source": "_error(\"invalid_job_id\", \"unknown job id\", field=\"job_id\")",
+          "id": "slopsearx_update_research:2491",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2495,
+          "end": 2495,
+          "source": "_error(\"invalid_input\", \"subquestion states must be resolved or unresolved\")",
+          "id": "slopsearx_update_research:2495",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2497,
+          "end": 2497,
+          "source": "_error(\"invalid_input\", \"complete must be a boolean\")",
+          "id": "slopsearx_update_research:2497",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2501,
+          "end": 2501,
+          "source": "_error(exc.code, str(exc))",
+          "id": "slopsearx_update_research:2501",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2504,
+          "end": 2504,
+          "source": "_error(\"invalid_input\", \"unknown subquestion id\")",
+          "id": "slopsearx_update_research:2504",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2507,
+          "end": 2507,
+          "source": "_error(\"idempotency_conflict\", \"completion request conflicts with the persisted completion\")",
+          "id": "slopsearx_update_research:2507",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2509,
+          "end": 2509,
+          "source": "_error(\"invalid_job_state\", \"job is already terminal\")",
+          "id": "slopsearx_update_research:2509",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2513,
+          "end": 2513,
+          "source": "ResearchMutationError(\"invalid_input\", \"unknown subquestion id\")",
+          "id": "slopsearx_update_research:2513",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2517,
+          "end": 2519,
+          "source": "ResearchMutationError(\n                \"idempotency_conflict\", \"completion request conflicts with the persisted completion\"\n            )",
+          "id": "slopsearx_update_research:2517",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2543,
+          "end": 2543,
+          "source": "_error(exc.code, str(exc))",
+          "id": "slopsearx_update_research:2543",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 2545,
+          "end": 2545,
+          "source": "_error(\"job_busy\", \"job is owned by a live worker; retry the progress update later\")",
+          "id": "slopsearx_update_research:2545",
+          "native_tests": [
+            "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "unavailable_store_errors_keep_each_method_source_envelope",
+            "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "cc5d5d100c364f6891e5345df4d16a07ba0605888b3b36242f371fd32e25be15",
+      "native_tests": [
+        "progress_completion_error_bodies_retain_source_precedence_and_busy_state",
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "unavailable_store_errors_keep_each_method_source_envelope",
+        "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "_limits",
+      "start": 36,
+      "end": 50,
+      "sites": [],
+      "function_ast_sha256": "c7c0745edef21fbca9666b06c4a3bf54bb156d632e7883c6719b1e8770fc5b2e",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "complete_actual_source_previews_and_identifier_observations_match",
+        "start_and_preview_preserve_distinct_source_limit_validation_order"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "_initial_preview",
+      "start": 53,
+      "end": 98,
+      "sites": [
+        {
+          "line": 61,
+          "end": 61,
+          "source": "ResearchMutationError(\"invalid_input\", \"question must be a nonempty bounded string\")",
+          "id": "_initial_preview:61",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "duplicate_variants_and_edited_initial_plans_never_persist",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 63,
+          "end": 63,
+          "source": "ResearchMutationError(\"job_budget_exceeded\", \"plan exceeds query or attempt budget; no entries dropped\")",
+          "id": "_initial_preview:63",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "duplicate_variants_and_edited_initial_plans_never_persist",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 66,
+          "end": 66,
+          "source": "ResearchMutationError(\"job_budget_exceeded\", \"plan exceeds engine-attempt budget; no entries dropped\")",
+          "id": "_initial_preview:66",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "duplicate_variants_and_edited_initial_plans_never_persist",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 69,
+          "end": 69,
+          "source": "ResearchMutationError(\"duplicate_query\", \"plan repeats the same query and source scope\")",
+          "id": "_initial_preview:69",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "duplicate_variants_and_edited_initial_plans_never_persist",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "315c83461557b4073f6f1ba8ac83e6d400761b61b69fda25263b1700fa2330be",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "complete_actual_source_previews_and_identifier_observations_match",
+        "duplicate_variants_and_edited_initial_plans_never_persist",
+        "start_and_preview_preserve_distinct_source_limit_validation_order"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "slopsearx_plan_research",
+      "start": 101,
+      "end": 150,
+      "sites": [
+        {
+          "line": 119,
+          "end": 119,
+          "source": "t._error(\"tool_disabled\", \"query planning requires MCP_GRANT_RESEARCH=1\")",
+          "id": "slopsearx_plan_research:119",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "malformed_decomposition_matrix_is_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 123,
+          "end": 123,
+          "source": "ResearchMutationError(\"invalid_input\", \"subquestions must leave a query slot for the original\")",
+          "id": "slopsearx_plan_research:123",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "malformed_decomposition_matrix_is_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 131,
+          "end": 131,
+          "source": "ResearchMutationError(\"invalid_input\", \"invalid subquestion fields\")",
+          "id": "slopsearx_plan_research:131",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "malformed_decomposition_matrix_is_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 135,
+          "end": 135,
+          "source": "ResearchMutationError(\"invalid_input\", \"subquestion ids must be nonempty and unique\")",
+          "id": "slopsearx_plan_research:135",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "malformed_decomposition_matrix_is_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 150,
+          "end": 150,
+          "source": "t._error(getattr(exc, \"code\", \"invalid_input\"), str(exc))",
+          "id": "slopsearx_plan_research:150",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "malformed_decomposition_matrix_is_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "ac6448a5b30a51d0ae74961ffd1c659d1d1b48b071a00eb29e6b63a930d79a50",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "malformed_decomposition_matrix_is_atomic",
+        "complete_actual_source_previews_and_identifier_observations_match",
+        "start_and_preview_preserve_distinct_source_limit_validation_order"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "slopsearx_plan_query_variants",
+      "start": 153,
+      "end": 189,
+      "sites": [
+        {
+          "line": 171,
+          "end": 171,
+          "source": "t._error(\"tool_disabled\", \"query planning requires MCP_GRANT_RESEARCH=1\")",
+          "id": "slopsearx_plan_query_variants:171",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "identifiers_exact_prefix_unicode_and_punctuation",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 175,
+          "end": 175,
+          "source": "ResearchMutationError(\"invalid_input\", \"variants must leave a query slot for the original\")",
+          "id": "slopsearx_plan_query_variants:175",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "identifiers_exact_prefix_unicode_and_punctuation",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 189,
+          "end": 189,
+          "source": "t._error(getattr(exc, \"code\", \"invalid_input\"), str(exc))",
+          "id": "slopsearx_plan_query_variants:189",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "identifiers_exact_prefix_unicode_and_punctuation",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "start_and_preview_preserve_distinct_source_limit_validation_order"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "6775a5a977eda62bf15157ad91c4ee43caaf74a5bc86c4b2fb7aad2bb0bfef35",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "identifiers_exact_prefix_unicode_and_punctuation",
+        "complete_actual_source_previews_and_identifier_observations_match",
+        "start_and_preview_preserve_distinct_source_limit_validation_order"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "slopsearx_plan_research_followup",
+      "start": 192,
+      "end": 283,
+      "sites": [
+        {
+          "line": 209,
+          "end": 209,
+          "source": "t._error(\"tool_disabled\", \"query planning requires MCP_GRANT_RESEARCH=1\")",
+          "id": "slopsearx_plan_research_followup:209",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 212,
+          "end": 212,
+          "source": "t._error(\"store_unavailable\", \"research job store is unavailable\")",
+          "id": "slopsearx_plan_research_followup:212",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 215,
+          "end": 215,
+          "source": "t._error(\"invalid_job_id\", \"unknown job id\")",
+          "id": "slopsearx_plan_research_followup:215",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 222,
+          "end": 222,
+          "source": "t._error(\"invalid_input\", \"workflow research jobs cannot be extended\")",
+          "id": "slopsearx_plan_research_followup:222",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 224,
+          "end": 224,
+          "source": "t._error(\"invalid_job_state\", \"job must be idle and open to continuations\")",
+          "id": "slopsearx_plan_research_followup:224",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 226,
+          "end": 226,
+          "source": "t._error(\"deadline_exceeded\", \"job deadline has passed\")",
+          "id": "slopsearx_plan_research_followup:226",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 247,
+          "end": 247,
+          "source": "ResearchMutationError(\"duplicate_query\", \"query already searched or planned in this scope\")",
+          "id": "slopsearx_plan_research_followup:247",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 258,
+          "end": 258,
+          "source": "ResearchMutationError(\"job_budget_exceeded\", \"job has insufficient remaining budget\")",
+          "id": "slopsearx_plan_research_followup:258",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 266,
+          "end": 266,
+          "source": "t._error(\"invalid_result_id\", \"captured evidence has invalid source provenance\")",
+          "id": "slopsearx_plan_research_followup:266",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "Source defensive record guard: its typed serializer always emits a nonempty list via primary fallback. Native SearchResult has String/BTreeSet<String>; malformed typed snapshot fails repository decoding. Empty-name/unknown and known-foreign actual Valkey controls preserve observable gate-before-subset behavior; no invented nonstring typed DTO."
+        },
+        {
+          "line": 270,
+          "end": 270,
+          "source": "t._error(\"invalid_result_id\", \"captured evidence does not match its parent source scope\")",
+          "id": "slopsearx_plan_research_followup:270",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 283,
+          "end": 283,
+          "source": "t._error(getattr(exc, \"code\", \"invalid_input\"), str(exc))",
+          "id": "slopsearx_plan_research_followup:283",
+          "native_tests": [
+            "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+            "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+            "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+            "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+            "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+            "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+            "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+            "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "6d5867b484804f16427c490cf465a84a538238e4b2961e5bff9df38a933ae18e",
+      "native_tests": [
+        "source_missing_job_and_method_grant_error_envelopes_preserve_fields",
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order",
+        "unrelated_retained_intent_does_not_replace_original_parent_authority_or_flags",
+        "followup_state_deadline_workflow_store_and_terminal_parent_matrix",
+        "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+        "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+        "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+      ]
+    },
+    {
+      "path": "slopsearx/research_planning.py",
+      "function": "validate_planning_metadata",
+      "start": 16,
+      "end": 30,
+      "sites": [
+        {
+          "line": 19,
+          "end": 19,
+          "source": "ValueError(\"unknown planning_method\")",
+          "id": "validate_planning_metadata:19",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 21,
+          "end": 21,
+          "source": "ValueError(\"evidence_result_ids must be a list of at most 10 result IDs\")",
+          "id": "validate_planning_metadata:21",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 23,
+          "end": 23,
+          "source": "ValueError(\"evidence_result_ids must contain nonempty bounded strings\")",
+          "id": "validate_planning_metadata:23",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 25,
+          "end": 25,
+          "source": "ValueError(\"duplicate evidence_result_ids\")",
+          "id": "validate_planning_metadata:25",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 27,
+          "end": 27,
+          "source": "ValueError(\"evidence references require a parent_attempt_id and rationale\")",
+          "id": "validate_planning_metadata:27",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        },
+        {
+          "line": 29,
+          "end": 29,
+          "source": "ValueError(\"evidence_followup requires admitted result references\")",
+          "id": "validate_planning_metadata:29",
+          "native_tests": [
+            "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+            "complete_actual_source_previews_and_identifier_observations_match",
+            "malformed_followups_reject_without_budget_or_dispatch"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "69e4368001846836cb1ec64d9ce616a8737f1881099ad79221278901efb322fe",
+      "native_tests": [
+        "source_business_input_envelopes_and_precedence_are_exact_and_atomic",
+        "complete_actual_source_previews_and_identifier_observations_match",
+        "malformed_followups_reject_without_budget_or_dispatch"
+      ]
+    },
+    {
+      "path": "slopsearx/research_planning.py",
+      "function": "validate_variant",
+      "start": 33,
+      "end": 38,
+      "sites": [
+        {
+          "line": 38,
+          "end": 38,
+          "source": "ValueError(\"terminology variants must preserve every CVE, DOI, arXiv or scoped-package identifier\")",
+          "id": "validate_variant:38",
+          "native_tests": [
+            "identifiers_exact_prefix_unicode_and_punctuation",
+            "variant_identifiers_revalidated_after_edited_preview",
+            "complete_actual_source_previews_and_identifier_observations_match"
+          ],
+          "qualification": "source-derived complete-body native controls; forwarded/helper cases also bind shared original-observation controls"
+        }
+      ],
+      "function_ast_sha256": "268c184da449fb8c70e3b2c59382d3e4133b7aa8ea044f6c750a517ed1e872c5",
+      "native_tests": [
+        "identifiers_exact_prefix_unicode_and_punctuation",
+        "variant_identifiers_revalidated_after_edited_preview",
+        "complete_actual_source_previews_and_identifier_observations_match"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/result_serialization.py",
+      "function": "_source_engines",
+      "start": 31,
+      "end": 37,
+      "function_ast_sha256": "07e095f335bfc7f24655eccee1b7c3a3b17d9ae5909e3840baa6c77a6f09cea3",
+      "native_tests": [
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order"
+      ],
+      "sites": []
+    },
+    {
+      "path": "slopsearx/mcp/result_serialization.py",
+      "function": "_result_record",
+      "start": 213,
+      "end": 263,
+      "function_ast_sha256": "e30898bee293ea309dbda3b298dd6f8dff691ad5094b8c951c18755cc6573c07",
+      "native_tests": [
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order"
+      ],
+      "sites": []
+    },
+    {
+      "path": "slopsearx/service.py",
+      "function": "_rehydrate_engines",
+      "start": 1802,
+      "end": 1820,
+      "function_ast_sha256": "40bc6645f5ce74057773165f7bb64d78c294fc2dd235f9fe8ce6b4b6f4ae56a5",
+      "native_tests": [
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order"
+      ],
+      "sites": []
+    },
+    {
+      "path": "slopsearx/service.py",
+      "function": "search_result_from_dict",
+      "start": 1823,
+      "end": 1848,
+      "function_ast_sha256": "847499cd96dc37fabfda263f6e131c37bf6c3a1219728669c6e934760b5d57cf",
+      "native_tests": [
+        "exact_snapshot_error_bodies_and_preexecution_budget_refusals_preserve_history",
+        "sensitive_scope_error_details_and_known_foreign_evidence_follow_source_order"
+      ],
+      "sites": []
+    }
+  ],
+  "site_count": 125,
+  "plan_id": "W03",
+  "original_capture_counts_unchanged": {
+    "source": 21,
+    "templates": 12,
+    "deadlines": 22,
+    "descriptors": 9,
+    "separate_stdlib_primitives": 2
+  },
+  "reviewed_plan": "Parent reviewed E01-E18 on 2026-10-17; opaque start-idempotency preservation is a direct advertised-field source correction.",
+  "typed_malformed_budget_boundary": "Valid bool, arbitrary-width signed integer, Unicode/underscore integer string and finite float-to-int ordering are preserved. Malformed/nonfinite retained workflow budget values fail closed as invalid_input; original int(...) raises ValueError/TypeError. This is explicit typed malformed-record handling, not a claim of identical arbitrary Python exception bodies.",
+  "transport_controls": [
+    "actual_authenticated_http_preview_execute_followup_replay_and_completion",
+    "real_native_stdio_process_preserves_complete_descriptors_preview_and_evidence_replay"
+  ],
+  "typed_provenance_guard": "Original immutable-snapshot rehydration coerces engines collection members and primary engine to str; original serializer emits sorted nonempty names or [primary]. Therefore its defensive nonstring/empty-list record guard is unreachable on this actual source path, not merely in Rust typing. Native actual empty-primary and known/unknown-foreign controls preserve reachable error ordering.",
+  "candidate003_review_corrections": {
+    "parent_scope": "Inherited authority is checked only for nonempty evidence IDs. Bare parent references still require valid terminal association; new-query/research/tenant/cost fences remain. Replay after revocation/completion/deadline preserves all stored values and history.",
+    "association_order": "Terminal parent, admitted-ID subset, current parent dispatch policy using its original requires_intent_grant and captured evidence, then resolved/duplicate/variant/preview-budget checks. Later actual-evidence authority is revalidated at fenced admission.",
+    "limit_order": "START queries/attempts/engines/engine_attempts/results; PREVIEW queries/engines/attempts/engine_attempts/results.",
+    "native_controls": [
+      "bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+      "bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+      "evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors",
+      "start_and_preview_preserve_distinct_source_limit_validation_order"
+    ],
+    "before_fix_result": "The candidate003 implementation reproduced four failures; exact source identity and raw log retained in immutable qualification evidence. No original-runtime observations added."
+  }
+}

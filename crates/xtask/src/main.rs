@@ -33,6 +33,7 @@ mod t09;
 mod w00;
 mod w01;
 mod w02;
+mod w03;
 mod w04;
 mod w05;
 mod w06;
@@ -484,6 +485,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "W00" => w00::check(root, records),
         "W01" => w01::check(root, records),
         "W02" => w02::check(root, records),
+        "W03" => w03::check(root, records),
         "W04" => w04::check(root, records),
         "W05" => w05::check(root, records),
         "W06" => w06::check(root, records),

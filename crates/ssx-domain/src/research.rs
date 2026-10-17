@@ -135,7 +135,7 @@ pub struct ResearchJob {
     pub owner_id: Option<String>,
     pub lease_token: Option<String>,
     pub lease_expires_at: FiniteF64,
-    pub subquestions: BTreeMap<String, BTreeMap<String, String>>,
+    pub subquestions: ssx_json::Map<String, BTreeMap<String, String>>,
     pub budget_limits: BTreeMap<String, u64>,
     pub budget_used: BTreeMap<String, u64>,
     pub seen_lead_ids: Vec<String>,
@@ -263,6 +263,7 @@ impl ResearchJob {
                         "done",
                         "failed",
                         "cancelled",
+                        "expired",
                         "interrupted",
                     ]
                     .contains(&a.state.as_str())

@@ -1,0 +1,135 @@
+{
+  "contract": "slopsearx.rust.w03.deadlines",
+  "baseline": "87af8096d46359241421ac747ed6aa1ad07f38ec",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "now": 1792238400.0,
+  "default_seconds": 600,
+  "observations": [
+    {
+      "input": null,
+      "output": 1792239000.0
+    },
+    {
+      "input": "",
+      "output": 1792239000.0
+    },
+    {
+      "input": "2026-10-17T14:30:12.1234567+00:00",
+      "output": 1792247412.123456
+    },
+    {
+      "input": "2026-10-17T14:30:12Z",
+      "output": 1792247412.0
+    },
+    {
+      "input": "2026-10-17 14:30:12",
+      "output": 1792261812.0
+    },
+    {
+      "input": "20261017T143012",
+      "output": 1792261812.0
+    },
+    {
+      "input": "2026-W42-6T14:30:12+00:00",
+      "output": 1792247412.0
+    },
+    {
+      "input": "2026W426T143012+0000",
+      "output": 1792247412.0
+    },
+    {
+      "input": "2026-10-17",
+      "output": 1792238460.0
+    },
+    {
+      "input": "2026-10-17T14:30",
+      "output": 1792261800.0
+    },
+    {
+      "input": "2026-10-17T14",
+      "output": 1792260000.0
+    },
+    {
+      "input": "2026-10-17T24:00:00Z",
+      "output": 1792281600.0
+    },
+    {
+      "input": "2026-10-17T14:30:12,5+01:30",
+      "output": 1792242012.5
+    },
+    {
+      "input": "2026-10-17T14:30:12+00:00:30.5",
+      "output": 1792247381.5
+    },
+    {
+      "input": "2026-10-17T14.5",
+      "output": {
+        "error": {
+          "code": "invalid_input",
+          "message": "deadline must be an ISO 8601 timestamp",
+          "field": "deadline"
+        }
+      }
+    },
+    {
+      "input": "2026-10-17T14:30.5",
+      "output": {
+        "error": {
+          "code": "invalid_input",
+          "message": "deadline must be an ISO 8601 timestamp",
+          "field": "deadline"
+        }
+      }
+    },
+    {
+      "input": "2000-01-01T00:00:00Z",
+      "output": 1792238460.0
+    },
+    {
+      "input": "2099-01-01T00:00:00Z",
+      "output": 1792324800.0
+    },
+    {
+      "input": "2026-02-30T12:00:00Z",
+      "output": {
+        "error": {
+          "code": "invalid_input",
+          "message": "deadline must be an ISO 8601 timestamp",
+          "field": "deadline"
+        }
+      }
+    },
+    {
+      "input": "2026-10-17T25:00:00Z",
+      "output": {
+        "error": {
+          "code": "invalid_input",
+          "message": "deadline must be an ISO 8601 timestamp",
+          "field": "deadline"
+        }
+      }
+    },
+    {
+      "input": "not-a-date",
+      "output": {
+        "error": {
+          "code": "invalid_input",
+          "message": "deadline must be an ISO 8601 timestamp",
+          "field": "deadline"
+        }
+      }
+    },
+    {
+      "input": "2026-10-17T14:30:12+24:00",
+      "output": {
+        "error": {
+          "code": "invalid_input",
+          "message": "deadline must be an ISO 8601 timestamp",
+          "field": "deadline"
+        }
+      }
+    }
+  ],
+  "provider_calls": 0,
+  "writes": 0
+}

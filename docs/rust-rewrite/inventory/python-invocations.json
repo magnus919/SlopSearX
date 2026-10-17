@@ -10984,4 +10984,49 @@
       "evidence": "Actual AST-inspected arguments/write sites; guidance only, no claim command executed or exists in CI/config."
     }
   ]
+,
+  "w03_historical_archives": {
+    "plan_id": "W03",
+    "baseline": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+    "new_runnable_python": 0,
+    "backend_runtime_delta": 0,
+    "archives": [
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_source.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_source.py.frozen",
+        "sha256": "601060feda97d852cf4e9d3a5ead688b66c4efd24a7c38fd1a521785c7323fc4",
+        "bytes": 7793,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_templates.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_templates.py.frozen",
+        "sha256": "2964020598aed26efd79b1a9fa956810d2a1a6c6175de32108cc8367ebb44ce7",
+        "bytes": 5010,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_deadlines.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_deadlines.py.frozen",
+        "sha256": "a622a0192d858197d0603665d03a76e0e8d4e7a29469019d5eace42d86cb9513",
+        "bytes": 4381,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_contract_map.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_contract_map.py.frozen",
+        "sha256": "64bc20910dfe15656568215bec125d44aef016da73a0c6ad5cf94b855617b611",
+        "bytes": 19328,
+        "before_mode": "0o644",
+        "after_mode": "0o644",
+        "role": "AST-only authoring; no backend import/provider/store calls; map is frozen; no further execution planned",
+        "actual_after_mode": "0o644"
+      }
+    ],
+    "consumer": "Native gate reads and hashes archives as data; it never imports, compiles, evaluates or executes Python. No runtime or mandatory Python invocation.",
+    "retirement_owner": "G08; retain immutable JSON/data-only history without claiming G08 complete"
+  }
 }

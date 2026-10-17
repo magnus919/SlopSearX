@@ -175,6 +175,11 @@ jobs:
         run: cargo xtask check W01 --output target/rust-evidence/W01.json
       - name: Durable research execution and recovery evidence
         run: cargo xtask check W02 --output target/rust-evidence/W02.json
+      - name: Caller-directed adaptive research planning and admission evidence
+        run: cargo xtask check W03 --output target/rust-evidence/W03.json
+        env:
+          SLOPSEARX_TEST_VALKEY_SERVER: ${{ runner.temp }}/ssx-valkey/bin/valkey-server
+          TZ: America/New_York
       - name: Saved execution observation and atomic publication evidence
         run: cargo xtask check W04 --output target/rust-evidence/W04.json
       - name: Saved event atomic publication replay acknowledgement and retention evidence
@@ -255,6 +260,7 @@ jobs:
             target/rust-evidence/W00.json
             target/rust-evidence/W01.json
             target/rust-evidence/W02.json
+            target/rust-evidence/W03.json
             target/rust-evidence/W04.json
             target/rust-evidence/W05.json
             target/rust-evidence/W11.json
