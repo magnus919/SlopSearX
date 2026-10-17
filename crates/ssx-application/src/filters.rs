@@ -146,6 +146,12 @@ pub struct DateFilterError {
     pub field: &'static str,
     pub message: String,
 }
+/// Allocation-free diagnostic for callers that own their error destination.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BorrowedDateFilterError {
+    pub field: &'static str,
+    pub message: &'static str,
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PublicationBounds {
     start: Option<i64>,
@@ -153,22 +159,37 @@ pub struct PublicationBounds {
 }
 impl PublicationBounds {
     pub fn new(start: Option<&str>, end: Option<&str>) -> Result<Self, DateFilterError> {
-        let parse = |value: Option<&str>, field| {
+        Self::new_borrowed(start, end).map_err(|error| DateFilterError {
+            field: error.field,
+            message: error.message.to_owned(),
+        })
+    }
+    /// Same canonical inclusive validator, without allocating a diagnostic.
+    /// Both inputs use the existing fixed ten-byte publication_day parser;
+    /// malformed lower bounds retain precedence over malformed upper bounds.
+    pub fn new_borrowed(
+        start: Option<&str>,
+        end: Option<&str>,
+    ) -> Result<Self, BorrowedDateFilterError> {
+        let parse = |value: Option<&str>, field, message| {
             value
-                .map(|s| {
-                    publication_day(s).ok_or_else(|| DateFilterError {
-                        field,
-                        message: format!("{field} must be a valid YYYY-MM-DD calendar date"),
-                    })
-                })
+                .map(|s| publication_day(s).ok_or(BorrowedDateFilterError { field, message }))
                 .transpose()
         };
-        let start = parse(start, "date_from")?;
-        let end = parse(end, "date_to")?;
+        let start = parse(
+            start,
+            "date_from",
+            "date_from must be a valid YYYY-MM-DD calendar date",
+        )?;
+        let end = parse(
+            end,
+            "date_to",
+            "date_to must be a valid YYYY-MM-DD calendar date",
+        )?;
         if start.zip(end).is_some_and(|(a, b)| a > b) {
-            return Err(DateFilterError {
+            return Err(BorrowedDateFilterError {
                 field: "date_from",
-                message: "date_from must be on or before date_to".into(),
+                message: "date_from must be on or before date_to",
             });
         }
         Ok(Self { start, end })
@@ -273,4 +294,86 @@ pub fn filter_results_by_time_range(
         .filter(|r| within_time_range(r.published_date.as_deref(), range, today) == Some(true))
         .cloned()
         .collect()
+}
+
+#[cfg(test)]
+mod borrowed_bounds_controls {
+    use super::*;
+    #[test]
+    fn canonical_inclusive_date_bounds_and_diagnostic_precedence() {
+        let valid = [
+            (None, None),
+            (Some("0001-01-01"), None),
+            (None, Some("9999-12-31")),
+            (Some("2024-02-29"), Some("2024-02-29")),
+            (Some("2020-02-29"), Some("2024-03-01")),
+        ];
+        for (lower, upper) in valid {
+            let actual = PublicationBounds::new_borrowed(lower, upper).unwrap();
+            assert_eq!(PublicationBounds::new(lower, upper).unwrap(), actual);
+            if let Some(lower) = lower {
+                assert!(actual.contains(Some(lower)));
+            }
+            if let Some(upper) = upper {
+                assert!(actual.contains(Some(upper)));
+            }
+            assert!(!actual.contains(None));
+            assert!(!actual.contains(Some("2024-02-30")));
+            assert!(!actual.contains(Some("20240229")));
+        }
+        let equal =
+            PublicationBounds::new_borrowed(Some("2024-02-29"), Some("2024-02-29")).unwrap();
+        assert!(!equal.contains(Some("2024-02-28")));
+        assert!(!equal.contains(Some("2024-03-01")));
+        for invalid in [
+            "",
+            "2023-02-29",
+            "1900-02-29",
+            "0000-01-01",
+            "10000-01-01",
+            "2024-2-29",
+            "2024-02-9",
+            "2024-13-01",
+            "2024-01-00",
+            "2024-04-31",
+            "２０２４-02-29",
+            "2024-02-29x",
+            " 2024-02-29",
+        ] {
+            for (lower, upper, field) in [
+                (Some(invalid), None, "date_from"),
+                (None, Some(invalid), "date_to"),
+                (Some(invalid), Some(invalid), "date_from"),
+            ] {
+                let e = PublicationBounds::new_borrowed(lower, upper).unwrap_err();
+                assert_eq!(e.field, field);
+                assert_eq!(
+                    e.message,
+                    if field == "date_from" {
+                        "date_from must be a valid YYYY-MM-DD calendar date"
+                    } else {
+                        "date_to must be a valid YYYY-MM-DD calendar date"
+                    }
+                );
+                let old = PublicationBounds::new(lower, upper).unwrap_err();
+                assert_eq!(old.field, e.field);
+                assert_eq!(old.message, e.message);
+            }
+        }
+        let e =
+            PublicationBounds::new_borrowed(Some("2024-03-01"), Some("2024-02-29")).unwrap_err();
+        assert_eq!(
+            e,
+            BorrowedDateFilterError {
+                field: "date_from",
+                message: "date_from must be on or before date_to"
+            }
+        );
+        let old = PublicationBounds::new(Some("2024-03-01"), Some("2024-02-29")).unwrap_err();
+        assert_eq!(old.field, e.field);
+        assert_eq!(old.message, e.message);
+        let huge = "x".repeat(1024 * 1024);
+        let e = PublicationBounds::new_borrowed(Some(&huge), Some("bad")).unwrap_err();
+        assert_eq!(e.field, "date_from");
+    }
 }

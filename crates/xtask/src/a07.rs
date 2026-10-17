@@ -9,6 +9,38 @@ use std::{
 };
 const ARTIFACTS: &[(&str, &str)] = &[
     (
+        "crates/ssx-infra/tests/support/default_ca_environment.rs",
+        "00aee0178f3f111449e5a6e99f495538a1eafa29ec95ced7d8343a3a8ee1108c",
+    ),
+    (
+        "crates/ssx-infra/src/http.rs",
+        "700c2a4f4526a97fe54b293c9465262ef94c5666caaae1c0e92f3fd5a64554a6",
+    ),
+    (
+        "crates/ssx-infra/tests/a07_context.rs",
+        "b913e5f13290c10b38ea1794b8cae976858ab4951bd0a43b478abb93109eae69",
+    ),
+    (
+        "crates/ssx-infra/tests/support/a07_cold_context.rs",
+        "35b0c77f25a4175fd8b25e63f10e2d95d13addde018264f3d5cb4dcf4248c55f",
+    ),
+    (
+        "crates/ssx-infra/tests/support/a07_http_clock.rs",
+        "df1b65b18a25f65586e3cc453061b9a78a9a5ce0c1bad9d20885b4df5c99866a",
+    ),
+    (
+        "crates/ssx-infra/tests/support/a07_owner_clock.rs",
+        "a3b1f31b273d82e527f587a86e27f7e1d7d972f1bbc9255767a24c632c1f9f4a",
+    ),
+    (
+        "crates/ssx-infra/tests/support/a07_source_replay.rs",
+        "f44fa9e3ac288e63bedfad3f41e6f3bc40a0182e35024a45ce3fa3c4311da04a",
+    ),
+    (
+        "crates/ssx-infra/src/http/monotonic.rs",
+        "6ea309356076a9dda8f7a313f2dd5f476c624ff28663c91b104bbf86bde63ec6",
+    ),
+    (
         "docs/rust-rewrite/a07/cases.json",
         "2970b172ad13b44ea55e502cddf2a6c2ec0f18eb75eb6eadfe095d2e586067b9",
     ),
@@ -18,7 +50,7 @@ const ARTIFACTS: &[(&str, &str)] = &[
     ),
     (
         "docs/rust-rewrite/a07/coverage.json",
-        "b3cfff83d19d76148e6e5e5a48630e2c3926fe4b5b1009a971cf47dfb40fd748",
+        "be6826b82c155617d02ce94bc48a0ddedbc75abdd535477f2c7889c63676661b",
     ),
     (
         "docs/rust-rewrite/a07/fixtures/clinicaltrials-success.json",
@@ -256,6 +288,71 @@ fn verify_executed(output: &str, expected: &BTreeSet<String>) -> Result<()> {
         "A07 listed native tests were missing, ignored, or did not pass",
     )
 }
+const MOVED_FULL: [(&str, &str); 4] = [
+    (
+        "clinicaltrials-config-timeout_ms-bool-True",
+        "clinicaltrials_bool_true_full_source_replay",
+    ),
+    (
+        "europepmc-config-timeout_ms-bool-True",
+        "europepmc_bool_true_full_source_replay",
+    ),
+    (
+        "pubchem-config-timeout_ms-bool-True",
+        "pubchem_bool_true_full_source_replay",
+    ),
+    (
+        "uniprot-config-timeout_ms-bool-True",
+        "uniprot_bool_true_full_source_replay",
+    ),
+];
+fn verify_replay_receipts(bytes: &str, expected: &BTreeSet<String>) -> Result<()> {
+    let mut actual = BTreeSet::new();
+    for line in bytes.lines() {
+        let row: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
+        require(
+            row["kind"] == "full_public_SearchEngine"
+                && row["compared"] == "original_config_status_requests_complete_output",
+            "A07 incomplete full-adapter receipt",
+        )?;
+        let id = row["id"]
+            .as_str()
+            .filter(|id| !id.is_empty())
+            .ok_or("A07 missing replay receipt ID")?;
+        require(
+            actual.insert(id.to_owned()),
+            "A07 duplicate executed source ID",
+        )?;
+    }
+    require(
+        actual == *expected,
+        "A07 exact full-adapter172 source ID union was not executed",
+    )
+}
+struct ReplayReceipts(std::path::PathBuf);
+impl ReplayReceipts {
+    fn fresh() -> Result<Self> {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|e| e.to_string())?
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!(
+            "a07-full-replay-{}-{stamp}.jsonl",
+            std::process::id()
+        ));
+        std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .map_err(|e| e.to_string())?;
+        Ok(Self(path))
+    }
+}
+impl Drop for ReplayReceipts {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.0);
+    }
+}
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     verify(root, ARTIFACTS)?;
     let ids = primary_ids(root)?;
@@ -301,6 +398,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             &format!("A07 original source changed: {path}"),
         )?;
     }
+    let receipts = ReplayReceipts::fresh()?;
     let mut available = BTreeMap::new();
     for (package, target) in [
         ("ssx-infra", "lib"),
@@ -328,6 +426,34 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .collect::<BTreeSet<_>>();
         require(!names.is_empty(), "A07 native binary contains no tests")?;
         available.insert((package.to_owned(), target.to_owned()), names);
+    }
+    let migrated = coverage["full_source_execution"]["moved"]
+        .as_array()
+        .ok_or("A07 full replay migration missing")?;
+    require(
+        migrated.len() == 4
+            && coverage["full_source_execution"]["total"] == 172
+            && coverage["full_source_execution"]["remaining"]["count"] == 168,
+        "A07 full replay partition changed",
+    )?;
+    for (id, name) in MOVED_FULL {
+        let matching = migrated
+            .iter()
+            .filter(|row| row["id"] == id)
+            .collect::<Vec<_>>();
+        require(
+            matching.len() == 1,
+            "A07 missing/duplicate migrated source ID",
+        )?;
+        let binding = matching[0];
+        require(
+            binding["package"] == "ssx-infra"
+                && binding["target"] == "lib"
+                && binding["qualified_name"]
+                    == format!("adapters::clinicaltrials::owner_clock_tests::{name}"),
+            "A07 wrong full-adapter migration identity",
+        )?;
+        exact_test_present(binding, &available)?;
     }
     for mapping in coverage["regression_mapping"]
         .as_array()
@@ -391,15 +517,39 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             ]);
         }
         args.extend(["--", "--format", "pretty"]);
-        let output = command(root, "cargo", &args, records)?;
+        // Only test evidence output is configured; Manual clocks have no env path.
+        let receipt_arg = format!("A07_COMPLETED_CASES={}", receipts.0.display());
+        let mut run_args = vec![receipt_arg.as_str(), "cargo"];
+        run_args.extend(args.iter().copied());
+        let output = command(root, "env", &run_args, records)?;
         verify_executed(&output, expected)?;
     }
+    verify_replay_receipts(
+        &fs::read_to_string(&receipts.0).map_err(|e| e.to_string())?,
+        &ids,
+    )?;
     records.push(json!({"A07":{"primary_source_controls":ids.len(),"factory_availability":"actual Registry attachment, separate from historical F06 declaration","temporary_python":"not executed or required","remaining_boundaries":"G02 retained-response/global input accounting and full MCP/HTML transport remain separate"}}));
     Ok(())
 }
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn full_replay_receipts_reject_missing_duplicate_wrong_kind_and_extra_ids() {
+        let expected = BTreeSet::from(["one".to_owned()]);
+        let row=json!({"id":"one","kind":"full_public_SearchEngine","compared":"original_config_status_requests_complete_output"}).to_string();
+        assert!(verify_replay_receipts(&row, &expected).is_ok());
+        assert!(verify_replay_receipts("", &expected).is_err());
+        assert!(verify_replay_receipts(&format!("{row}\n{row}"), &expected).is_err());
+        assert!(
+            verify_replay_receipts(
+                &row.replace("full_public_SearchEngine", "semantic_only"),
+                &expected
+            )
+            .is_err()
+        );
+        assert!(verify_replay_receipts(&row, &BTreeSet::new()).is_err());
+    }
     #[test]
     fn ignored_missing_and_wrong_identity_execution_fail_closed() {
         let expected = BTreeSet::from(["module::required".to_owned()]);

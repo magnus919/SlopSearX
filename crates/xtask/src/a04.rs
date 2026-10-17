@@ -272,7 +272,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     ensure(
         decoder_tests
             .lines()
-            .any(|l| l.starts_with("test result:") && l.contains("4 passed; 0 failed; 0 ignored")),
+            .any(|l| l.starts_with("test result:") && l.contains("5 passed; 0 failed; 0 ignored")),
         "A04 source JSON grammar, byte/depth/digit limits, and cancellation tests must pass",
     )?;
     let representation_bytes =

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "exact per-case transport-library User-Agent differences only; no full transport-header parity claim",
+  "scope": "Exact per-case source HTTPX vs reviewed native SlopSearX default User-Agent identity difference; adapter request overrides preserved; no full transport-header parity claim",
   "records": [
     {
       "id": "fred-success",
@@ -9,9 +9,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-empty",
@@ -20,9 +20,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-missing",
@@ -31,9 +31,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-outer-list",
@@ -42,9 +42,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-outer-null",
@@ -53,9 +53,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-http-404",
@@ -64,9 +64,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-http-429",
@@ -75,9 +75,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-http-503",
@@ -86,9 +86,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-max-0",
@@ -97,9 +97,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-max--1",
@@ -108,9 +108,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-max-True",
@@ -119,9 +119,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-max-2.0",
@@ -130,9 +130,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-max-'2'",
@@ -141,9 +141,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-timeout-True",
@@ -152,9 +152,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-malformed-json",
@@ -163,9 +163,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-timeout",
@@ -174,9 +174,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-success",
@@ -185,9 +185,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-empty",
@@ -197,10 +197,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-missing",
@@ -210,10 +210,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-outer-list",
@@ -222,9 +222,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-outer-null",
@@ -233,9 +233,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-http-404",
@@ -245,10 +245,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-http-429",
@@ -257,9 +257,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-http-503",
@@ -268,9 +268,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-max-0",
@@ -279,9 +279,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-max--1",
@@ -290,9 +290,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-max-True",
@@ -301,9 +301,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-max-2.0",
@@ -312,9 +312,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-max-'2'",
@@ -323,9 +323,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-timeout-True",
@@ -334,9 +334,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-malformed-json",
@@ -345,9 +345,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-timeout",
@@ -356,9 +356,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-success",
@@ -367,9 +367,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-empty",
@@ -378,9 +378,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-missing",
@@ -389,9 +389,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-outer-list",
@@ -400,9 +400,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-outer-null",
@@ -411,9 +411,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-http-404",
@@ -422,9 +422,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-http-429",
@@ -433,9 +433,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-http-503",
@@ -444,9 +444,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-max-0",
@@ -455,9 +455,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-max--1",
@@ -466,9 +466,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-max-True",
@@ -477,9 +477,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-max-2.0",
@@ -488,9 +488,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-max-'2'",
@@ -499,9 +499,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-timeout-True",
@@ -510,9 +510,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-malformed-json",
@@ -521,9 +521,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-timeout",
@@ -532,9 +532,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-None",
@@ -543,9 +543,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-''",
@@ -554,9 +554,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-[]",
@@ -565,9 +565,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-{}",
@@ -576,9 +576,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-'9.5'",
@@ -587,9 +587,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-True",
@@ -598,9 +598,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-'NaN'",
@@ -609,9 +609,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-'Infinity'",
@@ -620,9 +620,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-popularity-'bad'",
@@ -631,9 +631,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-series-None",
@@ -642,9 +642,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-series-{}",
@@ -653,9 +653,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-series-''",
@@ -664,9 +664,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-series-1",
@@ -675,9 +675,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-falsey-payload",
@@ -686,9 +686,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-rest",
@@ -697,9 +697,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-search-override",
@@ -708,9 +708,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-/cases/1953/1",
@@ -719,9 +719,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-/cases/../..",
@@ -730,9 +730,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-https://user:pw@API.OYEZ.ORG:444/cases/19%35%33/1?x=1#f",
@@ -741,9 +741,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-/cases/1953/a%2Fb",
@@ -752,9 +752,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-https://evil.test/cases/1953/1",
@@ -763,9 +763,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-/cases/1953",
@@ -774,9 +774,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-/cases//1",
@@ -785,9 +785,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-cases/1953/1",
@@ -796,9 +796,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-order-omit",
@@ -807,9 +807,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-score-None",
@@ -818,9 +818,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-score-'bad'",
@@ -829,9 +829,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-score-True",
@@ -840,9 +840,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-score-'9.5'",
@@ -851,9 +851,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-score-'NaN'",
@@ -862,9 +862,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-score-[]",
@@ -873,9 +873,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-score-{}",
@@ -884,9 +884,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-fallback",
@@ -896,10 +896,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-no-id-suppresses-fallback",
@@ -908,9 +908,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-stage-failure-0",
@@ -919,9 +919,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-stage-failure-1",
@@ -931,10 +931,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-results-None",
@@ -943,9 +943,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-results-{}",
@@ -954,9 +954,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-results-''",
@@ -965,9 +965,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-results-1",
@@ -976,9 +976,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-query-Advil",
@@ -987,42 +987,42 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
-      "id": "openfda-query-\u00dftra\u00dfe",
+      "id": "openfda-query-ßtraße",
       "header": "user-agent",
       "source_values": [
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
-      "id": "openfda-query-\u01f3ELTA test",
+      "id": "openfda-query-ǳELTA test",
       "header": "user-agent",
       "source_values": [
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
-      "id": "openfda-query-istanbul \u0130 \u03a3\u039f\u03a3",
+      "id": "openfda-query-istanbul İ ΣΟΣ",
       "header": "user-agent",
       "source_values": [
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-query-a\"b\\c",
@@ -1031,9 +1031,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-query-they're BILL'S",
@@ -1042,20 +1042,20 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
-      "id": "openfda-query-\u0149\ufb03",
+      "id": "openfda-query-ŉﬃ",
       "header": "user-agent",
       "source_values": [
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Falseset_id",
@@ -1064,9 +1064,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Trueset_id",
@@ -1075,9 +1075,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Falseid",
@@ -1086,9 +1086,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Trueid",
@@ -1097,9 +1097,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Falsespl_id",
@@ -1108,9 +1108,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Truespl_id",
@@ -1119,9 +1119,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Falsespl_set_id",
@@ -1130,9 +1130,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-Truespl_set_id",
@@ -1141,9 +1141,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-rank-dedup",
@@ -1152,9 +1152,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-title-None",
@@ -1163,9 +1163,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-title-True",
@@ -1174,9 +1174,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-title-42",
@@ -1185,9 +1185,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-title-[]",
@@ -1196,9 +1196,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-title-{}",
@@ -1207,9 +1207,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-title-'A\\ud800B'",
@@ -1218,9 +1218,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-notes-surrogate-'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\\ud800'",
@@ -1229,9 +1229,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-notes-surrogate-'\\ud800bad'",
@@ -1240,9 +1240,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-boundary-https://www.oyez.org:bad/cases/1953/1",
@@ -1251,9 +1251,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-boundary-https://www.%6fyez.org/cases/1953/1",
@@ -1262,20 +1262,20 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
-      "id": "oyez-url-boundary-/cases/1953/a%\u00e9",
+      "id": "oyez-url-boundary-/cases/1953/a%é",
       "header": "user-agent",
       "source_values": [
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-boundary-/cases/1953/%FF",
@@ -1284,9 +1284,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-url-boundary-/cases/1953/1;params",
@@ -1295,9 +1295,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-name-surrogate-'title\\ud800'",
@@ -1306,9 +1306,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-name-surrogate-[None, 'title\\ud800']",
@@ -1317,9 +1317,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-results-shape-[]",
@@ -1328,9 +1328,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-results-shape-{}",
@@ -1339,9 +1339,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-results-shape-None",
@@ -1350,9 +1350,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-results-shape-True",
@@ -1361,9 +1361,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-results-shape-42",
@@ -1372,9 +1372,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-results-shape-'wrong'",
@@ -1383,9 +1383,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-hits-shape-None",
@@ -1394,9 +1394,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-hits-shape-[]",
@@ -1405,9 +1405,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-hits-shape-{}",
@@ -1416,9 +1416,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-hits-shape-True",
@@ -1427,9 +1427,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-hits-shape-42",
@@ -1438,9 +1438,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-hits-shape-'bad'",
@@ -1449,9 +1449,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-harmonized-None",
@@ -1460,9 +1460,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-harmonized-[]",
@@ -1471,9 +1471,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-harmonized-{}",
@@ -1482,9 +1482,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-harmonized-True",
@@ -1493,9 +1493,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-harmonized-42",
@@ -1504,9 +1504,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-harmonized-'bad'",
@@ -1515,9 +1515,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-indications-surrogate-'IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII\\ud800'",
@@ -1526,9 +1526,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-indications-surrogate-'\\ud800bad'",
@@ -1537,9 +1537,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-surrogate-'id\\ud800'",
@@ -1548,9 +1548,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-id-surrogate-['id\\ud800']",
@@ -1559,9 +1559,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-name-surrogate-'brand\\ud800'",
@@ -1570,9 +1570,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "openfda-name-surrogate-['brand\\ud800']",
@@ -1581,9 +1581,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-redaction-245",
@@ -1592,9 +1592,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-redaction-246",
@@ -1603,9 +1603,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-redaction-247",
@@ -1614,9 +1614,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "fred-redaction-248",
@@ -1625,9 +1625,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-00",
@@ -1636,9 +1636,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-01",
@@ -1647,9 +1647,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-02",
@@ -1658,9 +1658,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-03",
@@ -1669,9 +1669,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-04",
@@ -1680,9 +1680,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-05",
@@ -1691,9 +1691,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-06",
@@ -1702,9 +1702,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-07",
@@ -1713,9 +1713,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-08",
@@ -1724,9 +1724,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-09",
@@ -1735,9 +1735,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-10",
@@ -1746,9 +1746,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-11",
@@ -1757,9 +1757,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-12",
@@ -1768,9 +1768,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-13",
@@ -1779,9 +1779,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-parse-14",
@@ -1790,9 +1790,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-00",
@@ -1801,9 +1801,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-01",
@@ -1812,9 +1812,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-02",
@@ -1823,9 +1823,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-03",
@@ -1834,9 +1834,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-04",
@@ -1845,9 +1845,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-05",
@@ -1856,9 +1856,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-06",
@@ -1867,9 +1867,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-07",
@@ -1878,9 +1878,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-08",
@@ -1889,9 +1889,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-09",
@@ -1900,9 +1900,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-10",
@@ -1911,9 +1911,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-11",
@@ -1922,9 +1922,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-12",
@@ -1933,9 +1933,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-13",
@@ -1944,9 +1944,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-14",
@@ -1955,9 +1955,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-15",
@@ -1966,9 +1966,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-16",
@@ -1977,9 +1977,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-17",
@@ -1988,9 +1988,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-18",
@@ -1999,9 +1999,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-19",
@@ -2010,9 +2010,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-20",
@@ -2021,9 +2021,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-21",
@@ -2032,9 +2032,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-22",
@@ -2043,9 +2043,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-23",
@@ -2054,9 +2054,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-24",
@@ -2065,9 +2065,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-25",
@@ -2076,9 +2076,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-26",
@@ -2087,9 +2087,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-27",
@@ -2098,9 +2098,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-28",
@@ -2109,9 +2109,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-29",
@@ -2120,9 +2120,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-30",
@@ -2131,9 +2131,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-31",
@@ -2142,9 +2142,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-32",
@@ -2153,9 +2153,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-33",
@@ -2164,9 +2164,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-34",
@@ -2175,9 +2175,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-netloc-35",
@@ -2186,9 +2186,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-relative-netloc-0",
@@ -2197,9 +2197,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-relative-netloc-1",
@@ -2208,9 +2208,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "oyez-post-number-3",
@@ -2219,9 +2219,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance#0",
@@ -2230,9 +2230,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links#0",
@@ -2241,9 +2241,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default#0",
@@ -2253,10 +2253,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format#0",
@@ -2265,9 +2265,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback#0",
@@ -2277,10 +2277,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty#0",
@@ -2290,10 +2290,10 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null,
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)",
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_malformed_results_are_an_error#0",
@@ -2302,9 +2302,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved#0",
@@ -2313,9 +2313,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results#0",
@@ -2324,9 +2324,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param#0",
@@ -2335,9 +2335,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized#0",
@@ -2346,9 +2346,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized#0",
@@ -2357,9 +2357,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited#0",
@@ -2368,9 +2368,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_fred.py::TestFREDAdapterSearch::test_timeout#0",
@@ -2379,9 +2379,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes#0",
@@ -2390,9 +2390,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order#0",
@@ -2401,9 +2401,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits#0",
@@ -2412,9 +2412,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge#0",
@@ -2423,9 +2423,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape#0",
@@ -2434,9 +2434,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search#0",
@@ -2445,9 +2445,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results#0",
@@ -2456,9 +2456,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results#0",
@@ -2467,9 +2467,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results#0",
@@ -2478,9 +2478,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_payload.py::TestFinancialPayload::test_fred_payload#0",
@@ -2489,9 +2489,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload#0",
@@ -2500,9 +2500,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent#0",
@@ -2511,9 +2511,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]#0",
@@ -2522,9 +2522,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]#0",
@@ -2533,9 +2533,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]#0",
@@ -2544,9 +2544,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]#0",
@@ -2555,9 +2555,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     },
     {
       "id": "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url#0",
@@ -2566,9 +2566,9 @@
         "python-httpx/0.28.1"
       ],
       "native_values": [
-        null
+        "SlopSearX/0.1.0 (meta search engine; agent-native)"
       ],
-      "difference": "HTTPX library identity is not synthesized by native F08; adapter-owned Accept/content-type and exact request contract remain asserted; real loopback verifies header absence."
+      "difference": "Accepted A06 default native identity intentionally differs from HTTPX library identity. Request/session overrides remain authoritative; actual socket assertion checks the native profile. No provider compatibility improvement or full header parity claimed."
     }
   ]
 }

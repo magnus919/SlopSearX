@@ -4,7 +4,7 @@
 //! enable serde_json's globally unified `arbitrary_precision` feature: its private
 //! number map tag collides with otherwise ordinary user object keys.
 pub mod float;
-pub use float::{FloatError, FloatNormalizer, parse_json_f64};
+pub use float::{FloatBufferError, FloatError, FloatNormalizer, parse_json_f64};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::ops::{Index, IndexMut};
 pub type Error = serde_json::Error;

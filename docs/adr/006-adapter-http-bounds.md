@@ -55,3 +55,19 @@ and use no providers. O02/O04 still own platform root/system-proxy
 qualification; A01–A14 own actual parsers and provider request sequences. The
 new limits and stricter redirects require review before downstream adoption;
 this decision does not itself assert complete provider/portal parity.
+
+## Shared native User-Agent amendment (candidate, parent review required)
+
+Outbound AdapterHttp sessions start with the static versioned identity
+`SlopSearX/<ssx-infra package version> (meta search engine; agent-native)`.
+An explicit request value overrides an explicit session value, which overrides
+this default. Each new session constructs only this static default; it never
+copies authorization, cookies, or tenant headers from another session or pool.
+Redirects retain the selected User-Agent under existing redirect rules.
+
+This intentionally changes the default wire identity from pinned Python HTTPX's
+`python-httpx/0.28.1`. It does not claim request-header parity or improved provider
+compatibility. Adapters with explicit User-Agent values retain those values.
+Default headers remain inside the outstanding F08/G02 backing ownership envelope;
+a static identity does not qualify opaque HeaderMap/socket/cookie allocations.
+Protected identity/gateway clients do not inherit AdapterHttp policy.

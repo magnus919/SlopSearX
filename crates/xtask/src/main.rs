@@ -4,6 +4,8 @@ mod a02;
 mod a03;
 mod a04;
 mod a05;
+mod a06;
+mod a06_resource;
 mod a07;
 mod a08;
 mod a09;
@@ -460,6 +462,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
     match id {
         "A01" => a01::check(root, records),
         "A04" => a04::check(root, records),
+        "A06" => a06::check(root, records),
         "A07" => a07::check(root, records),
         "A08" => a08::check(root, records),
         "A09" => a09::check(root, records),
@@ -547,6 +550,23 @@ fn main() {
         .expect("wall clock after epoch")
         .as_millis();
     let args: Vec<_> = std::env::args().skip(1).collect();
+    if args.len() == 2 && args[0] == "a06-source-cases" {
+        if let Err(error) = a06::check_source_log(&root, Path::new(&args[1])) {
+            eprintln!("{error}");
+            std::process::exit(1);
+        }
+        println!("A06 exact completed source case inventory passed");
+        return;
+    }
+    if args.as_slice() == ["a06-native-resource"] {
+        let mut records = Vec::new();
+        let result = a06_resource::check(&root, &mut records);
+        println!("{}", serde_json::to_string_pretty(&json!({"status":if result.is_ok(){"passed"}else{"failed"},"commands":records,"error":result.as_ref().err()})).expect("native resource evidence"));
+        if result.is_err() {
+            std::process::exit(1);
+        }
+        return;
+    }
     if args.first().is_some_and(|a| a == "ci-helper") {
         if let Err(error) = o06::helper(&root, &args[1..]) {
             eprintln!("{error}");

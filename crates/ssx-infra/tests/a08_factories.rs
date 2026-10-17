@@ -1,3 +1,5 @@
+#[path = "support/default_ca_environment.rs"]
+mod default_ca_environment;
 use ssx_application::{AdmissionDecision, PortFuture, SearchAdmission, SearchContext};
 use ssx_domain::{EngineStatus, SearchRequest};
 use ssx_infra::{
@@ -174,7 +176,7 @@ fn settings(edgar: EdgarConfig) -> RegulatorySettings {
 }
 
 const NAMES: [&str; 4] = ["edgar", "fred", "openfda", "oyez"];
-fn wired(
+async fn wired(
     name: &str,
     base: &str,
     timeout: i64,
@@ -189,7 +191,18 @@ fn wired(
     config.fred.settings.timeout_ms = config.edgar.timeout_ms.clone();
     config.openfda.timeout_ms = config.edgar.timeout_ms.clone();
     config.oyez.settings.timeout_ms = config.edgar.timeout_ms.clone();
-    let http = Arc::new(AdapterHttp::default());
+    let startup = Instant::now();
+    let (http, preparation) = AdapterHttp::new_ready(
+        tokio::time::Instant::now() + Duration::from_secs(10),
+        ssx_infra::http::Cancellation::default(),
+    )
+    .await
+    .unwrap();
+    eprintln!(
+        "A08_STARTUP_DIAGNOSTIC engine={name} elapsed={:?} preparation={preparation:?}",
+        startup.elapsed()
+    );
+    assert_eq!(preparation, ssx_infra::http::Preparation::Prepared);
     let mut registry = Registry::builtins().unwrap();
     register_regulatory(&mut registry, http.clone(), admission, config).unwrap();
     assert!(registry.is_available(name));
@@ -197,6 +210,11 @@ fn wired(
 }
 #[tokio::test]
 async fn all_four_future_drops_close_real_pending_sockets() {
+    if default_ca_environment::default_ca_test_environment(
+        "all_four_future_drops_close_real_pending_sockets",
+    ) {
+        return;
+    }
     for name in NAMES {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
@@ -208,9 +226,12 @@ async fn all_four_future_drops_close_real_pending_sockets() {
             assert!(count > 0);
             if name != "edgar" {
                 assert!(
-                    !String::from_utf8_lossy(&data[..count])
+                    String::from_utf8_lossy(&data[..count])
                         .to_ascii_lowercase()
-                        .contains("user-agent:")
+                        .contains(&format!(
+                            "user-agent: {}",
+                            ssx_infra::http::DEFAULT_USER_AGENT.to_ascii_lowercase()
+                        ))
                 );
             }
             tx.send(()).unwrap();
@@ -228,7 +249,8 @@ async fn all_four_future_drops_close_real_pending_sockets() {
             &format!("http://{addr}/slow"),
             5000,
             Arc::new(AllowAllAdmission),
-        );
+        )
+        .await;
         let engine = registry.instantiate(name).unwrap();
         let q = SearchRequest {
             query: "test".into(),
@@ -243,6 +265,11 @@ async fn all_four_future_drops_close_real_pending_sockets() {
 }
 #[tokio::test]
 async fn all_four_real_network_timers_match_actual_source_loopback() {
+    if default_ca_environment::default_ca_test_environment(
+        "all_four_real_network_timers_match_actual_source_loopback",
+    ) {
+        return;
+    }
     let source: serde_json::Value = serde_json::from_str(include_str!(
         "../../../docs/rust-rewrite/a08/timeout-loopback.json"
     ))
@@ -263,14 +290,21 @@ async fn all_four_real_network_timers_match_actual_source_loopback() {
                 &format!("http://{addr}/slow"),
                 timeout,
                 Arc::new(AllowAllAdmission),
-            );
+            )
+            .await;
             let engine = registry.instantiate(name).unwrap();
             if timeout > 0 {
+                let started = Instant::now();
                 let server = tokio::spawn(async move {
                     let (mut stream, _) = listener.accept().await.unwrap();
+                    let accepted = started.elapsed();
                     let mut data = vec![0; 8192];
                     let n = stream.read(&mut data).await.unwrap();
-                    assert!(n > 0);
+                    assert!(
+                        n > 0,
+                        "{name} timeout={timeout} accepted={accepted:?} read_elapsed={:?} bytes={n}",
+                        started.elapsed()
+                    );
                     let mut b = [0; 1];
                     assert_eq!(
                         tokio::time::timeout(Duration::from_secs(2), stream.read(&mut b))
@@ -280,12 +314,26 @@ async fn all_four_real_network_timers_match_actual_source_loopback() {
                         0
                     )
                 });
-                let result = engine
-                    .search(&SearchRequest {
-                        query: "test".into(),
-                        ..Default::default()
-                    })
-                    .await;
+                let request = SearchRequest {
+                    query: "test".into(),
+                    ..Default::default()
+                };
+                let mut operation = engine.search(&request);
+                let mut polls = 0usize;
+                let result = std::future::poll_fn(|cx| {
+                    let entered = Instant::now();
+                    let state = std::future::Future::poll(operation.as_mut(), cx);
+                    polls += 1;
+                    eprintln!("A08_POLL_DIAGNOSTIC engine={name} timeout={timeout} poll={polls} entered={:?} duration={:?} ready={}", entered.duration_since(started), entered.elapsed(), state.is_ready());
+                    state
+                })
+                .await;
+                eprintln!(
+                    "A08_TIMER_DIAGNOSTIC engine={name} timeout={timeout} elapsed={:?} status={:?} message={:?}",
+                    started.elapsed(),
+                    result.status,
+                    result.error_message
+                );
                 assert_eq!(result.status, EngineStatus::Timeout, "{name}");
                 assert!(result.results.is_empty());
                 assert_eq!(row["requests"].as_array().unwrap().len(), 1);
@@ -324,6 +372,11 @@ impl SearchAdmission for Pending {
 }
 #[tokio::test]
 async fn all_four_denied_unavailable_and_pending_admission_stop_before_http() {
+    if default_ca_environment::default_ca_test_environment(
+        "all_four_denied_unavailable_and_pending_admission_stop_before_http",
+    ) {
+        return;
+    }
     for name in NAMES {
         for (admission, status) in [
             (
@@ -339,7 +392,8 @@ async fn all_four_denied_unavailable_and_pending_admission_stop_before_http() {
                 &format!("http://{}/blocked", listener.local_addr().unwrap()),
                 5000,
                 admission,
-            );
+            )
+            .await;
             let engine = registry.instantiate(name).unwrap();
             let q = SearchRequest {
                 query: "test".into(),

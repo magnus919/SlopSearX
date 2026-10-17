@@ -633,28 +633,70 @@ fn blocked_helper_fixture(
     (directory, pid, pool)
 }
 #[cfg(unix)]
-async fn fixture_pid(path: &std::path::Path, pool: &ssx_infra::html::ParserPool) -> String {
+fn fixture_task_outcome<T>(outcome: Result<Result<T, String>, tokio::task::JoinError>) -> String {
+    match outcome {
+        Ok(Ok(_)) => "unexpected successful helper completion before PID readiness".into(),
+        Ok(Err(message)) => format!("helper returned error before PID readiness: {message:?}"),
+        Err(error) => format!("helper caller join failed before PID readiness: {error}"),
+    }
+}
+#[cfg(unix)]
+async fn fixture_pid<T>(
+    path: &std::path::Path,
+    pool: &ssx_infra::html::ParserPool,
+    task: &mut tokio::task::JoinHandle<Result<T, String>>,
+) -> String {
+    enum Observation {
+        Pid(String),
+        Early(String),
+    }
     let observed = tokio::time::timeout(std::time::Duration::from_secs(2), async {
         loop {
             if let Ok(pid) = std::fs::read_to_string(path)
                 && pid.ends_with('\n')
                 && pid.trim().parse::<u32>().is_ok_and(|value| value > 0)
             {
-                break pid;
+                break Observation::Pid(pid);
             }
-            tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+            tokio::select! {
+                biased;
+                outcome = &mut *task => break Observation::Early(fixture_task_outcome(outcome)),
+                _ = tokio::time::sleep(std::time::Duration::from_millis(5)) => {}
+            }
         }
     })
     .await;
-    match observed {
-        Ok(pid) => pid,
-        Err(error) => {
-            pool.shutdown()
-                .await
-                .expect("fixture timeout cleanup verifies reap");
-            panic!("complete owned PID missing at {path:?}: {error}");
-        }
+    if let Ok(Observation::Pid(pid)) = observed {
+        return pid;
     }
+    // A spawn/protocol/deadline error must not be hidden behind PID polling.
+    // Close and bound supervisor drain before reporting the actual observation.
+    let cleanup = tokio::time::timeout(std::time::Duration::from_secs(2), pool.shutdown()).await;
+    let detail = match observed {
+        Ok(Observation::Early(message)) => message,
+        Err(error) => {
+            let caller = match tokio::time::timeout(std::time::Duration::from_secs(2), &mut *task)
+                .await
+            {
+                Ok(outcome) => fixture_task_outcome(outcome),
+                Err(join_timeout) => {
+                    task.abort();
+                    let aborted =
+                        tokio::time::timeout(std::time::Duration::from_secs(2), &mut *task).await;
+                    format!(
+                        "caller join watchdog: {join_timeout}; abort completion: {}",
+                        match aborted {
+                            Ok(outcome) => fixture_task_outcome(outcome),
+                            Err(error) => format!("abort join unverified: {error}"),
+                        }
+                    )
+                }
+            };
+            format!("PID readiness deadline: {error}; {caller}")
+        }
+        Ok(Observation::Pid(_)) => unreachable!("returned above"),
+    };
+    panic!("complete owned PID missing at {path:?}: {detail}; owned pool shutdown={cleanup:?}");
 }
 
 #[cfg(unix)]
@@ -675,7 +717,7 @@ fn assert_reaped(pid: &str) {
 async fn helper_deadline_kills_and_reaps_before_releasing_slot() {
     let (directory, pid, pool) = blocked_helper_fixture("deadline");
     let parser = pool.clone();
-    let task = tokio::spawn(async move {
+    let mut task = tokio::spawn(async move {
         parser
             .parse(
                 "<html/>",
@@ -683,7 +725,7 @@ async fn helper_deadline_kills_and_reaps_before_releasing_slot() {
             )
             .await
     });
-    let pid = fixture_pid(&pid, &pool).await;
+    let pid = fixture_pid(&pid, &pool, &mut task).await;
     let result = tokio::time::timeout(std::time::Duration::from_secs(2), task)
         .await
         .unwrap()
@@ -699,7 +741,7 @@ async fn helper_deadline_kills_and_reaps_before_releasing_slot() {
 async fn helper_future_cancellation_kills_and_reaps_before_releasing_slot() {
     let (directory, pid, pool) = blocked_helper_fixture("cancel");
     let parser = pool.clone();
-    let task = tokio::spawn(async move {
+    let mut task = tokio::spawn(async move {
         parser
             .parse(
                 "<html/>",
@@ -707,7 +749,7 @@ async fn helper_future_cancellation_kills_and_reaps_before_releasing_slot() {
             )
             .await
     });
-    let pid = fixture_pid(&pid, &pool).await;
+    let pid = fixture_pid(&pid, &pool, &mut task).await;
     task.abort();
     let _ = task.await;
     tokio::time::timeout(std::time::Duration::from_secs(2), async {
@@ -726,7 +768,7 @@ async fn helper_future_cancellation_kills_and_reaps_before_releasing_slot() {
 async fn helper_shutdown_kills_and_reaps_and_closes_admission() {
     let (directory, pid, pool) = blocked_helper_fixture("shutdown");
     let parser = pool.clone();
-    let task = tokio::spawn(async move {
+    let mut task = tokio::spawn(async move {
         parser
             .parse(
                 "<html/>",
@@ -734,7 +776,7 @@ async fn helper_shutdown_kills_and_reaps_and_closes_admission() {
             )
             .await
     });
-    let pid = fixture_pid(&pid, &pool).await;
+    let pid = fixture_pid(&pid, &pool, &mut task).await;
     tokio::time::timeout(std::time::Duration::from_secs(2), pool.shutdown())
         .await
         .unwrap()
@@ -793,7 +835,7 @@ async fn stateful_codec_deadline_kills_reaps_and_releases_permit() {
     let mut bytes = vec![b'A'; 32 * 1024 * 1024];
     bytes[0] = b'+';
     let parser = pool.clone();
-    let task = tokio::spawn(async move {
+    let mut task = tokio::spawn(async move {
         parser
             .decode(
                 &bytes,
@@ -802,7 +844,7 @@ async fn stateful_codec_deadline_kills_reaps_and_releases_permit() {
             )
             .await
     });
-    let pid = fixture_pid(&pid, &pool).await;
+    let pid = fixture_pid(&pid, &pool, &mut task).await;
     let result = tokio::time::timeout(std::time::Duration::from_secs(2), task)
         .await
         .unwrap()
@@ -831,7 +873,7 @@ async fn stateful_codec_cancellation_kills_reaps_and_releases_permit() {
     let mut bytes = vec![b'A'; 32 * 1024 * 1024];
     bytes[0] = b'+';
     let parser = pool.clone();
-    let task = tokio::spawn(async move {
+    let mut task = tokio::spawn(async move {
         parser
             .decode(
                 &bytes,
@@ -840,7 +882,7 @@ async fn stateful_codec_cancellation_kills_reaps_and_releases_permit() {
             )
             .await
     });
-    let pid = fixture_pid(&pid, &pool).await;
+    let pid = fixture_pid(&pid, &pool, &mut task).await;
     // Permit enough time for real helper admission/input delivery; no sleep
     // executable substitutes for the native stateful decoder in this fixture.
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;

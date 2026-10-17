@@ -1,0 +1,812 @@
+{
+  "scope": "temporary offline invocation of inventoried export_source.capture; executable oracle retires G08; native consumes JSON",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "source_sha256": {
+    "docs/rust-rewrite/a06/oracle/export_source.py": "fac50ade3842d15169ea76ecb626f2f5a55d0aa8c7454f910c0c262f3175a65c",
+    "engines/semanticscholar.py": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c",
+    "slopsearx/payload.py": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d"
+  },
+  "records": [
+    {
+      "id": "semanticscholar.selected_values.00",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6IG51bGx9LCBudWxsLCB7fSwgeyJuYW1lIjogImxhc3QifV19XX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  null,
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.01",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6IGZhbHNlfSwgbnVsbCwge30sIHsibmFtZSI6ICJsYXN0In1dfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  false,
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.02",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6IDE3fSwgbnVsbCwge30sIHsibmFtZSI6ICJsYXN0In1dfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  17,
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.03",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6ICIifSwgbnVsbCwge30sIHsibmFtZSI6ICJsYXN0In1dfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  "",
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.04",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6ICJmb3VydGgifSwgbnVsbCwge30sIHsibmFtZSI6ICJsYXN0In1dfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  "fourth",
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.05",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6IFtdfSwgbnVsbCwge30sIHsibmFtZSI6ICJsYXN0In1dfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  [],
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.06",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6IHt9fSwgbnVsbCwge30sIHsibmFtZSI6ICJsYXN0In1dfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  {},
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.07",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6IFsiIiwgbnVsbCwgeyJhIjogImIifV19LCBudWxsLCB7fSwgeyJuYW1lIjogImxhc3QifV19XX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  [
+                    "",
+                    null,
+                    {
+                      "a": "b"
+                    }
+                  ],
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.08",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6IHsibmVzdGVkIjogWyIiLCBudWxsXX19LCBudWxsLCB7fSwgeyJuYW1lIjogImxhc3QifV19XX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  {
+                    "nested": [
+                      "",
+                      null
+                    ]
+                  },
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.selected_values.09",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjogW3sidGl0bGUiOiAiUGFwZXIiLCAidXJsIjogImh0dHBzOi8vcGFwZXIudGVzdC8iLCAiY2l0YXRpb25Db3VudCI6IDEsICJhdXRob3JzIjogW3sibmFtZSI6ICJBIn0sIHsibmFtZSI6ICJCIn0sIHsibmFtZSI6ICJDIn0sIHsibmFtZSI6ICJcdWQ4MDAifSwgbnVsbCwge30sIHsibmFtZSI6ICJsYXN0In1dfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://paper.test/",
+            "title": "Paper",
+            "content": "By: A, B, C et al. | Cited by: 1",
+            "engine": "semanticscholar",
+            "engines": [],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  "\ufffd",
+                  "",
+                  "last"
+                ]
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

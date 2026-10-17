@@ -45,7 +45,7 @@ impl UniProtAdapter {
     ) -> Result<ProducedBatch<'b>> {
         admit_with_context(&self.admission, "uniprot", context).await?;
         let candidate = candidate(&self.config.max_results)?;
-        let d = network_deadline(&self.config, false, context)?;
+        let d = network_deadline_for_http(&self.http, &self.config, context)?;
         let plan = query_plan(&q.query);
         let intent = plan.intent;
         let upstream = if let Some(identifier) = plan.expanded {

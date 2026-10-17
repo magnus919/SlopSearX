@@ -47,7 +47,12 @@ release evidence. These eighteen controls are explicit boundary differences. Str
 original JSON types and is deliberately not claimed as parity. Source/native
 status/results remain exact elsewhere. `header-differences.json` records each
 full source/native request pair for HTTPX's implicit framework User-Agent;
-explicit provider User-Agent, Accept and Bearer placement remain exact.
+explicit provider User-Agent, Accept and Bearer placement remain exact. The historical ledger remains
+byte-exact. `header-profile-amendment.json` separately records expected current
+native requests after the reviewed shared SlopSearX User-Agent profile; these
+expectations become actual composition evidence only when replayed successfully.
+The tests preserve the source and historical native tuples and compare current
+observations without normalization.
 
 The scoped native tests exercise actual F06 YAML/env-to-factory-to-request/outcome,
 public no-auth requests and TMDB Bearer-only secrets, real socket cancellation and

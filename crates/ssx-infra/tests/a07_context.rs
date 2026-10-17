@@ -1,4 +1,6 @@
 //! Real A07 adapters under the accepted F14 caller-owned context.
+#[path = "support/default_ca_environment.rs"]
+mod default_ca_environment;
 use ssx_application::{
     AdmissionDecision, NoopSink, PortFuture, SearchAdmission, SearchContext, SearchEngine,
 };
@@ -13,7 +15,7 @@ use ssx_infra::{
         pubmed::PubMedAdapter,
         uniprot::UniProtAdapter,
     },
-    http::{AdapterHttp, ExchangeFuture, Request, Response, Transport},
+    http::{AdapterHttp, Cancellation, ExchangeFuture, Preparation, Request, Response, Transport},
 };
 use std::{
     collections::VecDeque,
@@ -50,6 +52,24 @@ fn request() -> SearchRequest {
         interactive_timeout_ms: Some(5000),
         ..Default::default()
     }
+}
+// Production startup is separate from these query-context assertions. This
+// constructor builds the ordinary default-profile client without an HTTP GET;
+// its existing five-second idle expiry and environment/proxy policy apply.
+async fn ready_http() -> Arc<AdapterHttp> {
+    let startup = Instant::now();
+    let (http, preparation) = AdapterHttp::new_ready(
+        tokio::time::Instant::now() + Duration::from_secs(5),
+        Cancellation::default(),
+    )
+    .await
+    .unwrap();
+    assert_eq!(preparation, Preparation::Prepared);
+    eprintln!(
+        "A07_CONTEXT_STARTUP preparation={preparation:?} elapsed_ns={}",
+        startup.elapsed().as_nanos()
+    );
+    http
 }
 struct Replay {
     seen: Mutex<Vec<Request>>,
@@ -229,10 +249,16 @@ async fn ample_context_preserves_all_legacy_result_and_response_fields() {
 }
 #[tokio::test]
 async fn pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_context() {
+    if default_ca_environment::default_ca_test_environment(
+        "pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_context",
+    ) {
+        return;
+    }
     for (name, first, second) in [
         ("pubchem", PC_SEARCH, PC_DETAIL),
         ("pubmed", PM_SEARCH, PM_SUMMARY),
     ] {
+        let http = ready_http().await;
         let start = Instant::now();
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let base = format!("http://{}", listener.local_addr().unwrap());
@@ -280,7 +306,6 @@ async fn pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_contex
                 let _ = stream.write_all(body.as_bytes()).await;
             }
         });
-        let http = Arc::new(AdapterHttp::default());
         let mut c = BiomedicalConfig::defaults(&base);
         c.timeout_ms = ConfigScalar::Integer(15_000);
         let engine = adapter(name, http.clone(), Arc::new(AllowAllAdmission), c);
@@ -334,12 +359,21 @@ async fn pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_contex
 }
 #[tokio::test]
 async fn queue_time_consumes_absolute_context_instead_of_original_request_timeout() {
+    if default_ca_environment::default_ca_test_environment(
+        "queue_time_consumes_absolute_context_instead_of_original_request_timeout",
+    ) {
+        return;
+    }
     let (base, seen, task) = server(vec![(
         r#"{"studies":[]}"#.into(),
         Duration::from_millis(100),
     )])
     .await;
-    let http = Arc::new(AdapterHttp::default());
+    let http = ready_http().await;
+    assert!(
+        seen.lock().unwrap().is_empty(),
+        "startup sends no provider request"
+    );
     let engine = adapter(
         "clinicaltrials",
         http.clone(),

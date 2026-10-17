@@ -1,11 +1,19 @@
 //! Exact decimal normalization before standard IEEE conversion. Caller policies
 //! decide whether nonfinite values are acceptable; no JSON grammar is widened.
 use crate::MAX_JSON_BYTES;
+use std::fmt::Write as _;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FloatError {
     ByteLimit,
     Malformed,
     Incomplete,
+}
+/// Storage refusal is distinct from JSON lexical validation. The caller owns
+/// the backing allocation charge and keeps it alive until the normalizer drops.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FloatBufferError {
+    Input(FloatError),
+    Capacity,
 }
 #[derive(Clone, Copy)]
 enum Grammar {
@@ -65,6 +73,20 @@ impl<'a> FloatNormalizer<'a> {
             prepared: None,
             failed: false,
         })
+    }
+    /// Use caller-owned preallocated scratch without implicit growth. The input
+    /// bound/initial validation matches `new`. Storage must be empty and cover
+    /// raw.len()+8 bytes. Digit/sign/dot construction needs at most raw.len()+1;
+    /// preparation adds at most `e-324` (5 bytes), leaving two bytes of margin.
+    /// The caller must retain any associated charge through this value's drop.
+    pub fn with_buffer(raw: &'a str, buffer: String) -> Result<Self, FloatBufferError> {
+        let mut out = Self::new(raw).map_err(FloatBufferError::Input)?;
+        let required = raw.len().checked_add(8).ok_or(FloatBufferError::Capacity)?;
+        if !buffer.is_empty() || buffer.capacity() < required {
+            return Err(FloatBufferError::Capacity);
+        }
+        out.normalized = buffer;
+        Ok(out)
     }
     fn digit(&mut self, byte: u8, fraction: bool) {
         let index = self.total;
@@ -180,8 +202,7 @@ impl<'a> FloatNormalizer<'a> {
         if self.normalized.ends_with('.') {
             self.normalized.pop();
         }
-        self.normalized.push('e');
-        self.normalized.push_str(&power.to_string());
+        write!(&mut self.normalized, "e{power}").expect("String writer cannot fail");
         self.prepared = Some(Prepared::Decimal);
         Ok(())
     }
@@ -286,5 +307,74 @@ mod tests {
         }
         let raw = format!("0.{}1e+1990000", "0".repeat(1_990_000));
         assert_eq!(parse_json_f64(&raw).unwrap(), 0.1);
+    }
+}
+
+#[cfg(test)]
+mod buffer_tests {
+    use super::*;
+    #[test]
+    fn provided_scratch_never_reallocates_across_grammar_and_numeric_paths() {
+        let mut cases = vec![
+            "-0".to_owned(),
+            "0.000e999999999999999999999".to_owned(),
+            "-1e-99999999999999999999".to_owned(),
+            "1e99999999999999999999".to_owned(),
+            "-1e99999999999999999999".to_owned(),
+            "4.9406564584124654e-324".to_owned(),
+            "2.4703282292062327e-324".to_owned(),
+            "1.7976931348623157e308".to_owned(),
+            "1.7976931348623159e308".to_owned(),
+            "1.00000000000000011102230246251565404236316680908203126".to_owned(),
+            "-".to_owned(),
+            "1.".to_owned(),
+            "1e+".to_owned(),
+            "+1".to_owned(),
+            "01".to_owned(),
+        ];
+        cases.push(format!("0.{}1e+1990000", "0".repeat(1_990_000)));
+        cases.push(format!("-0.{}e+1990000", "0".repeat(1_990_000)));
+        cases.push(format!("-1.{}e-308", "1".repeat(100_000)));
+        cases.push(format!("1.{}e0", "1".repeat(MAX_JSON_BYTES - 4)));
+        for raw in cases {
+            let expected = parse_json_f64(&raw);
+            let buffer = String::with_capacity(raw.len() + 8);
+            let pointer = buffer.as_ptr();
+            let capacity = buffer.capacity();
+            let mut value = FloatNormalizer::with_buffer(&raw, buffer).unwrap();
+            let actual = loop {
+                let step = value.advance(1024);
+                assert_eq!(value.normalized.as_ptr(), pointer);
+                assert_eq!(value.normalized.capacity(), capacity);
+                match step {
+                    Ok(true) => break value.finish(),
+                    Ok(false) => {}
+                    Err(error) => break Err(error),
+                }
+            };
+            assert_eq!(actual.map(f64::to_bits), expected.map(f64::to_bits));
+        }
+    }
+    #[test]
+    fn storage_refusal_and_constructor_errors_are_distinct() {
+        assert!(matches!(
+            FloatNormalizer::with_buffer("1", String::new()),
+            Err(FloatBufferError::Capacity)
+        ));
+        let mut nonempty = String::with_capacity(32);
+        nonempty.push('x');
+        assert!(matches!(
+            FloatNormalizer::with_buffer("1", nonempty),
+            Err(FloatBufferError::Capacity)
+        ));
+        assert!(matches!(
+            FloatNormalizer::with_buffer("", String::new()),
+            Err(FloatBufferError::Input(FloatError::Malformed))
+        ));
+        let huge = "0".repeat(MAX_JSON_BYTES + 1);
+        assert!(matches!(
+            FloatNormalizer::with_buffer(&huge, String::new()),
+            Err(FloatBufferError::Input(FloatError::ByteLimit))
+        ));
     }
 }

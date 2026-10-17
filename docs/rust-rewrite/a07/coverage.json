@@ -1438,7 +1438,7 @@
     "G08 executable historical-source producer retirement before backend removal"
   ],
   "case_count": 172,
-  "capture_relation": "Complete recapture preserves original127 source inputs/requests/prior fields;45 supplemental controls close reviewed iterable/date shape findings.172 unique controls native-replayed; older captures remain immutable.",
+  "capture_relation": "All immutable127 original controls plus45 supplements retained. Four boolean1ms controls migrate to full public SearchEngine lib unit tests with coherent private owner clock; no semantic-only or timeout-success substitution.",
   "source_payload_component": {
     "source": "crates/ssx-infra/src/adapters/source_payload.rs",
     "sha256": "3d3dc960b8a1a50339a0669f6aab9476aad588961845a6e6c5bef80b7738e1cf",
@@ -1453,8 +1453,8 @@
     "native_test": "adapters::clinicaltrials::deadline_tests::only_pubmed_aggregate_budget_applies_to_source_decode"
   },
   "validation": {
-    "source_replay": "20 tests including172 original controls; exact request/fulloutput/diagnostic ledger",
-    "context": "7 real context tests plus accepted seam/F14 tests",
+    "source_replay": "172 full public-adapter captures:168 integration System owner,4 sealed Manual owner lib cases; exact receipt union and qualified tests required.",
+    "context": "7 real context tests retain original assertions; two isolate actual production startup before original70/80ms anchors. Separate three-engine cold Default/owned-drain control preserves legal early expiry; accepted seam/F14 controls unchanged.",
     "compact_consumer": "2 actual adapter-to-rank-to-result_card tests; not full transport/HTML",
     "runtime_units": "71 integrated infrastructure units, including16 A07 resource cases, actual-media guard, shared payload/batch/repr controls and accepted-main F15 units; exact integrated reports govern identities",
     "shared_controls": "35 actual Python repr controls,4 actual adapter payload/precedence controls,full existing casefold table equivalence",
@@ -1487,7 +1487,8 @@
     "crates/ssx-owned-budget/src/lib.rs",
     "crates/ssx-infra/tests/a07_factories.rs",
     "crates/xtask/src/a07.rs",
-    "crates/xtask/src/main.rs"
+    "crates/xtask/src/main.rs",
+    "crates/ssx-infra/tests/support/a07_cold_context.rs"
   ],
   "auxiliary_source_controls": {
     "repr": {
@@ -1617,6 +1618,31 @@
       "package": "ssx-infra",
       "target": "test:a07_biomedical",
       "qualified_name": "uniprot_default_window_preserves_all_related_records_and_species_ties"
+    },
+    "adapters::clinicaltrials::owner_clock_tests::clinicaltrials_bool_true_full_source_replay": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::clinicaltrials::owner_clock_tests::clinicaltrials_bool_true_full_source_replay"
+    },
+    "adapters::clinicaltrials::owner_clock_tests::europepmc_bool_true_full_source_replay": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::clinicaltrials::owner_clock_tests::europepmc_bool_true_full_source_replay"
+    },
+    "adapters::clinicaltrials::owner_clock_tests::pubchem_bool_true_full_source_replay": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::clinicaltrials::owner_clock_tests::pubchem_bool_true_full_source_replay"
+    },
+    "adapters::clinicaltrials::owner_clock_tests::uniprot_bool_true_full_source_replay": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::clinicaltrials::owner_clock_tests::uniprot_bool_true_full_source_replay"
+    },
+    "http::cold_context_tests::cold_default_context_expiry_retains_real_builder_until_owned_drain": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "http::cold_context_tests::cold_default_context_expiry_retains_real_builder_until_owned_drain"
     }
   },
   "main_integration": {
@@ -1629,5 +1655,72 @@
     "source_paths": 399,
     "historical_oracle_invocations": 40,
     "separate_owned_parser_donor_adopted": false
+  },
+  "full_source_execution": {
+    "total": 172,
+    "moved": [
+      {
+        "id": "clinicaltrials-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::clinicaltrials_bool_true_full_source_replay"
+      },
+      {
+        "id": "europepmc-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::europepmc_bool_true_full_source_replay"
+      },
+      {
+        "id": "pubchem-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::pubchem_bool_true_full_source_replay"
+      },
+      {
+        "id": "uniprot-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::uniprot_bool_true_full_source_replay"
+      }
+    ],
+    "remaining": {
+      "count": 168,
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "actual_source_matrix_preserves_requests_and_full_normalized_results"
+    },
+    "scope": "All 172 preserve original captured config/status/ordered requests/complete normalized outputs through actual public SearchEngine; four use sealed owner Manual clock in lib unit tests."
+  },
+  "context_fixture_isolation": {
+    "positive_cases": [
+      "pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_context",
+      "queue_time_consumes_absolute_context_instead_of_original_request_timeout"
+    ],
+    "startup_constructor": "AdapterHttp::new_ready with ordinary default options; no HTTP GET; existing five-second prepared idle expiry",
+    "original_query_contexts_ms": [
+      80,
+      70
+    ],
+    "original_request_counts": [
+      2,
+      1
+    ],
+    "original_query_anchors_and_assertions": "unchanged after actual production startup; setup recorded separately",
+    "cold_default_control": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "http::cold_context_tests::cold_default_context_expiry_retains_real_builder_until_owned_drain",
+      "engines": [
+        "clinicaltrials",
+        "pubchem",
+        "pubmed"
+      ],
+      "new_fixture_context_ms": 1000,
+      "configured_network_ms": 10000,
+      "scope": "Actual cold builder held across real context expiry, zero dispatch, retained leases and Pending shutdown until released/joined; no production timeout policy change"
+    },
+    "source_cases_added": 0,
+    "boundaries": "No guarantee cold System calls dispatch before short contexts; observed diagnostic logging is not a performance/reproducibility claim or attribution of prior one-request failure."
   }
 }

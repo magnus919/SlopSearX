@@ -25,6 +25,42 @@ fn matrix() -> Value {
     ))
     .unwrap()
 }
+// Diagnostic only: serialize after the timed call has fully completed. No input,
+// comparison or deadline behavior changes, and no partially emitted diagnostic.
+fn tiny_deadline_diagnostic(raw: (Value, Value), normalized: (&Value, &Value)) -> Result<()> {
+    const LIMIT: usize = 1024 * 1024;
+    struct Bounded(Vec<u8>);
+    impl std::io::Write for Bounded {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            if self.0.len().saturating_add(bytes.len()) >= LIMIT {
+                return Err(std::io::Error::other(
+                    "tiny deadline diagnostic exceeds 1 MiB",
+                ));
+            }
+            self.0.extend_from_slice(bytes);
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut output = Bounded(b"T06_TINY_DEADLINE_DIAGNOSTIC ".to_vec());
+    serde_json::to_writer(
+        &mut output,
+        &json!({
+            "name": "slopsearx_search",
+            "arguments": {"query": "q", "interactive_timeout_ms": true},
+            "raw_actual_result": raw.0,
+            "raw_expected_result": raw.1,
+            "normalized_actual_result": normalized.0,
+            "normalized_expected_result": normalized.1,
+        }),
+    )?;
+    output.0.push(b'\n');
+    use std::io::Write as _;
+    std::io::stdout().lock().write_all(&output.0)?;
+    Ok(())
+}
 fn first_difference(a: &Value, b: &Value, path: &str) -> String {
     match (a, b) {
         (Value::Object(a), Value::Object(b)) => {
@@ -307,11 +343,21 @@ async fn verify(client: &mut Client, fixture: Option<&fixture::Fixture>) -> Resu
                 );
             }
         }
+        let raw_tiny = (name == "slopsearx_search"
+            && row["arguments"]
+                .as_object()
+                .is_some_and(|args| args.len() == 2)
+            && row["arguments"]["query"].as_str() == Some("q")
+            && row["arguments"]["interactive_timeout_ms"].as_bool() == Some(true))
+        .then(|| (result.clone(), row["result"].clone()));
         let (actual, expected) = comparison.pair(
             result,
             row["result"].clone(),
             name.starts_with("slopsearx_search"),
         );
+        if let Some(raw) = raw_tiny {
+            tiny_deadline_diagnostic(raw, (&actual, &expected))?;
+        }
         if actual != expected {
             mismatches.push(format!(
                 "{name}/{} args={} {}",

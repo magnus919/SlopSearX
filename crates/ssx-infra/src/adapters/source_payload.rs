@@ -367,6 +367,8 @@ pub enum FieldRef<'a> {
     Value(&'a Value),
     Text(&'a Text),
     SelectedTexts(&'a [&'a Text]),
+    /// Arbitrary borrowed author values; source payload sanitation stays shared.
+    SelectedValues(&'a [&'a Value]),
     /// Already scalar-only Expat fields; no temporary SourceText allocation.
     Scalar(&'a str),
     /// Borrowed scalar author views; descriptor storage is caller-owned/charged.
@@ -495,6 +497,16 @@ pub async fn envelope_budgeted(
             FieldRef::Value(value) => visit(value, 1, &mut state)?.await?,
             FieldRef::Text(text) => Out::String(state.string(text).await?),
             FieldRef::Scalar(text) => Out::String(state.scalar(text).await?),
+            FieldRef::SelectedValues(values) => {
+                let mut output = state.array(values.len())?;
+                for (index, value) in values.iter().enumerate() {
+                    if index % 128 == 0 {
+                        state.checkpoint().await?;
+                    }
+                    output.push(visit(value, 2, &mut state)?.await?);
+                }
+                Out::Array(output)
+            }
             FieldRef::SelectedScalars(texts) => {
                 let mut output = state.array(texts.len())?;
                 for (index, text) in texts.iter().enumerate() {
@@ -1208,6 +1220,140 @@ mod scalar_borrow_tests {
                 assert_eq!(budget.snapshot().unwrap().used, 0);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod selected_values_controls {
+    use super::*;
+    use base64::Engine as _;
+    use ssx_owned_budget::{Budget, OwnedVec};
+    use std::{
+        future::Future,
+        task::{Context, Poll, Waker},
+        time::{Duration, Instant},
+    };
+    #[tokio::test]
+    async fn original_adapter_post_first3_arbitrary_author_values_preserve_payload() {
+        let corpus: ssx_json::Value = ssx_json::from_str(include_str!(
+            "../../../../docs/rust-rewrite/a06/source-selected-values.json"
+        ))
+        .unwrap();
+        let mut ids = std::collections::BTreeSet::new();
+        for row in corpus["records"].as_array().unwrap() {
+            assert!(ids.insert(row["id"].as_str().unwrap()));
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(row["responses"][0]["body_b64"].as_str().unwrap())
+                .unwrap();
+            let budget = Budget::new(1024 * 1024).unwrap();
+            let input = budget.reserve(bytes.capacity()).unwrap();
+            let deadline = Instant::now() + Duration::from_secs(30);
+            let source =
+                super::super::source_json::from_slice_budgeted(&bytes, Some(deadline), &budget)
+                    .await
+                    .unwrap();
+            let authors = source.value().get("data").unwrap().as_array().unwrap()[0]
+                .get("authors")
+                .unwrap()
+                .as_array()
+                .unwrap();
+            let empty = Value::String(Text::from(""));
+            let mut names = OwnedVec::with_capacity(&budget, authors.len()).unwrap();
+            for author in authors {
+                if let Some(author) = author.as_object() {
+                    names
+                        .try_push(author.get("name").unwrap_or(&empty))
+                        .unwrap();
+                }
+            }
+            let fields = [Field {
+                name: "authors",
+                value: FieldRef::SelectedValues(names.as_slice()),
+            }];
+            let payload = publication_budgeted("semanticscholar", &fields, &budget, Some(deadline))
+                .await
+                .unwrap();
+            assert_eq!(
+                payload.value(),
+                &row["output"]["results"][0]["payload"],
+                "{}",
+                row["id"]
+            );
+            drop(payload);
+            drop(names);
+            drop(source);
+            drop(input);
+            assert_eq!(budget.snapshot().unwrap().used, 0);
+        }
+        assert_eq!(ids.len(), 10);
+    }
+    #[tokio::test]
+    async fn charged_empty_selected_values_yield_then_cancel_or_expire_and_release() {
+        let empty = Value::String(Text::from(""));
+        for expire in [false, true] {
+            let budget = Budget::new(32 * 1024 * 1024).unwrap();
+            let mut values = OwnedVec::with_capacity(&budget, 65536).unwrap();
+            for _ in 0..65536 {
+                values.try_push(&empty).unwrap();
+            }
+            let descriptors = values.charged_bytes();
+            let array = 65536 * std::mem::size_of::<ssx_json::Value>();
+            let fields = [Field {
+                name: "authors",
+                value: FieldRef::SelectedValues(values.as_slice()),
+            }];
+            let deadline = Instant::now() + Duration::from_secs(if expire { 2 } else { 30 });
+            let mut future = Box::pin(publication_budgeted(
+                "semanticscholar",
+                &fields,
+                &budget,
+                Some(deadline),
+            ));
+            let mut context = Context::from_waker(Waker::noop());
+            let mut observed = 0;
+            for _ in 0..100000 {
+                assert!(matches!(future.as_mut().poll(&mut context), Poll::Pending));
+                if budget.snapshot().unwrap().used >= descriptors + array {
+                    observed += 1;
+                    if observed == 256 {
+                        break;
+                    }
+                }
+            }
+            assert_eq!(observed, 256);
+            if expire {
+                tokio::time::sleep_until(deadline.into()).await;
+                assert!(matches!(future.await, Err(BudgetError::Deadline)));
+            } else {
+                drop(future);
+            }
+            assert_eq!(budget.snapshot().unwrap().used, descriptors);
+            drop(values);
+            assert_eq!(budget.snapshot().unwrap().used, 0);
+        }
+        let budget = Budget::new(1024 * 1024).unwrap();
+        let mut values = OwnedVec::with_capacity(&budget, 65536).unwrap();
+        for _ in 0..65536 {
+            values.try_push(&empty).unwrap();
+        }
+        let descriptors = values.charged_bytes();
+        let fields = [Field {
+            name: "authors",
+            value: FieldRef::SelectedValues(values.as_slice()),
+        }];
+        assert!(matches!(
+            publication_budgeted(
+                "semanticscholar",
+                &fields,
+                &budget,
+                Some(Instant::now() + Duration::from_secs(30))
+            )
+            .await,
+            Err(BudgetError::Resource)
+        ));
+        assert_eq!(budget.snapshot().unwrap().used, descriptors);
+        drop(values);
+        assert_eq!(budget.snapshot().unwrap().used, 0);
     }
 }
 

@@ -235,11 +235,18 @@ async fn all_engine_source_replay() {
                 )
             );
             used_headers.insert(case["id"].as_str().unwrap().to_owned());
-            for request in &mut expected_requests {
-                request["headers"]
-                    .as_object_mut()
-                    .unwrap()
-                    .remove("user-agent");
+            // Both identities were asserted above; derive the explicit native
+            // request view without changing captured source/native observations.
+            for (request, native) in expected_requests
+                .iter_mut()
+                .zip(header["native_values"].as_array().unwrap())
+            {
+                let headers = request["headers"].as_object_mut().unwrap();
+                if native.is_null() {
+                    headers.remove("user-agent");
+                } else {
+                    headers.insert("user-agent".into(), native.clone());
+                }
             }
         }
         if let Some(difference) = differences["records"]

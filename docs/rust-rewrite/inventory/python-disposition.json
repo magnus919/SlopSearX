@@ -1,50 +1,5 @@
 {
-  "schema_version": "1.0.0",
   "baseline_sha": "20109f9083babd014971951e8c02565ae51c2326",
-  "source": "Pinned F01 baseline inventory plus reviewed post-baseline additions recorded in DRIFT.md; source-set validation refreshed at acceptance.",
-  "summary": {
-    "tracked_python_source_count": 485,
-    "extensionless_python_entrypoints": 1,
-    "executable_config_python_invocation_lines": 63,
-    "interpreter_configuration_lines": 106,
-    "documentation_shebang_script_count": 8,
-    "documented_example_invocation_references": 49,
-    "source_classifications": {
-      "historical evidence": 4,
-      "backend/runtime": 122,
-      "backend-coupled tooling/test": 358,
-      "client-only": 1
-    },
-    "documentation_file_modes": {
-      "100644": 739
-    },
-    "source_path_set_validation": {
-      "method": "sorted exact-set comparison between git ls-files paths ending .py/.pyw/.pyi plus ssx and files[].path",
-      "tracked_expected_count": 485,
-      "manifest_count": 485,
-      "exact_match": true,
-      "extensionless_python_paths": [
-        "ssx"
-      ],
-      "validation_scope": "Normal A11/current maina8a7 full-record union; exact tracked set and native requalification pending"
-    },
-    "historical_evidence_py_txt_path_count": 739,
-    "non_runtime_historical_py_txt_path_count": 738,
-    "active_dynamic_python_source_path_count": 1,
-    "documented_py_txt_command_references": 49,
-    "python_invocations_appendix": "python-invocations.json",
-    "configured_precommit_hook_rows": 15,
-    "dynamic_python_source_artifact_count": 1
-  },
-  "classifications": [
-    "backend/runtime",
-    "backend-coupled tooling/test",
-    "client-only",
-    "historical evidence"
-  ],
-  "client_only_files": [
-    "ssx"
-  ],
   "files": [
     {
       "path": "crates/ssx-source-codecs/provenance/idna/idna.py",
@@ -60,7 +15,7 @@
       "sha256": "ea8d7f01422af0ad138e4bf58d4ae63112f3ceb68833c486d6c4d18252610fd8",
       "bytes": 13248,
       "retirement_owner": "G08",
-      "retirement": "G08 removes runnable .py original and excludes it from backend/helper distribution; preserve original licensed bytes/notices/pins only as non-executable evidence or Git history.",
+      "retirement": "G08 removes runnable .py originals from the final backend tree and excludes all four originals from backend/helper packages. Preserve immutable licensed bytes, notices and pins only as clearly non-executable historical evidence or Git history. No runtime/client exception.",
       "source_inspection": {
         "imports": [
           "stringprep",
@@ -85,7 +40,7 @@
       "sha256": "1ee993f8eb4986999b6501381e53947be9a04443626cb48b4190bcff2e87d3b4",
       "bytes": 16255,
       "retirement_owner": "G08",
-      "retirement": "G08 removes runnable .py original and excludes it from backend/helper distribution; preserve original licensed bytes/notices/pins only as non-executable evidence or Git history.",
+      "retirement": "G08 removes runnable .py originals from the final backend tree and excludes all four originals from backend/helper packages. Preserve immutable licensed bytes, notices and pins only as clearly non-executable historical evidence or Git history. No runtime/client exception.",
       "source_inspection": {
         "imports": [],
         "declared_output_expressions": []
@@ -105,7 +60,7 @@
       "sha256": "60b6c83581093029312efb6670b11c540090b3f78bcf72264467b494f02f21a5",
       "bytes": 12917,
       "retirement_owner": "G08",
-      "retirement": "G08 removes runnable .py original and excludes it from backend/helper distribution; preserve original licensed bytes/notices/pins only as non-executable evidence or Git history.",
+      "retirement": "G08 removes runnable .py originals from the final backend tree and excludes all four originals from backend/helper packages. Preserve immutable licensed bytes, notices and pins only as clearly non-executable historical evidence or Git history. No runtime/client exception.",
       "source_inspection": {
         "imports": [
           "unicodedata"
@@ -127,7 +82,7 @@
       "sha256": "b2e81558e0d5c388932ac314e5d8b1d3f9fbfb593d1a6a9786518327c9919a59",
       "bytes": 10184,
       "retirement_owner": "G08",
-      "retirement": "G08 removes runnable .py original and excludes it from backend/helper distribution; preserve original licensed bytes/notices/pins only as non-executable evidence or Git history.",
+      "retirement": "G08 removes runnable .py originals from the final backend tree and excludes all four originals from backend/helper packages. Preserve immutable licensed bytes, notices and pins only as clearly non-executable historical evidence or Git history. No runtime/client exception.",
       "source_inspection": {
         "imports": [
           "re",
@@ -425,9 +380,34 @@
         "A05",
         "G08"
       ],
-      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
-      "evidence": "A05 offline CPython3.14.7/httpx0.28.1/lxml6.1.1 complete HTML adapter outcomes and outbound exchanges; mandatory native gates consume frozen JSON only.",
-      "reason": "No provider calls, runtime or optional-client exception; G08 retires executable Python and retains historical JSON.",
+      "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+      "evidence": "Temporary A05 offline source oracle. Never invoked by native mandatory gates.; imports: ast,asyncio,dataclasses,hashlib,importlib.metadata,json,subprocess,sys,pathlib,httpx,engines,slopsearx.adapter; codec call examples: D['HOME_HTML'].decode(); D['HTML_RESULTS_HTML'].decode()",
+      "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+      "sha256": "358e00b97469e58b9ab4b7ef3b2100f9a4626a2763effc865c878e4e8a3d3efd",
+      "bytes": 17996,
+      "retirement_owner": "G08",
+      "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+      "source_inspection": {
+        "imports": [
+          "ast",
+          "asyncio",
+          "dataclasses",
+          "hashlib",
+          "importlib.metadata",
+          "json",
+          "subprocess",
+          "sys",
+          "pathlib",
+          "httpx",
+          "engines",
+          "slopsearx.adapter"
+        ],
+        "declared_output_expressions": [
+          "Path(sys.argv[1])",
+          "Path(sys.argv[2])",
+          "Path(sys.argv[3])"
+        ]
+      },
       "introduced_after_baseline": "01876639fb8d87123f12293c02821981cff3f8b9"
     },
     {
@@ -6779,6 +6759,224 @@
       "sha256": "da65590a847b3b12b3571900293d123f0e31491e5202799ea0da88256d08af7c"
     },
     {
+      "path": "docs/rust-rewrite/a06/oracle/export_atom_decode.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Inspected source imports asyncio,base64,hashlib,httpx,inspect,json,pathlib,runpy,sys,xml.etree.ElementTree; fixed offline source controls emit JSON on stdout. Native gates consume immutable captures only.",
+      "reason": "Temporary manual source oracle; no runtime/client exception or provider calls.",
+      "sha256": "02105a7e850b7144f17c9e7ce86f5d8fc9e866242b30136f6031f3435b97a018",
+      "bytes": 2201,
+      "retirement_owner": "G08",
+      "retirement": "Remove executable Python before final backend removal; preserve immutable JSON captures and source identities as evidence."
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_charset.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Inspected source imports asyncio,base64,email.message,email.utils,hashlib,httpx,inspect,json,pathlib,runpy; fixed offline source controls emit JSON on stdout. Native gates consume immutable captures only.",
+      "reason": "Temporary manual source oracle; no runtime/client exception or provider calls.",
+      "sha256": "82c64457b6dc0bd8f1f94908e09b3b2b3338f90cbc53a60e22e50ce6f3756ea5",
+      "bytes": 5251,
+      "retirement_owner": "G08",
+      "retirement": "Remove executable Python before final backend removal; preserve immutable JSON captures and source identities as evidence."
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_charset_boundaries.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Inspected source imports base64,codecs,email.message,email.utils,hashlib,httpx,inspect,json,pathlib,sys; fixed offline source controls emit JSON on stdout. Native gates consume immutable captures only.",
+      "reason": "Temporary manual source oracle; no runtime/client exception or provider calls.",
+      "sha256": "30cf973e31bf5ae950e9c3cba35c131f858fae1ea78541e6b0d239cbe004a30b",
+      "bytes": 4418,
+      "retirement_owner": "G08",
+      "retirement": "Remove executable Python before final backend removal; preserve immutable JSON captures and source identities as evidence."
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_config.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Inspected source imports asyncio,hashlib,json,math,pathlib,runpy,sys; fixed offline source controls emit JSON on stdout. Native gates consume immutable captures only.",
+      "reason": "Temporary manual source oracle; no runtime/client exception or provider calls.",
+      "sha256": "af7313c13dc33b41c771c169a731de7180e9a8cb21da6d2ee4fbe7f81ee845da",
+      "bytes": 3689,
+      "retirement_owner": "G08",
+      "retirement": "Remove executable Python before final backend removal; preserve immutable JSON captures and source identities as evidence."
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_float_lexical.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Inspected source imports json,pathlib,platform,struct; fixed offline source controls emit JSON on stdout. Native gates consume immutable captures only.",
+      "reason": "Temporary manual source oracle; no runtime/client exception or provider calls.",
+      "sha256": "405251e707cf7cc05518761ab9b2d7e4b12c388505275f98aa3caab353f0de5a",
+      "bytes": 1075,
+      "retirement_owner": "G08",
+      "retirement": "Remove executable Python before final backend removal; preserve immutable JSON captures and source identities as evidence."
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_hostname_lower.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Inspected imports hashlib,inspect,json,sys,unicodedata,urllib.parse,pathlib. Offline Unicode16 scalar enumeration emits source JSON only; native controls consume immutable capture.",
+      "reason": "Temporary manual source oracle; no runtime/client exception or provider calls.",
+      "sha256": "85431be194ac33efb65c65229b50b4b09925a307ad8ea6de56e836cc56fd1abe",
+      "bytes": 2709,
+      "retirement_owner": "G08",
+      "retirement": "Remove executable Python before final backend removal; preserve immutable JSON/native tables and source identities as evidence."
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_json_matrix.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "198 actual whole-adapter offline OpenAlex/SemanticScholar JSON-operation captures, including source-error precedence after otherwise unrepresentable earlier rows; no provider calls.",
+      "reason": "Temporary source oracle; retain JSON evidence and retire executable Python before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_openalex_order.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Inspected source imports argparse,asyncio,base64,engines.openalex,json,pathlib,runpy; fixed offline source controls emit JSON on stdout. Native gates consume immutable captures only.",
+      "reason": "Temporary manual source oracle; no runtime/client exception or provider calls.",
+      "sha256": "eea046f9a9290f291ca5eb77127738deeb643887a82cd3ebc86e2827710ef091",
+      "bytes": 5482,
+      "retirement_owner": "G08",
+      "retirement": "Remove executable Python before final backend removal; preserve immutable JSON captures and source identities as evidence."
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_shared.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Offline source capture using pinned Python/HTTPX MockTransport; no provider calls; Rust parser consumes frozen JSON only.",
+      "reason": "Not a client-only or runtime exception. G08 must retire executable Python; replace required qualification driver with a native successor before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_source.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Offline source capture using pinned Python/HTTPX MockTransport; no provider calls; Rust parser consumes frozen JSON only.",
+      "reason": "Not a client-only or runtime exception. G08 must retire executable Python; replace required qualification driver with a native successor before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_wire.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Actual offline whole-adapter request URLs, exhaustive pinned Python Unicode16 word predicate, and HTTPX UTF7 surrogate-versus-XML error outcomes. No provider calls.",
+      "reason": "Temporary source oracle only; retain JSON and retire executable Python before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_xml.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Offline source capture using pinned Python/HTTPX MockTransport; no provider calls; Rust parser consumes frozen JSON only.",
+      "reason": "Not a client-only or runtime exception. G08 must retire executable Python; replace required qualification driver with a native successor before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_xml_grammar.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Offline source capture using pinned Python/HTTPX MockTransport; no provider calls; Rust parser consumes frozen JSON only.",
+      "reason": "Not a client-only or runtime exception. G08 must retire executable Python; replace required qualification driver with a native successor before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_xml_stress.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Offline source capture using pinned Python/HTTPX MockTransport; no provider calls; Rust parser consumes frozen JSON only.",
+      "reason": "Not a client-only or runtime exception. G08 must retire executable Python; replace required qualification driver with a native successor before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/native_qualification.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "A06",
+      "migration_owners": [
+        "A06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Former temporary native build/FD/resource qualification driver; required Rust CI invocation replaced by native A06 gate. Original executable remains inventoried for G08 retirement, never backend/runtime or client exception.",
+      "reason": "Not a client-only or runtime exception. G08 must retire executable Python; replace required qualification driver with a native successor before backend removal.",
+      "introduced_after_baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8",
+      "required_gate_python": false,
+      "native_successor": "cargo xtask check A06"
+    },
+    {
       "path": "docs/rust-rewrite/a11/capture_regressions.py",
       "classification": "backend-coupled tooling/test",
       "migration_owner": "A11",
@@ -6863,11 +7061,56 @@
       "sha256": "845ff9a68d68b3a9556b7535977234635f21048e2985acaf4e5bda36db4016ad"
     }
   ],
-  "documentation_examples": [],
+  "source": "Pinned F01 baseline inventory plus reviewed post-baseline additions recorded in DRIFT.md; source-set validation refreshed at acceptance.",
   "current_producer_identity_amendment": {
     "path": "docs/rust-rewrite/a05/producer-identity-amendments.json",
     "sha256": "1ebe1ca20e3d7a76aacfa6e5e1a907c7d07047af6a4b14e22d91a73847a3ad62",
     "producer_count": 53,
     "semantics": "Existing complete classification records retain their original observed source SHA. This amendment supplies current AST-equivalent tooling identities without relabeling historical capture or generation producer hashes."
+  },
+  "classifications": [
+    "backend/runtime",
+    "backend-coupled tooling/test",
+    "client-only",
+    "historical evidence"
+  ],
+  "client_only_files": [
+    "ssx"
+  ],
+  "schema_version": "1.0.0",
+  "documentation_examples": [],
+  "summary": {
+    "documentation_file_modes": {
+      "100644": 739
+    },
+    "active_dynamic_python_source_path_count": 1,
+    "executable_config_python_invocation_lines": 63,
+    "tracked_python_source_count": 500,
+    "configured_precommit_hook_rows": 15,
+    "python_invocations_appendix": "python-invocations.json",
+    "documented_example_invocation_references": 49,
+    "source_path_set_validation": {
+      "exact_match": true,
+      "method": "sorted exact-set comparison between git ls-files paths ending .py/.pyw/.pyi plus ssx and files[].path",
+      "tracked_expected_count": 500,
+      "validation_scope": "Normal A06/A11 main integration full-record union; exact source-set native gates required",
+      "extensionless_python_paths": [
+        "ssx"
+      ],
+      "manifest_count": 500
+    },
+    "non_runtime_historical_py_txt_path_count": 738,
+    "documented_py_txt_command_references": 49,
+    "extensionless_python_entrypoints": 1,
+    "historical_evidence_py_txt_path_count": 739,
+    "interpreter_configuration_lines": 106,
+    "documentation_shebang_script_count": 8,
+    "source_classifications": {
+      "historical evidence": 4,
+      "backend/runtime": 122,
+      "backend-coupled tooling/test": 373,
+      "client-only": 1
+    },
+    "dynamic_python_source_artifact_count": 1
   }
 }

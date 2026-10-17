@@ -6,7 +6,7 @@ use std::{collections::BTreeSet, path::Path};
 const CORPUS: &str = "4a83fb3db44894679213ba96941915dc12ad0bf00ad5cbfc691fb0410a86fc2e";
 const REVIEW: &str = "63bb5265fbc7e2228b121d44823a476b544a1968bbfd823791f50cdad515e81e";
 const REVIEW_2: &str = "fa247104d9829f24ec5d3ddd62c1c47cfb640e9dedd5e7edd8823fc4900302d2";
-const COVERAGE: &str = "212cbe90ce1f7ebb4b96bacacccceca45ffdedd7866be825bd0704d32d37316a";
+const COVERAGE: &str = "8a9f65dc267903f7fa07cc8b78ee7603c114c44b29ef0b2b6d2b7e0273cb323f";
 const UNICODE_BOUNDARY: &str = "69e4594300a116e547a3eeca1b98a47a3f57dd3eade381bf083c1c7c57e97b4c";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
@@ -684,6 +684,10 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     }) {
         return Err("A05 registry conformance cases did not all execute".into());
     }
+    let mut active_coverage = coverage.clone();
+    let process_cases = process_cases_for_platform(&coverage, cfg!(target_os = "linux"))?;
+    let process_count = process_cases.len();
+    active_coverage["native_process_unit_tests"] = json!(process_cases);
     for (key, package, selection, count) in [
         (
             "native_header_reader_tests",
@@ -695,7 +699,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "native_process_unit_tests",
             "ssx-infra",
             vec!["--lib", "process_pool::cleanup_tests::"],
-            11,
+            process_count,
         ),
         (
             "native_process_integration_tests",
@@ -710,7 +714,15 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             5,
         ),
     ] {
-        qualify_exact_group(root, records, &coverage, key, package, &selection, count)?;
+        qualify_exact_group(
+            root,
+            records,
+            &active_coverage,
+            key,
+            package,
+            &selection,
+            count,
+        )?;
     }
     records.push(json!({"contract":"A05","corpus_sha256":CORPUS,"coverage_sha256":COVERAGE,"review_corpus_sha256":REVIEW,"review_2_corpus_sha256":REVIEW_2,"executed_cases":completed,"native_tests":expected,"source_tests":source_tests,"scope":"offline HTML adapters through F06 factories/F08 sessions; explicit host-only cookie correction; no live provider or deployment claims","status":"passed"}));
     Ok(())
@@ -799,7 +811,13 @@ fn qualify_exact_group(
     if actual != expected {
         return Err(format!("A05 missing/extra tests: {key}"));
     }
-    args.extend_from_slice(&["--", "--nocapture"]);
+    args.push("--");
+    // The Linux held-writer test emits a completion marker. Default libtest
+    // capture retains canonical named pass lines; failures still print full
+    // diagnostics. Its dedicated Linux control separately qualifies the marker.
+    if key != "native_process_unit_tests" {
+        args.push("--nocapture");
+    }
     let output = command(root, "cargo", &args, records)?;
     let passed: BTreeSet<_> = output
         .lines()
@@ -809,4 +827,84 @@ fn qualify_exact_group(
         return Err(format!("A05 group did not execute completely: {key}"));
     }
     Ok(())
+}
+
+fn process_cases_for_platform(coverage: &Value, linux: bool) -> Result<Vec<Value>> {
+    let common = coverage["native_process_unit_tests"]
+        .as_array()
+        .ok_or("A05 common process cases missing")?;
+    let linux_cases = coverage["native_linux_process_unit_tests"]
+        .as_array()
+        .ok_or("A05 Linux process cases missing")?;
+    let mut names = BTreeSet::new();
+    for case in common {
+        let name = case.as_str().ok_or("A05 invalid common process case")?;
+        if !name.starts_with("process_pool::cleanup_tests::") || !names.insert(name) {
+            return Err("A05 duplicate or invalid common process case".into());
+        }
+    }
+    if common.len() != 12
+        || linux_cases
+            != &vec![json!(
+                "process_pool::cleanup_tests::held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup"
+            )]
+    {
+        return Err("A05 common/Linux process case inventory changed".into());
+    }
+    if linux_cases
+        .iter()
+        .any(|v| names.contains(v.as_str().unwrap_or_default()))
+    {
+        return Err("A05 process case appears in both architecture sets".into());
+    }
+    let mut cases = common.clone();
+    if linux {
+        cases.extend(linux_cases.iter().cloned());
+    }
+    Ok(cases)
+}
+
+#[cfg(test)]
+mod process_inventory_tests {
+    use super::*;
+    fn coverage() -> Value {
+        serde_json::from_str(include_str!("../../../docs/rust-rewrite/a05/coverage.json")).unwrap()
+    }
+    #[test]
+    fn architecture_sets_preserve_exact_common_cases_and_one_linux_addition() {
+        let q = coverage();
+        let common = process_cases_for_platform(&q, false).unwrap();
+        let linux = process_cases_for_platform(&q, true).unwrap();
+        assert_eq!(common.len(), 12);
+        assert_eq!(linux.len(), 13);
+        assert_eq!(
+            common,
+            q["native_process_unit_tests"].as_array().unwrap().clone()
+        );
+        assert_eq!(
+            linux
+                .iter()
+                .filter(|v| !common.contains(v))
+                .collect::<Vec<_>>(),
+            vec![&q["native_linux_process_unit_tests"][0]]
+        );
+        assert!(common.contains(&json!("process_pool::cleanup_tests::missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease")));
+    }
+    #[test]
+    fn invalid_duplicate_and_cross_architecture_members_fail_closed() {
+        for linux in [false, true] {
+            let mut q = coverage();
+            q["native_process_unit_tests"][0] = q["native_process_unit_tests"][1].clone();
+            assert!(process_cases_for_platform(&q, linux).is_err());
+            let mut q = coverage();
+            q["native_process_unit_tests"][0] = json!("unrelated::test");
+            assert!(process_cases_for_platform(&q, linux).is_err());
+            let mut q = coverage();
+            q["native_linux_process_unit_tests"] = json!([]);
+            assert!(process_cases_for_platform(&q, linux).is_err());
+            let mut q = coverage();
+            q["native_process_unit_tests"][0] = q["native_linux_process_unit_tests"][0].clone();
+            assert!(process_cases_for_platform(&q, linux).is_err());
+        }
+    }
 }

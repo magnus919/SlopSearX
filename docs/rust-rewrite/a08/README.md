@@ -32,7 +32,7 @@ complete outcome/result fields. Measured latency and transport/library default
 User-Agent headers are excluded; EDGAR's authored User-Agent and all declared
 Accept/content-type headers are asserted. Exact per-case library User-Agent
 differences are frozen in `header-differences.json`; real native loopback
-confirms absence for FDA/FRED/Oyez. No full transport-header parity is claimed. Only integer versus f64 encoding of a
+confirms the accepted A06 native default profile for FDA/FRED/Oyez. The default wire identity intentionally differs from HTTPX; EDGAR retains its explicit authored override. No full transport-header parity is claimed. Only integer versus f64 encoding of a
 numeric result.score is normalized under the accepted FiniteF64 boundary;
 booleans, strings and nonfinite scores are not silently coerced.
 

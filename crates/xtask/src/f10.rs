@@ -131,6 +131,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         records,
         "ssx-infra",
         &[
+            "a06_optional_adapter_cooldown_feedback_reuses_shared_authority_and_epoch",
             "absent_url_warmup_is_noop_and_fail_setting_is_explicit",
             "actual_f08_429_cooldown_prevents_redispatch_and_health_stays_observed",
             "actual_peer_started_timeout_records_failure_with_null_latency",

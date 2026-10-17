@@ -43,7 +43,7 @@ impl PubChemAdapter {
         observer: Observer<'_>,
     ) -> Result<ProducedBatch<'b>> {
         admit_with_context(&self.admission, "pubchem", context).await?;
-        let d = network_deadline(&self.config, false, context)?;
+        let d = network_deadline_for_http(&self.http, &self.config, context)?;
         let quoted = owned_quote(budget, &q.query, true, context).await?;
         let url = owned_join(
             budget,
@@ -133,7 +133,7 @@ impl PubChemAdapter {
             context,
         )
         .await?;
-        let d = network_deadline(&self.config, false, context)?;
+        let d = network_deadline_for_http(&self.http, &self.config, context)?;
         session.set_deadline(tokio::time::Instant::from_std(d));
         let req = request(url.as_str(), &[], false, false)?;
         drop(url);

@@ -3,7 +3,7 @@ use ssx_application::{AdmissionDecision, PortFuture, SearchAdmission, SearchCont
 use ssx_domain::{EngineStatus, SearchRequest};
 use ssx_infra::{
     adapters::{AllowAllAdmission, CatalogMediaSettings, register_catalog_media},
-    http::AdapterHttp,
+    http::{AdapterHttp, Cancellation, Preparation},
 };
 use ssx_registry::Registry;
 use std::{
@@ -15,6 +15,9 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
 };
+#[path = "support/default_ca_environment.rs"]
+mod default_ca_environment;
+
 const NAMES: [&str; 5] = [
     "openlibrary",
     "musicbrainz",
@@ -423,6 +426,11 @@ async fn five_future_drops_and_owner_shutdown_close_real_pending_sockets() {
 }
 #[tokio::test]
 async fn five_real_timeout_and_expired_context_cleanup() {
+    if default_ca_environment::default_ca_test_environment(
+        "five_real_timeout_and_expired_context_cleanup",
+    ) {
+        return;
+    }
     for name in NAMES {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
@@ -431,8 +439,21 @@ async fn five_real_timeout_and_expired_context_cleanup() {
             30,
             Arc::new(AllowAllAdmission),
         );
+        // Prepare the ordinary pool before the unchanged request deadline starts.
+        assert_eq!(
+            h.prepare_default(
+                tokio::time::Instant::now() + Duration::from_secs(5),
+                Cancellation::default(),
+            )
+            .await
+            .unwrap(),
+            Preparation::Prepared
+        );
         let server = tokio::spawn(async move {
-            let (mut socket, _) = listener.accept().await.unwrap();
+            let (mut socket, _) = tokio::time::timeout(Duration::from_secs(2), listener.accept())
+                .await
+                .expect("prepared request must reach the loopback server")
+                .unwrap();
             let mut data = [0; 8192];
             assert!(socket.read(&mut data).await.unwrap() > 0);
             let mut b = [0; 1];
@@ -460,7 +481,7 @@ async fn five_real_timeout_and_expired_context_cleanup() {
                 EngineStatus::Timeout
             }
         );
-        server.await.unwrap();
+        let server_result = server.await;
         let result = r
             .instantiate(name)
             .unwrap()
@@ -473,6 +494,7 @@ async fn five_real_timeout_and_expired_context_cleanup() {
             .await;
         assert_eq!(result.status, EngineStatus::Timeout);
         h.shutdown_and_wait().await;
+        server_result.unwrap();
     }
 }
 #[tokio::test]

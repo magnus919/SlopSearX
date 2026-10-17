@@ -780,3 +780,68 @@ async fn shutdown_does_not_close_borrowed_f07_authority() {
     owned.shutdown().await;
     assert_eq!(owned.warmup().await.unwrap_err(), RateFailure::Closed);
 }
+
+#[tokio::test]
+async fn a06_optional_adapter_cooldown_feedback_reuses_shared_authority_and_epoch() {
+    use ssx_application::{AdmissionDecision, SearchAdmission};
+    use ssx_infra::adapters::{AllowAllAdmission, F10Admission, f10_monotonic_seconds};
+    let server = Server::start();
+    let local = Arc::new(tokio::sync::Mutex::new(RateLimiter::new(
+        Arc::new(quota(&server, 10.0, 1.0)),
+        true,
+    )));
+    let remote = Arc::new(tokio::sync::Mutex::new(RateLimiter::new(
+        Arc::new(quota(&server, 10.0, 1.0)),
+        true,
+    )));
+    let a = F10Admission::new(local.clone());
+    let b = F10Admission::new(remote);
+    assert_eq!(a.admit("semanticscholar").await, AdmissionDecision::Allowed);
+    let before = f10_monotonic_seconds();
+    a.set_upstream_cooldown("semanticscholar", 12.5).await;
+    let state = local
+        .lock()
+        .await
+        .state(&engine("semanticscholar"))
+        .unwrap()
+        .clone();
+    assert!(state.upstream_cooldown_until >= before + 12.5);
+    assert!(state.upstream_cooldown_until <= f10_monotonic_seconds() + 12.5);
+    assert_eq!(a.admit("semanticscholar").await, AdmissionDecision::Denied);
+    assert_eq!(b.admit("semanticscholar").await, AdmissionDecision::Denied);
+    let ttl = ttl_ms(&server, "ratelimit:upstream-cooldown:semanticscholar");
+    assert!((1..=13_000).contains(&ttl));
+    // Optional absence is the source no-limiter case, not a shared cooldown.
+    let absent = AllowAllAdmission;
+    absent.set_upstream_cooldown("semanticscholar", 12.5).await;
+    assert_eq!(
+        absent.admit("semanticscholar").await,
+        AdmissionDecision::Allowed
+    );
+    // Publication failure is ignored, retaining the local marker already set.
+    let store = Arc::new(
+        DistributedQuota::from_url(
+            "",
+            None,
+            QuotaConfig::new(10.0, 1.0).unwrap(),
+            Duration::from_millis(100),
+        )
+        .unwrap(),
+    );
+    let failed = Arc::new(tokio::sync::Mutex::new(RateLimiter::new(store, true)));
+    let bridge = F10Admission::new(failed.clone());
+    bridge.set_upstream_cooldown("semanticscholar", 12.5).await;
+    assert_eq!(
+        bridge.admit("semanticscholar").await,
+        AdmissionDecision::Denied
+    );
+    assert!(
+        failed
+            .lock()
+            .await
+            .state(&engine("semanticscholar"))
+            .unwrap()
+            .upstream_cooldown_until
+            > 0.0
+    );
+}

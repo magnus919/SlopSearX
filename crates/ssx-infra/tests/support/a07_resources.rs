@@ -701,23 +701,35 @@ async fn actual_pubchem_cid_reference_parts_yield_and_release_before_second_disp
         let budget = Budget::new(ROW_BYTES).unwrap();
         let phase = AtomicUsize::new(0);
         let baseline = AtomicUsize::new(0);
+        let history = AtomicUsize::new(0);
         let observer = |p| {
             if matches!(p, Phase::CidParts | Phase::CidPartsComplete) {
+                history.fetch_or(1 << p as usize, Ordering::SeqCst);
                 phase.store(p as usize + 1, Ordering::SeqCst);
             }
         };
         let deadline = Instant::now() + Duration::from_secs(2);
         let q = query();
         let mut future = Box::pin(engine.run(&q, Some(deadline), &budget, Some(&observer)));
-        until_phase(
-            future.as_mut(),
-            &phase,
-            Phase::CidParts,
-            &budget,
-            &baseline,
-            1,
-        )
-        .await;
+        let phase_started = Instant::now();
+        poll_fn(|cx| match future.as_mut().poll(cx) {
+            Poll::Ready(result) => panic!(
+                "PubChem completed before phase: error={:?} elapsed={:?} phase={} history={} budget={:?} requests={}",
+                result.as_ref().err(), phase_started.elapsed(),
+                phase.load(Ordering::SeqCst), history.load(Ordering::SeqCst),
+                budget.snapshot().unwrap(), replies.seen.load(Ordering::SeqCst)
+            ),
+            Poll::Pending => {
+                let reached = phase.load(Ordering::SeqCst) == Phase::CidParts as usize + 1;
+                let used = budget.snapshot().unwrap().used;
+                if reached && used > baseline.load(Ordering::SeqCst) {
+                    Poll::Ready(())
+                } else {
+                    cx.waker().wake_by_ref();
+                    Poll::Pending
+                }
+            }
+        }).await;
         assert!(budget.snapshot().unwrap().used > 4096 * std::mem::size_of::<&str>());
         eprintln!(
             "A07_PROVIDER_PHASE pubchem expire={expire} live={} peak={}",

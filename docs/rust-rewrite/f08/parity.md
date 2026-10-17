@@ -20,3 +20,15 @@ Review/merge acceptance remains pending.
 | Resource strategy | Ten origin-specific idle clients enforce the global idle bound; origin churn may retain fewer useful idle sockets than HTTPX's internal strategy; no performance equivalence claim |
 | Platform trust | macOS loopback evidence only; system roots/proxies and mTLS on release platforms remain O02/O04 qualification |
 | Portal | Additive native module only; no production wiring/browser contract change; later integration must run the required portal checks |
+
+## Candidate native User-Agent amendment
+
+Shared default identity is versioned `SlopSearX/<ssx-infra package version>
+(meta search engine; agent-native)`, with request > session > default precedence.
+This is an intentional source/native wire-identity difference from pinned
+`python-httpx/0.28.1`; immutable source captures remain unchanged. Native replay
+expectations declare it explicitly, while Replay retains complete strict header
+comparison. Actual sockets qualify default/overrides, redirects, and continued
+cookie/auth isolation. No provider compatibility benefit is claimed. Merged
+A07 consumers still require validation after normal main integration or isolated
+parent donor validation; this candidate is not activation acceptance.

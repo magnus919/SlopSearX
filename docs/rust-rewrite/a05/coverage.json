@@ -2203,6 +2203,7 @@
     "process_pool::cleanup_tests::closed_receiver_during_success_delivery_retains_lease_until_reply_drop",
     "process_pool::cleanup_tests::concurrent_fixtures_with_identical_clock_have_exclusive_identities",
     "process_pool::cleanup_tests::incomplete_pid_record_is_not_child_readiness",
+    "process_pool::cleanup_tests::missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease",
     "process_pool::cleanup_tests::missing_request_readiness_releases_gate_before_bounded_shutdown",
     "process_pool::cleanup_tests::unknown_cleanup_closes_reuse_and_reports_shutdown_failure",
     "process_pool::cleanup_tests::unknown_cleanup_retains_lease_and_permit_and_reports_failed_drain",
@@ -2223,5 +2224,8 @@
     "impossible_allocation_is_typed_and_child_reaped",
     "oversized_capacity_is_typed_instead_of_panicking"
   ],
-  "producer_maintenance_sha256": "1ebe1ca20e3d7a76aacfa6e5e1a907c7d07047af6a4b14e22d91a73847a3ad62"
+  "producer_maintenance_sha256": "1ebe1ca20e3d7a76aacfa6e5e1a907c7d07047af6a4b14e22d91a73847a3ad62",
+  "native_linux_process_unit_tests": [
+    "process_pool::cleanup_tests::held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup"
+  ]
 }

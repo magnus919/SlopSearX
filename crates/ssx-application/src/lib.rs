@@ -36,6 +36,15 @@ pub enum AdmissionDecision {
 /// Shared quota/cooldown authority injected into provider adapter factories.
 pub trait SearchAdmission: Send + Sync {
     fn admit<'a>(&'a self, engine: &'static str) -> PortFuture<'a, AdmissionDecision>;
+    /// Optional provider feedback, matching source adapters with no configured
+    /// limiter. Persistence failure must not replace the upstream classification.
+    fn set_upstream_cooldown<'a>(
+        &'a self,
+        _engine: &'static str,
+        _seconds: f64,
+    ) -> PortFuture<'a, ()> {
+        Box::pin(async {})
+    }
 }
 /// Foundation readiness probe only; never use this as the adapter search API.
 pub trait Engine: Send + Sync {

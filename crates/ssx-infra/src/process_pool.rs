@@ -45,6 +45,8 @@ struct State {
 }
 struct Inner {
     helper: PathBuf,
+    #[cfg(test)]
+    test_args: Vec<std::ffi::OsString>,
     permits: Arc<Semaphore>,
     state: Mutex<State>,
     drained: Notify,
@@ -109,6 +111,8 @@ impl ProcessPool {
         Ok(Self {
             inner: Arc::new(Inner {
                 helper,
+                #[cfg(test)]
+                test_args: Vec::new(),
                 permits: Arc::new(Semaphore::new(capacity.get())),
                 state: Mutex::new(State::default()),
                 drained: Notify::new(),
@@ -296,7 +300,10 @@ async fn run_worker<P: AsRef<[u8]> + Sync>(
         if Instant::now() >= deadline {
             return Err(ProcessError::Deadline);
         }
-        tokio::process::Command::new(&inner.helper)
+        let mut command = tokio::process::Command::new(&inner.helper);
+        #[cfg(test)]
+        command.args(&inner.test_args);
+        command
             .env_clear()
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
@@ -511,7 +518,6 @@ mod cleanup_tests {
     }
     #[cfg(unix)]
     fn fixture_at_stamp(body: &str, stamp: u128) -> (PathBuf, PathBuf) {
-        use std::os::unix::fs::PermissionsExt;
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         for _ in 0..64 {
             let sequence = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -531,7 +537,6 @@ mod cleanup_tests {
                 format!("#!/bin/sh\necho $$ > '{}'\n{body}\n", pid.display()),
             )
             .unwrap();
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
             eprintln!(
                 "private fixture: helper={} pidfile={}",
                 path.display(),
@@ -540,6 +545,15 @@ mod cleanup_tests {
             return (path, pid);
         }
         panic!("private fixture directory collision limit");
+    }
+    #[cfg(unix)]
+    fn fixture_pool(path: &std::path::Path) -> ProcessPool {
+        let mut pool =
+            ProcessPool::new(PathBuf::from("/bin/sh"), NonZeroUsize::new(1).unwrap()).unwrap();
+        // Configured exactly once before any clone or dispatch; no shared
+        // mutation, retry, or production command change.
+        Arc::get_mut(&mut pool.inner).unwrap().test_args = vec![path.as_os_str().to_owned()];
+        pool
     }
     #[cfg(unix)]
     fn cleanup_fixture(path: PathBuf, pid: PathBuf) {
@@ -640,7 +654,7 @@ mod cleanup_tests {
     async fn cancelled_caller_lease_survives_blocked_cleanup_until_real_reap() {
         let (path, pidfile) =
             fixture("IFS= read -r first; printf 'ready\\n' > \"$0.ready\"; while :; do :; done");
-        let pool = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+        let pool = fixture_pool(&path);
         let gate = Arc::new(CleanupGate {
             entered: Semaphore::new(0),
             release: Semaphore::new(0),
@@ -719,7 +733,7 @@ mod cleanup_tests {
     #[tokio::test]
     async fn missing_request_readiness_releases_gate_before_bounded_shutdown() {
         let (path, pidfile) = fixture("exec /bin/sleep 30");
-        let pool = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+        let pool = fixture_pool(&path);
         let gate = Arc::new(CleanupGate {
             entered: Semaphore::new(0),
             release: Semaphore::new(0),
@@ -764,7 +778,7 @@ mod cleanup_tests {
         .enumerate()
         {
             let (path, pidfile) = fixture(body);
-            let pool = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+            let pool = fixture_pool(&path);
             let (payload, payload_budget, payload_dropped) = charged_payload();
             let accounting = Arc::new(Semaphore::new(1));
             let lease = Arc::new(accounting.clone().acquire_owned().await.unwrap());
@@ -793,12 +807,99 @@ mod cleanup_tests {
             cleanup_fixture(path, pidfile);
         }
     }
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup()
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let (path, pidfile) =
+            fixture("/bin/cat >/dev/null; printf '\\000\\000\\000\\000\\000\\000\\000\\002ok'");
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let held_writer = std::fs::OpenOptions::new().write(true).open(&path).unwrap();
+        let direct_error = std::process::Command::new(&path).spawn().unwrap_err();
+        assert_eq!(direct_error.raw_os_error(), Some(26));
+        let direct = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+        assert!(direct.inner.test_args.is_empty());
+        assert_eq!(
+            direct
+                .exchange(
+                    Instant::now() + std::time::Duration::from_secs(2),
+                    vec![],
+                    vec![],
+                    2
+                )
+                .await,
+            Err(ProcessError::Spawn(direct_error.to_string()))
+        );
+        direct.shutdown().await.unwrap();
+        assert!(!pidfile.exists());
+        let interpreted = fixture_pool(&path);
+        let (payload, budget, dropped) = charged_payload();
+        let accounting = Arc::new(Semaphore::new(1));
+        let lease = Arc::new(accounting.clone().acquire_owned().await.unwrap());
+        assert_eq!(
+            interpreted
+                .exchange_with_lease(
+                    Instant::now() + std::time::Duration::from_secs(2),
+                    vec![],
+                    payload,
+                    2,
+                    lease
+                )
+                .await,
+            Ok(b"ok".to_vec())
+        );
+        interpreted.shutdown().await.unwrap();
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+        assert!(dropped.load(std::sync::atomic::Ordering::SeqCst));
+        assert_eq!(accounting.available_permits(), 1);
+        assert_eq!(interpreted.available_slots(), 1);
+        assert!(pid_gone(&actual_pid(&pidfile).await));
+        drop(held_writer);
+        cleanup_fixture(path, pidfile);
+        println!(
+            "LINUX_ETXTBSY_CONTROL direct-rejected:interpreter-exact-protocol:reaped:released"
+        );
+    }
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease() {
+        let (path, pidfile) = fixture("exit 99");
+        let missing = path.with_extension("missing");
+        let expected = std::process::Command::new(&missing)
+            .spawn()
+            .unwrap_err()
+            .to_string();
+        let pool = ProcessPool::new(missing, NonZeroUsize::new(1).unwrap()).unwrap();
+        assert!(pool.inner.test_args.is_empty());
+        let (payload, budget, dropped) = charged_payload();
+        let accounting = Arc::new(Semaphore::new(1));
+        let lease = Arc::new(accounting.clone().acquire_owned().await.unwrap());
+        assert_eq!(
+            pool.exchange_with_lease(
+                Instant::now() + std::time::Duration::from_secs(2),
+                vec![],
+                payload,
+                2,
+                lease
+            )
+            .await,
+            Err(ProcessError::Spawn(expected))
+        );
+        pool.shutdown().await.unwrap();
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+        assert!(dropped.load(std::sync::atomic::Ordering::SeqCst));
+        assert_eq!(accounting.available_permits(), 1);
+        assert!(!pidfile.exists());
+        cleanup_fixture(path, pidfile);
+        println!("A10_FIXTURE_COMPLETE direct-spawn-error-released");
+    }
     #[cfg(unix)]
     #[tokio::test]
     async fn closed_receiver_during_success_delivery_retains_lease_until_reply_drop() {
         let (path, pidfile) =
             fixture("/bin/cat >/dev/null; printf '\\000\\000\\000\\000\\000\\000\\000\\002ok'");
-        let pool = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+        let pool = fixture_pool(&path);
         let gate = Arc::new(CleanupGate {
             entered: Semaphore::new(0),
             release: Semaphore::new(0),
@@ -881,7 +982,7 @@ mod cleanup_tests {
             } else {
                 "/bin/cat >/dev/null; printf x"
             });
-            let pool = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+            let pool = fixture_pool(&path);
             let (payload, budget, dropped) = charged_payload();
             let header_budget = ssx_owned_budget::Budget::new(8 * 1024 * 1024).unwrap();
             let header_charge = header_budget.reserve(4 * 1024 * 1024).unwrap();
@@ -918,7 +1019,7 @@ mod cleanup_tests {
     async fn unknown_cleanup_retains_lease_and_permit_and_reports_failed_drain() {
         let (path, pidfile) =
             fixture("/bin/cat >/dev/null; printf '\\000\\000\\000\\000\\000\\000\\000\\002ok'");
-        let pool = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+        let pool = fixture_pool(&path);
         pool.inner
             .cleanup_error
             .store(true, std::sync::atomic::Ordering::SeqCst);

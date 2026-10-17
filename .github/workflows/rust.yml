@@ -111,6 +111,9 @@ jobs:
       - name: Workspace tests, including xtask
         run: cargo test --locked --workspace
 
+      - name: Native scholarly adapters and Expat boundary qualification
+        run: cargo xtask check A06 --output target/rust-evidence/A06.json
+
       - name: Locked workspace build
         run: cargo build --locked --workspace --target "${{ matrix.target }}"
 
@@ -272,6 +275,7 @@ jobs:
             target/rust-evidence/A02.json
             target/rust-evidence/A03.json
             target/rust-evidence/A04.json
+            target/rust-evidence/A06.json
             target/rust-evidence/A05.json
             target/rust-evidence/A07.json
             target/rust-evidence/A08.json

@@ -1,0 +1,429 @@
+{
+  "source_sha256": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+  "runtime_expat": "expat_2.7.4",
+  "scope": "5 complete whole-source outputs and 3 explicit giant-field source outcome summaries; input generators and hashes retained",
+  "records": [
+    {
+      "id": "arxiv.stress.deep_100000",
+      "generator": {
+        "kind": "deep",
+        "count": 100000
+      },
+      "body_sha256": "366e826bbe921a36a655fdaa2afbcbb9ae6dc0c6131ea6bb2c21d07865a2d2a1",
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Aq&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.stress.siblings_1000001",
+      "generator": {
+        "kind": "siblings",
+        "count": 1000001
+      },
+      "body_sha256": "32566f0985986189c389655f357337b3babcc588b305c6155eac4172fd6d3c84",
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Aq&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/",
+            "title": "T",
+            "content": "",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {},
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.stress.entity_chain_10000",
+      "generator": {
+        "kind": "entity_chain",
+        "count": 10000
+      },
+      "body_sha256": "b96bd27a298480945d45b95f3caed659b0d49d51e617d72e8621553ddae75d3e",
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Aq&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/",
+            "title": "X",
+            "content": "",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {},
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.stress.transport_max_ascii",
+      "generator": {
+        "kind": "ascii",
+        "padding": 33554339,
+        "body_bytes": 33554432
+      },
+      "body_sha256": "c52db3d1136597a1f0eec4f2a4dad683530de0fa8312a45718f14893864ba477",
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Aq&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/",
+            "title": "T",
+            "content": "",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {},
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.stress.transport_max_utf8_replacement",
+      "generator": {
+        "kind": "utf8_replacement",
+        "padding": 33554339,
+        "body_bytes": 33554432
+      },
+      "body_sha256": "5fb7a20212989e80544441d4a4275e77041b6276f93264c92e9a4167600f6c3b",
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Aq&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/",
+            "title": "T",
+            "content": "",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {},
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.stress.retained64m_False",
+      "generator": {
+        "base": "A",
+        "base_count": 1024,
+        "doublings": 16,
+        "comment_padding": 1048576,
+        "late_invalid": false
+      },
+      "body_sha256": "6c23efcc4bfdeeeb41486bf857051f4da627a12e3084e8a6918ab1263913214a",
+      "body_bytes": 1050102,
+      "source_output_summary": {
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false,
+        "results_summary": [
+          {
+            "title_codepoints": 67108864,
+            "title_sha256": "dbfaca2662cb70b69dfefd5ac95d1f54a73663092d46cefdc9609dc695a12c98",
+            "other_fields": {
+              "url": "https://arxiv.org/abs/",
+              "content": "",
+              "engine": "arxiv",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "science",
+                "type": "publication",
+                "schema_version": 1,
+                "data": {},
+                "provenance": {
+                  "engine": "arxiv",
+                  "adapter_fields": [],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "arxiv.stress.retained64m_True",
+      "generator": {
+        "base": "A",
+        "base_count": 1024,
+        "doublings": 16,
+        "comment_padding": 1048576,
+        "late_invalid": true
+      },
+      "body_sha256": "624be0c5a22a2b1490a90c19efde8652665eb77b83f7a6e54b712c050a937150",
+      "body_bytes": 1050107,
+      "source_output_summary": {
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false,
+        "results_summary": []
+      }
+    },
+    {
+      "id": "arxiv.stress.large_abstract5m",
+      "generator": {
+        "kind": "large_abstract",
+        "summary_codepoints": 5242880
+      },
+      "body_sha256": "5136ac74fc03d10de2b7404152d1458286cd649abd94ee5349470048ce5f403b",
+      "abstract_codepoints": 5242880,
+      "abstract_sha256": "dbbe5517996826bd5861ac22b745d21d11219055d89243ca1aea0ad31f552b12",
+      "output_without_abstract": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/",
+            "title": "T",
+            "content": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {},
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

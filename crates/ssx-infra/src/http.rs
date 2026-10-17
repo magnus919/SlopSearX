@@ -1,4 +1,6 @@
 //! Adapter-owned sockets and search-owned identity. No provider retries or parsers.
+mod monotonic;
+pub(crate) use monotonic::Clock as DeadlineClock;
 use reqwest::{
     Client, Method, Url,
     cookie::{CookieStore, Jar},
@@ -12,7 +14,7 @@ use std::{
     sync::{Arc, Mutex, Weak},
     time::{Duration, Instant},
 };
-use tokio::sync::{Notify, OwnedSemaphorePermit, Semaphore, watch};
+use tokio::sync::{Notify, OwnedSemaphorePermit, Semaphore, oneshot, watch};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
@@ -30,6 +32,22 @@ pub enum Error {
     Network,
 }
 pub type Result<T> = std::result::Result<T, Error>;
+/// Reviewed native outbound adapter identity. Explicit request/session values
+/// override this static versioned default; no tenant/auth headers are copied.
+pub const DEFAULT_USER_AGENT: &str = concat!(
+    "SlopSearX/",
+    env!("CARGO_PKG_VERSION"),
+    " (meta search engine; agent-native)"
+);
+fn default_headers() -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        header::USER_AGENT,
+        HeaderValue::from_static(DEFAULT_USER_AGENT),
+    );
+    headers
+}
+
 pub type ExchangeFuture<'a> = Pin<Box<dyn Future<Output = Result<Response>> + Send + 'a>>;
 /// Caller-owned transports are borrowed and never closed by this module.
 pub trait Transport: Send + Sync {
@@ -197,8 +215,13 @@ impl Pool {
             options,
         }
     }
-    fn checkout(self: &Arc<Self>, url: &Url, state: Arc<Mutex<State>>) -> Result<Checkout> {
-        let origin = url.origin().ascii_serialization();
+    fn reserve(
+        self: &Arc<Self>,
+        origin: String,
+        state: Arc<Mutex<State>>,
+        adapter_permit: OwnedSemaphorePermit,
+        pool_permit: OwnedSemaphorePermit,
+    ) -> Result<Checkout> {
         let mut slots = self.slots.lock().unwrap();
         if self.permits.is_closed() {
             return Err(Error::Closed);
@@ -211,7 +234,8 @@ impl Pool {
             .position(|(busy, s)| {
                 !busy
                     && s.as_ref().is_some_and(|i| {
-                        i.origin == origin && i.used.elapsed() < Duration::from_secs(5)
+                        (i.origin == origin || i.origin.is_empty())
+                            && i.used.elapsed() < Duration::from_secs(5)
                     })
             })
             .or_else(|| slots.iter().position(|(busy, s)| !busy && s.is_none()))
@@ -226,22 +250,28 @@ impl Pool {
             });
         let client = if let Some(n) = slot {
             let client = match slots[n].1.take() {
-                Some(i) if i.origin == origin && i.used.elapsed() < Duration::from_secs(5) => {
-                    i.client
+                Some(i)
+                    if (i.origin == origin || i.origin.is_empty())
+                        && i.used.elapsed() < Duration::from_secs(5) =>
+                {
+                    Some(i.client)
                 }
-                _ => build_client(&self.options)?,
+                _ => None,
             };
             slots[n].0 = true;
             client
         } else {
-            build_client(&self.options)?
+            None
         };
         Ok(Checkout {
             state,
             pool: self.clone(),
             slot,
             origin,
-            client: Some(client),
+            client,
+            retain: true,
+            _adapter_permit: adapter_permit,
+            _pool_permit: pool_permit,
         })
     }
     fn expire_idle(&self) {
@@ -269,6 +299,11 @@ struct Checkout {
     slot: Option<usize>,
     origin: String,
     client: Option<Client>,
+    // A non-abortable builder owns this whole checkout, including these leases
+    // and its reserved slot, until completion even if its waiting future drops.
+    retain: bool,
+    _adapter_permit: OwnedSemaphorePermit,
+    _pool_permit: OwnedSemaphorePermit,
 }
 impl Drop for Checkout {
     fn drop(&mut self) {
@@ -277,10 +312,10 @@ impl Drop for Checkout {
         self.state.lock().unwrap().expire_idle();
         if let Some(n) = self.slot {
             let mut slots = self.pool.slots.lock().unwrap();
-            if self.pool.permits.is_closed() {
+            slots[n].0 = false;
+            if self.pool.permits.is_closed() || self.client.is_none() || !self.retain {
                 return;
             }
-            slots[n].0 = false;
             slots[n].1 = self
                 .pool
                 .idle
@@ -294,6 +329,127 @@ impl Drop for Checkout {
                     used: Instant::now(),
                 });
         }
+    }
+}
+/// Startup preparation is deliberately limited to the preexisting ordinary
+/// default pool. Ephemeral TLS/proxy profiles retain their cold-session lifetime.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Preparation {
+    Prepared,
+    Ephemeral,
+    Injected,
+    CapacityUnavailable,
+}
+#[derive(Default)]
+struct BuilderState {
+    closed: bool,
+    jobs: Vec<tokio::task::JoinHandle<()>>,
+}
+#[cfg(test)]
+type TestClientBuilder = Arc<dyn Fn(&Options) -> Result<Client> + Send + Sync>;
+#[derive(Default)]
+struct ClientBuilders {
+    state: Mutex<BuilderState>,
+    draining: tokio::sync::Mutex<()>,
+    #[cfg(test)]
+    build: Mutex<Option<TestClientBuilder>>,
+    #[cfg(test)]
+    events: Mutex<Option<tokio::sync::mpsc::Sender<&'static str>>>,
+}
+impl ClientBuilders {
+    fn event(&self, event: &'static str) {
+        #[cfg(test)]
+        if let Some(events) = self.events.lock().unwrap().as_ref() {
+            let _ = events.try_send(event);
+        }
+        #[cfg(not(test))]
+        let _ = event;
+    }
+    fn construct(&self, options: &Options) -> Result<Client> {
+        #[cfg(test)]
+        if let Some(build) = self.build.lock().unwrap().clone() {
+            return build(options);
+        }
+        build_client(options)
+    }
+    async fn run<T: Send + 'static>(
+        &self,
+        work: impl FnOnce() -> Result<T> + Send + 'static,
+    ) -> Result<T> {
+        let (tx, rx) = oneshot::channel();
+        {
+            let mut state = self.state.lock().unwrap();
+            if state.closed {
+                return Err(Error::Closed);
+            }
+            // Admission belongs to the caller's existing connection and pool
+            // leases, already moved into work, not a second worker allowance.
+            state.jobs.retain(|job| !job.is_finished());
+            state.jobs.push(tokio::task::spawn_blocking(move || {
+                // Receiver cancellation drops the completed checkout here,
+                // releasing its client, reserved slot and both owned leases.
+                let _ = tx.send(work());
+            }));
+        }
+        rx.await.map_err(|_| Error::InvalidResponse)?
+    }
+    fn close(&self) {
+        self.state.lock().unwrap().closed = true;
+    }
+    async fn drain(&self) {
+        let _draining = self.draining.lock().await;
+        // Keep join handles in the owner across cancellation of this drain.
+        // The async lock serializes concurrent drain waiters without detaching
+        // any job when one caller drops its shutdown future.
+        std::future::poll_fn(|cx| {
+            let mut state = self.state.lock().unwrap();
+            state
+                .jobs
+                .retain_mut(|job| Pin::new(job).poll(cx).is_pending());
+            if state.jobs.is_empty() {
+                std::task::Poll::Ready(())
+            } else {
+                std::task::Poll::Pending
+            }
+        })
+        .await;
+        self.event("builders_joined");
+    }
+}
+async fn checkout(
+    pool: Arc<Pool>,
+    builders: Arc<ClientBuilders>,
+    state: Arc<Mutex<State>>,
+    connections: Arc<Semaphore>,
+    origin: String,
+) -> Result<Checkout> {
+    let adapter_permit = connections
+        .acquire_owned()
+        .await
+        .map_err(|_| Error::Closed)?;
+    let pool_permit = pool
+        .permits
+        .clone()
+        .acquire_owned()
+        .await
+        .map_err(|_| Error::Closed)?;
+    state.lock().unwrap().expire_idle();
+    let mut checkout = pool.reserve(origin, state, adapter_permit, pool_permit)?;
+    if checkout.client.is_none() {
+        // Only the receiving operation can authorize idle retention. If its
+        // future drops, the worker/result guard drops the new client outright.
+        checkout.retain = false;
+        let builder_owner = builders.clone();
+        let mut checkout = builders
+            .run(move || {
+                checkout.client = Some(builder_owner.construct(&checkout.pool.options)?);
+                Ok(checkout)
+            })
+            .await?;
+        checkout.retain = true;
+        Ok(checkout)
+    } else {
+        Ok(checkout)
     }
 }
 fn build_client(o: &Options) -> Result<Client> {
@@ -348,18 +504,22 @@ impl State {
     }
 }
 pub struct AdapterHttp {
+    clock: DeadlineClock,
     idle: Arc<Semaphore>,
     connections: Arc<Semaphore>,
     decoder: Arc<Decoder>,
+    builders: Arc<ClientBuilders>,
     state: Arc<Mutex<State>>,
     stop: Cancellation,
 }
 impl Default for AdapterHttp {
     fn default() -> Self {
         Self {
+            clock: DeadlineClock::default(),
             idle: Arc::new(Semaphore::new(10)),
             connections: Arc::new(Semaphore::new(20)),
             decoder: Arc::new(Decoder::default()),
+            builders: Arc::new(ClientBuilders::default()),
             state: Arc::new(Mutex::new(State {
                 closed: false,
                 used: false,
@@ -372,7 +532,161 @@ impl Default for AdapterHttp {
     }
 }
 impl AdapterHttp {
+    pub(crate) fn deadline_now(&self) -> Instant {
+        self.clock.now()
+    }
+    pub(crate) fn deadline_clock(&self) -> DeadlineClock {
+        self.clock.clone()
+    }
+    #[cfg(test)]
+    pub(crate) fn pending_replay_owner(
+        manual: bool,
+    ) -> (Self, PendingObserver, Option<monotonic::Driver>) {
+        pending_replay::owner(manual)
+    }
+    pub(crate) async fn admission_timeout<F: std::future::Future>(
+        &self,
+        deadline: Instant,
+        future: F,
+    ) -> std::result::Result<F::Output, ()> {
+        #[cfg(test)]
+        if self.clock.is_manual() {
+            assert!(
+                self.clock.is_pending_only(),
+                "scholarly Manual owner must be sealed pending-only"
+            );
+            return tokio::select! { biased; value=future=>Ok(value), _=self.clock.sleep_until(deadline)=>Err(()) };
+        }
+        tokio::time::timeout_at(deadline.into(), future)
+            .await
+            .map_err(|_| ())
+    }
+    #[cfg(test)]
+    pub(crate) fn record_scholarly_deadlines(&self, network: Instant, operation: Instant) {
+        self.clock.record_deadlines(network, operation);
+    }
+    #[cfg(test)]
+    pub(crate) fn assert_direct_replay_context(&self, context: Option<Instant>) {
+        assert!(
+            !self.clock.is_manual() || context.is_none(),
+            "manual HTTP replay is direct-only; context parser/admission clocks remain System"
+        );
+    }
+    /// Sealed unit-test construction always installs an injected transport.
+    /// No production/config/feature entry point can select a Manual clock.
+    #[cfg(test)]
+    pub(crate) fn replay_owner(transport: Arc<dyn Transport>) -> (Self, monotonic::Driver) {
+        let (clock, driver) = DeadlineClock::replay();
+        let mut owner = Self::default();
+        owner.clock = clock;
+        owner.set_transport(transport).expect("unused replay owner");
+        (owner, driver)
+    }
+    #[cfg(test)]
+    pub(crate) fn replay_workers(&self) -> (usize, usize) {
+        (
+            self.decoder.state.lock().unwrap().active,
+            self.builders.state.lock().unwrap().jobs.len(),
+        )
+    }
+    /// Production startup constructor. A single runtime-owned startup guardian
+    /// retains the unpublished owner until receiver acknowledgment, or closes
+    /// and drains it if the constructor future disappears. No global reaper or
+    /// provider request is involved. Only the owner Arc is shared, never Client.
+    ///
+    /// Cleanup can outlast the startup deadline: OS proxy discovery cannot be
+    /// forcibly canceled. The guardian is not externally joined by a canceled
+    /// caller, and its async cleanup requires its Tokio runtime to remain alive.
+    /// Publication means this constructor returns Ready. A completed enclosing
+    /// task result left unread is normal post-return owner Drop; exact joins
+    /// then require an external shutdown supervisor, not this startup guardian.
+    pub async fn new_ready(
+        deadline: tokio::time::Instant,
+        cancel: Cancellation,
+    ) -> Result<(Arc<Self>, Preparation)> {
+        Self::ready_owner(Arc::new(Self::default()), deadline, cancel).await
+    }
+    async fn ready_owner(
+        owner: Arc<Self>,
+        deadline: tokio::time::Instant,
+        cancel: Cancellation,
+    ) -> Result<(Arc<Self>, Preparation)> {
+        let (mut publication, receiver) = oneshot::channel();
+        let receiver_cancel = cancel.clone();
+        // Exactly one startup guardian per new owner. Its sole cleanup scope is
+        // this owner and its existing admitted builders, not a background queue.
+        let _guardian = tokio::spawn(async move {
+            let result = tokio::select! { biased;
+                _=publication.closed()=>Err(Error::Cancelled),
+                result=owner.prepare_default(deadline, cancel.clone())=>result,
+            };
+            match result {
+                Ok(preparation) => {
+                    // Complete initialization joins before publication; no search
+                    // consumer can yet create another builder on this owner.
+                    owner.builders.drain().await;
+                    let late_error = if *owner.stop.0.borrow() {
+                        Some(Error::Closed)
+                    } else if *cancel.0.borrow() {
+                        Some(Error::Cancelled)
+                    } else if tokio::time::Instant::now() >= deadline {
+                        Some(Error::Deadline)
+                    } else {
+                        None
+                    };
+                    if let Some(error) = late_error {
+                        owner.builders.event("startup_cleanup_started");
+                        owner.shutdown_and_wait().await;
+                        let _ = publication.send(Err(error));
+                        return;
+                    }
+                    let (acknowledge, acknowledgment) = oneshot::channel();
+                    let value = Ok((owner.clone(), preparation, acknowledge));
+                    match publication.send(value) {
+                        Ok(()) => {
+                            owner.builders.event("startup_sent");
+                            if acknowledgment.await.is_ok() {
+                                owner.builders.event("startup_acknowledged");
+                                return;
+                            }
+                        }
+                        Err(value) => drop(value),
+                    }
+                    // A successful send can still be unread and then dropped.
+                    // Only receiver acknowledgment authorizes publication.
+                    owner.builders.event("startup_cleanup_started");
+                    owner.shutdown_and_wait().await;
+                }
+                Err(error) => {
+                    owner.builders.event("startup_cleanup_started");
+                    owner.shutdown_and_wait().await;
+                    let _ = publication.send(Err(error));
+                }
+            }
+        });
+        let (owner, preparation, acknowledge) = receiver.await.map_err(|_| Error::Closed)??;
+        // A successfully sent payload may have remained unread while startup
+        // cancellation/closure/deadline changed. Recheck before publication in
+        // the same priority as execute; rejecting drops the ack and owner Arc,
+        // so the guardian still owns and drains the unpublished owner.
+        if *owner.stop.0.borrow() {
+            return Err(Error::Closed);
+        }
+        if *receiver_cancel.0.borrow() {
+            return Err(Error::Cancelled);
+        }
+        if tokio::time::Instant::now() >= deadline {
+            return Err(Error::Deadline);
+        }
+        // No await/yield between acknowledgment and returning the strong owner.
+        acknowledge.send(()).map_err(|_| Error::Closed)?;
+        Ok((owner, preparation))
+    }
     pub fn set_transport(&self, t: Arc<dyn Transport>) -> Result<()> {
+        #[cfg(test)]
+        if self.clock.is_pending_only() {
+            return Err(Error::InvalidRequest);
+        }
         let mut s = self.state.lock().unwrap();
         if s.closed || s.used {
             return Err(Error::Closed);
@@ -453,19 +767,124 @@ impl AdapterHttp {
             s.all_pools.push(Arc::downgrade(&pool));
         }
         Ok(Session {
+            clock: self.clock.clone(),
             state: self.state.clone(),
             connections: self.connections.clone(),
             decoder: self.decoder.clone(),
+            builders: self.builders.clone(),
             pool,
             injected: s.injected.clone(),
             jar: Jar::default(),
-            headers: HeaderMap::new(),
+            headers: default_headers(),
             options,
             deadline,
             cancel,
             stop: self.stop.clone(),
             requests: 0,
         })
+    }
+    /// Prepare one independent default-profile client before publishing native
+    /// consumers. This never connects to a URL. Only the already retained
+    /// ordinary pool is eligible; custom/environment-derived ephemeral profiles
+    /// are reported explicitly and remain cooperatively cold.
+    ///
+    /// The startup deadline covers admission and construction. A prepared client
+    /// shares the existing adapter-wide idle-ten allowance and expires after
+    /// five seconds, without extending the later request's absolute deadline.
+    pub async fn prepare_default(
+        &self,
+        deadline: tokio::time::Instant,
+        cancel: Cancellation,
+    ) -> Result<Preparation> {
+        if *self.stop.0.borrow() {
+            return Err(Error::Closed);
+        }
+        if *cancel.0.borrow() {
+            return Err(Error::Cancelled);
+        }
+        if tokio::time::Instant::now() >= deadline {
+            return Err(Error::Deadline);
+        }
+        {
+            let state = self.state.lock().unwrap();
+            if state.closed {
+                return Err(Error::Closed);
+            }
+            if state.injected.is_some() {
+                return Ok(Preparation::Injected);
+            }
+        }
+        // Default env-root profiles are already ephemeral after resolution.
+        // Report that exclusion before synchronous filesystem/certificate work;
+        // their ordinary session behavior remains unchanged.
+        if std::env::var_os("SSL_CERT_FILE").is_some() || std::env::var_os("SSL_CERT_DIR").is_some()
+        {
+            return Ok(Preparation::Ephemeral);
+        }
+        let session = self.session(Options::default(), deadline, cancel.clone())?;
+        self.prepare_resolved(session, deadline, cancel).await
+    }
+    async fn prepare_resolved(
+        &self,
+        session: Session,
+        deadline: tokio::time::Instant,
+        cancel: Cancellation,
+    ) -> Result<Preparation> {
+        if session.injected.is_some() {
+            return Ok(Preparation::Injected);
+        }
+        if !self
+            .state
+            .lock()
+            .unwrap()
+            .pools
+            .values()
+            .any(|p| Arc::ptr_eq(p, &session.pool))
+        {
+            return Ok(Preparation::Ephemeral);
+        }
+        let work = async {
+            self.state.lock().unwrap().expire_idle();
+            if session
+                .pool
+                .slots
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|(_, entry)| entry.as_ref().is_some_and(|e| e.origin.is_empty()))
+            {
+                return Ok(Preparation::Prepared);
+            }
+            let prepared = checkout(
+                session.pool.clone(),
+                self.builders.clone(),
+                self.state.clone(),
+                self.connections.clone(),
+                String::new(),
+            )
+            .await?;
+            // Return through the ordinary slot/retention guard, with an empty
+            // origin meaning an unused client which has never opened a socket.
+            drop(prepared);
+            let retained = session
+                .pool
+                .slots
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|(_, entry)| entry.as_ref().is_some_and(|e| e.origin.is_empty()));
+            Ok(if retained {
+                Preparation::Prepared
+            } else {
+                Preparation::CapacityUnavailable
+            })
+        };
+        tokio::select! { biased;
+            _=self.stop.cancelled()=>Err(Error::Closed),
+            _=cancel.cancelled()=>Err(Error::Cancelled),
+            _=tokio::time::sleep_until(deadline)=>Err(Error::Deadline),
+            result=work=>result,
+        }
     }
     /// Cancels in-flight operations; existing session handles reject further work.
     /// Synchronous drop closes owned idle clients; it never closes injected transports.
@@ -476,6 +895,7 @@ impl AdapterHttp {
         self.connections.close();
         self.idle.close();
         self.decoder.close();
+        self.builders.close();
         for p in s.all_pools.drain(..).filter_map(|p| p.upgrade()) {
             p.close();
         }
@@ -486,6 +906,8 @@ impl AdapterHttp {
     pub async fn shutdown_and_wait(&self) {
         self.shutdown();
         self.decoder.drain().await;
+        self.builders.drain().await;
+        self.builders.event("shutdown_drained");
     }
     pub fn retained_pools(&self) -> usize {
         self.state.lock().unwrap().pools.len()
@@ -493,13 +915,16 @@ impl AdapterHttp {
 }
 impl Drop for AdapterHttp {
     fn drop(&mut self) {
+        self.builders.event("owner_dropped");
         self.shutdown();
     }
 }
 pub struct Session {
+    clock: DeadlineClock,
     state: Arc<Mutex<State>>,
     connections: Arc<Semaphore>,
     decoder: Arc<Decoder>,
+    builders: Arc<ClientBuilders>,
     pool: Arc<Pool>,
     injected: Option<Arc<dyn Transport>>,
     jar: Jar,
@@ -511,6 +936,9 @@ pub struct Session {
     requests: usize,
 }
 impl Session {
+    pub(crate) fn deadline_elapsed(&self, deadline: Instant) -> bool {
+        self.clock.now() >= deadline
+    }
     /// Set the caller-owned deadline for the next operation without replacing
     /// this session's cookies, request budget, cancellation, stop state or pool.
     /// Callers with an overall search budget must cap this at its remaining
@@ -528,6 +956,7 @@ impl Session {
         let cancel = self.cancel.clone();
         let stop = self.stop.clone();
         let deadline = self.deadline;
+        let clock = self.clock.clone();
         for (name, value) in &self.headers {
             if !request.headers.contains_key(name) {
                 request.headers.insert(name, value.clone());
@@ -536,7 +965,7 @@ impl Session {
         tokio::select! { biased;
             _=stop.cancelled()=>Err(Error::Closed),
             _=cancel.cancelled()=>Err(Error::Cancelled),
-            _=tokio::time::sleep_until(deadline)=>Err(Error::Deadline),
+            _=clock.sleep_until(deadline.into_std())=>Err(Error::Deadline),
             result=self.execute_inner(request)=>result,
         }
     }
@@ -581,6 +1010,7 @@ impl Session {
                     self.cancel.clone(),
                     self.stop.clone(),
                     self.deadline,
+                    self.clock.clone(),
                 )
                 .await?;
             if self.options.follow_redirects
@@ -623,19 +1053,14 @@ impl Session {
     async fn network(&self, mut r: Request) -> Result<Response> {
         // Route-specific and ephemeral clients share the adapter's admission
         // budget. Keep ownership until the response body has been consumed.
-        let _adapter_permit = self
-            .connections
-            .acquire()
-            .await
-            .map_err(|_| Error::Closed)?;
-        let _permit = self
-            .pool
-            .permits
-            .acquire()
-            .await
-            .map_err(|_| Error::Closed)?;
-        self.state.lock().unwrap().expire_idle();
-        let checkout = self.pool.checkout(&r.url, self.state.clone())?;
+        let checkout = checkout(
+            self.pool.clone(),
+            self.builders.clone(),
+            self.state.clone(),
+            self.connections.clone(),
+            r.url.origin().ascii_serialization(),
+        )
+        .await?;
         r.headers
             .entry(header::ACCEPT_ENCODING)
             .or_insert(HeaderValue::from_static("gzip, deflate"));
@@ -738,6 +1163,8 @@ impl Decoder {
         .await
         .map_err(|_| Error::InvalidResponse)
     }
+    // Keep decoding ownership and the same operation clock explicit at this boundary.
+    #[allow(clippy::too_many_arguments)]
     async fn decode(
         self: &Arc<Self>,
         headers: HeaderMap,
@@ -746,9 +1173,20 @@ impl Decoder {
         cancel: Cancellation,
         stop: Cancellation,
         deadline: tokio::time::Instant,
+        clock: DeadlineClock,
     ) -> Result<Vec<u8>> {
-        self.run(move || decode(&headers, &body, bound, &cancel, &stop, deadline.into_std()))
-            .await?
+        self.run(move || {
+            decode_with_clock(
+                &headers,
+                &body,
+                bound,
+                &cancel,
+                &stop,
+                deadline.into_std(),
+                &clock,
+            )
+        })
+        .await?
     }
     fn close(&self) {
         self.state.lock().unwrap().closed = true;
@@ -772,6 +1210,7 @@ fn bounded_read(
     cancel: &Cancellation,
     stop: &Cancellation,
     deadline: Instant,
+    clock: &DeadlineClock,
 ) -> Result<Vec<u8>> {
     let mut result = Vec::new();
     let mut chunk = [0; 64 * 1024];
@@ -782,7 +1221,7 @@ fn bounded_read(
         if *cancel.0.borrow() {
             return Err(Error::Cancelled);
         }
-        if Instant::now() >= deadline {
+        if clock.now() >= deadline {
             return Err(Error::Deadline);
         }
         let size = reader
@@ -798,13 +1237,14 @@ fn bounded_read(
     }
     Ok(result)
 }
-fn decode(
+fn decode_with_clock(
     headers: &HeaderMap,
     body: &[u8],
     bound: usize,
     cancel: &Cancellation,
     stop: &Cancellation,
     deadline: Instant,
+    clock: &DeadlineClock,
 ) -> Result<Vec<u8>> {
     let mut encodings = Vec::new();
     for value in headers.get_all(header::CONTENT_ENCODING) {
@@ -821,13 +1261,16 @@ fn decode(
     let mut result = body.to_vec();
     for encoding in encodings.into_iter().rev() {
         result = match encoding.as_str() {
-            "identity" | "" => bounded_read(result.as_slice(), bound, cancel, stop, deadline)?,
+            "identity" | "" => {
+                bounded_read(result.as_slice(), bound, cancel, stop, deadline, clock)?
+            }
             "gzip" => bounded_read(
                 flate2::read::MultiGzDecoder::new(result.as_slice()),
                 bound,
                 cancel,
                 stop,
                 deadline,
+                clock,
             )?,
             "deflate" => match bounded_read(
                 flate2::read::ZlibDecoder::new(result.as_slice()),
@@ -835,6 +1278,7 @@ fn decode(
                 cancel,
                 stop,
                 deadline,
+                clock,
             ) {
                 Err(Error::InvalidResponse) => bounded_read(
                     flate2::read::DeflateDecoder::new(result.as_slice()),
@@ -842,6 +1286,7 @@ fn decode(
                     cancel,
                     stop,
                     deadline,
+                    clock,
                 )?,
                 other => other?,
             },
@@ -849,6 +1294,25 @@ fn decode(
         };
     }
     Ok(result)
+}
+#[cfg(test)]
+fn decode(
+    headers: &HeaderMap,
+    body: &[u8],
+    bound: usize,
+    cancel: &Cancellation,
+    stop: &Cancellation,
+    deadline: Instant,
+) -> Result<Vec<u8>> {
+    decode_with_clock(
+        headers,
+        body,
+        bound,
+        cancel,
+        stop,
+        deadline,
+        &DeadlineClock::default(),
+    )
 }
 /// Offline exchange replay exercises the exact session policy without parsing bodies.
 /// Adapters own HTML/XML/JSON parsing and provider-specific status classification.
@@ -1180,3 +1644,560 @@ mod f15_header_tests {
         assert!(!identity_announced_oversize(&h, 2_000_000));
     }
 }
+#[cfg(test)]
+#[path = "../tests/support/default_ca_environment.rs"]
+mod default_ca_environment;
+#[cfg(test)]
+pub(crate) use default_ca_environment::default_ca_test_environment;
+
+#[cfg(test)]
+mod client_initialization_tests {
+    use super::*;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    fn block_builder(http: &AdapterHttp) -> (oneshot::Receiver<()>, std::sync::mpsc::Sender<()>) {
+        let (started_tx, started_rx) = oneshot::channel();
+        let started = Mutex::new(Some(started_tx));
+        let (release_tx, release_rx) = std::sync::mpsc::channel();
+        let release = Mutex::new(release_rx);
+        *http.builders.build.lock().unwrap() = Some(Arc::new(move |_| {
+            started.lock().unwrap().take().unwrap().send(()).unwrap();
+            release.lock().unwrap().recv().unwrap();
+            // Only the scheduling control changes: the normal builder still
+            // produces an independent client; no HTTP or real proxy is used.
+            build_client(&Options {
+                trust_env: false,
+                ..Options::default()
+            })
+        }));
+        (started_rx, release_tx)
+    }
+    fn busy(http: &AdapterHttp) -> usize {
+        http.state
+            .lock()
+            .unwrap()
+            .all_pools
+            .iter()
+            .filter_map(Weak::upgrade)
+            .map(|p| {
+                p.slots
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|(busy, _)| *busy)
+                    .count()
+            })
+            .sum()
+    }
+    #[tokio::test]
+    async fn deadline_keeps_builder_permits_and_slot_until_actual_completion_without_dispatch() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let http = Arc::new(AdapterHttp::default());
+        let (started, release) = block_builder(&http);
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(60);
+        let mut session = http
+            .session(Options::default(), deadline, Cancellation::default())
+            .unwrap();
+        let pool = session.pool.clone();
+        let request = Request::get(&format!("http://{}/", listener.local_addr().unwrap())).unwrap();
+        let operation = tokio::spawn(async move { session.execute(request).await });
+        tokio::time::timeout(Duration::from_secs(5), started)
+            .await
+            .unwrap()
+            .unwrap();
+        // A deterministic parent Tokio deadline after observed worker startup;
+        // actual A08 fifty-millisecond wall-clock control stays separate.
+        tokio::time::pause();
+        tokio::time::advance(Duration::from_secs(61)).await;
+        assert!(tokio::time::Instant::now() > deadline);
+        // Resume before the qualification timeout: blocked workers inhibit
+        // paused-clock auto-advance, but cannot stop this real running clock.
+        tokio::time::resume();
+        assert_eq!(http.connections.available_permits(), 19);
+        assert_eq!(pool.permits.available_permits(), 19);
+        assert_eq!(busy(&http), 1);
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(5), operation)
+                .await
+                .unwrap()
+                .unwrap()
+                .unwrap_err(),
+            Error::Deadline,
+        );
+        assert_eq!(http.connections.available_permits(), 19);
+        assert_eq!(pool.permits.available_permits(), 19);
+        assert_eq!(busy(&http), 1);
+        assert!(
+            tokio::time::timeout(Duration::from_millis(1), listener.accept())
+                .await
+                .is_err()
+        );
+        let owner = http.clone();
+        let drain = tokio::spawn(async move { owner.shutdown_and_wait().await });
+        tokio::task::yield_now().await;
+        assert!(!drain.is_finished());
+        release.send(()).unwrap();
+        drain.await.unwrap();
+        assert_eq!(busy(&http), 0);
+        // Closed semaphore still reports released ownership after exact join.
+        assert_eq!(http.connections.available_permits(), 20);
+        assert_eq!(pool.permits.available_permits(), 20);
+        assert!(pool.slots.lock().unwrap().iter().all(|(busy, _)| !busy));
+        assert!(http.state.lock().unwrap().pools.is_empty());
+    }
+    #[tokio::test]
+    async fn waiter_abort_does_not_release_blocking_builder_ownership_or_retain_late_client() {
+        let http = Arc::new(AdapterHttp::default());
+        let (started, release) = block_builder(&http);
+        let mut session = http
+            .session(
+                Options::default(),
+                tokio::time::Instant::now() + Duration::from_secs(10),
+                Cancellation::default(),
+            )
+            .unwrap();
+        let operation = tokio::spawn(async move {
+            session
+                .execute(Request::get("http://127.0.0.1:1/").unwrap())
+                .await
+        });
+        tokio::time::timeout(Duration::from_secs(5), started)
+            .await
+            .unwrap()
+            .unwrap();
+        operation.abort();
+        assert!(operation.await.unwrap_err().is_cancelled());
+        assert_eq!(http.connections.available_permits(), 19);
+        assert_eq!(busy(&http), 1);
+        let owner = http.clone();
+        let first_drain = tokio::spawn(async move { owner.builders.drain().await });
+        tokio::task::yield_now().await;
+        assert!(!first_drain.is_finished());
+        first_drain.abort();
+        assert!(first_drain.await.unwrap_err().is_cancelled());
+        assert_eq!(http.builders.state.lock().unwrap().jobs.len(), 1);
+        release.send(()).unwrap();
+        http.builders.drain().await;
+        assert_eq!(http.connections.available_permits(), 20);
+        assert_eq!(busy(&http), 0);
+        assert_eq!(http.idle.available_permits(), 10);
+        http.shutdown_and_wait().await;
+    }
+    #[tokio::test]
+    async fn prepared_default_client_is_moved_once_and_reuses_existing_retention_and_expiry() {
+        if default_ca_test_environment(
+            "http::client_initialization_tests::prepared_default_client_is_moved_once_and_reuses_existing_retention_and_expiry",
+        ) {
+            return;
+        }
+        let http = AdapterHttp::default();
+        *http.builders.build.lock().unwrap() = Some(Arc::new(|_| {
+            build_client(&Options {
+                trust_env: false,
+                ..Options::default()
+            })
+        }));
+        let result = http
+            .prepare_default(
+                tokio::time::Instant::now() + Duration::from_secs(2),
+                Cancellation::default(),
+            )
+            .await
+            .unwrap();
+        // Launcher must provide an ordinary default-profile environment;
+        // a nonordinary host profile fails visibly rather than skipping controls.
+        assert_eq!(result, Preparation::Prepared);
+        assert_eq!(http.idle.available_permits(), 9);
+        let pool = http.state.lock().unwrap().pools.get(&None).unwrap().clone();
+        assert_eq!(
+            pool.slots
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|(_, i)| i.as_ref().is_some_and(|i| i.origin.is_empty()))
+                .count(),
+            1
+        );
+        // Unused prepared clients use the same five-second idle expiry.
+        for (_, entry) in pool.slots.lock().unwrap().iter_mut() {
+            if let Some(entry) = entry {
+                entry.used = Instant::now() - Duration::from_secs(5);
+            }
+        }
+        pool.expire_idle();
+        assert_eq!(http.idle.available_permits(), 10);
+        assert_eq!(
+            http.prepare_default(
+                tokio::time::Instant::now() + Duration::from_secs(2),
+                Cancellation::default()
+            )
+            .await
+            .unwrap(),
+            Preparation::Prepared
+        );
+        assert_eq!(http.idle.available_permits(), 9);
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut bytes = [0; 8192];
+            assert!(stream.read(&mut bytes).await.unwrap() > 0);
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
+                .await
+                .unwrap();
+        });
+        // Any second construction is an actual regression, not a timing check.
+        *http.builders.build.lock().unwrap() =
+            Some(Arc::new(|_| panic!("prepared client was not moved")));
+        let mut session = http
+            .session(
+                Options::default(),
+                tokio::time::Instant::now() + Duration::from_secs(2),
+                Cancellation::default(),
+            )
+            .unwrap();
+        assert_eq!(
+            session
+                .execute(Request::get(&format!("http://{address}/")).unwrap())
+                .await
+                .unwrap()
+                .body,
+            b"ok"
+        );
+        server.await.unwrap();
+        assert_eq!(http.idle.available_permits(), 9);
+        assert!(
+            pool.slots
+                .lock()
+                .unwrap()
+                .iter()
+                .all(|(_, i)| i.as_ref().is_none_or(|i| !i.origin.is_empty()))
+        );
+        for (_, idle) in pool.slots.lock().unwrap().iter_mut() {
+            if let Some(idle) = idle {
+                idle.used = Instant::now() - Duration::from_secs(5);
+            }
+        }
+        pool.expire_idle();
+        assert_eq!(http.idle.available_permits(), 10);
+        http.shutdown_and_wait().await;
+    }
+    #[tokio::test]
+    async fn builder_error_releases_both_leases_and_reserved_slot_without_idle_client() {
+        if default_ca_test_environment(
+            "http::client_initialization_tests::builder_error_releases_both_leases_and_reserved_slot_without_idle_client",
+        ) {
+            return;
+        }
+        let http = AdapterHttp::default();
+        *http.builders.build.lock().unwrap() = Some(Arc::new(|_| Err(Error::InvalidRequest)));
+        assert_eq!(
+            http.prepare_default(
+                tokio::time::Instant::now() + Duration::from_secs(5),
+                Cancellation::default()
+            )
+            .await
+            .unwrap_err(),
+            Error::InvalidRequest
+        );
+        let mut session = http
+            .session(
+                Options::default(),
+                tokio::time::Instant::now() + Duration::from_secs(5),
+                Cancellation::default(),
+            )
+            .unwrap();
+        let pool = session.pool.clone();
+        assert_eq!(
+            session
+                .execute(Request::get("http://127.0.0.1:1/").unwrap())
+                .await
+                .unwrap_err(),
+            Error::InvalidRequest
+        );
+        http.builders.drain().await;
+        assert_eq!(http.connections.available_permits(), 20);
+        assert_eq!(pool.permits.available_permits(), 20);
+        assert_eq!(busy(&http), 0);
+        assert_eq!(http.idle.available_permits(), 10);
+        http.shutdown_and_wait().await;
+    }
+    #[tokio::test]
+    async fn owner_close_cancels_waiter_but_retains_build_ownership_until_drain() {
+        let http = Arc::new(AdapterHttp::default());
+        let (started, release) = block_builder(&http);
+        let mut session = http
+            .session(
+                Options::default(),
+                tokio::time::Instant::now() + Duration::from_secs(60),
+                Cancellation::default(),
+            )
+            .unwrap();
+        let pool = session.pool.clone();
+        let operation = tokio::spawn(async move {
+            session
+                .execute(Request::get("http://127.0.0.1:1/").unwrap())
+                .await
+        });
+        tokio::time::timeout(Duration::from_secs(5), started)
+            .await
+            .unwrap()
+            .unwrap();
+        http.shutdown();
+        assert_eq!(operation.await.unwrap().unwrap_err(), Error::Closed);
+        assert_eq!(http.connections.available_permits(), 19);
+        assert_eq!(pool.permits.available_permits(), 19);
+        assert!(pool.slots.lock().unwrap().iter().any(|(busy, _)| *busy));
+        release.send(()).unwrap();
+        http.shutdown_and_wait().await;
+        assert_eq!(http.connections.available_permits(), 20);
+        assert_eq!(pool.permits.available_permits(), 20);
+        assert!(pool.slots.lock().unwrap().iter().all(|(busy, _)| !*busy));
+        assert_eq!(http.idle.available_permits(), 10);
+    }
+    struct NeverExchange;
+    impl Transport for NeverExchange {
+        fn exchange(&self, _: Request) -> ExchangeFuture<'_> {
+            Box::pin(async { panic!("preparation dispatched HTTP") })
+        }
+    }
+    #[tokio::test]
+    async fn injected_and_ephemeral_profiles_never_start_preparation_workers() {
+        let http = AdapterHttp::default();
+        *http.builders.build.lock().unwrap() = Some(Arc::new(|_| panic!("excluded profile built")));
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        // These are actual existing ephemeral Session profiles. The same private
+        // classification is called by the public default-only preparation API.
+        for options in [
+            Options {
+                trust_env: false,
+                ..Options::default()
+            },
+            Options {
+                http2: true,
+                ..Options::default()
+            },
+            Options {
+                verify_tls: false,
+                ..Options::default()
+            },
+        ] {
+            let session = http
+                .session(options, deadline, Cancellation::default())
+                .unwrap();
+            assert_eq!(
+                http.prepare_resolved(session, deadline, Cancellation::default())
+                    .await
+                    .unwrap(),
+                Preparation::Ephemeral
+            );
+        }
+        assert!(http.builders.state.lock().unwrap().jobs.is_empty());
+        assert_eq!(http.connections.available_permits(), 20);
+        assert_eq!(http.idle.available_permits(), 10);
+        http.shutdown_and_wait().await;
+        let injected = AdapterHttp::default();
+        injected.set_transport(Arc::new(NeverExchange)).unwrap();
+        *injected.builders.build.lock().unwrap() =
+            Some(Arc::new(|_| panic!("injected profile built")));
+        assert_eq!(
+            injected
+                .prepare_default(deadline, Cancellation::default())
+                .await
+                .unwrap(),
+            Preparation::Injected
+        );
+        assert!(injected.builders.state.lock().unwrap().jobs.is_empty());
+        assert_eq!(injected.connections.available_permits(), 20);
+        assert_eq!(injected.idle.available_permits(), 10);
+        injected.shutdown_and_wait().await;
+    }
+    async fn event(events: &mut tokio::sync::mpsc::Receiver<&'static str>, expected: &'static str) {
+        let actual = tokio::time::timeout(Duration::from_secs(5), events.recv())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(actual, expected);
+    }
+    #[tokio::test]
+    async fn aborted_unpublished_constructor_guardian_joins_blocked_builder_without_external_owner()
+    {
+        if default_ca_test_environment(
+            "http::client_initialization_tests::aborted_unpublished_constructor_guardian_joins_blocked_builder_without_external_owner",
+        ) {
+            return;
+        }
+        let owner = Arc::new(AdapterHttp::default());
+        let weak = Arc::downgrade(&owner);
+        let connections = owner.connections.clone();
+        let idle = owner.idle.clone();
+        let (events_tx, mut events) = tokio::sync::mpsc::channel(16);
+        *owner.builders.events.lock().unwrap() = Some(events_tx);
+        let (started, release) = block_builder(&owner);
+        let mut constructor = Box::pin(AdapterHttp::ready_owner(
+            owner,
+            tokio::time::Instant::now() + Duration::from_secs(60),
+            Cancellation::default(),
+        ));
+        std::future::poll_fn(|cx| {
+            assert!(constructor.as_mut().poll(cx).is_pending());
+            std::task::Poll::Ready(())
+        })
+        .await;
+        tokio::time::timeout(Duration::from_secs(5), started)
+            .await
+            .unwrap()
+            .unwrap();
+        let pool = {
+            let owner = weak.upgrade().unwrap();
+            owner
+                .state
+                .lock()
+                .unwrap()
+                .pools
+                .get(&None)
+                .unwrap()
+                .clone()
+        };
+        // Only the unpublished guardian now owns AdapterHttp, not this test.
+        assert_eq!(weak.strong_count(), 1);
+        drop(constructor);
+        event(&mut events, "startup_cleanup_started").await;
+        assert_eq!(connections.available_permits(), 19);
+        assert_eq!(pool.permits.available_permits(), 19);
+        assert!(pool.slots.lock().unwrap().iter().any(|(busy, _)| *busy));
+        assert!(events.try_recv().is_err());
+        release.send(()).unwrap();
+        event(&mut events, "builders_joined").await;
+        event(&mut events, "shutdown_drained").await;
+        event(&mut events, "owner_dropped").await;
+        assert!(weak.upgrade().is_none());
+        assert_eq!(connections.available_permits(), 20);
+        assert_eq!(pool.permits.available_permits(), 20);
+        assert!(
+            pool.slots
+                .lock()
+                .unwrap()
+                .iter()
+                .all(|(busy, entry)| !busy && entry.is_none())
+        );
+        assert_eq!(idle.available_permits(), 10);
+    }
+    #[tokio::test]
+    async fn unread_successful_publication_still_requires_ack_and_drains_on_receiver_drop() {
+        if default_ca_test_environment(
+            "http::client_initialization_tests::unread_successful_publication_still_requires_ack_and_drains_on_receiver_drop",
+        ) {
+            return;
+        }
+        let owner = Arc::new(AdapterHttp::default());
+        let weak = Arc::downgrade(&owner);
+        let connections = owner.connections.clone();
+        let idle = owner.idle.clone();
+        let (events_tx, mut events) = tokio::sync::mpsc::channel(16);
+        *owner.builders.events.lock().unwrap() = Some(events_tx);
+        *owner.builders.build.lock().unwrap() = Some(Arc::new(|_| {
+            build_client(&Options {
+                trust_env: false,
+                ..Options::default()
+            })
+        }));
+        let mut constructor = Box::pin(AdapterHttp::ready_owner(
+            owner,
+            tokio::time::Instant::now() + Duration::from_secs(60),
+            Cancellation::default(),
+        ));
+        std::future::poll_fn(|cx| {
+            assert!(constructor.as_mut().poll(cx).is_pending());
+            std::task::Poll::Ready(())
+        })
+        .await;
+        event(&mut events, "builders_joined").await;
+        event(&mut events, "startup_sent").await;
+        // Do not poll constructor again: send succeeded, but result is unread.
+        assert_eq!(weak.strong_count(), 2); // guardian plus channel payload
+        assert_eq!(idle.available_permits(), 9);
+        drop(constructor);
+        event(&mut events, "startup_cleanup_started").await;
+        event(&mut events, "builders_joined").await;
+        event(&mut events, "shutdown_drained").await;
+        event(&mut events, "owner_dropped").await;
+        assert!(weak.upgrade().is_none());
+        assert_eq!(connections.available_permits(), 20);
+        assert_eq!(idle.available_permits(), 10);
+    }
+    async fn reject_late_unread_publication(cancelled: bool) {
+        let owner = Arc::new(AdapterHttp::default());
+        let weak = Arc::downgrade(&owner);
+        let connections = owner.connections.clone();
+        let idle = owner.idle.clone();
+        let (events_tx, mut events) = tokio::sync::mpsc::channel(16);
+        *owner.builders.events.lock().unwrap() = Some(events_tx);
+        *owner.builders.build.lock().unwrap() = Some(Arc::new(|_| {
+            build_client(&Options {
+                trust_env: false,
+                ..Options::default()
+            })
+        }));
+        let cancel = Cancellation::default();
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(60);
+        let mut constructor = Box::pin(AdapterHttp::ready_owner(owner, deadline, cancel.clone()));
+        std::future::poll_fn(|cx| {
+            assert!(constructor.as_mut().poll(cx).is_pending());
+            std::task::Poll::Ready(())
+        })
+        .await;
+        event(&mut events, "builders_joined").await;
+        event(&mut events, "startup_sent").await;
+        assert_eq!(weak.strong_count(), 2);
+        if cancelled {
+            cancel.cancel();
+        } else {
+            tokio::time::pause();
+            tokio::time::advance(Duration::from_secs(61)).await;
+            assert!(tokio::time::Instant::now() > deadline);
+            tokio::time::resume();
+        }
+        let result = tokio::time::timeout(Duration::from_secs(5), constructor)
+            .await
+            .unwrap();
+        if cancelled {
+            assert!(matches!(result, Err(Error::Cancelled)));
+        } else {
+            assert!(matches!(result, Err(Error::Deadline)));
+        }
+        event(&mut events, "startup_cleanup_started").await;
+        event(&mut events, "builders_joined").await;
+        event(&mut events, "shutdown_drained").await;
+        event(&mut events, "owner_dropped").await;
+        assert!(weak.upgrade().is_none());
+        assert_eq!(connections.available_permits(), 20);
+        assert_eq!(idle.available_permits(), 10);
+    }
+    #[tokio::test]
+    async fn unread_publication_cancelled_before_final_poll_is_rejected_and_drained() {
+        reject_late_unread_publication(true).await;
+    }
+    #[tokio::test]
+    async fn unread_publication_expired_before_final_poll_is_rejected_and_drained() {
+        reject_late_unread_publication(false).await;
+    }
+}
+
+#[cfg(test)]
+#[path = "../tests/support/a07_http_clock.rs"]
+mod owner_clock_tests;
+
+#[cfg(test)]
+#[path = "http/pending_replay.rs"]
+mod pending_replay;
+#[cfg(test)]
+pub(crate) use pending_replay::PendingObserver;
+#[cfg(test)]
+#[path = "../tests/support/a06_timeout_clock.rs"]
+mod scholarly_timeout_clock;
+
+#[cfg(test)]
+#[path = "../tests/support/a07_cold_context.rs"]
+mod cold_context_tests;

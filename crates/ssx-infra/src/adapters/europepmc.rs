@@ -45,7 +45,7 @@ impl EuropePMCAdapter {
         use super::source_payload::{Field, FieldRef, publication_budgeted};
         admit_with_context(&self.admission, "europepmc", context).await?;
         let limit = int_value(&self.config.max_results)?.clamp(1, 1000) as usize;
-        let d = network_deadline(&self.config, false, context)
+        let d = network_deadline_for_http(&self.http, &self.config, context)
             .map_err(Failure::empty_timeout_diagnostic)?;
         let req = request(
             &format!("{}/search", self.config.base_url.trim_end_matches('/')),

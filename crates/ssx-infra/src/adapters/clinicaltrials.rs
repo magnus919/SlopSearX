@@ -137,6 +137,14 @@ pub(super) fn network_deadline(
     pubmed: bool,
     context: Option<Instant>,
 ) -> Result<Instant> {
+    network_deadline_using(config, pubmed, context, Instant::now)
+}
+fn network_deadline_using(
+    config: &BiomedicalConfig,
+    pubmed: bool,
+    context: Option<Instant>,
+    now: impl FnOnce() -> Instant,
+) -> Result<Instant> {
     if !pubmed {
         let millis = numeric(&config.timeout_ms, false).map_err(|_| error("invalid timeout_ms"))?;
         if millis <= 0. {
@@ -147,7 +155,7 @@ pub(super) fn network_deadline(
         }
         let configured = Duration::try_from_secs_f64(millis / 1000.)
             .ok()
-            .and_then(|duration| Instant::now().checked_add(duration));
+            .and_then(|duration| now().checked_add(duration));
         return match (configured, context) {
             (Some(configured), Some(limit)) => Ok(limit.min(configured)),
             (Some(configured), None) => Ok(configured),
@@ -157,6 +165,17 @@ pub(super) fn network_deadline(
     }
     let configured = deadline(config, true)?;
     Ok(context.map_or(configured, |limit| limit.min(configured)))
+}
+/// Only direct non-PubMed requests need the HTTP owner's configured timer.
+/// Production deadline_now is Instant::now; caller context remains unchanged.
+pub(super) fn network_deadline_for_http(
+    http: &AdapterHttp,
+    config: &BiomedicalConfig,
+    context: Option<Instant>,
+) -> Result<Instant> {
+    #[cfg(test)]
+    http.assert_direct_replay_context(context);
+    network_deadline_using(config, false, context, || http.deadline_now())
 }
 pub(super) fn scalar_text(v: &ConfigScalar) -> String {
     match v {
@@ -329,7 +348,9 @@ pub(super) async fn get_observed(
     parse_deadline: Option<Instant>,
     observer: Observer<'_>,
 ) -> Result<Option<Value>> {
-    check(deadline)?;
+    if session.deadline_elapsed(deadline) {
+        return Err(timeout());
+    }
     let response = session.execute(req).await.map_err(|e| match e {
         crate::http::Error::Deadline => Failure {
             status: EngineStatus::Timeout,
@@ -480,7 +501,7 @@ impl ClinicalTrialsAdapter {
         observer: Observer<'_>,
     ) -> Result<ProducedBatch<'b>> {
         admit_with_context(&self.admission, "clinicaltrials", context).await?;
-        let d = network_deadline(&self.config, false, context)?;
+        let d = network_deadline_for_http(&self.http, &self.config, context)?;
         let max = scalar_text(&self.config.max_results);
         let req = request(
             &self.config.base_url,
@@ -940,3 +961,7 @@ pub(super) fn fixed_format(
     .map_err(|_| resource())?;
     Ok(out)
 }
+
+#[cfg(test)]
+#[path = "../../tests/support/a07_owner_clock.rs"]
+mod owner_clock_tests;

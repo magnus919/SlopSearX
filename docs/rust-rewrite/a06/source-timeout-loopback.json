@@ -1,0 +1,534 @@
+{
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "temporary_oracle": {
+    "path": "/private/tmp/a06-timeout-source-loopback.py",
+    "owner": "A06",
+    "retirement": "G08",
+    "native_runtime": false,
+    "mandatory_gate": false
+  },
+  "source_sha256": {
+    "engines/arxiv.py": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+    "engines/openalex.py": "537f1da9deda5f75ffde429167620c0006d93c485d0e5e8723b5c39f6c102e59",
+    "engines/semanticscholar.py": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c",
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+  },
+  "records": [
+    {
+      "id": "arxiv.real_timeout.zero",
+      "engine": "arxiv",
+      "timer": "zero",
+      "config_timer": "0",
+      "response_delay_ms": 50,
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": 0.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "arxiv.real_timeout.negative",
+      "engine": "arxiv",
+      "timer": "negative",
+      "config_timer": "-1",
+      "response_delay_ms": 50,
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": -0.001,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "arxiv.real_timeout.positive",
+      "engine": "arxiv",
+      "timer": "positive",
+      "config_timer": "10",
+      "response_delay_ms": 50,
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "requests_b64": [
+        "R0VUIC8/c2VhcmNoX3F1ZXJ5PWFsbCUzQSUyMm9mZmxpbmUrdGltZXIlMjImc3RhcnQ9MCZtYXhfcmVzdWx0cz01JnNvcnRCeT1yZWxldmFuY2Umc29ydE9yZGVyPWRlc2NlbmRpbmcgSFRUUC8xLjENCkhvc3Q6IDEyNy4wLjAuMTo1NDI0Ng0KQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlDQpDb25uZWN0aW9uOiBrZWVwLWFsaXZlDQpVc2VyLUFnZW50OiBTbG9wU2VhclgvMC4xLjAgKG1ldGEgc2VhcmNoIGVuZ2luZTsgYWdlbnQtbmF0aXZlKQ0KQWNjZXB0OiBhcHBsaWNhdGlvbi9hdG9tK3htbA0KDQo="
+      ],
+      "client_options": [
+        {
+          "timeout": 0.01,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "arxiv.real_timeout.nan",
+      "engine": "arxiv",
+      "timer": "nan",
+      "config_timer": "nan",
+      "response_delay_ms": 50,
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "requests_b64": [
+        "R0VUIC8/c2VhcmNoX3F1ZXJ5PWFsbCUzQSUyMm9mZmxpbmUrdGltZXIlMjImc3RhcnQ9MCZtYXhfcmVzdWx0cz01JnNvcnRCeT1yZWxldmFuY2Umc29ydE9yZGVyPWRlc2NlbmRpbmcgSFRUUC8xLjENCkhvc3Q6IDEyNy4wLjAuMTo1NDI0OA0KQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlDQpDb25uZWN0aW9uOiBrZWVwLWFsaXZlDQpVc2VyLUFnZW50OiBTbG9wU2VhclgvMC4xLjAgKG1ldGEgc2VhcmNoIGVuZ2luZTsgYWdlbnQtbmF0aXZlKQ0KQWNjZXB0OiBhcHBsaWNhdGlvbi9hdG9tK3htbA0KDQo="
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "nan"
+          },
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "oracle_external_timeout_seconds": 1,
+        "source_adapter_outcome": null,
+        "cancelled_and_joined": true
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "arxiv.real_timeout.inf",
+      "engine": "arxiv",
+      "timer": "inf",
+      "config_timer": "inf",
+      "response_delay_ms": 50,
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "requests_b64": [
+        "R0VUIC8/c2VhcmNoX3F1ZXJ5PWFsbCUzQSUyMm9mZmxpbmUrdGltZXIlMjImc3RhcnQ9MCZtYXhfcmVzdWx0cz01JnNvcnRCeT1yZWxldmFuY2Umc29ydE9yZGVyPWRlc2NlbmRpbmcgSFRUUC8xLjENCkhvc3Q6IDEyNy4wLjAuMTo1NDI5OQ0KQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlDQpDb25uZWN0aW9uOiBrZWVwLWFsaXZlDQpVc2VyLUFnZW50OiBTbG9wU2VhclgvMC4xLjAgKG1ldGEgc2VhcmNoIGVuZ2luZTsgYWdlbnQtbmF0aXZlKQ0KQWNjZXB0OiBhcHBsaWNhdGlvbi9hdG9tK3htbA0KDQo="
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "inf"
+          },
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "arxiv.real_timeout.negative_inf",
+      "engine": "arxiv",
+      "timer": "negative_inf",
+      "config_timer": "-inf",
+      "response_delay_ms": 50,
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "-inf"
+          },
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "openalex.real_timeout.zero",
+      "engine": "openalex",
+      "timer": "zero",
+      "config_timer": "0",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": 0.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": "",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "openalex.real_timeout.negative",
+      "engine": "openalex",
+      "timer": "negative",
+      "config_timer": "-1",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": -0.001
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": "",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "openalex.real_timeout.positive",
+      "engine": "openalex",
+      "timer": "positive",
+      "config_timer": "10",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [
+        "R0VUIC93b3Jrcz9zZWFyY2g9b2ZmbGluZSUyMHRpbWVyJnBlcl9wYWdlPTEwIEhUVFAvMS4xDQpIb3N0OiAxMjcuMC4wLjE6NTQzMDcNCkFjY2VwdDogKi8qDQpBY2NlcHQtRW5jb2Rpbmc6IGd6aXAsIGRlZmxhdGUNCkNvbm5lY3Rpb246IGtlZXAtYWxpdmUNClVzZXItQWdlbnQ6IHB5dGhvbi1odHRweC8wLjI4LjENCg0K"
+      ],
+      "client_options": [
+        {
+          "timeout": 0.01
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": "",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "openalex.real_timeout.nan",
+      "engine": "openalex",
+      "timer": "nan",
+      "config_timer": "nan",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [
+        "R0VUIC93b3Jrcz9zZWFyY2g9b2ZmbGluZSUyMHRpbWVyJnBlcl9wYWdlPTEwIEhUVFAvMS4xDQpIb3N0OiAxMjcuMC4wLjE6NTQzMDkNCkFjY2VwdDogKi8qDQpBY2NlcHQtRW5jb2Rpbmc6IGd6aXAsIGRlZmxhdGUNCkNvbm5lY3Rpb246IGtlZXAtYWxpdmUNClVzZXItQWdlbnQ6IHB5dGhvbi1odHRweC8wLjI4LjENCg0K"
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "nan"
+          }
+        }
+      ],
+      "output": {
+        "oracle_external_timeout_seconds": 1,
+        "source_adapter_outcome": null,
+        "cancelled_and_joined": true
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "openalex.real_timeout.inf",
+      "engine": "openalex",
+      "timer": "inf",
+      "config_timer": "inf",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [
+        "R0VUIC93b3Jrcz9zZWFyY2g9b2ZmbGluZSUyMHRpbWVyJnBlcl9wYWdlPTEwIEhUVFAvMS4xDQpIb3N0OiAxMjcuMC4wLjE6NTQzMTYNCkFjY2VwdDogKi8qDQpBY2NlcHQtRW5jb2Rpbmc6IGd6aXAsIGRlZmxhdGUNCkNvbm5lY3Rpb246IGtlZXAtYWxpdmUNClVzZXItQWdlbnQ6IHB5dGhvbi1odHRweC8wLjI4LjENCg0K"
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "inf"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "openalex.real_timeout.negative_inf",
+      "engine": "openalex",
+      "timer": "negative_inf",
+      "config_timer": "-inf",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "-inf"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": "",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "semanticscholar.real_timeout.zero",
+      "engine": "semanticscholar",
+      "timer": "zero",
+      "config_timer": "0",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": 0.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "semanticscholar.real_timeout.negative",
+      "engine": "semanticscholar",
+      "timer": "negative",
+      "config_timer": "-1",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": -0.001
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "semanticscholar.real_timeout.positive",
+      "engine": "semanticscholar",
+      "timer": "positive",
+      "config_timer": "10",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [
+        "R0VUIC8/cXVlcnk9b2ZmbGluZSt0aW1lciZsaW1pdD01JmZpZWxkcz10aXRsZSUyQ3VybCUyQ2Fic3RyYWN0JTJDY2l0YXRpb25Db3VudCUyQ3B1YmxpY2F0aW9uRGF0ZSUyQ2V4dGVybmFsSWRzJTJDYXV0aG9ycyBIVFRQLzEuMQ0KSG9zdDogMTI3LjAuMC4xOjU0MzI0DQpBY2NlcHQ6ICovKg0KQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlDQpDb25uZWN0aW9uOiBrZWVwLWFsaXZlDQpVc2VyLUFnZW50OiBTbG9wU2VhclgvMC4xLjAgKG1ldGEgc2VhcmNoIGVuZ2luZTsgYWdlbnQtbmF0aXZlKQ0KDQo="
+      ],
+      "client_options": [
+        {
+          "timeout": 0.01
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "semanticscholar.real_timeout.nan",
+      "engine": "semanticscholar",
+      "timer": "nan",
+      "config_timer": "nan",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [
+        "R0VUIC8/cXVlcnk9b2ZmbGluZSt0aW1lciZsaW1pdD01JmZpZWxkcz10aXRsZSUyQ3VybCUyQ2Fic3RyYWN0JTJDY2l0YXRpb25Db3VudCUyQ3B1YmxpY2F0aW9uRGF0ZSUyQ2V4dGVybmFsSWRzJTJDYXV0aG9ycyBIVFRQLzEuMQ0KSG9zdDogMTI3LjAuMC4xOjU0MzI2DQpBY2NlcHQ6ICovKg0KQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlDQpDb25uZWN0aW9uOiBrZWVwLWFsaXZlDQpVc2VyLUFnZW50OiBTbG9wU2VhclgvMC4xLjAgKG1ldGEgc2VhcmNoIGVuZ2luZTsgYWdlbnQtbmF0aXZlKQ0KDQo="
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "nan"
+          }
+        }
+      ],
+      "output": {
+        "oracle_external_timeout_seconds": 1,
+        "source_adapter_outcome": null,
+        "cancelled_and_joined": true
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "semanticscholar.real_timeout.inf",
+      "engine": "semanticscholar",
+      "timer": "inf",
+      "config_timer": "inf",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [
+        "R0VUIC8/cXVlcnk9b2ZmbGluZSt0aW1lciZsaW1pdD01JmZpZWxkcz10aXRsZSUyQ3VybCUyQ2Fic3RyYWN0JTJDY2l0YXRpb25Db3VudCUyQ3B1YmxpY2F0aW9uRGF0ZSUyQ2V4dGVybmFsSWRzJTJDYXV0aG9ycyBIVFRQLzEuMQ0KSG9zdDogMTI3LjAuMC4xOjU0MzMwDQpBY2NlcHQ6ICovKg0KQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlDQpDb25uZWN0aW9uOiBrZWVwLWFsaXZlDQpVc2VyLUFnZW50OiBTbG9wU2VhclgvMC4xLjAgKG1ldGEgc2VhcmNoIGVuZ2luZTsgYWdlbnQtbmF0aXZlKQ0KDQo="
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "inf"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    },
+    {
+      "id": "semanticscholar.real_timeout.negative_inf",
+      "engine": "semanticscholar",
+      "timer": "negative_inf",
+      "config_timer": "-inf",
+      "response_delay_ms": 50,
+      "response_body_b64": "e30=",
+      "requests_b64": [],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "-inf"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "timeout",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "cleanup": {
+        "server_closed": true,
+        "active_handlers": 0
+      }
+    }
+  ]
+}
