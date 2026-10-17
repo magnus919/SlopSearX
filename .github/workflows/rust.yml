@@ -230,6 +230,9 @@ jobs:
       - name: Native jobs adapters
         run: cargo xtask check A14 --output target/rust-evidence/A14.json
 
+      - name: Native infrastructure security adapters
+        run: cargo xtask check A12 --output target/rust-evidence/A12.json
+
       - name: Native readiness and Python bridge smoke
         env:
           SSX_SERVER_BIN: target/${{ matrix.target }}/debug/ssx-server
@@ -277,6 +280,7 @@ jobs:
             target/rust-evidence/A08.json
             target/rust-evidence/A09.json
             target/rust-evidence/A11.json
+            target/rust-evidence/A12.json
             target/rust-evidence/A14.json
             target/rust-feature-graph.txt
           if-no-files-found: warn

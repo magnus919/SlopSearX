@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "plan_id": "A12",
+  "evidence_kind": "STATIC_SOURCE_DERIVATION_AND_NATIVE_COMPONENT",
+  "source_baseline": "3571e499b9d5da8f5ddface32b6ebc3cfcb9a06c",
+  "shared_proposal_base": "80ecfcf5bcd7393bbe1457fa5f406d439525e4f8",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "450d214ea7b2d41bf0693e4fad4c4265692db181f889bac2faea590b755a000f"
+    },
+    {
+      "path": "crates/ssx-application/src/lib.rs",
+      "sha256": "a7102f8c75244e74680cf8773c527d21fb2dcd177a29f0bd27abeef2beeb880e"
+    },
+    {
+      "path": "crates/ssx-config/src/lib.rs",
+      "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34"
+    },
+    {
+      "path": "crates/ssx-domain/src/records.rs",
+      "sha256": "5e08c70c9adb8dc1f12562d560191ccf7b262edca73c6e6154057620e353d5bc"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/censys.rs",
+      "sha256": "bdb567824179a6a49be2d10db5f9f51fe95e4640ba507773220bb92d7f29af5b"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/crtsh.rs",
+      "sha256": "ab6bff21304ff0c930a310090852d876d336186a4a989228e552f42702905e37"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/http_charset.rs",
+      "sha256": "37d4060344b491a83c2ace5d727a4c8daedf1a1eadd1c2fdc27cf08ca377f953"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/http_headers.rs",
+      "sha256": "93a37259920b4602e81dbd773d51bfe6ce09dc6a71c1cdf4454d9f1cae882dd4"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/infrastructure_security.rs",
+      "sha256": "71f433bc1cb94419fa77a38c91fd1dc1d966ad353ca959fa48138abc687c5765"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/mod.rs",
+      "sha256": "b5edccab2c633e36fdc9c7e51e58521b5973f220555f0e0d0587adeeee3ac3c1"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/shodan.rs",
+      "sha256": "819a06c84e453994159638dc731b27d5bcf61b50d18c962ce0deb2e4bcb1c5c1"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "sha256": "0f42f0c200f1e84f427b03bcb5e9d8fc5251180b7d0f58e22c9e0b724370509d"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "sha256": "19d7e3cb4a94c1e4f3445f7afa9d1b05ca56eaf02f55de38f6896acfd52493a0"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload/batch.rs",
+      "sha256": "864d4d9056a4a5f12d2a40001a501376ea2ec682ce21c32a40837bea4bb8ba21"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_repr.rs",
+      "sha256": "06680a00d9d8b17082d09a175c44797e5a7a984b64096d18f102b8a2cb2d23fd"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/virustotal.rs",
+      "sha256": "35de01e593db8de65b42e07afde511f6a8b725c8a65e5606dea131068358f611"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulncheck.rs",
+      "sha256": "84b40bae8908d997857b437d51ce533467d52768481487bde22d195f3eb79ec0"
+    },
+    {
+      "path": "crates/ssx-infra/src/http.rs",
+      "sha256": "53f617dc02aca29a3a6db418c9c6f90e965f8498d8f154dbe9301344d15e9ed0"
+    },
+    {
+      "path": "crates/ssx-infra/tests/a12_security.rs",
+      "sha256": "ed2e50a2ac281fdb257598d0d26f0fe170efab7fe9e3e91467909e3bcdc2e82c"
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "0ab426d18827611232a7e07f5e87b685cf1aa43abd204ba9049a20ec321297ec"
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39"
+    },
+    {
+      "path": "docs/rust-rewrite/a01/README.md",
+      "sha256": "7dfe805866c574f6b781886cf8a225af9b2e72314b77837c617cdb2078a20faa"
+    },
+    {
+      "path": "docs/rust-rewrite/a12/BOUNDS_REVIEW.md",
+      "sha256": "e31064069e755a93e34062dc24b356734c4f9ecafa6d5b3ce073f9d467be195f"
+    },
+    {
+      "path": "docs/rust-rewrite/a12/PARITY.md",
+      "sha256": "9e809b4d8e3b845228ae3b8e147d64928a52f00bc7390a078a4d9742d53d79c4"
+    },
+    {
+      "path": "docs/rust-rewrite/a12/PORTAL_IMPACT.md",
+      "sha256": "192a27b4cdca4fabc117a80551b5e83844d951ebcb3097d874295a255c4fada4"
+    },
+    {
+      "path": "docs/rust-rewrite/a12/README.md",
+      "sha256": "c96a313c318ba092a5e8517963d5dbdbc7ef279f3969a90f59447863bbe62141"
+    },
+    {
+      "path": "docs/rust-rewrite/a12/source-test-map-v1.json",
+      "sha256": "b3600e7212b40ee27671d25ba4baef87a48775d34e292de88f4f4d24135f3968"
+    },
+    {
+      "path": "docs/rust-rewrite/a12/static-fixtures-v1.json",
+      "sha256": "5acf40ea00c58ee7114dd591b6e7b548768eac71689a15cb7ca5e88e0ea7f010"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/README.md",
+      "sha256": "2299848a08874ff218ef12a168f8bb8aa1515377a0c9a0f72486f40b9d82a4f8"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/censys.json",
+      "sha256": "06ad3f9e8e9a9015cbaf05c1ea0bb31add6182d5ed1d1c372155e6b4469b541b"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/crtsh.json",
+      "sha256": "6723c561b80a65511abd0170b9996b9cf12e0d981560862a26af1e2144569ad3"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/shodan.json",
+      "sha256": "3e92569ac197ad7b3f5833e131a97518221e7b079efe16f0fcb34cd07f07d3dc"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/virustotal.json",
+      "sha256": "343198106610be06e36869979b156f359c6054f54343dd472ed62734edef15f3"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/vulncheck.json",
+      "sha256": "a3527a2df42a063fe82778263b95b9dcc8a88b5a63f4bc93eb35184f1042bf84"
+    },
+    {
+      "path": "docs/rust-rewrite/replay/README.md",
+      "sha256": "702f1a063952a850445db9aa54b3868f4180c536b8c166647a233d4debaa6144"
+    },
+    {
+      "path": "engines/censys.py",
+      "sha256": "7bd028ed435dd26fec42a42e83064db0d46e676dc9b2531ff5f8b3b3c8f4024b"
+    },
+    {
+      "path": "engines/crtsh.py",
+      "sha256": "2291458551dc91f81eaf0472802fae84e10479a4095b43309dcc68ef0b6e8f76"
+    },
+    {
+      "path": "engines/shodan.py",
+      "sha256": "c135651afdb68707bfc5d9728e2b857ffe484d5b927dd41a448e78eec58c78f3"
+    },
+    {
+      "path": "engines/virustotal.py",
+      "sha256": "7cd801a42eaf8ae21b5fb35d2b7dfe97938398db1399fd3264521dcc7cd5924e"
+    },
+    {
+      "path": "engines/vulncheck.py",
+      "sha256": "9ee7454c77ecb110a4c7ab27e3249eeca794eef409dc9bf5e3ca9aa01a7ab46a"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    },
+    {
+      "path": "tests/test_censys.py",
+      "sha256": "78ab7d70a226f643e928da2c60f7ab8cd64c861a5d47d972dbaecc60d5803b44"
+    },
+    {
+      "path": "tests/test_crtsh.py",
+      "sha256": "39b1292ae846ed796f9e8335f2690870e7bf4d99a26d75b385d262e1d453ad47"
+    },
+    {
+      "path": "tests/test_shodan.py",
+      "sha256": "77e4b6f8100493ada06b6baf5d0719ba09d3e0ad51253b9c2168e7c320a2943c"
+    },
+    {
+      "path": "tests/test_virustotal.py",
+      "sha256": "a053dd98278cc2518312a423639299505af7ffb609e89242f3dc584434fe0f6d"
+    },
+    {
+      "path": "tests/test_vulncheck.py",
+      "sha256": "f2811d9eb9270e49443b4e96ca8c0747398c75efc39a214d6c597e91542a1d77"
+    }
+  ],
+  "native_tests": [
+    "absolute_context_bounds_admission_and_releases_its_future",
+    "admission_failure_precedes_credentials_url_and_parse_with_zero_dispatch",
+    "all_five_complete_results_and_exact_requests",
+    "context_and_configured_deadline_each_drop_actual_inflight_exchange",
+    "crtsh_marker_order_sniff_window_and_decoded_scan_boundaries",
+    "drop_and_shutdown_cancel_only_owned_exchange_and_join_cleanup",
+    "dropping_actual_projection_work_releases_scratch_at_observed_charge",
+    "expired_absolute_context_does_not_admit_or_dispatch",
+    "f08_transport_failure_is_redacted_and_does_not_substitute_provider_payload",
+    "inherited_f05_refusals_are_whole_responses_and_unused_values_remain_legal",
+    "legal_config_scalars_credential_encoding_and_base_override_are_not_silently_coerced",
+    "numeric_unicode_container_and_limit_semantics_use_source_operations",
+    "original_crtsh_exact_classification_messages_and_no_body_disclosure",
+    "original_named_auth_errors_have_no_outbound_and_admit_first",
+    "original_status_classes_are_empty_and_redacted_for_every_engine",
+    "owned_projection_charges_release_and_refusals_are_atomic",
+    "private_loopback_wire_contract",
+    "registered_factories_preserve_f06_descriptor_metadata",
+    "resolved_config_normalization_and_secret_debug",
+    "review_source_selection_crtsh_date_tail",
+    "review_source_selection_crtsh_san_tail",
+    "review_source_selection_crtsh_vertical_tab_html",
+    "review_source_selection_vulncheck_date_tail",
+    "source_empty_wrong_shape_and_atomic_failure_matrix",
+    "source_slicing_and_request_limits_are_distinct",
+    "unsupported_request_filters_and_paging_do_not_claim_or_change_enforcement",
+    "vulncheck_query_routing_first_match_unicode_digits_and_no_cve"
+  ],
+  "source_runs": [
+
+  ],
+  "provider_calls": 0,
+  "qualification": "component candidate; parent integration/acceptance required"
+}

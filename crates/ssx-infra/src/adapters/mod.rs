@@ -922,3 +922,15 @@ mod threat_intel;
 mod threat_ioc;
 pub mod urlhaus;
 pub use threat_intel::{ThreatIntelConfig, ThreatIntelSettings, register_threat_intelligence};
+
+// A12 engine-local infrastructure security; shared policy/transport remain caller-owned.
+pub mod censys;
+pub mod crtsh;
+mod infrastructure_security;
+pub mod shodan;
+pub mod virustotal;
+pub mod vulncheck;
+pub use infrastructure_security::{
+    Kind as InfrastructureSecurityKind, SecurityConfig, SecuritySettings,
+    register_infrastructure_security,
+};

@@ -831,3 +831,13 @@ as an eighth external, capture-only producer. The old checkout and staged bytes
 are untouched. No execution attestation or actual invocation row is invented;
 all62 actual rows and479 source paths remain unchanged. G08 owns retirement
 of that runnable old-checkout exporter as well as the seven current-goal tools.
+
+## A12 native component candidate
+
+A12 adds native Censys/Shodan/VirusTotal/VulnCheck/CRT.sh components and a
+compiled Rust-only gate proposal. All ten original engine/test records retain
+every existing field and owner; additive candidate pointers identify static
+source mapping plus native assertions, never new Python runs or oracle captures.
+No Python source, interpreter command, configured hook or original file hash is
+added or changed. Python invocation inventory and all retirement dispositions
+remain intact; parent review/current-main integration and hosted CI are pending.

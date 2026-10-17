@@ -1,0 +1,708 @@
+{
+  "baseline": "3571e499b9d5da8f5ddface32b6ebc3cfcb9a06c",
+  "files": [
+    {
+      "path": "engines/censys.py",
+      "sha256": "7bd028ed435dd26fec42a42e83064db0d46e676dc9b2531ff5f8b3b3c8f4024b",
+      "git_blob": "3a5ae6f8890eca181114d9ecc848b5975a171486"
+    },
+    {
+      "path": "tests/test_censys.py",
+      "sha256": "78ab7d70a226f643e928da2c60f7ab8cd64c861a5d47d972dbaecc60d5803b44",
+      "git_blob": "8363212a7599819434e3c34ce16b6194e7d119f9"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/censys.json",
+      "sha256": "06ad3f9e8e9a9015cbaf05c1ea0bb31add6182d5ed1d1c372155e6b4469b541b",
+      "git_blob": "a2eae94a8f867504c4118d883cceb71e64db9d9b"
+    },
+    {
+      "path": "engines/shodan.py",
+      "sha256": "c135651afdb68707bfc5d9728e2b857ffe484d5b927dd41a448e78eec58c78f3",
+      "git_blob": "b3974b6ba0d662d77dd0fde84a4d57a9e7970f11"
+    },
+    {
+      "path": "tests/test_shodan.py",
+      "sha256": "77e4b6f8100493ada06b6baf5d0719ba09d3e0ad51253b9c2168e7c320a2943c",
+      "git_blob": "db442e922ce13d645ac19658d0c59d96e37972a2"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/shodan.json",
+      "sha256": "3e92569ac197ad7b3f5833e131a97518221e7b079efe16f0fcb34cd07f07d3dc",
+      "git_blob": "d423d1b4f17cab85a5779524340f9f095a0bb3a5"
+    },
+    {
+      "path": "engines/virustotal.py",
+      "sha256": "7cd801a42eaf8ae21b5fb35d2b7dfe97938398db1399fd3264521dcc7cd5924e",
+      "git_blob": "0882c5da14bd7e6edb881c4e446d7f8d38bf1e50"
+    },
+    {
+      "path": "tests/test_virustotal.py",
+      "sha256": "a053dd98278cc2518312a423639299505af7ffb609e89242f3dc584434fe0f6d",
+      "git_blob": "ed8e087d4535b36188fb3b7be9d99f526cfc11f5"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/virustotal.json",
+      "sha256": "343198106610be06e36869979b156f359c6054f54343dd472ed62734edef15f3",
+      "git_blob": "4134c978319c5cf0a63208e43e9049a853b9b053"
+    },
+    {
+      "path": "engines/vulncheck.py",
+      "sha256": "9ee7454c77ecb110a4c7ab27e3249eeca794eef409dc9bf5e3ca9aa01a7ab46a",
+      "git_blob": "33c47ad515e1ae60137ebf265c44702479ffcb77"
+    },
+    {
+      "path": "tests/test_vulncheck.py",
+      "sha256": "f2811d9eb9270e49443b4e96ca8c0747398c75efc39a214d6c597e91542a1d77",
+      "git_blob": "9162d79506b59599af4ef257e93c7a73c4517025"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/vulncheck.json",
+      "sha256": "a3527a2df42a063fe82778263b95b9dcc8a88b5a63f4bc93eb35184f1042bf84",
+      "git_blob": "f4b75e5db41bd3c415d4a0fe3808c6141bdaa40d"
+    },
+    {
+      "path": "engines/crtsh.py",
+      "sha256": "2291458551dc91f81eaf0472802fae84e10479a4095b43309dcc68ef0b6e8f76",
+      "git_blob": "98ce21737f14a23039e46922eef39e981ef8ead8"
+    },
+    {
+      "path": "tests/test_crtsh.py",
+      "sha256": "39b1292ae846ed796f9e8335f2690870e7bf4d99a26d75b385d262e1d453ad47",
+      "git_blob": "94e003fab7e8290a724177327309b50e3c64653a"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/crtsh.json",
+      "sha256": "6723c561b80a65511abd0170b9996b9cf12e0d981560862a26af1e2144569ad3",
+      "git_blob": "788429147b03eee30d1ec3160e5330ecd28475e6"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+      "git_blob": "82eb29d50c4ca98a237949d4d8994cfe3cbeca9f"
+    },
+    {
+      "path": "crates/ssx-application/src/lib.rs",
+      "sha256": "a7102f8c75244e74680cf8773c527d21fb2dcd177a29f0bd27abeef2beeb880e",
+      "git_blob": "14df2ec4ba0f1f03e18bb7071c5646536a45a773"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "sha256": "0f42f0c200f1e84f427b03bcb5e9d8fc5251180b7d0f58e22c9e0b724370509d",
+      "git_blob": "e319d379590f2b9e39097a4e8ed3a309e9fc67d7"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_repr.rs",
+      "sha256": "06680a00d9d8b17082d09a175c44797e5a7a984b64096d18f102b8a2cb2d23fd",
+      "git_blob": "cfff201598e7631fb2693a1a5c77c4d14b08a492"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "sha256": "19d7e3cb4a94c1e4f3445f7afa9d1b05ca56eaf02f55de38f6896acfd52493a0",
+      "git_blob": "7dda316df0ea1573e260c80a85c5c631dc16a4d2"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload/batch.rs",
+      "sha256": "864d4d9056a4a5f12d2a40001a501376ea2ec682ce21c32a40837bea4bb8ba21",
+      "git_blob": "7a11edc04a430c315609a3c8f538fc626fd19444"
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39",
+      "git_blob": "d609376fa8a8dba26de1d941a60351915f2b1687"
+    },
+    {
+      "path": "docs/rust-rewrite/a01/README.md",
+      "sha256": "7dfe805866c574f6b781886cf8a225af9b2e72314b77837c617cdb2078a20faa",
+      "git_blob": "90e0b39d9ea18687a66f3bd6b5a6cf52e6029f35"
+    },
+    {
+      "path": "docs/rust-rewrite/replay/README.md",
+      "sha256": "702f1a063952a850445db9aa54b3868f4180c536b8c166647a233d4debaa6144",
+      "git_blob": "e20b661d982b84bf1711311c0598b38d2a3124d2"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/README.md",
+      "sha256": "2299848a08874ff218ef12a168f8bb8aa1515377a0c9a0f72486f40b9d82a4f8",
+      "git_blob": "36db715225b2bf3ab23c10c3ec5cead7b290c8b5"
+    }
+  ],
+  "original_tests": [
+    {
+      "node": "tests/test_censys.py::TestCensysAdapter::test_search_returns_hits",
+      "source_line": 23,
+      "engine": "censys",
+      "kind": "static_original_test_mapping",
+      "native_case": "censys.search_returns_hits",
+      "source_executed": false,
+      "native_test": "all_five_complete_results_and_exact_requests",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_returns_hits(self, adapter):\n        data = {\n            \"result\": {\n                \"hits\": [\n                    {\n                        \"ip\": \"1.2.3.4\",\n                        \"location\": {\"country\": \"US\", \"city\": \"Mountain View\"},\n                        \"services\": [{\"service_name\": \"HTTP\", \"port\": 80}],\n                    }\n                ]\n            }\n        }\n        async with MockHTTP(lambda r: httpx.Response(200, json=data)):\n            result = await adapter.search(\"1.2.3.4\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 1\n        assert \"1.2.3.4\" in result.results[0].title",
+      "native_assertions": [
+        "complete AdapterResponse except measured latency",
+        "every SearchResult field, original sample rows",
+        "exact ordered URL query, method, all injected custom headers, empty body",
+        "exact one admission and one exchange"
+      ]
+    },
+    {
+      "node": "tests/test_censys.py::TestCensysAdapter::test_missing_api_key",
+      "source_line": 41,
+      "engine": "censys",
+      "kind": "static_original_test_mapping",
+      "native_case": "censys.missing_api_key",
+      "source_executed": false,
+      "native_test": "original_named_auth_errors_have_no_outbound_and_admit_first",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API credentials\" in (result.error_message or \"\")",
+      "native_assertions": [
+        "each required key absent including independent Censys secret",
+        "exact named admission before credential failure",
+        "zero exchanges",
+        "Shodan empty and Python whitespace keys rejected; stripped bearer preserved"
+      ]
+    },
+    {
+      "node": "tests/test_censys.py::TestCensysAdapter::test_rate_limited",
+      "source_line": 47,
+      "engine": "censys",
+      "kind": "static_original_test_mapping",
+      "native_case": "censys.rate_limited",
+      "source_executed": false,
+      "native_test": "original_status_classes_are_empty_and_redacted_for_every_engine",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.RATE_LIMITED",
+      "native_assertions": [
+        "429/403/401/404/500 across every engine",
+        "complete empty typed response and classified status",
+        "fixed diagnostic for generic F08 HTTP errors, no body/key",
+        "one actual injected exchange"
+      ]
+    },
+    {
+      "node": "tests/test_censys.py::TestCensysAdapter::test_adapter_registered",
+      "source_line": 52,
+      "engine": "censys",
+      "kind": "static_original_test_mapping",
+      "native_case": "censys.adapter_registered",
+      "source_executed": false,
+      "native_test": "registered_factories_preserve_f06_descriptor_metadata",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"censys\" in list_engines()",
+      "native_assertions": [
+        "all five real factories instantiate",
+        "full descriptor vector unchanged",
+        "security category for every engine, it category for CRT.sh",
+        "no declared enforced filters"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_search_returns_results",
+      "source_line": 21,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.search_returns_results",
+      "source_executed": false,
+      "native_test": "all_five_complete_results_and_exact_requests",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_returns_results(self, adapter):\n        data = {\n            \"matches\": [\n                {\n                    \"ip_str\": \"1.2.3.4\",\n                    \"port\": 80,\n                    \"org\": \"Example ISP\",\n                    \"product\": \"nginx\",\n                    \"hostnames\": [\"www.example.com\"],\n                    \"transport\": \"tcp\",\n                }\n            ]\n        }\n        async with MockHTTP(lambda r: httpx.Response(200, json=data)):\n            result = await adapter.search(\"nginx\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 1\n        assert \"1.2.3.4:80\" in result.results[0].title\n        assert \"nginx\" in result.results[0].content",
+      "native_assertions": [
+        "complete AdapterResponse except measured latency",
+        "every SearchResult field, original sample rows",
+        "exact ordered URL query, method, all injected custom headers, empty body",
+        "exact one admission and one exchange"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_missing_api_key",
+      "source_line": 41,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.missing_api_key",
+      "source_executed": false,
+      "native_test": "original_named_auth_errors_have_no_outbound_and_admit_first",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key not configured\" in (result.error_message or \"\")",
+      "native_assertions": [
+        "each required key absent including independent Censys secret",
+        "exact named admission before credential failure",
+        "zero exchanges",
+        "Shodan empty and Python whitespace keys rejected; stripped bearer preserved"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_rate_limited",
+      "source_line": 47,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.rate_limited",
+      "source_executed": false,
+      "native_test": "original_status_classes_are_empty_and_redacted_for_every_engine",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.RATE_LIMITED",
+      "native_assertions": [
+        "429/403/401/404/500 across every engine",
+        "complete empty typed response and classified status",
+        "fixed diagnostic for generic F08 HTTP errors, no body/key",
+        "one actual injected exchange"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_search_http_status_error_sanitized",
+      "source_line": 52,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.search_http_status_error_sanitized",
+      "source_executed": false,
+      "native_test": "original_status_classes_are_empty_and_redacted_for_every_engine",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_http_status_error_sanitized(self):\n        \"\"\"HTTPStatusError (500) must not leak API key in error_message.\"\"\"\n        instances = discover_engines({\"shodan\": {\"enabled\": True, \"api_key\": \"test-shodan-key-67890\"}})\n        adapter = instances[\"shodan\"]\n\n        async with MockHTTP(lambda r: httpx.Response(500)):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.ERROR\n        assert result.error_message is not None\n        assert \"test-shodan-key-67890\" not in result.error_message",
+      "native_assertions": [
+        "429/403/401/404/500 across every engine",
+        "complete empty typed response and classified status",
+        "fixed diagnostic for generic F08 HTTP errors, no body/key",
+        "one actual injected exchange"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_search_broad_exception_sanitized",
+      "source_line": 63,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.search_broad_exception_sanitized",
+      "source_executed": false,
+      "native_test": "f08_transport_failure_is_redacted_and_does_not_substitute_provider_payload",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_broad_exception_sanitized(self):\n        \"\"\"Broad handler sanitizes error_message when exception contains a URL.\"\"\"\n        instances = discover_engines({\"shodan\": {\"enabled\": True, \"api_key\": \"test-shodan-key-67890\"}})\n        adapter = instances[\"shodan\"]\n\n        async with MockHTTP(\n            lambda r: (_ for _ in ()).throw(\n                RuntimeError(\"https://api.shodan.io/shodan/host/search?key=test-shodan-key-67890&query=test&limit=10\")\n            )\n        ):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.ERROR\n        assert result.error_message is not None\n        assert \"test-shodan-key-67890\" not in result.error_message",
+      "native_assertions": [
+        "actual injected F08 Network error",
+        "whole Error response with constant diagnostic",
+        "no fake source exception string; existing F08 abstraction explicitly documented"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_uses_bearer_auth_header",
+      "source_line": 78,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.uses_bearer_auth_header",
+      "source_executed": false,
+      "native_test": "all_five_complete_results_and_exact_requests",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_uses_bearer_auth_header(self):\n        \"\"\"Shodan sends API key as Authorization: Bearer header, not query param.\"\"\"\n        captured_headers = {}\n        captured_params = {}\n\n        def _handler(r):\n            captured_headers.update(dict(r.headers))\n            captured_params.update(dict(r.url.params))\n            return httpx.Response(200, json={\"matches\": []})\n\n        instances = discover_engines({\"shodan\": {\"enabled\": True, \"api_key\": \"shodan-bearer-test\"}})\n        async with MockHTTP(_handler):\n            await instances[\"shodan\"].search(\"test\")\n\n        assert captured_headers.get(\"authorization\") == \"Bearer shodan-bearer-test\"\n        assert \"key\" not in captured_params",
+      "native_assertions": [
+        "complete AdapterResponse except measured latency",
+        "every SearchResult field, original sample rows",
+        "exact ordered URL query, method, all injected custom headers, empty body",
+        "exact one admission and one exchange"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_empty_key_treated_as_not_configured",
+      "source_line": 95,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.empty_key_treated_as_not_configured",
+      "source_executed": false,
+      "native_test": "original_named_auth_errors_have_no_outbound_and_admit_first",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_empty_key_treated_as_not_configured(self):\n        \"\"\"Empty-string API key results in 'not configured' error, not a request.\"\"\"\n        instances = discover_engines({\"shodan\": {\"enabled\": True, \"api_key\": \"\"}})\n        result = await instances[\"shodan\"].search(\"test\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key not configured\" in (result.error_message or \"\")",
+      "native_assertions": [
+        "each required key absent including independent Censys secret",
+        "exact named admission before credential failure",
+        "zero exchanges",
+        "Shodan empty and Python whitespace keys rejected; stripped bearer preserved"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_whitespace_key_treated_as_not_configured",
+      "source_line": 102,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.whitespace_key_treated_as_not_configured",
+      "source_executed": false,
+      "native_test": "original_named_auth_errors_have_no_outbound_and_admit_first",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_whitespace_key_treated_as_not_configured(self):\n        \"\"\"Whitespace-only API key treated as absent.\"\"\"\n        instances = discover_engines({\"shodan\": {\"enabled\": True, \"api_key\": \"   \"}})\n        result = await instances[\"shodan\"].search(\"test\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key not configured\" in (result.error_message or \"\")",
+      "native_assertions": [
+        "each required key absent including independent Censys secret",
+        "exact named admission before credential failure",
+        "zero exchanges",
+        "Shodan empty and Python whitespace keys rejected; stripped bearer preserved"
+      ]
+    },
+    {
+      "node": "tests/test_shodan.py::TestShodanAdapter::test_adapter_registered",
+      "source_line": 109,
+      "engine": "shodan",
+      "kind": "static_original_test_mapping",
+      "native_case": "shodan.adapter_registered",
+      "source_executed": false,
+      "native_test": "registered_factories_preserve_f06_descriptor_metadata",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"shodan\" in list_engines()",
+      "native_assertions": [
+        "all five real factories instantiate",
+        "full descriptor vector unchanged",
+        "security category for every engine, it category for CRT.sh",
+        "no declared enforced filters"
+      ]
+    },
+    {
+      "node": "tests/test_virustotal.py::TestVirusTotalAdapter::test_search_returns_results",
+      "source_line": 21,
+      "engine": "virustotal",
+      "kind": "static_original_test_mapping",
+      "native_case": "virustotal.search_returns_results",
+      "source_executed": false,
+      "native_test": "all_five_complete_results_and_exact_requests",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_returns_results(self, adapter):\n        data = {\n            \"data\": [\n                {\n                    \"id\": \"d41d8cd98f00b204e9800998ecf8427e\",\n                    \"attributes\": {\n                        \"last_analysis_stats\": {\"malicious\": 5, \"suspicious\": 2, \"harmless\": 50, \"undetected\": 10},\n                        \"meaningful_name\": \"bad.exe\",\n                        \"reputation\": -5,\n                    },\n                }\n            ]\n        }\n        async with MockHTTP(lambda r: httpx.Response(200, json=data)):\n            result = await adapter.search(\"d41d8cd98f00b204e9800998ecf8427e\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 1\n        assert \"bad.exe\" in result.results[0].title\n        assert \"5/67\" in result.results[0].content",
+      "native_assertions": [
+        "complete AdapterResponse except measured latency",
+        "every SearchResult field, original sample rows",
+        "exact ordered URL query, method, all injected custom headers, empty body",
+        "exact one admission and one exchange"
+      ]
+    },
+    {
+      "node": "tests/test_virustotal.py::TestVirusTotalAdapter::test_missing_api_key",
+      "source_line": 41,
+      "engine": "virustotal",
+      "kind": "static_original_test_mapping",
+      "native_case": "virustotal.missing_api_key",
+      "source_executed": false,
+      "native_test": "original_named_auth_errors_have_no_outbound_and_admit_first",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key\" in (result.error_message or \"\")",
+      "native_assertions": [
+        "each required key absent including independent Censys secret",
+        "exact named admission before credential failure",
+        "zero exchanges",
+        "Shodan empty and Python whitespace keys rejected; stripped bearer preserved"
+      ]
+    },
+    {
+      "node": "tests/test_virustotal.py::TestVirusTotalAdapter::test_rate_limited",
+      "source_line": 47,
+      "engine": "virustotal",
+      "kind": "static_original_test_mapping",
+      "native_case": "virustotal.rate_limited",
+      "source_executed": false,
+      "native_test": "original_status_classes_are_empty_and_redacted_for_every_engine",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.RATE_LIMITED",
+      "native_assertions": [
+        "429/403/401/404/500 across every engine",
+        "complete empty typed response and classified status",
+        "fixed diagnostic for generic F08 HTTP errors, no body/key",
+        "one actual injected exchange"
+      ]
+    },
+    {
+      "node": "tests/test_virustotal.py::TestVirusTotalAdapter::test_adapter_registered",
+      "source_line": 52,
+      "engine": "virustotal",
+      "kind": "static_original_test_mapping",
+      "native_case": "virustotal.adapter_registered",
+      "source_executed": false,
+      "native_test": "registered_factories_preserve_f06_descriptor_metadata",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"virustotal\" in list_engines()",
+      "native_assertions": [
+        "all five real factories instantiate",
+        "full descriptor vector unchanged",
+        "security category for every engine, it category for CRT.sh",
+        "no declared enforced filters"
+      ]
+    },
+    {
+      "node": "tests/test_vulncheck.py::TestVulnCheckAdapter::test_search_with_cve_id",
+      "source_line": 21,
+      "engine": "vulncheck",
+      "kind": "static_original_test_mapping",
+      "native_case": "vulncheck.search_with_cve_id",
+      "source_executed": false,
+      "native_test": "all_five_complete_results_and_exact_requests",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_with_cve_id(self, adapter):\n        data = {\n            \"data\": {\n                \"exploit_state\": \"exploited\",\n                \"date_added\": \"2024-04-01\",\n                \"vendor_data\": [{\"vendor\": \"apache\"}],\n                \"exploit_urls\": [\"https://example.com/exploit\"],\n            }\n        }\n        async with MockHTTP(lambda r: httpx.Response(200, json=data)):\n            result = await adapter.search(\"CVE-2024-3094\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 1\n        assert \"exploited\" in result.results[0].content",
+      "native_assertions": [
+        "complete AdapterResponse except measured latency",
+        "every SearchResult field, original sample rows",
+        "exact ordered URL query, method, all injected custom headers, empty body",
+        "exact one admission and one exchange"
+      ]
+    },
+    {
+      "node": "tests/test_vulncheck.py::TestVulnCheckAdapter::test_without_cve_id_returns_empty",
+      "source_line": 36,
+      "engine": "vulncheck",
+      "kind": "static_original_test_mapping",
+      "native_case": "vulncheck.without_cve_id_returns_empty",
+      "source_executed": false,
+      "native_test": "vulncheck_query_routing_first_match_unicode_digits_and_no_cve",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_without_cve_id_returns_empty(self, adapter):\n        result = await adapter.search(\"linux kernel\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 0",
+      "native_assertions": [
+        "non-CVE query has admission but zero HTTP and empty success",
+        "first matching CVE, no word-boundary requirement",
+        "Unicode16 decimal digits preserved",
+        "one exact CVE endpoint for valid cases"
+      ]
+    },
+    {
+      "node": "tests/test_vulncheck.py::TestVulnCheckAdapter::test_missing_api_key",
+      "source_line": 41,
+      "engine": "vulncheck",
+      "kind": "static_original_test_mapping",
+      "native_case": "vulncheck.missing_api_key",
+      "source_executed": false,
+      "native_test": "original_named_auth_errors_have_no_outbound_and_admit_first",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"CVE-2024-12345\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key\" in (result.error_message or \"\")",
+      "native_assertions": [
+        "each required key absent including independent Censys secret",
+        "exact named admission before credential failure",
+        "zero exchanges",
+        "Shodan empty and Python whitespace keys rejected; stripped bearer preserved"
+      ]
+    },
+    {
+      "node": "tests/test_vulncheck.py::TestVulnCheckAdapter::test_rate_limited",
+      "source_line": 47,
+      "engine": "vulncheck",
+      "kind": "static_original_test_mapping",
+      "native_case": "vulncheck.rate_limited",
+      "source_executed": false,
+      "native_test": "original_status_classes_are_empty_and_redacted_for_every_engine",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"CVE-2024-12345\")\n        assert result.status == EngineStatus.RATE_LIMITED",
+      "native_assertions": [
+        "429/403/401/404/500 across every engine",
+        "complete empty typed response and classified status",
+        "fixed diagnostic for generic F08 HTTP errors, no body/key",
+        "one actual injected exchange"
+      ]
+    },
+    {
+      "node": "tests/test_vulncheck.py::TestVulnCheckAdapter::test_adapter_registered",
+      "source_line": 52,
+      "engine": "vulncheck",
+      "kind": "static_original_test_mapping",
+      "native_case": "vulncheck.adapter_registered",
+      "source_executed": false,
+      "native_test": "registered_factories_preserve_f06_descriptor_metadata",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"vulncheck\" in list_engines()",
+      "native_assertions": [
+        "all five real factories instantiate",
+        "full descriptor vector unchanged",
+        "security category for every engine, it category for CRT.sh",
+        "no declared enforced filters"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_returns_certs",
+      "source_line": 41,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_returns_certs",
+      "source_executed": false,
+      "native_test": "all_five_complete_results_and_exact_requests",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_returns_certs(self, adapter, sample_certs):\n        async with MockHTTP(lambda r: httpx.Response(200, json=sample_certs)):\n            result = await adapter.search(\"example.com\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 2\n        assert result.results[0].title == \"example.com\"\n        assert \"Let's Encrypt\" in result.results[0].content\n        assert \"SANs: example.com\" in result.results[0].content\n        assert result.results[1].title == \"test.org\"",
+      "native_assertions": [
+        "complete AdapterResponse except measured latency",
+        "every SearchResult field, original sample rows",
+        "exact ordered URL query, method, all injected custom headers, empty body",
+        "exact one admission and one exchange"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_empty",
+      "source_line": 51,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_empty",
+      "source_executed": false,
+      "native_test": "original_crtsh_exact_classification_messages_and_no_body_disclosure",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_empty(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(200, json=[])):\n            result = await adapter.search(\"nonexistent.xyz\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 0\n        assert result.error_message is None",
+      "native_assertions": [
+        "exact original CRT.sh JSON/HTML/challenge/malformed-row diagnostics",
+        "whole empty response, including all extension fields",
+        "raw HTML absent from diagnostic",
+        "valid empty list succeeds with no error"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_rejects_non_list_json",
+      "source_line": 58,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_rejects_non_list_json",
+      "source_executed": false,
+      "native_test": "original_crtsh_exact_classification_messages_and_no_body_disclosure",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_rejects_non_list_json(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(200, json={\"error\": \"temporarily unavailable\"})):\n            result = await adapter.search(\"example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert result.results == []\n        assert result.error_message == (\n            \"CRT.sh returned an unexpected JSON shape; expected a list (HTTP 200, content-type application/json)\"\n        )",
+      "native_assertions": [
+        "exact original CRT.sh JSON/HTML/challenge/malformed-row diagnostics",
+        "whole empty response, including all extension fields",
+        "raw HTML absent from diagnostic",
+        "valid empty list succeeds with no error"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_rejects_malformed_json",
+      "source_line": 67,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_rejects_malformed_json",
+      "source_executed": false,
+      "native_test": "original_crtsh_exact_classification_messages_and_no_body_disclosure",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_rejects_malformed_json(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(200, text=\"not json\")):\n            result = await adapter.search(\"example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert result.results == []\n        assert result.error_message == \"CRT.sh returned malformed JSON (HTTP 200, content-type text/plain)\"",
+      "native_assertions": [
+        "exact original CRT.sh JSON/HTML/challenge/malformed-row diagnostics",
+        "whole empty response, including all extension fields",
+        "raw HTML absent from diagnostic",
+        "valid empty list succeeds with no error"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_classifies_html_challenge_without_body",
+      "source_line": 74,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_classifies_html_challenge_without_body",
+      "source_executed": false,
+      "native_test": "original_crtsh_exact_classification_messages_and_no_body_disclosure",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_classifies_html_challenge_without_body(self, adapter):\n        html = \"<html><body><div class='captcha'>verify you are human</div></body></html>\"\n        async with MockHTTP(\n            lambda r: httpx.Response(\n                200,\n                text=html,\n                headers={\"content-type\": \"text/html; charset=UTF-8\"},\n            )\n        ):\n            result = await adapter.search(\"github.com\")\n        assert result.status == EngineStatus.BLOCKED\n        assert result.results == []\n        assert result.error_message == (\n            \"CRT.sh returned an upstream challenge/block page \"\n            \"(HTTP 200, content-type text/html; markers=captcha,verify_human)\"\n        )\n        assert html not in (result.error_message or \"\")",
+      "native_assertions": [
+        "exact original CRT.sh JSON/HTML/challenge/malformed-row diagnostics",
+        "whole empty response, including all extension fields",
+        "raw HTML absent from diagnostic",
+        "valid empty list succeeds with no error"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_classifies_nonchallenge_html_as_upstream_error",
+      "source_line": 92,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_classifies_nonchallenge_html_as_upstream_error",
+      "source_executed": false,
+      "native_test": "original_crtsh_exact_classification_messages_and_no_body_disclosure",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_classifies_nonchallenge_html_as_upstream_error(self, adapter):\n        async with MockHTTP(\n            lambda r: httpx.Response(\n                200,\n                text=\"<html><body>maintenance</body></html>\",\n                headers={\"content-type\": \"text/html; charset=UTF-8\"},\n            )\n        ):\n            result = await adapter.search(\"github.com\")\n        assert result.status == EngineStatus.ERROR\n        assert result.results == []\n        assert result.error_message == (\n            \"CRT.sh returned non-JSON HTML (HTTP 200, content-type text/html; no challenge markers)\"\n        )",
+      "native_assertions": [
+        "exact original CRT.sh JSON/HTML/challenge/malformed-row diagnostics",
+        "whole empty response, including all extension fields",
+        "raw HTML absent from diagnostic",
+        "valid empty list succeeds with no error"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_rejects_malformed_certificate_row",
+      "source_line": 107,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_rejects_malformed_certificate_row",
+      "source_executed": false,
+      "native_test": "original_crtsh_exact_classification_messages_and_no_body_disclosure",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_rejects_malformed_certificate_row(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(200, json=[{\"id\": 1}, \"not-a-certificate-row\"])):\n            result = await adapter.search(\"example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert result.results == []\n        assert result.error_message == (\n            \"CRT.sh returned a malformed certificate row (HTTP 200, content-type application/json)\"\n        )",
+      "native_assertions": [
+        "exact original CRT.sh JSON/HTML/challenge/malformed-row diagnostics",
+        "whole empty response, including all extension fields",
+        "raw HTML absent from diagnostic",
+        "valid empty list succeeds with no error"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_blocked",
+      "source_line": 116,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_blocked",
+      "source_executed": false,
+      "native_test": "original_status_classes_are_empty_and_redacted_for_every_engine",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_blocked(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(403)):\n            result = await adapter.search(\"example.com\")\n        assert result.status == EngineStatus.BLOCKED\n        assert result.results == []",
+      "native_assertions": [
+        "429/403/401/404/500 across every engine",
+        "complete empty typed response and classified status",
+        "fixed diagnostic for generic F08 HTTP errors, no body/key",
+        "one actual injected exchange"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_search_rate_limited",
+      "source_line": 122,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.search_rate_limited",
+      "source_executed": false,
+      "native_test": "original_status_classes_are_empty_and_redacted_for_every_engine",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_search_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.RATE_LIMITED",
+      "native_assertions": [
+        "429/403/401/404/500 across every engine",
+        "complete empty typed response and classified status",
+        "fixed diagnostic for generic F08 HTTP errors, no body/key",
+        "one actual injected exchange"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_adapter_registered",
+      "source_line": 127,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.adapter_registered",
+      "source_executed": false,
+      "native_test": "registered_factories_preserve_f06_descriptor_metadata",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    async def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"crtsh\" in list_engines()",
+      "native_assertions": [
+        "all five real factories instantiate",
+        "full descriptor vector unchanged",
+        "security category for every engine, it category for CRT.sh",
+        "no declared enforced filters"
+      ]
+    },
+    {
+      "node": "tests/test_crtsh.py::TestCrtShAdapter::test_adapter_categories",
+      "source_line": 132,
+      "engine": "crtsh",
+      "kind": "static_original_test_mapping",
+      "native_case": "crtsh.adapter_categories",
+      "source_executed": false,
+      "native_test": "registered_factories_preserve_f06_descriptor_metadata",
+      "native_target": "ssx-infra::a12_security",
+      "original_test_source_excerpt": "    def test_adapter_categories(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"security\" in list_engines()[\"crtsh\"].categories\n        assert \"it\" in list_engines()[\"crtsh\"].categories",
+      "native_assertions": [
+        "all five real factories instantiate",
+        "full descriptor vector unchanged",
+        "security category for every engine, it category for CRT.sh",
+        "no declared enforced filters"
+      ]
+    }
+  ],
+  "source_runs": [
+
+  ],
+  "live_provider_calls": 0,
+  "python_executed": false,
+  "purpose": "Static original-source-to-native assertion map; no original test, oracle or provider was executed for A12."
+}
