@@ -396,11 +396,14 @@ impl SearchSurface {
         };
         let snapshot = captured.snapshot;
         let mut response = view.response;
-        let mut notes = warnings(&proposal, &preview);
+        let mut notes = caller_warnings(&proposal, &preview);
         let cursor = snapshot.ok().map(|v| v.to_string());
         if cursor.is_none() {
             notes.push("snapshot store unavailable — pagination cursor not created".into());
         }
+        // Match the source envelope: caller notes, optional snapshot failure,
+        // then the actual service scope, including post-dispatch warnings.
+        notes.extend(response.scope.warnings.clone());
         response
             .results
             .truncate(args.bound("max_results", self.state.max_results) as usize);
@@ -696,7 +699,7 @@ fn scope(s: &ssx_domain::ScopeDecision, intent: &str) -> Value {
     }
     v
 }
-fn warnings(p: &ScopeProposal, preview: &ScopePreview) -> Vec<String> {
+fn caller_warnings(p: &ScopeProposal, preview: &ScopePreview) -> Vec<String> {
     let mut v = Vec::new();
     let profiles: Value = ssx_json::from_str(include_str!(
         "../../../../docs/rust-rewrite/f09/profiles.json"
@@ -781,6 +784,10 @@ fn warnings(p: &ScopeProposal, preview: &ScopePreview) -> Vec<String> {
             v.push(e.reason.clone());
         }
     }
+    v
+}
+fn warnings(p: &ScopeProposal, preview: &ScopePreview) -> Vec<String> {
+    let mut v = caller_warnings(p, preview);
     v.extend(preview.scope.warnings.clone());
     v
 }
@@ -1022,5 +1029,34 @@ impl ServerHandler for SearchSurface {
                 .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
         }
         response
+    }
+}
+
+#[cfg(test)]
+mod warning_tests {
+    use super::*;
+
+    #[test]
+    fn specialist_previews_preserve_scope_warning_order_and_multiplicity() {
+        for surface in [
+            SearchSurfaceKind::Jobs,
+            SearchSurfaceKind::Security,
+            SearchSurfaceKind::Science,
+        ] {
+            let mut proposal = ScopeProposal::generic(SearchRequest::default());
+            proposal.surface = surface;
+            let mut preview = ScopePreview {
+                scope: Default::default(),
+                enforcement: Default::default(),
+            };
+            // Repetition is source behavior, not a set to be deduplicated.
+            preview.scope.warnings = vec!["same".into(), "same".into(), "last".into()];
+            let caller = caller_warnings(&proposal, &preview);
+            let mut expected = caller.clone();
+            expected.extend(preview.scope.warnings.clone());
+            assert_eq!(warnings(&proposal, &preview), expected);
+            assert!(!caller.is_empty());
+            assert!(!caller.iter().any(|warning| warning == "same"));
+        }
     }
 }

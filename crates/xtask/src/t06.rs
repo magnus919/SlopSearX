@@ -44,6 +44,7 @@ const NATIVE_FIXTURE_TESTS: &[&str] =
 const LIB_TESTS: &[&str] = &[
     "search_surface::validation::tests::actual_source_argument_matrix_preserves_validation_text_and_coercions",
     "search_surface::entities::tests::frozen_source_entity_grammar_conserves_indices_facts_edges_and_unicode16",
+    "search_surface::warning_tests::specialist_previews_preserve_scope_warning_order_and_multiplicity",
 ];
 const T06_DISCOVERY: &[&str] =
     &["live_passive_health_categories_finite_diagnostics_and_secret_redaction"];
@@ -56,6 +57,7 @@ const T06_SERVICE: &[&str] = &[
     "pre_cancelled_prepare_and_preview_never_contact_provider_or_dispatch",
     "preview_rejects_sensitive_and_disabled_before_optional_provider_and_never_dispatches",
     "preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership",
+    "runtime_scope_warning_survives_native_mcp_and_snapshot_without_cache_admission",
 ];
 const T06_SOURCE_BINDINGS: &[&str] =
     &["original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings"];

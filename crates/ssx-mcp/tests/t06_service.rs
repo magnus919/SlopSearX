@@ -687,3 +687,153 @@ async fn actual_stdio_eof_during_optional_prepare_and_preview_drains_owned_proce
     }
     Ok(())
 }
+
+/// Execute the real MCP handler and its production opaque output projection,
+/// using an in-memory SDK connection solely to obtain a real server peer.
+async fn warning_tool_call(
+    surface: &ssx_mcp::search_surface::SearchSurface,
+    peer: rmcp::Peer<rmcp::RoleServer>,
+    name: &str,
+    arguments: serde_json::Value,
+) -> Result<ssx_json::Value> {
+    use rmcp::ServerHandler;
+    let request = serde_json::json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":arguments}});
+    let mut overlay = ssx_mcp::opaque::Overlay::default();
+    overlay.request(
+        &ssx_mcp::search_surface::SearchSurface::catalogs(),
+        &request.to_string(),
+    )?;
+    let response = surface
+        .call_tool(
+            rmcp::model::CallToolRequestParams::new(name.to_owned())
+                .with_arguments(arguments.as_object().unwrap().clone()),
+            rmcp::service::RequestContext::new(rmcp::model::RequestId::Number(1), peer),
+        )
+        .await?;
+    let rmcp::model::CallToolResponse::Complete(response) = response else {
+        panic!("unexpected incomplete tool response")
+    };
+    let response = serde_json::json!({"jsonrpc":"2.0","id":1,"result":response});
+    let full: ssx_json::Value = ssx_json::from_str(&overlay.response(&response.to_string())?)?;
+    let result = &full["result"];
+    let text: ssx_json::Value = ssx_json::from_str(result["content"][0]["text"].as_str().unwrap())?;
+    assert_eq!(
+        text, result["structuredContent"],
+        "MCP text and structured envelopes differ"
+    );
+    Ok(text)
+}
+
+#[tokio::test]
+async fn runtime_scope_warning_survives_native_mcp_and_snapshot_without_cache_admission()
+-> Result<()> {
+    use rmcp::ServiceExt;
+    use ssx_json::json;
+    let server = private_valkey::Server::start();
+    let mut fake = engines();
+    fake[0].count = 1;
+    fake[1].count = 1;
+    fake[1].delay = Duration::from_secs(60);
+    let fixture = fixture::Fixture::with_engines(server.url(), true, fake).await;
+    let (server_io, client_io) = tokio::io::duplex(65536);
+    let surface = fixture.surface.clone();
+    let serving = tokio::spawn(async move { surface.serve(server_io).await });
+    let client = rmcp::model::ClientConfig::default()
+        .serve(client_io)
+        .await?;
+    let service = serving.await??;
+    let peer = service.peer().clone();
+    let surface = fixture.surface.clone();
+    // prefer_fresh returns before cache IO; deadline-truncated writes are skipped.
+    // Startup, snapshot persistence/reads and connection drain use running time.
+    tokio::time::pause();
+    let call =
+        tokio::spawn(async move {
+            warning_tool_call(&surface, peer, "slopsearx_search", serde_json::json!({
+            "query":"runtime warning regression", "engines":["wikipedia","pubmed"],
+            "freshness":"prefer_fresh", "interactive_timeout_ms":100, "safesearch":"moderate",
+        })).await
+        });
+    // Auto-advance occurs only when all runnable tasks are idle. The immediate
+    // engine and collector therefore finish before this 1ms sleep completes;
+    // the second engine remains pending beyond the 100ms interactive deadline.
+    tokio::time::sleep(Duration::from_millis(1)).await;
+    assert_eq!(fixture.calls(), 2);
+    tokio::time::advance(Duration::from_millis(99)).await;
+    tokio::time::resume();
+    let response = call.await??;
+    assert_eq!(response["meta"]["deadline_exceeded"], true);
+    assert_eq!(response["meta"]["partial"], true);
+    assert_eq!(response["meta"]["cached"], false);
+    assert_eq!(response["results"].as_array().unwrap().len(), 1);
+    assert_eq!(response["engine_outcomes"][0]["status"], "ok");
+    assert_eq!(response["engine_outcomes"][1]["status"], "unavailable");
+    assert_eq!(
+        response["engine_outcomes"][1]["message"],
+        "interactive deadline reached"
+    );
+    let warning =
+        "Interactive deadline reached; captured results or suggestions may be incomplete.";
+    assert_eq!(
+        response["warnings"],
+        json!([
+            "language 'en' is not enforced by selected adapters",
+            "moderate safesearch is requested but may not be enforced by every adapter",
+            warning
+        ])
+    );
+    let cursor =
+        ssx_domain::SnapshotId::new(response["meta"]["cursor"].as_str().unwrap().to_owned())
+            .unwrap();
+    let SnapshotLookup::Found(snapshot) = fixture.surface.state().snapshots.read(&cursor).await
+    else {
+        panic!("snapshot missing")
+    };
+    assert_eq!(snapshot.scope().warnings, [warning]);
+    assert_eq!(snapshot.results().len(), 1);
+    let page = warning_tool_call(
+        &fixture.surface,
+        service.peer().clone(),
+        "slopsearx_read_results",
+        serde_json::json!({"cursor":cursor.as_str()}),
+    )
+    .await?;
+    assert_eq!(page["results"].as_array().unwrap().len(), 1);
+    assert!(
+        page.get("warnings").is_none(),
+        "result-page contract adds no warnings field"
+    );
+    assert_eq!(fixture.calls(), 2);
+    let cached_keys: Vec<String> = redis::cmd("KEYS")
+        .arg("search:*")
+        .query(&mut server.connection())?;
+    assert!(
+        cached_keys.is_empty(),
+        "deadline-truncated result entered cache"
+    );
+    // A deadline-truncated response was not admitted. A separate complete
+    // query proves the ordinary cache path still returns identical warnings.
+    let complete_args = serde_json::json!({"query":"admitted warning cache control", "engines":["wikipedia"], "safesearch":"moderate"});
+    let first = warning_tool_call(
+        &fixture.surface,
+        service.peer().clone(),
+        "slopsearx_search_targeted",
+        complete_args.clone(),
+    )
+    .await?;
+    let after_first = fixture.calls();
+    let cached = warning_tool_call(
+        &fixture.surface,
+        service.peer().clone(),
+        "slopsearx_search_targeted",
+        complete_args,
+    )
+    .await?;
+    assert_eq!(first["meta"]["cached"], false);
+    assert_eq!(cached["meta"]["cached"], true);
+    assert_eq!(cached["warnings"], first["warnings"]);
+    assert_eq!(fixture.calls(), after_first);
+    client.cancel().await?;
+    service.cancel().await?;
+    Ok(())
+}
