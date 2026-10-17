@@ -3,7 +3,7 @@
   "baseline_sha": "20109f9083babd014971951e8c02565ae51c2326",
   "source": "Pinned F01 baseline inventory plus reviewed post-baseline additions recorded in DRIFT.md; source-set validation refreshed at acceptance.",
   "summary": {
-    "tracked_python_source_count": 485,
+    "tracked_python_source_count": 486,
     "extensionless_python_entrypoints": 1,
     "executable_config_python_invocation_lines": 63,
     "interpreter_configuration_lines": 106,
@@ -13,20 +13,20 @@
       "historical evidence": 4,
       "backend/runtime": 122,
       "backend-coupled tooling/test": 358,
-      "client-only": 1
+      "client-only": 2
     },
     "documentation_file_modes": {
       "100644": 739
     },
     "source_path_set_validation": {
       "method": "sorted exact-set comparison between git ls-files paths ending .py/.pyw/.pyi plus ssx and files[].path",
-      "tracked_expected_count": 485,
-      "manifest_count": 485,
+      "tracked_expected_count": 486,
+      "manifest_count": 486,
       "exact_match": true,
       "extensionless_python_paths": [
         "ssx"
       ],
-      "validation_scope": "Normal A11/current maina8a7 full-record union; exact tracked set and native requalification pending"
+      "validation_scope": "Current tracked Python source set; T02 native browser client is explicitly wire-only and uses an externally started Rust HTTP fixture."
     },
     "historical_evidence_py_txt_path_count": 739,
     "non_runtime_historical_py_txt_path_count": 738,
@@ -43,7 +43,8 @@
     "historical evidence"
   ],
   "client_only_files": [
-    "ssx"
+    "ssx",
+    "tests/test_native_html_theme_browser.py"
   ],
   "files": [
     {
@@ -5827,6 +5828,17 @@
       ]
     },
     {
+      "path": "tests/test_native_html_theme_browser.py",
+      "classification": "client-only",
+      "migration_owner": "T02",
+      "migration_owners": [
+        "T02"
+      ],
+      "disposition": "wire_only_client_for_native_http_browser_smoke",
+      "evidence": "Wire-only Playwright client: imports os, typing.Any, pytest and playwright.sync_api; navigates a supplied native HTTP URL and asserts visible theme behavior. It does not import slopsearx/engines, start a server/process, use FFI, or contact a provider.",
+      "reason": "T02 owns this optional browser client for the native HTTP renderer; Rust CI builds and starts the target separately, while this client only observes the HTTP surface through Chromium."
+    },
+    {
       "path": "tests/test_portal_browser.py",
       "classification": "backend-coupled tooling/test",
       "migration_owner": "T03",
@@ -6869,5 +6881,50 @@
     "sha256": "1ebe1ca20e3d7a76aacfa6e5e1a907c7d07047af6a4b14e22d91a73847a3ad62",
     "producer_count": 53,
     "semantics": "Existing complete classification records retain their original observed source SHA. This amendment supplies current AST-equivalent tooling identities without relabeling historical capture or generation producer hashes."
+  }
+,
+  "w03_historical_archives": {
+    "plan_id": "W03",
+    "baseline": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+    "new_runnable_python": 0,
+    "backend_runtime_delta": 0,
+    "archives": [
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_source.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_source.py.frozen",
+        "sha256": "601060feda97d852cf4e9d3a5ead688b66c4efd24a7c38fd1a521785c7323fc4",
+        "bytes": 7793,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_templates.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_templates.py.frozen",
+        "sha256": "2964020598aed26efd79b1a9fa956810d2a1a6c6175de32108cc8367ebb44ce7",
+        "bytes": 5010,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_deadlines.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_deadlines.py.frozen",
+        "sha256": "a622a0192d858197d0603665d03a76e0e8d4e7a29469019d5eace42d86cb9513",
+        "bytes": 4381,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_contract_map.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_contract_map.py.frozen",
+        "sha256": "64bc20910dfe15656568215bec125d44aef016da73a0c6ad5cf94b855617b611",
+        "bytes": 19328,
+        "before_mode": "0o644",
+        "after_mode": "0o644",
+        "role": "AST-only authoring; no backend import/provider/store calls; map is frozen; no further execution planned",
+        "actual_after_mode": "0o644"
+      }
+    ],
+    "consumer": "Native gate reads and hashes archives as data; it never imports, compiles, evaluates or executes Python. No runtime or mandatory Python invocation.",
+    "retirement_owner": "G08; retain immutable JSON/data-only history without claiming G08 complete"
   }
 }

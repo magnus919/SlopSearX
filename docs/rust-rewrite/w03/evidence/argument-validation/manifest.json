@@ -1,0 +1,80 @@
+{
+  "classification": "native authenticated HTTP regression evidence; no original Python execution",
+  "finding": {
+    "pr": 1009,
+    "review_comment_id": 4303617615,
+    "reviewed_head": "2957bf3c889115b101e21d019239cccf1d89ae3a"
+  },
+  "combined_main": "3c5936ad5250eb37d32bc9d0fbb79b098bfd63fe",
+  "test_name": "actual_authenticated_http_preview_execute_followup_replay_and_completion",
+  "observations": [
+    {
+      "phase": "old-red",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "w03",
+        "actual_authenticated_http_preview_execute_followup_replay_and_completion",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit_code": 101,
+      "source_files_sha256": {
+        "crates/ssx-mcp/src/research_planning.rs": "09068ac9e7a39e3b9d602bf4e8de92b563e5e3e3088d7349196ea436d6a7abf1",
+        "crates/ssx-mcp/tests/w03.rs": "271a2b0bd90b597e4dc2ff8516623848ca1aeaa01c5b890d4e1b07277b5e4aeb"
+      },
+      "logs": {
+        "stdout": {
+          "path": "old-red.stdout.gz",
+          "raw_sha256": "e3132f0f6db524c86b1e4f7f521a0612c1a7f0fc7414fb194c64d1def2193e83",
+          "gzip_sha256": "0c70c85ad5a7f4f2078640a8b75cb8888f822d92052d2cca62c80b39076036a8"
+        },
+        "stderr": {
+          "path": "old-red.stderr.gz",
+          "raw_sha256": "51061b117444695b9ed163e979cb33b8634604faab7f1c100ccc5c91bea89331",
+          "gzip_sha256": "b2f3bd45851046e71dfc63c0065dbc5bf7940b2d295499c6a81eabc5b63c254b"
+        }
+      }
+    },
+    {
+      "phase": "fixed-green",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "w03",
+        "actual_authenticated_http_preview_execute_followup_replay_and_completion",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "source_files_sha256": {
+        "crates/ssx-mcp/src/research_planning.rs": "949da30ae5d550c70c3cc4a113f357146c81fccc019d18f2eedd48d69c8d1734",
+        "crates/ssx-mcp/tests/w03.rs": "271a2b0bd90b597e4dc2ff8516623848ca1aeaa01c5b890d4e1b07277b5e4aeb"
+      },
+      "logs": {
+        "stdout": {
+          "path": "fixed-green.stdout.gz",
+          "raw_sha256": "2401da4f85f1169bb7d7add8fd84f321b50170a2f054ac768c02f8b71a28542a",
+          "gzip_sha256": "6ba83073e1007d46575ef9ccd3b9ef39f5c33f8400ea37c4a5fc6ef9e9a894ea"
+        },
+        "stderr": {
+          "path": "fixed-green.stderr.gz",
+          "raw_sha256": "eb1b4fe68d3f394ff3a16a9d16adf0ea304a8e2ccf5a6a708193195f7939b6c7",
+          "gzip_sha256": "9da61c406d90afce48f32dd28ca179fd549bd20a939a4f001e53ef5da96ffdf8"
+        }
+      }
+    }
+  ],
+  "original_source_artifacts_unchanged": true,
+  "portal_impact": "Declared planning-tool schema enforced at shared MCP validation; ordinary browser search wire/HTML contract unchanged. Required portal gates remain CI evidence."
+}

@@ -21,17 +21,17 @@
     {"boundary": "recovered_research_intent", "source": "public planner rejects unknown and media intents, but recovered dispatch checks specialist grants only for recognized strings", "native": "all research proposals require a known non-media intent before grant selection; blank, auto, whitespace/case variants and media intents fail closed", "migration": "malformed recovered records require correction or replacement; never normalize intent into a different authority"},
     {"boundary": "explicit_inactive_member", "source": "MCP catalog-enabled member absent from active adapters validates then silently drops during resolution", "native": "MCP explicit lists and research evidence reject inactive members atomically before resolution; HTTP dropping and metadata preview of active unported factories remain unchanged"},
     {"boundary": "tier1_fallback", "source": "Python set iteration is process dependent", "native": "sort selected tier1 names deterministically", "oracle_comparator": "only tier1 fallback selected order is normalized"},
-    {"boundary": "research_legacy_grant_flag", "source": "recovered requires_intent_grant=false may bypass specialist grant", "native": "every research DTO requires current specialist grant; false cannot confer exemption", "migration": "current grants or operator reauthorization required before legacy work dispatch"},
     {"boundary": "pagination_report", "source": "public core envelopes omit pagination although shared resolver supports it", "native": "include an audited pagination entry for typed page on all search surfaces; never infer enforcement from snapshot slicing"},
     {"boundary": "native_execution_availability", "source": "Python active adapters are executable", "native": "configured/enabled/active/executable factory signals stay separate; unported factories cannot authorize"},
     {"boundary": "typed_topic_validation", "source": "some malformed topic scalar/container values survive until dynamic runtime errors", "native": "reject malformed topic types and missing insertion-order provenance for programmatic maps"}
   ],
   "downstream": {
     "T02_T03": "use PolicyService for HTTP/MCP, preserving explicit Http vs MCP authority; surface is trusted endpoint composition provenance, never wire or stored input; preview DTO is not dispatch authority",
-    "W02": "fresh with_revalidated callback under authoritative tenant/lease/budget/cancellation commit; additionally verify admitted evidence references; no legacy flag grant exemption; recovered intent must name a known non-media profile",
+    "W02": "fresh with_revalidated callback under authoritative tenant/lease/budget/cancellation commit; additionally verify admitted evidence references; preserve source internal-template/retained false flag distinction while caller initial plans always require grants; recovered intent must name a known non-media profile",
     "F15": "provider advice is not implemented here; additions must become fresh proposals through shared policy and admission",
     "G08": "retire developer-only Python exporter; keep immutable JSON observations"
   },
   "portal_impact": "backend primitive only; no current routes/browser behavior changed; downstream HTTP/portal wiring retains deterministic portal gates",
+  "w03_template_amendment": {"source": "internal template and retained false flag skip only specialist grant", "native": "same shared research/sensitive/current-eligibility gate; explicit caller plans force true and reject flag fields", "evidence": "W03 actual template captures plus source authority replay and forged caller-field controls"},
   "provider_calls": 0
 }

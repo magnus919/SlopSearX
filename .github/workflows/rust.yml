@@ -108,6 +108,9 @@ jobs:
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
+      - name: Build actual-process HTTP fixture server
+        run: cargo build --locked -p ssx-http --example t02_fixture
+
       - name: Workspace tests, including xtask
         run: cargo test --locked --workspace
 
@@ -165,6 +168,9 @@ jobs:
       - name: Bounded semantic reranking and read-boundary advisory evidence
         run: cargo xtask check F15 --output target/rust-evidence/F15.json
 
+      - name: Native HTTP original corpus and real-process evidence
+        run: cargo xtask check T02 --output target/rust-evidence/T02.json
+
       - name: Native Valkey ownership and lifecycle evidence
         run: cargo xtask check F07 --output target/rust-evidence/F07.json
 
@@ -175,6 +181,11 @@ jobs:
         run: cargo xtask check W01 --output target/rust-evidence/W01.json
       - name: Durable research execution and recovery evidence
         run: cargo xtask check W02 --output target/rust-evidence/W02.json
+      - name: Caller-directed adaptive research planning and admission evidence
+        run: cargo xtask check W03 --output target/rust-evidence/W03.json
+        env:
+          SLOPSEARX_TEST_VALKEY_SERVER: ${{ runner.temp }}/ssx-valkey/bin/valkey-server
+          TZ: America/New_York
       - name: Saved execution observation and atomic publication evidence
         run: cargo xtask check W04 --output target/rust-evidence/W04.json
       - name: Saved event atomic publication replay acknowledgement and retention evidence
@@ -255,6 +266,7 @@ jobs:
             target/rust-evidence/W00.json
             target/rust-evidence/W01.json
             target/rust-evidence/W02.json
+            target/rust-evidence/W03.json
             target/rust-evidence/W04.json
             target/rust-evidence/W05.json
             target/rust-evidence/W11.json
@@ -267,6 +279,7 @@ jobs:
             target/rust-evidence/F13.json
             target/rust-evidence/F14.json
             target/rust-evidence/F15.json
+            target/rust-evidence/T02.json
             target/rust-evidence/T09.json
             target/rust-evidence/A01.json
             target/rust-evidence/A02.json

@@ -87,3 +87,12 @@ mod tests {
 }
 
 pub mod browser_identity;
+
+pub mod formats;
+pub mod formatter_metadata;
+pub mod native;
+pub use native::{HtmlRenderer, HttpState, router as native_router, serve as native_serve};
+
+pub mod discovery;
+
+pub mod html;

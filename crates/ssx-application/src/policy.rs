@@ -41,6 +41,7 @@ impl Default for SearchPolicy {
 }
 #[derive(Debug, Clone)]
 struct ResearchPolicyContext {
+    requires_intent_grant: bool,
     planning_method: Option<String>,
     evidence_result_ids: Vec<String>,
     evidence_engines: Vec<String>,
@@ -76,6 +77,7 @@ impl ScopeProposal {
         p.surface = SearchSurface::Research;
         p.intent = q.intent.clone();
         p.research = Some(ResearchPolicyContext {
+            requires_intent_grant: q.requires_intent_grant,
             planning_method: q.planning_method.clone(),
             evidence_result_ids: q.evidence_result_ids.clone(),
             evidence_engines: q.evidence_engines.clone(),
@@ -319,6 +321,65 @@ impl PolicyService {
         }
         Ok(())
     }
+    /// Source default-strategy metadata only. This is not dispatch authority;
+    /// every resulting query still passes authorize/from_research_query at admission
+    /// and again at dispatch. No optional routing provider or store is consulted.
+    pub fn research_template_scope(
+        &self,
+        intent: &str,
+    ) -> Result<(Vec<String>, Vec<String>), PolicyError> {
+        self.grant("research", "")?;
+        let table = tables();
+        let profile = &table["intents"][intent];
+        if profile.is_null() || !strings(&profile["media_types"]).is_empty() {
+            return Err(PolicyError::new(
+                "invalid_intent",
+                "intent",
+                "invalid research template intent",
+            ));
+        }
+        let explicit = strings(&profile["engines"]);
+        let mut warnings = Vec::new();
+        let mut names = if explicit.is_empty() {
+            let categories = strings(&profile["categories"]);
+            self.catalog
+                .engines()
+                .iter()
+                .filter(|e| e.enabled && e.categories.iter().any(|c| categories.contains(c)))
+                .map(|e| e.name.clone())
+                .collect::<Vec<_>>()
+        } else {
+            let mut missing = explicit
+                .iter()
+                .filter(|n| self.catalog.get(n).is_none())
+                .cloned()
+                .collect::<Vec<_>>();
+            missing.sort();
+            if !missing.is_empty() {
+                warnings.push(format!(
+                    "intent '{intent}' references unknown engines: {}",
+                    missing.join(", ")
+                ));
+            }
+            explicit
+                .into_iter()
+                .filter(|n| self.catalog.get(n).is_some())
+                .collect()
+        };
+        let mut excluded = names
+            .iter()
+            .filter(|n| {
+                self.policy.sensitive_engines.contains(*n) && !self.policy.sensitive_allowed
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        if !excluded.is_empty() {
+            excluded.sort();
+            names.retain(|n| !excluded.contains(n));
+            warnings.push(format!("sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): {}", excluded.join(", ")));
+        }
+        Ok((names, warnings))
+    }
     /// Recovered workflow metadata is never dispatch authority. Dossier grants
     /// and every planned engine traverse the same fail-closed gate atomically.
     pub fn validate_research_workflow(
@@ -427,6 +488,7 @@ impl PolicyService {
             }
         }
         if matches!(p.intent.as_str(), "jobs" | "security" | "science")
+            && p.research.as_ref().is_none_or(|c| c.requires_intent_grant)
             && !self.policy.grants.contains(&p.intent)
         {
             return Err(reject(&format!(

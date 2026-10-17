@@ -385,9 +385,26 @@ impl SearchReadCapture {
     }
     pub fn present_with_advisories(&self) -> Result<SearchReadView, SearchError> {
         let inner = self.service.upgrade().ok_or(SearchError::Closed)?;
-        let service = SearchService(inner.clone());
-        let policy = service.current_policy(inner.deps.clock.capture().0)?;
-        let query = self.request.query.to_lowercase();
+        let service = SearchService(inner);
+        let advisories =
+            service.read_advisories(&self.request, &self.scope, self.full_result_count())?;
+        Ok(SearchReadView {
+            response: self.present(),
+            advisories,
+        })
+    }
+}
+impl SearchService {
+    /// Read-only public notes. This does not acquire scope, quota, cache or dispatch authority.
+    /// HTTP uses the same writer for a policy-checked empty eligible scope.
+    pub fn read_advisories(
+        &self,
+        request: &SearchRequest,
+        scope: &ScopeDecision,
+        full_result_count: usize,
+    ) -> Result<Vec<ssx_json::Value>, SearchError> {
+        let policy = self.current_policy(self.0.deps.clock.capture().0)?;
+        let query = request.query.to_lowercase();
         let topic = policy.resolver.topics.as_ref().and_then(|topics| {
             topics
                 .iter()
@@ -397,7 +414,8 @@ impl SearchReadCapture {
             || policy.resolver.tier1.clone(),
             |t| t.engines.iter().cloned().collect(),
         );
-        let catalog = inner
+        let catalog = self
+            .0
             .advisory_catalog
             .as_ref()
             .map(|source| source.snapshot())
@@ -406,7 +424,7 @@ impl SearchReadCapture {
             .engines()
             .iter()
             .filter_map(|e| {
-                let descriptor = inner.registry.descriptor(&e.name)?;
+                let descriptor = self.0.registry.descriptor(&e.name)?;
                 Some(ssx_application::advisories::Engine {
                     name: e.name.clone(),
                     display_name: descriptor.display_name.clone(),
@@ -430,21 +448,16 @@ impl SearchReadCapture {
             engines,
             hidden,
             automatic_names,
-            routing_configured: inner.deps.jev.is_some(),
-            reranking_configured: inner.deps.reranker.is_some(),
+            routing_configured: self.0.deps.jev.is_some(),
+            reranking_configured: self.0.deps.reranker.is_some(),
         };
-        Ok(SearchReadView {
-            response: self.present(),
-            advisories: ssx_application::advisories::search(
-                &self.request,
-                &self.scope,
-                &context,
-                self.full_result_count(),
-            ),
-        })
+        Ok(ssx_application::advisories::search(
+            request,
+            scope,
+            &context,
+            full_result_count,
+        ))
     }
-}
-impl SearchService {
     pub fn new(config: SearchConfig, deps: SearchDependencies) -> Result<Self, SearchError> {
         let registry =
             ssx_registry::Registry::builtins().map_err(|_| SearchError::InvalidConfiguration)?;
@@ -597,6 +610,34 @@ impl SearchService {
     pub fn revalidate_research_scope(&self, authority: &ValidatedScope) -> Result<(), SearchError> {
         self.current_policy(self.0.deps.clock.capture().0)?
             .with_revalidated(authority, |_| ())
+            .map_err(SearchError::Policy)
+    }
+    /// Resolve source default-strategy metadata through the current shared policy.
+    /// Returned names are proposals, never authority; callers must authorize each
+    /// nonempty query before persistence and execution.
+    pub fn research_template_scope(
+        &self,
+        intent: &str,
+    ) -> Result<(Vec<String>, Vec<String>), SearchError> {
+        if self.0.closed.load(Ordering::Acquire) {
+            return Err(SearchError::Closed);
+        }
+        self.current_policy(self.0.deps.clock.capture().0)?
+            .research_template_scope(intent)
+            .map_err(SearchError::Policy)
+    }
+    /// Pure caller-directed planning admission. Uses the same current policy
+    /// authority, without optional routing providers, cache writes or dispatch.
+    /// Research previews and execution admission must not execute Jev advice.
+    pub fn prepare_research_plan(
+        &self,
+        proposal: &ScopeProposal,
+    ) -> Result<ValidatedScope, SearchError> {
+        if self.0.closed.load(Ordering::Acquire) {
+            return Err(SearchError::Closed);
+        }
+        self.current_policy(self.0.deps.clock.capture().0)?
+            .authorize(proposal.clone())
             .map_err(SearchError::Policy)
     }
     /// Reuse this opaque authority after a transport's enforcement preview; the

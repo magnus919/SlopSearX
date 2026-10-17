@@ -1,0 +1,70 @@
+"""Manual, offline W03 oracle. Never a native runtime or mandatory gate."""
+from __future__ import annotations
+import asyncio
+import hashlib
+import importlib.metadata
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import sys
+
+ROOT=Path(__file__).resolve().parents[3]
+DIRECTORY=Path(__file__).resolve().parent
+
+def require(condition,message):
+    if not condition: raise RuntimeError(message)
+
+def main():
+    require(len(sys.argv)==3 and sys.argv[1]=="--allow-original-oracle","explicit --allow-original-oracle required before imports")
+    output=Path(sys.argv[2]);require(not os.path.lexists(output),"refusing existing output before imports")
+    require(output.parent.is_dir(),"output parent must exist")
+    sys.dont_write_bytecode=True
+    require(sys.version_info[:3]==(3,14,7),"requires pinned CPython3.14.7")
+    require(importlib.metadata.version("fastmcp")=="4.0.11","wrong FastMCP")
+    require(importlib.metadata.version("mcp")=="2.3.0","wrong MCP SDK")
+    pins=json.loads((DIRECTORY/"deadline-oracle-pins.json").read_text())
+    require(subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip()==pins["baseline"],"wrong source revision")
+    for row in pins["sources"]:
+        require(hashlib.sha256((ROOT/row["path"]).read_bytes()).hexdigest()==row["sha256"],"source drift before imports: "+row["path"])
+    require(hashlib.sha256(Path(__file__).read_bytes()).hexdigest()==pins["producer_sha256"],"producer drift")
+    require(not Path("/etc/slopsearx/config.yaml").exists(),"ambient config forbidden before backend import")
+    require(os.environ.get("HOME")=="/private/tmp/w03-oracle-home","isolated HOME required")
+    allowed={k:v for k,v in os.environ.items() if k in ("PATH","HOME","TMPDIR","LANG","LC_ALL")}
+    os.environ.clear();os.environ.update(allowed)
+    # No public, private, loopback or Unix network connection is allowed.
+    def denied(*args,**kwargs):raise RuntimeError("W03 offline oracle forbids sockets")
+    socket.socket.connect=denied;socket.socket.connect_ex=denied;socket.create_connection=denied
+    socket.getaddrinfo=denied;socket.gethostbyname=denied;socket.gethostbyname_ex=denied;socket.gethostbyaddr=denied
+    socket.socket.bind=denied;socket.socket.sendto=denied
+    def audit(event,args):
+        if event.startswith("subprocess.") or event in {"os.system","os.posix_spawn","os.fork","os.forkpty","pty.spawn","socket.connect","socket.bind","socket.sendto","socket.getaddrinfo","socket.gethostbyname","socket.gethostbyaddr"}:
+            raise RuntimeError("W03 oracle forbids subprocesses after preimport git guard")
+    sys.addaudithook(audit)
+    sys.path.insert(0,str(ROOT))
+    from types import SimpleNamespace
+    from slopsearx.mcp import tools as t
+    from slopsearx.mcp.state import set_state
+    async def capture():
+        state=SimpleNamespace(policy=SimpleNamespace(job_default_deadline_seconds=600))
+        original=t.time
+        fixed=1792238400.0
+        try:
+            t.time=SimpleNamespace(time=lambda:fixed)
+            cases=[None,"","2026-10-17T14:30:12.1234567+00:00","2026-10-17T14:30:12Z","2026-10-17 14:30:12","20261017T143012","2026-W42-6T14:30:12+00:00","2026W426T143012+0000","2026-10-17","2026-10-17T14:30","2026-10-17T14","2026-10-17T24:00:00Z","2026-10-17T14:30:12,5+01:30","2026-10-17T14:30:12+00:00:30.5","2026-10-17T14.5","2026-10-17T14:30.5","2000-01-01T00:00:00Z","2099-01-01T00:00:00Z","2026-02-30T12:00:00Z","2026-10-17T25:00:00Z","not-a-date","2026-10-17T14:30:12+24:00"]
+            return {"contract":"slopsearx.rust.w03.deadlines","baseline":pins["baseline"],"python":sys.version,"now":fixed,"default_seconds":600,"observations":[{"input":value,"output":t._resolve_deadline(state,value)} for value in cases],"provider_calls":0,"writes":0}
+        finally:
+            t.time=original
+            set_state(None)
+    try:
+        result=asyncio.run(capture())
+    finally:
+        set_state(None)
+    for row in pins["sources"]:
+        require(hashlib.sha256((ROOT/row["path"]).read_bytes()).hexdigest()==row["sha256"],"source drift after capture: "+row["path"])
+    data=(json.dumps(result,indent=2,ensure_ascii=True)+"\n").encode()
+    fd=os.open(output,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+    with os.fdopen(fd,"wb") as stream:stream.write(data);stream.flush();os.fsync(stream.fileno())
+
+if __name__=="__main__":main()
