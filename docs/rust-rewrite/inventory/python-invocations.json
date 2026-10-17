@@ -5,16 +5,16 @@
   "summary": {
     "active_python_invocation_rows": 63,
     "python_configuration_groups": 106,
-    "historical_py_txt_paths": 739,
-    "non_runtime_historical_py_txt_paths": 738,
+    "historical_py_txt_paths": 742,
+    "non_runtime_historical_py_txt_paths": 741,
     "active_dynamic_python_source_paths": 1,
     "documented_py_txt_command_references": 49,
     "shebang_py_txt_historical_paths": 8,
     "historical_py_txt_git_modes": {
-      "100644": 739
+      "100644": 742
     },
     "configured_precommit_hook_rows": 15,
-    "developer_oracle_invocation_rows": 68
+    "developer_oracle_invocation_rows": 72
   },
   "interpreter_invocations": [
     {
@@ -7495,6 +7495,36 @@
       "documented_python_invocation_references": []
     },
     {
+      "path": "docs/rust-rewrite/a10/evidence/capture-boundaries-failed-622477.py.txt",
+      "classification": "historical evidence",
+      "git_mode": "100644",
+      "python_shebang": false,
+      "documented_python_invocation_references": [],
+      "migration_owner": "A10",
+      "retirement_owner": "G08",
+      "semantics": "Immutable observed source bytes only; no tracked Python consumer or native runtime/gate executes this historical text."
+    },
+    {
+      "path": "docs/rust-rewrite/a10/evidence/capture-boundaries-308-821193.py.txt",
+      "classification": "historical evidence",
+      "git_mode": "100644",
+      "python_shebang": false,
+      "documented_python_invocation_references": [],
+      "migration_owner": "A10",
+      "retirement_owner": "G08",
+      "semantics": "Immutable observed source bytes only; no tracked Python consumer or native runtime/gate executes this historical text."
+    },
+    {
+      "path": "docs/rust-rewrite/a10/evidence/capture-boundaries-30-76eeca.py.txt",
+      "classification": "historical evidence",
+      "git_mode": "100644",
+      "python_shebang": false,
+      "documented_python_invocation_references": [],
+      "migration_owner": "A10",
+      "retirement_owner": "G08",
+      "semantics": "Immutable observed source bytes only; no tracked Python consumer or native runtime/gate executes this historical text."
+    },
+    {
       "path": "docs/rust-rewrite/a11/evidence/a11-finish-producer-style-amendment-v1.py.txt",
       "classification": "historical evidence",
       "git_mode": "100644",
@@ -8920,6 +8950,150 @@
       "current_producer_amendment": "docs/rust-rewrite/w05/producer-format-amendment.json"
     },
     {
+      "path": "docs/rust-rewrite/a10/oracle-inventory.json",
+      "example_path": "docs/rust-rewrite/a10/capture_regressions.py",
+      "evidence": "/private/tmp/slopsearx-rust-oracle-py314/bin/python /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_regressions.py --allow-original-oracle --output /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/source-regressions-v1.json",
+      "classification": "temporary backend-coupled developer oracle; never mandatory native gate/runtime",
+      "migration_owner": "A10",
+      "retirement_owner": "G08",
+      "disposition": "Actual completed offline original-reference invocation; retire executable at G08, retain source/output evidence.",
+      "source_sha256": "0845f8b68a05999315f12d37e3b37b8059601f5bc8fb3b137840eaacf843ed92",
+      "executed_source_sha256": "0845f8b68a05999315f12d37e3b37b8059601f5bc8fb3b137840eaacf843ed92",
+      "current_producer_sha256": "0845f8b68a05999315f12d37e3b37b8059601f5bc8fb3b137840eaacf843ed92",
+      "observed_source_archive": "docs/rust-rewrite/a10/capture_regressions.py",
+      "execution_status": "completed-original-reference",
+      "execution_receipt": "docs/rust-rewrite/a10/evidence/original-regression-capture-v1/receipt.json",
+      "execution_receipt_sha256": "8680530ffcf4a49a98eeb6bd789e442739e97dfab1aa84e9d267fdd71f21f4f9",
+      "output": "docs/rust-rewrite/a10/source-regressions-v1.json",
+      "output_sha256": "d3a54d23dd3f22c22ef910e91c1f71f72b0b0284975c9cd0f7ece944b10ce1b3"
+    },
+    {
+      "path": "docs/rust-rewrite/a10/oracle-inventory.json",
+      "example_path": "docs/rust-rewrite/a10/capture_boundaries.py",
+      "evidence": "/private/tmp/slopsearx-rust-oracle-py314/bin/python /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_boundaries.py --allow-original-oracle --output /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/source-boundaries-v1.json",
+      "classification": "temporary backend-coupled developer oracle; never mandatory native gate/runtime",
+      "migration_owner": "A10",
+      "retirement_owner": "G08",
+      "disposition": "Actual incomplete original-reference invocation; failed pre-try NVD TypeError and zero-byte output retained, not completed capture evidence.",
+      "source_sha256": "622477de5d1b90d93bb0d7cca683ccd9300c32c23f38a00ca033f1ff266ba838",
+      "executed_source_sha256": "622477de5d1b90d93bb0d7cca683ccd9300c32c23f38a00ca033f1ff266ba838",
+      "current_producer_sha256": "5b7c7ef8db04c273856573d1c197ca58bccc7fb4bd7e4b6120f61ddf1ad73240",
+      "observed_source_archive": "docs/rust-rewrite/a10/evidence/capture-boundaries-failed-622477.py.txt",
+      "execution_status": "incomplete-original-exception",
+      "execution_receipt": "docs/rust-rewrite/a10/evidence/original-boundary-capture-v1/receipt.json",
+      "execution_receipt_sha256": "a96edda6cb5c0abd5690766e5c92f1a08ab93af5dd1dbf50c3f96ed5f87cfec8",
+      "retained_failed_zero_output": "docs/rust-rewrite/a10/evidence/failed-boundaries-v1.empty",
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/rust-rewrite/a10/oracle-inventory.json",
+      "example_path": "docs/rust-rewrite/a10/capture_boundaries.py",
+      "evidence": "/private/tmp/slopsearx-rust-oracle-py314/bin/python /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_boundaries.py --allow-original-oracle --output /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/source-boundaries-v2.json",
+      "classification": "temporary backend-coupled developer oracle; never mandatory native gate/runtime",
+      "migration_owner": "A10",
+      "retirement_owner": "G08",
+      "disposition": "Actual completed offline original-reference invocation; retire executable at G08, retain source/output evidence.",
+      "source_sha256": "82119317e6a9f7c20688e9cb7fdfdb5c0ad5ff4a8a94e94477c8aa9121cb6b88",
+      "executed_source_sha256": "82119317e6a9f7c20688e9cb7fdfdb5c0ad5ff4a8a94e94477c8aa9121cb6b88",
+      "current_producer_sha256": "5b7c7ef8db04c273856573d1c197ca58bccc7fb4bd7e4b6120f61ddf1ad73240",
+      "observed_source_archive": "docs/rust-rewrite/a10/evidence/capture-boundaries-308-821193.py.txt",
+      "execution_status": "completed-original-reference",
+      "execution_receipt": "docs/rust-rewrite/a10/evidence/original-boundary-capture-v2/receipt.json",
+      "execution_receipt_sha256": "1ca46152d868711ef01816bbbda837d3372f82040cbc9df2fd2186c8c55b1842",
+      "output": "docs/rust-rewrite/a10/source-boundaries-v2.json",
+      "output_sha256": "dad7065badf627e9feddf3e66d9ddb62e9b94a87cba3d7f0d356894a1dfe406d"
+    },
+    {
+      "path": "docs/rust-rewrite/a10/oracle-inventory.json",
+      "example_path": "docs/rust-rewrite/a10/capture_boundaries.py",
+      "evidence": "/private/tmp/slopsearx-rust-oracle-py314/bin/python /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_boundaries.py --allow-original-oracle --inputs boundary-supplement-inputs-v1.json --output /Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/source-supplement-v1.json",
+      "classification": "temporary backend-coupled developer oracle; never mandatory native gate/runtime",
+      "migration_owner": "A10",
+      "retirement_owner": "G08",
+      "disposition": "Actual completed offline original-reference invocation; retire executable at G08, retain source/output evidence.",
+      "source_sha256": "76eeca33481a704c54421c26cd1217097810c643433fe78e7a830246c099bcb1",
+      "executed_source_sha256": "76eeca33481a704c54421c26cd1217097810c643433fe78e7a830246c099bcb1",
+      "current_producer_sha256": "5b7c7ef8db04c273856573d1c197ca58bccc7fb4bd7e4b6120f61ddf1ad73240",
+      "observed_source_archive": "docs/rust-rewrite/a10/evidence/capture-boundaries-30-76eeca.py.txt",
+      "execution_status": "completed-original-reference",
+      "execution_receipt": "docs/rust-rewrite/a10/evidence/original-supplement-capture-v1/receipt.json",
+      "execution_receipt_sha256": "4893f00a2b381286e72726ce97e91dbaab6fd0397409903da4ce8e3214df0eb2",
+      "output": "docs/rust-rewrite/a10/source-supplement-v1.json",
+      "output_sha256": "9d75f2b5dc508a15c557027be8c70ec9fe8ec660d6ac613086e39561c9965353"
+    },
+    {
+      "path": "docs/rust-rewrite/o01/evidence/supplement39-receipt.json",
+      "example_path": "/private/tmp/o01-source-supplement/capture.py",
+      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-source-supplement/capture.py",
+      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
+      "migration_owner": "O01",
+      "retirement_owner": "G08",
+      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
+      "source_sha256": "1a61bbb3805c1758d39fb83e9df04e755ddec45156074849ace7d7bad27efc48",
+      "executed_source_sha256": "1a61bbb3805c1758d39fb83e9df04e755ddec45156074849ace7d7bad27efc48",
+      "current_producer_sha256": "1a61bbb3805c1758d39fb83e9df04e755ddec45156074849ace7d7bad27efc48",
+      "execution_receipt": "docs/rust-rewrite/o01/evidence/supplement39-receipt.json",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/o01-source-supplement/capture.py"
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o01/evidence/service-rounding4-receipt.json",
+      "example_path": "/private/tmp/o01-source-supplement/service_capture.py",
+      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-source-supplement/service_capture.py",
+      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
+      "migration_owner": "O01",
+      "retirement_owner": "G08",
+      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
+      "source_sha256": "13d1317c3dce8310c294fc948a7b1d505d2e8b2bf5a03142d0cc25178ba91822",
+      "executed_source_sha256": "13d1317c3dce8310c294fc948a7b1d505d2e8b2bf5a03142d0cc25178ba91822",
+      "current_producer_sha256": "13d1317c3dce8310c294fc948a7b1d505d2e8b2bf5a03142d0cc25178ba91822",
+      "execution_receipt": "docs/rust-rewrite/o01/evidence/service-rounding4-receipt.json",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/o01-source-supplement/service_capture.py"
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
+      "example_path": "/private/tmp/o01-original42-source-execution/run-v1.py",
+      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-original42-source-execution/run-v1.py",
+      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
+      "migration_owner": "O01",
+      "retirement_owner": "G08",
+      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
+      "source_sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d",
+      "executed_source_sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d",
+      "current_producer_sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d",
+      "execution_receipt": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/o01-original42-source-execution/run-v1.py"
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
+      "example_path": "/private/tmp/o01-original42-source-execution/run-v2.py",
+      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-original42-source-execution/run-v2.py",
+      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
+      "migration_owner": "O01",
+      "retirement_owner": "G08",
+      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
+      "source_sha256": "653f3b65b2cd768875756cc84ead1161f210b2a0bad9ac629ddceaa288a8427f",
+      "executed_source_sha256": "653f3b65b2cd768875756cc84ead1161f210b2a0bad9ac629ddceaa288a8427f",
+      "current_producer_sha256": "653f3b65b2cd768875756cc84ead1161f210b2a0bad9ac629ddceaa288a8427f",
+      "execution_receipt": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/o01-original42-source-execution/run-v2.py"
+      ]
+    },
+    {
       "path": "docs/rust-rewrite/a11/oracle-runs-v1.json",
       "example_path": "docs/rust-rewrite/a11/capture_regressions.py",
       "evidence": "Actual completed original-only invocation on immutable executed bytes; capture/receipt/rawstdout hashes are archived in oracle-runs-v1.json. Current source style is not claimed executed.",
@@ -9031,78 +9205,6 @@
       "actual_executed_source_path": "/private/tmp/a11-credential-ascii-oracle-proposal-v1/capture_credential_ascii.py",
       "actual_external_receipt": "/private/tmp/a11-original-credential-capture-v1/receipt.json",
       "current_bytes_equal_observed_executed_bytes": true
-    },
-    {
-      "path": "docs/rust-rewrite/o01/evidence/supplement39-receipt.json",
-      "example_path": "/private/tmp/o01-source-supplement/capture.py",
-      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-source-supplement/capture.py",
-      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
-      "migration_owner": "O01",
-      "retirement_owner": "G08",
-      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
-      "source_sha256": "1a61bbb3805c1758d39fb83e9df04e755ddec45156074849ace7d7bad27efc48",
-      "executed_source_sha256": "1a61bbb3805c1758d39fb83e9df04e755ddec45156074849ace7d7bad27efc48",
-      "current_producer_sha256": "1a61bbb3805c1758d39fb83e9df04e755ddec45156074849ace7d7bad27efc48",
-      "execution_receipt": "docs/rust-rewrite/o01/evidence/supplement39-receipt.json",
-      "command": [
-        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
-        "-O",
-        "/private/tmp/o01-source-supplement/capture.py"
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o01/evidence/service-rounding4-receipt.json",
-      "example_path": "/private/tmp/o01-source-supplement/service_capture.py",
-      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-source-supplement/service_capture.py",
-      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
-      "migration_owner": "O01",
-      "retirement_owner": "G08",
-      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
-      "source_sha256": "13d1317c3dce8310c294fc948a7b1d505d2e8b2bf5a03142d0cc25178ba91822",
-      "executed_source_sha256": "13d1317c3dce8310c294fc948a7b1d505d2e8b2bf5a03142d0cc25178ba91822",
-      "current_producer_sha256": "13d1317c3dce8310c294fc948a7b1d505d2e8b2bf5a03142d0cc25178ba91822",
-      "execution_receipt": "docs/rust-rewrite/o01/evidence/service-rounding4-receipt.json",
-      "command": [
-        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
-        "-O",
-        "/private/tmp/o01-source-supplement/service_capture.py"
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
-      "example_path": "/private/tmp/o01-original42-source-execution/run-v1.py",
-      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-original42-source-execution/run-v1.py",
-      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
-      "migration_owner": "O01",
-      "retirement_owner": "G08",
-      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
-      "source_sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d",
-      "executed_source_sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d",
-      "current_producer_sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d",
-      "execution_receipt": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
-      "command": [
-        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
-        "-O",
-        "/private/tmp/o01-original42-source-execution/run-v1.py"
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
-      "example_path": "/private/tmp/o01-original42-source-execution/run-v2.py",
-      "evidence": "Actual historical command retained verbatim in referenced immutable receipt; /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/o01-original42-source-execution/run-v2.py",
-      "classification": "temporary manual offline original oracle; no native runtime or mandatory gate Python",
-      "migration_owner": "O01",
-      "retirement_owner": "G08",
-      "disposition": "retire runnable external producer at G08; retain immutable source.txt/JSON and failure provenance",
-      "source_sha256": "653f3b65b2cd768875756cc84ead1161f210b2a0bad9ac629ddceaa288a8427f",
-      "executed_source_sha256": "653f3b65b2cd768875756cc84ead1161f210b2a0bad9ac629ddceaa288a8427f",
-      "current_producer_sha256": "653f3b65b2cd768875756cc84ead1161f210b2a0bad9ac629ddceaa288a8427f",
-      "execution_receipt": "docs/rust-rewrite/o01/evidence/original53-receipt.json",
-      "command": [
-        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
-        "-O",
-        "/private/tmp/o01-original42-source-execution/run-v2.py"
-      ]
     }
   ],
   "external_temporary_oracle_sources": [
@@ -10936,7 +11038,8 @@
           "positional_literals": [
             "--child"
           ],
-          "keywords": {}
+          "keywords": {
+          }
         },
         {
           "positional_literals": [
@@ -10984,4 +11087,49 @@
       "evidence": "Actual AST-inspected arguments/write sites; guidance only, no claim command executed or exists in CI/config."
     }
   ]
+,
+  "w03_historical_archives": {
+    "plan_id": "W03",
+    "baseline": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+    "new_runnable_python": 0,
+    "backend_runtime_delta": 0,
+    "archives": [
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_source.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_source.py.frozen",
+        "sha256": "601060feda97d852cf4e9d3a5ead688b66c4efd24a7c38fd1a521785c7323fc4",
+        "bytes": 7793,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_templates.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_templates.py.frozen",
+        "sha256": "2964020598aed26efd79b1a9fa956810d2a1a6c6175de32108cc8367ebb44ce7",
+        "bytes": 5010,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_deadlines.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_deadlines.py.frozen",
+        "sha256": "a622a0192d858197d0603665d03a76e0e8d4e7a29469019d5eace42d86cb9513",
+        "bytes": 4381,
+        "before_mode": "0o644",
+        "after_mode": "0o644"
+      },
+      {
+        "executed_location": "docs/rust-rewrite/w03/capture_contract_map.py",
+        "archive_location": "docs/rust-rewrite/w03/capture_contract_map.py.frozen",
+        "sha256": "64bc20910dfe15656568215bec125d44aef016da73a0c6ad5cf94b855617b611",
+        "bytes": 19328,
+        "before_mode": "0o644",
+        "after_mode": "0o644",
+        "role": "AST-only authoring; no backend import/provider/store calls; map is frozen; no further execution planned",
+        "actual_after_mode": "0o644"
+      }
+    ],
+    "consumer": "Native gate reads and hashes archives as data; it never imports, compiles, evaluates or executes Python. No runtime or mandatory Python invocation.",
+    "retirement_owner": "G08; retain immutable JSON/data-only history without claiming G08 complete"
+  }
 }

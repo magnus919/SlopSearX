@@ -1,0 +1,673 @@
+{
+  "schema_version": 1,
+  "purpose": "synthetic source supplements for reachable Unicode slices, finite huge empty counts and raw settings",
+  "cases": [
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0--1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0--2",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -2
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0-0",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 0
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0-1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1--1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1--2",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -2
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1-0",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 0
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1-1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2--1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2--2",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -2
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2-0",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 0
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2-1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3--1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"a\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3--2",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -2
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"a\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3-0",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 0
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"a\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3-1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"a\\u00e9\\ud83d\\ude00\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4--1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4--2",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": -2
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4-0",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 0
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4-1",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 1
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":\"\"}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-positive",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 10
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,\"recordsFiltered\":0}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-negative",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 10
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,\"recordsFiltered\":0}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-filtered",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 10
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,\"recordsFiltered\":10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-negative-filtered",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 10
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,\"recordsFiltered\":-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/boolean-total",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 10
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":true,\"recordsFiltered\":0}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/negative-zero-total",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 10
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":-0.0,\"recordsFiltered\":0}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/raw-max-empty-array",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": []
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":1,\"recordsFiltered\":0}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/raw-max-array",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": [
+          null,
+          true,
+          100000000000000000000000000000000000000000000000000000000000000000000000000000000
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":1,\"recordsFiltered\":0}"
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/raw-max-object",
+      "engine": "exploitdb",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": {
+          "x": "\u00e9",
+          "n": null
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"data\":[],\"recordsTotal\":1,\"recordsFiltered\":0}"
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/cwe-unicode-order-and-distinct-forms",
+      "engine": "nvd",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "max_results": 10
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "body": "{\"vulnerabilities\":[{\"cve\":{\"id\":\"CVE-2024-12345\",\"descriptions\":[{\"lang\":\"en\",\"value\":\"desc\"}],\"weaknesses\":[{\"description\":[{\"value\":\"CWE-0\"},{\"value\":\"CWE-0\"},{\"value\":\"\\u00e9\"},{\"value\":\"e\\u0301\"},{\"value\":\"\\u00e9\"},{\"value\":\"  \"}]}]}}]}"
+      }
+    }
+  ]
+}

@@ -159,6 +159,16 @@ impl<'css> Selector<'css> {
     }
 }
 impl Html {
+    /// Borrow each element in document order without copying the parsed tree.
+    /// A10 composes source XPath predicates from these existing native nodes.
+    pub(crate) fn elements(&self) -> impl Iterator<Item = ElementRef<'_>> {
+        self.nodes
+            .iter()
+            .enumerate()
+            .filter_map(move |(index, node)| {
+                (!node.name.is_empty()).then_some(ElementRef { tree: self, index })
+            })
+    }
     pub fn select<'a>(
         &'a self,
         selector: &'a Selector<'_>,
@@ -231,6 +241,23 @@ impl<'a> ElementRef<'a> {
                 index,
             })
         })
+    }
+    /// Direct children include text nodes, preserving XPath child-axis shape.
+    pub(crate) fn children(self) -> impl Iterator<Item = Self> {
+        self.tree.nodes[self.index]
+            .children
+            .iter()
+            .map(move |&index| Self {
+                tree: self.tree,
+                index,
+            })
+    }
+    /// Borrow source attribute names and values; no selector normalization.
+    pub(crate) fn attributes(self) -> impl Iterator<Item = (&'a str, &'a str)> {
+        self.tree.nodes[self.index]
+            .attrs
+            .iter()
+            .map(|(name, value)| (name.as_str(), value.as_str()))
     }
     pub fn next_siblings(self) -> impl Iterator<Item = Self> {
         let list = self.tree.nodes[self.index]

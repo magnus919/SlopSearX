@@ -55,6 +55,16 @@ impl OwnedRows {
         .await
         .map_err(wire)
     }
+    pub(crate) async fn a10_rows(
+        &self,
+    ) -> Result<crate::adapters::vulnerability_wire::Rows<'_>, OperationFailure> {
+        crate::adapters::vulnerability_wire::Rows::validate(
+            &self.frame,
+            self.layout,
+            &self.lease.operation,
+        )
+        .await
+    }
     pub(crate) fn operation(&self) -> &Arc<Operation> {
         &self.lease.operation
     }
@@ -178,7 +188,11 @@ pub(super) async fn parse(
     };
     // Full validation before exposing even a row view. Reconstructing a later
     // borrowed view revalidates; no unchecked self-referential string exists.
-    owned.rows().await?;
+    if layout.is_a10() {
+        owned.a10_rows().await?;
+    } else {
+        owned.rows().await?;
+    }
     Ok(owned)
 }
 

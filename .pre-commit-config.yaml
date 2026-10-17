@@ -17,8 +17,8 @@ repos:
         args: [--fix=lf]
       - id: check-merge-conflict
       - id: check-added-large-files
-        # Exact frozen T06/W06/A11 captures and ledger; JSON/hash validation remains enabled.
-        exclude: ^docs/rust-rewrite/t06/(entities|validation)\.json$|^docs/rust-rewrite/w06/(source\.json|evidence/source-before-(composite-id-correction|unique-snapshot-ids)\.json|evidence/review-public-source-outcomes\.json)$|^docs/rust-rewrite/a11/(source-boundaries-v2|native-differences-v1)\.json$
+        # Exact frozen T06/W06/A10/A11 captures and ledgers; JSON/native hash validation remains enabled.
+        exclude: ^docs/rust-rewrite/t06/(entities|validation)\.json$|^docs/rust-rewrite/w06/(source\.json|evidence/source-before-(composite-id-correction|unique-snapshot-ids)\.json|evidence/review-public-source-outcomes\.json)$|^docs/rust-rewrite/a10/(source-boundaries-v2\.json|native-differences-v1\.json)$|^docs/rust-rewrite/a11/(source-boundaries-v2|native-differences-v1)\.json$
         args: [--maxkb=500]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

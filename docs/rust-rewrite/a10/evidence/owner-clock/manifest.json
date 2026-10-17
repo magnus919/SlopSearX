@@ -1,0 +1,1253 @@
+{
+  "schema_version": 1,
+  "kind": "native_owner_clock_qualification_evidence",
+  "scope": "Recorded private macOS qualification of historical source plus reviewed overlay; not current-main integration or hosted Linux evidence",
+  "source": {
+    "historical_baseline": "88906afebfa7f2f35481b6e6670895ba4d0efda9",
+    "final_source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+    "frozen_source_paths": 7590,
+    "final_15_path_manifest_sha256": "5f1fd23cdcf83b2e691c0f4a24bebc463c633d7299a318176d610562c274bf7c",
+    "final_patch_sha256": "547dd5886520c69256c786c8a413230e0c73e0d423c87905bee1ffcacb94b407",
+    "qualified_afterimages": [
+      {
+        "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+        "before_exists": true,
+        "before_sha256": "d85151ac6399ee72cf0372840b648a7aa810ed2a1c1d1f46978f236448c6acc3",
+        "before_git_blob": "88f9d698f53a2615c9094ab085a418684188e718",
+        "after_sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7",
+        "after_git_blob": "f4cc578e117b3f75b56cd6a7994c3ae38eb61dae",
+        "after_bytes": 33943
+      },
+      {
+        "path": "crates/ssx-infra/src/adapters/cve.rs",
+        "before_exists": true,
+        "before_sha256": "c0ef3ea36b5614a5335df3304bbc0b17fa14246dd84c774a63b328736a66925d",
+        "before_git_blob": "ce310c2c90bebb36041eac0abb83fd22bf640a47",
+        "after_sha256": "3594582c5feb10fc3d8eb50fb858d1d34c9b0a8ded253d06b6ca643ade9bed91",
+        "after_git_blob": "fd4ea4a99b4f9d4dfd96a644a22367ed096969c9",
+        "after_bytes": 10764
+      },
+      {
+        "path": "crates/ssx-infra/src/adapters/epss.rs",
+        "before_exists": true,
+        "before_sha256": "8f30a99e8cbc99623ac780412c26210a732a603e230b5cd7a041d81652203fc9",
+        "before_git_blob": "f5050b10fc131637de57966b2d5e21663c46916c",
+        "after_sha256": "32727a0ba6c5b07aed9c22cc0591c2ca2c191c5c5560fb14ee8f22866f7d75ed",
+        "after_git_blob": "a0673c96bf67de4017332bc3ca2fbe3e6d6336d5",
+        "after_bytes": 5306
+      },
+      {
+        "path": "crates/ssx-infra/src/adapters/nvd.rs",
+        "before_exists": true,
+        "before_sha256": "9c24ecc92dab4513f0a419e0409d73bde8a020f3f4303336df27a60acb977bd3",
+        "before_git_blob": "14364e3512e0dac0e1f061acee3a97669b5bf68e",
+        "after_sha256": "d5593c319bc64be051c47202d04c22134ab8b2b7d2e4a09231ed22f4e48bd37c",
+        "after_git_blob": "7097976796e6e7915c38fc3ed7a754483fb43e3a",
+        "after_bytes": 14209
+      },
+      {
+        "path": "crates/ssx-infra/src/adapters/vulnerability.rs",
+        "before_exists": true,
+        "before_sha256": "06620fbe9f7bfdf8d3f945f75aba284fdcef9fa55ce0766d586f769c676d5992",
+        "before_git_blob": "6eaf929bf46fcb85e839254e91261a05f925a33d",
+        "after_sha256": "5b8852e45bd4b7bd63be0c9fdebf1c245ddd270d2fc3965fddb73dfd4c1f7db4",
+        "after_git_blob": "c370a2db7a527af146b74d7afe2414722fff58f0",
+        "after_bytes": 22046
+      },
+      {
+        "path": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+        "before_exists": true,
+        "before_sha256": "0220819632a46bbbd0721e21a68bbaa7f3f214dbf78face64b30a03d76a84a9d",
+        "before_git_blob": "9ee8d1d6a946bf9a88ecd0858ebbb5c7e24c2d17",
+        "after_sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+        "after_git_blob": "17503d22620abb92bf59d5f759eaf51998247c21",
+        "after_bytes": 36757
+      },
+      {
+        "path": "crates/ssx-infra/src/http.rs",
+        "before_exists": true,
+        "before_sha256": "53f617dc02aca29a3a6db418c9c6f90e965f8498d8f154dbe9301344d15e9ed0",
+        "before_git_blob": "8a90c6a2a38fe318b97793ef93e374f0f72ea47c",
+        "after_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+        "after_git_blob": "392a01333fb5e3bb529dae13ca88cfde6a08f1e0",
+        "after_bytes": 41754
+      },
+      {
+        "path": "crates/ssx-infra/src/http/monotonic.rs",
+        "before_exists": false,
+        "before_sha256": null,
+        "before_git_blob": null,
+        "after_sha256": "1a58034e2ca03360d8bb4cdf419353e3677be0528704962a66ecb4add388a24f",
+        "after_git_blob": "7cbcc0c28ca7d3307ba13544983b0c6b79d10831",
+        "after_bytes": 2433
+      },
+      {
+        "path": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+        "before_exists": false,
+        "before_sha256": null,
+        "before_git_blob": null,
+        "after_sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+        "after_git_blob": "4dee98f5a57eb3c6722eb911a4919cdab2856867",
+        "after_bytes": 15970
+      },
+      {
+        "path": "crates/xtask/src/a10.rs",
+        "before_exists": true,
+        "before_sha256": "e2239e79c33d929585fd9a15c7d467a6c048374bdf10d783a1f65846d8aad3d6",
+        "before_git_blob": "2d4daa3fbc0f897ef1b608d3b3e2f91f9fe1f539",
+        "after_sha256": "9ea78f4c1e81fd1bfe867bbd7c1e9fae23e471f01f44bc74e385be2372ff1b2f",
+        "after_git_blob": "327b2ab317714b12c16f2c205293ddb6b4c8ce67",
+        "after_bytes": 14893
+      },
+      {
+        "path": "crates/xtask/src/a11.rs",
+        "before_exists": true,
+        "before_sha256": "468e5179dcc61b7975aeb22e097d692fda83f8a79132f30405a8e0bb2ba42e67",
+        "before_git_blob": "db23ae2af06d12d330bb78e4363a854289e0d8a5",
+        "after_sha256": "2ebf17e7fb3770eada1d3b8bc3ab0d0557cccb0f9a5049a8f588a33f1d64489d",
+        "after_git_blob": "fae0093e2ae1b161d2718559c0a7c9ad81c21f4f",
+        "after_bytes": 19879
+      },
+      {
+        "path": "crates/xtask/src/a14.rs",
+        "before_exists": true,
+        "before_sha256": "b1ed785987cd5fb0e5e742586428ee7e2955dd4e85ae28b6de682e9982bd7bae",
+        "before_git_blob": "813a838d3522ba3126e3487d8f669897d1d96563",
+        "after_sha256": "fdd90e4c81d2501670888794f66c3fc46578cfdb1d7fb6aef54a28325dcbd1f5",
+        "after_git_blob": "40b7938008b2bb35f2f343ea5fcb93480994b9e7",
+        "after_bytes": 13477
+      },
+      {
+        "path": "docs/rust-rewrite/a10/qualification.json",
+        "before_exists": true,
+        "before_sha256": "7f15e50493f01f2434f9febd6261c4ca4ec3fc0afd5dcb86c5c429ca12fcb41c",
+        "before_git_blob": "90a43f0f99324b972258392a5a0e3c293cc26654",
+        "after_sha256": "67a38c898e5eec6d7985e10fd0e708381655dae1ce8cc89e39ad082c3b2c4a5d",
+        "after_git_blob": "759ceaa8096e98acbbf55f86ead593dac3ecb862",
+        "after_bytes": 194351
+      },
+      {
+        "path": "docs/rust-rewrite/a11/qualification.json",
+        "before_exists": true,
+        "before_sha256": "51291c7a4edb8633bffaa2bd7c5962b30993e125e0e7ce7c55922857429afba8",
+        "before_git_blob": "79956ae46c7496a7e777bc94862b3bbf73cb3373",
+        "after_sha256": "d41dba04098afe928c0b6582d64781300c0c364b3add036e66ce18fbf034dab8",
+        "after_git_blob": "684778fcd48b11d1399720b74a33e7805665fb5a",
+        "after_bytes": 180443
+      },
+      {
+        "path": "docs/rust-rewrite/a14/cases.json",
+        "before_exists": true,
+        "before_sha256": "aec17d1b8c673877c2af48ae7a16c38ccd4a71aaff84a5b4d2a927cde188eaab",
+        "before_git_blob": "b7ac846749ebbe149225d34b73dbd856f805f3b8",
+        "after_sha256": "4d7e4d4208a514c0f2b7b9b137651d07c9953fdaa3836d8c3a30490b6f0cd5c5",
+        "after_git_blob": "6b7486991e75f2b9366cf6af98dd54a7db6c1a00",
+        "after_bytes": 44172
+      }
+    ]
+  },
+  "retained_external_packet": {
+    "location": "/private/tmp/a10-owner-clock-execution-v2",
+    "packet_manifest_sha256": "9fde98b70d3254756285af4bc442adc9dcebc0fd809dfbe7011c9df7155650f8",
+    "handoff_sha256": "3ba9b1c8b8dbf0fa191663ecfd4ef6603be596e9ad18a7eda0462a5d050f10d3",
+    "source_bound_manifest_sha256": "4999bea8ee3b0be3ce96ceef62dff2e516043d564f7207837c19a6379978ec1c",
+    "raw_artifacts_manifest_sha256": "27c1cf663adfcc37ed97956a046a97c28e25c68f41d2b663c511f4a4d8fe7277",
+    "unique_source_blobs": 1562,
+    "total_gate_source_bindings": 10934,
+    "full_source_blobs_and_seven_full_gate_reports_intentionally_not_copied": true
+  },
+  "toolchain": {
+    "rust": "1.99.0",
+    "offline": true,
+    "locked": true,
+    "cargo_build_jobs": 2,
+    "cargo_incremental": 0,
+    "build_target": "/Volumes/tank01/magnus/rust-builds/slopsearx/a10-owner-clock-v2",
+    "pinned_valkey": "8.1.10"
+  },
+  "positive_controls": [
+    {
+      "test": "http::a10_owner_clock_tests::manual_session_survives_elapsed_tokio_after_confirmed_post_exchange_decoder_wait",
+      "target": "lib",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 0,
+      "expected_completion_markers": [
+        "A10_OWNER_CLOCK_COMPLETE manual-session-after-decoder-wait"
+      ],
+      "actual_running": 1,
+      "actual_passed": 1,
+      "actual_failed": 0,
+      "actual_ignored": 0,
+      "artifacts": {
+        "json": "raw/positive/1.json.gz",
+        "stdout": "raw/positive/1.stdout.gz",
+        "stderr": "raw/positive/1.stderr.gz"
+      }
+    },
+    {
+      "test": "http::a10_owner_clock_tests::system_session_expires_after_confirmed_post_exchange_decoder_wait",
+      "target": "lib",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 0,
+      "expected_completion_markers": [
+        "A10_OWNER_CLOCK_COMPLETE system-session-expiry-after-decoder-wait"
+      ],
+      "actual_running": 1,
+      "actual_passed": 1,
+      "actual_failed": 0,
+      "actual_ignored": 0,
+      "artifacts": {
+        "json": "raw/positive/2.json.gz",
+        "stdout": "raw/positive/2.stdout.gz",
+        "stderr": "raw/positive/2.stderr.gz"
+      }
+    },
+    {
+      "test": "http::a10_owner_clock_tests::identity_decoder_uses_owner_after_confirmed_worker_start_and_elapsed_wall_time",
+      "target": "lib",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 0,
+      "expected_completion_markers": [
+        "A10_OWNER_CLOCK_COMPLETE identity-reader-wall-delay"
+      ],
+      "actual_running": 1,
+      "actual_passed": 1,
+      "actual_failed": 0,
+      "actual_ignored": 0,
+      "artifacts": {
+        "json": "raw/positive/3.json.gz",
+        "stdout": "raw/positive/3.stdout.gz",
+        "stderr": "raw/positive/3.stderr.gz"
+      }
+    },
+    {
+      "test": "http::a10_owner_clock_tests::manual_pending_exchange_expires_at_exact_250us_and_drops_once",
+      "target": "lib",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 0,
+      "expected_completion_markers": [
+        "A10_OWNER_CLOCK_COMPLETE pending-exact-250us"
+      ],
+      "actual_running": 1,
+      "actual_passed": 1,
+      "actual_failed": 0,
+      "actual_ignored": 0,
+      "artifacts": {
+        "json": "raw/positive/4.json.gz",
+        "stdout": "raw/positive/4.stdout.gz",
+        "stderr": "raw/positive/4.stderr.gz"
+      }
+    },
+    {
+      "test": "http::a10_owner_clock_tests::unmocked_system_expiry_and_expired_search_context_dispatch_nothing",
+      "target": "lib",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 0,
+      "expected_completion_markers": [
+        "A10_OWNER_CLOCK_COMPLETE system-unmocked-and-context-expiry"
+      ],
+      "actual_running": 1,
+      "actual_passed": 1,
+      "actual_failed": 0,
+      "actual_ignored": 0,
+      "artifacts": {
+        "json": "raw/positive/5.json.gz",
+        "stdout": "raw/positive/5.stdout.gz",
+        "stderr": "raw/positive/5.stderr.gz"
+      }
+    },
+    {
+      "test": "http::a10_owner_clock_tests::manual_direct_replay_rejects_absolute_search_context",
+      "target": "lib",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 0,
+      "expected_completion_markers": [
+        "A10_OWNER_CLOCK_COMPLETE manual-context-refused"
+      ],
+      "actual_running": 1,
+      "actual_passed": 1,
+      "actual_failed": 0,
+      "actual_ignored": 0,
+      "artifacts": {
+        "json": "raw/positive/6.json.gz",
+        "stdout": "raw/positive/6.stdout.gz",
+        "stderr": "raw/positive/6.stderr.gz"
+      }
+    },
+    {
+      "test": "adapters::vulnerability::tests::direct_api_configured_deadline_uses_exact_owner_250us_and_preserves_system_context",
+      "target": "lib",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 0,
+      "expected_completion_markers": [
+        "A10_OWNER_CLOCK_COMPLETE configured-exact-owner-250us"
+      ],
+      "actual_running": 1,
+      "actual_passed": 1,
+      "actual_failed": 0,
+      "actual_ignored": 0,
+      "artifacts": {
+        "json": "raw/positive/7.json.gz",
+        "stdout": "raw/positive/7.stdout.gz",
+        "stderr": "raw/positive/7.stderr.gz"
+      }
+    }
+  ],
+  "causal_controls": [
+    {
+      "kind": "session",
+      "test": "http::a10_owner_clock_tests::manual_session_survives_elapsed_tokio_after_confirmed_post_exchange_decoder_wait",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 101,
+      "classification": "SEMANTIC_POST_DISPATCH_DEADLINE_ASSERTION",
+      "compiler_succeeded": true,
+      "actual_running": 1,
+      "actual_failed": 1,
+      "actual_ignored": 0,
+      "observed_assertion": "Manual source HTTP response: Deadline",
+      "stage_witnesses": [
+        "A10_OWNER_STAGE manual=true site=post_exchange_decoder_admission requests=1 active=0 available_slots=0"
+      ],
+      "only_mutated_path": "crates/ssx-infra/src/http.rs",
+      "before_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+      "mutant_sha256": "8f0efba8fc9a2a59c42f468c9d8f9a2198767787eab4994ac6faf191b609e4c4",
+      "full_copy_source_paths_restored": 7590,
+      "primary_source_paths_verified": 7590,
+      "artifacts": {
+        "native.json": "raw/causal/session/native.json.gz",
+        "native.stdout": "raw/causal/session/native.stdout.gz",
+        "native.stderr": "raw/causal/session/native.stderr.gz",
+        "restoration.json": "raw/causal/session/restoration.json.gz",
+        "mutation.patch": "raw/causal/session/mutation.patch.gz"
+      }
+    },
+    {
+      "kind": "identity-reader",
+      "test": "http::a10_owner_clock_tests::identity_decoder_uses_owner_after_confirmed_worker_start_and_elapsed_wall_time",
+      "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+      "actual_exit": 101,
+      "classification": "SEMANTIC_POST_DISPATCH_DEADLINE_ASSERTION",
+      "compiler_succeeded": true,
+      "actual_running": 1,
+      "actual_failed": 1,
+      "actual_ignored": 0,
+      "observed_assertion": "Manual identity decoder source response: Deadline",
+      "stage_witnesses": [
+        "A10_OWNER_STAGE site=identity_worker_started requests=1 active=1 clock_owners=5",
+        "A10_OWNER_DELAY site=identity_reader wall_expired=true owner_expired=false"
+      ],
+      "only_mutated_path": "crates/ssx-infra/src/http.rs",
+      "before_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+      "mutant_sha256": "b3a5c989c415e9b73e4c4129b070c7ccb95bb4bc6356b60856ff48aea43658b4",
+      "full_copy_source_paths_restored": 7590,
+      "primary_source_paths_verified": 7590,
+      "artifacts": {
+        "native.json": "raw/causal/identity-reader/native.json.gz",
+        "native.stdout": "raw/causal/identity-reader/native.stdout.gz",
+        "native.stderr": "raw/causal/identity-reader/native.stderr.gz",
+        "restoration.json": "raw/causal/identity-reader/restoration.json.gz",
+        "mutation.patch": "raw/causal/identity-reader/mutation.patch.gz"
+      }
+    }
+  ],
+  "session_observed_validation": {
+    "audit": "raw/causal/session/observed-assertion-audit.json.gz",
+    "independent_acceptance": "raw/causal/session/root-observed-acceptance.json.gz",
+    "original_external_validator_rejection": "raw/causal/session/original-validator-rejection.txt.gz",
+    "diagnostic_provenance": "raw/causal/session/original-validator-rejection-provenance.json.gz",
+    "expected_earlier_single_poll_assertion_did_not_fire": true,
+    "accepted_later_assertion": "Manual source HTTP response: Deadline",
+    "accepted_later_location": "support/a10_http_clock.rs:171:46",
+    "native_rerun": false,
+    "limitations": [
+      "No immediate Tokio readiness claim",
+      "No identification of the winning post-dispatch site in the original hosted ARM failure",
+      "Original validator diagnostic is explicitly transcribed from its original terminal; native streams and receipts remain byte-exact"
+    ]
+  },
+  "earlier_attempts": [
+    {
+      "id": "03-full-infra-list",
+      "source_freeze_sha256": "999b05228dff313345f4257dccb3e8cbde18fa5225d1de4e2b66d345fbcb8647",
+      "actual_exit": 101,
+      "classification": "PRE_DISCOVERY_COMPILATION_FAILURE",
+      "description": "E0308 missing explicit existing From conversion; no test discovered or executed",
+      "clock_semantic_failure": false,
+      "artifacts": {
+        "json": "raw/earlier-attempt/1.json.gz",
+        "stdout": "raw/earlier-attempt/1.stdout.gz",
+        "stderr": "raw/earlier-attempt/1.stderr.gz"
+      }
+    },
+    {
+      "id": "05-owner-control-1",
+      "source_freeze_sha256": "a03d509817271473fa3d130fdfe6c289917315074f225e37b450851e7c378d56",
+      "actual_exit": 101,
+      "classification": "PRE_STAGE_FIXTURE_LOADING_FAILURE",
+      "description": "serde_json::Value rejected unrelated lone surrogate while loading whole frozen corpus; no clock stage reached",
+      "clock_semantic_failure": false,
+      "artifacts": {
+        "json": "raw/earlier-attempt/2.json.gz",
+        "stdout": "raw/earlier-attempt/2.stdout.gz",
+        "stderr": "raw/earlier-attempt/2.stderr.gz"
+      }
+    },
+    {
+      "id": "07-owner-control-1",
+      "source_freeze_sha256": "0f620833db8da3b9888042dc84961bea1af456703d9a07c14f85cd7467d23033",
+      "actual_exit": 101,
+      "classification": "PRE_STAGE_FIXTURE_LOADING_FAILURE",
+      "description": "ssx_json::Value scalar String also rejected unrelated lone surrogate; no clock stage reached",
+      "clock_semantic_failure": false,
+      "artifacts": {
+        "json": "raw/earlier-attempt/3.json.gz",
+        "stdout": "raw/earlier-attempt/3.stdout.gz",
+        "stderr": "raw/earlier-attempt/3.stderr.gz"
+      }
+    }
+  ],
+  "native_qualification": {
+    "commands": [
+      {
+        "id": "12-final-fmt",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "ff83fbe8fc3c3050a5da9bef1d3819201b6b86a2eacf49d50ed560b990031db4",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt": "raw/qualification/12-final-fmt.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "13-full-strict-clippy",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "9f2790faa5f8ee55614d4508ee83a7c4767f65c8753e8afb93c9b315c37b8fcd",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "9392cefe6628af826f7e493ca6ed842cc02faffc1b44dfc80f0b6e519df12e21",
+        "receipt": "raw/qualification/13-full-strict-clippy.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "14-gate-a10",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "94e75e16ac09bbe3140870084a630c8088af6e44970ceaae78ccffe6319de853",
+        "stdout_sha256": "8d3ad08044e7aa6c530a22538ffaafea153ed3cb8407b6cbaa164b706232be43",
+        "stderr_sha256": "d51464b5a3c9b565a8e322f368e4eb2117768b3de6de2f9d0e67cc2f5c192997",
+        "receipt": "raw/qualification/14-gate-a10.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "15-gate-a11",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "16abc7d612a96cd944f832b779f779049c18e2099cd1a1dbed3de5216bf7a23b",
+        "stdout_sha256": "b7eeca48129e274edfb50845c15e80c2206917ca0576bc328550ef4b97a98ac2",
+        "stderr_sha256": "bda29dcea26e95d2f1d032bd5b5f2f55c2df065ecf61a951669627399669f089",
+        "receipt": "raw/qualification/15-gate-a11.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "16-gate-a14",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "bec1ea53e8a9bc54bca04129d4d3871400965be7c573e618b99f53a06a85fee2",
+        "stdout_sha256": "ca3d1f847c6ded4478e7caaf91b8c3e7beb9314a2b9210780a8185d322c14779",
+        "stderr_sha256": "2ce6fb812460e056ba259dc69416fef3bd152d80490679b1dbe4ace5c9796d4c",
+        "receipt": "raw/qualification/16-gate-a14.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "17-gate-a09",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "74d2b2be5f47aa687c525974fc08e4741c0205fba674ca446540719c4292afe3",
+        "stdout_sha256": "dae382d943e45cd6aa980fe8b4721d59f3deb031ab9999b89e36b3eaa40d819b",
+        "stderr_sha256": "6b71e8bf873c67fa61edbbc32f2fff6cdc3d3ff01456601df97a72c7d8bb5d2f",
+        "receipt": "raw/qualification/17-gate-a09.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "18-gate-f09",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "5b2278c0bccc207d7da4fd8e9d4ecbc97863dbc695c69412ec57a41ccb08cc38",
+        "stdout_sha256": "b317db09e079fb6d34d4a4b3caae2c1a9a5ab1261ab2888beabb855c2f821b06",
+        "stderr_sha256": "4b87d19df2378b262d70e38dcb605d565ede60df12f29d41fe4b8e69a80a1ff1",
+        "receipt": "raw/qualification/18-gate-f09.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "19-gate-f01",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "3d57ed28910ceb474a0557e622cc66f8ecc5b24ba9b078e20951aa88b2dbbb9c",
+        "stdout_sha256": "7d4c2a89546ef9355c4009d4f41016ec5ff1ba97f357e7faa9cc2981465a1d6c",
+        "stderr_sha256": "16ce8354c7081418ebacc05e697692107df9c10c16ca71dcf74a234a627cbbc8",
+        "receipt": "raw/qualification/19-gate-f01.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "20-gate-o06",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "1503bbb04490274c8ca5ce526c50c66ff420961ae91245348aac5fb2f70717c8",
+        "stdout_sha256": "4d533ec22f3924d1bd6a4e7556e3e6ee0a7f6cf6b1e4446009185d9971558abc",
+        "stderr_sha256": "9cfe44ce73a508484c2695aff6d79829ca16414a5ce1a2f5924e396ad7facec0",
+        "receipt": "raw/qualification/20-gate-o06.json.gz",
+        "full_raw_streams_retained_external": true
+      },
+      {
+        "id": "21-full-infra-execution",
+        "actual_exit": 0,
+        "source_freeze_sha256": "21da307c7135f577c1596a35aae27e0efa458932535e0fa5f1f15809134674d6",
+        "receipt_sha256": "aa82b72d518f13f7faf0a46228375dff2789b757516ee5ee396d6ee6b9bee35f",
+        "stdout_sha256": "54829388c6ed4218e541b53b5a137b45009f6b34c853fcee37930ae52a960869",
+        "stderr_sha256": "af0a30f04cea69d581c4830bb993ffd4d8f39f0e48d7baa5eabb65cd8af0f86d",
+        "receipt": "raw/qualification/21-full-infra-execution.json.gz",
+        "full_raw_streams_retained_external": true
+      }
+    ],
+    "gate_reports": [
+      {
+        "plan_id": "A09",
+        "retained_external_path": "/private/tmp/a10-owner-clock-execution-v2/qualification/A09.json",
+        "sha256": "f8d06967f51a5e8657b4aa16b9e2f0cd67fd0708474ae3c8141fc1680928209f",
+        "source_bindings": 1562
+      },
+      {
+        "plan_id": "A10",
+        "retained_external_path": "/private/tmp/a10-owner-clock-execution-v2/qualification/A10.json",
+        "sha256": "b9cb809a7cfac085cf34758f01a4bfe082acdf8c411aed2f24b7672da5678b00",
+        "source_bindings": 1562
+      },
+      {
+        "plan_id": "A11",
+        "retained_external_path": "/private/tmp/a10-owner-clock-execution-v2/qualification/A11.json",
+        "sha256": "9a95aefabe5df73a3d84ed2d056fdc4f47965256537414dddbcf4827d7e52360",
+        "source_bindings": 1562
+      },
+      {
+        "plan_id": "A14",
+        "retained_external_path": "/private/tmp/a10-owner-clock-execution-v2/qualification/A14.json",
+        "sha256": "ad376872b711d1b64ba8b225dcabbce34cab7393b46faa358bcd1cc12b40b65a",
+        "source_bindings": 1562
+      },
+      {
+        "plan_id": "F01",
+        "retained_external_path": "/private/tmp/a10-owner-clock-execution-v2/qualification/F01.json",
+        "sha256": "9ee0c4e133de95f032cc5f87c9a6f004354e73f5d519d4633d67cb933ad2da15",
+        "source_bindings": 1562
+      },
+      {
+        "plan_id": "F09",
+        "retained_external_path": "/private/tmp/a10-owner-clock-execution-v2/qualification/F09.json",
+        "sha256": "15b8605966008b85ae9beaf090ca8b5a301cde547661e3b03f40cb51161950c3",
+        "source_bindings": 1562
+      },
+      {
+        "plan_id": "O06",
+        "retained_external_path": "/private/tmp/a10-owner-clock-execution-v2/qualification/O06.json",
+        "sha256": "640319f9bdbe7329d9f2208b6d5ceb26e070d3c9dad0aad8ba3a8866a1142db5",
+        "source_bindings": 1562
+      }
+    ],
+    "actual_full_library_inventory": 237,
+    "actual_full_library_executed": 237,
+    "actual_ignored": 0,
+    "a10_completed_cases": 568,
+    "unchanged_original_a10_cases": 561,
+    "new_native_contracts": 7
+  },
+  "tooling": {
+    "runs": [
+      {
+        "id": "22-all-files-hooks",
+        "actual_exit": 1,
+        "artifacts": {
+          "json": "raw/tooling/22-all-files-hooks.json.gz",
+          "stdout": "raw/tooling/22-all-files-hooks.stdout.gz",
+          "stderr": "raw/tooling/22-all-files-hooks.stderr.gz"
+        }
+      },
+      {
+        "id": "23-all-files-hooks-formatted-baseline",
+        "actual_exit": 0,
+        "artifacts": {
+          "json": "raw/tooling/23-all-files-hooks-formatted-baseline.json.gz",
+          "stdout": "raw/tooling/23-all-files-hooks-formatted-baseline.stdout.gz",
+          "stderr": "raw/tooling/23-all-files-hooks-formatted-baseline.stderr.gz"
+        }
+      },
+      {
+        "id": "24-scoped-approved-hooks",
+        "actual_exit": 0,
+        "artifacts": {
+          "json": "raw/tooling/24-scoped-approved-hooks.json.gz",
+          "stdout": "raw/tooling/24-scoped-approved-hooks.stdout.gz",
+          "stderr": "raw/tooling/24-scoped-approved-hooks.stderr.gz"
+        }
+      },
+      {
+        "id": "25-graphify-ast-update",
+        "actual_exit": 0,
+        "artifacts": {
+          "json": "raw/tooling/25-graphify-ast-update.json.gz",
+          "stdout": "raw/tooling/25-graphify-ast-update.stdout.gz",
+          "stderr": "raw/tooling/25-graphify-ast-update.stderr.gz"
+        }
+      }
+    ],
+    "baseline": {
+      "guards.json": "raw/tooling/baseline/guards.json.gz",
+      "ast-equivalence.json": "raw/tooling/baseline/ast-equivalence.json.gz",
+      "restoration.json": "raw/tooling/baseline/restoration.json.gz",
+      "tooling-link-cleanup.json": "raw/tooling/baseline/tooling-link-cleanup.json.gz"
+    },
+    "initial_all_files_failure_retained": true,
+    "all_files_pass_was_with_temporary_ast_equivalent_baseline_formatting": true,
+    "baseline_then_restored_exactly": true,
+    "scoped_15_paths_passed_after_restore": true,
+    "ast_graph_output_private_only": true
+  },
+  "limitations": [
+    "Existing original-source captures were replayed; no new Python/backend/oracle execution or captures",
+    "No corpus/request/output masks, ledger tuple changes or timeout inflation",
+    "Production System 250us and absolute-context/unmocked expiry remain authoritative; Manual clock is cfg(test) direct mock replay only",
+    "All source copies restored; no live source application, commit, push or CI rerun",
+    "New repository documentation changes the source snapshot; root must qualify its actual integrated source separately"
+  ],
+  "artifacts": [
+    {
+      "path": "raw/positive/1.json.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "1b69c86b5f24c0efcdd4da2fcd531693298b6fbd79543323ac0def92911a55e8",
+      "raw_bytes": 1481,
+      "gzip_sha256": "af403eb5b887b7ff81340f1866432dcb2ee9710d2654c03742dceda30080f6c5",
+      "gzip_bytes": 741,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-1.json"
+    },
+    {
+      "path": "raw/positive/1.stdout.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "0156ba3b10265780664221f366972b8fc55f5b16a93931851945bd64db26f512",
+      "raw_bytes": 665,
+      "gzip_sha256": "e39c393808f13c1df8f4213f96174ff5ff89cf3bcfb5151e657abc97bb3c51a9",
+      "gzip_bytes": 314,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-1.stdout"
+    },
+    {
+      "path": "raw/positive/1.stderr.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "b6451f5d49aff91ae803241188e9e8ddeb377a811682e533f1c16488b91d7d02",
+      "raw_bytes": 211,
+      "gzip_sha256": "04db6760cf35e54745486f301fdb5663b3943cf791b1a5a9b4f16bb6a97b88d1",
+      "gzip_bytes": 191,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-1.stderr"
+    },
+    {
+      "path": "raw/positive/2.json.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "c0d4714b2354167122f672c193fa072eb0e6c3c7eb2eb6cf077337c81f7e9de0",
+      "raw_bytes": 1466,
+      "gzip_sha256": "3b7bb3e2556945b7de2334f982a99293e5906ba5f2f574d240f66b8829bcce26",
+      "gzip_bytes": 731,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-2.json"
+    },
+    {
+      "path": "raw/positive/2.stdout.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "e246b0e50242f4356facaae3c7179a172b4c7669f6b01a2071cb00cdf412d262",
+      "raw_bytes": 628,
+      "gzip_sha256": "535383c3c62e1cc564d672025056c2b5d33037b43a3e992168bfd9f07a4d2659",
+      "gzip_bytes": 311,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-2.stdout"
+    },
+    {
+      "path": "raw/positive/2.stderr.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "77d906dd7b04d57db3e109463378a00c7b60beaf8011c95f7f03325fd6e923fc",
+      "raw_bytes": 211,
+      "gzip_sha256": "9309affdf8ab42f1f6893dd9aee2b602f9f7ba38621f19ba4b61616898c0480c",
+      "gzip_bytes": 192,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-2.stderr"
+    },
+    {
+      "path": "raw/positive/3.json.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "a7db1135ad50111d291c228c610f7d317df4604a74b1d17133aea6b5fcd540f8",
+      "raw_bytes": 1479,
+      "gzip_sha256": "669469475c4e6616640d675e915f9482254084ddbe896fd8751184e062fe3166",
+      "gzip_bytes": 732,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-3.json"
+    },
+    {
+      "path": "raw/positive/3.stdout.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "e88de3ab9ca838eaaaed910937191357ba444b2f6c35bf657dac4b6828eaeb61",
+      "raw_bytes": 704,
+      "gzip_sha256": "e9b60dcea2b8e814177654c9967654b6aee89a8d2d5e5d5ed95c3d170c87d56c",
+      "gzip_bytes": 327,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-3.stdout"
+    },
+    {
+      "path": "raw/positive/3.stderr.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "c690b9d4e18ec425772d434544687ed281b569aed01e87678e964cb62b21b024",
+      "raw_bytes": 211,
+      "gzip_sha256": "5bdc60e4f60c21ff445a2b87580f4b6cec27fe5816001ca47ed3484a1aaf455a",
+      "gzip_bytes": 191,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-3.stderr"
+    },
+    {
+      "path": "raw/positive/4.json.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "9b6d4c8c28c8cd6a27a2d58c4871121a9d1c3a3034d9614e02b95e24e719e716",
+      "raw_bytes": 1462,
+      "gzip_sha256": "ee12d27f5ae0c76a0e2bc7999e9117e4c9ccc26ec68b2af0e19bf561c31dd9e3",
+      "gzip_bytes": 727,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-4.json"
+    },
+    {
+      "path": "raw/positive/4.stdout.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "73df04c4fb47cbd2853405a89af6709d2c33d85a5aec32ecb83ac1e07ee8dab4",
+      "raw_bytes": 491,
+      "gzip_sha256": "4fecee23477ef9900127c00ab1ffd44794b2e528a876943157fbd4313c7cb021",
+      "gzip_bytes": 244,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-4.stdout"
+    },
+    {
+      "path": "raw/positive/4.stderr.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "77d906dd7b04d57db3e109463378a00c7b60beaf8011c95f7f03325fd6e923fc",
+      "raw_bytes": 211,
+      "gzip_sha256": "9309affdf8ab42f1f6893dd9aee2b602f9f7ba38621f19ba4b61616898c0480c",
+      "gzip_bytes": 192,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-4.stderr"
+    },
+    {
+      "path": "raw/positive/5.json.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "9b7cb9bc57875396313102c5fe9df128dd57ddaecc8378f5dae218361669aa2a",
+      "raw_bytes": 1467,
+      "gzip_sha256": "1d827f308ae0ea6c11dad308b743466c9d085a2f97935ae706d2e8c1afbfb7a1",
+      "gzip_bytes": 729,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-5.json"
+    },
+    {
+      "path": "raw/positive/5.stdout.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "09208366546d87db24c6ecee8e4f4b15db0a929574144cbc0a8c0d5377c699a4",
+      "raw_bytes": 521,
+      "gzip_sha256": "5a2872663c39c747f466ea611e99fffd1b923f31cc0491a26abe11f1f7e28495",
+      "gzip_bytes": 250,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-5.stdout"
+    },
+    {
+      "path": "raw/positive/5.stderr.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "aaa8fb4d844f6b851dd5a0cb7c50864f511047efb68d1251e456718d37b9fa2e",
+      "raw_bytes": 211,
+      "gzip_sha256": "11a25e336329585b0de438550e690377945ca492d73dcdcf5082d78594aab438",
+      "gzip_bytes": 192,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-5.stderr"
+    },
+    {
+      "path": "raw/positive/6.json.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "a889f7f3b75b0f5d32daaddb129cd3153c80eeff1d2ace7e9653f7f5893043dc",
+      "raw_bytes": 1452,
+      "gzip_sha256": "a2835cd98ee535374164dd1e14bd38bdaec5d883e0d36120f07316f17f946b2c",
+      "gzip_bytes": 721,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-6.json"
+    },
+    {
+      "path": "raw/positive/6.stdout.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "248ae6feb2d3e32a5b8350883befafe79a8a07f203b6f05abee4a71a0c884cf4",
+      "raw_bytes": 14324,
+      "gzip_sha256": "aa3c220b8d0148814d3523a150188d0e6909bf4a1557b69735e06df264c7362f",
+      "gzip_bytes": 1832,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-6.stdout"
+    },
+    {
+      "path": "raw/positive/6.stderr.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "c690b9d4e18ec425772d434544687ed281b569aed01e87678e964cb62b21b024",
+      "raw_bytes": 211,
+      "gzip_sha256": "5bdc60e4f60c21ff445a2b87580f4b6cec27fe5816001ca47ed3484a1aaf455a",
+      "gzip_bytes": 191,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-6.stderr"
+    },
+    {
+      "path": "raw/positive/7.json.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "16fbaf99ac1f32f95a981d18e2953ac87f1070c6b0cf93eff23b7432ffa80ad8",
+      "raw_bytes": 1486,
+      "gzip_sha256": "9a210f61690a29a9e1d8fc0f34322aabaadcd634bf29caeb19808a63255af876",
+      "gzip_bytes": 738,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-7.json"
+    },
+    {
+      "path": "raw/positive/7.stdout.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "45c18074c55feba240fda1ae56a4a8df2add81e48f1ab9f4a7ec32bbdf04fb1e",
+      "raw_bytes": 572,
+      "gzip_sha256": "0b8e7a4a5fb1ab9b6c44bc7e64bc4505ada399305ce4a7597591d2a660f35cbb",
+      "gzip_bytes": 264,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-7.stdout"
+    },
+    {
+      "path": "raw/positive/7.stderr.gz",
+      "kind": "positive_exact_control",
+      "raw_sha256": "aaa8fb4d844f6b851dd5a0cb7c50864f511047efb68d1251e456718d37b9fa2e",
+      "raw_bytes": 211,
+      "gzip_sha256": "11a25e336329585b0de438550e690377945ca492d73dcdcf5082d78594aab438",
+      "gzip_bytes": 192,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/09-owner-control-7.stderr"
+    },
+    {
+      "path": "raw/causal/session/native.json.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "9ae12fdc83351632b4990f70894bd2363887fa9d656ecdea1b066f37eb17e7c0",
+      "raw_bytes": 1533,
+      "gzip_sha256": "8a2f2ae9632e10289e1a84e44ca80296ff751a40eba367103f8ed47f1a9bd5a7",
+      "gzip_bytes": 755,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/native.json"
+    },
+    {
+      "path": "raw/causal/session/native.stdout.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "ff43cac254e7c75f993cc580998ccdc52b0a704a082571c25afcbd22751cc138",
+      "raw_bytes": 11442,
+      "gzip_sha256": "70102ae294efa40e07f4eb2db3b74ee0fd2cacc4c7a40748cdf5f547e2ed9daa",
+      "gzip_bytes": 1515,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/native.stdout"
+    },
+    {
+      "path": "raw/causal/session/native.stderr.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "c6c0d46b93f7590283cb2693f07805fc2914677796fe135730c3995581f43360",
+      "raw_bytes": 1480,
+      "gzip_sha256": "59be739370d2b764a46eba7b3e2f1446fb052a551c271932e110fc546e77b27e",
+      "gzip_bytes": 683,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/native.stderr"
+    },
+    {
+      "path": "raw/causal/session/restoration.json.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "29772ec38a748d35137ca4d7d51d647f226440622acc5a2392167673b4ae2b33",
+      "raw_bytes": 203,
+      "gzip_sha256": "b2e39030c52e63a3ac22bf326d0d853882fd3ddd096a024da218cbbb4d190f89",
+      "gzip_bytes": 161,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/restoration.json"
+    },
+    {
+      "path": "raw/causal/session/mutation.patch.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "dee7ca235ecb76fdad2252920801a8518db83020c6900d273c6185d2f1fdd17d",
+      "raw_bytes": 470,
+      "gzip_sha256": "edcc6120b6c81ec4456b05ec6046cabbec60c5d0beadf7729622f59cf0efa2ec",
+      "gzip_bytes": 241,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/mutation.patch"
+    },
+    {
+      "path": "raw/causal/identity-reader/native.json.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "bee2eee091d007367fb276945cd6b4d818a36fb644bdaef81b387eabcaecdaac",
+      "raw_bytes": 1534,
+      "gzip_sha256": "a4a971266083c5b620fbb6042fde501721b329eb942a52ae4e853f5e5b13f2e8",
+      "gzip_bytes": 752,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/11-reader-old-instant-mutant/native.json"
+    },
+    {
+      "path": "raw/causal/identity-reader/native.stdout.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "ed8fc110e8eebaffd9cefe86e40369718ed18528f687f337e99f923541fa4e1d",
+      "raw_bytes": 11352,
+      "gzip_sha256": "10f89449082ea59cf69da9e7ff889d82ed4b52b80cfd1c2237af487b0f6e851b",
+      "gzip_bytes": 1510,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/11-reader-old-instant-mutant/native.stdout"
+    },
+    {
+      "path": "raw/causal/identity-reader/native.stderr.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "9254443c4496b819cec8d51508c10183f9bb8dd2b80fafba9d4727828114161a",
+      "raw_bytes": 1100,
+      "gzip_sha256": "cc53d7d5790127989b15462506cdac58bec8bdb996117cd85cf88845bfb6917f",
+      "gzip_bytes": 544,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/11-reader-old-instant-mutant/native.stderr"
+    },
+    {
+      "path": "raw/causal/identity-reader/restoration.json.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "29772ec38a748d35137ca4d7d51d647f226440622acc5a2392167673b4ae2b33",
+      "raw_bytes": 203,
+      "gzip_sha256": "b2e39030c52e63a3ac22bf326d0d853882fd3ddd096a024da218cbbb4d190f89",
+      "gzip_bytes": 161,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/11-reader-old-instant-mutant/restoration.json"
+    },
+    {
+      "path": "raw/causal/identity-reader/mutation.patch.gz",
+      "kind": "isolated_causal_control",
+      "raw_sha256": "a61951da86fe3652d1a07246e05ff03cd1d86a66f8dae3d2c8b26883e19c74c9",
+      "raw_bytes": 346,
+      "gzip_sha256": "aeb53341061394aadd90e3d7065afeec8d89e1e83e695a8997baf6af7bd9cf60",
+      "gzip_bytes": 198,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/11-reader-old-instant-mutant/mutation.patch"
+    },
+    {
+      "path": "raw/causal/session/observed-assertion-audit.json.gz",
+      "kind": "accepted_observed_session_assertion_audit",
+      "raw_sha256": "23af2f45f4586f8f33dd1e09201302a16809edde115e0523d0fab7f3952fa541",
+      "raw_bytes": 1066,
+      "gzip_sha256": "3bf1fa59bc64793d0c8f99b6ec482e9d35f15017fb99b91cdd5efa4b5b6e4c5b",
+      "gzip_bytes": 674,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/observed-assertion-audit.json"
+    },
+    {
+      "path": "raw/causal/session/root-observed-acceptance.json.gz",
+      "kind": "independent_observed_session_assertion_acceptance",
+      "raw_sha256": "e9e01bc6abb92433dd6dde0eb32fc698a26070b965f2756c6b46b8eeb06eeace",
+      "raw_bytes": 556,
+      "gzip_sha256": "0a74024a2c85fa00f8f4feb8e5def5ebd6c482c79b7481d897761b8eaf5188a3",
+      "gzip_bytes": 370,
+      "retained_external_source": "/private/tmp/a10-root-session-mutant-observed-acceptance.json"
+    },
+    {
+      "path": "raw/causal/session/original-validator-rejection.txt.gz",
+      "kind": "original_validator_diagnostic_transcribed_from_terminal",
+      "raw_sha256": "90047ab1c0f20f461adcd5ad639f3b57ca5eb67ce55bd3709b7939acb7bedd58",
+      "raw_bytes": 170,
+      "gzip_sha256": "aaa221e15d237a38fa6e4db8abaf8d0d9eae04a00cb0d9221b7027ec4c642b36",
+      "gzip_bytes": 133,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/original-validator-rejection.txt"
+    },
+    {
+      "path": "raw/causal/session/original-validator-rejection-provenance.json.gz",
+      "kind": "original_validator_diagnostic_provenance",
+      "raw_sha256": "4c39edc0b5ec4230db052681c5303eb1252f765598bec5a641279bbbd8c544e0",
+      "raw_bytes": 260,
+      "gzip_sha256": "a2ba37ca5d35ca0cd27bf935ecd8cb4b2596042258b4a0662ae0766d81fd72f8",
+      "gzip_bytes": 189,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/10-session-old-tokio-mutant/original-validator-rejection-provenance.json"
+    },
+    {
+      "path": "raw/earlier-attempt/1.json.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "cee6662cfa4a81ed4499ee516dbf0bb0732e7f9c030a5b506e3eaf5c8841b63f",
+      "raw_bytes": 1277,
+      "gzip_sha256": "dabb93d2e80eac4b0fbe20475345068102c3e35b00ee5047cfa7f46fa23d7176",
+      "gzip_bytes": 640,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/03-full-infra-list.json"
+    },
+    {
+      "path": "raw/earlier-attempt/1.stdout.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_bytes": 0,
+      "gzip_sha256": "1dfebcc5ccafcc1292461ca8bbaafa8c0b6a444970aefa5796e8eb66fae3ae63",
+      "gzip_bytes": 20,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/03-full-infra-list.stdout"
+    },
+    {
+      "path": "raw/earlier-attempt/1.stderr.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "93cbf6d2910dcf78fb4e21181526996f19ed472fd8e0c114a33a4f4820ef3524",
+      "raw_bytes": 10641,
+      "gzip_sha256": "1c8ba5ee98a0b175f6bd1d847f9af1c56dc2bfc0c4fdc9778fe19fdb390ada49",
+      "gzip_bytes": 3114,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/03-full-infra-list.stderr"
+    },
+    {
+      "path": "raw/earlier-attempt/2.json.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "14cbe0de10b3561e6466c2604e51a1be72417e99226a4e83337158bd63aa5142",
+      "raw_bytes": 1484,
+      "gzip_sha256": "a5aeb7f9c1a4a65fad48f21e56c2694c0c4d7e0a5fb2d99bfbf84d815ac7d9d8",
+      "gzip_bytes": 744,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/05-owner-control-1.json"
+    },
+    {
+      "path": "raw/earlier-attempt/2.stdout.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "7b6447e9b76921e8561afb285e44c3ba123dd86907a663ebd399af75eced7270",
+      "raw_bytes": 11525,
+      "gzip_sha256": "e6b4c18aef8f077e1199dd0be3bcddecda62c137687243131a450861ff9d415d",
+      "gzip_bytes": 1525,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/05-owner-control-1.stdout"
+    },
+    {
+      "path": "raw/earlier-attempt/2.stderr.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "0d8d45363d21d037433a83787d34bd1dafffd7fdbaaef26e7beb8332f7da3fc6",
+      "raw_bytes": 266,
+      "gzip_sha256": "46cd68611ebfa1c34020b9da5c19e79157bce3437b660c71252c66ffba4cdbfb",
+      "gzip_bytes": 226,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/05-owner-control-1.stderr"
+    },
+    {
+      "path": "raw/earlier-attempt/3.json.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "7f4496477738b6a683611ec2f3599a74d33a9642e2a8a73867d9bbd2f909340f",
+      "raw_bytes": 1484,
+      "gzip_sha256": "e86f63bf98a43647fc72c4c19316d2c766fdd0371393897cfcd21825735b87e0",
+      "gzip_bytes": 742,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/07-owner-control-1.json"
+    },
+    {
+      "path": "raw/earlier-attempt/3.stdout.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "ffba3665b6d9d3dddf40aaf83197c8e5c58f2d38fa09dfe283e081a16c6c08c4",
+      "raw_bytes": 11511,
+      "gzip_sha256": "0c9e1e14bf304a0fe390304c4fbe923e26c07b355b9a63e83443947ef811c01b",
+      "gzip_bytes": 1519,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/07-owner-control-1.stdout"
+    },
+    {
+      "path": "raw/earlier-attempt/3.stderr.gz",
+      "kind": "earlier_unmodified_failure",
+      "raw_sha256": "3a8126644340b1a8acb7090d1fe2b171f49b2ba82c0fc9a706cb012973c1c2ee",
+      "raw_bytes": 266,
+      "gzip_sha256": "5e0f885cafbb2114aaaff204d765b1e7dab58516785fbfbdf14d2d1877f67a92",
+      "gzip_bytes": 226,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/07-owner-control-1.stderr"
+    },
+    {
+      "path": "raw/qualification/12-final-fmt.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "ff83fbe8fc3c3050a5da9bef1d3819201b6b86a2eacf49d50ed560b990031db4",
+      "raw_bytes": 1200,
+      "gzip_sha256": "7ae0eeefa8603191b6a1edf6dad6fda57ebbecd45eb50a85187a0081b9df3b54",
+      "gzip_bytes": 566,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/12-final-fmt.json"
+    },
+    {
+      "path": "raw/qualification/13-full-strict-clippy.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "9f2790faa5f8ee55614d4508ee83a7c4767f65c8753e8afb93c9b315c37b8fcd",
+      "raw_bytes": 1313,
+      "gzip_sha256": "abfd07f1431cdb9701566502a8843b3fa9a668470531cba95b122658cf2c0423",
+      "gzip_bytes": 655,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/13-full-strict-clippy.json"
+    },
+    {
+      "path": "raw/qualification/14-gate-a10.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "94e75e16ac09bbe3140870084a630c8088af6e44970ceaae78ccffe6319de853",
+      "raw_bytes": 1285,
+      "gzip_sha256": "7d251c8c9eb8d981c89acccc0d0046e90e4de3ca07bf8e309f5b4a084dd84edc",
+      "gzip_bytes": 641,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/14-gate-a10.json"
+    },
+    {
+      "path": "raw/qualification/15-gate-a11.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "16abc7d612a96cd944f832b779f779049c18e2099cd1a1dbed3de5216bf7a23b",
+      "raw_bytes": 1285,
+      "gzip_sha256": "1dd98f5cce8f82efd1f11a99890b41f26fb452ffecf3193893e1dd552f075909",
+      "gzip_bytes": 641,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/15-gate-a11.json"
+    },
+    {
+      "path": "raw/qualification/16-gate-a14.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "bec1ea53e8a9bc54bca04129d4d3871400965be7c573e618b99f53a06a85fee2",
+      "raw_bytes": 1283,
+      "gzip_sha256": "1008d73f2770fae74f51be6e76c580aee00a30faad7910a378c9a8275085e528",
+      "gzip_bytes": 640,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/16-gate-a14.json"
+    },
+    {
+      "path": "raw/qualification/17-gate-a09.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "74d2b2be5f47aa687c525974fc08e4741c0205fba674ca446540719c4292afe3",
+      "raw_bytes": 1285,
+      "gzip_sha256": "1dc32a92a2c263cf7138d4dcb44c45f92d2f6903bba4c405ccc661a41e2e2bd8",
+      "gzip_bytes": 642,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/17-gate-a09.json"
+    },
+    {
+      "path": "raw/qualification/18-gate-f09.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "5b2278c0bccc207d7da4fd8e9d4ecbc97863dbc695c69412ec57a41ccb08cc38",
+      "raw_bytes": 1284,
+      "gzip_sha256": "5ea8c5b61851e3be0aacf51bb94f8e0aa91fc9cb18e08a199ae55b38e4245295",
+      "gzip_bytes": 642,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/18-gate-f09.json"
+    },
+    {
+      "path": "raw/qualification/19-gate-f01.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "3d57ed28910ceb474a0557e622cc66f8ecc5b24ba9b078e20951aa88b2dbbb9c",
+      "raw_bytes": 1285,
+      "gzip_sha256": "4b6734afdc3432758d1de7998132ded97a5e55b0923e252e18f00fc9a3b8cd81",
+      "gzip_bytes": 639,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/19-gate-f01.json"
+    },
+    {
+      "path": "raw/qualification/20-gate-o06.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "1503bbb04490274c8ca5ce526c50c66ff420961ae91245348aac5fb2f70717c8",
+      "raw_bytes": 1285,
+      "gzip_sha256": "e838f354644176c67bb86005404aebfb5a751ebbc95417073e4742efebf58587",
+      "gzip_bytes": 639,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/20-gate-o06.json"
+    },
+    {
+      "path": "raw/qualification/21-full-infra-execution.json.gz",
+      "kind": "final_native_qualification_receipt",
+      "raw_sha256": "aa82b72d518f13f7faf0a46228375dff2789b757516ee5ee396d6ee6b9bee35f",
+      "raw_bytes": 1366,
+      "gzip_sha256": "f2deff2c8b920693485ec5e4b670377b67672d91f1526a0d8089063a0bfa7495",
+      "gzip_bytes": 670,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/21-full-infra-execution.json"
+    },
+    {
+      "path": "raw/tooling/22-all-files-hooks.json.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "d009dbda4b503f928bd9651c4b31dc7c77d045648ae6fafe5add1f683090ca7a",
+      "raw_bytes": 1196,
+      "gzip_sha256": "832a5113aa66a3796665409aeebc95071c9189cde418f768195403f30f78b812",
+      "gzip_bytes": 620,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/22-all-files-hooks.json"
+    },
+    {
+      "path": "raw/tooling/22-all-files-hooks.stdout.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "04ca3aa8c17ab383b0bac67179020ab26fceaaa07a4fb996526ab978ef29aec9",
+      "raw_bytes": 1225,
+      "gzip_sha256": "229e883adc49ad3a217da36f87c23e43f122f4645e6b22fa9bfd15dcd983e521",
+      "gzip_bytes": 285,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/22-all-files-hooks.stdout"
+    },
+    {
+      "path": "raw/tooling/22-all-files-hooks.stderr.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_bytes": 0,
+      "gzip_sha256": "1dfebcc5ccafcc1292461ca8bbaafa8c0b6a444970aefa5796e8eb66fae3ae63",
+      "gzip_bytes": 20,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/22-all-files-hooks.stderr"
+    },
+    {
+      "path": "raw/tooling/23-all-files-hooks-formatted-baseline.json.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "dd94320ede3e6fdb83ca4472f4b9c9dcc5482ec6f6f0fea89fe48411aa0327a6",
+      "raw_bytes": 1253,
+      "gzip_sha256": "15f1fa56301d9f0c9263e1df4babb033a246180202f00dff7ecca0d594e7565e",
+      "gzip_bytes": 639,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/23-all-files-hooks-formatted-baseline.json"
+    },
+    {
+      "path": "raw/tooling/23-all-files-hooks-formatted-baseline.stdout.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "41c8a1cd06a474a6a77f31a4bccab57ba8c8f1b3ebb664a801a6224288daa7d2",
+      "raw_bytes": 1120,
+      "gzip_sha256": "a82ee61f45f08eb88d457c8f2f9d56cf576522296ab7fcdf66dcc501f2734a94",
+      "gzip_bytes": 213,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/23-all-files-hooks-formatted-baseline.stdout"
+    },
+    {
+      "path": "raw/tooling/23-all-files-hooks-formatted-baseline.stderr.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_bytes": 0,
+      "gzip_sha256": "1dfebcc5ccafcc1292461ca8bbaafa8c0b6a444970aefa5796e8eb66fae3ae63",
+      "gzip_bytes": 20,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/23-all-files-hooks-formatted-baseline.stderr"
+    },
+    {
+      "path": "raw/tooling/24-scoped-approved-hooks.json.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "461fcf8898d4316e38a51225d814012640a7138cda263e57c15104503c579f7a",
+      "raw_bytes": 1879,
+      "gzip_sha256": "fd72f5957078253b5494c65414a95b2cd3a9f328e4bee5e24c20f2b269b083c3",
+      "gzip_bytes": 781,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/24-scoped-approved-hooks.json"
+    },
+    {
+      "path": "raw/tooling/24-scoped-approved-hooks.stdout.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "390cd452b412395b11e77398e9bbbff549e3d14fa63f88da24ecf8c101902cfa",
+      "raw_bytes": 1120,
+      "gzip_sha256": "6d72bc2ee4c2a40c381416f1656bb49c81e3687806e52d05bb5c25a037bad9e3",
+      "gzip_bytes": 237,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/24-scoped-approved-hooks.stdout"
+    },
+    {
+      "path": "raw/tooling/24-scoped-approved-hooks.stderr.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_bytes": 0,
+      "gzip_sha256": "1dfebcc5ccafcc1292461ca8bbaafa8c0b6a444970aefa5796e8eb66fae3ae63",
+      "gzip_bytes": 20,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/24-scoped-approved-hooks.stderr"
+    },
+    {
+      "path": "raw/tooling/25-graphify-ast-update.json.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "65054a0a53d55698566944750fddf5d06c73512a1768b865983507b1320047cf",
+      "raw_bytes": 1320,
+      "gzip_sha256": "53f22e93682225e3492f52decfc344f506ce64e404ee707dfe87c95091403426",
+      "gzip_bytes": 660,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/25-graphify-ast-update.json"
+    },
+    {
+      "path": "raw/tooling/25-graphify-ast-update.stdout.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "29ce6febf3d21c17342da6b69a04c1e847ca90c90ea614d2cceb429658b714d4",
+      "raw_bytes": 4259,
+      "gzip_sha256": "1e0dcd5250c39fb1bbc689fecedbf4eeefa9b56c5bcbd77f5a2bfe8891350af0",
+      "gzip_bytes": 736,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/25-graphify-ast-update.stdout"
+    },
+    {
+      "path": "raw/tooling/25-graphify-ast-update.stderr.gz",
+      "kind": "installed_static_tooling_receipt_or_stream",
+      "raw_sha256": "9bc816e21227b4b46bad11888cda4033420424a83201fbe061403713f38cf80b",
+      "raw_bytes": 329,
+      "gzip_sha256": "afcc8a3b8b2e0d8cdbce63ab746d791e19a1e5cf905942969b9de0b92f5596ca",
+      "gzip_bytes": 244,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/25-graphify-ast-update.stderr"
+    },
+    {
+      "path": "raw/tooling/baseline/guards.json.gz",
+      "kind": "known_baseline_static_ast_and_exact_restore",
+      "raw_sha256": "8bd6b344ea226a2517a97405c000d22d2d577874be4be9c6f958631b83219d09",
+      "raw_bytes": 279,
+      "gzip_sha256": "5807dbc04079d74c605f5959a402779ec21f03aefb53c644fd489ab27736ab1d",
+      "gzip_bytes": 219,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/hook-baseline/guards.json"
+    },
+    {
+      "path": "raw/tooling/baseline/ast-equivalence.json.gz",
+      "kind": "known_baseline_static_ast_and_exact_restore",
+      "raw_sha256": "a522c46a1ce416fdfaf569a5f3272f08689a6ff78520155728368c2c2f44621c",
+      "raw_bytes": 186,
+      "gzip_sha256": "4edf3c5b514b74f67749e1d37a132ffc8d7612bf1c46cf050d2a4e6b74717cb8",
+      "gzip_bytes": 171,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/hook-baseline/ast-equivalence.json"
+    },
+    {
+      "path": "raw/tooling/baseline/restoration.json.gz",
+      "kind": "known_baseline_static_ast_and_exact_restore",
+      "raw_sha256": "0b43ab84dcf4c665b1a019616c88514e33e9292c535a518ed0c4965a61b18dc0",
+      "raw_bytes": 187,
+      "gzip_sha256": "f1685525012e015d30b213f39160ffbc00b948464303410240d364276d674465",
+      "gzip_bytes": 159,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/hook-baseline/restoration.json"
+    },
+    {
+      "path": "raw/tooling/baseline/tooling-link-cleanup.json.gz",
+      "kind": "known_baseline_static_ast_and_exact_restore",
+      "raw_sha256": "8baa9d64cf8199366fb96d9703e68958f328ed66415b9bbded060d9ab16f02f1",
+      "raw_bytes": 89,
+      "gzip_sha256": "bb1f1cdf9315947a2a8a79096232ec2c1ffda8f5e8394f33a8d963dd4d6268a1",
+      "gzip_bytes": 96,
+      "retained_external_source": "/private/tmp/a10-owner-clock-execution-v2/hook-baseline/tooling-link-cleanup.json"
+    }
+  ]
+}

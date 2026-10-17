@@ -118,6 +118,11 @@ pub(super) async fn project(
     layout: Layout,
     query: &str,
 ) -> Result<Batch, OperationFailure> {
+    if layout.is_a10() {
+        return Err(OperationFailure::Invariant(
+            "A10 rows require typed projection",
+        ));
+    }
     let operation = owned.operation().clone();
     check(&operation)?;
     let rows = owned.rows().await?;

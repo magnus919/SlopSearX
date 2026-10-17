@@ -1,0 +1,79 @@
+{
+  "plan_id": "W03",
+  "status": "proposed_for_parent_review",
+  "differences": [
+    {
+      "id": "W03-D01",
+      "source": "slopsearx/mcp/tools.py::_validate_research_associations + slopsearx_extend_research",
+      "native": "AdaptiveResearch::evidence + extend authoritative claim callback",
+      "change": "New evidence-bearing continuation rereads current tenant-scoped snapshot validity/provenance before lease/budget mutation and revalidates opaque authority inside fresh fenced callback. Source relies on recorded admitted IDs at execution. Same-key replay rechecks current captured intent but preserves already accepted historical continuation.",
+      "basis": "Issue907 explicitly requires forged/stale/cross-tenant reference rejection before spend.",
+      "proof": [
+        "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend",
+        "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+      ]
+    },
+    {
+      "id": "W03-D02",
+      "source": "tests/test_adaptive_research.py::test_lifecycle_during_dispatch_retains_evidence_and_stops_next_query + worker-death tests",
+      "native": "Accepted W02 joined cancellation/lease loss and acknowledged attempt settlement",
+      "change": "Owned native work is interrupted and joined rather than preserving a remote result after cancellation; uncertain/orphan outcomes retain charged interrupted attempts. Wire notes truthfully describe this accepted lifecycle. Completed preexisting evidence stays immutable.",
+      "basis": "Accepted W01/W02 lifecycle and actual killed-worker/held-socket qualification; W03 reuses it.",
+      "proof": [
+        "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges",
+        "process_kill_restart_discovers_orphan_and_conserves_unknown_spend",
+        "durable_cancel_interrupts_owned_capture_and_settles_truthfully"
+      ]
+    },
+    {
+      "id": "W03-D03",
+      "source": "source category templates can propose enabled but inactive entries",
+      "native": "Accepted F09 shared policy authorizes explicit current scopes atomically",
+      "change": "An unavailable/inactive explicit member denies admission atomically; it is not silently filtered or dispatched. Template proposals themselves retain source names/order/warnings.",
+      "basis": "Accepted F09 current-engine eligibility gate; issue907 requires current eligibility.",
+      "proof": [
+        "default_pending_queries_revalidate_research_sensitive_and_engine_authority_before_dispatch",
+        "explicit_inactive_members_reject_atomically_without_changing_http_or_preview_availability"
+      ]
+    },
+    {
+      "id": "W03-D04",
+      "source": "test_rate_limit_error_remains_a_compatibility_export",
+      "native": "No Python runtime compatibility aliases in native library",
+      "change": "The Python RateLimitError compatibility export remains unchanged in original source; Rust uses its accepted typed engine/status errors. A Python alias identity test is inapplicable to the Rust runtime.",
+      "basis": "Native-only migration boundary; original source preserved.",
+      "proof": []
+    },
+    {
+      "id": "W03-D05",
+      "source": "test_unexpected_dispatch_failure_has_fresh_durable_attempt expects arbitrary Python RuntimeError string",
+      "native": "Accepted typed SearchEngine / SearchService and ResearchRunner failures",
+      "change": "Native port cannot raise arbitrary Python exceptions. Actual native adapter/snapshot failures create fresh durable failed attempts, retain earlier snapshots, and expose typed native error vocabulary. Exact arbitrary exception-message text is not asserted as equivalent.",
+      "basis": "Accepted adapter interface never raises and W02 typed failure path.",
+      "proof": [
+        "partial_retry_preserves_success_and_failed_snapshot_bytes"
+      ]
+    },
+    {
+      "id": "W03-D06",
+      "source": "slopsearx_start_research.source object composition / source artifact projections",
+      "native": "AdaptiveResearch::admit explicitly returns invalid_input naming W09 before writes or dispatch",
+      "change": "Field and exact original descriptor remain advertised; composition is not silently ignored. Final implementation requires W08 artifact projections and W09 final composition/registry. This is a documented downstream gap, so this handoff does not claim complete generic start parity.",
+      "basis": "Parent ownership review of issue907 and issue915; default strategies/deadlines required in W03 and implemented.",
+      "proof": [
+        "actual_http_default_strategies_deadline_and_idempotent_admission"
+      ]
+    },
+    {
+      "id": "W03-D07",
+      "source": "slopsearx_start_research unavailable-store degraded/ephemeral queued response",
+      "native": "Accepted Valkey-only ResearchStore failure returned as store_unavailable",
+      "change": "No successful ephemeral job is returned on an unavailable store; native admission fails closed and schedules no execution.",
+      "basis": "Accepted W01 authoritative Valkey-only shared state; source ephemeral jobs also never execute.",
+      "proof": [
+        "unavailable_authoritative_store_refuses_start_without_dispatch_or_ephemeral_success"
+      ]
+    }
+  ],
+  "review": "Parent accepted directions including D06 explicit downstream gap; final actual-proof acceptance remains parent-owned."
+}

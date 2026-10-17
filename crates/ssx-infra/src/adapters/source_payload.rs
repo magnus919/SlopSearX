@@ -7,7 +7,9 @@
 use super::source_json::{ProjectionError, Text, Value};
 mod batch;
 #[cfg(test)]
-pub(crate) use batch::{BATCH_PHASE, BatchPhase};
+pub(crate) use batch::{
+    BATCH_PHASE, BatchPhase, DEADLINE_PHASE, DeadlinePhase, observe_deadline_phase,
+};
 pub use batch::{Outcome, ProducedBatch, Skeleton};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -115,6 +117,13 @@ impl Projection<'_> {
             .map_err(|_| BudgetError::Resource)
     }
     async fn checkpoint(&self) -> Result<(), BudgetError> {
+        self.checkpoint_sample().await.map(|_| ())
+    }
+    // Retain the exact second finite-deadline check sample. Ordinary callers
+    // discard it; the final handoff can expose it to a test-only observer.
+    async fn checkpoint_sample(
+        &self,
+    ) -> Result<Option<(std::time::Instant, std::time::Instant)>, BudgetError> {
         if self
             .deadline
             .is_some_and(|deadline| std::time::Instant::now() >= deadline)
@@ -122,13 +131,13 @@ impl Projection<'_> {
             return Err(BudgetError::Deadline);
         }
         tokio::task::yield_now().await;
-        if self
+        let sample = self
             .deadline
-            .is_some_and(|deadline| std::time::Instant::now() >= deadline)
-        {
+            .map(|deadline| (deadline, std::time::Instant::now()));
+        if sample.is_some_and(|(deadline, checked_at)| checked_at >= deadline) {
             return Err(BudgetError::Deadline);
         }
-        Ok(())
+        Ok(sample)
     }
     async fn string(&mut self, text: &Text) -> Result<String, BudgetError> {
         if text.codepoints().len() > 4 * 1024 * 1024 {
@@ -367,6 +376,11 @@ pub enum FieldRef<'a> {
     Value(&'a Value),
     Text(&'a Text),
     SelectedTexts(&'a [&'a Text]),
+    /// Arbitrary borrowed author values; source payload sanitation stays shared.
+    SelectedValues(&'a [&'a Value]),
+    /// Engine-declared nested object keys with borrowed source values (CVSS).
+    /// Unlike top-level envelope compaction, nested null values are retained.
+    SelectedObject(&'a [(&'a str, &'a Value)]),
     /// Already scalar-only Expat fields; no temporary SourceText allocation.
     Scalar(&'a str),
     /// Borrowed scalar author views; descriptor storage is caller-owned/charged.
@@ -495,6 +509,25 @@ pub async fn envelope_budgeted(
             FieldRef::Value(value) => visit(value, 1, &mut state)?.await?,
             FieldRef::Text(text) => Out::String(state.string(text).await?),
             FieldRef::Scalar(text) => Out::String(state.scalar(text).await?),
+            FieldRef::SelectedValues(values) => {
+                let mut output = state.array(values.len())?;
+                for (index, value) in values.iter().enumerate() {
+                    if index % 128 == 0 {
+                        state.checkpoint().await?;
+                    }
+                    output.push(visit(value, 2, &mut state)?.await?);
+                }
+                Out::Array(output)
+            }
+            FieldRef::SelectedObject(fields) => {
+                let mut output = state.map(fields.len())?;
+                for (key, value) in fields {
+                    state.checkpoint().await?;
+                    let value = visit(value, 2, &mut state)?.await?;
+                    state.insert(&mut output, key, value).await?;
+                }
+                Out::Object(output)
+            }
             FieldRef::SelectedScalars(texts) => {
                 let mut output = state.array(texts.len())?;
                 for (index, text) in texts.iter().enumerate() {
@@ -1245,5 +1278,107 @@ mod generic_envelope_tests {
                 ssx_json::json!(["notes"])
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod selected_source_object_tests {
+    use super::*;
+    use ssx_owned_budget::Budget;
+    #[tokio::test]
+    async fn selected_nested_sources_preserve_exact_values_order_and_null() {
+        let source = super::super::source_json::from_slice(br#"{"huge":18446744073709551617,"nil":null,"tag":{"$serde_json::private::Number":"literal"},"version":"3.1","ref":"first"}"#, None).await.unwrap();
+        let huge = source.get("huge").unwrap();
+        let nil = source.get("nil").unwrap();
+        let tag = source.get("tag").unwrap();
+        let version = source.get("version").unwrap();
+        let object = [
+            ("score", nil),
+            ("severity", nil),
+            ("vector", tag),
+            ("version", version),
+            ("score", huge),
+        ];
+        let refs = [source.get("ref").unwrap(), tag, nil, huge];
+        let fields = [
+            Field {
+                name: "cvss",
+                value: FieldRef::SelectedObject(&object),
+            },
+            Field {
+                name: "references",
+                value: FieldRef::SelectedValues(&refs),
+            },
+        ];
+        let budget = Budget::new(1024 * 1024).unwrap();
+        let output = envelope_budgeted("security", "vulnerability", "cve", &fields, &budget, None)
+            .await
+            .unwrap();
+        let expected = ssx_json::from_str::<ssx_json::Value>(r#"{"score":18446744073709551617,"severity":null,"vector":{"$serde_json::private::Number":"literal"},"version":"3.1"}"#).unwrap();
+        assert_eq!(output.value()["data"]["cvss"], expected);
+        assert_eq!(
+            output.value()["data"]["cvss"]
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            vec!["score", "severity", "vector", "version"]
+        );
+        assert_eq!(
+            output.value()["data"]["references"][3],
+            *expected.get("score").unwrap()
+        );
+        assert_eq!(
+            output.value()["data"]["references"][2],
+            ssx_json::Value::Null
+        );
+        assert!(budget.snapshot().unwrap().used > 0);
+        drop(output);
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+    }
+    #[tokio::test]
+    async fn selected_sources_refuse_budget_deadline_and_release_cancelled_storage() {
+        let source = Value::String(Text::from("x".repeat(100000)));
+        let values = [&source];
+        let fields = [Field {
+            name: "references",
+            value: FieldRef::SelectedValues(&values),
+        }];
+        let small = Budget::new(1).unwrap();
+        assert!(matches!(
+            envelope_budgeted("security", "vulnerability", "cve", &fields, &small, None).await,
+            Err(BudgetError::Resource)
+        ));
+        assert_eq!(small.snapshot().unwrap().used, 0);
+        let budget = Budget::new(1024 * 1024).unwrap();
+        assert!(matches!(
+            envelope_budgeted(
+                "security",
+                "vulnerability",
+                "cve",
+                &fields,
+                &budget,
+                Some(std::time::Instant::now())
+            )
+            .await,
+            Err(BudgetError::Deadline)
+        ));
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+        let mut future = Box::pin(envelope_budgeted(
+            "security",
+            "vulnerability",
+            "cve",
+            &fields,
+            &budget,
+            None,
+        ));
+        let end = std::time::Instant::now() + std::time::Duration::from_secs(2);
+        while budget.snapshot().unwrap().used == 0 {
+            tokio::select! { _ = &mut future => panic!("projection must suspend with owned backing"), _=tokio::task::yield_now()=>{} }
+            assert!(std::time::Instant::now() < end);
+        }
+        drop(future);
+        assert_eq!(budget.snapshot().unwrap().used, 0);
     }
 }

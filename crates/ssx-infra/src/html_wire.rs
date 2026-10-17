@@ -6,14 +6,28 @@ pub enum Layout {
     DdgLite,
     DdgImage,
     Google,
+    ExploitDb,
+    MitreTechnique,
+    MitreGroup,
+    MitreSoftware,
 }
 impl Layout {
+    pub(crate) fn is_a10(self) -> bool {
+        matches!(
+            self,
+            Self::ExploitDb | Self::MitreTechnique | Self::MitreGroup | Self::MitreSoftware
+        )
+    }
     fn tag(self) -> u8 {
         match self {
             Self::DdgHtml => 0,
             Self::DdgLite => 1,
             Self::DdgImage => 2,
             Self::Google => 3,
+            Self::ExploitDb => 4,
+            Self::MitreTechnique => 5,
+            Self::MitreGroup => 6,
+            Self::MitreSoftware => 7,
         }
     }
     pub(super) fn from_tag(tag: u8) -> Result<Self, Error> {
@@ -22,6 +36,10 @@ impl Layout {
             1 => Ok(Self::DdgLite),
             2 => Ok(Self::DdgImage),
             3 => Ok(Self::Google),
+            4 => Ok(Self::ExploitDb),
+            5 => Ok(Self::MitreTechnique),
+            6 => Ok(Self::MitreGroup),
+            7 => Ok(Self::MitreSoftware),
             _ => Err(Error::Layout),
         }
     }

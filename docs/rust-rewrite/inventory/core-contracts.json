@@ -298,6 +298,15 @@
           "security"
         ],
         "cost_class": "free"
+      },
+      "native_successor": {
+        "owner": "A10",
+        "runtime_module": "crates/ssx-infra/src/adapters/cve.rs",
+        "factory": "register_vulnerability_with_parser",
+        "gate": "cargo xtask check A10",
+        "qualification": "docs/rust-rewrite/a10/qualification.json",
+        "contract_scope": "Full recorded source133/308/30 plus74 original parameterized test mappings; exact identity-bound diagnostic/header/typed-public differences and four correlated tiny-positive deadlines. Actual private HTTP/native child/storage consumer proofs.",
+        "limits": "Candidate full gate and exact-head CI still required; original Python runtime is retained until W09/G08. No production routing or global RSS claim."
       }
     },
     {
@@ -448,6 +457,15 @@
           "threat-intel"
         ],
         "cost_class": "free"
+      },
+      "native_successor": {
+        "owner": "A10",
+        "runtime_module": "crates/ssx-infra/src/adapters/epss.rs",
+        "factory": "register_vulnerability_with_parser",
+        "gate": "cargo xtask check A10",
+        "qualification": "docs/rust-rewrite/a10/qualification.json",
+        "contract_scope": "Full recorded source133/308/30 plus74 original parameterized test mappings; exact identity-bound diagnostic/header/typed-public differences and four correlated tiny-positive deadlines. Actual private HTTP/native child/storage consumer proofs.",
+        "limits": "Candidate full gate and exact-head CI still required; original Python runtime is retained until W09/G08. No production routing or global RSS claim."
       }
     },
     {
@@ -510,6 +528,15 @@
           "exploit"
         ],
         "cost_class": "free"
+      },
+      "native_successor": {
+        "owner": "A10",
+        "runtime_module": "crates/ssx-infra/src/adapters/exploitdb.rs",
+        "factory": "register_vulnerability_with_parser",
+        "gate": "cargo xtask check A10",
+        "qualification": "docs/rust-rewrite/a10/qualification.json",
+        "contract_scope": "Full recorded source133/308/30 plus74 original parameterized test mappings; exact identity-bound diagnostic/header/typed-public differences and four correlated tiny-positive deadlines. Actual private HTTP/native child/storage consumer proofs.",
+        "limits": "Candidate full gate and exact-head CI still required; original Python runtime is retained until W09/G08. No production routing or global RSS claim."
       }
     },
     {
@@ -868,6 +895,15 @@
           "reference"
         ],
         "cost_class": "free"
+      },
+      "native_successor": {
+        "owner": "A10",
+        "runtime_module": "crates/ssx-infra/src/adapters/mitreattack.rs",
+        "factory": "register_vulnerability_with_parser",
+        "gate": "cargo xtask check A10",
+        "qualification": "docs/rust-rewrite/a10/qualification.json",
+        "contract_scope": "Full recorded source133/308/30 plus74 original parameterized test mappings; exact identity-bound diagnostic/header/typed-public differences and four correlated tiny-positive deadlines. Actual private HTTP/native child/storage consumer proofs.",
+        "limits": "Candidate full gate and exact-head CI still required; original Python runtime is retained until W09/G08. No production routing or global RSS claim."
       }
     },
     {
@@ -985,6 +1021,15 @@
           "security"
         ],
         "cost_class": "free"
+      },
+      "native_successor": {
+        "owner": "A10",
+        "runtime_module": "crates/ssx-infra/src/adapters/nvd.rs",
+        "factory": "register_vulnerability_with_parser",
+        "gate": "cargo xtask check A10",
+        "qualification": "docs/rust-rewrite/a10/qualification.json",
+        "contract_scope": "Full recorded source133/308/30 plus74 original parameterized test mappings; exact identity-bound diagnostic/header/typed-public differences and four correlated tiny-positive deadlines. Actual private HTTP/native child/storage consumer proofs.",
+        "limits": "Candidate full gate and exact-head CI still required; original Python runtime is retained until W09/G08. No production routing or global RSS claim."
       }
     },
     {

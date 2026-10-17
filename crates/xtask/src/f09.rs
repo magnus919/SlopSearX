@@ -141,7 +141,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         "validated_command_preserves_specialist_values_and_pagination_truth",
         "local_time_postfilter_requires_actual_publication_evidence",
         "source_public_denials_and_research_dispatch_policy",
-        "legacy_false_flag_cannot_confer_an_intent_grant",
+        "default_template_and_explicit_research_intent_grants_remain_distinct",
         "recovered_research_rejects_unknown_and_media_intents_before_dispatch",
     ];
     run_inventory(

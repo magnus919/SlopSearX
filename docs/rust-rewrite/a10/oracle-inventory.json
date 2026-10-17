@@ -1,0 +1,71 @@
+{
+  "plan_id": "A10",
+  "retirement_gate": "G08",
+  "runtime_or_mandatory_native_gate_dependency": false,
+  "entries": [
+    {
+      "path": "docs/rust-rewrite/a10/capture_regressions.py",
+      "source_sha256": "0845f8b68a05999315f12d37e3b37b8059601f5bc8fb3b137840eaacf843ed92",
+      "purpose": "optional manual original regression assertions + mocked outbound and pure parsing observations; never implements native adapter or native gate",
+      "admission": "explicit --allow-original-oracle, Python3.14.7/Unicode16 guard and real socket/DNS refusal before backend imports; explicit RuntimeError survives python-O",
+      "input_authority": "source-test-inventory.json binds immutable five engines and five test modules at baseline",
+      "output_policy": "exclusive create only; never overwrite historical captures; original pytest source does not change",
+      "original_imports": [
+        "engines/{cve,nvd,epss,exploitdb,mitreattack}.py",
+        "slopsearx.adapter",
+        "tests/test_{cve,nvd,epss,exploitdb,mitreattack}.py"
+      ],
+      "fixture_source": "existing source regression inline mocks; synthetic private payloads; no live provider observations",
+      "network": "httpx.MockTransport only; all real DNS/connect/connect_ex/sendto/create_connection blocked"
+    },
+    {
+      "path": "docs/rust-rewrite/a10/capture_boundaries.py",
+      "source_sha256": "5b7c7ef8db04c273856573d1c197ca58bccc7fb4bd7e4b6120f61ddf1ad73240",
+      "purpose": "optional manual original 308 synthetic boundary searches; never native implementation/gate producer",
+      "admission": "explicit --allow-original-oracle RuntimeError before backend imports; exact Python3.14.7/Unicode16; socket/DNS refusal before imports; denial under python-O",
+      "input_authority": {
+        "path": "docs/rust-rewrite/a10/boundary-inputs-v1.json",
+        "sha256": "56019967cf96d0a446ccb2c37d249a9f8bb43bd38b50974f35f45c3990e5f96b",
+        "cases": 308,
+        "source": "synthetic deterministic variations over immutable source regression payloads and source branch conditions"
+      },
+      "output_policy": "exclusive create; unchanged original ten files plus fixed input SHA checked after all actual calls; unhandled original exceptions are captured explicitly per case, never fabricated AdapterResponse",
+      "network": "httpx.MockTransport only via original MockHTTP seam; real connect/DNS/sendto blocked",
+      "runtime_or_mandatory_native_gate_dependency": false,
+      "prior_executed_sources": [
+        {
+          "source_sha256": "622477de5d1b90d93bb0d7cca683ccd9300c32c23f38a00ca033f1ff266ba838",
+          "receipt": "/private/tmp/a10-original-boundary-capture-v1/receipt.json",
+          "result": "terminal source exception at NVD textual max before original try; zero-byte exclusive output retained, partial actual stdout retained; not a completed capture"
+        },
+        {
+          "source_sha256": "82119317e6a9f7c20688e9cb7fdfdb5c0ad5ff4a8a94e94477c8aa9121cb6b88",
+          "receipt": "/private/tmp/a10-original-boundary-capture-v2/receipt.json",
+          "output": "docs/rust-rewrite/a10/source-boundaries-v2.json",
+          "output_sha256": "dad7065badf627e9feddf3e66d9ddb62e9b94a87cba3d7f0d356894a1dfe406d",
+          "result": "308 actual unique completed original boundary observations; immutable"
+        },
+        {
+          "source_sha256": "76eeca33481a704c54421c26cd1217097810c643433fe78e7a830246c099bcb1",
+          "receipt": "/private/tmp/a10-original-supplement-capture-v1/receipt.json",
+          "output": "docs/rust-rewrite/a10/source-supplement-v1.json",
+          "output_sha256": "9d75f2b5dc508a15c557027be8c70ec9fe8ec660d6ac613086e39561c9965353",
+          "result": "30 actual unique completed original supplemental boundary observations; immutable"
+        }
+      ],
+      "additional_manual_profiles": [
+        {
+          "argument": "--inputs boundary-supplement-inputs-v1.json",
+          "path": "docs/rust-rewrite/a10/boundary-supplement-inputs-v1.json",
+          "sha256": "4c5e9ddfb9eef7335c8ff502fd6721c45f854fbd90aa43fd9bb48c877e14b32b",
+          "cases": 30,
+          "purpose": "reachable NVD Unicode negative slicing, ExploitDB arbitrary integer valid-empty, raw container max and CWE Unicode order; no native implementation dependency"
+        }
+      ],
+      "source_sha256_role": "current formatted producer; not an execution claim",
+      "current_producer_sha256": "5b7c7ef8db04c273856573d1c197ca58bccc7fb4bd7e4b6120f61ddf1ad73240",
+      "last_executed_source_sha256": "76eeca33481a704c54421c26cd1217097810c643433fe78e7a830246c099bcb1",
+      "producer_format_amendment": "docs/rust-rewrite/a10/evidence/producer-format-and-failed-output-archive-v1.json"
+    }
+  ]
+}

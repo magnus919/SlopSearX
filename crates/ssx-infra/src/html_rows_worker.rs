@@ -16,22 +16,45 @@ pub(super) struct Request {
     pub(super) count: usize,
     pub(super) allowance: usize,
 }
+enum Results {
+    A05(OwnedVec<super::child_rows::Row>),
+    A10(crate::adapters::vulnerability_html::Rows),
+}
 impl Request {
     pub(super) fn encode(&self) -> Result<[u8; HEADER], &'static str> {
         if self.count > MAX_POINTS || self.allowance == 0 || self.allowance > MAX_SEARCH_BYTES {
             return Err("invalid HTML rows allowance/count");
+        }
+        if self.layout.is_a10()
+            != matches!(
+                self.limit,
+                RowLimit::Slice(_) | RowLimit::SliceAll | RowLimit::InvalidSlice
+            )
+            || (matches!(
+                self.layout,
+                Layout::MitreTechnique | Layout::MitreGroup | Layout::MitreSoftware
+            ) && !matches!(self.limit, RowLimit::SliceAll))
+        {
+            return Err("HTML rows layout/limit mismatch");
         }
         let layout = match self.layout {
             Layout::DdgHtml => 0,
             Layout::DdgLite => 1,
             Layout::DdgImage => 2,
             Layout::Google => 3,
+            Layout::ExploitDb => 4,
+            Layout::MitreTechnique => 5,
+            Layout::MitreGroup => 6,
+            Layout::MitreSoftware => 7,
         };
         let (tag, bits) = match self.limit {
             RowLimit::Number(number) => (0, number.to_bits()),
             RowLimit::Unlimited => (1, 0),
             RowLimit::Invalid(tag @ 0..=3) => (tag + 2, 0),
             RowLimit::Invalid(_) => return Err("invalid HTML rows limit"),
+            RowLimit::Slice(n) => (6, u64::from_be_bytes(n.to_be_bytes())),
+            RowLimit::SliceAll => (7, 0),
+            RowLimit::InvalidSlice => (8, 0),
         };
         let mut bytes = [0; HEADER];
         bytes[..8].copy_from_slice(&[b'A', b'0', b'5', b'H', VERSION, 2, layout, tag]);
@@ -49,6 +72,10 @@ impl Request {
             1 => Layout::DdgLite,
             2 => Layout::DdgImage,
             3 => Layout::Google,
+            4 => Layout::ExploitDb,
+            5 => Layout::MitreTechnique,
+            6 => Layout::MitreGroup,
+            7 => Layout::MitreSoftware,
             _ => return Err("invalid HTML rows layout"),
         };
         let bits = u64::from_be_bytes(bytes[8..16].try_into().unwrap());
@@ -56,6 +83,9 @@ impl Request {
             (0, bits) => RowLimit::Number(f64::from_bits(bits)),
             (1, 0) => RowLimit::Unlimited,
             (tag @ 2..=5, 0) => RowLimit::Invalid(tag - 2),
+            (6, bits) => RowLimit::Slice(i64::from_be_bytes(bits.to_be_bytes())),
+            (7, 0) => RowLimit::SliceAll,
+            (8, 0) => RowLimit::InvalidSlice,
             _ => return Err("invalid HTML rows limit"),
         };
         let request = Self {
@@ -70,13 +100,14 @@ impl Request {
         Ok(request)
     }
 }
-pub(super) const ERRORS: [&str; 6] = [
+pub(super) const ERRORS: [&str; 7] = [
     "Document is empty",
     "Unicode strings with encoding declaration are not supported. Please use bytes input or XML fragments without declaration.",
     "'>=' not supported between instances of 'int' and 'NoneType'",
     "'>=' not supported between instances of 'int' and 'str'",
     "'>=' not supported between instances of 'int' and 'list'",
     "'>=' not supported between instances of 'int' and 'dict'",
+    "slice indices must be integers or None or have an __index__ method",
 ];
 fn failure(output: &mut impl Write, tag: u8, code: u8) -> std::io::Result<()> {
     output.write_all(&7u64.to_be_bytes())?;
@@ -131,23 +162,45 @@ pub(super) fn worker(input: &mut impl Read, output: &mut impl Write) -> Result<(
                 _ => (3, 0),
             },
         )?;
-        let results =
+        let results = if request.layout.is_a10() {
+            crate::adapters::vulnerability_html::extract(
+                &doc,
+                points.as_slice(),
+                request.layout,
+                request.limit,
+                &budget,
+            )
+            .map(Results::A10)
+        } else {
             crate::adapters::html_extract_rows(&doc, request.layout, request.limit, &budget)
-                .map_err(|error| match error {
-                    super::OperationFailure::Resource => (1, 0),
-                    super::OperationFailure::Parse(message) => ERRORS
-                        .iter()
-                        .position(|s| *s == message)
-                        .map(|code| (2, code as u8))
-                        .unwrap_or((3, 0)),
-                    _ => (3, 0),
-                })?;
+                .map(Results::A05)
+        }
+        .map_err(|error| match error {
+            super::OperationFailure::Resource => (1, 0),
+            super::OperationFailure::Parse(message) => ERRORS
+                .iter()
+                .position(|s| *s == message)
+                .map(|code| (2, code as u8))
+                .unwrap_or((3, 0)),
+            _ => (3, 0),
+        })?;
         drop(doc);
         drop(points);
         Ok(results)
     })();
     match result {
-        Ok(results) => {
+        Ok(Results::A10(results)) => {
+            match crate::adapters::vulnerability_wire::size(request.layout, &results) {
+                Ok(size) if size <= request.allowance => {}
+                Ok(_) | Err(super::OperationFailure::Resource) => {
+                    return failure(output, 1, 0).map_err(|error| error.to_string());
+                }
+                Err(_) => return failure(output, 3, 0).map_err(|error| error.to_string()),
+            }
+            crate::adapters::vulnerability_wire::write(request.layout, &results, output)
+                .map_err(|error| error.to_string())
+        }
+        Ok(Results::A05(results)) => {
             let mut rows = match OwnedVec::with_capacity(&budget, results.len()) {
                 Ok(rows) => rows,
                 Err(_) => return failure(output, 1, 0).map_err(|error| error.to_string()),

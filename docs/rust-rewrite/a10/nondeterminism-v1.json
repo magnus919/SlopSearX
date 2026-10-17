@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "purpose": "Finite correlated completion variants for exactly four positive deadline identities; overrides historical strict-v1 exact dispatch count only for these identities",
+  "identities": [
+    "a10-boundary/exploitdb/timeout-0.25",
+    "a10-boundary/exploitdb/timeout-True",
+    "a10-boundary/mitreattack/timeout-True",
+    "a10-boundary/mitreattack/timeout-0.25"
+  ],
+  "branches": [
+    {
+      "outcome": "exact original full Success",
+      "dispatches": 1,
+      "unused_source_exchanges": 0,
+      "condition": "complete exact reviewed native request; exactly one actual finite owned-operation deadline and one terminal projection handoff stamp captured by a per-future test observer; deadlines identical and the exact timestamp used by the real second terminal check strictly before that deadline; no second clock sample and no hard-preemption or caller-return-time claim"
+    },
+    {
+      "outcome": "exact empty Timeout response",
+      "dispatches": 1,
+      "unused_source_exchanges": 0,
+      "condition": "complete exact reviewed native request"
+    },
+    {
+      "outcome": "exact empty Timeout response",
+      "dispatches": 0,
+      "unused_source_exchanges": 1,
+      "condition": "exact original source request remains unused; no dispatch observed"
+    }
+  ],
+  "strict_invariants": [
+    "All complete source/native values outside these four IDs remain exact",
+    "All fifteen nonpositive timeout cases still require zero dispatch",
+    "No arbitrary Error, partial result, changed request, additional dispatch or unmatched unused exchange",
+    "No artificial sleeps, slowdowns or clock changes used to force a corpus outcome"
+  ],
+  "retained_strict_failure": {
+    "receipt": "/private/tmp/a10-identity-bound-replay-v1/receipt.json",
+    "log_sha256": "1cdec891735d2c48435a0e4e6f6122c916a331ffc4d4740754c859301060fa0f",
+    "outer_exit_mismatch": "receipt aggregate101, final Clippy0 leaked as outer exit0; immutable runner preserved, future runners corrected"
+  },
+  "retained_fourth_identity_failure": {
+    "receipt": "/private/tmp/a10-tiny-deadline-qualification-v1/receipt.json",
+    "log_sha256": "ae88e8ff8b474cb71d678317d214d528699186a1014f7e8907c726b05f9209f9",
+    "difference": "Only new ExploitDB true/1ms output difference; all451 prior difference values exact; aggregate runner101"
+  },
+  "retained_hosted_ci_failures": [
+    {
+      "architecture": "amd64",
+      "head": "cebd8973d0cd0fc47b0080dac6484e3185638753",
+      "raw_log": "/private/tmp/pr1000-cebd-amd-job.log",
+      "sha256": "83fa9cbb45dd3e03f22ed4e55ba645403d476c34612bc0ec376cce80aca5e24f",
+      "failure": "F03 rejected exact source success for exploitdb/timeout-True because the earlier caller-observed floor was false; actual operation deadline overrun unproven"
+    },
+    {
+      "architecture": "arm64",
+      "head": "cebd8973d0cd0fc47b0080dac6484e3185638753",
+      "raw_log": "/private/tmp/pr1000-cebd-arm-job.log",
+      "sha256": "ca72e646b269b10069cb4c833f7531c30bedf6fb856261404b2183de09713975",
+      "failure": "F09 infra lib exact success assertion received Spawn(Text file busy os error 26); inherited writable descriptor is a hypothesis, not an established cause"
+    }
+  ]
+}

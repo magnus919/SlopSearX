@@ -1,0 +1,2217 @@
+{
+  "schema_version": 1,
+  "purpose": "immutable optional original boundary observations; not native acceptance",
+  "head": "0a0743904264b0054e14cb19cdd78af7d31eb60c",
+  "producer_sha256": "76eeca33481a704c54421c26cd1217097810c643433fe78e7a830246c099bcb1",
+  "python": "3.14.7",
+  "unicode": "16.0.0",
+  "source_sha256": {
+    "engines/cve.py": "b2e4f7177a3b09758305ef3c89c80e205e2d5551ca07c786ef3c8234988a8851",
+    "tests/test_cve.py": "c2e93dcbcc94fc960ef6e7ca2e92f2e0510444ae60a1394396b0e4166141cb7f",
+    "engines/nvd.py": "ef465e8decab33aa61e8e7ec1ea5c9b6352a33a803d6c43694600b39a37bc64d",
+    "tests/test_nvd.py": "b9c168244cb384741b59ce068f6f8b177bf8944e9eda690fe6b152a609dc4b55",
+    "engines/epss.py": "e6df882daf4f6324dac834289c7c12358d38ab1e729cd695aca6b6676a364f04",
+    "tests/test_epss.py": "5a3f0d06a01c2115dcea270a46ea808449bc0e6ce0c29b5793d18228b41d8830",
+    "engines/exploitdb.py": "69f1502ba59882e962230a052a87a15f24034eb0d678ae6f9755acb0b53aa26b",
+    "tests/test_exploitdb.py": "ac988665920d7747d5584af866953780149758b577e061642626bd8a8b422006",
+    "engines/mitreattack.py": "f0c2dd0735b5392aa84e4a6e252542b441d6b6954442860e42d86bfdb55d96c4",
+    "tests/test_mitreattack.py": "f7155da58c8eb1cb5bab046434ac5952e29a229eedcc404addf0fc20dc65cbff",
+    "docs/rust-rewrite/a10/boundary-supplement-inputs-v1.json": "4c5e9ddfb9eef7335c8ff502fd6721c45f854fbd90aa43fd9bb48c877e14b32b"
+  },
+  "source_inputs_unchanged": true,
+  "records": [
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0--1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "28"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTkifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0--2",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -2
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-2&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "28"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTkifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0-0",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 0
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=0&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "28"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTkifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-0-1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "28"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTkifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1--1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "34"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1--2",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -2
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-2&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "34"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1-0",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 0
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=0&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "34"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-1-1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "34"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2--1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "40"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTlcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2--2",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -2
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-2&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "40"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTlcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2-0",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 0
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=0&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "40"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTlcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-2-1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "40"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJcdTAwZTlcdWQ4M2RcdWRlMDAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3--1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "41"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJhXHUwMGU5XHVkODNkXHVkZTAwIn0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3--2",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -2
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-2&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "41"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJhXHUwMGU5XHVkODNkXHVkZTAwIn0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3-0",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 0
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=0&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "41"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJhXHUwMGU5XHVkODNkXHVkZTAwIn0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-3-1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "41"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiJhXHUwMGU5XHVkODNkXHVkZTAwIn0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4--1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "22"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiIifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4--2",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": -2
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=-2&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "22"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiIifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4-0",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 0
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=0&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "22"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiIifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/codepoint-slice-4-1",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 1
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "22"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOiIifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-positive",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 10
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=10&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "448"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjoxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCwicmVjb3Jkc0ZpbHRlcmVkIjowfQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-negative",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 10
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=10&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "449"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjotMTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAsInJlY29yZHNGaWx0ZXJlZCI6MH0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Exploit-DB returned unparseable or incomplete result records",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-filtered",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 10
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=10&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "848"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjoxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCwicmVjb3Jkc0ZpbHRlcmVkIjoxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMH0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Exploit-DB returned unparseable or incomplete result records",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/huge-negative-filtered",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 10
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=10&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "849"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjoxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCwicmVjb3Jkc0ZpbHRlcmVkIjotMTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDB9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Exploit-DB returned unparseable or incomplete result records",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/boolean-total",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 10
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=10&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "51"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjp0cnVlLCJyZWNvcmRzRmlsdGVyZWQiOjB9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Exploit-DB returned unparseable or incomplete result records",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/negative-zero-total",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 10
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=10&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "51"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjotMC4wLCJyZWNvcmRzRmlsdGVyZWQiOjB9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/raw-max-empty-array",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": []
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "48"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjoxLCJyZWNvcmRzRmlsdGVyZWQiOjB9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/raw-max-array",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": [
+          null,
+          true,
+          100000000000000000000000000000000000000000000000000000000000000000000000000000000
+        ]
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=&length=true&length=100000000000000000000000000000000000000000000000000000000000000000000000000000000&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "48"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjoxLCJyZWNvcmRzRmlsdGVyZWQiOjB9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/exploitdb/raw-max-object",
+      "source_test": null,
+      "engine": "exploitdb",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": {
+          "x": "\u00e9",
+          "n": null
+        }
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://www.exploit-db.com/search?draw=1&start=0&length=%7B%27x%27%3A+%27%C3%A9%27%2C+%27n%27%3A+None%7D&order%5B0%5D%5Bcolumn%5D=0&order%5B0%5D%5Bdir%5D=desc&columns%5B0%5D%5Bdata%5D=date_published&columns%5B0%5D%5Bname%5D=date_published&cve=2024-12345",
+            "headers": [
+              [
+                "host",
+                "www.exploit-db.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              [
+                "accept",
+                "application/json,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"
+              ],
+              [
+                "accept-language",
+                "en-US,en;q=0.9"
+              ],
+              [
+                "x-requested-with",
+                "XMLHttpRequest"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "48"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjpbXSwicmVjb3Jkc1RvdGFsIjoxLCJyZWNvcmRzRmlsdGVyZWQiOjB9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "a10-supplement/nvd/cwe-unicode-order-and-distinct-forms",
+      "source_test": null,
+      "engine": "nvd",
+      "operation": "search",
+      "query": "CVE-2024-12345",
+      "params": {
+        "page": 8,
+        "language": "fr"
+      },
+      "config": {
+        "enabled": true,
+        "max_results": 10
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=10&cveIds=CVE-2024-12345",
+            "headers": [
+              [
+                "host",
+                "services.nvd.nist.gov"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "application/json"
+              ],
+              [
+                "content-length",
+                "241"
+              ]
+            ],
+            "body_base64": "eyJ2dWxuZXJhYmlsaXRpZXMiOlt7ImN2ZSI6eyJpZCI6IkNWRS0yMDI0LTEyMzQ1IiwiZGVzY3JpcHRpb25zIjpbeyJsYW5nIjoiZW4iLCJ2YWx1ZSI6ImRlc2MifV0sIndlYWtuZXNzZXMiOlt7ImRlc2NyaXB0aW9uIjpbeyJ2YWx1ZSI6IkNXRS0wIn0seyJ2YWx1ZSI6IkNXRS0wIn0seyJ2YWx1ZSI6Ilx1MDBlOSJ9LHsidmFsdWUiOiJlXHUwMzAxIn0seyJ2YWx1ZSI6Ilx1MDBlOSJ9LHsidmFsdWUiOiIgICJ9XX1dfX1dfQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-12345",
+            "title": "CVE-2024-12345",
+            "content": "desc | CWE-0 | \u00e9 | e\u0301 |   ",
+            "engine": "nvd",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "security",
+              "type": "vulnerability",
+              "schema_version": 1,
+              "data": {
+                "cve_id": "CVE-2024-12345",
+                "description": "desc",
+                "cwe_ids": [
+                  "CWE-0",
+                  "\u00e9",
+                  "e\u0301",
+                  "  "
+                ]
+              },
+              "provenance": {
+                "engine": "nvd",
+                "adapter_fields": [
+                  "cve_id",
+                  "description",
+                  "cwe_ids"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ],
+  "real_network_allowed": false,
+  "latency_normalization": "remove only original search latency_ms"
+}

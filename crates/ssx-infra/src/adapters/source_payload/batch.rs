@@ -28,6 +28,18 @@ async fn observe_phase(phase: BatchPhase) {
         std::future::pending::<()>().await;
     }
 }
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum DeadlinePhase {
+    Operation(Instant),
+    Handoff(Option<(Instant, Instant)>),
+}
+#[cfg(test)]
+tokio::task_local! { pub(crate) static DEADLINE_PHASE: std::sync::Arc<dyn Fn(DeadlinePhase)+Send+Sync>; }
+#[cfg(test)]
+pub(crate) fn observe_deadline_phase(phase: DeadlinePhase) {
+    let _ = DEADLINE_PHASE.try_with(|observer| observer(phase));
+}
 pub struct Skeleton<'a> {
     pub url: &'a str,
     pub title: &'a str,
@@ -195,7 +207,9 @@ impl<'a> ProducedBatch<'a> {
         if outcome.status != EngineStatus::Ok {
             self.results.clear();
         }
-        self.state.checkpoint().await?;
+        let _handoff = self.state.checkpoint_sample().await?;
+        #[cfg(test)]
+        observe_deadline_phase(DeadlinePhase::Handoff(_handoff));
         let results = std::mem::take(&mut self.results);
         Ok(AdapterResponse {
             results,
@@ -214,6 +228,41 @@ impl<'a> ProducedBatch<'a> {
 mod tests {
     use super::*;
     use crate::adapters::source_json::{Text, Value};
+    // Poll the existing two cooperative yields separately. Expire the real
+    // absolute deadline only after entering the terminal checkpoint; no corpus
+    // replay is delayed or clock-modified by this focused control.
+    #[tokio::test]
+    async fn expired_terminal_handoff_refuses_rows_and_drains_without_success_stamp() {
+        use std::{future::Future, task::Poll};
+        let budget = Budget::new(8192).unwrap();
+        let deadline = Instant::now() + std::time::Duration::from_secs(2);
+        let mut batch = ProducedBatch::new(&budget, 1, Some(deadline)).unwrap();
+        batch.push(row("content"), None).await.unwrap();
+        let stamps = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let captured = stamps.clone();
+        let observer: std::sync::Arc<dyn Fn(DeadlinePhase) + Send + Sync> =
+            std::sync::Arc::new(move |phase| captured.lock().unwrap().push(phase));
+        let mut future = Box::pin(DEADLINE_PHASE.scope(
+            observer,
+            batch.into_adapter_response(outcome(EngineStatus::Ok)),
+        ));
+        for phase in ["initial", "terminal"] {
+            std::future::poll_fn(|cx| {
+                assert!(
+                    matches!(future.as_mut().poll(cx), Poll::Pending),
+                    "missing {phase} handoff yield"
+                );
+                Poll::Ready(())
+            })
+            .await;
+        }
+        assert!(stamps.lock().unwrap().is_empty());
+        tokio::time::sleep_until(tokio::time::Instant::from_std(deadline)).await;
+        assert!(matches!(future.await, Err(BudgetError::Deadline)));
+        assert!(stamps.lock().unwrap().is_empty());
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+        println!("A10_DEADLINE_COMPLETE expired-terminal-handoff");
+    }
     fn row(content: &str) -> Skeleton<'_> {
         Skeleton {
             url: "https://example.test/1",

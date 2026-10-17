@@ -529,7 +529,6 @@ mod cleanup_tests {
     }
     #[cfg(unix)]
     fn fixture_at_stamp(body: &str, stamp: u128) -> (PathBuf, PathBuf) {
-        use std::os::unix::fs::PermissionsExt;
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         for _ in 0..64 {
             let sequence = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -549,7 +548,6 @@ mod cleanup_tests {
                 format!("#!/bin/sh\necho $$ > '{}'\n{body}\n", pid.display()),
             )
             .unwrap();
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
             eprintln!(
                 "private fixture: helper={} pidfile={}",
                 path.display(),
@@ -821,6 +819,93 @@ mod cleanup_tests {
             drop(writer);
             cleanup_fixture(path, pidfile);
         }
+    }
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup()
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let (path, pidfile) =
+            fixture("/bin/cat >/dev/null; printf '\\000\\000\\000\\000\\000\\000\\000\\002ok'");
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let held_writer = std::fs::OpenOptions::new().write(true).open(&path).unwrap();
+        let direct_error = std::process::Command::new(&path).spawn().unwrap_err();
+        assert_eq!(direct_error.raw_os_error(), Some(26));
+        let direct = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
+        assert!(!direct.inner.shell_fixture);
+        assert_eq!(
+            direct
+                .exchange(
+                    Instant::now() + std::time::Duration::from_secs(2),
+                    vec![],
+                    vec![],
+                    2
+                )
+                .await,
+            Err(ProcessError::Spawn(direct_error.to_string()))
+        );
+        direct.shutdown().await.unwrap();
+        assert!(!pidfile.exists());
+        let interpreted = fixture_pool(path.clone());
+        let (payload, budget, dropped) = charged_payload();
+        let accounting = Arc::new(Semaphore::new(1));
+        let lease = Arc::new(accounting.clone().acquire_owned().await.unwrap());
+        assert_eq!(
+            interpreted
+                .exchange_with_lease(
+                    Instant::now() + std::time::Duration::from_secs(2),
+                    vec![],
+                    payload,
+                    2,
+                    lease
+                )
+                .await,
+            Ok(b"ok".to_vec())
+        );
+        interpreted.shutdown().await.unwrap();
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+        assert!(dropped.load(std::sync::atomic::Ordering::SeqCst));
+        assert_eq!(accounting.available_permits(), 1);
+        assert_eq!(interpreted.available_slots(), 1);
+        assert!(pid_gone(&actual_pid(&pidfile).await));
+        drop(held_writer);
+        cleanup_fixture(path, pidfile);
+        println!(
+            "LINUX_ETXTBSY_CONTROL direct-rejected:interpreter-exact-protocol:reaped:released"
+        );
+    }
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease() {
+        let (path, pidfile) = fixture("exit 99");
+        let missing = path.with_extension("missing");
+        let expected = std::process::Command::new(&missing)
+            .spawn()
+            .unwrap_err()
+            .to_string();
+        let pool = ProcessPool::new(missing, NonZeroUsize::new(1).unwrap()).unwrap();
+        assert!(!pool.inner.shell_fixture);
+        let (payload, budget, dropped) = charged_payload();
+        let accounting = Arc::new(Semaphore::new(1));
+        let lease = Arc::new(accounting.clone().acquire_owned().await.unwrap());
+        assert_eq!(
+            pool.exchange_with_lease(
+                Instant::now() + std::time::Duration::from_secs(2),
+                vec![],
+                payload,
+                2,
+                lease
+            )
+            .await,
+            Err(ProcessError::Spawn(expected))
+        );
+        pool.shutdown().await.unwrap();
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+        assert!(dropped.load(std::sync::atomic::Ordering::SeqCst));
+        assert_eq!(accounting.available_permits(), 1);
+        assert!(!pidfile.exists());
+        cleanup_fixture(path, pidfile);
+        println!("A10_FIXTURE_COMPLETE direct-spawn-error-released");
     }
     #[cfg(unix)]
     #[tokio::test]

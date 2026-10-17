@@ -1,0 +1,33 @@
+{
+  "selected_raw_copies": [
+    {
+      "file": "old-selected.stdout.base64.txt",
+      "private_source_sha256": "6d3be7e75805719496face696544c433319a7fd1ae1fdeb53fd41c8dbadac98d",
+      "published_sha256": "9d1e129fabf1edcf6c675c1364ebe16d1f62e7759e8c4267f8124313f05b6fed",
+      "operation": "lossless RFC4648 Base64, 80 columns/final newline; decoding reproduces private raw bytes exactly; encoded bytes/hash differ from raw",
+      "decoded_raw_sha256": "6d3be7e75805719496face696544c433319a7fd1ae1fdeb53fd41c8dbadac98d"
+    },
+    {
+      "file": "old-selected.stderr.txt",
+      "private_source_sha256": "336da70d3ad963e00ce5b59e16cba6b517557517728f9e0ec6e88bad72b0a616",
+      "published_sha256": "336da70d3ad963e00ce5b59e16cba6b517557517728f9e0ec6e88bad72b0a616",
+      "operation": "byte-identical selected causal stdout/stderr only; clean allowlisted child env"
+    },
+    {
+      "file": "new-selected.stdout.base64.txt",
+      "private_source_sha256": "604cded8ccf5bd98535db54880882f0501506349c6ac626970a1b413a8e16b79",
+      "published_sha256": "a1886f7ee745ca149835076b0399180130211b3b383f5bf529475f4e5b0e87af",
+      "operation": "lossless RFC4648 Base64, 80 columns/final newline; decoding reproduces private raw bytes exactly; encoded bytes/hash differ from raw",
+      "decoded_raw_sha256": "604cded8ccf5bd98535db54880882f0501506349c6ac626970a1b413a8e16b79"
+    },
+    {
+      "file": "new-selected.stderr.txt",
+      "private_source_sha256": "9ee854bfe2aa99d432910ff90497a7f89462039084ebdd091a12aa79a4653c7a",
+      "published_sha256": "9ee854bfe2aa99d432910ff90497a7f89462039084ebdd091a12aa79a4653c7a",
+      "operation": "byte-identical selected causal stdout/stderr only; clean allowlisted child env"
+    }
+  ],
+  "metadata_derivation": "allowlisted command/result/source/binary fields only; excludes all environment objects and private image/archive paths",
+  "stdout_stderr_secret_value_scan": "checked privately against inherited credential values; no matches; no names or values emitted",
+  "packaging_correction": "The end-of-file hook changed the plaintext stdout trailing blank lines; preserve original private raws and publish lossless Base64 instead, without hook exemptions."
+}

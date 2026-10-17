@@ -458,44 +458,47 @@ fn source_public_denials_and_research_dispatch_policy() {
             ssx_json::from_value(c["query"].clone()).unwrap();
         let p = ScopeProposal::from_research_query(&q);
         let result = s.authorize(p);
-        if c["name"].as_str() == Some("legacy-no-intent-grant") {
-            assert!(c["expected"].is_null(), "retain actual source acceptance");
-            assert_eq!(
-                result.unwrap_err().message,
-                "science requires the science grant"
-            );
-        } else {
-            assert_eq!(
-                result
-                    .err()
-                    .map(|e| json!(e.message))
-                    .unwrap_or(Value::Null),
-                c["expected"],
-                "{}",
-                c["name"]
-            );
-        }
+        assert_eq!(
+            result
+                .err()
+                .map(|e| json!(e.message))
+                .unwrap_or(Value::Null),
+            c["expected"],
+            "{}",
+            c["name"]
+        );
     }
 }
 
 #[test]
-fn legacy_false_flag_cannot_confer_an_intent_grant() {
+fn default_template_and_explicit_research_intent_grants_remain_distinct() {
     let mut s = service();
     s.policy.grants.insert("research".into());
-    let q = ssx_domain::research::ResearchQuery {
+    let mut q = ssx_domain::research::ResearchQuery {
         query: "query".into(),
         intent: "science".into(),
         engines: vec!["alpha".into()],
         requires_intent_grant: false,
         ..Default::default()
     };
+    // Source-generated default templates need research, not a specialist grant.
+    // Caller-provided queries set the flag true at the admission boundary.
     let mut calls = 0;
-    let result = s.authorize(ScopeProposal::from_research_query(&q));
-    assert!(result.is_err());
-    if let Ok(t) = result {
-        s.with_revalidated(&t, |_| calls += 1).unwrap();
-    }
-    assert_eq!(calls, 0);
+    let template = s.authorize(ScopeProposal::from_research_query(&q)).unwrap();
+    s.with_revalidated(&template, |_| calls += 1).unwrap();
+    q.requires_intent_grant = true;
+    assert!(s.authorize(ScopeProposal::from_research_query(&q)).is_err());
+    s.policy.grants.insert("science".into());
+    let explicit = s.authorize(ScopeProposal::from_research_query(&q)).unwrap();
+    s.with_revalidated(&explicit, |_| calls += 1).unwrap();
+    s.policy.grants.remove("research");
+    assert!(s.with_revalidated(&template, |_| calls += 1).is_err());
+    assert!(s.with_revalidated(&explicit, |_| calls += 1).is_err());
+    s.policy.grants.insert("research".into());
+    s.policy.sensitive_engines.insert("alpha".into());
+    assert!(s.with_revalidated(&template, |_| calls += 1).is_err());
+    assert!(s.with_revalidated(&explicit, |_| calls += 1).is_err());
+    assert_eq!(calls, 2);
 }
 
 #[test]

@@ -83,12 +83,13 @@ packet does not claim a deployed search service or provider adapter execution.
 
 Recovered research policy is captured in `authority.json` using actual public
 MCP denials and `_research_dispatch_error(check_evidence=True)`. New and recovered
-native research DTOs always require the current specialist intent grant, even
-when legacy `requires_intent_grant=false` would skip it in Python. This is an
-approved conservative policy correction: an untrusted record flag cannot grant an
-exemption. The actual source false-flag acceptance remains in the capture and is
-asserted as an intentional difference. Legacy records need current grants or
-operator reauthorization before dispatch; W02 must use this fail-closed rule.
+native research queries preserve the source distinction under the reviewed W03
+amendment: internally built templates and retained `requires_intent_grant=false`
+records need research authority without a specialist grant; caller initial plans
+always set the flag true and reject caller-supplied true/false flags. The previous
+conservative false-flag denial is superseded by source parity, not by a second
+policy gate. Research, sensitive-engine and current eligibility checks still apply
+at admission, recovery and dispatch. Missing legacy flags continue to default true.
 Captured evidence scope and intent are rechecked under the current policy. F09
 validates planning metadata but does not establish tenant ownership or prove
 that references were admitted: the authoritative research store/worker remains
