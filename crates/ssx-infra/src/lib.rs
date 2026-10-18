@@ -130,3 +130,6 @@ pub mod staged_runner;
 pub mod staged_service;
 
 pub mod research_planning;
+
+/// Concrete production composition; foundation fixtures are never selected here.
+pub mod composition;

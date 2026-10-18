@@ -1,0 +1,5 @@
+# Portal impact review: native research-worker bootstrap
+
+The production HTTP/MCP/portal route implementations and their existing request/result/filter/cache/policy serialization remain unchanged. This component exports a Rust composition API and replaces the foundation research-worker stub only; no portal route or deployment is activated. Shared SearchService/catalog/policy inputs remain authoritative. All51 descriptors remain,33 real factories are mounted, and an enabled unavailable adapter fails preflight rather than disappearing from discovery.
+
+This is a static impact review, not browser or deployed-portal proof. Existing portal/HTTP contract CI remains required and unchanged. Any later activation of these runtime dependencies into a server, catalog endpoint or browser-visible workflow must add the corresponding deterministic portal contracts/browser coverage before claiming production portal parity. The additive worker example profile does not reconfigure the existing portal service.

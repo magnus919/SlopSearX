@@ -109,7 +109,28 @@ jobs:
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
       - name: Workspace tests, including xtask
-        run: cargo test --locked --workspace
+        run: |
+          set -eu
+          cargo build --locked -p ssx-worker --bin ssx-worker
+          umask 077
+          composition_workdir=$(mktemp -d /tmp/ssx-comp.XXXXXX)
+          composition_cleanup() {
+            composition_test_status=$?
+            trap - EXIT
+            if ! rmdir -- "$composition_workdir"; then
+              if [ "$composition_test_status" -eq 0 ]; then
+                composition_test_status=1
+              fi
+            fi
+            exit "$composition_test_status"
+          }
+          trap composition_cleanup EXIT
+          export SLOPSEARX_TEST_WORKDIR="$composition_workdir"
+          export SLOPSEARX_TEST_WORKER_BIN="$GITHUB_WORKSPACE/target/debug/ssx-worker"
+          export SLOPSEARX_TEST_VALKEY_SERVER="$RUNNER_TEMP/ssx-valkey/bin/valkey-server"
+          test -x "$SLOPSEARX_TEST_WORKER_BIN"
+          test -x "$SLOPSEARX_TEST_VALKEY_SERVER"
+          cargo test --locked --workspace
 
       - name: Linux held-writer interpreter mutation control
         timeout-minutes: 10

@@ -349,7 +349,26 @@ fn load_config_entries(
     path: Option<&Path>,
     env: &[(String, String)],
 ) -> Result<Config, ConfigError> {
+    load_bundle_entries(path, env).map(|(config, _, _)| config)
+}
+
+/// One file read supplies engine settings and the workflow policy section.
+/// The returned section may contain secrets: callers must never log it.
+pub fn load_bundle_with(
+    path: Option<&Path>,
+    env: &BTreeMap<String, String>,
+) -> Result<(Config, Value, Value), ConfigError> {
+    let entries: Vec<_> = env.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+    load_bundle_entries(path, &entries)
+}
+/// Ordered OS capture preserves last alias occurrence before scalar coercion.
+pub fn load_bundle_entries(
+    path: Option<&Path>,
+    env: &[(String, String)],
+) -> Result<(Config, Value, Value), ConfigError> {
     let registry = Registry::builtins().map_err(|error| ConfigError(error.to_string()))?;
+    let mut section = Value::Null;
+    let mut observability = Value::Null;
     let mut config = Config::default();
     for descriptor in registry.descriptors() {
         // Only the explicit 28-entry Python defaults table creates an
@@ -376,12 +395,14 @@ fn load_config_entries(
             let root = parsed
                 .as_object()
                 .ok_or_else(|| ConfigError("config root must be a mapping".into()))?;
+            section = root.get("mcp").cloned().unwrap_or(Value::Null);
+            observability = root.get("observability").cloned().unwrap_or(Value::Null);
             apply_file(&mut config, root)?;
             config.routing.named_topic_order = named_topic_order;
         }
     }
     apply_environment(&mut config, env)?;
-    Ok(config)
+    Ok((config, section, observability))
 }
 
 fn apply_file(config: &mut Config, root: &Map<String, Value>) -> Result<(), ConfigError> {

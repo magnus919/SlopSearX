@@ -1710,7 +1710,7 @@
             },
             {
               "name": "Workspace tests, including xtask",
-              "run": "cargo test --locked --workspace"
+              "run": "set -eu\ncargo build --locked -p ssx-worker --bin ssx-worker\numask 077\ncomposition_workdir=$(mktemp -d /tmp/ssx-comp.XXXXXX)\ncomposition_cleanup() {\n  composition_test_status=$?\n  trap - EXIT\n  if ! rmdir -- \"$composition_workdir\"; then\n    if [ \"$composition_test_status\" -eq 0 ]; then\n      composition_test_status=1\n    fi\n  fi\n  exit \"$composition_test_status\"\n}\ntrap composition_cleanup EXIT\nexport SLOPSEARX_TEST_WORKDIR=\"$composition_workdir\"\nexport SLOPSEARX_TEST_WORKER_BIN=\"$GITHUB_WORKSPACE/target/debug/ssx-worker\"\nexport SLOPSEARX_TEST_VALKEY_SERVER=\"$RUNNER_TEMP/ssx-valkey/bin/valkey-server\"\ntest -x \"$SLOPSEARX_TEST_WORKER_BIN\"\ntest -x \"$SLOPSEARX_TEST_VALKEY_SERVER\"\ncargo test --locked --workspace\n"
             },
             {
               "name": "Linux held-writer interpreter mutation control",

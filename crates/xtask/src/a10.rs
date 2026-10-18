@@ -23,7 +23,7 @@ use std::{
     fs,
     path::Path,
 };
-const COVERAGE_SHA: &str = "2f0418add9981ae0a6d1d94afbd748940e8bc3d54a97eb8c4d87069166a227c8";
+const COVERAGE_SHA: &str = "93cd90380541915eb24da69ddb3c8ea105ea72e2f5cb197f4ac6c8efd8505b3e";
 fn require(value: bool, message: &str) -> Result<()> {
     if value { Ok(()) } else { Err(message.into()) }
 }
