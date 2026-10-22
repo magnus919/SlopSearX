@@ -28,7 +28,7 @@ jobs:
       CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
@@ -490,7 +490,7 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Install pinned cargo-deny
         run: cargo install --locked --version 0.20.2 cargo-deny
