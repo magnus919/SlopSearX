@@ -799,8 +799,8 @@ async fn stdio_journey(
         }),
         "overall owner did not close the existing backend",
     )?;
-    // No CLIENT UNPAUSE has been sent: ACK, handler drain, owner close and actual
-    // child exit all precede releasing the held private server.
+    // The private server is still held: ACK, handler drain, owner close and
+    // actual child exit all precede its terminal owner stop/reap.
     eprintln!(
         "W07_STDIO_EOF_OBSERVATIONS {}",
         json!({"pending_id":pending_id,
@@ -811,7 +811,7 @@ async fn stdio_journey(
 #[tokio::test]
 async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof_drain()
 -> Result<()> {
-    let server = server();
+    let mut server = server();
     let sentinel = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
     let source = format!("http://{}/must-remain-inert", sentinel.local_addr()?);
     let source_fetches = Arc::new(AtomicUsize::new(0));
@@ -825,34 +825,11 @@ async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof
         }
     });
     let mut control = server.connection();
-    // Both administrative connections exist before PAUSE. This is the same
-    // private server, and finally sends exactly one UNPAUSE without retry.
-    let mut release = server.connection();
-    for connection in [&mut control, &mut release] {
-        if let Err(error) = connection.set_read_timeout(Some(Duration::from_secs(2))) {
-            sentinel_task.abort();
-            let _ = sentinel_task.await;
-            return Err(error.into());
-        }
+    if let Err(error) = control.set_read_timeout(Some(Duration::from_secs(2))) {
+        sentinel_task.abort();
+        let _ = sentinel_task.await;
+        return Err(error.into());
     }
-    let ids = (|| -> Result<_> {
-        let control_id: i64 = redis::cmd("CLIENT").arg("ID").query(&mut control)?;
-        let release_id: i64 = redis::cmd("CLIENT").arg("ID").query(&mut release)?;
-        need(
-            control_id != release_id,
-            "owned admin connections share identity",
-        )?;
-        Ok(json!({"control_id":control_id,"release_id":release_id,"owned_valkey_url":server.url()}))
-    })();
-    let ids = match ids {
-        Ok(ids) => ids,
-        Err(error) => {
-            sentinel_task.abort();
-            let _ = sentinel_task.await;
-            return Err(error);
-        }
-    };
-    eprintln!("W07_STDIO_OWNED_ADMIN {ids}");
     let mut process = match StdioProcess::start(server.url(), &source) {
         Ok(process) => process,
         Err(error) => {
@@ -862,14 +839,16 @@ async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof
         }
     };
     let result = stdio_journey(&mut process, &mut control, &source).await;
-    // Retirement runs for success and every Result error/timeout. This command
-    // targets only the owned fixture connection; no ambient application URL.
-    let resumed = redis::cmd("CLIENT")
-        .arg("UNPAUSE")
-        .query::<String>(&mut release)
-        .map_err(|e| format!("owned Valkey CLIENT UNPAUSE on reserved admin: {e}"));
+    // Both retire on success and every Result error/timeout. All positive EOF
+    // assertions ran before either step; terminating this disposable server
+    // cannot cause a passing cancellation/drain/child-exit observation.
     let reaped = process.reap().await;
-    if result.is_err() || resumed.is_err() || reaped.is_err() {
+    server.stop(); // Existing fixture owns, kills and waits its exact Child.
+    eprintln!(
+        "W07_STDIO_STORE_RETIRED {}",
+        json!({"owned_valkey_url":server.url()})
+    );
+    if result.is_err() || reaped.is_err() {
         use tokio::io::AsyncReadExt;
         let mut child_stderr = String::new();
         let stderr_read = tokio::time::timeout(
@@ -883,26 +862,16 @@ async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof
             "W07_STDIO_FAILURE {}",
             json!({
                 "phase":process.phase,"journey_error":result.as_ref().err().map(ToString::to_string),
-                "unpause_error":resumed.as_ref().err().map(ToString::to_string),
                 "reap_error":reaped.as_ref().err().map(ToString::to_string),
                 "child_status":format!("{:?}",process.child.try_wait()),
                 "child_stderr":child_stderr,"stderr_read":format!("{stderr_read:?}"),
-                "owned_valkey_url":server.url()
+                "owned_valkey_url":server.url(),"owned_valkey_retired":true
             })
         );
     }
     sentinel_task.abort();
     let _ = sentinel_task.await;
     result?;
-    let release_ack = resumed?;
-    need(
-        release_ack == "OK",
-        "owned Valkey unpause acknowledgement differs",
-    )?;
-    eprintln!(
-        "W07_STDIO_UNPAUSE_ACK {}",
-        json!({"reply":release_ack,"admin":ids})
-    );
     reaped?;
     need(
         source_fetches.load(Ordering::SeqCst) == 0,

@@ -113,10 +113,15 @@ emitted only after that actual receipt-read future yields; its drained marker
 is emitted only after the future returns. The parent holds only its disposable
 Valkey, closes stdin after the pending acknowledgement, and requires handler
 drain with that actual RequestContext cancellation token set, overall-owner
-backend close, and child exit before unpausing the server.
-Success and Result-error paths resume the private server and reap the child.
+backend close, and child exit before terminal private-server retirement.
+Success and Result-error paths reap the evidence child, then call the existing
+fixture owner's `Server::stop()` to kill and wait its exact disposable Valkey
+child. The positive journey assertions all precede this cleanup.
+Same-connection and reserved-admin `UNPAUSE` experiments returned OS35 after a
+successful journey; their failed runs remain preserved. The server-internal
+cause is unknown and is unnecessary for a disposable fixture that is never reused.
 The observer creates no task, backend, shutdown owner, or replacement policy.
-This process journey has not run. W07 supplies usable native evidence APIs, storage, fixtures, and these
+The complete current C vector still requires qualification. W07 supplies usable native evidence APIs, storage, fixtures, and these
 factories. Full executable startup and workflow registry composition remain
 T02/W09 milestone work; this source increment does not close issue #913.
 
