@@ -54,6 +54,10 @@ pub struct Valkey {
     budget: Duration,
 }
 impl Valkey {
+    /// Terminal owner state only; this is not transport readiness or a probe.
+    pub fn is_closed(&self) -> bool {
+        self.closed.load(Ordering::SeqCst)
+    }
     pub fn new(url: &str, budget: Duration) -> Result<Self, Failure> {
         if budget.is_zero() {
             return Err(Failure::InvalidInput);

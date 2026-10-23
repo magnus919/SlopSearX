@@ -1,6 +1,6 @@
 //! Native T06 search/discovery surface. Engines and shared stores are injected,
 //! while protocol dispatch and network authorization remain the same runtime.
-mod entities;
+pub(crate) mod entities;
 mod resources;
 mod results;
 mod runtime_discovery;
@@ -70,6 +70,7 @@ impl SearchState {
 #[derive(Clone)]
 pub struct SearchSurface {
     state: Arc<SearchState>,
+    evidence: Option<Arc<crate::evidence::EvidenceRuntime>>,
     wire: Option<Arc<std::sync::Mutex<crate::opaque::WireState>>>,
     connection_tenant: Option<TenantId>,
 }
@@ -77,9 +78,25 @@ impl SearchSurface {
     pub fn new(state: SearchState) -> Self {
         Self {
             state: Arc::new(state),
+            evidence: None,
             wire: None,
             connection_tenant: None,
         }
+    }
+    /// Attach a borrowed graph before this surface/state is shared. B does not
+    /// advertise or dispatch evidence tools; transport integration belongs to C.
+    pub fn with_evidence(
+        mut self,
+        evidence: Arc<crate::evidence::EvidenceRuntime>,
+    ) -> Result<Self, &'static str> {
+        if Arc::strong_count(&self.state) != 1 || self.wire.is_some() {
+            return Err("surface already shared or bound");
+        }
+        self.evidence = Some(evidence);
+        Ok(self)
+    }
+    pub fn evidence(&self) -> Option<&crate::evidence::EvidenceRuntime> {
+        self.evidence.as_deref()
     }
     /// Trusted per-connection state supplied by the qualified transport factory.
     pub fn bind_connection(

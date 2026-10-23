@@ -22,6 +22,17 @@ use std::sync::Arc;
 /// existing shared gate's retained_engine_rejection, never dispatch authority.
 pub trait Policy: Send + Sync {
     fn current(&self) -> PolicyService;
+    /// Sample policy and operator bounds together at an existing authorization
+    /// boundary. Legacy injected ports retain their fixed configured bounds.
+    fn current_with_limits(
+        &self,
+        staged: &crate::staged::Limits,
+        reports: usize,
+    ) -> (PolicyService, crate::staged::Limits, usize) {
+        let mut staged = staged.clone();
+        staged.granted = true;
+        (self.current(), staged, reports)
+    }
 }
 #[derive(Clone, Debug)]
 pub struct EntityGroup {
@@ -338,6 +349,18 @@ impl NativeResolver {
         let SnapshotViewLookup::Found(snapshot) = read else {
             return Ok(empty(root, Status::Missing).into());
         };
+        let policy = self.policy.current();
+        if !policy.policy.grants.contains("retrieval_receipts")
+            || policy
+                .retained_engine_rejection(&snapshot.scope().selected_engines, "engines")
+                .is_err()
+        {
+            return Ok(Resolved {
+                node: Node::policy_denied(root.clone()),
+                edges: vec![],
+            }
+            .into());
+        }
         let version = if parts[1].starts_with("entity-v2-") {
             2
         } else {
@@ -805,5 +828,134 @@ mod contract_tests {
         assert!(value.edges.is_empty());
         assert_eq!(repo.calls.load(Ordering::SeqCst), 1);
         assert_eq!(*repo.trace.lock().unwrap(), vec!["tenant-b:result-1"]);
+    }
+    struct PublishingSnapshots {
+        policy: Arc<Mutex<PolicyService>>,
+        next: PolicyService,
+        reads: AtomicUsize,
+        snapshot: SearchSnapshot,
+    }
+    impl SnapshotRepository for PublishingSnapshots {
+        fn create<'a>(
+            &'a self,
+            _: &'a SearchSnapshot,
+            _: NonZeroU64,
+        ) -> PortFuture<'a, Result<SnapshotWrite, SnapshotFailure>> {
+            Box::pin(async { panic!("readonly source") })
+        }
+        fn read<'a>(
+            &'a self,
+            _: &'a TenantId,
+            _: &'a SnapshotId,
+        ) -> PortFuture<'a, Result<Option<SearchSnapshot>, SnapshotFailure>> {
+            Box::pin(async move {
+                if self.reads.fetch_add(1, Ordering::SeqCst) == 1 {
+                    *self.policy.lock().unwrap() = self.next.clone();
+                }
+                Ok(Some(self.snapshot.clone()))
+            })
+        }
+    }
+    struct PublishedPolicy(Arc<Mutex<PolicyService>>);
+    impl Policy for PublishedPolicy {
+        fn current(&self) -> PolicyService {
+            self.0.lock().unwrap().clone()
+        }
+    }
+    struct CountingProjected(AtomicUsize);
+    impl Entities for CountingProjected {
+        fn groups(&self, _: &SearchSnapshot, _: u8) -> Vec<EntityGroup> {
+            panic!("projected path must not rehydrate")
+        }
+        fn projected(&self) -> Option<&dyn ProjectedEntities> {
+            Some(self)
+        }
+    }
+    impl ProjectedEntities for CountingProjected {
+        fn groups(
+            &self,
+            snapshot: &ValidatedSnapshotRead,
+            _: u8,
+        ) -> Result<Vec<EntityGroup>, Failure> {
+            self.0.fetch_add(1, Ordering::SeqCst);
+            snapshot.visit_results(&mut |_, _| {}).unwrap();
+            Ok(vec![])
+        }
+    }
+    #[test]
+    fn entity_second_read_rechecks_live_policy_before_projected_visitation() {
+        for mutation in ["grant", "engine", "sensitive"] {
+            let mut initial = CurrentPolicy(true).current();
+            initial.policy.sensitive_engines.insert("brave".into());
+            initial.policy.sensitive_allowed = true;
+            let mut next = initial.clone();
+            match mutation {
+                "grant" => {
+                    next.policy.grants.remove("retrieval_receipts");
+                }
+                "engine" => {
+                    let mut engines = next.catalog.engines().to_vec();
+                    engines[0].enabled = false;
+                    next.catalog = CatalogSnapshot::new(engines).unwrap();
+                }
+                _ => next.policy.sensitive_allowed = false,
+            }
+            let policy = Arc::new(Mutex::new(initial));
+            let mut scope = ssx_domain::ScopeDecision::default();
+            scope.selected_engines = vec!["brave".into()];
+            let snapshot = SearchSnapshot::new(
+                SnapshotId::new("snapshot-a").unwrap(),
+                "q".into(),
+                ssx_domain::QueryId::new("query-a").unwrap(),
+                vec![],
+                scope,
+                tenant("tenant-a"),
+                WallClockTimestamp::new(50.).unwrap(),
+                None,
+            )
+            .unwrap();
+            let store = Arc::new(PublishingSnapshots {
+                policy: policy.clone(),
+                next,
+                reads: AtomicUsize::new(0),
+                snapshot,
+            });
+            let entities = Arc::new(CountingProjected(AtomicUsize::new(0)));
+            let receipts = Arc::new(Receipts {
+                calls: AtomicUsize::new(0),
+                rows: vec![],
+                trace: Arc::new(Mutex::new(vec![])),
+            });
+            let resolver = NativeResolver {
+                snapshots: SnapshotService::new(
+                    store.clone(),
+                    Arc::new(TestClock),
+                    Arc::new(Ids),
+                    tenant("tenant-a"),
+                    SnapshotTtl::new(60).unwrap(),
+                ),
+                receipts: receipts.clone(),
+                policy: Arc::new(PublishedPolicy(policy)),
+                clock: Arc::new(TestClock),
+                entities: entities.clone(),
+                workflows: Arc::new(NoWorkflows),
+            };
+            let id = composite_artifact_id(&["snapshot-a", "entity-v2-fixture"]).unwrap();
+            let result = run(resolver.resolve(
+                &tenant("tenant-a"),
+                &ArtifactRef::new(ArtifactKind::EntityGroup, id).unwrap(),
+                &Cancellation::default(),
+            ))
+            .unwrap();
+            assert_eq!(result.node.status, Status::PolicyDenied, "{mutation}");
+            assert!(result.edges.is_empty());
+            assert_eq!(store.reads.load(Ordering::SeqCst), 2);
+            assert_eq!(
+                entities.0.load(Ordering::SeqCst),
+                1,
+                "only parent snapshot may visit rows"
+            );
+            assert_eq!(receipts.calls.load(Ordering::SeqCst), 0);
+        }
     }
 }

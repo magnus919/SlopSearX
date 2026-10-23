@@ -121,13 +121,19 @@ fn details(
     }
 }
 impl WorkflowResolver {
-    fn dossier_allowed(&self, job: &ResearchJob) -> bool {
-        // Preserve the already accepted native workflow revalidation, including
-        // dossier intent/routing fences. This creates no engine dispatch.
-        self.policy
-            .current()
-            .validate_research_workflow(job)
-            .is_ok()
+    fn research_allowed(&self, job: &ResearchJob) -> bool {
+        let policy = self.policy.current();
+        policy.policy.grants.contains("research")
+            && policy
+                .retained_engine_rejection(
+                    &job.queries
+                        .iter()
+                        .flat_map(|q| q.engines.clone())
+                        .collect::<Vec<_>>(),
+                    "engines",
+                )
+                .is_ok()
+            && policy.validate_research_workflow(job).is_ok()
     }
     async fn job(
         &self,
@@ -159,7 +165,7 @@ impl WorkflowResolver {
         {
             return Ok(empty(root, Status::Missing));
         }
-        if !self.dossier_allowed(&job) {
+        if !self.research_allowed(&job) {
             return Ok(denied(root));
         }
         let mut edges = job
@@ -231,6 +237,9 @@ impl WorkflowResolver {
         if job.tenant != tenant.as_str() || job.job_id != parts[0] {
             return Err(Failure::Malformed);
         }
+        if !self.research_allowed(&job) {
+            return Ok(denied(root));
+        }
         let Some(attempt) = job
             .queries
             .iter()
@@ -277,9 +286,10 @@ impl WorkflowResolver {
         if record.tenant() != *tenant || record.id().as_str() != root.id() {
             return Err(Failure::Malformed);
         }
-        let mut limits = self.staged_limits.clone();
-        limits.granted = true;
-        if staged::revalidate(&self.policy.current(), &limits, &record).is_err() {
+        let (policy, limits, _) = self.policy.current_with_limits(&self.staged_limits, 0);
+        if !policy.policy.grants.contains("staged_search")
+            || staged::revalidate(&policy, &limits, &record).is_err()
+        {
             return Ok(denied(root));
         }
         let v = record.value();
@@ -335,15 +345,17 @@ impl WorkflowResolver {
         if definition.tenant != tenant.as_str() || definition.search_id != root.id() {
             return Err(Failure::Malformed);
         }
-        if self
+        let (policy, _, reports_limit) = self
             .policy
-            .current()
-            .retained_engine_rejection(&definition.engines, "engines")
-            .is_err()
+            .current_with_limits(&self.staged_limits, self.saved_max_reports);
+        if !policy.policy.grants.contains("saved_searches")
+            || policy
+                .retained_engine_rejection(&definition.engines, "engines")
+                .is_err()
         {
             return Ok(denied(root));
         }
-        if self.saved_max_reports == 0 {
+        if reports_limit == 0 {
             return Err(Failure::Malformed);
         }
         let reports = match missing(
@@ -352,7 +364,7 @@ impl WorkflowResolver {
                     tenant,
                     &definition,
                     self.clock.now(),
-                    self.saved_max_reports.min(100),
+                    reports_limit.min(100),
                     None,
                     cancel,
                 )
@@ -403,13 +415,26 @@ impl WorkflowResolver {
         if definition.tenant != tenant.as_str() || definition.search_id != parts[0] {
             return Err(Failure::Malformed);
         }
+        let (policy, _, reports_limit) = self
+            .policy
+            .current_with_limits(&self.staged_limits, self.saved_max_reports);
+        if !policy.policy.grants.contains("saved_searches")
+            || policy
+                .retained_engine_rejection(&definition.engines, "engines")
+                .is_err()
+        {
+            return Ok(denied(root));
+        }
+        if reports_limit == 0 {
+            return Err(Failure::Malformed);
+        }
         let reports = match missing(
             self.records
                 .reports(
                     tenant,
                     &definition,
                     self.clock.now(),
-                    self.saved_max_reports.min(100),
+                    reports_limit.min(100),
                     Some(&parts[1]),
                     cancel,
                 )

@@ -138,8 +138,11 @@ impl Sources {
                 "source research artifact was not found",
             ));
         }
-        self.policy
-            .current()
+        let policy = self.policy.current();
+        if !policy.policy.grants.contains("research") {
+            return Err(policy_error());
+        }
+        policy
             .retained_engine_rejection(
                 &job.queries
                     .iter()
@@ -147,6 +150,9 @@ impl Sources {
                     .collect::<Vec<_>>(),
                 "engines",
             )
+            .map_err(|_| policy_error())?;
+        policy
+            .validate_research_workflow(&job)
             .map_err(|_| policy_error())?;
         let attempts = job
             .queries
@@ -243,9 +249,10 @@ impl Sources {
                 "source staged search was not found",
             ));
         }
-        let mut limits = self.staged_limits.clone();
-        limits.granted = true;
-        if staged::revalidate(&self.policy.current(), &limits, &record).is_err() {
+        let (policy, limits, _) = self.policy.current_with_limits(&self.staged_limits, 0);
+        if !policy.policy.grants.contains("staged_search")
+            || staged::revalidate(&policy, &limits, &record).is_err()
+        {
             return Err(error(
                 "source_policy_denied",
                 "current policy denies the source staged search",
