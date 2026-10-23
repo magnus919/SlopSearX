@@ -381,7 +381,12 @@ impl Process {
         extra: &[String],
         browser: Option<(&std::path::Path, &std::path::Path)>,
     ) -> Self {
-        let mut command = tokio::process::Command::new(env!("CARGO_BIN_EXE_ssx-gateway"));
+        let installed = ssx_mcp::gateway_client::resolver::install::stage_cargo_gateway(
+            std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway")),
+            std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns")),
+        )
+        .expect("preregistered native gateway package fixture");
+        let mut command = tokio::process::Command::new(installed);
         command
             .env_clear()
             .env("no_proxy", "*")

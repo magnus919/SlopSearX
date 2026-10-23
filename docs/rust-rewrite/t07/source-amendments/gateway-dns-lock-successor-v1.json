@@ -1,0 +1,46 @@
+{
+  "kind": "T07_GATEWAY_DNS_LOCK_SUCCESSOR_V1",
+  "source_parent": "757fbc2686db7f0601cfbbd1ecfc42b9f0dbdbd8",
+  "paths": [
+    "Cargo.lock"
+  ],
+  "prior": {
+    "path": "Cargo.lock",
+    "bytes": 91393,
+    "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1",
+    "git_blob": "bdf7413f848d86be3a91158aaa4c5637ac7f32b4",
+    "mode": "0644"
+  },
+  "archive": {
+    "path": "docs/rust-rewrite/t07/source-amendments/gateway-dns-predecessor-v1/Cargo.lock",
+    "bytes": 91393,
+    "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1",
+    "git_blob": "bdf7413f848d86be3a91158aaa4c5637ac7f32b4",
+    "mode": "0644",
+    "source_path": "Cargo.lock"
+  },
+  "current": {
+    "path": "Cargo.lock",
+    "bytes": 91701,
+    "sha256": "ebbcd0e37416ef61cb75415b56136603ba6ef5ce506ba2fceb07c1cd97bc75c8",
+    "git_blob": "ce43f5f34d5f903602e7d915ad5adec4ab42eaa8",
+    "mode": "0644"
+  },
+  "edits": [
+    {
+      "at": 17404,
+      "remove_utf8": "",
+      "insert_utf8": "]\n\n[[package]]\nname = \"dns-lookup\"\nversion = \"4.0.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"263c0ccfc6b3b6a93e959edad4f985779e76c0b36dbb2e13e3d27c690974adf1\"\ndependencies = [\n \"cfg-if\",\n \"libc\",\n \"socket2\",\n \"windows-sys 0.61.2\",\n"
+    },
+    {
+      "at": 64142,
+      "remove_utf8": "",
+      "insert_utf8": " \"futures-util\",\n \"nix\",\n"
+    },
+    {
+      "at": 65396,
+      "remove_utf8": "",
+      "insert_utf8": " \"dns-lookup\",\n"
+    }
+  ]
+}

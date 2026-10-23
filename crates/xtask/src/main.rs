@@ -26,6 +26,8 @@ mod f12;
 mod f13;
 mod f14;
 mod f15;
+#[cfg(unix)]
+mod gateway_package;
 mod o01;
 mod o03;
 mod o06;
@@ -561,6 +563,10 @@ fn main() {
         .expect("wall clock after epoch")
         .as_millis();
     let args: Vec<_> = std::env::args().skip(1).collect();
+    #[cfg(unix)]
+    if gateway_package::cli(&root, &args) {
+        return;
+    }
     if args.len() == 2 && args[0] == "a06-source-cases" {
         if let Err(error) = a06::check_source_log(&root, Path::new(&args[1])) {
             eprintln!("{error}");

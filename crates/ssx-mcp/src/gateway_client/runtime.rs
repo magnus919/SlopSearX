@@ -150,6 +150,8 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
     };
     // Revoke OAuth admission before remote cleanup. DELETE keeps the HTTP owner
     // alive and sends only the in-memory bearer, without credential-store work.
+    // Its bounded grace may fail; every later cleanup still runs before errors
+    // are combined, including the actual DNS supervisor/child joins.
     auth_cancel.cancel();
     let remote = if let Some(start) = startup.as_mut() {
         start.close().await
@@ -164,7 +166,7 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
         Ok(())
     };
     let browser_result = browser.shutdown().await;
-    network.shutdown().await;
+    let network_result = network.shutdown().await;
     io.close();
     let files = io
         .shutdown()
@@ -174,5 +176,6 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
         .and(remote)
         .and(callback_result)
         .and(browser_result)
+        .and(network_result)
         .and(files)
 }

@@ -9,6 +9,9 @@ publish.workspace = true
 [lints]
 workspace = true
 
+[features]
+gateway-dns-fixtures = []
+
 [dependencies]
 ssx-application.workspace = true
 ssx-infra.workspace = true
@@ -42,8 +45,9 @@ sha2.workspace = true
 rustls.workspace = true
 
 [target.'cfg(unix)'.dependencies]
-nix = { version = "=0.31.3", default-features = false, features = ["fs", "poll"] }
+nix = { version = "=0.31.3", default-features = false, features = ["fs", "poll", "event", "process", "signal"] }
 libc = "=0.2.190"
+dns-lookup = "=4.0.2"
 
 [dev-dependencies]
 redis.workspace = true

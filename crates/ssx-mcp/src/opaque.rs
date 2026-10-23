@@ -1159,6 +1159,10 @@ impl GatewayHttp for LegacyGatewayHttp {
         })
     }
 }
+/// Final DELETE grace matches the pinned rmcp streamable-HTTP session cleanup.
+/// Normal source requests retain their independent transport/authorization budgets.
+pub const GATEWAY_SESSION_CLEANUP_TIMEOUT: Duration = Duration::from_secs(5);
+
 async fn gateway_until<T>(
     deadline: Option<tokio::time::Instant>,
     future: impl std::future::Future<Output = Result<T>>,
@@ -1645,8 +1649,17 @@ impl RawGateway {
             if let Some(token) = &self.token {
                 headers.push(("authorization", format!("Bearer {token}")));
             }
-            let deadline =
-                (!self.transport_budgeted).then(|| tokio::time::Instant::now() + self.deadline);
+            // Final cleanup must reach the retained network/resolver join even
+            // when DELETE needs fresh DNS or the peer holds response headers.
+            // Match rmcp's five-second session-cleanup grace. Unlike rmcp's
+            // logged timeout, our existing fail-closed cleanup contract returns
+            // failure and retains the session identity for a possible retry.
+            let limit = if self.transport_budgeted {
+                GATEWAY_SESSION_CLEANUP_TIMEOUT
+            } else {
+                self.deadline
+            };
+            let deadline = Some(tokio::time::Instant::now() + limit);
             let response = gateway_until(
                 deadline,
                 self.http.open(GatewayHttpRequest {

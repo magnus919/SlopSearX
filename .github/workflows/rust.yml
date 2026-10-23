@@ -25,12 +25,16 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: 1
+      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
       CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Prepare private gateway package fixtures
+        run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"
 
       - name: Confirm pinned toolchain
         run: rustc --version --verbose
@@ -494,6 +498,10 @@ jobs:
             target/rust-evidence/A14.json
             target/rust-feature-graph.txt
           if-no-files-found: warn
+
+      - name: Retire gateway package fixtures
+        if: always()
+        run: rm -rf -- "$SLOPSEARX_INSTALL_TEST_ROOT"
 
   supply-chain:
     name: Supply-chain policy (cargo-deny 0.20.2)

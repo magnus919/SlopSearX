@@ -1128,12 +1128,19 @@ For a source build, configure `CARGO_TARGET_DIR` outside the checkout as describ
 in [Rust build footprint](RUST_BUILD_FOOTPRINT.md), then run:
 
 ```sh
-cargo build --locked --package ssx-gateway --bin ssx-gateway
-# Use the resulting binary's absolute path in your MCP client configuration.
+cargo xtask gateway-package
+# Use bin/ssx-gateway within the printed package prefix in your MCP client configuration.
 MCP_REMOTE_TOKEN='<remote-token>' /absolute/path/ssx-gateway --remote https://example.org/mcp
 ```
 
-For an OAuth remote, configure the binary directly:
+The package includes the digest-bound DNS helper in its fixed `libexec/slopsearx`
+role. Keep the complete package together; an unpackaged Cargo binary cannot discover
+its helper. `cargo xtask gateway -- --remote URL` builds, stages and runs the same
+pair for development. Gateway DNS is cancellable and joined during shutdown;
+ordinary Reqwest clients keep their default resolver. This source increment still
+requires native qualification, and Windows helper/input support remains pending.
+
+For an OAuth remote, configure the installed package binary directly:
 
 ```json
 {
@@ -1161,7 +1168,12 @@ On the qualified local macOS ARM fixture, EOF/SIGTERM wakes and joins the native
 input owner, cancels held requests and drains remote session, callback, browser
 and file owners. Cleanup uses only the already-held bearer; denied DELETE or
 cancellation does not register, refresh or open a new authorization flow. A denied
-session DELETE remains an explicit gateway failure. The current T06 backend
+session DELETE remains an explicit gateway failure. Final session DELETE has a
+five-second graceful request budget, matching the pinned Rust SDK cleanup budget;
+expiry is also a gateway failure. Cleanup then joins the retained HTTP/DNS owners,
+including the original native DNS helper if DELETE needed a held hostname lookup.
+Normal RPC transport budgets are unchanged. This cleanup/DNS increment is source
+registered and awaits current native qualification. The current T06 backend
 stdio owner is unchanged; this is a gateway ownership result.
 
 The distribution goals in [ADR 005](adr/005-rust-protocol-tls-and-platforms.md) are

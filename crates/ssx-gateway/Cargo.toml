@@ -9,6 +9,14 @@ publish.workspace = true
 [lints]
 workspace = true
 
+[features]
+dns-test-fixtures = ["ssx-mcp/gateway-dns-fixtures"]
+
+[[bin]]
+name = "ssx-gateway-dns-fixture"
+path = "src/bin/ssx-gateway-dns-fixture.rs"
+required-features = ["dns-test-fixtures"]
+
 [dependencies]
 ssx-wire.workspace = true
 rmcp.workspace = true
@@ -18,6 +26,7 @@ tokio.workspace = true
 tokio-util = "=0.7.20"
 
 [dev-dependencies]
+futures-util = "=0.3.34"
 axum.workspace = true
 serde_json.workspace = true
 reqwest.workspace = true
@@ -31,3 +40,6 @@ ssx-config.workspace = true
 ssx-json.workspace = true
 redis.workspace = true
 chrono = { version = "=0.4.45", default-features = false, features = ["clock", "std"] }
+
+[target.'cfg(unix)'.dev-dependencies]
+nix = { version = "=0.31.3", default-features = false, features = ["process", "signal"] }

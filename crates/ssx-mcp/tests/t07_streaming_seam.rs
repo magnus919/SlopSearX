@@ -17,6 +17,7 @@ use ssx_mcp::{
 };
 use std::{
     convert::Infallible,
+    future::Future,
     sync::{
         Arc, Mutex,
         atomic::{AtomicUsize, Ordering},
@@ -321,6 +322,94 @@ async fn failed_discovery_keeps_cleanup_owner_and_zero_budget_dispatches_nothing
     );
     assert_eq!(http.slots.available_permits(), 1);
     wait_body_drop(&fixture.state).await;
+    fixture.shutdown().await;
+    Ok(())
+}
+
+// Synthetic timer boundary control supplements the actual-process DNS tests.
+// The held DELETE is never completed; timeout must drop its future, return a
+// failure, preserve session identity and permit a later successful retry.
+#[tokio::test]
+async fn session_delete_grace_expires_at_sdk_budget_drops_waiter_and_retains_retry_identity()
+-> Result<()> {
+    use ssx_mcp::opaque::{GATEWAY_SESSION_CLEANUP_TIMEOUT, GatewayAuthMode};
+    use std::sync::atomic::AtomicBool;
+    struct HeldDelete {
+        http: Arc<TestHttp>,
+        hold: AtomicBool,
+        dropped: Arc<AtomicUsize>,
+    }
+    struct DropCount(Arc<AtomicUsize>);
+    impl Drop for DropCount {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+    impl GatewayHttp for HeldDelete {
+        fn open(&self, request: GatewayHttpRequest) -> GatewayOpenFuture<'_> {
+            Box::pin(async move {
+                if request.method == Method::DELETE && self.hold.load(Ordering::SeqCst) {
+                    assert!(request.auth == GatewayAuthMode::ExistingBearer);
+                    assert!(
+                        request
+                            .headers
+                            .iter()
+                            .any(|(name, value)| *name == "mcp-session-id"
+                                && value == "synthetic-session")
+                    );
+                    assert!(
+                        request
+                            .headers
+                            .iter()
+                            .any(|(name, value)| *name == "authorization"
+                                && value == "Bearer synthetic-bearer")
+                    );
+                    let _guard = DropCount(self.dropped.clone());
+                    return std::future::pending().await;
+                }
+                self.http.open(request).await
+            })
+        }
+    }
+    let mut fixture = Fixture::new(false, false, false).await;
+    let http = Arc::new(HeldDelete {
+        http: TestHttp::new(),
+        hold: AtomicBool::new(true),
+        dropped: Default::default(),
+    });
+    let mut start = RawGatewayStart::new_source(
+        fixture.url.clone(),
+        Some("synthetic-bearer".into()),
+        http.clone(),
+    )?;
+    start.initialize(None).await?;
+    start.discover_tools(Duration::from_secs(2)).await?;
+    tokio::time::pause();
+    let mut close = Box::pin(start.close());
+    std::future::poll_fn(|cx| {
+        assert!(close.as_mut().poll(cx).is_pending());
+        std::task::Poll::Ready(())
+    })
+    .await;
+    tokio::time::advance(GATEWAY_SESSION_CLEANUP_TIMEOUT - Duration::from_millis(1)).await;
+    std::future::poll_fn(|cx| {
+        assert!(close.as_mut().poll(cx).is_pending());
+        std::task::Poll::Ready(())
+    })
+    .await;
+    assert_eq!(http.dropped.load(Ordering::SeqCst), 0);
+    tokio::time::advance(Duration::from_millis(1)).await;
+    assert!(close.await.is_err());
+    assert_eq!(http.dropped.load(Ordering::SeqCst), 1);
+    assert!(start.ready().is_err());
+    tokio::time::resume();
+    http.hold.store(false, Ordering::SeqCst);
+    start.close().await?;
+    assert_eq!(
+        &*fixture.state.deleted.lock().unwrap(),
+        &["synthetic-session"]
+    );
+    assert_eq!(http.http.slots.available_permits(), 1);
     fixture.shutdown().await;
     Ok(())
 }

@@ -24,3 +24,6 @@ pub mod title;
 
 #[cfg(unix)]
 pub(crate) mod stdio_input;
+
+#[cfg(unix)]
+pub mod resolver;

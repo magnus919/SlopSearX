@@ -3,7 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
-const BINDINGS: &str = "7e6ac7e4c19cbbb61e8e198e2d3c77afb8ad1c6ced1d2babda25a60fb3fbdb24";
+const BINDINGS: &str = "238decf62b8407e39caa8ba36f56a59bd685bb08d8dc73f9f3be1907f2d7b1d3";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -36,6 +36,9 @@ fn suite(
         args.push("--lib")
     } else {
         args.extend(["--test", target])
+    }
+    if target == "t07_dns_owner" {
+        args.extend(["--features", "dns-test-fixtures"]);
     }
     if let Some(filter) = filter {
         args.push(filter)
@@ -95,6 +98,12 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     if !cfg!(unix) {
         return Err("T07 native qualification inventory is currently Linux/macOS; no Windows acceptance claim".into());
     }
+    let install = std::env::var_os("SLOPSEARX_INSTALL_TEST_ROOT")
+        .ok_or("T07 controller must preregister a private install fixture root")?;
+    let install = Path::new(&install);
+    if !install.is_absolute() || !install.is_dir() || install.is_symlink() {
+        return Err("T07 private install fixture root invalid".into());
+    }
     let value = validate(
         &fs::read(root.join("docs/rust-rewrite/t07/source_bindings.json"))
             .map_err(|e| e.to_string())?,
@@ -153,6 +162,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "ssx-gateway",
             "--bin",
             "ssx-gateway",
+            "--bin",
+            "ssx-gateway-dns",
         ],
         records,
     )?;
@@ -196,16 +207,28 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .ok_or("T07 stdio owner inventory absent")?,
         records,
     )?;
+    suite(
+        root,
+        "ssx-gateway",
+        "t07_dns_owner",
+        None,
+        value["dns_owner_tests"]
+            .as_array()
+            .ok_or("T07 DNS owner inventory absent")?,
+        records,
+    )?;
     let count = |key: &str| -> Result<usize> {
         value[key]
             .as_array()
             .map(Vec::len)
             .ok_or_else(|| format!("T07 {key} inventory absent"))
     };
-    let focused_native_cases =
-        count("library_tests")? + count("seam_tests")? + count("process_tests")?;
+    let focused_native_cases = count("library_tests")?
+        + count("seam_tests")?
+        + count("process_tests")?
+        + count("dns_owner_tests")?;
     let stdio_owner_controls = count("stdio_owner_tests")?;
-    records.push(json!({"contract":"native_gateway_source_bound","source_files":seen.len(),"focused_native_cases":focused_native_cases,"stdio_owner_controls":stdio_owner_controls,"focused_native_selectors_total":focused_native_cases+stdio_owner_controls,"python_executed":false,"provider_calls":0,"full_transport_component_acceptance":"independent R1/R2/profile/SDK source-bound receipts and inherited T01/T05/T06/F08 remain required"}));
+    records.push(json!({"contract":"native_gateway_source_bound","source_files":seen.len(),"focused_native_cases":focused_native_cases,"stdio_owner_controls":stdio_owner_controls,"dns_owner_controls":count("dns_owner_tests")?,"focused_native_selectors_total":focused_native_cases+stdio_owner_controls,"python_executed":false,"provider_calls":0,"full_transport_component_acceptance":"independent R1/R2/profile/SDK source-bound receipts and inherited T01/T05/T06/F08 remain required"}));
     Ok(())
 }
 #[cfg(test)]

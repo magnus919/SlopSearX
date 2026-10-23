@@ -5,6 +5,8 @@ const CAPSULE: &str =
     "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor-v1.json";
 const CAPSULE_SHA: &str = "f106ec3a76a2c84a31bdfa85330a9538e7a03bd2ce1d69c68f3c27ef4f5cdbec";
 const CAPSULE_BYTES: u64 = 22354;
+#[path = "gateway-dns-lock-successor.rs"]
+mod gateway_dns_lock_successor;
 const PATHS: [&str; 2] = ["Cargo.toml", "Cargo.lock"];
 
 pub(super) fn selected(path: &str) -> bool {
@@ -82,7 +84,11 @@ fn materials(root: &Path, expected: &Value) -> Result<(Vec<u8>, Vec<u8>, Value),
     let doc = load(root)?;
     let row = row(&doc, expected)?;
     let prior = super::read(root, &row["archive"])?;
-    let actual = super::read(root, &row["current"])?;
+    let actual = if expected["path"] == "Cargo.lock" {
+        gateway_dns_lock_successor::archived_prior(root, &row["current"])?
+    } else {
+        super::read(root, &row["current"])?
+    };
     validate(
         &doc,
         expected,
@@ -100,11 +106,14 @@ pub(super) fn prove_current(
     expected: &Value,
     supplied_prior: &[u8],
 ) -> Result<(), String> {
-    let (prior, actual, _) = materials(root, expected)?;
+    let (prior, actual, current) = materials(root, expected)?;
     super::need(
         prior == supplied_prior,
         "T07 supplied A06 predecessor differs",
     )?;
+    if expected["path"] == "Cargo.lock" {
+        gateway_dns_lock_successor::actual_bytes(root, &current, &actual)?;
+    }
     eprintln!(
         "T07_A06_SHARED_CURRENT_PROOF path={} a06_sha256={} current_sha256={}",
         super::text(expected, "path")?,
@@ -114,7 +123,12 @@ pub(super) fn prove_current(
     Ok(())
 }
 pub(super) fn actual_bytes(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
-    Ok(materials(root, expected)?.1)
+    let (_, actual, current) = materials(root, expected)?;
+    if expected["path"] == "Cargo.lock" {
+        gateway_dns_lock_successor::actual_bytes(root, &current, &actual)
+    } else {
+        Ok(actual)
+    }
 }
 
 #[cfg(test)]
@@ -123,7 +137,7 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     for row in doc["transitions"].as_array().ok_or("T07 controls scope")? {
         let expected = &row["prior"];
         let prior = super::read(root, &row["archive"])?;
-        let actual = super::read(root, &row["current"])?;
+        let (_, actual, _) = materials(root, expected)?;
         validate(&doc, expected, &prior, &actual, "0644")?;
         let mut wrong = expected.clone();
         wrong["path"] = json!("Cargo.unlisted");
@@ -191,5 +205,6 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
             }
         }
     }
+    gateway_dns_lock_successor::controls(root)?;
     Ok(())
 }

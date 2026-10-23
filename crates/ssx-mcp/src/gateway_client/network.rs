@@ -1,5 +1,6 @@
 //! Concrete source-profile HTTP owner. Requires the reviewed local Reqwest fork.
-//! No request-wide timeout: P/C/W use C; each actual plaintext read uses R300.
+//! Normal requests have no request-wide timeout: P/C/W use C; plaintext reads R300.
+//! The final session DELETE has a separate SDK-derived grace in RawGateway.
 use crate::{
     Result,
     opaque::{GatewayChunkFuture, GatewayHttpResponse},
@@ -12,6 +13,8 @@ pub struct Network {
     connect: Duration,
     oauth: bool,
     stop: CancellationToken,
+    #[cfg(unix)]
+    resolver: Arc<super::resolver::GatewayResolver>,
 }
 pub struct Response {
     response: reqwest::Response,
@@ -43,18 +46,35 @@ impl Response {
 }
 impl Network {
     pub fn create(oauth: bool) -> Result<Arc<Self>> {
-        let connect = Duration::from_secs(if oauth { 30 } else { 60 });
-        let client = reqwest::source_pool::gateway_builder_from_environment(connect)?.build()?;
-        let pool = client
-            .source_http1_pool_control()
-            .ok_or("gateway source pool absent")?;
-        Ok(Arc::new(Self {
-            client,
-            pool,
-            connect,
-            oauth,
-            stop: CancellationToken::new(),
-        }))
+        #[cfg(not(unix))]
+        {
+            let _ = oauth;
+            Err("gateway DNS owner requires Unix".into())
+        }
+        #[cfg(unix)]
+        {
+            let connect = Duration::from_secs(if oauth { 30 } else { 60 });
+            let resolver = super::resolver::GatewayResolver::new(
+                super::resolver::install::current_helper()?,
+                connect,
+            );
+            // Only this gateway client opts in. Existing Reqwest clients and
+            // SourcePool route cloning retain their unchanged defaults.
+            let client = reqwest::source_pool::gateway_builder_from_environment(connect)?
+                .dns_resolver(resolver.clone())
+                .build()?;
+            let pool = client
+                .source_http1_pool_control()
+                .ok_or("gateway source pool absent")?;
+            Ok(Arc::new(Self {
+                client,
+                pool,
+                connect,
+                oauth,
+                stop: CancellationToken::new(),
+                resolver,
+            }))
+        }
     }
     pub fn cancellation(&self) -> CancellationToken {
         self.stop.clone()
@@ -117,8 +137,13 @@ impl Network {
             followed += 1;
         }
     }
-    pub async fn shutdown(&self) {
+    pub async fn shutdown(&self) -> Result<()> {
         self.stop.cancel();
         self.pool.close().await;
+        // DELETE/callback/browser cleanup is finished before the network owner
+        // closes DNS admission. Then join every actual registered helper child.
+        #[cfg(unix)]
+        self.resolver.close().await?;
+        Ok(())
     }
 }

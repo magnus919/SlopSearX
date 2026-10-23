@@ -3,8 +3,12 @@
   "oracle_execution": "none; source-derived contracts plus retained component captures",
   "files": [
     {
+      "path": ".github/workflows/rust.yml",
+      "sha256": "0d5ce62777aa3751da3d9404d4a49b829f7200374fc263dbe5257035e941b215"
+    },
+    {
       "path": "Cargo.lock",
-      "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1"
+      "sha256": "ebbcd0e37416ef61cb75415b56136603ba6ef5ce506ba2fceb07c1cd97bc75c8"
     },
     {
       "path": "Cargo.toml",
@@ -12,19 +16,31 @@
     },
     {
       "path": "crates/ssx-gateway/Cargo.toml",
-      "sha256": "6916591d40065b525ec61f87c731127c9c12fa984079e99fc9a1f3cd10ee6ab6"
+      "sha256": "f0729ad3fec717fc12822a38f522058b441790f6fabcd0812fa535b211a6f754"
+    },
+    {
+      "path": "crates/ssx-gateway/src/bin/ssx-gateway-dns-fixture.rs",
+      "sha256": "17971b72c1812dcddb88f62fd3f924a364c6823432dd34418f43ee96beec6653"
+    },
+    {
+      "path": "crates/ssx-gateway/src/bin/ssx-gateway-dns.rs",
+      "sha256": "00e115195d5570b7994ecf1097ca14c861306d051b541e68d92252dcedb6a466"
     },
     {
       "path": "crates/ssx-gateway/src/main.rs",
       "sha256": "e8a9942798b697f85bda53349c36fa1373fc9318d21f380705b331abe6650d3c"
     },
     {
+      "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
+      "sha256": "f6e03c111935b6d1904fc9b1e46baf74a1553e1f56bf0d1823a217cbf7f8d3a0"
+    },
+    {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
-      "sha256": "2739f4872aaadcae4608097514c05cde517df677b0953f5443832103bc5284d2"
+      "sha256": "b153c775e113b0b328b09191d74ef343241b7459b8896f3c49f953b8acf76771"
     },
     {
       "path": "crates/ssx-mcp/Cargo.toml",
-      "sha256": "5be63b387282651185fdc0ffe44380096c6e45bff9f134615c7f5b29b7dffd8c"
+      "sha256": "57d767ac9dac5d959cfe7b8748c531647bb7482a07a74dbfd2af77c42569c8a4"
     },
     {
       "path": "crates/ssx-mcp/src/bin/mcp-qualification.rs",
@@ -52,11 +68,11 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/mod.rs",
-      "sha256": "5d11f741885adb39dd355b37c1393ea368bfd57c6f503f3fec230153c26baac5"
+      "sha256": "e400a90e25cef3e7e75afc7a53604f33a2610326e995cd1ed2339344e8d4cb32"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/network.rs",
-      "sha256": "08860f89aef805c0f0c2c14363c94522d1ea7886c4b27fe7703f5fb4ddf245eb"
+      "sha256": "55b9a66f40084167ffbacdd226630d910b5e9b3d8a5a224f40ebf51983dbe57f"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/oauth.rs",
@@ -71,8 +87,28 @@
       "sha256": "10b25d17e09b75f4d4e61a5f5bfc437522b0774b83b76c3ffd9b2eca79bc9429"
     },
     {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/helper.rs",
+      "sha256": "5318c439dc539f77c6366bb07cfbf85218489a5c5a5a0551c455dce24bba39ce"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/install.rs",
+      "sha256": "0aa5f4125f1d0077781d439f4b829e69acbe80474ef2532ac43e186aad605bd1"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/mod.rs",
+      "sha256": "bd253d2dcf858ae073fa35ca90f96804c966615c24d572612cc407fa63293b7d"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/protocol.rs",
+      "sha256": "739c4947998abdc9cd011c3799818a9900aa1dcd7918359574fbf35e2fdfd34d"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/runtime.rs",
+      "sha256": "e2189e1e0e285163e22ac304a373bf31f3e6e600f8267b2c6e738d18d027161e"
+    },
+    {
       "path": "crates/ssx-mcp/src/gateway_client/runtime.rs",
-      "sha256": "001ab01bdc994c24f4670577b14ba0a252cdda13b654c78f0a4479254cee6252"
+      "sha256": "b31a539b031fcf57790e43b7deef27e0b8599b964882183ad7a4156107a324d7"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/settings.rs",
@@ -116,7 +152,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/opaque.rs",
-      "sha256": "071ad9556b801fe073dc947ae70c3160b17481cdc8b68372bb9476301241859d"
+      "sha256": "f46db8ce513e3c399169f3560324982c19562f05cc7c5b4658be581c81bc14ab"
     },
     {
       "path": "crates/ssx-mcp/src/search_surface/entities.rs",
@@ -164,7 +200,7 @@
     },
     {
       "path": "crates/ssx-mcp/tests/t07_streaming_seam.rs",
-      "sha256": "22d191edfd35f873edaed45170a354325336a036f7b48e636854596eaa985140"
+      "sha256": "1c7585183819284c62eae327906e50ec02ae910503819e6c4c6b649153669c31"
     },
     {
       "path": "crates/ssx-source-codecs/provenance/idna/inputs/SpecialCasing-16.0.0.txt",
@@ -173,6 +209,14 @@
     {
       "path": "crates/ssx-source-codecs/provenance/idna/inputs/UnicodeData-16.0.0.txt",
       "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f"
+    },
+    {
+      "path": "crates/xtask/src/gateway_package.rs",
+      "sha256": "ad651c0172d90da0f73c93fada658c517b5fde4faa72f4257a8e0f8ffc6772dd"
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "cf29f49aa50f10c39aba47e6eadb3020602821a7ef1055ce709cca644e43023d"
     },
     {
       "path": "crates/xtask/src/t01.rs",
@@ -208,7 +252,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/CURRENT_SOURCE.md",
-      "sha256": "8b5f6bb4bb5cf873065ca894c5bdc7d53c4c0fb7996e3c462a0dc321f615ea16"
+      "sha256": "d787e2e728565b026d5eff7e0684809ecdbde6063740b653f214201663a27e29"
     },
     {
       "path": "docs/rust-rewrite/t07/OAUTH_REVIEW_V3.md",
@@ -248,7 +292,19 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor.rs",
-      "sha256": "f56abfd7044c27cfd94b1868701070963750838d1157b45d3f75a4eaa4416ee8"
+      "sha256": "eb200a808efb9423836a302478542d1eeb861a19d596e2b6088d50489d1978a8"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-dns-lock-successor-v1.json",
+      "sha256": "0ec1e1848d6e770cd54d9e9a49f86699eb5afe54deb7f011232c3b2c3f469833"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-dns-lock-successor.rs",
+      "sha256": "6c95f30c09b00a464941468437ea634f5e25e26fef91c0d716136153e4a207bc"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-dns-predecessor-v1/Cargo.lock",
+      "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1"
     },
     {
       "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-LICENSE.txt",
@@ -2036,6 +2092,17 @@
     "gateway_client::oauth_policy::tests::source_scope_priority_and_stepup_union_keep_granted_scope",
     "gateway_client::redirect::tests::source_redirects_keep_method_origin_and_userinfo",
     "gateway_client::redirect::tests::source_static_url_basic_overrides_bearer_but_oauth_does_not_use_url_basic",
+    "gateway_client::resolver::install::tests::changed_gateway_or_helper_bytes_cannot_reuse_record_identity",
+    "gateway_client::resolver::install::tests::duplicate_unknown_record_fields_and_bad_shape_are_rejected",
+    "gateway_client::resolver::install::tests::installed_symlinks_hardlinks_and_writable_package_entries_are_rejected",
+    "gateway_client::resolver::install::tests::missing_wrong_role_or_changed_record_fails_before_any_helper_spawn",
+    "gateway_client::resolver::install::tests::normal_cargo_input_hardlinks_are_copied_to_single_link_private_outputs",
+    "gateway_client::resolver::install::tests::repeated_staging_reuses_only_exact_matching_complete_package",
+    "gateway_client::resolver::install::tests::staged_record_discovers_helper_without_runtime_user_configuration",
+    "gateway_client::resolver::protocol::tests::response_rejects_trailing_truncated_or_hostile_count",
+    "gateway_client::resolver::protocol::tests::sockaddr_response_preserves_sequence_scope_flow_and_returned_port",
+    "gateway_client::resolver::protocol::tests::socket_conversion_order_is_distinct",
+    "gateway_client::resolver::runtime::tests::anyio_scoped_literal_compression_keeps_source_scope",
     "gateway_client::settings::tests::blank_token_override_and_raw_token_path",
     "gateway_client::settings::tests::boolean_environment_and_mutual_exclusion",
     "gateway_client::settings::tests::cli_overrides_environment_without_reading_engine_keys",
@@ -2071,7 +2138,8 @@
   "seam_tests": [
     "correlated_sse_completes_before_eof_and_releases_actual_body_lease",
     "dropped_unbounded_initialize_retains_session_for_delete_and_disables_readiness",
-    "failed_discovery_keeps_cleanup_owner_and_zero_budget_dispatches_nothing"
+    "failed_discovery_keeps_cleanup_owner_and_zero_budget_dispatches_nothing",
+    "session_delete_grace_expires_at_sdk_budget_drops_waiter_and_retains_retry_identity"
   ],
   "process_tests": [
     "actual_native_oauth_non200_refresh_falls_back_to_authorization_without_second_registration",
@@ -2101,5 +2169,28 @@
     "vendor/ssx-http-source/hyper/.cargo-ok",
     "vendor/ssx-http-source/reqwest/.cargo-ok",
     "vendor/ssx-sdk-auth/rmcp/.cargo-ok"
+  ],
+  "dns_owner_tests": [
+    "request_abort_cancels_held_helper_and_close_reaps_group",
+    "outer_request_owner_abort_retains_independent_runtime_close_obligation",
+    "prespawn_admission_and_close_do_not_leave_untracked_child",
+    "concurrent_registration_close_and_close_callers_are_owned",
+    "close_future_abort_keeps_join_registry_for_next_close",
+    "helper_crash_malformed_oversize_and_timeout_all_retire",
+    "multiple_held_lookups_shutdown_cancels_and_reaps_every_row",
+    "numeric_skips_helper_but_hostname_lookup_precedes_original_port_failure",
+    "scoped_ipv6_retains_returned_ports_flow_scope_and_sequence",
+    "native_artifact_identity_is_explicit_and_digest_checked",
+    "pipe_eof_before_normal_exit_preserves_original_success",
+    "pipe_eof_while_leader_lives_obeys_lookup_budget_then_retires",
+    "pipe_conversion_failure_keeps_exact_spawned_child_until_reaped",
+    "repeated_close_after_retirement_keeps_group_absence_and_closed_admission",
+    "reqwest_hook_preserves_native_sockaddr_sequence_scope_flow_and_ports",
+    "dropping_reqwest_lookup_cancels_original_child_and_explicit_close_joins",
+    "actual_gateway_cancelled_held_dns_retires_child_before_next_rpc_and_eof",
+    "actual_gateway_eof_cancels_held_dns_and_joins_original_child",
+    "actual_gateway_sigterm_cancels_held_dns_with_parent_stdin_open",
+    "actual_gateway_eof_bounds_session_delete_held_fresh_dns_and_joins_original_child",
+    "actual_gateway_sigterm_bounds_session_delete_held_fresh_dns_with_stdin_open"
   ]
 }
