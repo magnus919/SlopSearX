@@ -1,0 +1,13 @@
+{
+  "archive_path": "docs/rust-rewrite/w03/source-archives/cdfab98eb0308bacedb83f0dee7e5db85002665c.py.frozen",
+  "baseline": "87af8096d46359241421ac747ed6aa1ad07f38ec",
+  "candidate_commit": "4960be835b72ad6e0e506943141a9c27b7afeda9",
+  "candidate_git_blob": "6b2f6aba503b6cd50a7ac30ef2426876e0e1e76d",
+  "candidate_sha256": "14f409498ffe56ebe45f578e1abb3433b018780f2404355da1d152842fafeb45",
+  "frozen_capture_manifests": "unchanged; historical producer captures remain immutable and are not rerun.",
+  "original_git_blob": "cdfab98eb0308bacedb83f0dee7e5db85002665c",
+  "original_sha256": "d8c4b3e1d2a73a2dd021c2a7e3a1fecf03676426b0c2a7e6d43d827eb4c5aca8",
+  "path": "tests/test_coverage_operator_handoff.py",
+  "schema": "slopsearx.w03.explicit-source-amendment.v1",
+  "scope": "Single test method: replace direct write_bytes/chmod and write_text/chmod with handoff._write_new for receipt response and ASCII SHA-256 pin. Test assertions and production code are unchanged."
+}

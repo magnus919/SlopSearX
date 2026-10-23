@@ -686,10 +686,9 @@ class OperatorReceiptHandoffTests(unittest.TestCase):
                     plan=plan,
                 )
             response = request_path.parent.parent / "responses" / "permit.receipt"
-            response.write_bytes(receipt)
-            response.chmod(0o600)
-            (request_path.parent.parent / "pins" / "permit.sha256").write_text(digest(receipt) + "\n")
-            (request_path.parent.parent / "pins" / "permit.sha256").chmod(0o600)
+            handoff._write_new(response, receipt)
+            pin = request_path.parent.parent / "pins" / "permit.sha256"
+            handoff._write_new(pin, (digest(receipt) + "\n").encode("ascii"))
             worker.join(timeout=3)
             self.assertFalse(worker.is_alive())
             self.assertEqual(result, [(receipt, digest(receipt))])

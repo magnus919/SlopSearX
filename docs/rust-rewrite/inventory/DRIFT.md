@@ -843,3 +843,8 @@ source mapping plus native assertions, never new Python runs or oracle captures.
 No Python source, interpreter command, configured hook or original file hash is
 added or changed. Python invocation inventory and all retirement dispositions
 remain intact; parent review/current-main integration and hosted CI are pending.
+
+
+## PR #1024 source binding reconciliation
+
+PR #1024 changes only the existing test module `tests/test_coverage_operator_handoff.py` (blob `cdfab98eb0308bacedb83f0dee7e5db85002665c` → `6b2f6aba503b6cd50a7ac30ef2426876e0e1e76d`). In its late-registration handoff case, the test now publishes the response and SHA pin through the existing `_write_new` helper instead of direct write/chmod sequences. The tracked path, Python disposition, owner, and invocation inventory are unchanged; no runtime entrypoint or provider invocation was added or removed. F01 must refresh the exact current-source pin without changing its path set, count, dispositions, or parity assertions. W03 retains a separate historical source-pin guard for the prior whole-file bytes; do not claim its source check passes on this revision until its owner reconciles that guard explicitly.

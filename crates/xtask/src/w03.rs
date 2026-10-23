@@ -4,6 +4,13 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
 const BASELINE: &str = "87af8096d46359241421ac747ed6aa1ad07f38ec";
+const AMENDED_SOURCE: &str = "tests/test_coverage_operator_handoff.py";
+const AMENDED_OLD_BLOB: &str = "cdfab98eb0308bacedb83f0dee7e5db85002665c";
+const AMENDED_OLD_SHA256: &str = "d8c4b3e1d2a73a2dd021c2a7e3a1fecf03676426b0c2a7e6d43d827eb4c5aca8";
+const AMENDED_NEW_BLOB: &str = "6b2f6aba503b6cd50a7ac30ef2426876e0e1e76d";
+const AMENDED_NEW_SHA256: &str = "14f409498ffe56ebe45f578e1abb3433b018780f2404355da1d152842fafeb45";
+const AMENDED_ARCHIVE: &str =
+    "docs/rust-rewrite/w03/source-archives/cdfab98eb0308bacedb83f0dee7e5db85002665c.py.frozen";
 const EVIDENCE: &[(&str, &str)] = &[
     (
         "docs/rust-rewrite/w03/error-envelope-map.json",
@@ -78,6 +85,14 @@ const EVIDENCE: &[(&str, &str)] = &[
         "244826a3dd34cec98088670e7866a1e82626ec8e0b00a6e8779afb9276716c4f",
     ),
     (
+        "docs/rust-rewrite/w03/source-archives/cdfab98eb0308bacedb83f0dee7e5db85002665c.py.frozen",
+        "d8c4b3e1d2a73a2dd021c2a7e3a1fecf03676426b0c2a7e6d43d827eb4c5aca8",
+    ),
+    (
+        "docs/rust-rewrite/w03/source-amendment.json",
+        "30fe74a604be2a6f8775c455569dd44c8706b02743debf7e81907057b6f151a3",
+    ),
+    (
         "docs/rust-rewrite/w03/evidence/guard-log-manifest.json",
         "67bcc7e5820ed7606e78a0bc4c65a72f354ffce3251986a37ad6cb0c5c840f04",
     ),
@@ -89,6 +104,24 @@ fn digest(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
+
+fn amended_source_matches(original: &[u8], candidate: &[u8]) -> bool {
+    const OLD: &[u8] = b"            response.write_bytes(receipt)\n            response.chmod(0o600)\n            (request_path.parent.parent / \"pins\" / \"permit.sha256\").write_text(digest(receipt) + \"\\n\")\n            (request_path.parent.parent / \"pins\" / \"permit.sha256\").chmod(0o600)";
+    const NEW: &[u8] = b"            handoff._write_new(response, receipt)\n            pin = request_path.parent.parent / \"pins\" / \"permit.sha256\"\n            handoff._write_new(pin, (digest(receipt) + \"\\n\").encode(\"ascii\"))";
+    let occurrences = original.windows(OLD.len()).filter(|w| *w == OLD).count();
+    if occurrences != 1 {
+        return false;
+    }
+    let Some(index) = original.windows(OLD.len()).position(|w| w == OLD) else {
+        return false;
+    };
+    let mut expected = original.to_vec();
+    expected.splice(index..index + OLD.len(), NEW.iter().copied());
+    expected == candidate
+        && digest(original) == AMENDED_OLD_SHA256
+        && digest(candidate) == AMENDED_NEW_SHA256
+}
+
 fn read(root: &Path, path: &str) -> Result<Value> {
     serde_json::from_slice(&fs::read(root.join(path)).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())
@@ -352,13 +385,65 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     if pins["baseline"] != BASELINE || array(&pins, "sources")?.len() != 315 {
         return Err("W03 oracle source provenance mismatch".into());
     }
+    let amendment = read(root, &format!("{directory}/source-amendment.json"))?;
+    if amendment["schema"] != "slopsearx.w03.explicit-source-amendment.v1"
+        || amendment["path"] != AMENDED_SOURCE
+        || amendment["baseline"] != BASELINE
+        || amendment["original_git_blob"] != AMENDED_OLD_BLOB
+        || amendment["original_sha256"] != AMENDED_OLD_SHA256
+        || amendment["archive_path"] != AMENDED_ARCHIVE
+        || amendment["candidate_git_blob"] != AMENDED_NEW_BLOB
+        || amendment["candidate_sha256"] != AMENDED_NEW_SHA256
+        || amendment["frozen_capture_manifests"]
+            != "unchanged; historical producer captures remain immutable and are not rerun."
+    {
+        return Err("W03 source-amendment manifest mismatch".into());
+    }
     let mut pinned = BTreeSet::new();
     for row in array(&pins, "sources")? {
         let path = row["path"].as_str().ok_or("W03 pin path absent")?;
-        if !pinned.insert(path)
-            || Some(digest(&fs::read(root.join(path)).map_err(|e| e.to_string())?).as_str())
-                != row["sha256"].as_str()
-        {
+        if !pinned.insert(path) {
+            return Err(format!("W03 duplicate original source pin: {path}"));
+        }
+        let expected = row["sha256"].as_str().ok_or("W03 source pin SHA absent")?;
+        let current = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+        if path == AMENDED_SOURCE {
+            if expected != AMENDED_OLD_SHA256 {
+                return Err("W03 historical amended-source pin changed".into());
+            }
+            let archive = fs::read(root.join(AMENDED_ARCHIVE)).map_err(|e| e.to_string())?;
+            if digest(&archive) != AMENDED_OLD_SHA256 || !amended_source_matches(&archive, &current)
+            {
+                return Err("W03 approved test-only source amendment mismatch".into());
+            }
+            let blob = command(
+                root,
+                "git",
+                &["rev-parse", &format!("{BASELINE}:{AMENDED_SOURCE}")],
+                records,
+            )?;
+            if blob.trim() != AMENDED_OLD_BLOB {
+                return Err("W03 amended source baseline blob mismatch".into());
+            }
+            let candidate_blob = command(root, "git", &["hash-object", AMENDED_SOURCE], records)?;
+            if candidate_blob.trim() != AMENDED_NEW_BLOB {
+                return Err("W03 amended source candidate blob mismatch".into());
+            }
+            // Finite controls: exact approved bytes pass; an added byte and a mutated archive fail.
+            let mut extra = current.clone();
+            extra.push(b'!');
+            let mut bad_archive = archive.clone();
+            if let Some(byte) = bad_archive.first_mut() {
+                *byte ^= 1;
+            }
+            if !amended_source_matches(&archive, &current)
+                || amended_source_matches(&archive, &extra)
+                || amended_source_matches(&bad_archive, &current)
+            {
+                return Err("W03 source-amendment negative control failed".into());
+            }
+            finite_negative_controls += 2;
+        } else if Some(digest(&current).as_str()) != Some(expected) {
             return Err(format!("W03 original source drift: {path}"));
         }
     }
