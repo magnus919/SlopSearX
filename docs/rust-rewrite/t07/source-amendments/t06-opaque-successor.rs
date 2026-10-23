@@ -1,10 +1,88 @@
 //! Exact current T07 opaque bytes compose with the immutable T06 native row.
-use super::super::{digest, edits, need, read};
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
+use std::fs;
 use std::path::Path;
 const CAPSULE: &str = "docs/rust-rewrite/t07/source-amendments/t06-opaque-successor-v1.json";
 const SHA: &str = "924bd720bf302560345ca264629e3aa4ce80b52df89897e9164b4cc5bc33f1c1";
 const BYTES: u64 = 32211;
+fn need(ok: bool, message: &str) -> Result<(), String> {
+    if ok { Ok(()) } else { Err(message.into()) }
+}
+fn digest(raw: &[u8]) -> String {
+    Sha256::digest(raw)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+fn raw_mode(mode: u32) -> String {
+    format!("{:04o}", mode & 0o7777)
+}
+#[cfg(unix)]
+fn permissions(path: &Path) -> Result<String, String> {
+    use std::os::unix::fs::PermissionsExt;
+    Ok(raw_mode(
+        fs::symlink_metadata(path)
+            .map_err(|e| e.to_string())?
+            .permissions()
+            .mode(),
+    ))
+}
+#[cfg(not(unix))]
+fn permissions(_: &Path) -> Result<String, String> {
+    Err("A06 source mode proof requires Unix".into())
+}
+fn text<'a>(row: &'a Value, key: &str) -> Result<&'a str, String> {
+    row[key]
+        .as_str()
+        .ok_or_else(|| format!("A06 missing {key}"))
+}
+fn material(row: &Value, raw: &[u8], mode: &str) -> Result<(), String> {
+    need(
+        row["sha256"] == digest(raw)
+            && row["bytes"].as_u64() == Some(raw.len() as u64)
+            && row["mode"] == mode,
+        "A06 exact source material differs",
+    )
+}
+fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    let path = root.join(text(row, "path")?);
+    let stat = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
+    need(
+        stat.is_file() && !stat.file_type().is_symlink(),
+        "A06 source must be regular, not symlink",
+    )?;
+    let raw = fs::read(&path).map_err(|e| e.to_string())?;
+    material(row, &raw, &permissions(&path)?)?;
+    Ok(raw)
+}
+fn edits(before: &[u8], changes: &Value) -> Result<Vec<u8>, String> {
+    let rows = changes.as_array().ok_or("A06 ordered edits absent")?;
+    need(!rows.is_empty(), "A06 ordered edits absent")?;
+    let mut output = Vec::new();
+    let mut end = 0;
+    for row in rows {
+        let at = row["at"]
+            .as_u64()
+            .and_then(|n| usize::try_from(n).ok())
+            .ok_or("A06 edit offset")?;
+        let remove = text(row, "remove_utf8")?.as_bytes();
+        let insert = text(row, "insert_utf8")?.as_bytes();
+        let next = at.checked_add(remove.len()).ok_or("A06 edit overflow")?;
+        need(
+            at >= end
+                && next <= before.len()
+                && &before[at..next] == remove
+                && (!remove.is_empty() || !insert.is_empty()),
+            "A06 edit preimage/order differs",
+        )?;
+        output.extend_from_slice(&before[end..at]);
+        output.extend_from_slice(insert);
+        end = next;
+    }
+    output.extend_from_slice(&before[end..]);
+    Ok(output)
+}
 fn document(raw: &[u8]) -> Result<Value, String> {
     need(digest(raw) == SHA, "T06 opaque capsule identity")?;
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
@@ -59,7 +137,7 @@ fn validate(doc: &Value, expected: &Value, prior: &[u8], actual: &[u8]) -> Resul
         "T06 exact default owner changed",
     )
 }
-pub(super) fn prove(root: &Path, expected: &Value, supplied_current: &[u8]) -> Result<(), String> {
+pub(crate) fn prove(root: &Path, expected: &Value, supplied_current: &[u8]) -> Result<(), String> {
     let doc = load(root)?;
     let prior = read(root, &doc["archive"])?;
     let actual = read(root, &doc["current"])?;
@@ -70,7 +148,7 @@ pub(super) fn prove(root: &Path, expected: &Value, supplied_current: &[u8]) -> R
     validate(&doc, expected, &prior, &actual)
 }
 #[cfg(test)]
-pub(super) fn controls(root: &Path) -> Result<(), String> {
+pub(crate) fn controls(root: &Path) -> Result<(), String> {
     let doc = load(root)?;
     let prior = read(root, &doc["archive"])?;
     let actual = read(root, &doc["current"])?;

@@ -1,6 +1,8 @@
 //! Native source-drift gate: reads frozen bytes, never executes Python.
 use sha2::{Digest, Sha256};
 use std::path::Path;
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/t06-opaque-successor.rs"]
+mod t07_opaque_successor;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -87,6 +89,12 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
     assert_eq!(digest(archive), storage["before_sha256"].as_str().unwrap());
     for row in native["files"].as_array().unwrap() {
         let name = row["file"].as_str().unwrap();
+        if name == "crates/ssx-mcp/src/opaque.rs" {
+            t07_opaque_successor::prove(&root, row, &std::fs::read(root.join(name)).unwrap())
+                .unwrap();
+            t07_opaque_successor::controls(&root).unwrap();
+            continue;
+        }
         let expected = if row["file"] == storage["file"] {
             assert_eq!(row["sha256"], storage["before_sha256"]);
             storage["after_sha256"].as_str().unwrap()
