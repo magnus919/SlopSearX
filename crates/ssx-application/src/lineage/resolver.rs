@@ -277,39 +277,62 @@ impl NativeResolver {
         let Some(index) = index.filter(|i| *i < snapshot.total()) else {
             return Ok(empty(root, Status::Missing));
         };
-        let mut edges = vec![edge(root.clone(), LineageRelation::DerivedFrom, parent)];
-        if self
-            .policy
-            .current()
-            .policy
-            .grants
-            .contains("retrieval_receipts")
+        let policy = self.policy.current();
+        if policy
+            .retained_engine_rejection(&snapshot.scope().selected_engines, "engines")
+            .is_err()
         {
-            match self
+            return Ok(Resolved {
+                node: Node::policy_denied(root.clone()),
+                edges: vec![],
+            });
+        }
+        let mut edges = vec![edge(root.clone(), LineageRelation::DerivedFrom, parent)];
+        if policy.policy.grants.contains("retrieval_receipts") {
+            let retained = self
                 .receipts
                 .read(tenant, root.id(), self.clock.now(), 20, cancel)
-                .await
+                .await;
+            if cancel.is_cancelled() {
+                return Err(Failure::Cancelled);
+            }
+            let current = self.policy.current();
+            if current
+                .retained_engine_rejection(&snapshot.scope().selected_engines, "engines")
+                .is_err()
             {
-                Ok(retained) => {
-                    for receipt in retained.receipts {
-                        if let Some(id) = receipt
-                            .get("receipt_id")
-                            .and_then(Value::as_str)
-                            .filter(|s| !s.is_empty())
-                        {
-                            let composite = composite_artifact_id(&[root.id(), id])
-                                .map_err(|_| Failure::Malformed)?;
-                            edges.push(edge(
-                                reference(ArtifactKind::RetrievalReceipt, &composite)?,
-                                LineageRelation::RetrievalOf,
-                                root.clone(),
-                            ));
+                return Ok(Resolved {
+                    node: Node::policy_denied(root.clone()),
+                    edges: vec![],
+                });
+            }
+            // Results remain visible without a receipt grant, but no receipt
+            // relationship may escape a grant revoked during this read.
+            if current.policy.grants.contains("retrieval_receipts") {
+                match retained {
+                    Ok(retained) => {
+                        for receipt in retained.receipts {
+                            if let Some(id) = receipt
+                                .get("receipt_id")
+                                .and_then(Value::as_str)
+                                .filter(|s| !s.is_empty())
+                            {
+                                let composite = composite_artifact_id(&[root.id(), id])
+                                    .map_err(|_| Failure::Malformed)?;
+                                edges.push(edge(
+                                    reference(ArtifactKind::RetrievalReceipt, &composite)?,
+                                    LineageRelation::RetrievalOf,
+                                    root.clone(),
+                                ));
+                            }
                         }
                     }
+                    // Source store.read reports no receipts when disconnected.
+                    Err(
+                        crate::receipts::Failure::Unavailable | crate::receipts::Failure::Closed,
+                    ) => {}
+                    Err(e) => return Err(map_failure(e)),
                 }
-                // Source store.read reports no receipts when disconnected.
-                Err(crate::receipts::Failure::Unavailable | crate::receipts::Failure::Closed) => {}
-                Err(e) => return Err(map_failure(e)),
             }
         }
         Ok(Resolved {
@@ -350,10 +373,9 @@ impl NativeResolver {
             return Ok(empty(root, Status::Missing).into());
         };
         let policy = self.policy.current();
-        if !policy.policy.grants.contains("retrieval_receipts")
-            || policy
-                .retained_engine_rejection(&snapshot.scope().selected_engines, "engines")
-                .is_err()
+        if policy
+            .retained_engine_rejection(&snapshot.scope().selected_engines, "engines")
+            .is_err()
         {
             return Ok(Resolved {
                 node: Node::policy_denied(root.clone()),
@@ -415,11 +437,21 @@ impl NativeResolver {
         let Ok(parts) = input::composite(root.id(), 2) else {
             return Ok(empty(root, Status::Missing));
         };
-        let retained = match self
+        let read = self
             .receipts
             .read(tenant, &parts[0], self.clock.now(), 20, cancel)
-            .await
-        {
+            .await;
+        if cancel.is_cancelled() {
+            return Err(Failure::Cancelled);
+        }
+        let policy = self.policy.current();
+        if !policy.policy.grants.contains("retrieval_receipts") {
+            return Ok(Resolved {
+                node: Node::policy_denied(root.clone()),
+                edges: vec![],
+            });
+        }
+        let retained = match read {
             Ok(v) => v,
             Err(crate::receipts::Failure::Unavailable | crate::receipts::Failure::Closed) => {
                 return Ok(empty(root, Status::Unavailable));
@@ -444,12 +476,7 @@ impl NativeResolver {
                 .iter()
                 .map(|v| v.as_str().map(str::to_owned))
                 .collect::<Option<Vec<_>>>();
-            names.is_some_and(|names| {
-                self.policy
-                    .current()
-                    .retained_engine_rejection(&names, "engines")
-                    .is_ok()
-            })
+            names.is_some_and(|names| policy.retained_engine_rejection(&names, "engines").is_ok())
         });
         if !allowed {
             return Ok(Resolved {
@@ -541,6 +568,7 @@ mod contract_tests {
     };
     use std::{
         collections::BTreeSet,
+        future::Future,
         num::NonZeroU64,
         sync::{
             Mutex,
@@ -701,7 +729,7 @@ mod contract_tests {
             workflows: Arc::new(NoWorkflows),
         }
     }
-    fn run<F: std::future::Future>(future: F) -> F::Output {
+    fn run<F: Future>(future: F) -> F::Output {
         let mut future = std::pin::pin!(future);
         let mut context = std::task::Context::from_waker(std::task::Waker::noop());
         match future.as_mut().poll(&mut context) {
@@ -875,17 +903,25 @@ mod contract_tests {
         fn groups(
             &self,
             snapshot: &ValidatedSnapshotRead,
-            _: u8,
+            version: u8,
         ) -> Result<Vec<EntityGroup>, Failure> {
             self.0.fetch_add(1, Ordering::SeqCst);
             snapshot.visit_results(&mut |_, _| {}).unwrap();
-            Ok(vec![])
+            Ok(if version == 2 {
+                vec![EntityGroup {
+                    id: "entity-v2-fixture".into(),
+                    namespace: "fixture".into(),
+                    result_indices: vec![0],
+                }]
+            } else {
+                vec![]
+            })
         }
     }
     #[test]
     fn entity_second_read_rechecks_live_policy_before_projected_visitation() {
-        for mutation in ["grant", "engine", "sensitive"] {
-            let mut initial = CurrentPolicy(true).current();
+        for mutation in ["absent", "grant", "engine", "sensitive"] {
+            let mut initial = CurrentPolicy(mutation != "absent").current();
             initial.policy.sensitive_engines.insert("brave".into());
             initial.policy.sensitive_allowed = true;
             let mut next = initial.clone();
@@ -898,7 +934,8 @@ mod contract_tests {
                     engines[0].enabled = false;
                     next.catalog = CatalogSnapshot::new(engines).unwrap();
                 }
-                _ => next.policy.sensitive_allowed = false,
+                "sensitive" => next.policy.sensitive_allowed = false,
+                _ => {}
             }
             let policy = Arc::new(Mutex::new(initial));
             let mut scope = ssx_domain::ScopeDecision::default();
@@ -907,7 +944,7 @@ mod contract_tests {
                 SnapshotId::new("snapshot-a").unwrap(),
                 "q".into(),
                 ssx_domain::QueryId::new("query-a").unwrap(),
-                vec![],
+                vec![SearchResult::default()],
                 scope,
                 tenant("tenant-a"),
                 WallClockTimestamp::new(50.).unwrap(),
@@ -947,15 +984,238 @@ mod contract_tests {
                 &Cancellation::default(),
             ))
             .unwrap();
-            assert_eq!(result.node.status, Status::PolicyDenied, "{mutation}");
-            assert!(result.edges.is_empty());
+            let allowed = matches!(mutation, "absent" | "grant");
+            assert_eq!(
+                result.node.status,
+                if allowed {
+                    Status::Live
+                } else {
+                    Status::PolicyDenied
+                },
+                "{mutation}"
+            );
+            assert_eq!(result.edges.len(), if allowed { 2 } else { 0 });
             assert_eq!(store.reads.load(Ordering::SeqCst), 2);
             assert_eq!(
                 entities.0.load(Ordering::SeqCst),
-                1,
-                "only parent snapshot may visit rows"
+                if allowed { 2 } else { 1 },
+                "only authorized rows may be visited"
             );
             assert_eq!(receipts.calls.load(Ordering::SeqCst), 0);
+        }
+    }
+
+    // Manual polling holds the actual repository future at an await boundary.
+    // Policy changes only after the lookup is pending, before its rows return.
+    #[derive(Default)]
+    struct ReadGate {
+        entered: std::sync::atomic::AtomicBool,
+        released: std::sync::atomic::AtomicBool,
+    }
+    impl ReadGate {
+        async fn wait(&self) {
+            std::future::poll_fn(|_| {
+                self.entered.store(true, Ordering::SeqCst);
+                if self.released.load(Ordering::SeqCst) {
+                    std::task::Poll::Ready(())
+                } else {
+                    std::task::Poll::Pending
+                }
+            })
+            .await;
+        }
+    }
+    struct HeldSnapshots {
+        snapshot: SearchSnapshot,
+        reads: AtomicUsize,
+        hold_at: usize,
+        gate: Arc<ReadGate>,
+    }
+    impl SnapshotRepository for HeldSnapshots {
+        fn create<'a>(
+            &'a self,
+            _: &'a SearchSnapshot,
+            _: NonZeroU64,
+        ) -> PortFuture<'a, Result<SnapshotWrite, SnapshotFailure>> {
+            Box::pin(async { panic!("readonly lineage created a snapshot") })
+        }
+        fn read<'a>(
+            &'a self,
+            _: &'a TenantId,
+            _: &'a SnapshotId,
+        ) -> PortFuture<'a, Result<Option<SearchSnapshot>, SnapshotFailure>> {
+            Box::pin(async move {
+                if self.reads.fetch_add(1, Ordering::SeqCst) == self.hold_at {
+                    self.gate.wait().await;
+                }
+                Ok(Some(self.snapshot.clone()))
+            })
+        }
+    }
+    struct HeldReceipts {
+        rows: Arc<Receipts>,
+        gate: Arc<ReadGate>,
+    }
+    impl ReceiptRepository for HeldReceipts {
+        fn replay<'a>(
+            &'a self,
+            _: &'a TenantId,
+            _: &'a str,
+            _: &'a str,
+            _: &'a str,
+            _: WallClockTimestamp,
+            _: &'a Cancellation,
+        ) -> PortFuture<'a, Result<Replay, ReceiptFailure>> {
+            Box::pin(async { panic!("readonly lineage replayed a receipt") })
+        }
+        fn submit<'a>(
+            &'a self,
+            _: Insert<'a>,
+        ) -> PortFuture<'a, Result<Submission, ReceiptFailure>> {
+            Box::pin(async { panic!("readonly lineage submitted a receipt") })
+        }
+        fn read<'a>(
+            &'a self,
+            tenant: &'a TenantId,
+            result: &'a str,
+            now: WallClockTimestamp,
+            limit: usize,
+            cancel: &'a Cancellation,
+        ) -> PortFuture<'a, Result<Retained, ReceiptFailure>> {
+            Box::pin(async move {
+                self.gate.wait().await;
+                self.rows.read(tenant, result, now, limit, cancel).await
+            })
+        }
+    }
+    fn revoke(policy: &mut PolicyService, mutation: &str) {
+        match mutation {
+            "grant" => {
+                policy.policy.grants.remove("retrieval_receipts");
+            }
+            "engine" => {
+                let mut engines = policy.catalog.engines().to_vec();
+                engines[0].enabled = false;
+                policy.catalog = CatalogSnapshot::new(engines).unwrap();
+            }
+            "sensitive" => policy.policy.sensitive_allowed = false,
+            _ => panic!("unknown policy mutation"),
+        }
+    }
+    fn assert_denied(value: &Resolved) {
+        assert_eq!(value.node.status, Status::PolicyDenied);
+        assert!(value.node.created_at.is_none());
+        assert!(value.node.expires_at.is_none());
+        assert_eq!(
+            value.node.details.as_ref().unwrap(),
+            json!({"reason":"current_policy_denied"})
+                .as_object()
+                .unwrap()
+        );
+        assert!(value.edges.is_empty());
+    }
+    #[test]
+    fn held_lineage_reads_revalidate_policy_before_publishing_metadata_or_edges() {
+        for projected in [false, true] {
+            for boundary in ["result_snapshot", "result_receipts", "receipt"] {
+                for mutation in ["engine", "sensitive", "grant"] {
+                    let mut initial = CurrentPolicy(true).current();
+                    initial.policy.sensitive_engines.insert("brave".into());
+                    initial.policy.sensitive_allowed = true;
+                    let policy = Arc::new(Mutex::new(initial));
+                    let gate = Arc::new(ReadGate::default());
+                    let mut scope = ssx_domain::ScopeDecision::default();
+                    scope.selected_engines = vec!["brave".into()];
+                    let snapshots = Arc::new(HeldSnapshots {
+                        snapshot: SearchSnapshot::new(
+                            SnapshotId::new("snapshot-held").unwrap(),
+                            "private query".into(),
+                            ssx_domain::QueryId::new("query-held").unwrap(),
+                            vec![SearchResult::default()],
+                            scope,
+                            tenant("tenant-a"),
+                            WallClockTimestamp::new(50.).unwrap(),
+                            None,
+                        )
+                        .unwrap(),
+                        reads: AtomicUsize::new(0),
+                        hold_at: if boundary == "result_snapshot" {
+                            1
+                        } else {
+                            usize::MAX
+                        },
+                        gate: gate.clone(),
+                    });
+                    let rows = Arc::new(Receipts {
+                        calls: AtomicUsize::new(0),
+                        rows: vec![receipt(json!(["brave"]))],
+                        trace: Arc::new(Mutex::new(vec![])),
+                    });
+                    let receipts: Arc<dyn ReceiptRepository> = if boundary == "result_snapshot" {
+                        rows.clone()
+                    } else {
+                        Arc::new(HeldReceipts {
+                            rows: rows.clone(),
+                            gate: gate.clone(),
+                        })
+                    };
+                    let resolver = NativeResolver {
+                        snapshots: SnapshotService::new(
+                            snapshots.clone(),
+                            Arc::new(TestClock),
+                            Arc::new(Ids),
+                            tenant("tenant-a"),
+                            SnapshotTtl::new(60).unwrap(),
+                        ),
+                        receipts,
+                        policy: Arc::new(PublishedPolicy(policy.clone())),
+                        clock: Arc::new(TestClock),
+                        entities: if projected {
+                            Arc::new(CountingProjected(AtomicUsize::new(0)))
+                        } else {
+                            Arc::new(NoEntities)
+                        },
+                        workflows: Arc::new(NoWorkflows),
+                    };
+                    let root = if boundary == "receipt" {
+                        ArtifactRef::new(
+                            ArtifactKind::RetrievalReceipt,
+                            composite_artifact_id(&["snapshot-held:0", "receipt-1"]).unwrap(),
+                        )
+                        .unwrap()
+                    } else {
+                        ArtifactRef::new(ArtifactKind::Result, "snapshot-held:0").unwrap()
+                    };
+                    let tenant = tenant("tenant-a");
+                    let cancel = Cancellation::default();
+                    let mut operation = std::pin::pin!(resolver.resolve(&tenant, &root, &cancel));
+                    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+                    assert!(operation.as_mut().poll(&mut context).is_pending());
+                    assert!(gate.entered.load(Ordering::SeqCst));
+                    revoke(&mut policy.lock().unwrap(), mutation);
+                    assert!(operation.as_mut().poll(&mut context).is_pending());
+                    gate.released.store(true, Ordering::SeqCst);
+                    let value = run(operation).unwrap();
+                    if mutation == "grant" && boundary != "receipt" {
+                        assert_eq!(value.node.status, Status::Live);
+                        assert_eq!(value.edges.len(), 1);
+                        assert_eq!(value.edges[0].relation, LineageRelation::DerivedFrom);
+                        assert_eq!(value.edges[0].to.kind(), ArtifactKind::Snapshot);
+                    } else {
+                        assert_denied(&value);
+                    }
+                    assert_eq!(
+                        snapshots.reads.load(Ordering::SeqCst),
+                        if boundary == "receipt" { 0 } else { 2 }
+                    );
+                    if boundary == "result_snapshot" && mutation != "grant" {
+                        assert_eq!(rows.calls.load(Ordering::SeqCst), 0);
+                    }
+                    if boundary != "result_snapshot" {
+                        assert_eq!(rows.calls.load(Ordering::SeqCst), 1);
+                    }
+                }
+            }
         }
     }
 }
