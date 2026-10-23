@@ -388,6 +388,7 @@ fn v2(r: &SearchResult) -> (Vec<Identity>, String, Value) {
     };
     (identities, reason, data)
 }
+type EntityEdges = BTreeMap<(String, String, String), Value>;
 pub(crate) struct Collector {
     cursor: String,
     version: u8,
@@ -395,7 +396,7 @@ pub(crate) struct Collector {
     index: BTreeMap<String, usize>,
     facts: BTreeMap<String, BTreeMap<String, Vec<u8>>>,
     conflicts: BTreeMap<String, BTreeSet<String>>,
-    edges: BTreeMap<(String, String, String), Value>,
+    edges: EntityEdges,
 }
 impl Collector {
     pub(crate) fn new(cursor: &str, version: u8) -> Self {
@@ -524,7 +525,7 @@ impl Collector {
             }
         }
     }
-    fn finish(mut self) -> (Vec<Value>, BTreeMap<(String, String, String), Value>) {
+    fn finish(mut self) -> (Vec<Value>, EntityEdges) {
         for (id, n) in self.index {
             self.groups[n]["conflicting_fields"] =
                 json!(self.conflicts.remove(&id).unwrap_or_default());

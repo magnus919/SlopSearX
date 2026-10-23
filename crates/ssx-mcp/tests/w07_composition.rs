@@ -3,10 +3,7 @@
 mod private_valkey;
 use sha2::{Digest, Sha256};
 use ssx_application::{
-    lineage::{
-        Resolver,
-        resolver::{Entities, ProjectedEntities},
-    },
+    lineage::resolver::{Entities, ProjectedEntities},
     policy::{PolicyService, SearchPolicy},
     receipts::{
         Cancellation,

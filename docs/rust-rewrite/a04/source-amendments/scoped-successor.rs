@@ -205,7 +205,12 @@ fn verify_merged_a13(root: &Path, current_row: &Value) -> Result<(), String> {
         next["current"] == accepted_main_row,
         "PR1034 A13 accepted-main predecessor row differs",
     )?;
-    let actual = read_material(root, current_row, "A06 actual CURRENT composed A13")?;
+    let w07_current = a06_source_successor::w07_evidence_successor::effective_current(
+        root,
+        XTASK_A13,
+        current_row,
+    )?;
+    let actual = read_material(root, &w07_current, "W07 actual CURRENT composed A13")?;
     check_source_transition(
         &next,
         &previous.bytes,
@@ -1086,7 +1091,9 @@ fn verify_validator_composition(root: &Path, document: &Value, row: &Value) -> R
         &transition["predecessor_archive"],
         "PR1034 HISTORICAL validator",
     )?;
-    let actual = read_material(root, row, "PR1034 CURRENT validator")?;
+    let w07_current =
+        a06_source_successor::w07_evidence_successor::effective_current(root, VALIDATOR, row)?;
+    let actual = read_material(root, &w07_current, "W07 actual CURRENT validator")?;
     check_source_transition(
         transition,
         &old,

@@ -6,6 +6,8 @@ use std::{fs, path::Path};
 mod a13_header_layout_successor;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
+#[path = "w07-evidence-successor.rs"]
+pub(crate) mod w07_evidence_successor;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
 const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v1.json";
 const VALIDATOR: &str = "docs/rust-rewrite/a13/source-amendments/validator.rs";
