@@ -104,7 +104,8 @@ observer around the existing handler future. Its ID-bound pending marker is
 emitted only after that actual receipt-read future yields; its drained marker
 is emitted only after the future returns. The parent holds only its disposable
 Valkey, closes stdin after the pending acknowledgement, and requires handler
-drain, overall-owner backend close, and child exit before unpausing the server.
+drain with that actual RequestContext cancellation token set, overall-owner
+backend close, and child exit before unpausing the server.
 Success and Result-error paths resume the private server and reap the child.
 The observer creates no task, backend, shutdown owner, or replacement policy.
 This process journey has not run. W07 supplies usable native evidence APIs, storage, fixtures, and these

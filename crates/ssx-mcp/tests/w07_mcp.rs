@@ -752,9 +752,10 @@ async fn stdio_journey(
         .map(ssx_json::from_str::<Value>)
         .collect::<std::result::Result<Vec<_>, _>>()?;
     need(
-        rows.iter()
-            .any(|v| v["w07_read_drained"] == true && v["id"] == pending_id),
-        "pending evidence handler did not report drain",
+        rows.iter().any(|v| {
+            v["w07_read_drained"] == true && v["id"] == pending_id && v["context_cancelled"] == true
+        }),
+        "EOF did not cancel and drain the pending evidence handler",
     )?;
     need(
         rows.iter().any(|v| {
