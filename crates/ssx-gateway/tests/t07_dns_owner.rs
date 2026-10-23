@@ -648,9 +648,8 @@ async fn process_case(stop: ProcessStop) {
         }
         let pid=tokio::time::timeout(Duration::from_secs(3),async {
             loop {
-                if let Ok(text)=std::fs::read_to_string(control.with_extension("ready")) {
-                    if let Ok(pid)=text.trim().parse::<u32>() { break pid; }
-                }
+                if let Ok(text)=std::fs::read_to_string(control.with_extension("ready"))
+                    && let Ok(pid)=text.trim().parse::<u32>() { break pid; }
                 tokio::task::yield_now().await;
             }
         }).await.unwrap();
