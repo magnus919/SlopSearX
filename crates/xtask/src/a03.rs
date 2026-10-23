@@ -186,7 +186,15 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         return Err("A03 source observation inventory differs".into());
     }
     for (path, expected) in SOURCE {
-        if command(root, "git", &["hash-object", "--", path], records)?.trim() != *expected {
+        let current = command(root, "git", &["hash-object", "--", path], records)?;
+        if *path == crate::t06::lock_amendment::SOURCE_PATH {
+            crate::t06::lock_amendment::verify(
+                root,
+                path,
+                crate::t06::lock_amendment::HISTORICAL_SHA256,
+            )?;
+            crate::t06::lock_amendment::verify_git_pins(path, expected, expected, current.trim())?;
+        } else if current.trim() != *expected {
             return Err(format!("A03 source drift: {path}"));
         }
     }

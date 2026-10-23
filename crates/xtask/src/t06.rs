@@ -1,6 +1,8 @@
 //! Source-bound actual T06 search/discovery qualification. Never executes Python.
 use crate::a13::a06_source_successor::w07_evidence_successor;
 use crate::{Result, command};
+#[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
+pub(crate) mod lock_amendment;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
@@ -99,8 +101,13 @@ const T06_SERVICE: &[&str] = &[
     "preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership",
     "runtime_scope_warning_survives_native_mcp_and_snapshot_without_cache_admission",
 ];
-const T06_SOURCE_BINDINGS: &[&str] =
-    &["original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings"];
+const T06_SOURCE_BINDINGS: &[&str] = &[
+    "original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings",
+    "lock_amendment::tests::exact_security_lock_successor_retains_historical_profile_and_shared_runtime_disclosure",
+    "lock_amendment::tests::changed_entry_sdk_and_unrelated_lock_mutants_cannot_use_the_amendment",
+    "lock_amendment::tests::inverse_scope_rejects_missing_duplicate_extra_and_tampered_package_spans",
+    "lock_amendment::tests::source_path_row_hash_manifest_git_mode_and_missing_material_controls_fail_closed",
+];
 const T06_TRANSPORT: &[&str] = &[
     "wall_guard::tests::operation_errors_preserve_error_and_join_watchdog",
     "wall_guard::tests::real_wall_timeout_cancels_and_drains_operation",
@@ -221,7 +228,13 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         for row in v[key].as_array().unwrap() {
             let path = row["file"].as_str().ok_or("T06 binding path")?;
             let bytes = fs::read(root.join(path)).map_err(|e| format!("T06 {path}: {e}"))?;
-            if Some(digest(&bytes).as_str()) != row["sha256"].as_str() {
+            if key == "sources" && path == crate::t06::lock_amendment::SOURCE_PATH {
+                crate::t06::lock_amendment::verify(
+                    root,
+                    path,
+                    row["sha256"].as_str().ok_or("T06 lock row hash")?,
+                )?;
+            } else if Some(digest(&bytes).as_str()) != row["sha256"].as_str() {
                 return Err(format!("T06 reviewed source/capture drift: {path}"));
             }
             if key == "sources" {
@@ -232,7 +245,14 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                     &["rev-parse", &format!("{BASELINE}:{path}")],
                     records,
                 )?;
-                if current.trim() != accepted.trim() {
+                if path == crate::t06::lock_amendment::SOURCE_PATH {
+                    crate::t06::lock_amendment::verify_git_pins(
+                        path,
+                        accepted.trim(),
+                        accepted.trim(),
+                        current.trim(),
+                    )?;
+                } else if current.trim() != accepted.trim() {
                     return Err(format!("T06 original baseline drift: {path}"));
                 }
             }
