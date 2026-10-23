@@ -15,7 +15,7 @@ use main_successor::{
     CURRENT_SHA as MAIN_CURRENT_SHA, PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
-const REGISTRY_SHA: &str = "84f6fff38b4989c2d24761ba6d2f513c80f39afbdbf4425cecc60d04cf4589bf";
+const REGISTRY_SHA: &str = "d3d8e7cad25325cf010a884b0103c8e70584b7c663051d0617b11a36b4d9e10f";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -60,9 +60,15 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     }
     let bytes = fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
     if sha(&bytes) != expected {
-        return Err(format!(
-            "W07 source drift requires finite reviewed reconciliation: {path}"
-        ));
+        if path == crate::t06::lock_amendment::SOURCE_PATH
+            && expected == crate::t06::lock_amendment::HISTORICAL_SHA256
+        {
+            crate::t06::lock_amendment::verify(root, path, expected)?;
+        } else {
+            return Err(format!(
+                "W07 source drift requires finite reviewed reconciliation: {path}"
+            ));
+        }
     }
     Ok(bytes)
 }

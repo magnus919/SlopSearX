@@ -31,10 +31,10 @@ async fn rpc(client: &reqwest::Client, url: &str, method: &str, params: Value) -
 #[tokio::test]
 async fn measured_python_descriptors_and_negative_calls_match_actual_native_http() -> Result<()> {
     let reference: Value = ssx_json::from_str(include_str!(
-        "../../../docs/rust-rewrite/w07/wire-reference.json"
+        "../../../docs/rust-rewrite/t06/source-amendments/packaging262-wire.json"
     ))?;
     let successor: Value = ssx_json::from_str(include_str!(
-        "../../../docs/rust-rewrite/w07/wire-reference-packaging263.json"
+        "../../../docs/rust-rewrite/t06/source-amendments/packaging263-wire.json"
     ))?;
     for field in ["tools", "full_catalog", "cases"] {
         if reference[field] != successor[field] {

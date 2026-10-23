@@ -38,9 +38,12 @@ No fields, bytes, missing/null distinctions or error text are normalized.
 All-catalog metadata is retained for the finite packaging comparison; this is
 not evidence that every T06 behavior or every Python test has been replayed.
 
-`wire-reference.json` is the immutable packaging26.2 observation used by this
-scope. The separately captured packaging26.3 profile is compared as an additive
-shared-runtime dependency observation. The historical T06 observations, source
+The canonical observations are
+`../t06/source-amendments/packaging262-wire.json` and
+`../t06/source-amendments/packaging263-wire.json`. W07 uses the exact paired
+bytes already retained by A06; the duplicate W07 copies were removed.
+The packaging26.3 profile is compared as an additive shared runtime dependency
+observation. The historical T06 observations, source
 bindings and producer bytes remain frozen; packaging is runtime-reachable
 through FastMCP and is not described as a development-only dependency.
 
@@ -74,3 +77,21 @@ attribution; its F03 workspace Clippy failure is preserved, and the one-line
 source correction has not been relabeled as a pass. D's current native gate
 and inherited qualification remain pending. The measured Python artifacts and
 the exact e695-to-cb11 main proof chain are unchanged.
+
+## Accepted dependency bridge integration
+
+The published security update19fa and accepted source bridge6cd are integrated
+through normal cherry-picks. The original125-source Python observations still
+contain the original `uv.lock` hash. Only that exact path and frozen old hash
+may call the accepted finite lock verifier when the actual bytes differ. The
+verifier requires the exact current three-package update and reconstructs every
+old byte; the other124 measured source bindings retain strict byte hashes.
+`mcp-tools-source.json` and historical T06 manifests are unchanged.
+
+Both T06 source consumers retain the W07 V3 search proof and add the UV proof.
+W07 also executes the exact accepted five-test source-binding target, including
+the four amendment rejection controls. It now requires79 named native tests
+and22 individual measured wire completions. No D native qualification is claimed.
+The A06 owner's strict checks and123 controls passed on that owner's source;
+its remaining consumer gates were still running when this source integration
+was authorized. Those results are not relabeled as a D or full A06 gate pass.
