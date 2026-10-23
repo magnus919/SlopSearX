@@ -275,3 +275,6 @@ impl ReceiptRepository for ValkeyReceipts {
         })
     }
 }
+
+/// Readonly workflow records; receipt persistence above is unchanged.
+pub mod lineage;
