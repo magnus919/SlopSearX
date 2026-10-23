@@ -10,14 +10,14 @@ jobs:
   duplicate-detection:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Detect duplicate code with jscpd
         run: npx jscpd --min-tokens 50 --min-lines 5 --threshold 25 slopsearx/ engines/
 
   analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Large file detection
         run: |
           echo "Checking for files over 200KB..."
@@ -41,7 +41,7 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -90,7 +90,7 @@ jobs:
     env:
       SLOPSEARX_TEST_VALKEY_URL: redis://127.0.0.1:6379/0
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -104,7 +104,7 @@ jobs:
   searxng-api-contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -126,7 +126,7 @@ jobs:
             expected: "1"
             key: ci-synthetic-key
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -141,7 +141,7 @@ jobs:
   portal-contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -158,7 +158,7 @@ jobs:
   portal-browser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -181,7 +181,7 @@ jobs:
         python-version: ["3.12", "3.13"]
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v7
@@ -244,7 +244,7 @@ jobs:
   monitoring-rules:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Configure hosted-runner Docker Hub cache
         run: python3 scripts/configure_ci_dockerhub_mirror.py
       - name: Validate Prometheus rules and firing behavior
