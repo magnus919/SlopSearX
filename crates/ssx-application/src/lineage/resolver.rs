@@ -566,6 +566,7 @@ mod contract_tests {
             SnapshotWrite,
         },
     };
+    use ssx_domain::SearchResult;
     use std::{
         collections::BTreeSet,
         future::Future,
