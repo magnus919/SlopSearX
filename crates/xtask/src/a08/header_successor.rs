@@ -625,7 +625,15 @@ pub(crate) fn verify(root: &Path, records: &mut Vec<Value>) -> Result<Value> {
     let mut materials = BTreeMap::new();
     for row in rows(&doc, "fixed_sources")? {
         let path = str_field(row, "path")?;
-        materials.insert(path.to_owned(), load(root, path)?);
+        let material = if path == "Cargo.toml" {
+            Material {
+                bytes: crate::a13::a06_source_successor::user_agent_manifest_prior(root, row)?,
+                mode: 0o644,
+            }
+        } else {
+            load(root, path)?
+        };
+        materials.insert(path.to_owned(), material);
     }
     for t in rows(&doc, "transitions")? {
         for key in ["archive", "after"] {

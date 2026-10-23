@@ -7,10 +7,14 @@ const CAPSULE_SHA: &str = "f106ec3a76a2c84a31bdfa85330a9538e7a03bd2ce1d69c68f3c2
 const CAPSULE_BYTES: u64 = 22354;
 #[path = "gateway-dns-lock-successor.rs"]
 mod gateway_dns_lock_successor;
+#[path = "gateway-xtask-main-successor.rs"]
+mod gateway_xtask_main_successor;
+#[path = "t06-opaque-successor.rs"]
+mod t06_opaque_successor;
 const PATHS: [&str; 2] = ["Cargo.toml", "Cargo.lock"];
 
 pub(super) fn selected(path: &str) -> bool {
-    PATHS.contains(&path)
+    PATHS.contains(&path) || gateway_xtask_main_successor::selected(path)
 }
 fn document(raw: &[u8]) -> Result<Value, String> {
     super::need(
@@ -99,6 +103,9 @@ fn materials(root: &Path, expected: &Value) -> Result<(Vec<u8>, Vec<u8>, Value),
     Ok((prior, actual, row["current"].clone()))
 }
 pub(super) fn archived_prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    if gateway_xtask_main_successor::selected(super::text(expected, "path")?) {
+        return gateway_xtask_main_successor::archived_prior(root, expected);
+    }
     Ok(materials(root, expected)?.0)
 }
 pub(super) fn prove_current(
@@ -106,6 +113,15 @@ pub(super) fn prove_current(
     expected: &Value,
     supplied_prior: &[u8],
 ) -> Result<(), String> {
+    if gateway_xtask_main_successor::selected(super::text(expected, "path")?) {
+        let prior = gateway_xtask_main_successor::archived_prior(root, expected)?;
+        super::need(
+            prior == supplied_prior,
+            "T07 xtask supplied predecessor differs",
+        )?;
+        gateway_xtask_main_successor::actual_bytes(root, expected, &prior)?;
+        return Ok(());
+    }
     let (prior, actual, current) = materials(root, expected)?;
     super::need(
         prior == supplied_prior,
@@ -123,6 +139,10 @@ pub(super) fn prove_current(
     Ok(())
 }
 pub(super) fn actual_bytes(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    if gateway_xtask_main_successor::selected(super::text(expected, "path")?) {
+        let prior = gateway_xtask_main_successor::archived_prior(root, expected)?;
+        return gateway_xtask_main_successor::actual_bytes(root, expected, &prior);
+    }
     let (_, actual, current) = materials(root, expected)?;
     if expected["path"] == "Cargo.lock" {
         gateway_dns_lock_successor::actual_bytes(root, &current, &actual)
@@ -206,5 +226,15 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
         }
     }
     gateway_dns_lock_successor::controls(root)?;
+    gateway_xtask_main_successor::controls(root)?;
+    t06_opaque_successor::controls(root)?;
     Ok(())
+}
+
+pub(super) fn t06_opaque_material(
+    root: &Path,
+    expected: &Value,
+    actual: &[u8],
+) -> Result<(), String> {
+    t06_opaque_successor::prove(root, expected, actual)
 }

@@ -210,7 +210,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     for row in native["files"].as_array().unwrap() {
         let path = row["file"].as_str().ok_or("T06 native fixture path")?;
         let bytes = fs::read(root.join(path)).map_err(|e| format!("T06 {path}: {e}"))?;
-        validate_native_file(row, &bytes, &storage)?;
+        if path == "crates/ssx-mcp/src/opaque.rs" {
+            crate::a13::a06_source_successor::t07_opaque_material(root, row, &bytes)?;
+        } else {
+            validate_native_file(row, &bytes, &storage)?;
+        }
     }
 
     for key in ["sources", "artifacts"] {

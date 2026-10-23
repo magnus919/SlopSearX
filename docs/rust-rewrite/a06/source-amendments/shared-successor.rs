@@ -800,6 +800,25 @@ pub(crate) fn validator_baseline(
     )?;
     Ok((row["baseline"].clone(), before))
 }
+/// A08's immutable UA proof consumes the exact A06 manifest predecessor only
+/// after the existing T07 successor has proved the actual current root bytes.
+pub(crate) fn user_agent_manifest_prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    need(
+        *expected
+            == json!({"path":"Cargo.toml","sha256":"d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3","bytes":1984,"mode":420}),
+        "A08 exact manifest caller differs",
+    )?;
+    let doc = load(root)?;
+    let row = source(&doc, "Cargo.toml")?;
+    let (_, prior) = verify_transition(root, row)?;
+    need(
+        row["current"]["sha256"] == expected["sha256"]
+            && row["current"]["bytes"] == expected["bytes"],
+        "A08 manifest predecessor relation differs",
+    )?;
+    material(&row["current"], &prior, "0644")?;
+    Ok(prior)
+}
 pub(crate) fn security_lock_baseline(
     root: &Path,
     supplied_current: &[u8],
@@ -1514,4 +1533,14 @@ pub(crate) fn a13_header_layout_controls(root: &Path) -> Result<(), String> {
 
 pub(crate) fn a13_inventory_library_source(root: &Path, expected: &Value) -> Result<(), String> {
     a13_json_inventory_successor::library_source(root, expected)
+}
+
+/// Single immutable T06 opaque caller, with current T07 reconstruction and an
+/// independent exact default-owner byte invariant; no general material bypass.
+pub(crate) fn t07_opaque_material(
+    root: &Path,
+    expected: &Value,
+    actual: &[u8],
+) -> Result<(), String> {
+    t07_source_successor::t06_opaque_material(root, expected, actual)
 }
