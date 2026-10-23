@@ -5,6 +5,7 @@ use crate::{
     Result,
     opaque::{GatewayChunkFuture, GatewayHttpResponse},
 };
+use reqwest::source_pool::{SourceCookieJar, SourceCookieStore, SourceCookieView};
 use std::{sync::Arc, time::Duration};
 use tokio_util::sync::CancellationToken;
 pub struct Network {
@@ -13,6 +14,7 @@ pub struct Network {
     connect: Duration,
     oauth: bool,
     stop: CancellationToken,
+    cookies: Arc<dyn SourceCookieStore>,
     #[cfg(unix)]
     resolver: Arc<super::resolver::GatewayResolver>,
 }
@@ -72,6 +74,7 @@ impl Network {
                 connect,
                 oauth,
                 stop: CancellationToken::new(),
+                cookies: Arc::new(SourceCookieJar::default()),
                 resolver,
             }))
         }
@@ -85,6 +88,42 @@ impl Network {
     ) -> Result<Option<axum::body::Bytes>> {
         tokio::select! {biased;_=self.stop.cancelled()=>Err("gateway HTTP owner closed".into()),value=response.chunk()=>Ok(value?)}
     }
+    pub(crate) fn prepare_cookies(
+        &self,
+        url: &str,
+        headers: &mut reqwest::header::HeaderMap,
+    ) -> Result<()> {
+        if self.cookies.has_cookies() {
+            let view = SourceCookieView::parse(url, headers)?;
+            if let Some(value) = self.cookies.cookies(&view)? {
+                headers.insert(reqwest::header::COOKIE, value);
+            }
+        }
+        Ok(())
+    }
+    /// HTTPX builds the next cookie-bearing request before the MCP follow gate,
+    /// including an unfollowed redirect or a reached redirect budget.
+    pub(crate) fn prepare_redirect(
+        &self,
+        method: &reqwest::Method,
+        current: &url::Url,
+        response: &reqwest::Response,
+        headers: &mut reqwest::header::HeaderMap,
+    ) -> Result<Option<url::Url>> {
+        let location = response.headers().get(reqwest::header::LOCATION);
+        let Some(candidate) = super::redirect::location_url(current, response.status(), location)
+        else {
+            return Ok(None);
+        };
+        headers.remove(reqwest::header::COOKIE);
+        self.prepare_cookies(candidate.as_str(), headers)?;
+        Ok(super::redirect::next_url(
+            method,
+            current,
+            response.status(),
+            location,
+        ))
+    }
     pub async fn send_once(
         &self,
         method: reqwest::Method,
@@ -92,6 +131,17 @@ impl Network {
         mut headers: reqwest::header::HeaderMap,
         body: Vec<u8>,
     ) -> Result<reqwest::Response> {
+        self.prepare_cookies(&url, &mut headers)?;
+        self.send_prepared(method, url, headers, body).await
+    }
+    pub(crate) async fn send_prepared(
+        &self,
+        method: reqwest::Method,
+        url: String,
+        mut headers: reqwest::header::HeaderMap,
+        body: Vec<u8>,
+    ) -> Result<reqwest::Response> {
+        let view = SourceCookieView::parse(&url, &headers)?;
         let url = super::redirect::wire_url(&url, self.oauth, &mut headers)?;
         // The source fork selects the trusted mount on every actual attempt.
         // Source owner shutdown cancels dispatch, then joins all actual drivers.
@@ -102,9 +152,15 @@ impl Network {
             .body(body)
             .source_http1_timeouts(self.connect, Duration::from_secs(300))
             .send();
-        tokio::select! {biased;_=self.stop.cancelled()=>Err("gateway HTTP owner closed".into()),v=operation=>Ok(v?)}
+        let response = tokio::select! {biased;_=self.stop.cancelled()=>return Err("gateway HTTP owner closed".into()),v=operation=>v?};
+        if response.headers().contains_key(reqwest::header::SET_COOKIE)
+            || response.headers().contains_key("set-cookie2")
+        {
+            self.cookies.extract(&view, response.headers())?;
+        }
+        Ok(response)
     }
-    /// MCP stream_within_origin uses HTTPX's independent default20-hop cap.
+    /// MCP stream_within_origin builds an initial request from the client jar.
     pub async fn send(
         &self,
         method: reqwest::Method,
@@ -112,24 +168,48 @@ impl Network {
         headers: reqwest::header::HeaderMap,
         body: Vec<u8>,
     ) -> Result<reqwest::Response> {
+        self.send_loop(method, url, headers, body, 20, true).await
+    }
+    /// Source OAuth yields already-built HTTPX Request objects. Client.send
+    /// extracts response cookies but does not merge client defaults into those
+    /// initial requests. Redirect construction does use the shared jar.
+    pub(crate) async fn send_built_request(
+        &self,
+        method: reqwest::Method,
+        url: String,
+        headers: reqwest::header::HeaderMap,
+        body: Vec<u8>,
+        max_redirects: usize,
+    ) -> Result<reqwest::Response> {
+        self.send_loop(method, url, headers, body, max_redirects, false)
+            .await
+    }
+    async fn send_loop(
+        &self,
+        method: reqwest::Method,
+        url: String,
+        headers: reqwest::header::HeaderMap,
+        body: Vec<u8>,
+        max_redirects: usize,
+        merge_initial_cookies: bool,
+    ) -> Result<reqwest::Response> {
+        let mut headers = headers;
+        if merge_initial_cookies {
+            self.prepare_cookies(&url, &mut headers)?;
+        }
         let mut url = url::Url::parse(&url)?;
         let mut followed = 0;
         loop {
             let mut response = self
-                .send_once(
+                .send_prepared(
                     method.clone(),
                     url.to_string(),
                     headers.clone(),
                     body.clone(),
                 )
                 .await?;
-            let next = super::redirect::next_url(
-                &method,
-                &url,
-                response.status(),
-                response.headers().get(reqwest::header::LOCATION),
-            );
-            if followed == 20 || next.is_none() {
+            let next = self.prepare_redirect(&method, &url, &response, &mut headers)?;
+            if followed == max_redirects || next.is_none() {
                 return Ok(response);
             }
             while self.chunk(&mut response).await?.is_some() {}
@@ -147,3 +227,7 @@ impl Network {
         Ok(())
     }
 }
+
+#[cfg(all(test, unix))]
+#[path = "network_cookie_tests.rs"]
+mod cookie_wire_tests;

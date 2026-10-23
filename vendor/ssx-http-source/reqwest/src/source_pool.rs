@@ -1,6 +1,15 @@
 //! Explicit finite HTTPX transport mounts over the qualified source HTTP/1 pool.
 //! Routing is selected at the innermost Reqwest service on every actual attempt.
 mod environment;
+mod source_cookie_clock;
+mod source_cookie_date;
+mod source_cookie_headers;
+mod source_cookie_jar;
+mod source_cookies;
+pub use source_cookie_jar::SourceCookieJar;
+pub use source_cookies::{
+    SourceCookieClock, SourceCookieStore, SourceCookieSystemClock, SourceCookieView,
+};
 mod os_proxy;
 mod platform_api;
 mod python_text;
@@ -309,6 +318,44 @@ pub fn gateway_builder_from_environment(connect: Duration) -> crate::Result<crat
     gateway_builder(connect, &current_environment_proxy_info()?)
 }
 
+// Keep the original caller operand independently of per-attempt route defaults.
+// Retrying/reusing the same request must never promote route A's generated
+// credentials into an explicit caller header on route B or direct bypass.
+#[derive(Clone)]
+struct CallerProxyAuthorization(Vec<http::HeaderValue>);
+fn prepare_proxy_authorization(
+    req: &mut hyper::Request<crate::async_impl::body::Body>,
+    proxy: Option<&Intercepted>,
+) {
+    let caller = if let Some(original) = req.extensions().get::<CallerProxyAuthorization>() {
+        original.0.clone()
+    } else {
+        let mut original = req
+            .headers()
+            .get_all(PROXY_AUTHORIZATION)
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>();
+        for value in &mut original {
+            value.set_sensitive(true);
+        }
+        req.extensions_mut()
+            .insert(CallerProxyAuthorization(original.clone()));
+        original
+    };
+    req.headers_mut().remove(PROXY_AUTHORIZATION);
+    if !caller.is_empty() {
+        for value in caller {
+            req.headers_mut().append(PROXY_AUTHORIZATION, value);
+        }
+    } else if let (Some("http"), Some(value)) = (
+        req.uri().scheme_str(),
+        proxy.and_then(|p| p.http_non_tunnel_basic_auth()),
+    ) {
+        req.headers_mut().insert(PROXY_AUTHORIZATION, value);
+    }
+}
+
 pub(crate) struct Prepared {
     config: SourceHttp1PoolConfig,
     pub(crate) control: SourcePoolControl,
@@ -332,14 +379,7 @@ impl Prepared {
     ) -> Result<(hyper_util::client::legacy::pool::SourceMount, Connector), crate::Error> {
         let id = self.config.select(req.uri());
         let proxy = self.config.mounts[id].clone();
-        // Transport-owned proxy credentials are freshly selected per attempt;
-        // never let previous hop's proxy authentication choose or contaminate it.
-        req.headers_mut().remove(PROXY_AUTHORIZATION);
-        if req.uri().scheme_str() == Some("http") {
-            if let Some(auth) = proxy.as_ref().and_then(|p| p.http_non_tunnel_basic_auth()) {
-                req.headers_mut().insert(PROXY_AUTHORIZATION, auth);
-            }
-        }
+        prepare_proxy_authorization(req, proxy.as_ref());
         let connector = self
             .connector
             .source_pool_route(proxy)
@@ -374,6 +414,84 @@ fn resolve_proxy_info(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers(
+    ) {
+        let config = SourceHttp1PoolConfig::new(
+            Duration::from_secs(1),
+            vec![
+                (
+                    "http://a.test".into(),
+                    Some("http://first:one@127.0.0.1:1".into()),
+                ),
+                (
+                    "http://b.test".into(),
+                    Some("http://second:two@127.0.0.1:2".into()),
+                ),
+            ],
+        )
+        .unwrap();
+        let mut request = hyper::Request::builder()
+            .uri("http://a.test/")
+            .body(crate::async_impl::Body::empty())
+            .unwrap();
+        prepare_proxy_authorization(&mut request, config.mounts[1].as_ref());
+        assert_eq!(request.headers()[PROXY_AUTHORIZATION], "Basic Zmlyc3Q6b25l");
+        *request.uri_mut() = "http://b.test/".parse().unwrap();
+        prepare_proxy_authorization(&mut request, config.mounts[2].as_ref());
+        assert_eq!(
+            request.headers()[PROXY_AUTHORIZATION],
+            "Basic c2Vjb25kOnR3bw==",
+            "mutant: stale route A authorization survived route B"
+        );
+        prepare_proxy_authorization(&mut request, None);
+        assert!(
+            !request.headers().contains_key(PROXY_AUTHORIZATION),
+            "mutant: generated proxy credentials leaked to direct origin"
+        );
+        let mut explicit = hyper::Request::builder()
+            .uri("http://a.test/")
+            .header(PROXY_AUTHORIZATION, "Bearer caller")
+            .body(crate::async_impl::Body::empty())
+            .unwrap();
+        for proxy in [config.mounts[1].as_ref(), config.mounts[2].as_ref(), None] {
+            prepare_proxy_authorization(&mut explicit, proxy);
+            assert_eq!(
+                explicit.headers()[PROXY_AUTHORIZATION],
+                "Bearer caller",
+                "mutant: configured route overwrote explicit caller"
+            );
+            assert!(explicit.headers()[PROXY_AUTHORIZATION].is_sensitive());
+        }
+        let mut duplicate = hyper::Request::builder()
+            .uri("http://a.test/")
+            .body(crate::async_impl::Body::empty())
+            .unwrap();
+        duplicate
+            .headers_mut()
+            .append(PROXY_AUTHORIZATION, http::HeaderValue::from_static("one"));
+        duplicate
+            .headers_mut()
+            .append(PROXY_AUTHORIZATION, http::HeaderValue::from_static("two"));
+        prepare_proxy_authorization(&mut duplicate, config.mounts[1].as_ref());
+        assert_eq!(
+            duplicate
+                .headers()
+                .get_all(PROXY_AUTHORIZATION)
+                .iter()
+                .map(|v| v.as_bytes())
+                .collect::<Vec<_>>(),
+            vec![b"one".as_slice(), b"two".as_slice()],
+            "duplicate caller authorization collapsed mutant"
+        );
+        *explicit.uri_mut() = "https://b.test/".parse().unwrap();
+        prepare_proxy_authorization(&mut explicit, config.mounts[2].as_ref());
+        assert_eq!(
+            explicit.headers()[PROXY_AUTHORIZATION],
+            "Bearer caller",
+            "CONNECT credentials must not replace origin caller"
+        );
+    }
     #[test]
     fn distinct_scheme_mounts_keep_distinct_credit_even_same_proxy_url() {
         let info = BTreeMap::from([

@@ -40,7 +40,7 @@
     },
     {
       "path": "crates/ssx-mcp/Cargo.toml",
-      "sha256": "57d767ac9dac5d959cfe7b8748c531647bb7482a07a74dbfd2af77c42569c8a4"
+      "sha256": "f84dacf46bd8c0ecb164310b074b07b22792afe6f0e589288af02e1795495dbc"
     },
     {
       "path": "crates/ssx-mcp/src/bin/mcp-qualification.rs",
@@ -72,11 +72,15 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/network.rs",
-      "sha256": "55b9a66f40084167ffbacdd226630d910b5e9b3d8a5a224f40ebf51983dbe57f"
+      "sha256": "b71fbc521e57fca865d466e49223b1dd104d1aacd61d0e374547bfaead0296a5"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/network_cookie_tests.rs",
+      "sha256": "056952b2e1e51bfe833a85dccb5337420f49774327ab2fd6322536c877ebd592"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/oauth.rs",
-      "sha256": "40b573ed1a85aa2992e89bc46616370015a860ddfa41f41789353a0c8d5657ce"
+      "sha256": "877dc84e2898cd2362eaef8875ca7ac3c54be8aade69bd303798e6889a19a568"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/oauth_policy.rs",
@@ -84,7 +88,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/redirect.rs",
-      "sha256": "10b25d17e09b75f4d4e61a5f5bfc437522b0774b83b76c3ffd9b2eca79bc9429"
+      "sha256": "408c5b11cfbe84451dea4314111ce9068a2d5c24d1e528afd16fdf1ed04c5327"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/resolver/helper.rs",
@@ -339,6 +343,10 @@
       "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
     },
     {
+      "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-cookiejar.py.txt",
+      "sha256": "33cdcee4ec52171e50cd079da77923d1d0f6e523cefa39f296a8e1ec1b1acb64"
+    },
+    {
       "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-unicodectype.c.txt",
       "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61"
     },
@@ -385,6 +393,10 @@
     {
       "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__utilities__components.py.txt",
       "sha256": "187def5e5ac449212f58bc23a3d2b5fb1c3ac5f4f31f625ed1f42c91b548b529"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpcore2___async__http_proxy.py.txt",
+      "sha256": "ba374f61bcef34f33cbe9c51d4dd98a133b053d84f4a034b7550be6fee1ab412"
     },
     {
       "path": "docs/rust-rewrite/t07/source-inputs/httpx2-2.13.1.dist-info__LICENSE.md.txt",
@@ -456,7 +468,7 @@
     },
     {
       "path": "vendor/ssx-http-source/PROVENANCE.json",
-      "sha256": "44fb2b88ef678cd3b107c2efdc819c1429ae71866a33ed55f6a7133c62654e76"
+      "sha256": "95ce1bf503074570169fc6b2b743115ef4a9c5ae70c8743144c924fa680859a0"
     },
     {
       "path": "vendor/ssx-http-source/httparse/.cargo_vcs_info.json",
@@ -1132,7 +1144,7 @@
     },
     {
       "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
-      "sha256": "1c4bb1f3c272de17302849e8e98c35f0b0e703ef9137c52e1ff097c5511000b9"
+      "sha256": "f2c81c01425afbcb21066273d54806bad89ec89a9f0e3e2b554f17d3c7810182"
     },
     {
       "path": "vendor/ssx-http-source/reqwest/Cargo.toml.orig",
@@ -1292,7 +1304,7 @@
     },
     {
       "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
-      "sha256": "8c428a358f60699c517df5137007f8e7bfbee9f750db4bd5041525184b526e1c"
+      "sha256": "38099adf861d6ba0a1c3996e892e2fea08edf4a2977bcdbc418307114642ae0f"
     },
     {
       "path": "vendor/ssx-http-source/reqwest/src/source_pool/environment.rs",
@@ -1344,11 +1356,31 @@
     },
     {
       "path": "vendor/ssx-http-source/reqwest/src/source_pool/python_text.rs",
-      "sha256": "32fd01babe02c3ae834037819462ad869622cfd1c7591ee55a0b08a52b9a441d"
+      "sha256": "25d0676eb1b1f704a9d537b7d4e00f71109a39371ad37e2b5ed9d25ba9550ab6"
     },
     {
       "path": "vendor/ssx-http-source/reqwest/src/source_pool/python_text_data.rs",
       "sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_clock.rs",
+      "sha256": "dfd960fe5d590ddb9278312a27b697c5cd5a7f83055c43f58e0e5648efe1ee58"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_date.rs",
+      "sha256": "ed578904597951e8f3b66a848c7870bb5146dc1fce56cf6ba7e770a3d2cf7031"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_headers.rs",
+      "sha256": "5d58b3df98723667456df2b18c187e14a851f38099cdae01842c8d15295ae1dd"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_jar.rs",
+      "sha256": "3637b7502ec0d864e674f4946904f7ad473fbaf565f9d5ecbbabd1cb77f76677"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
+      "sha256": "288e96d527db84cff6a10704b96b7973b848c5d424b12a5b07948fc753801894"
     },
     {
       "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_text.rs",
@@ -1385,6 +1417,10 @@
     {
       "path": "vendor/ssx-http-source/reqwest/src/wasm/response.rs",
       "sha256": "c7931612eb1c370345e938c8ce8a1f600f42b479ae81441f20d8832948cdd7c6"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-cookie-proxy-amendment-v1.json",
+      "sha256": "5295d49c134405bb2f9465654ea56ca5661d6e60851383369f33fd08b48e0345"
     },
     {
       "path": "vendor/ssx-sdk-auth/NOTICE.md",
@@ -2108,6 +2144,15 @@
     "gateway_client::client_model::tests::pinned_client_url_model_controls",
     "gateway_client::io_owner::tests::cancelled_waiter_retains_actual_job_until_shutdown_join",
     "gateway_client::io_owner::tests::deadline_queue_and_owner_close_do_not_start_second_worker",
+    "gateway_client::network::cookie_wire_tests::connect_uses_selected_proxy_credentials_separately_from_origin_caller_header",
+    "gateway_client::network::cookie_wire_tests::environment_no_proxy_route_bypasses_configured_credentials_on_actual_wire",
+    "gateway_client::network::cookie_wire_tests::oauth_built_request_does_not_merge_client_cookie_but_redirect_uses_shared_jar",
+    "gateway_client::network::cookie_wire_tests::queued_caller_cancellation_never_resolves_and_released_credit_uses_new_caller",
+    "gateway_client::network::cookie_wire_tests::response_cookie_redirect_selection_replaces_caller_and_persists_deletion",
+    "gateway_client::network::cookie_wire_tests::two_real_proxy_routes_keep_caller_precedence_and_no_proxy_has_no_ambient_credentials",
+    "gateway_client::network::cookie_wire_tests::unfollowed_redirect_prepares_cookie_before_origin_method_and_budget_gates",
+    "gateway_client::network::cookie_wire_tests::uppercase_configured_https_returns_secure_cookie_on_next_initial_request",
+    "gateway_client::network::cookie_wire_tests::zero_redirect_budget_still_prepares_same_origin_get_307_cookie",
     "gateway_client::oauth::registration_review_controls::wire_issuer_is_discarded_before_model_validation_for_any_json_type",
     "gateway_client::oauth::tests::cached_source_expiry_is_not_an_sdk_u64_schema",
     "gateway_client::oauth::tests::source_received_expiry_preserves_signed_and_float_overflow_outcomes",

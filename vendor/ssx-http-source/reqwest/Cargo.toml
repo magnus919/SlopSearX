@@ -68,7 +68,7 @@ features = [
 ]
 
 [features]
-ssx-http1-source-pool = ["ssx-http1-source-connect", "hyper-util/ssx-http1-source-pool"]
+ssx-http1-source-pool = ["ssx-http1-source-connect", "hyper-util/ssx-http1-source-pool", "dep:regex", "dep:chrono", "dep:num-bigint", "dep:libc"]
 ssx-http1-source-connect = ["ssx-http1-source-read", "hyper-util/ssx-http1-source-connect", "rustls"]
 ssx-send-operation-timeout = ["hyper/ssx-send-operation-timeout"]
 ssx-http1-source-read = ["ssx-send-operation-timeout", "hyper/ssx-http1-source-read"]
@@ -509,3 +509,22 @@ package = "zstd"
 level = "warn"
 priority = 0
 check-cfg = ["cfg(reqwest_unstable)"]
+
+# Gateway-only pinned CookieJar implementation; all nodes already in root lock.
+[dependencies.regex]
+version = "=1.13.1"
+optional = true
+
+[dependencies.chrono]
+version = "=0.4.45"
+default-features = false
+features = ["std"]
+optional = true
+
+[dependencies.num-bigint]
+version = "=0.4.8"
+optional = true
+
+[dependencies.libc]
+version = "=0.2.190"
+optional = true

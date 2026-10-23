@@ -1210,5 +1210,12 @@
       }
     }
   },
-  "scope_limit": "Current package tree hashes identify the exact retained composition. Historical patch references are not a fresh archive-to-current reconstruction or a claim of full runtime/consumer/platform acceptance."
+  "scope_limit": "Current package tree hashes identify the exact retained composition. Historical patch references are not a fresh archive-to-current reconstruction or a claim of full runtime/consumer/platform acceptance.",
+  "source_only_amendments": [
+    {
+      "path": "source-cookie-proxy-amendment-v1.json",
+      "sha256": "5295d49c134405bb2f9465654ea56ca5661d6e60851383369f33fd08b48e0345",
+      "scope": "gateway-only cookie state/redirect preparation and caller proxy authorization; uncompiled source; lock resolution pending"
+    }
+  ]
 }

@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "status": "SOURCE_ONLY_COOKIE_PROXY_IMPLEMENTATION_UNCOMPILED_UNEXECUTED",
+  "source_parent": "da33d15ce2bd0c6599d419e0c910b6fdcd32761b",
+  "ordinary_reqwest_cookie_api": "unchanged; gateway explicitly owns one SourceCookieJar only",
+  "raw_authority_IDNA_SOCKS_Windows": "remain open; this changes cookie observations/store and caller proxy header selection only",
+  "lock_sha256_unchanged": "ebbcd0e37416ef61cb75415b56136603ba6ef5ce506ba2fceb07c1cd97bc75c8",
+  "afterimages": [
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/network.rs",
+      "after_sha256": "b71fbc521e57fca865d466e49223b1dd104d1aacd61d0e374547bfaead0296a5",
+      "after_bytes": 8408,
+      "before_sha256": "55b9a66f40084167ffbacdd226630d910b5e9b3d8a5a224f40ebf51983dbe57f",
+      "before_bytes": 5255
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/network_cookie_tests.rs",
+      "after_sha256": "056952b2e1e51bfe833a85dccb5337420f49774327ab2fd6322536c877ebd592",
+      "after_bytes": 25049,
+      "before": "absent"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/oauth.rs",
+      "after_sha256": "877dc84e2898cd2362eaef8875ca7ac3c54be8aade69bd303798e6889a19a568",
+      "after_bytes": 32824,
+      "before_sha256": "40b573ed1a85aa2992e89bc46616370015a860ddfa41f41789353a0c8d5657ce",
+      "before_bytes": 33551
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/redirect.rs",
+      "after_sha256": "408c5b11cfbe84451dea4314111ce9068a2d5c24d1e528afd16fdf1ed04c5327",
+      "after_bytes": 5639,
+      "before_sha256": "10b25d17e09b75f4d4e61a5f5bfc437522b0774b83b76c3ffd9b2eca79bc9429",
+      "before_bytes": 5259
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
+      "after_sha256": "f2c81c01425afbcb21066273d54806bad89ec89a9f0e3e2b554f17d3c7810182",
+      "after_bytes": 13932,
+      "before_sha256": "1c4bb1f3c272de17302849e8e98c35f0b0e703ef9137c52e1ff097c5511000b9",
+      "before_bytes": 13514
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+      "after_sha256": "38099adf861d6ba0a1c3996e892e2fea08edf4a2977bcdbc418307114642ae0f",
+      "after_bytes": 22918,
+      "before_sha256": "8c428a358f60699c517df5137007f8e7bfbee9f750db4bd5041525184b526e1c",
+      "before_bytes": 18426
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python_text.rs",
+      "after_sha256": "25d0676eb1b1f704a9d537b7d4e00f71109a39371ad37e2b5ed9d25ba9550ab6",
+      "after_bytes": 9633,
+      "before_sha256": "32fd01babe02c3ae834037819462ad869622cfd1c7591ee55a0b08a52b9a441d",
+      "before_bytes": 8590
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_clock.rs",
+      "after_sha256": "dfd960fe5d590ddb9278312a27b697c5cd5a7f83055c43f58e0e5648efe1ee58",
+      "after_bytes": 3827,
+      "before": "absent"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_date.rs",
+      "after_sha256": "ed578904597951e8f3b66a848c7870bb5146dc1fce56cf6ba7e770a3d2cf7031",
+      "after_bytes": 6907,
+      "before": "absent"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_headers.rs",
+      "after_sha256": "5d58b3df98723667456df2b18c187e14a851f38099cdae01842c8d15295ae1dd",
+      "after_bytes": 7886,
+      "before": "absent"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_jar.rs",
+      "after_sha256": "3637b7502ec0d864e674f4946904f7ad473fbaf565f9d5ecbbabd1cb77f76677",
+      "after_bytes": 25250,
+      "before": "absent"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
+      "after_sha256": "288e96d527db84cff6a10704b96b7973b848c5d424b12a5b07948fc753801894",
+      "after_bytes": 9453,
+      "before": "absent"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-cookiejar.py.txt",
+      "before": "absent",
+      "after_sha256": "33cdcee4ec52171e50cd079da77923d1d0f6e523cefa39f296a8e1ec1b1acb64",
+      "after_bytes": 77516
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpcore2___async__http_proxy.py.txt",
+      "before": "absent",
+      "after_sha256": "ba374f61bcef34f33cbe9c51d4dd98a133b053d84f4a034b7550be6fee1ab412",
+      "after_bytes": 14766
+    },
+    {
+      "path": "crates/ssx-mcp/Cargo.toml",
+      "before_sha256": "57d767ac9dac5d959cfe7b8748c531647bb7482a07a74dbfd2af77c42569c8a4",
+      "before_bytes": 1618,
+      "after_sha256": "f84dacf46bd8c0ecb164310b074b07b22792afe6f0e589288af02e1795495dbc",
+      "after_bytes": 1819
+    }
+  ],
+  "cookie_leaf_derivations": {
+    "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_clock.rs": {
+      "sha256": "dfd960fe5d590ddb9278312a27b697c5cd5a7f83055c43f58e0e5648efe1ee58",
+      "bytes": 3827,
+      "source_derivation": "reviewed cookie core V3 plus accepted batch V4 and date tie correction; raw view adapted separately, no SourceUrl routing adoption"
+    },
+    "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_date.rs": {
+      "sha256": "ed578904597951e8f3b66a848c7870bb5146dc1fce56cf6ba7e770a3d2cf7031",
+      "bytes": 6907,
+      "source_derivation": "reviewed cookie core V3 plus accepted batch V4 and date tie correction; raw view adapted separately, no SourceUrl routing adoption"
+    },
+    "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_headers.rs": {
+      "sha256": "5d58b3df98723667456df2b18c187e14a851f38099cdae01842c8d15295ae1dd",
+      "bytes": 7886,
+      "source_derivation": "reviewed cookie core V3 plus accepted batch V4 and date tie correction; raw view adapted separately, no SourceUrl routing adoption"
+    },
+    "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_jar.rs": {
+      "sha256": "3637b7502ec0d864e674f4946904f7ad473fbaf565f9d5ecbbabd1cb77f76677",
+      "bytes": 25250,
+      "source_derivation": "reviewed cookie core V3 plus accepted batch V4 and date tie correction; raw view adapted separately, no SourceUrl routing adoption"
+    },
+    "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs": {
+      "sha256": "288e96d527db84cff6a10704b96b7973b848c5d424b12a5b07948fc753801894",
+      "bytes": 9453,
+      "source_derivation": "reviewed cookie core V3 plus accepted batch V4 and date tie correction; raw view adapted separately, no SourceUrl routing adoption"
+    }
+  },
+  "native_gateway_controls": [
+    "response_cookie_redirect_selection_replaces_caller_and_persists_deletion",
+    "unfollowed_redirect_prepares_cookie_before_origin_method_and_budget_gates",
+    "two_real_proxy_routes_keep_caller_precedence_and_no_proxy_has_no_ambient_credentials",
+    "environment_no_proxy_route_bypasses_configured_credentials_on_actual_wire",
+    "queued_caller_cancellation_never_resolves_and_released_credit_uses_new_caller",
+    "connect_uses_selected_proxy_credentials_separately_from_origin_caller_header",
+    "oauth_built_request_does_not_merge_client_cookie_but_redirect_uses_shared_jar",
+    "uppercase_configured_https_returns_secure_cookie_on_next_initial_request",
+    "zero_redirect_budget_still_prepares_same_origin_get_307_cookie"
+  ],
+  "upstream_cookiejar_sha256": "33cdcee4ec52171e50cd079da77923d1d0f6e523cefa39f296a8e1ec1b1acb64",
+  "upstream_proxy_sha256": "db3564ae5bfe0ecfab5866aa69796b84426201014fa36dc14f71aafec5a80575",
+  "optional_dependency_edges": [
+    {
+      "from": "reqwest0.13.5/ssx-http1-source-pool",
+      "name": "regex",
+      "version": "1.13.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "from": "reqwest0.13.5/ssx-http1-source-pool",
+      "name": "chrono",
+      "version": "0.4.45",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "from": "reqwest0.13.5/ssx-http1-source-pool",
+      "name": "num-bigint",
+      "version": "0.4.8",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    {
+      "from": "reqwest0.13.5/ssx-http1-source-pool",
+      "name": "libc",
+      "version": "0.2.190",
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    }
+  ],
+  "local_year": "minimal reviewed libc localtime_r/localtime_s ABI leaf in vendored crate; actual platform/TZ qualification remains required",
+  "source_license_file": "reqwest/src/source_pool/python-text-source/LICENSE.txt",
+  "oauth_cookie_stages": "bare SDK auth-flow requests extract but do not merge initial client cookies; redirect construction uses shared jar before follow predicates",
+  "canonical_httpcore2": {
+    "snapshot": "/Volumes/tank01/magnus/rust-builds/slopsearx/t07-connect-execution-v5/source/source-context/source/python/httpcore2-proxy.py.txt",
+    "snapshot_sha256": "ba374f61bcef34f33cbe9c51d4dd98a133b053d84f4a034b7550be6fee1ab412",
+    "snapshot_bytes": 14766,
+    "capture_binding": "/Volumes/tank01/magnus/rust-builds/slopsearx/t07-connect-execution-v5/source/source-context/source-bindings.json",
+    "capture_binding_sha256": "439a806c18d508c2767ab6a5f06573491eb12deb8b227cc88ca1bbbee96cb8d3",
+    "exact_captured_row": {
+      "snapshot": "source/python/httpcore2-proxy.py.txt",
+      "original_path": "/private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/httpcore2/_async/http_proxy.py",
+      "sha256": "ba374f61bcef34f33cbe9c51d4dd98a133b053d84f4a034b7550be6fee1ab412",
+      "bytes": 14766,
+      "line_anchors": [
+        [
+          226,
+          326
+        ]
+      ]
+    },
+    "root_uv_lock_version": "2.13.1",
+    "scope": "captured source identity plus existing locked package provenance; no backend invocation or live site-package claim",
+    "selected_lines": {
+      "caller_overrides_default": [
+        35,
+        47
+      ],
+      "forward": [
+        181,
+        196
+      ],
+      "CONNECT_proxy_only": [
+        268,
+        279
+      ]
+    }
+  },
+  "primary_source_inputs": [
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-cookiejar.py.txt",
+      "sha256": "33cdcee4ec52171e50cd079da77923d1d0f6e523cefa39f296a8e1ec1b1acb64",
+      "bytes": 77516
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpcore2___async__http_proxy.py.txt",
+      "sha256": "ba374f61bcef34f33cbe9c51d4dd98a133b053d84f4a034b7550be6fee1ab412",
+      "bytes": 14766
+    }
+  ],
+  "review_repair": {
+    "frozen_patch_sha256": "cb31c7fd3fca9594d5def7b462d25b5a84a5b61771d9236f43c4e24b241a677a",
+    "scheme": "ASCII scheme lowercase only; authority/path unchanged",
+    "proofs": [
+      "verified TLS uppercase configured HTTPS Secure-cookie return",
+      "GET same-origin307 with exhausted zero redirect budget",
+      "caller-cookie mutant asserts registered witness before path-order assertion"
+    ],
+    "dev_dependency_edges": [
+      {
+        "from": "ssx-mcp dev-dependencies",
+        "name": "tokio-rustls",
+        "version": "0.26.6",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "c9cc2678c2cdd569ef8215e2afd7954ada2ae20b4fdd2c5fe6139a3b02d105db",
+        "features": []
+      },
+      {
+        "from": "ssx-mcp dev-dependencies",
+        "name": "rcgen",
+        "version": "0.14.10",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "8774e05a7d0de114588e6a28fe7e71694b82614ed569d86d8b389dfbc98b8ad8",
+        "features": [
+          "aws_lc_rs",
+          "pem"
+        ]
+      }
+    ]
+  }
+}

@@ -1,6 +1,17 @@
 //! Source MCP/HTTPX redirect and configured URL authentication rules.
 use crate::Result;
 use base64::Engine;
+/// Build HTTPX's candidate before source MCP's method/origin follow predicate.
+pub(crate) fn location_url(
+    current: &url::Url,
+    status: reqwest::StatusCode,
+    location: Option<&reqwest::header::HeaderValue>,
+) -> Option<url::Url> {
+    if !matches!(status.as_u16(), 301 | 302 | 303 | 307 | 308) {
+        return None;
+    }
+    current.join(location?.to_str().ok()?).ok()
+}
 pub fn next_url(
     method: &reqwest::Method,
     current: &url::Url,
@@ -16,7 +27,7 @@ pub fn next_url(
     {
         return None;
     }
-    let location = current.join(location?.to_str().ok()?).ok()?;
+    let location = location_url(current, status, location)?;
     let same = current.scheme() == location.scheme()
         && current.host_str() == location.host_str()
         && current.port() == location.port();

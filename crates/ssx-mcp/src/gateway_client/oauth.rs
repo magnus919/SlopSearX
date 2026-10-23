@@ -187,7 +187,7 @@ impl OAuthHttpClient for Http {
                     .ok()
                     .is_some_and(|v| v.get("redirect_uris").is_some());
             let method = parts.method;
-            let mut url = reqwest::Url::parse(&parts.uri.to_string())?;
+            let url = reqwest::Url::parse(&parts.uri.to_string())?;
             let mut headers = parts.headers;
             let mut body = body;
             if token_exchange {
@@ -226,30 +226,10 @@ impl OAuthHttpClient for Http {
                     reqwest::header::HeaderValue::from_static("2026-07-28"),
                 );
             }
-            let mut followed = 0;
-            let mut response = loop {
-                let mut response = self
-                    .network
-                    .send_once(
-                        method.clone(),
-                        url.to_string(),
-                        headers.clone(),
-                        body.clone(),
-                    )
-                    .await?;
-                let next = super::redirect::next_url(
-                    &method,
-                    &url,
-                    response.status(),
-                    response.headers().get(reqwest::header::LOCATION),
-                );
-                if followed == max_redirects || next.is_none() {
-                    break response;
-                }
-                while self.network.chunk(&mut response).await?.is_some() {}
-                url = next.unwrap();
-                followed += 1;
-            };
+            let mut response = self
+                .network
+                .send_built_request(method, url.to_string(), headers, body, max_redirects)
+                .await?;
             let status = response.status();
             let headers = response.headers().clone();
             let mut bytes = Vec::new();

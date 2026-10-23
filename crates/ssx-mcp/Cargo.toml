@@ -52,3 +52,7 @@ dns-lookup = "=4.0.2"
 [dev-dependencies]
 redis.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
+
+# Existing workspace TLS fixture stack; native qualification remains pending.
+tokio-rustls.workspace = true
+rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
