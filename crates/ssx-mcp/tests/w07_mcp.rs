@@ -549,6 +549,7 @@ struct StdioProcess {
     output: tokio::io::BufReader<tokio::process::ChildStdout>,
     errors: tokio::io::BufReader<tokio::process::ChildStderr>,
     id: u64,
+    phase: String,
 }
 impl StdioProcess {
     fn start(url: &str, source: &str) -> Result<Self> {
@@ -570,9 +571,11 @@ impl StdioProcess {
             errors: tokio::io::BufReader::new(child.stderr.take().ok_or("child stderr")?),
             child,
             id: 0,
+            phase: "spawned".into(),
         })
     }
     async fn send(&mut self, request: Value) -> Result<()> {
+        self.phase = "write child stdin".into();
         let input = self.input.as_mut().ok_or("stdio already closed")?;
         input
             .write_all(ssx_json::to_string(&request)?.as_bytes())
@@ -587,6 +590,7 @@ impl StdioProcess {
         self.send(json!({"jsonrpc":"2.0","id":id,"method":method,"params":params}))
             .await?;
         loop {
+            self.phase = format!("read child stdout for {method}");
             let mut line = String::new();
             let read =
                 tokio::time::timeout(Duration::from_secs(5), self.output.read_line(&mut line))
@@ -613,7 +617,8 @@ impl StdioProcess {
     async fn call(&mut self, name: &str, args: Value) -> Result<Value> {
         let result = self
             .rpc("tools/call", json!({"name":name,"arguments":args}))
-            .await?;
+            .await
+            .map_err(|e| format!("stdio tools/call {name}: {e}"))?;
         need(result["isError"] == false, "unexpected tool type error")?;
         Ok(ssx_json::from_str(
             result["content"][0]["text"]
@@ -622,6 +627,7 @@ impl StdioProcess {
         )?)
     }
     async fn pending_read(&mut self, id: u64) -> Result<()> {
+        self.phase = "read ID-bound pending marker".into();
         tokio::time::timeout(Duration::from_secs(3), async {
             loop {
                 let mut line = String::new();
@@ -738,16 +744,19 @@ async fn stdio_journey(
     // The only controlled server is this test's disposable Unix-socket Valkey.
     // Pause exceeds the complete ACK/EOF guard, so automatic expiry cannot
     // masquerade as an explicitly released read during the success assertion.
+    process.phase = "owned Valkey CLIENT PAUSE".into();
     redis::cmd("CLIENT")
         .arg("PAUSE")
         .arg(30000)
         .arg("ALL")
-        .query::<()>(control)?;
+        .query::<()>(control)
+        .map_err(|e| format!("owned Valkey CLIENT PAUSE: {e}"))?;
     process.id += 1;
     let pending_id = process.id;
     let read_started = std::time::Instant::now();
     process.send(json!({"jsonrpc":"2.0","id":pending_id,"method":"tools/call","params":{"name":TOOL_NAMES[1],"arguments":{"result_id":id}}})).await?;
     process.pending_read(pending_id).await?;
+    process.phase = "close stdin and observe actual child exit".into();
     process.input.take(); // Actual stdin EOF reaches the existing owned transport.
     // The shared fixture's store budget is two seconds. Refuse an inconclusive
     // delayed ACK/EOF rather than accepting a read that already timed out.
@@ -760,6 +769,7 @@ async fn stdio_journey(
         exit.success(),
         "evidence child did not exit cleanly before Valkey release",
     )?;
+    process.phase = "read stderr after actual child exit".into();
     let mut stderr = String::new();
     (&mut process.errors)
         .take(65537)
@@ -823,8 +833,31 @@ async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof
     // targets only the owned fixture connection; no ambient application URL.
     let resumed = redis::cmd("CLIENT")
         .arg("UNPAUSE")
-        .query::<()>(&mut control);
+        .query::<()>(&mut control)
+        .map_err(|e| format!("owned Valkey CLIENT UNPAUSE: {e}"));
     let reaped = process.reap().await;
+    if result.is_err() || resumed.is_err() || reaped.is_err() {
+        use tokio::io::AsyncReadExt;
+        let mut child_stderr = String::new();
+        let stderr_read = tokio::time::timeout(
+            Duration::from_secs(2),
+            (&mut process.errors)
+                .take(65537)
+                .read_to_string(&mut child_stderr),
+        )
+        .await;
+        eprintln!(
+            "W07_STDIO_FAILURE {}",
+            json!({
+                "phase":process.phase,"journey_error":result.as_ref().err().map(ToString::to_string),
+                "unpause_error":resumed.as_ref().err().map(ToString::to_string),
+                "reap_error":reaped.as_ref().err().map(ToString::to_string),
+                "child_status":format!("{:?}",process.child.try_wait()),
+                "child_stderr":child_stderr,"stderr_read":format!("{stderr_read:?}"),
+                "owned_valkey_url":server.url()
+            })
+        );
+    }
     sentinel_task.abort();
     let _ = sentinel_task.await;
     result?;
