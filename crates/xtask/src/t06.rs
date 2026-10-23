@@ -1,4 +1,5 @@
 //! Source-bound actual T06 search/discovery qualification. Never executes Python.
+use crate::a13::a06_source_successor::w07_evidence_successor;
 use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -53,7 +54,10 @@ fn validate_storage(bytes: &[u8], archive: &[u8]) -> Result<Value> {
     }
     Ok(value)
 }
-fn validate_native_file(row: &Value, bytes: &[u8], storage: &Value) -> Result<()> {
+fn validate_native_file(root: &Path, row: &Value, bytes: &[u8], storage: &Value) -> Result<()> {
+    if row["file"] == "crates/ssx-infra/src/search.rs" {
+        return w07_evidence_successor::t06_native_search(root, row, bytes).map(|_| ());
+    }
     let expected = if row["file"] == storage["file"] {
         if row["sha256"] != storage["before_sha256"] {
             return Err("T06 storage amendment preimage differs".into());
@@ -210,7 +214,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     for row in native["files"].as_array().unwrap() {
         let path = row["file"].as_str().ok_or("T06 native fixture path")?;
         let bytes = fs::read(root.join(path)).map_err(|e| format!("T06 {path}: {e}"))?;
-        validate_native_file(row, &bytes, &storage)?;
+        validate_native_file(root, row, &bytes, &storage)?;
     }
 
     for key in ["sources", "artifacts"] {
@@ -277,6 +281,8 @@ mod tests {
     use super::*;
     #[test]
     fn altered_t06_bindings_cannot_self_certify() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        w07_evidence_successor::controls(&root).unwrap();
         let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
         validate(raw).unwrap();
         let native = include_bytes!("../../../docs/rust-rewrite/t06/native_fixture_bindings.json");
@@ -298,12 +304,24 @@ mod tests {
             .find(|row| row["file"] == storage["file"])
             .unwrap();
         let current = include_bytes!("../../ssx-mcp/tests/t06_support/server.rs");
-        validate_native_file(server, current, &storage).unwrap();
-        assert!(validate_native_file(server, b"changed current source", &storage).is_err());
-        assert!(validate_native_file(server, archive, &storage).is_err());
+        validate_native_file(&root, server, current, &storage).unwrap();
+        assert!(validate_native_file(&root, server, b"changed current source", &storage).is_err());
+        assert!(validate_native_file(&root, server, archive, &storage).is_err());
         let mut changed_preimage = server.clone();
         changed_preimage["sha256"] = json!("0".repeat(64));
-        assert!(validate_native_file(&changed_preimage, current, &storage).is_err());
+        assert!(validate_native_file(&root, &changed_preimage, current, &storage).is_err());
+        let search = approved["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["file"] == "crates/ssx-infra/src/search.rs")
+            .unwrap();
+        let search_bytes = include_bytes!("../../ssx-infra/src/search.rs");
+        validate_native_file(&root, search, search_bytes, &storage).unwrap();
+        assert!(validate_native_file(&root, search, b"changed search", &storage).is_err());
+        let mut bad_search = search.clone();
+        bad_search["sha256"] = json!("0".repeat(64));
+        assert!(validate_native_file(&root, &bad_search, search_bytes, &storage).is_err());
         let mut altered: Value = serde_json::from_slice(native).unwrap();
         altered["files"][0]["sha256"] = json!("0".repeat(64));
         assert!(validate_native(&serde_json::to_vec(&altered).unwrap()).is_err());

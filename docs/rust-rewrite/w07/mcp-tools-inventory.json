@@ -51,6 +51,18 @@
     {
       "path": "crates/ssx-mcp/src/bin/evidence-qualification.rs",
       "sha256": "346c3068fbfc24057c41bd9bf3a5c64565112bcc171656554c14957cb04ff519"
+    },
+    {
+      "path": "crates/xtask/src/t06.rs",
+      "sha256": "5ce32ac2639b63a8d8b4dc592620628e675d8c30120827b922ce60e1f75d84a3"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_source_bindings.rs",
+      "sha256": "84404e64d72d0a0f19fca5e499502a45d319a99a591d2b07ca75f847a5434b57"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor.rs",
+      "sha256": "690eafe5bef5a6c11e06e4d9153438e9d0f5c61468a3314dbb41c782cef10bc1"
     }
   ],
   "library_tests": [
@@ -68,7 +80,7 @@
   "inherited_controls": {
     "F03": "full workspace still discovers additive tests; no original frozen controls removed",
     "T01": "original captured protocol catalog fixture unchanged",
-    "T06": "static eleven-tool descriptors and existing search_surface library identities retained",
+    "T06": "static eleven-tool descriptors and existing search_surface library identities retained; both native binding consumers use the same exact sealed W07 reconstruction for the frozen search source row",
     "A06_A13": "V3 exact inverse spans reconstruct original prior bytes; frozen V1/V2 unchanged",
     "W07": "current application/Valkey/transport execution and full closure remain root acceptance work"
   }

@@ -93,7 +93,12 @@ additive search-source amendment is V3: frozen V1/V2 and the original A06/A13
 source contracts remain unchanged; reconstruction removes only the reviewed
 additive spans. The new application/MCP tests must join the current finite
 inventory when native qualification resumes. T06's historical tool catalog and
-three search-surface library test identities remain intact.
+three search-surface library test identities remain intact. Both T06 native
+binding consumers use the same sealed W07 reconstruction for the exact frozen
+search source row (`fcac2929…7b12`, 86,121 bytes), including actual current
+hash/length/mode and inverse edits. The frozen ten-file manifest and existing
+storage amendment remain unchanged. This closes the source binding gap; its
+positive and negative native controls still require execution.
 
 Before C/D acceptance, execute the current application/MCP tests, compare the
 current runtime descriptors against the source contract, run inherited

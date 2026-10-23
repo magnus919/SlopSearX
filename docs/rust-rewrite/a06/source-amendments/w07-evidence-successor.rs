@@ -2,7 +2,8 @@
 use serde_json::Value;
 #[cfg(test)]
 use serde_json::json;
-use std::path::Path;
+use sha2::{Digest, Sha256};
+use std::{fs, path::Path};
 pub(crate) const TEST: &str =
     "search::tests::current_policy_source_is_construction_only_and_preserves_default_generation";
 const CAPSULE: &str = "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json";
@@ -15,17 +16,37 @@ const PATHS: [&str; 3] = [
     "crates/xtask/src/a13.rs",
     "docs/rust-rewrite/a13/source-amendments/validator.rs",
 ];
-fn need(v: bool, m: &str) -> Result<(), String> {
-    super::need(v, m)
+fn need(ok: bool, message: &str) -> Result<(), String> {
+    if ok { Ok(()) } else { Err(message.into()) }
+}
+fn digest(raw: &[u8]) -> String {
+    Sha256::digest(raw)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+fn raw_mode(mode: u32) -> String {
+    format!("{:04o}", mode & 0o7777)
+}
+#[cfg(unix)]
+fn permissions(path: &Path) -> Result<String, String> {
+    use std::os::unix::fs::PermissionsExt;
+    Ok(raw_mode(
+        fs::symlink_metadata(path)
+            .map_err(|e| e.to_string())?
+            .permissions()
+            .mode(),
+    ))
+}
+#[cfg(not(unix))]
+fn permissions(_: &Path) -> Result<String, String> {
+    Err("A06 source mode proof requires Unix".into())
 }
 fn text<'a>(v: &'a Value, k: &str) -> Result<&'a str, String> {
     v[k].as_str().ok_or_else(|| format!("W07 missing {k}"))
 }
 fn document(raw: &[u8]) -> Result<Value, String> {
-    need(
-        super::digest(raw) == SHA,
-        "W07 sealed successor capsule changed",
-    )?;
+    need(digest(raw) == SHA, "W07 sealed successor capsule changed")?;
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
     need(
         doc.as_object().is_some_and(|m| m.len() == 5)
@@ -49,14 +70,14 @@ fn document(raw: &[u8]) -> Result<Value, String> {
 }
 fn load(root: &Path) -> Result<Value, String> {
     need(
-        super::permissions(&root.join(CAPSULE))? == "0644"
-            && super::permissions(&root.join(PREDECESSOR))? == "0644",
+        permissions(&root.join(CAPSULE))? == "0644"
+            && permissions(&root.join(PREDECESSOR))? == "0644",
         "W07 capsule modes differ",
     )?;
     let doc = document(&std::fs::read(root.join(CAPSULE)).map_err(|e| e.to_string())?)?;
     let prior_raw = std::fs::read(root.join(PREDECESSOR)).map_err(|e| e.to_string())?;
     need(
-        super::digest(&prior_raw) == PREDECESSOR_SHA,
+        digest(&prior_raw) == PREDECESSOR_SHA,
         "W07 original capsule changed",
     )?;
     let prior: Value = serde_json::from_slice(&prior_raw).map_err(|e| e.to_string())?;
@@ -99,7 +120,7 @@ fn reconstruct(row: &Value, actual: &[u8], mode: &str) -> Result<Vec<u8>, String
     )?;
     need(
         row["current"]["bytes"].as_u64() == Some(actual.len() as u64)
-            && row["current"]["sha256"] == super::digest(actual),
+            && row["current"]["sha256"] == digest(actual),
         "W07 actual source differs",
     )?;
     let edits = row["edits"].as_array().ok_or("W07 edits absent")?;
@@ -129,7 +150,7 @@ fn reconstruct(row: &Value, actual: &[u8], mode: &str) -> Result<Vec<u8>, String
     prior.extend_from_slice(&actual[at..]);
     need(
         row["prior"]["bytes"].as_u64() == Some(prior.len() as u64)
-            && row["prior"]["sha256"] == super::digest(&prior),
+            && row["prior"]["sha256"] == digest(&prior),
         "W07 historical source reconstruction differs",
     )?;
     Ok(prior)
@@ -146,7 +167,7 @@ pub(crate) fn prior(root: &Path, path: &str, expected: &Value) -> Result<Vec<u8>
     )?;
     let file = root.join(path);
     let actual = std::fs::read(&file).map_err(|e| e.to_string())?;
-    reconstruct(row, &actual, &super::permissions(&file)?)
+    reconstruct(row, &actual, &permissions(&file)?)
 }
 pub(crate) fn effective_current(
     root: &Path,
@@ -165,6 +186,7 @@ pub(crate) fn effective_current(
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum SearchOperand {
     RuntimePin,
+    T06NativeFixture,
     #[cfg(test)]
     AdditiveControl,
     Inventory,
@@ -183,10 +205,30 @@ pub(crate) fn search_operand(
     )?;
     eprintln!(
         "W07_SEARCH_OPERAND_PROOF role={role:?} actual_sha256={} prior_sha256={}",
-        super::digest(&actual),
-        super::digest(&prior)
+        digest(&actual),
+        digest(&prior)
     );
     Ok(prior)
+}
+/// T06 keeps its frozen native row. Only this exact search predecessor may
+/// consume the already sealed W07 transition; supplied bytes must be the actual
+/// file, including the capsule's full current hash, length and Unix mode proof.
+pub(crate) fn t06_native_search(
+    root: &Path,
+    frozen: &Value,
+    supplied: &[u8],
+) -> Result<Vec<u8>, String> {
+    const FROZEN_SHA: &str = "fcac2929eb6637960d5e1086c321f0eac62fc0f8446cf73f22d6b43406137b12";
+    need(
+        frozen.as_object().is_some_and(|m| m.len() == 2)
+            && frozen["file"] == SEARCH
+            && frozen["sha256"] == FROZEN_SHA,
+        "W07 exact T06 native caller differs",
+    )?;
+    let expected = serde_json::json!({
+        "path": SEARCH, "sha256": FROZEN_SHA, "bytes": 86121, "mode": "0644"
+    });
+    search_operand(root, SearchOperand::T06NativeFixture, &expected, supplied)
 }
 pub(crate) fn prove_search(root: &Path) -> Result<(), String> {
     let file = root.join(SEARCH);
@@ -262,6 +304,7 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     expected["mode"] = json!("0644");
     for role in [
         SearchOperand::RuntimePin,
+        SearchOperand::T06NativeFixture,
         SearchOperand::AdditiveControl,
         SearchOperand::Inventory,
     ] {
@@ -283,6 +326,35 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
             "W07 wrong typed search predecessor accepted",
         )?;
     }
+    let frozen = json!({"file":SEARCH,
+        "sha256":"fcac2929eb6637960d5e1086c321f0eac62fc0f8446cf73f22d6b43406137b12"});
+    let historical = t06_native_search(root, &frozen, &search_raw)?;
+    need(
+        historical.len() == 86121,
+        "W07 T06 historical byte count differs",
+    )?;
+    for (key, value) in [
+        ("file", json!("wrong.rs")),
+        ("sha256", json!("wrong")),
+        ("unlisted", json!(true)),
+    ] {
+        let mut bad = frozen.clone();
+        bad[key] = value;
+        need(
+            t06_native_search(root, &bad, &search_raw).is_err(),
+            "W07 changed T06 caller accepted",
+        )?;
+    }
+    let mut bad = search_raw.clone();
+    bad.push(0);
+    need(
+        t06_native_search(root, &frozen, &bad).is_err(),
+        "W07 changed T06 supplied bytes accepted",
+    )?;
+    need(
+        t06_native_search(root, &frozen, &historical).is_err(),
+        "W07 historical T06 supplied as actual",
+    )?;
     let raw = std::fs::read(root.join(CAPSULE)).map_err(|e| e.to_string())?;
     let mut changed = doc.clone();
     changed["test"] = json!("observed::unexpected");
