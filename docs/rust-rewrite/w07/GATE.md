@@ -9,7 +9,7 @@ against its exact qualified identities, then executes that same selection.
 A pass requires every named test to finish successfully, with no ignored,
 missing, duplicated, or unexpected completion, and one complete success
 summary. The wire replay additionally emits and verifies every individual
-measured call identity. The runner then executes locked offline package checks,
+measured call identity. Before semantic execution the runner executes locked offline package checks,
 formatting and strict all-target Clippy. Declarations and counts cannot pass.
 
 The ordinary qualification controller must supply exclusive Cargo target/cache
@@ -21,8 +21,13 @@ The existing T01/T06/F03 gates remain independent inheritance requirements.
 
 ## Python reference and source proof
 
-`capture_wire_reference.py` is a manual, temporary G08 reference producer.
-It is never called by a native gate. The capture binds its producer,125 backend,
+The manual G08 reference producer is retained byte-for-byte as the inert
+`../t06/source-amendments/packaging-wire-producer.py.txt` capsule. Its historical
+capture filename was `docs/rust-rewrite/w07/capture_wire_reference.py`; that
+duplicate executable source was retired after capture. The exact original
+commands and environment remain in the external task evidence at
+`/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/handoff/python-capture-commands-v1.json`.
+The producer is never called by a native gate. The capture binds its producer,125 backend,
 fixture, guard and dependency sources to the explicit C continuation revision.
 It checks exact CPython3.14.7/FastMCP4.0.11/mcp2.3.0/Pydantic2.13.4 and an
 explicit packaging profile before backend imports. It uses the original
