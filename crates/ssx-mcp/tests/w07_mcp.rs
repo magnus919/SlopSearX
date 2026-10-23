@@ -37,6 +37,19 @@ fn server() -> private_valkey::Server {
     );
     private_valkey::Server::start()
 }
+fn evidence_catalog_matches_source(catalog: &Value) -> Result<()> {
+    let source: Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/w07/mcp-tools-source.json"
+    ))?;
+    let actual = catalog["tools"]
+        .as_array()
+        .ok_or("transport tool catalog")?;
+    let expected = source["tools"].as_array().ok_or("source tool catalog")?;
+    need(
+        actual.ends_with(expected),
+        "transport evidence descriptors differ from the pinned source contract",
+    )
+}
 async fn rpc(client: &reqwest::Client, url: &str, method: &str, params: Value) -> Result<Value> {
     let response = client
         .post(url)
@@ -98,6 +111,7 @@ async fn authenticated_http_four_tools_replay_lineage_tenant_grants_and_no_sourc
         )]))
         .build()?;
     let tools = rpc(&client, &endpoint, "tools/list", json!({})).await?;
+    evidence_catalog_matches_source(&tools)?;
     let actual: Vec<_> = tools["tools"]
         .as_array()
         .unwrap()
@@ -484,6 +498,7 @@ async fn authenticated_legacy_factory_advertises_and_dispatches_four_evidence_to
         json!({}),
     )
     .await?;
+    evidence_catalog_matches_source(&catalog)?;
     let names: Vec<_> = catalog["tools"]
         .as_array()
         .unwrap()
@@ -647,6 +662,7 @@ async fn stdio_journey(
         .send(json!({"jsonrpc":"2.0","method":"notifications/initialized"}))
         .await?;
     let catalog = process.rpc("tools/list", json!({})).await?;
+    evidence_catalog_matches_source(&catalog)?;
     let names: Vec<_> = catalog["tools"]
         .as_array()
         .ok_or("tool catalog")?

@@ -85,6 +85,9 @@ The current finite C inventory is in
 ports, strict/nested argument types, error order, replay/conflict, tenant and
 grant isolation, the actual authenticated HTTP/legacy factories, an inert-URL
 listener, and cancellation held at an owned receipt read. They have not run.
+Each actual HTTP, legacy and stdio `tools/list` response is compared in full
+for the four descriptors against the pinned source projection, including
+parameter schemas, defaults, descriptions and metadata.
 The private Valkey test fixture requires the root's explicit executable and
 SHA-256 environment pins. No ambient application Valkey URL is consumed.
 
