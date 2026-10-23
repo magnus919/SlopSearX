@@ -1,5 +1,7 @@
-//! B: a borrowed, readonly component graph. No transport dispatch/catalog change.
+//! Borrowed evidence component graph attached to the existing native MCP owner.
 pub mod authority;
+pub mod factory;
+pub mod tools;
 use authority::{EvidenceAuthority, LineagePolicyAdapter, RecordAuthorityAdapter};
 use ssx_application::{
     PortFuture,

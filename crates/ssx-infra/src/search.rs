@@ -294,6 +294,10 @@ impl SearchCancellation {
     pub fn cancel(&self) {
         self.0.send_replace(true);
     }
+    /// Observe the caller's existing signal without creating an owner or task.
+    pub async fn cancelled(&self) {
+        cancelled(&mut self.0.subscribe()).await;
+    }
 }
 struct Waiter(Arc<Flight>);
 impl Drop for Waiter {

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "scope": "W07 C four-tool native MCP source increment",
+  "predecessor": "98330f1a94b5f50ad228117ce392601c0ce4dea4",
+  "status": "source-only; no current native execution or runtime descriptor equality claim",
+  "source_contract": "docs/rust-rewrite/w07/mcp-tools-source.json",
+  "intentional_differences": [
+    {
+      "id": "W07-MCP-KNOWN-CORRUPT-STATE",
+      "trigger": "receipt repository Failure::Malformed or lineage Failure::Malformed",
+      "wire": {
+        "error": {
+          "code": "store_corrupt",
+          "message": "retained receipt state is malformed"
+        }
+      },
+      "lineage_wire": {
+        "error": {
+          "code": "store_corrupt",
+          "message": "retained artifact state is malformed"
+        }
+      },
+      "reason": "Native typed repository failures distinguish known corruption from missing handles and temporary unavailability; no silent empty receipt list or retry.",
+      "acceptance": "pending root review and current native execution"
+    },
+    {
+      "id": "W07-MCP-NATIVE-STORAGE-FAILURES",
+      "trigger": "native repository failure after the current grant/connectivity admission check",
+      "wire_by_failure": {
+        "Closed_or_Unavailable": {
+          "error": {
+            "code": "store_unavailable",
+            "message": "receipt store is unavailable"
+          }
+        },
+        "InvalidInput": {
+          "error": {
+            "code": "invalid_input",
+            "message": "receipt store rejected the input"
+          }
+        },
+        "Collision": {
+          "error": {
+            "code": "store_unavailable",
+            "message": "receipt identity collision"
+          }
+        }
+      },
+      "reason": "Preserve typed native storage refusals rather than collapsing an unavailable read into an empty successful receipt collection or claiming a missing source. Ordinary service validation, replay/conflict/capacity, source-handle errors, and source availability messages remain in their existing application owners.",
+      "acceptance": "pending root review and current native execution"
+    },
+    {
+      "id": "W07-MCP-INDETERMINATE-PERSISTENCE",
+      "trigger": "Failure::CompletionUnknown or Failure::ScriptErrorMayHaveWritten",
+      "wire": {
+        "error": {
+          "code": "completion_unknown",
+          "message": "receipt persistence completion is unknown; replay the same idempotency key"
+        }
+      },
+      "reason": "Preserve the existing native repository distinction rather than incorrectly claiming the mutation failed or did not happen. No automatic retry is performed.",
+      "acceptance": "pending root review and current native execution"
+    },
+    {
+      "id": "W07-MCP-FINITE-ARBITRARY-OBJECTS",
+      "trigger": "non-finite floating token nested in dict[str, Any] artifact/source parameters",
+      "wire": {
+        "content": [
+          {
+            "type": "text",
+            "text_pattern": "validation error for call[TOOL] at parameter path; Input should be a finite number [type=finite_number]"
+          }
+        ],
+        "isError": true
+      },
+      "reason": "The native JSON boundary requires finite f64. Reject before conversion instead of panicking or normalizing an invalid identity. Ordinary finite arbitrary keys and values still reach the original artifact semantic parser.",
+      "acceptance": "pending root review and current native execution"
+    },
+    {
+      "id": "W07-LINEAGE-POST-READ-AUTHORITY",
+      "trigger": "current grant, retained engine, or sensitive eligibility changes during a readonly operation",
+      "wire": {
+        "node_status": "policy_denied",
+        "edges": []
+      },
+      "result_receipt_grant_only": "result remains live with its snapshot edge; receipt edges are omitted",
+      "reason": "Fulfill B's promised current-policy invariant after awaited reads. Python's initial artifact eligibility is preserved; historical race behavior is not retained.",
+      "acceptance": "separate application correction requires root review and current native execution"
+    }
+  ],
+  "preserved_inherited_behavior": [
+    "F13 malformed snapshot state is mapped to Missing by SnapshotService; no distinct source-corruption claim is made here.",
+    "Receipt submission/read remain historical attributed access and do not invoke engine acquisition policy.",
+    "Lineage is registered without a standalone grant; entity groups use retained engine policy rather than a receipt grant.",
+    "Default T06 static catalog remains eleven tools; explicitly attached runtime catalog contains fifteen."
+  ],
+  "qualification": {
+    "current_native_executed": false,
+    "current_python_backend_executed": false,
+    "provider_calls": 0,
+    "tests_status": "authored, not executed",
+    "runtime_descriptor_comparison": "pending",
+    "binary_startup_integration": "T02/W09 remaining milestone work; not W07 API closure by itself",
+    "publication": "not attempted"
+  },
+  "application_correction_commit": "42a0b695bf292632d850cccfd28c096aae8a7056"
+}

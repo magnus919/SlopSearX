@@ -1,7 +1,7 @@
 //! Source-compatible validation occurs before any application service call.
 use rmcp::ErrorData;
 use ssx_json::{Map, Value};
-pub(super) struct Arguments {
+pub(crate) struct Arguments {
     values: Map<String, Value>,
 }
 #[derive(Clone)]
@@ -284,8 +284,71 @@ fn boolean(value: &Value) -> Result<bool, (&'static str, &'static str)> {
         _ => Err(("Input should be a valid boolean", "bool_type")),
     }
 }
+fn strict_integer(name: &str, key: &str) -> bool {
+    key == "version"
+        || (crate::evidence::tools::TOOL_NAMES.contains(&name)
+            && ["limit", "max_depth", "max_nodes"].contains(&key))
+}
+fn validate_item(rule: &Value, value: &Observed, location: &str, failures: &mut Vec<Failure>) {
+    match rule["type"].as_str() {
+        Some("string") if !value.is_string() => failures.push(failure(
+            location,
+            "Input should be a valid string",
+            "string_type",
+            value,
+        )),
+        Some("object") => {
+            if let Observed::Object(object) = value {
+                if rule["additionalProperties"] == Value::Bool(true) {
+                    for (key, value) in object {
+                        finite_object(value, &format!("{location}.{key}"), failures);
+                    }
+                }
+                if rule["additionalProperties"]["type"].as_str() == Some("string") {
+                    for (key, value) in object {
+                        validate_item(
+                            &rule["additionalProperties"],
+                            value,
+                            &format!("{location}.{key}"),
+                            failures,
+                        );
+                    }
+                }
+            } else {
+                failures.push(failure(
+                    location,
+                    "Input should be a valid dictionary",
+                    "dict_type",
+                    value,
+                ));
+            }
+        }
+        _ => {}
+    }
+}
+fn finite_object(value: &Observed, location: &str, failures: &mut Vec<Failure>) {
+    match value {
+        Observed::Infinite(_) => failures.push(failure(
+            location,
+            "Input should be a finite number",
+            "finite_number",
+            value,
+        )),
+        Observed::Array(a) => {
+            for (i, v) in a.iter().enumerate() {
+                finite_object(v, &format!("{location}.{i}"), failures);
+            }
+        }
+        Observed::Object(o) => {
+            for (k, v) in o {
+                finite_object(v, &format!("{location}.{k}"), failures);
+            }
+        }
+        _ => {}
+    }
+}
 impl Arguments {
-    pub(super) fn new(name: &str, values: Map<String, Value>) -> Result<Self, ErrorData> {
+    pub(crate) fn new(name: &str, values: Map<String, Value>) -> Result<Self, ErrorData> {
         Self::validate(
             name,
             values
@@ -294,7 +357,7 @@ impl Arguments {
                 .collect(),
         )
     }
-    pub(super) fn raw(name: &str, json: &str) -> Result<Self, ErrorData> {
+    pub(crate) fn raw(name: &str, json: &str) -> Result<Self, ErrorData> {
         let Observed::Object(values) = Observed::parse(json, 0)? else {
             return Err(ErrorData::invalid_params(
                 "arguments must be an object",
@@ -308,6 +371,7 @@ impl Arguments {
         let Some(tool) = descriptors["tools"]
             .as_array()
             .and_then(|a| a.iter().find(|v| v["name"].as_str() == Some(name)))
+            .or_else(|| crate::evidence::tools::descriptor(name))
         else {
             return Err(ErrorData::invalid_params(
                 format!("Unknown tool: {name}"),
@@ -359,14 +423,7 @@ impl Arguments {
                 Some("array") => {
                     if let Observed::Array(array) = value {
                         for (i, v) in array.iter().enumerate() {
-                            if !v.is_string() {
-                                failures.push(failure(
-                                    format!("{key}.{i}"),
-                                    "Input should be a valid string",
-                                    "string_type",
-                                    v,
-                                ));
-                            }
+                            validate_item(&rule["items"], v, &format!("{key}.{i}"), &mut failures);
                         }
                     } else {
                         failures.push(failure(
@@ -377,12 +434,14 @@ impl Arguments {
                         ));
                     }
                 }
+                Some("object") => validate_item(rule, value, key, &mut failures),
                 Some("integer") => match value
                     .finite()
-                    .map(|v| integer(v, key == "version"))
+                    .map(|v| integer(v, strict_integer(name, key)))
                     .unwrap_or_else(|| {
                         Err(
-                            if matches!(value, Observed::Infinite(_)) && key != "version" {
+                            if matches!(value, Observed::Infinite(_)) && !strict_integer(name, key)
+                            {
                                 ("Input should be a finite number", "finite_number")
                             } else {
                                 ("Input should be a valid integer", "int_type")
@@ -427,6 +486,9 @@ impl Arguments {
                 .map(|(k, v)| (k, v.into_value()))
                 .collect(),
         })
+    }
+    pub(crate) fn values(&self) -> &Map<String, Value> {
+        &self.values
     }
     pub(super) fn string<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
         self.string_opt(key).unwrap_or(default)

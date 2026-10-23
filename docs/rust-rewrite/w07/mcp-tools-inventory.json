@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "scope": "finite C source inventory; declarations are not native execution evidence",
+  "predecessor": "98330f1a94b5f50ad228117ce392601c0ce4dea4",
+  "native_executed": false,
+  "files": [
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "sha256": "23989888f2434630b9185d339f8548a8e73e8e08846ce00419609be4b439c05c"
+    },
+    {
+      "path": "crates/ssx-mcp/src/evidence/mod.rs",
+      "sha256": "31ca14935818a50fa3a59f8561c9e9b71caa512f165cdd7a7ab5b52c465064e6"
+    },
+    {
+      "path": "crates/ssx-mcp/src/evidence/factory.rs",
+      "sha256": "3c77f1a7a3b470f72e324f33fbbf006ff256c6a707f2d9415119f520edad8b96"
+    },
+    {
+      "path": "crates/ssx-mcp/src/evidence/tools.rs",
+      "sha256": "c4504b7dffbaf11420350bce226c9e18559ea382316f57fc55a7469f4c12943f"
+    },
+    {
+      "path": "crates/ssx-mcp/src/evidence/tools/tests.rs",
+      "sha256": "e59db600245871647443c6af8995e80a0f947705224e56e2278ad435384bc98e"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/mod.rs",
+      "sha256": "db27a4c64584f32eeabfecb7953148bbe7666f90568a3fb00ba9f3cdec4cb091"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/validation.rs",
+      "sha256": "7df42259622e459f1efa28257a6898dbf794f6cc360686be9cb10a25ec40ab0b"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/w07_mcp.rs",
+      "sha256": "15fc48685862f3e3cd98a9efd9913245d815775d6cf7c031a0c84af0420f665c"
+    },
+    {
+      "path": "docs/rust-rewrite/w07/mcp-tools-source.json",
+      "sha256": "f92ba77c01bbb0f3e78e29a4f1fb0f0d25d905e49369cdf451249d58f50874ea"
+    }
+  ],
+  "library_tests": [
+    "evidence::tools::tests::handlers_reuse_application_replay_conflict_tenant_grant_and_manifest_contracts",
+    "evidence::tools::tests::function_boundary_preserves_strict_bounds_nested_types_and_semantic_artifacts",
+    "evidence::tools::tests::semantic_errors_keep_source_order_defaults_and_field_attribution"
+  ],
+  "transport_target": "w07_mcp",
+  "transport_tests": [
+    "authenticated_http_four_tools_replay_lineage_tenant_grants_and_no_source_fetch",
+    "handler_cancellation_signals_and_drains_existing_receipt_operation_before_completion",
+    "authenticated_legacy_factory_advertises_and_dispatches_four_evidence_tools"
+  ],
+  "inherited_controls": {
+    "F03": "full workspace still discovers additive tests; no original frozen controls removed",
+    "T01": "original captured protocol catalog fixture unchanged",
+    "T06": "static eleven-tool descriptors and existing search_surface library identities retained",
+    "A06_A13": "V3 exact inverse spans reconstruct original prior bytes; frozen V1/V2 unchanged",
+    "W07": "current application/Valkey/transport execution and full closure remain root acceptance work"
+  }
+}

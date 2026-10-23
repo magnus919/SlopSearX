@@ -4,7 +4,7 @@ pub(crate) mod entities;
 mod resources;
 mod results;
 mod runtime_discovery;
-mod validation;
+pub(crate) mod validation;
 pub use runtime_discovery::{RuntimeDiagnostics, RuntimeDiagnosticsState, RuntimeDiscovery};
 
 use rmcp::{ErrorData, RoleServer, ServerHandler, model::*, service::RequestContext};
@@ -83,8 +83,8 @@ impl SearchSurface {
             connection_tenant: None,
         }
     }
-    /// Attach a borrowed graph before this surface/state is shared. B does not
-    /// advertise or dispatch evidence tools; transport integration belongs to C.
+    /// Attach the existing borrowed evidence graph before sharing the surface.
+    /// Its four tools are advertised by the matching runtime catalog.
     pub fn with_evidence(
         mut self,
         evidence: Arc<crate::evidence::EvidenceRuntime>,
@@ -172,6 +172,44 @@ impl SearchSurface {
         );
         Arc::new(catalogs)
     }
+    /// An unattached T06 fixture retains its frozen catalog. The same native
+    /// factory uses this instance catalog when it attaches the evidence owner.
+    pub fn runtime_descriptors(&self) -> serde_json::Value {
+        let mut descriptors = Self::descriptors();
+        if self.evidence.is_some() {
+            descriptors["tools"]
+                .as_array_mut()
+                .expect("tools")
+                .extend(crate::evidence::tools::descriptors().iter().cloned());
+        }
+        descriptors
+    }
+    pub fn runtime_catalogs(&self) -> Arc<crate::opaque::Catalogs> {
+        let mut catalogs = Self::catalogs().as_ref().clone();
+        if self.evidence.is_some() {
+            let names: Vec<_> = TOOL_NAMES
+                .into_iter()
+                .chain(crate::evidence::tools::TOOL_NAMES)
+                .collect();
+            for (key, value) in [
+                (
+                    "tools/list",
+                    serde_json::json!({"tools":self.runtime_descriptors()["tools"]}),
+                ),
+                ("ssx/native-tools", serde_json::json!(names)),
+                ("ssx/native-raw-arguments", serde_json::json!(names)),
+            ] {
+                catalogs.insert(
+                    key.into(),
+                    serde_json::value::RawValue::from_string(
+                        serde_json::to_string(&value).expect("evidence catalog"),
+                    )
+                    .expect("evidence catalog"),
+                );
+            }
+        }
+        Arc::new(catalogs)
+    }
     pub async fn execute(
         &self,
         name: &str,
@@ -222,6 +260,32 @@ impl SearchSurface {
             }
             "slopsearx_read_results" | "slopsearx_read_entities" | "slopsearx_read_result" => {
                 self.read(name, &args, tenant).await
+            }
+            _ if crate::evidence::tools::TOOL_NAMES.contains(&name) => {
+                let Some(evidence) = &self.evidence else {
+                    return Err(ErrorData::invalid_params(
+                        format!("Unknown tool: {name}"),
+                        None,
+                    ));
+                };
+                let cancel = ssx_application::receipts::Cancellation::default();
+                let task = crate::evidence::tools::execute(
+                    evidence,
+                    name,
+                    args.values(),
+                    &tenant,
+                    &cancel,
+                );
+                tokio::pin!(task);
+                tokio::select! {
+                    biased;
+                    _ = cancellation.cancelled() => {
+                        cancel.cancel();
+                        let _ = task.await;
+                        Err(ErrorData::internal_error("cancelled", None))
+                    }
+                    value = &mut task => value,
+                }
             }
             _ if TOOL_NAMES.contains(&name) => self.search(name, &args, tenant, cancellation).await,
             _ => Err(ErrorData::invalid_params(
@@ -922,7 +986,7 @@ impl ServerHandler for SearchSurface {
         _: Option<PaginatedRequestParams>,
         _: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, ErrorData> {
-        parsed(serde_json::json!({"tools":Self::descriptors()["tools"]}))
+        parsed(serde_json::json!({"tools":self.runtime_descriptors()["tools"]}))
     }
     async fn list_resources(
         &self,

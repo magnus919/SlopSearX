@@ -5,10 +5,10 @@ use serde_json::json;
 use std::path::Path;
 pub(crate) const TEST: &str =
     "search::tests::current_policy_source_is_construction_only_and_preserves_default_generation";
-const CAPSULE: &str = "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json";
-const SHA: &str = "8ad6a2eb0e1a574bbc1958ee5b157d47b806ead711e47d77d5e5ac1edf13155b";
-const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v1.json";
-const PREDECESSOR_SHA: &str = "04fe24e489805e5ac95c01f44e189717432e74a7c78ad7279076bf7f42fa1637";
+const CAPSULE: &str = "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json";
+const SHA: &str = "f1d1a1360485feba371aeace873cb5ae60090ea99e57e2ba3ade40f0e42a4be5";
+const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json";
+const PREDECESSOR_SHA: &str = "8ad6a2eb0e1a574bbc1958ee5b157d47b806ead711e47d77d5e5ac1edf13155b";
 const SEARCH: &str = "crates/ssx-infra/src/search.rs";
 const PATHS: [&str; 3] = [
     SEARCH,
@@ -29,7 +29,7 @@ fn document(raw: &[u8]) -> Result<Value, String> {
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
     need(
         doc.as_object().is_some_and(|m| m.len() == 5)
-            && doc["schema"] == "W07_EVIDENCE_ADDITIVE_SUCCESSOR_V2"
+            && doc["schema"] == "W07_EVIDENCE_ADDITIVE_SUCCESSOR_V3"
             && doc["predecessor"]
                 == serde_json::json!({"path":PREDECESSOR,"sha256":PREDECESSOR_SHA})
             && doc["test"] == TEST
@@ -61,7 +61,7 @@ fn load(root: &Path) -> Result<Value, String> {
     )?;
     let prior: Value = serde_json::from_slice(&prior_raw).map_err(|e| e.to_string())?;
     need(
-        prior["schema"] == "W07_EVIDENCE_ADDITIVE_SUCCESSOR_V1"
+        prior["schema"] == "W07_EVIDENCE_ADDITIVE_SUCCESSOR_V2"
             && prior["baseline"] == doc["baseline"]
             && prior["test"] == doc["test"],
         "W07 predecessor scope differs",
@@ -76,7 +76,9 @@ fn load(root: &Path) -> Result<Value, String> {
             old["path"] == next["path"] && old["prior"] == next["prior"],
             "W07 original baseline changed",
         )?;
-        if next["path"] != "docs/rust-rewrite/a13/source-amendments/validator.rs" {
+        // C adds only cancellation observation to search.rs. All other B
+        // transitions, including the prior validator proof, remain byte exact.
+        if next["path"] != SEARCH {
             need(old == next, "W07 unrelated source transition changed")?;
         }
     }
