@@ -134,3 +134,35 @@ is retained, and the cancellation change only observes an existing signal.
 No browser-visible contract change or portal documentation change is needed.
 The required portal gate remains part of eventual exact-head qualification;
 it has not been run for this C source revision.
+
+
+## Current local qualification
+
+At source `d76f3ab5d1e3cab2cc058a3a108cc3b9730a7f47`, the seven C
+library/transport tests, 119 xtask controls, 61 focused shared application/store
+cases, scoped strict Clippy, and inherited T01/T06 passed. The extra exact
+stdio test also passed. Its recorded pending ID, context cancellation, handler
+drain, backend close and successful child exit all preceded disposable-server
+retirement. This is native evidence for the attached four-tool boundary; it
+does not establish executable startup composition or complete W07 acceptance.
+
+The same run's F03 workspace Clippy stopped on unused W07 source-proof
+entrypoints through an A13 fixture wrapper. Workspace tests, build and readiness
+were not reached. The source correction adds the missing W07 child-control call
+to the existing shared `controls` wrapper, so that path executes its positive
+and negative contracts. It adds no lint allowance or runtime behavior change;
+its native F03 rerun remains pending a new resource grant. Frozen capsules and
+original negative controls are unchanged.
+
+Immutable local receipts live under the registered Rust build root in
+`w07-c-native-tools-20261023-v5/`. `RESULT.json` remains `FAILED_OR_STOPPED`;
+`YIELD.json` records all original process groups retired, empty short scratch
+removed, and all three resource leases released. Earlier compile errors and
+both unsuccessful `UNPAUSE` experiments remain in v1–v4. The measured d76 source
+and its receipts remain separate from this later source/document correction.
+
+The W07D executable gate, independent Python reference capture integration,
+reviewed main/dependency integration, and full milestone acceptance remain
+separate work. The source-projected descriptor file and declaration inventory
+retain their authoring-time status; the results above do not reinterpret those
+metadata fields as a native gate. No publication or issue closure is claimed.
