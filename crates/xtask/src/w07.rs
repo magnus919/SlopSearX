@@ -15,7 +15,7 @@ use main_successor::{
     CURRENT_SHA as MAIN_CURRENT_SHA, PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
-const REGISTRY_SHA: &str = "a19fe7d1e319819cd66ee79947bff797c05173264de97daf6acec455b511345d";
+const REGISTRY_SHA: &str = "84f6fff38b4989c2d24761ba6d2f513c80f39afbdbf4425cecc60d04cf4589bf";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]

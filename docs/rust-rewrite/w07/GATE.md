@@ -66,3 +66,11 @@ issue closure, downstream startup integration and G08 retirement remain separate
 This increment adds disconnected qualification tooling and a test target. It
 changes no portal request/response or production route. Portal acceptance remains
 required when the shared evidence factory is activated in public runtime startup.
+
+C cleanup and source-control composition were integrated through their normal
+commits. The D registry changes only the actual MCP fixture and shared proof
+control source bindings. d76's scoped native passes retain their own source
+attribution; its F03 workspace Clippy failure is preserved, and the one-line
+source correction has not been relabeled as a pass. D's current native gate
+and inherited qualification remain pending. The measured Python artifacts and
+the exact e695-to-cb11 main proof chain are unchanged.
