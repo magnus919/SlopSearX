@@ -431,7 +431,7 @@ async fn legacy_rpc(
     assert_eq!(response.status(), 202);
     let (_, raw) = legacy_event(stream, pending).await?;
     let response: Value = ssx_json::from_str(&raw)?;
-    assert_eq!(response["id"], id);
+    assert_eq!(response["id"].as_u64(), Some(id));
     assert!(response.get("error").is_none(), "{response}");
     Ok(response["result"].clone())
 }
@@ -599,7 +599,10 @@ impl StdioProcess {
             if response.get("id").is_none() {
                 continue;
             }
-            need(response["id"] == id, "stdio response ID mismatch")?;
+            need(
+                response["id"].as_u64() == Some(id),
+                "stdio response ID mismatch",
+            )?;
             need(
                 response.get("error").is_none(),
                 "unexpected stdio protocol error",
@@ -628,7 +631,7 @@ impl StdioProcess {
                     "pending-read acknowledgement missing",
                 )?;
                 let value: Value = ssx_json::from_str(&line)?;
-                if value["w07_read_pending"] == true && value["id"] == id {
+                if value["w07_read_pending"] == true && value["id"].as_u64() == Some(id) {
                     return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(());
                 }
             }
@@ -769,7 +772,9 @@ async fn stdio_journey(
         .collect::<std::result::Result<Vec<_>, _>>()?;
     need(
         rows.iter().any(|v| {
-            v["w07_read_drained"] == true && v["id"] == pending_id && v["context_cancelled"] == true
+            v["w07_read_drained"] == true
+                && v["id"].as_u64() == Some(pending_id)
+                && v["context_cancelled"] == true
         }),
         "EOF did not cancel and drain the pending evidence handler",
     )?;

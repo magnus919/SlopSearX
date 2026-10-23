@@ -4,6 +4,7 @@
 mod engine_fixture;
 use ssx_application::{
     NoopSink,
+    cache::RoutingIdentity,
     policy::{PolicyService, SearchPolicy},
     saved::SavedLimits,
     scope::{CatalogSnapshot, EngineCapability, ScopeResolver},
@@ -13,8 +14,8 @@ use ssx_application::{
 use ssx_domain::{EngineStatus, TenantId};
 use ssx_infra::{
     search::{
-        EngineBinding, RoutingIdentity, SearchClock, SearchConfig, SearchDependencies,
-        SearchService, SystemSearchClock,
+        EngineBinding, SearchClock, SearchConfig, SearchDependencies, SearchService,
+        SystemSearchClock,
     },
     valkey::{
         Valkey,
