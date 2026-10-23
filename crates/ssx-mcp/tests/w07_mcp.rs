@@ -745,12 +745,17 @@ async fn stdio_journey(
     // Pause exceeds the complete ACK/EOF guard, so automatic expiry cannot
     // masquerade as an explicitly released read during the success assertion.
     process.phase = "owned Valkey CLIENT PAUSE".into();
-    redis::cmd("CLIENT")
+    let pause_ack: String = redis::cmd("CLIENT")
         .arg("PAUSE")
         .arg(30000)
         .arg("ALL")
-        .query::<()>(control)
+        .query(control)
         .map_err(|e| format!("owned Valkey CLIENT PAUSE: {e}"))?;
+    need(
+        pause_ack == "OK",
+        "owned Valkey pause acknowledgement differs",
+    )?;
+    eprintln!("W07_STDIO_PAUSE_ACK {}", json!({"reply":pause_ack}));
     process.id += 1;
     let pending_id = process.id;
     let read_started = std::time::Instant::now();
@@ -796,6 +801,11 @@ async fn stdio_journey(
     )?;
     // No CLIENT UNPAUSE has been sent: ACK, handler drain, owner close and actual
     // child exit all precede releasing the held private server.
+    eprintln!(
+        "W07_STDIO_EOF_OBSERVATIONS {}",
+        json!({"pending_id":pending_id,
+        "child_exit_success":exit.success(),"rows":rows})
+    );
     Ok(())
 }
 #[tokio::test]
@@ -815,11 +825,34 @@ async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof
         }
     });
     let mut control = server.connection();
-    if let Err(error) = control.set_read_timeout(Some(Duration::from_secs(2))) {
-        sentinel_task.abort();
-        let _ = sentinel_task.await;
-        return Err(error.into());
+    // Both administrative connections exist before PAUSE. This is the same
+    // private server, and finally sends exactly one UNPAUSE without retry.
+    let mut release = server.connection();
+    for connection in [&mut control, &mut release] {
+        if let Err(error) = connection.set_read_timeout(Some(Duration::from_secs(2))) {
+            sentinel_task.abort();
+            let _ = sentinel_task.await;
+            return Err(error.into());
+        }
     }
+    let ids = (|| -> Result<_> {
+        let control_id: i64 = redis::cmd("CLIENT").arg("ID").query(&mut control)?;
+        let release_id: i64 = redis::cmd("CLIENT").arg("ID").query(&mut release)?;
+        need(
+            control_id != release_id,
+            "owned admin connections share identity",
+        )?;
+        Ok(json!({"control_id":control_id,"release_id":release_id,"owned_valkey_url":server.url()}))
+    })();
+    let ids = match ids {
+        Ok(ids) => ids,
+        Err(error) => {
+            sentinel_task.abort();
+            let _ = sentinel_task.await;
+            return Err(error);
+        }
+    };
+    eprintln!("W07_STDIO_OWNED_ADMIN {ids}");
     let mut process = match StdioProcess::start(server.url(), &source) {
         Ok(process) => process,
         Err(error) => {
@@ -833,8 +866,8 @@ async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof
     // targets only the owned fixture connection; no ambient application URL.
     let resumed = redis::cmd("CLIENT")
         .arg("UNPAUSE")
-        .query::<()>(&mut control)
-        .map_err(|e| format!("owned Valkey CLIENT UNPAUSE: {e}"));
+        .query::<String>(&mut release)
+        .map_err(|e| format!("owned Valkey CLIENT UNPAUSE on reserved admin: {e}"));
     let reaped = process.reap().await;
     if result.is_err() || resumed.is_err() || reaped.is_err() {
         use tokio::io::AsyncReadExt;
@@ -861,7 +894,15 @@ async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof
     sentinel_task.abort();
     let _ = sentinel_task.await;
     result?;
-    resumed?;
+    let release_ack = resumed?;
+    need(
+        release_ack == "OK",
+        "owned Valkey unpause acknowledgement differs",
+    )?;
+    eprintln!(
+        "W07_STDIO_UNPAUSE_ACK {}",
+        json!({"reply":release_ack,"admin":ids})
+    );
     reaped?;
     need(
         source_fetches.load(Ordering::SeqCst) == 0,
