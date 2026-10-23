@@ -1,0 +1,345 @@
+{
+  "source_sha256": "9f454a0216c4695900d4330f13d77a0e9c72281eacf872e7b54eeb85ebbe31af",
+  "model_path": "/private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/mcp/shared/auth.py",
+  "model_sha256": "899afdfa4f368e89d6672141431b6a32f839f9e38a7f0b3a6e6654cda25200e2",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "cases": [
+    {
+      "id": "missing",
+      "source_json_utf8_hex": "7b7d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "null",
+      "source_json_utf8_hex": "7b22746f6b656e73223a206e756c6c7d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "false",
+      "source_json_utf8_hex": "7b22746f6b656e73223a2066616c73657d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "empty-string",
+      "source_json_utf8_hex": "7b22746f6b656e73223a2022227d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "empty-object",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b7d7d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "minimal",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963227d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "empty-access",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a2022227d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "lower-bearer",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c2022746f6b656e5f74797065223a2022626561726572227d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "bad-token-type",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c2022746f6b656e5f74797065223a20224261736963227d7d",
+      "get_tokens": {
+        "error_type": "ValidationError",
+        "error": "1 validation error for OAuthToken\ntoken_type\n  Input should be 'Bearer' [type=literal_error, input_value='Basic', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_error"
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "string-expiry",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c2022657870697265735f696e223a202233363030227d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": 3600,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "bool-expiry",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c2022657870697265735f696e223a20747275657d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": 1,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "fraction-expiry",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c2022657870697265735f696e223a20312e357d7d",
+      "get_tokens": {
+        "error_type": "ValidationError",
+        "error": "1 validation error for OAuthToken\nexpires_in\n  Input should be a valid integer, got a number with a fractional part [type=int_from_float, input_value=1.5, input_type=float]\n    For further information visit https://errors.pydantic.dev/2.13/v/int_from_float"
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "negative-expiry",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c2022657870697265735f696e223a202d317d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": -1,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "empty-scope-refresh",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c202273636f7065223a2022222c2022726566726573685f746f6b656e223a2022227d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": "",
+          "refresh_token": ""
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "unknown-token-member",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963222c20226578747261223a20226b6570742d756e74696c2d6d6f64656c2d73617665227d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    },
+    {
+      "id": "client-minimum",
+      "source_json_utf8_hex": "7b22636c69656e745f696e666f223a207b22636c69656e745f6964223a202273796e7468657469632d636c69656e74227d7d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "value": {
+          "response_types": [
+            "code"
+          ],
+          "scope": null,
+          "client_name": null,
+          "client_uri": null,
+          "logo_uri": null,
+          "contacts": null,
+          "tos_uri": null,
+          "policy_uri": null,
+          "jwks_uri": null,
+          "jwks": null,
+          "software_id": null,
+          "software_version": null,
+          "redirect_uris": null,
+          "token_endpoint_auth_method": null,
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": null,
+          "client_id": "synthetic-client",
+          "client_secret": null,
+          "client_id_issued_at": null,
+          "client_secret_expires_at": null,
+          "issuer": null
+        }
+      }
+    },
+    {
+      "id": "client-placeholder",
+      "source_json_utf8_hex": "7b22636c69656e745f696e666f223a207b22636c69656e745f6964223a202273796e7468657469632d636c69656e74222c202272656469726563745f75726973223a205b22225d2c20226170706c69636174696f6e5f74797065223a206e756c6c2c20226772616e745f7479706573223a206e756c6c7d7d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "error_type": "ValidationError",
+        "error": "1 validation error for OAuthClientInformationFull\nredirect_uris.0\n  Input should be a valid URL, input is empty [type=url_parsing, input_value='', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/url_parsing"
+      }
+    },
+    {
+      "id": "client-secret",
+      "source_json_utf8_hex": "7b22636c69656e745f696e666f223a207b22636c69656e745f6964223a202273796e7468657469632d636c69656e74222c2022636c69656e745f736563726574223a202273796e7468657469632d736563726574222c202272656469726563745f75726973223a205b22687474703a2f2f3132372e302e302e313a383736352f63616c6c6261636b225d2c2022746f6b656e5f656e64706f696e745f617574685f6d6574686f64223a20226e6f6e65227d7d",
+      "get_tokens": {
+        "value": null
+      },
+      "get_client_info": {
+        "value": {
+          "response_types": [
+            "code"
+          ],
+          "scope": null,
+          "client_name": null,
+          "client_uri": null,
+          "logo_uri": null,
+          "contacts": null,
+          "tos_uri": null,
+          "policy_uri": null,
+          "jwks_uri": null,
+          "jwks": null,
+          "software_id": null,
+          "software_version": null,
+          "redirect_uris": [
+            "http://127.0.0.1:8765/callback"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": null,
+          "client_id": "synthetic-client",
+          "client_secret": "synthetic-secret",
+          "client_id_issued_at": null,
+          "client_secret_expires_at": null,
+          "issuer": null
+        }
+      }
+    },
+    {
+      "id": "unknown-root-large-int",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963227d2c2022756e6b6e6f776e223a2031303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030307d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      },
+      "after_model_save_utf8_hex": "7b0a202022746f6b656e73223a207b0a20202020226163636573735f746f6b656e223a202273796e7468657469632d75706461746564222c0a2020202022746f6b656e5f74797065223a2022426561726572222c0a2020202022657870697265735f696e223a206e756c6c2c0a202020202273636f7065223a206e756c6c2c0a2020202022726566726573685f746f6b656e223a206e756c6c0a20207d2c0a202022756e6b6e6f776e223a2031303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030300a7d"
+    },
+    {
+      "id": "unknown-root-nonfinite",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e746865746963227d2c2022756e6b6e6f776e223a204e614e7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      },
+      "after_model_save_utf8_hex": "7b0a202022746f6b656e73223a207b0a20202020226163636573735f746f6b656e223a202273796e7468657469632d75706461746564222c0a2020202022746f6b656e5f74797065223a2022426561726572222c0a2020202022657870697265735f696e223a206e756c6c2c0a202020202273636f7065223a206e756c6c2c0a2020202022726566726573685f746f6b656e223a206e756c6c0a20207d2c0a202022756e6b6e6f776e223a204e614e0a7d"
+    },
+    {
+      "id": "surrogate-access",
+      "source_json_utf8_hex": "7b22746f6b656e73223a207b226163636573735f746f6b656e223a202273796e7468657469632d5c7564383030227d7d",
+      "get_tokens": {
+        "value": {
+          "access_token": "synthetic-\ud800",
+          "token_type": "Bearer",
+          "expires_in": null,
+          "scope": null,
+          "refresh_token": null
+        }
+      },
+      "get_client_info": {
+        "value": null
+      }
+    }
+  ]
+}

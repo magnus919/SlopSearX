@@ -1,0 +1,3 @@
+# Locally modified HTTP dependencies
+
+Hyper 1.12.0 is MIT licensed; retain hyper/LICENSE. Reqwest 0.13.5 is MIT OR Apache-2.0; retain reqwest/LICENSE-MIT and reqwest/LICENSE-APACHE. Original copyright notices remain in those files. These local forks add SlopSearX's opt-in send-operation deadlines, request-local redirect propagation and terminal ownership handling; the unapplied read-slice candidate additionally adds explicitly selected plaintext-read deadlines and body-demand handling; the upstream authors did not publish or endorse these changes. Each source tree carries SSX-PATCH.md. The release attribution/SBOM must record original archive checksum plus exact local patch/tree digest.

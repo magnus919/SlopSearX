@@ -1,7 +1,7 @@
 [workspace]
 members = ["crates/*"]
 resolver = "3"
-exclude = ["vendor/libxml"]
+exclude = ["vendor/libxml", "vendor/ssx-http-source/httparse", "vendor/ssx-http-source/hyper", "vendor/ssx-http-source/hyper-util", "vendor/ssx-http-source/reqwest", "vendor/ssx-sdk-auth/rmcp"]
 
 [workspace.package]
 version = "0.1.0"
@@ -54,3 +54,11 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 all = "warn"
+
+# Explicit T07 reviewed HTTP/OAuth source composition.
+[patch.crates-io]
+httparse = { path = "vendor/ssx-http-source/httparse" }
+hyper = { path = "vendor/ssx-http-source/hyper" }
+hyper-util = { path = "vendor/ssx-http-source/hyper-util" }
+reqwest = { path = "vendor/ssx-http-source/reqwest" }
+rmcp = { path = "vendor/ssx-sdk-auth/rmcp" }

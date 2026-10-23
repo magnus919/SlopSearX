@@ -13,3 +13,21 @@ workspace = true
 ssx-wire.workspace = true
 rmcp.workspace = true
 clap.workspace = true
+ssx-mcp.workspace = true
+tokio.workspace = true
+tokio-util = "=0.7.20"
+
+[dev-dependencies]
+axum.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+base64.workspace = true
+sha2.workspace = true
+ssx-application.workspace = true
+ssx-domain.workspace = true
+ssx-infra.workspace = true
+ssx-registry.workspace = true
+ssx-config.workspace = true
+ssx-json.workspace = true
+redis.workspace = true
+chrono = { version = "=0.4.45", default-features = false, features = ["clock", "std"] }

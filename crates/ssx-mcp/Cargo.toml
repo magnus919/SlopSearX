@@ -16,25 +16,34 @@ ssx-config.workspace = true
 ssx-registry.workspace = true
 unicode-normalization = "=0.1.24"
 ssx-wire.workspace = true
-rmcp = { workspace = true, features = ["client", "transport-io", "transport-child-process", "transport-streamable-http-server", "transport-streamable-http-client-reqwest"] }
+rmcp = { workspace = true, features = ["auth", "client", "transport-io", "transport-child-process", "transport-streamable-http-server", "transport-streamable-http-client-reqwest"] }
 tokio.workspace = true
 axum = { workspace = true, features = ["multipart"] }
 serde.workspace = true
 serde_json = { workspace = true, features = ["raw_value"] }
-reqwest = { workspace = true, features = ["stream"] }
+reqwest = { workspace = true, features = ["stream", "ssx-http1-source-pool"] }
 tokio-util = "=0.7.20"
 futures-util = "=0.3.34"
+flate2.workspace = true
+async-trait = "=0.1.92"
+oauth2 = { version = "=5.0.0", default-features = false }
+tracing = "=0.1.44"
 uuid = { version = "=1.28.0", features = ["v4"] }
 subtle = "=2.6.1"
 sse-stream = "=0.2.6"
 ssx-domain.workspace = true
 ssx-json.workspace = true
+indexmap.workspace = true
 
 # T05 protocol codecs and accepted AWS-LC credential randomness.
 base64 = "=0.23.1"
 url.workspace = true
 sha2.workspace = true
 rustls.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "=0.31.3", default-features = false, features = ["fs", "poll"] }
+libc = "=0.2.190"
 
 [dev-dependencies]
 redis.workspace = true

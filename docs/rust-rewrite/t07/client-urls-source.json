@@ -1,0 +1,755 @@
+{
+  "source_sha256": "899afdfa4f368e89d6672141431b6a32f839f9e38a7f0b3a6e6654cda25200e2",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "cases": [
+    {
+      "id": "redirect_uris:0",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "http://EXAMPLE.invalid"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "http://example.invalid"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:1",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "http://EXAMPLE.invalid/"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "http://example.invalid/"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:2",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "http://example.invalid?x=1"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "http://example.invalid?x=1"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:3",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "http://example.invalid/."
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "http://example.invalid/"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:4",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "http:example.invalid"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "http://example.invalid"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:5",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "https://\u4f8b\u3048.invalid/\u96ea"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "https://xn--r8jz45g.invalid/%E9%9B%AA"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:6",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "custom:foo"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "custom:foo"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:7",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "mailto:a@example.invalid"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "mailto:a@example.invalid"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:8",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          ""
+        ]
+      },
+      "error_type": "ValidationError"
+    },
+    {
+      "id": "redirect_uris:9",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "not url"
+        ]
+      },
+      "error_type": "ValidationError"
+    },
+    {
+      "id": "redirect_uris:10",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          " http://example.invalid\n"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "http://example.invalid"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "redirect_uris:11",
+      "input": {
+        "client_id": "synthetic-client",
+        "redirect_uris": [
+          "http://127.0.0.1:8765/callback"
+        ]
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [
+          "http://127.0.0.1:8765/callback"
+        ],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:12",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "http://EXAMPLE.invalid"
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "http://example.invalid",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:13",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "http://EXAMPLE.invalid/"
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "http://example.invalid/",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:14",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "http://example.invalid?x=1"
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "http://example.invalid?x=1",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:15",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "http://example.invalid/."
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "http://example.invalid/",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:16",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "http:example.invalid"
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "http://example.invalid",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:17",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "https://\u4f8b\u3048.invalid/\u96ea"
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "https://xn--r8jz45g.invalid/%E9%9B%AA",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:18",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "custom:foo"
+      },
+      "error_type": "ValidationError"
+    },
+    {
+      "id": "client_uri:19",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "mailto:a@example.invalid"
+      },
+      "error_type": "ValidationError"
+    },
+    {
+      "id": "client_uri:20",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": ""
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:21",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "not url"
+      },
+      "error_type": "ValidationError"
+    },
+    {
+      "id": "client_uri:22",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": " http://example.invalid\n"
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "http://example.invalid",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "id": "client_uri:23",
+      "input": {
+        "client_id": "synthetic-client",
+        "client_uri": "http://127.0.0.1:8765/callback"
+      },
+      "value": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": "http://127.0.0.1:8765/callback",
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "synthetic-client",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    }
+  ]
+}

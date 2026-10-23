@@ -1,0 +1,11 @@
+# T07 V6 inline stdio owner source successor
+
+This unmaterialized source overlay retains the complete frozen8296-file V5 preimage and both historical V5 composition documents. It transfers only the independently reviewed1010 stdio owner/IO seam and six actual SDK owner controls. All other T07 opaque exports, GatewaySse/Gateway functionality, existing tests and source policy remain byte-exact. Cargo manifests/lock and SDK vendor sources are unchanged.
+
+The outer serving future is inline/pinned. Dropping its owner drops held initialization immediately; normal EOF/caller cancellation stops and awaits that same future. SDK established DropGuard still requests asynchronous cancellation, so outer-drop is not labeled synchronous internal join or arbitrary handler drain. The six controls witness actual held-init destruction and handler-owner retirement. The compile-valid old-spawn mutant must retain the IO seam and fail the held-init witness before restored positive acceptance.
+
+Current inventory is52 gateway_client library +3 seam +9 process, all retained; add6 separate opaque::tests::owned_stdio_ library controls for70 total. The gateway_client filter does not contain opaque controls. The actual source gate selects the additional owner subset separately. Historical QUALIFICATION_PLAN.md remains an obsolete V2 narrative; this V6 record and current source_bindings/gate give the active proposed inventory.
+
+Old V5 compiled images and partial/stopped receipts remain immutable historical evidence. They cannot qualify this corrected source. Root must review full maps/diff/pins, apply in an authorized private source, rebuild every affected executable/test artifact, bind actual compiler receipts and exact70 inventories, then run fresh bounded controls and inherited/profile/platform/strict-Clippy gates. Existing target/cache may be reused only after owner confirmation; no native work is authorized here. The14 reqwest dead-code warnings remain a separate strict-Clippy obligation.
+
+New source/overlay/support files stay on Tank, with no full source copy or compiled-tree write. Root must review owner/PR/path/actual-size/retention and release redundant artifacts after every merge. No producer/provider/original Python oracle or OS browser is invoked by source authoring.

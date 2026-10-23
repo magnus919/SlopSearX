@@ -32,6 +32,7 @@ mod t01;
 mod t04;
 mod t05;
 mod t06;
+mod t07;
 mod t09;
 mod w00;
 mod w01;
@@ -486,6 +487,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "T04" => t04::check(root, records),
         "T05" => t05::check(root, records),
         "T06" => t06::check(root, records),
+        "T07" => t07::check(root, records),
         "F05" => f05::check(root, records),
         "F06" => f06::check(root, records),
         "F07" => f07::check(root, records),
@@ -669,6 +671,8 @@ fn main() {
         "synthetic MCP registry, real stdio/streamable HTTP/legacy SSE and gateway SDK qualification; no production tool parity or OAuth authorization-server claim"
     } else if id == "T06" {
         "source-bound native search/discovery through shared authenticated HTTP, stdio and legacy with real service/snapshot authorities; exactly two accepted outer-params diagnostic differences; production startup T02/W09 separate"
+    } else if id == "T07" {
+        "source-bound native client executable, fixed gateway projection, static/OAuth loopback, invocation and owned startup/cancel/EOF/instance isolation; independent exact R1/R2/profile/SDK and inherited transport acceptance remain required"
     } else if id == "T05" {
         "OAuth wire endpoints and all-network transport authentication with real clients/private Valkey; no provider, production cutover or browser identity claim"
     } else if id == "T04" {

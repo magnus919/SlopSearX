@@ -1,0 +1,843 @@
+diff -ruN a/hyper/Cargo.toml b/hyper/Cargo.toml
+--- a/hyper/Cargo.toml
++++ b/hyper/Cargo.toml
+@@ -17,6 +17,7 @@
+ authors = ["Sean McArthur <sean@seanmonstar.com>"]
+ build = false
+ include = [
++    "SSX-PATCH.md",
+     "Cargo.toml",
+     "LICENSE",
+     "src/**/*",
+@@ -67,6 +68,8 @@
+ from = "capi/include/hyper.h"
+ 
+ [features]
++ssx-send-operation-timeout = ["client", "http1", "tokio/time"]
++ssx-http1-source-read = ["ssx-send-operation-timeout"]
+ capi = []
+ client = [
+     "dep:want",
+diff -ruN a/hyper/Cargo.toml.orig b/hyper/Cargo.toml.orig
+--- a/hyper/Cargo.toml.orig
++++ b/hyper/Cargo.toml.orig
+@@ -14,6 +14,7 @@
+ rust-version = "1.63" # keep in sync with MSRV.md dev doc
+ 
+ include = [
++    "SSX-PATCH.md",
+   "Cargo.toml",
+   "LICENSE",
+   "src/**/*",
+@@ -69,6 +70,8 @@
+ tokio-util = "0.7.10"
+ 
+ [features]
++ssx-send-operation-timeout = ["client", "http1", "tokio/time"]
++ssx-http1-source-read = ["ssx-send-operation-timeout"]
+ # Nothing by default
+ default = []
+ 
+diff -ruN a/hyper/SSX-PATCH.md b/hyper/SSX-PATCH.md
+--- a/hyper/SSX-PATCH.md
++++ b/hyper/SSX-PATCH.md
+@@ -0,0 +1,11 @@
++# Local T07 source modification
++
++This is locally modified hyper 1.12.0, not the unchanged registry release. Upstream archive SHA-256: `2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c`. Original MIT license and copyright notices remain in the package. `../PROVENANCE.json` records every local file digest, the complete tree digest and the retained complete patch at `../patches/hyper.patch`. These repository-relative files identify the fork without an external review packet.
++
++This proposal retains the reviewed nondefault HTTP/1 send-operation extension, request-local timeout propagation and terminal cancellation ownership. It adds the nondefault ssx-http1-source-read feature: a typed, explicitly selected per-plaintext-read option and per-frame body demand. The latter is a candidate only, not activated or qualified in the repository. No socket buffer controls, receipt collectors or TLS fixture dependencies are added. Unopted requests retain their existing paths.
++
++Before updating, verify a newly reviewed upstream archive, inspect source semantics, rebase the minimal patch, regenerate provenance, and run causal empty-event/trailer/cancellation/write-error/redirect/retry/TLS controls plus all affected-consumer and platform gates. Independent review and maintainer acceptance are required before accepting changed digests. Release SBOMs must include both upstream archive and local patch/tree identities.
++
++V2 read-slice candidate additionally proposes terminal opted-read cancellation/error owner destruction without shutdown IO, and clears clocks before internal idle probes. All native Hyper/reqwest qualification remains unexecuted.
++
++V3 read-slice candidate adds a same-pass post-write profiled receive poll inside the existing bounded loop, after cancellation checks, to guarantee the first Headers read even without an extra transport wake. No default path or send method is changed. It is unexecuted.
+diff -ruN a/hyper/src/body/chan.rs b/hyper/src/body/chan.rs
+--- a/hyper/src/body/chan.rs
++++ b/hyper/src/body/chan.rs
+@@ -17,6 +17,8 @@
+             sender_open: true,
+             receiver_open: true,
+             want: !wanter,
++            #[cfg(feature = "ssx-http1-source-read")]
++            source_demand: false,
+         }),
+         sender_waker: AtomicWaker::new(),
+         receiver_waker: AtomicWaker::new(),
+@@ -60,9 +62,18 @@
+     sender_open: bool,
+     receiver_open: bool,
+     want: bool,
++    #[cfg(feature = "ssx-http1-source-read")]
++    source_demand: bool,
+ }
+ 
+ impl Sender {
++    #[cfg(feature = "ssx-http1-source-read")]
++    pub(crate) fn source_demand_per_frame(&mut self) {
++        let mut state = self.shared.state.lock().panic_if_poisoned();
++        state.source_demand = true;
++        state.want = false;
++    }
++
+     pub(crate) fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<crate::Result<()>> {
+         self.shared.sender_waker.register(cx.waker());
+         let state = self.shared.state.lock().panic_if_poisoned();
+@@ -98,6 +109,10 @@
+             return Err(chunk);
+         }
+         state.item = Some(Ok(chunk));
++        #[cfg(feature = "ssx-http1-source-read")]
++        if state.source_demand {
++            state.want = false;
++        }
+         drop(state);
+         self.shared.receiver_waker.wake();
+         Ok(())
+@@ -172,6 +187,12 @@
+             false
+         };
+         if let Some(item) = state.item.take() {
++            #[cfg(feature = "ssx-http1-source-read")]
++            if state.source_demand {
++                // Taking a delivered frame does not request another network read.
++                // The next poll without buffered data grants the next demand.
++                state.want = false;
++            }
+             drop(state);
+             self.shared.sender_waker.wake();
+             return Poll::Ready(Some(item));
+diff -ruN a/hyper/src/body/incoming.rs b/hyper/src/body/incoming.rs
+--- a/hyper/src/body/incoming.rs
++++ b/hyper/src/body/incoming.rs
+@@ -90,6 +90,13 @@
+         let (tx, rx) = chan::channel(wanter);
+         let rx = Incoming::new(Kind::Chan { content_length, rx });
+ 
++        (tx, rx)
++    }
++
++    #[cfg(feature = "ssx-http1-source-read")]
++    pub(crate) fn new_source_channel(content_length: DecodedLength) -> (Sender, Incoming) {
++        let (mut tx, rx) = Self::new_channel(content_length, true);
++        tx.source_demand_per_frame();
+         (tx, rx)
+     }
+ 
+diff -ruN a/hyper/src/error.rs b/hyper/src/error.rs
+--- a/hyper/src/error.rs
++++ b/hyper/src/error.rs
+@@ -313,6 +313,13 @@
+     /// [`header_read_timeout`](crate::server::conn::http1::Builder::header_read_timeout)).
+     /// It also covers any timeout set via a user-provided timer.
+     pub fn is_timeout(&self) -> bool {
++        #[cfg(feature = "ssx-send-operation-timeout")]
++        if self
++            .find_source::<crate::ext::SendOperationTimedOut>()
++            .is_some()
++        {
++            return true;
++        }
+         #[cfg(all(feature = "http1", feature = "server"))]
+         if matches!(self.inner.kind, Kind::HeaderTimeout) {
+             return true;
+diff -ruN a/hyper/src/ext/mod.rs b/hyper/src/ext/mod.rs
+--- a/hyper/src/ext/mod.rs
++++ b/hyper/src/ext/mod.rs
+@@ -261,3 +261,13 @@
+         self.entry_order.iter()
+     }
+ }
++
++#[cfg(feature = "ssx-send-operation-timeout")]
++mod send_operation;
++#[cfg(feature = "ssx-send-operation-timeout")]
++pub use send_operation::{SendOperationPhase, SendOperationTimedOut, SendOperationTimeout};
++
++#[cfg(feature = "ssx-http1-source-read")]
++mod source_read;
++#[cfg(feature = "ssx-http1-source-read")]
++pub use source_read::{SourceHttp1ReadPhase, SourceHttp1ReadTimedOut, SourceHttp1ReadTimeout};
+diff -ruN a/hyper/src/ext/send_operation.rs b/hyper/src/ext/send_operation.rs
+--- a/hyper/src/ext/send_operation.rs
++++ b/hyper/src/ext/send_operation.rs
+@@ -0,0 +1,25 @@
++//! Experimental opt-in HTTP/1 complete send-event budgets.
++use std::{fmt, time::Duration};
++/// A nonrenewed deadline for each complete HTTP/1 request send operation.
++/// This experimental extension has no effect on requests without the extension.
++#[derive(Clone, Copy, Debug)]
++pub struct SendOperationTimeout(pub Duration);
++/// The complete send operation which exceeded its budget.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum SendOperationPhase {
++    /// Serialized request headers.
++    Headers,
++    /// One complete body data frame, including its transfer framing.
++    Data,
++    /// End of message, including trailers or an empty terminal write.
++    EndOfMessage,
++}
++/// Typed source retained in Hyper's body-write error chain.
++#[derive(Debug)]
++pub struct SendOperationTimedOut(pub SendOperationPhase);
++impl fmt::Display for SendOperationTimedOut {
++    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
++        write!(f, "HTTP/1 send operation timed out: {:?}", self.0)
++    }
++}
++impl std::error::Error for SendOperationTimedOut {}
+diff -ruN a/hyper/src/ext/source_read.rs b/hyper/src/ext/source_read.rs
+--- a/hyper/src/ext/source_read.rs
++++ b/hyper/src/ext/source_read.rs
+@@ -0,0 +1,27 @@
++//! Experimental source-profile plaintext network-read operations for HTTP/1.
++use std::{fmt, time::Duration};
++
++/// A fresh timeout for every demanded plaintext IO read in an HTTP/1 response.
++/// This requires `SendOperationTimeout` on the same HTTP/1 client request.
++/// It is not a response-header, frame, SSE-event, body or whole-request timeout.
++#[derive(Clone, Copy, Debug)]
++pub struct SourceHttp1ReadTimeout(pub Duration);
++
++/// Response phase containing the stalled plaintext read.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum SourceHttp1ReadPhase {
++    /// Final or informational response headers.
++    Headers,
++    /// Response data, transfer framing, or trailers.
++    Body,
++}
++
++/// Typed error source with no URL, header or response-body data.
++#[derive(Debug)]
++pub struct SourceHttp1ReadTimedOut(pub SourceHttp1ReadPhase);
++impl fmt::Display for SourceHttp1ReadTimedOut {
++    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
++        write!(f, "HTTP/1 plaintext read operation timed out: {:?}", self.0)
++    }
++}
++impl std::error::Error for SourceHttp1ReadTimedOut {}
+diff -ruN a/hyper/src/proto/h1/conn.rs b/hyper/src/proto/h1/conn.rs
+--- a/hyper/src/proto/h1/conn.rs
++++ b/hyper/src/proto/h1/conn.rs
+@@ -569,6 +569,12 @@
+ 
+     fn try_keep_alive(&mut self, cx: &mut Context<'_>) {
+         self.state.try_keep_alive::<T>();
++        #[cfg(feature = "ssx-http1-source-read")]
++        if self.state.is_idle() {
++            // maybe_notify can probe IO before the outer dispatcher regains
++            // control. An idle probe must not inherit the last response clock.
++            self.io.source_read_operation(None);
++        }
+         self.maybe_notify(cx);
+     }
+ 
+@@ -850,6 +856,31 @@
+ 
+         // fallback is pass the error back up
+         Err(err)
++    }
++
++    #[cfg(feature = "ssx-http1-source-read")]
++    pub(crate) fn source_read_operation(
++        &mut self,
++        operation: Option<(std::time::Duration, crate::ext::SourceHttp1ReadPhase)>,
++    ) {
++        self.io.source_read_operation(operation);
++    }
++
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    pub(crate) fn finish_empty_send_event(&mut self, cx: &mut Context<'_>) {
++        self.try_keep_alive(cx);
++    }
++
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    pub(crate) fn cancel_client_send(&mut self) {
++        self.io.discard_write_buffer();
++        self.state.close();
++    }
++
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    pub(crate) fn recover_client_write_error(&mut self) {
++        self.io.discard_write_buffer();
++        self.state.close_write(); // disables keep-alive; receive side stays owned/open
+     }
+ 
+     pub(crate) fn poll_flush(&mut self, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+diff -ruN a/hyper/src/proto/h1/dispatch.rs b/hyper/src/proto/h1/dispatch.rs
+--- a/hyper/src/proto/h1/dispatch.rs
++++ b/hyper/src/proto/h1/dispatch.rs
+@@ -25,6 +25,20 @@
+     body_tx: SenderDropGuard,
+     body_rx: Pin<Box<Option<Bs>>>,
+     is_closing: bool,
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    send_budget: Option<std::time::Duration>,
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    send_event: Option<(crate::ext::SendOperationPhase, Pin<Box<tokio::time::Sleep>>)>,
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    send_eom: bool,
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    send_done: bool,
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    send_opt_in: bool,
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    send_cancelled: bool,
++    #[cfg(feature = "ssx-http1-source-read")]
++    source_read: Option<std::time::Duration>,
+ }
+ 
+ pub(crate) trait Dispatch {
+@@ -84,6 +98,20 @@
+             body_tx: SenderDropGuard::none(),
+             body_rx: Box::pin(None),
+             is_closing: false,
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            send_budget: None,
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            send_event: None,
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            send_eom: false,
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            send_done: false,
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            send_opt_in: false,
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            send_cancelled: false,
++            #[cfg(feature = "ssx-http1-source-read")]
++            source_read: None,
+         }
+     }
+ 
+@@ -149,6 +177,13 @@
+ 
+         ready!(self.poll_loop(cx))?;
+ 
++        #[cfg(feature = "ssx-send-operation-timeout")]
++        if self.send_cancelled {
++            // Terminal cancellation destroys the connection owner. Do not flush
++            // canceled output or await shutdown IO before dropping the socket.
++            return Poll::Ready(Ok(Dispatched::Shutdown));
++        }
++
+         if self.is_done() {
+             if let Some(pending) = self.conn.pending_upgrade() {
+                 self.conn.take_error()?;
+@@ -170,8 +205,31 @@
+         // 16 was chosen arbitrarily, as that is number of pipelined requests
+         // benchmarks often use. Perhaps it should be a config option instead.
+         for _ in 0..16 {
++            #[cfg(not(feature = "ssx-send-operation-timeout"))]
+             let _ = self.poll_read(cx)?;
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            {
++                // The selected source sends the request before receiving a response.
++                // In particular, an early response cannot cancel an active write deadline.
++                if self.send_budget.is_none() {
++                    let _ = self.poll_read(cx)?;
++                }
++            }
+             let write_ready = self.poll_write(cx)?.is_ready();
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            if self.send_cancelled {
++                return Poll::Ready(Ok(()));
++            }
++            #[cfg(feature = "ssx-http1-source-read")]
++            if self.source_read.is_some() && self.send_budget.is_none() {
++                // The initial profile may have been installed inside poll_write.
++                // Start receive now, even if an earlier idle read was blocked
++                // and no response byte will provide another IO wake.
++                let _ = self.poll_read(cx)?;
++                if self.send_cancelled {
++                    return Poll::Ready(Ok(()));
++                }
++            }
+             let flush_ready = self.poll_flush(cx)?.is_ready();
+ 
+             // If we can write more body and the connection is ready, we should
+@@ -227,12 +285,19 @@
+             if self.is_closing {
+                 return Poll::Ready(Ok(()));
+             } else if self.conn.can_read_head() {
++                #[cfg(feature = "ssx-http1-source-read")]
++                self.conn.source_read_operation(
++                    self.source_read
++                        .map(|timeout| (timeout, crate::ext::SourceHttp1ReadPhase::Headers)),
++                );
+                 ready!(self.poll_read_head(cx))?;
+             } else if let Some(mut body) = self.body_tx.take() {
+                 if self.conn.can_read_body() {
+                     match body.poll_ready(cx) {
+                         Poll::Ready(Ok(())) => (),
+                         Poll::Pending => {
++                            #[cfg(feature = "ssx-http1-source-read")]
++                            self.conn.source_read_operation(None);
+                             self.body_tx.set(body);
+                             return Poll::Pending;
+                         }
+@@ -240,10 +305,22 @@
+                             // user doesn't care about the body
+                             // so we should stop reading
+                             trace!("body receiver dropped before eof, draining or closing");
++                            #[cfg(feature = "ssx-http1-source-read")]
++                            if self.source_read.is_some() {
++                                // Source cancellation closes incomplete responses; it
++                                // does not acquire fresh demand to drain their bodies.
++                                self.close_source_read_terminal();
++                                return Poll::Ready(Ok(()));
++                            }
+                             self.conn.poll_drain_or_close_read(cx);
+                             continue;
+                         }
+                     }
++                    #[cfg(feature = "ssx-http1-source-read")]
++                    self.conn.source_read_operation(
++                        self.source_read
++                            .map(|timeout| (timeout, crate::ext::SourceHttp1ReadPhase::Body)),
++                    );
+                     match self.conn.poll_read_body(cx) {
+                         Poll::Ready(Some(Ok(frame))) => {
+                             if frame.is_data() {
+@@ -253,6 +330,11 @@
+                                         self.body_tx.set(body);
+                                     }
+                                     Err(_canceled) => {
++                                        #[cfg(feature = "ssx-http1-source-read")]
++                                        if self.source_read.is_some() {
++                                            self.close_source_read_terminal();
++                                            return Poll::Ready(Ok(()));
++                                        }
+                                         if self.conn.can_read_body() {
+                                             trace!("body receiver dropped before eof, closing");
+                                             self.conn.close_read();
+@@ -267,6 +349,11 @@
+                                         self.body_tx.set(body);
+                                     }
+                                     Err(_canceled) => {
++                                        #[cfg(feature = "ssx-http1-source-read")]
++                                        if self.source_read.is_some() {
++                                            self.close_source_read_terminal();
++                                            return Poll::Ready(Ok(()));
++                                        }
+                                         if self.conn.can_read_body() {
+                                             trace!("body receiver dropped before eof, closing");
+                                             self.conn.close_read();
+@@ -287,12 +374,22 @@
+                         }
+                         Poll::Ready(Some(Err(e))) => {
+                             body.send_error(crate::Error::new_body(e));
++                            #[cfg(feature = "ssx-http1-source-read")]
++                            if self.source_read.is_some() {
++                                self.close_source_read_terminal();
++                                return Poll::Ready(Ok(()));
++                            }
+                         }
+                     }
+                 } else {
+                     // just drop, the body will close automatically
+                 }
+             } else {
++                #[cfg(feature = "ssx-http1-source-read")]
++                {
++                    self.source_read = None;
++                    self.conn.source_read_operation(None);
++                }
+                 return self.conn.poll_read_keep_alive(cx);
+             }
+         }
+@@ -303,6 +400,11 @@
+         if let Ok(()) = ready!(self.dispatch.poll_ready(cx)) {
+         } else {
+             trace!("dispatch no longer receiving messages");
++            #[cfg(feature = "ssx-http1-source-read")]
++            if self.source_read.is_some() {
++                self.close_source_read_terminal();
++                return Poll::Ready(Ok(()));
++            }
+             self.close();
+             return Poll::Ready(Ok(()));
+         }
+@@ -313,8 +415,16 @@
+                 let body = match body_len {
+                     DecodedLength::ZERO => IncomingBody::empty(),
+                     other => {
+-                        let (tx, rx) =
++                        #[cfg(feature = "ssx-http1-source-read")]
++                        let channel = if self.source_read.is_some() {
++                            IncomingBody::new_source_channel(other)
++                        } else {
++                            IncomingBody::new_channel(other, wants.contains(Wants::EXPECT))
++                        };
++                        #[cfg(not(feature = "ssx-http1-source-read"))]
++                        let channel =
+                             IncomingBody::new_channel(other, wants.contains(Wants::EXPECT));
++                        let (tx, rx) = channel;
+                         self.body_tx.set(tx);
+                         rx
+                     }
+@@ -337,6 +447,11 @@
+                 // if here, the dispatcher gave the user the error
+                 // somewhere else. we still need to shutdown, but
+                 // not as a second error.
++                #[cfg(feature = "ssx-http1-source-read")]
++                if self.source_read.is_some() {
++                    self.close_source_read_terminal();
++                    return Poll::Ready(Ok(()));
++                }
+                 self.close();
+                 Poll::Ready(Ok(()))
+             }
+@@ -355,6 +470,14 @@
+ 
+     fn poll_write(&mut self, cx: &mut Context<'_>) -> Poll<crate::Result<()>> {
+         loop {
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            if self.is_closing {
++                return Poll::Ready(Ok(()));
++            }
++            #[cfg(feature = "ssx-send-operation-timeout")]
++            if self.send_budget.is_some() {
++                ready!(self.poll_send_operations(cx))?;
++            }
+             if self.is_closing {
+                 return Poll::Ready(Ok(()));
+             } else if self.body_rx.is_none()
+@@ -376,7 +499,43 @@
+                         self.body_rx.set(Some(body));
+                         btype
+                     };
++                    #[cfg(feature = "ssx-send-operation-timeout")]
++                    {
++                        self.send_budget = if T::is_server() {
++                            None
++                        } else {
++                            head.extensions
++                                .get::<crate::ext::SendOperationTimeout>()
++                                .map(|v| v.0)
++                        };
++                        self.send_opt_in = self.send_budget.is_some();
++                        if self.send_budget.is_some() {
++                            self.send_eom = self.body_rx.is_none();
++                            self.send_done = false;
++                        }
++                    }
++                    #[cfg(feature = "ssx-http1-source-read")]
++                    {
++                        self.conn.source_read_operation(None);
++                        self.source_read = if T::is_server() {
++                            None
++                        } else {
++                            head.extensions
++                                .get::<crate::ext::SourceHttp1ReadTimeout>()
++                                .map(|option| option.0)
++                        };
++                        if self.source_read.is_some() && self.send_budget.is_none() {
++                            return Poll::Ready(Err(crate::Error::new_user_body(
++                                "source HTTP/1 read profile requires send-operation timeout",
++                            )));
++                        }
++                    }
+                     self.conn.write_head(head, body_type);
++                    #[cfg(feature = "ssx-send-operation-timeout")]
++                    if self.send_budget.is_some() {
++                        // Match source: encode the event before starting the send budget.
++                        self.begin_send_event(crate::ext::SendOperationPhase::Headers);
++                    }
+                 } else {
+                     self.close();
+                     return Poll::Ready(Ok(()));
+@@ -447,14 +606,189 @@
+         }
+     }
+ 
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    fn begin_send_event(&mut self, phase: crate::ext::SendOperationPhase) {
++        // AnyIOStream.write returns before its timer/IO when serialized bytes
++        // are empty. A fixed-length EOM and empty Data therefore have no budget.
++        if !self.conn.has_buffered_write() {
++            return;
++        }
++        self.send_event = Some((
++            phase,
++            Box::pin(tokio::time::sleep(self.send_budget.expect("opt-in budget"))),
++        ));
++    }
++
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    fn poll_send_operations(&mut self, cx: &mut Context<'_>) -> Poll<crate::Result<()>> {
++        use crate::ext::SendOperationPhase;
++        loop {
++            // Observe callback cancellation independently of HTTP response bytes,
++            // including while the body is Pending between untimed frames.
++            if let Poll::Ready(Err(())) = self.dispatch.poll_ready(cx) {
++                self.body_rx.set(None);
++                self.send_event = None;
++                self.send_budget = None;
++                self.send_eom = false;
++                self.send_done = false;
++                self.send_cancelled = true;
++                self.is_closing = true;
++                self.conn.cancel_client_send();
++                return Poll::Ready(Ok(()));
++            }
++            if self.send_event.is_some() {
++                ready!(self.poll_flush(cx))?;
++                if self.send_budget.is_none() {
++                    // A non-timeout transport WriteError switched to receive.
++                    return Poll::Ready(Ok(()));
++                }
++            }
++            if self.send_done {
++                self.send_budget = None;
++                self.send_done = false;
++                return Poll::Ready(Ok(()));
++            }
++            if self.send_eom {
++                if self.conn.can_write_body() {
++                    self.conn.end_body()?;
++                }
++                self.send_eom = false;
++                self.send_done = true;
++                self.begin_send_event(SendOperationPhase::EndOfMessage);
++                continue;
++            }
++            if !self.conn.can_write_body() {
++                // Match ordinary Hyper: the encoder has ended (for example,
++                // Content-Length is exhausted). Drop remaining frames rather
++                // than polling trailers into a finished encoder. A valid
++                // chunked encoder remains writable and retains its trailers.
++                self.body_rx.set(None);
++                self.send_eom = true;
++                continue;
++            }
++            // Body ownership remains in the dispatcher. No frame bytes are copied.
++            // A known-length encoder may finish after its final data frame.
++            // Still consume the body's EOF and apply the distinct empty end event.
++            let body = self
++                .body_rx
++                .as_mut()
++                .as_pin_mut()
++                .expect("body until end event");
++            let item = ready!(body.poll_frame(cx));
++            match item {
++                Some(Ok(frame)) if frame.is_data() => {
++                    let chunk = frame.into_data().unwrap_or_else(|_| unreachable!());
++                    // Always retain a distinct EndOfMessage, even for the last data.
++                    if chunk.remaining() != 0 {
++                        if !self.conn.can_write_body() {
++                            self.close();
++                            return Poll::Ready(Err(crate::Error::new_body_write(
++                                "body data after encoder end",
++                            )));
++                        }
++                        self.conn.write_body(chunk);
++                    }
++                    self.begin_send_event(SendOperationPhase::Data);
++                }
++                Some(Ok(frame)) if frame.is_trailers() => {
++                    self.conn
++                        .write_trailers(frame.into_trailers().unwrap_or_else(|_| unreachable!()));
++                    // Hyper can reject undeclared/invalid trailers without ending the encoder.
++                    if self.conn.can_write_body() {
++                        self.conn.end_body()?;
++                    }
++                    self.body_rx.set(None);
++                    self.send_done = true;
++                    self.begin_send_event(SendOperationPhase::EndOfMessage);
++                }
++                Some(Ok(_)) => continue,
++                Some(Err(error)) => return Poll::Ready(Err(crate::Error::new_user_body(error))),
++                None => {
++                    self.body_rx.set(None);
++                    self.send_eom = true;
++                }
++            }
++        }
++    }
++
+     fn poll_flush(&mut self, cx: &mut Context<'_>) -> Poll<crate::Result<()>> {
+-        self.conn.poll_flush(cx).map_err(|err| {
++        #[cfg(feature = "ssx-send-operation-timeout")]
++        if let Some((phase, timer)) = self.send_event.as_mut() {
++            if tokio::time::Instant::now() >= timer.deadline() || timer.as_mut().poll(cx).is_ready()
++            {
++                let source = crate::ext::SendOperationTimedOut(*phase);
++                self.close();
++                return Poll::Ready(Err(crate::Error::new_body_write(source)));
++            }
++        }
++        #[cfg(feature = "ssx-send-operation-timeout")]
++        if self.send_opt_in && self.send_event.is_none() && !self.conn.has_buffered_write() {
++            // No artificial flush on an empty source write. Still advance the
++            // HTTP state machine without accessing the underlying IO.
++            self.conn.finish_empty_send_event(cx);
++            return Poll::Ready(Ok(()));
++        }
++        let result = self.conn.poll_flush(cx);
++        #[cfg(feature = "ssx-send-operation-timeout")]
++        if self.send_event.is_some() {
++            if let Poll::Ready(Err(ref error)) = result {
++                use std::io::ErrorKind;
++                if error.kind() == ErrorKind::TimedOut {
++                    let phase = self.send_event.as_ref().expect("active send").0;
++                    self.close();
++                    return Poll::Ready(Err(crate::Error::new_body_write(
++                        crate::ext::SendOperationTimedOut(phase),
++                    )));
++                } else {
++                    // This boundary contains only underlying IO write/flush errors.
++                    // AnyIO maps broken/closed stream errors to WriteError, including
++                    // other underlying OS/transport failures. Match its suppression, not
++                    // WriteTimeout, body/encoding errors or cancellation.
++                    // Stop all writes, discard unsent bytes, disable pooling,
++                    // and retain the same IO owner while receiving a response.
++                    self.conn.recover_client_write_error();
++                    self.body_rx.set(None);
++                    self.send_event = None;
++                    self.send_budget = None;
++                    self.send_eom = false;
++                    self.send_done = false;
++                    cx.waker().wake_by_ref();
++                    return Poll::Ready(Ok(()));
++                }
++            }
++        }
++        let result = result.map_err(|err| {
+             debug!("error writing: {}", err);
+             crate::Error::new_body_write(err)
+-        })
++        });
++        #[cfg(feature = "ssx-send-operation-timeout")]
++        if result.is_ready() {
++            self.send_event = None;
++        }
++        result
++    }
++
++    #[cfg(feature = "ssx-http1-source-read")]
++    fn close_source_read_terminal(&mut self) {
++        // An opted-in failed/cancelled read must destroy the same IO owner.
++        // Reuse the accepted terminal send bypass: do not poll shutdown/flush
++        // after cancellation, nor retain an incomplete source response there.
++        self.body_rx.set(None);
++        self.send_event = None;
++        self.send_budget = None;
++        self.send_eom = false;
++        self.send_done = false;
++        self.send_cancelled = true;
++        self.conn.cancel_client_send();
++        self.close();
+     }
+ 
+     fn close(&mut self) {
++        #[cfg(feature = "ssx-http1-source-read")]
++        {
++            self.source_read = None;
++            self.conn.source_read_operation(None);
++        }
+         self.is_closing = true;
+         self.conn.close_read();
+         self.conn.close_write();
+diff -ruN a/hyper/src/proto/h1/io.rs b/hyper/src/proto/h1/io.rs
+--- a/hyper/src/proto/h1/io.rs
++++ b/hyper/src/proto/h1/io.rs
+@@ -1,5 +1,7 @@
+ use std::cmp;
+ use std::fmt;
++#[cfg(feature = "ssx-http1-source-read")]
++use std::future::Future;
+ use std::io::{self, IoSlice};
+ use std::pin::Pin;
+ use std::task::{Context, Poll};
+@@ -37,6 +39,10 @@
+     read_buf: BytesMut,
+     read_buf_strategy: ReadStrategy,
+     write_buf: WriteBuf<B>,
++    #[cfg(feature = "ssx-http1-source-read")]
++    source_read: Option<(std::time::Duration, crate::ext::SourceHttp1ReadPhase)>,
++    #[cfg(feature = "ssx-http1-source-read")]
++    source_read_timer: Option<Pin<Box<tokio::time::Sleep>>>,
+ }
+ 
+ impl<T, B> fmt::Debug for Buffered<T, B>
+@@ -71,6 +77,10 @@
+             read_buf: BytesMut::with_capacity(0),
+             read_buf_strategy: ReadStrategy::default(),
+             write_buf,
++            #[cfg(feature = "ssx-http1-source-read")]
++            source_read: None,
++            #[cfg(feature = "ssx-http1-source-read")]
++            source_read_timer: None,
+         }
+     }
+ 
+@@ -228,6 +238,17 @@
+         }
+     }
+ 
++    #[cfg(feature = "ssx-http1-source-read")]
++    pub(crate) fn source_read_operation(
++        &mut self,
++        operation: Option<(std::time::Duration, crate::ext::SourceHttp1ReadPhase)>,
++    ) {
++        if self.source_read != operation {
++            self.source_read_timer = None;
++            self.source_read = operation;
++        }
++    }
++
+     pub(crate) fn poll_read_from_io(&mut self, cx: &mut Context<'_>) -> Poll<io::Result<usize>> {
+         self.read_blocked = false;
+         // Get the next amount to allocate, but make sure we don't go over
+@@ -246,7 +267,34 @@
+         // bytes onto `dst`.
+         let dst = unsafe { self.read_buf.chunk_mut().as_uninit_slice_mut() };
+         let mut buf = ReadBuf::uninit(dst);
+-        match Pin::new(&mut self.io).poll_read(cx, buf.unfilled()) {
++        #[cfg(feature = "ssx-http1-source-read")]
++        if let Some((timeout, phase)) = self.source_read {
++            // The caller has established demand and exhausted its buffered data.
++            // Allocation/parsing and pauses between reads do not run this clock.
++            if self.source_read_timer.is_none() {
++                self.source_read_timer = Some(Box::pin(tokio::time::sleep(timeout)));
++            }
++            let timer = self
++                .source_read_timer
++                .as_mut()
++                .expect("active read operation");
++            if tokio::time::Instant::now() >= timer.deadline() || timer.as_mut().poll(cx).is_ready()
++            {
++                self.source_read_timer = None;
++                return Poll::Ready(Err(io::Error::new(
++                    io::ErrorKind::TimedOut,
++                    crate::ext::SourceHttp1ReadTimedOut(phase),
++                )));
++            }
++        }
++        let result = Pin::new(&mut self.io).poll_read(cx, buf.unfilled());
++        #[cfg(feature = "ssx-http1-source-read")]
++        if result.is_ready() {
++            // Positive plaintext bytes, EOF and errors all finish this operation.
++            // Pending preserves its original deadline across arbitrary wakeups.
++            self.source_read_timer = None;
++        }
++        match result {
+             Poll::Ready(Ok(())) => {
+                 let n = buf.filled().len();
+                 trace!("received {} bytes", n);
+@@ -273,6 +321,12 @@
+ 
+     pub(crate) fn is_read_blocked(&self) -> bool {
+         self.read_blocked
++    }
++
++    #[cfg(feature = "ssx-send-operation-timeout")]
++    pub(crate) fn discard_write_buffer(&mut self) {
++        self.write_buf.headers.reset();
++        self.write_buf.queue = BufList::new();
+     }
+ 
+     pub(crate) fn poll_flush(&mut self, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
