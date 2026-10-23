@@ -873,6 +873,7 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
     a13_json_inventory_successor::controls(root)?;
     real_clock_successor::controls(root)?;
+    w07_evidence_successor::controls(root)?;
     let doc = load(root)?;
     frozen(root, &doc)?;
     scope(&doc)?;
