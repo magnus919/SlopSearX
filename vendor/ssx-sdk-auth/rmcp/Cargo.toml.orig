@@ -224,15 +224,6 @@ name = "test_tool_macros"
 required-features = ["server", "client"]
 path = "tests/test_tool_macros.rs"
 
-[[test]]
-name = "test_with_python"
-required-features = [
-  "reqwest",
-  "server",
-  "client",
-  "transport-child-process",
-]
-path = "tests/test_with_python.rs"
 
 [[test]]
 name = "test_with_js"

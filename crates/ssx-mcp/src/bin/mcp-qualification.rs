@@ -13,6 +13,9 @@ async fn main() -> Result<()> {
             .await?;
     } else if args == ["stdio"] {
         ssx_mcp::opaque::stdio(Registry::synthetic()).await?;
+    } else if args == ["stdio-stderr"] {
+        eprintln!("T01_NATIVE_STDERR_READY");
+        ssx_mcp::opaque::stdio(Registry::synthetic()).await?;
     } else if args == ["stdio-opaque"] {
         ssx_mcp::opaque::stdio(Registry::large_catalog()).await?;
     } else {

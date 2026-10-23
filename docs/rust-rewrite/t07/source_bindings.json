@@ -4,11 +4,11 @@
   "files": [
     {
       "path": "Cargo.lock",
-      "sha256": "6e99cda90ac4df5f25c94df4322c94fbc21a6ecbf0400b024885f082d2532a80"
+      "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "991a64bfba9ee1736aab00c84ab588142b600b34638814c17b8b4cd92d4f14c4"
+      "sha256": "3e42da30b3d9c9ca417cbd082cc1553d2fc2bf1e31f2d754199d48cc601cc6e3"
     },
     {
       "path": "crates/ssx-gateway/Cargo.toml",
@@ -25,6 +25,10 @@
     {
       "path": "crates/ssx-mcp/Cargo.toml",
       "sha256": "5be63b387282651185fdc0ffe44380096c6e45bff9f134615c7f5b29b7dffd8c"
+    },
+    {
+      "path": "crates/ssx-mcp/src/bin/mcp-qualification.rs",
+      "sha256": "7a3cac8f5fbb37914f1de974b2eaa039ba4f3b64f9c793b2c588ac52b99e95c8"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/arguments.rs",
@@ -139,6 +143,10 @@
       "sha256": "25f64af70605e7b9623f1e84e2b3f2f7222f7602ae3296c5546d2e879803fa95"
     },
     {
+      "path": "crates/ssx-mcp/tests/qualification.rs",
+      "sha256": "1c7612c711a3ae96d66228b9316609d3f68d2a3cf51f8ee6280b7605f02786b8"
+    },
+    {
       "path": "crates/ssx-mcp/tests/t06_support/deadline_clock.rs",
       "sha256": "14dfffd020f54430944c9d37ce6e400b282f3b805f7db2ad2778a89dab7ad626"
     },
@@ -167,6 +175,14 @@
       "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f"
     },
     {
+      "path": "crates/xtask/src/t01.rs",
+      "sha256": "12e8cdab4eafce5f419d6a6c4527ad67230d6473c96532b6f42c4fbd5a823ce3"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "sha256": "52206e861fb55f0b2690f76495b11c1524fcc2233d7d89bd0d6ffe1e489cbe87"
+    },
+    {
       "path": "docs/rust-rewrite/t06/coverage.json",
       "sha256": "38754e14b0b5020a98b80306c4607f218b68c91f81cb2e8245f9a40acbf3e714"
     },
@@ -192,7 +208,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/CURRENT_SOURCE.md",
-      "sha256": "a7295352aec2077886a27ac4ccb7eed88929024ebabe22a0f3e7106520fd8b54"
+      "sha256": "8b5f6bb4bb5cf873065ca894c5bdc7d53c4c0fb7996e3c462a0dc321f615ea16"
     },
     {
       "path": "docs/rust-rewrite/t07/OAUTH_REVIEW_V3.md",
@@ -217,6 +233,22 @@
     {
       "path": "docs/rust-rewrite/t07/client-urls-source.json",
       "sha256": "b708c6c60ff942bdb8beef1c2a671bcff2309f6f3d073cefbd7d4aa4190b5aa7"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-51fda0f7/Cargo.lock",
+      "sha256": "92ee06e2da26d90c014ffabe812d52af88b084b0edfc4b362c9c33716e0ecd7d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-51fda0f7/Cargo.toml",
+      "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor-v1.json",
+      "sha256": "f106ec3a76a2c84a31bdfa85330a9538e7a03bd2ce1d69c68f3c27ef4f5cdbec"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor.rs",
+      "sha256": "f56abfd7044c27cfd94b1868701070963750838d1157b45d3f75a4eaa4416ee8"
     },
     {
       "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-LICENSE.txt",
@@ -1276,7 +1308,11 @@
     },
     {
       "path": "vendor/ssx-sdk-auth/PROVENANCE.json",
-      "sha256": "f28275b239a7f541eb82b8d41353eb6117483b4c29551ff73ac5da28bbaaef57"
+      "sha256": "b775068938da4749437686ad1061e5071dc1010b0b1de0319a5ca95f94a2f1fd"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/patches/rmcp-native-dev-fixtures.patch",
+      "sha256": "df1f5f8d2ce2ec3f51dca942fece1400a8fa860ed3933af70ac4df5df4a7f3ee"
     },
     {
       "path": "vendor/ssx-sdk-auth/patches/rmcp-source-policy.patch",
@@ -1300,11 +1336,11 @@
     },
     {
       "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml",
-      "sha256": "48c28efb27f815f48ee9bec1b953112cffb59312d94ce71c16f4bd532a085069"
+      "sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a"
     },
     {
       "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml.orig",
-      "sha256": "549e268c14b284c2bcc22303348a19b0f5227097eb41b37f2e2c1adeaa29c4ff"
+      "sha256": "6bd53bfd3ef16ad9485ca35cd5bb27da3275df911eed3f84b2480cb1ebe7e46c"
     },
     {
       "path": "vendor/ssx-sdk-auth/rmcp/LICENSE-APACHE",
@@ -1316,7 +1352,7 @@
     },
     {
       "path": "vendor/ssx-sdk-auth/rmcp/SSX-PATCH.md",
-      "sha256": "e376d7e73237bda40760ddc6aa1a09b711f844906f1cf102b63ae6b632e41e91"
+      "sha256": "2f7941f342e474094c9c5a1e41c0bd7911ce6dfb55d17e81d4a8cde733bed726"
     },
     {
       "path": "vendor/ssx-sdk-auth/rmcp/build.rs",
@@ -1973,26 +2009,6 @@
     {
       "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/streamable_server.js",
       "sha256": "01074613ae942d99028c3f31b1ff35e64817c6de30ab8beabeb3823cb97e7498"
-    },
-    {
-      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_python.rs",
-      "sha256": "8dfb812b859a69406a8bdaa63fc19b40de4dbb685f7f31f79c63e56fb2af94c4"
-    },
-    {
-      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_python/.gitignore",
-      "sha256": "618d61694f582d0ed04e6c7edc8d7d24966331bcf4249f13bf372fd57607f2fb"
-    },
-    {
-      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_python/client.py",
-      "sha256": "522e2401016ad7d87efa6b13a113c618cc1c1ee568b8f51bd1b92a605668b0ab"
-    },
-    {
-      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_python/pyproject.toml",
-      "sha256": "24c16a04204c0ccc6c30a77514b488ac63419de3da27d88652bf92b8ed5ebae0"
-    },
-    {
-      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_python/server.py",
-      "sha256": "d27a404deb187a66f6b521d2deea4743bb8dc1e64179f2bf2e3a6cfb58aaa4d9"
     }
   ],
   "library_tests": [

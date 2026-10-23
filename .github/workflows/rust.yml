@@ -328,6 +328,9 @@ jobs:
       - name: Native search and discovery through authenticated transports
         run: cargo xtask check T06 --output target/rust-evidence/T06.json
 
+      - name: Native gateway client and owned OAuth lifecycle
+        run: cargo xtask check T07 --output target/rust-evidence/T07.json
+
       - name: MCP transport and gateway qualification
         run: cargo xtask check T01 --output target/rust-evidence/T01.json
 
@@ -451,6 +454,7 @@ jobs:
             target/rust-evidence/T04.json
             target/rust-evidence/T05.json
             target/rust-evidence/T06.json
+            target/rust-evidence/T07.json
             target/rust-evidence/F05.json
             target/rust-evidence/F06.json
             target/rust-evidence/F09.json

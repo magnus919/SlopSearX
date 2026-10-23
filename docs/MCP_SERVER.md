@@ -1116,3 +1116,57 @@ proxy tools or ready session are published. This is a per-phase timeout; it is
 not an end-to-end deadline for interactive OAuth authorization. OAuth mode keeps
 its existing authorization timeout during initialization; it is excluded from
 this shorter initialization deadline, while discovery remains bounded.
+
+
+## Native Rust gateway candidate (T07)
+
+`ssx-gateway` is the Rust client candidate. It serves local MCP stdio and connects
+to a remote streamable HTTP MCP endpoint; it does not start a search backend.
+The existing `slopsearx-mcp` examples above remain the Python entry point. Native
+release installation and signed artifacts remain subject to O04 qualification.
+For a source build, configure `CARGO_TARGET_DIR` outside the checkout as described
+in [Rust build footprint](RUST_BUILD_FOOTPRINT.md), then run:
+
+```sh
+cargo build --locked --package ssx-gateway --bin ssx-gateway
+# Use the resulting binary's absolute path in your MCP client configuration.
+MCP_REMOTE_TOKEN='<remote-token>' /absolute/path/ssx-gateway --remote https://example.org/mcp
+```
+
+For an OAuth remote, configure the binary directly:
+
+```json
+{
+  "mcpServers": {
+    "slopsearx-native-candidate": {
+      "command": "/absolute/path/ssx-gateway",
+      "args": ["--remote", "https://example.org/mcp", "--oauth"],
+      "env": {
+        "MCP_REMOTE_TOKEN_FILE": "/absolute/private/slopsearx-tokens.json"
+      }
+    }
+  }
+}
+```
+
+The candidate accepts `--token`, `--oauth-callback-port`, `--oauth-no-browser` and
+`--oauth-token-file`, with the corresponding `MCP_REMOTE_*` variables in §3.2.
+Static credentials and OAuth are separate modes. The default callback is loopback
+port 8765; remote OAuth uses HTTPS outside loopback. The authorization URL is
+intentionally printed to stderr for user interaction. `--oauth-no-browser` keeps
+the manual callback flow without launching a browser. Protect the token file and
+its private parent directory; do not check credentials into client configuration.
+
+On the qualified local macOS ARM fixture, EOF/SIGTERM wakes and joins the native
+input owner, cancels held requests and drains remote session, callback, browser
+and file owners. Cleanup uses only the already-held bearer; denied DELETE or
+cancellation does not register, refresh or open a new authorization flow. A denied
+session DELETE remains an explicit gateway failure. The current T06 backend
+stdio owner is unchanged; this is a gateway ownership result.
+
+The distribution goals in [ADR 005](adr/005-rust-protocol-tls-and-platforms.md) are
+Linux x86_64/aarch64, macOS x86_64/aarch64 and Windows x86_64. This intermediate
+cancellable input implementation covers Unix, with local native evidence only on
+macOS aarch64. Windows input is explicitly unimplemented and remains a pending
+O04 goal. A target is not advertised as supported until its install, TLS/CA,
+invocation and signature gates pass. No Python fallback is part of this binary.

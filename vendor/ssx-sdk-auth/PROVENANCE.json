@@ -14,7 +14,7 @@
       "version": "3.5.1",
       "upstream_archive_sha256": "ab5023804cbe0304cbe06197ac16e645a0a0d0ffa2953bf735c15c2fa0213350",
       "archive_identity_source": "current baseline Cargo.lock registry checksum for rmcp; no archive reread or acquisition in this proposal",
-      "local_tree_sha256": "6d18acf1b0fe4346b3e17ff0f659b233bb78c307ed544966127bbc185ee0e60d",
+      "local_tree_sha256": "64012336e473e2210cc9a2b3e132c59bc38e732822730f0b8cccf505f8467800",
       "files": [
         {
           "path": ".cargo_vcs_info.json",
@@ -33,13 +33,13 @@
         },
         {
           "path": "Cargo.toml",
-          "sha256": "48c28efb27f815f48ee9bec1b953112cffb59312d94ce71c16f4bd532a085069",
-          "bytes": 18573
+          "sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a",
+          "bytes": 18405
         },
         {
           "path": "Cargo.toml.orig",
-          "sha256": "549e268c14b284c2bcc22303348a19b0f5227097eb41b37f2e2c1adeaa29c4ff",
-          "bytes": 13565
+          "sha256": "6bd53bfd3ef16ad9485ca35cd5bb27da3275df911eed3f84b2480cb1ebe7e46c",
+          "bytes": 13405
         },
         {
           "path": "LICENSE-APACHE",
@@ -53,8 +53,8 @@
         },
         {
           "path": "SSX-PATCH.md",
-          "sha256": "e376d7e73237bda40760ddc6aa1a09b711f844906f1cf102b63ae6b632e41e91",
-          "bytes": 2272
+          "sha256": "2f7941f342e474094c9c5a1e41c0bd7911ce6dfb55d17e81d4a8cde733bed726",
+          "bytes": 3484
         },
         {
           "path": "build.rs",
@@ -875,31 +875,6 @@
           "path": "tests/test_with_js/streamable_server.js",
           "sha256": "01074613ae942d99028c3f31b1ff35e64817c6de30ab8beabeb3823cb97e7498",
           "bytes": 2884
-        },
-        {
-          "path": "tests/test_with_python.rs",
-          "sha256": "8dfb812b859a69406a8bdaa63fc19b40de4dbb685f7f31f79c63e56fb2af94c4",
-          "bytes": 2253
-        },
-        {
-          "path": "tests/test_with_python/.gitignore",
-          "sha256": "618d61694f582d0ed04e6c7edc8d7d24966331bcf4249f13bf372fd57607f2fb",
-          "bytes": 188
-        },
-        {
-          "path": "tests/test_with_python/client.py",
-          "sha256": "522e2401016ad7d87efa6b13a113c618cc1c1ee568b8f51bd1b92a605668b0ab",
-          "bytes": 775
-        },
-        {
-          "path": "tests/test_with_python/pyproject.toml",
-          "sha256": "24c16a04204c0ccc6c30a77514b488ac63419de3da27d88652bf92b8ed5ebae0",
-          "bytes": 278
-        },
-        {
-          "path": "tests/test_with_python/server.py",
-          "sha256": "d27a404deb187a66f6b521d2deea4743bb8dc1e64179f2bf2e3a6cfb58aaa4d9",
-          "bytes": 418
         }
       ],
       "upstream_license_declaration": "Apache-2.0",
@@ -920,8 +895,43 @@
         {
           "path": "patches/rmcp.patch",
           "sha256": "a978c006227dc9b561b5d7867740588b280edc483647145fce0c546b300bfaff"
+        },
+        {
+          "path": "patches/rmcp-native-dev-fixtures.patch",
+          "sha256": "df1f5f8d2ce2ec3f51dca942fece1400a8fa860ed3933af70ac4df5df4a7f3ee",
+          "applies_after": "preceding composed SDK source, including unchanged privacy and SourceWithinOrigin patches"
         }
-      ]
+      ],
+      "native_development_fixture_retirement": {
+        "scope": "before first publication; not legacy backend retirement",
+        "predecessor_provenance_sha256": "f28275b239a7f541eb82b8d41353eb6117483b4c29551ff73ac5da28bbaaef57",
+        "predecessor_local_tree_sha256": "6d18acf1b0fe4346b3e17ff0f659b233bb78c307ed544966127bbc185ee0e60d",
+        "removed_paths": [
+          "rmcp/tests/test_with_python.rs",
+          "rmcp/tests/test_with_python/.gitignore",
+          "rmcp/tests/test_with_python/client.py",
+          "rmcp/tests/test_with_python/pyproject.toml",
+          "rmcp/tests/test_with_python/server.py"
+        ],
+        "retired": "live Python/FastMCP development interoperability smoke",
+        "replacement_scope": "actual native SDK child constructor remains covered by original T01; additive builder stderr capture/drain and one-page list_all catalogs; no live cross-language or multi-page equivalence claim",
+        "native_sources": [
+          {
+            "path": "crates/ssx-mcp/src/bin/mcp-qualification.rs",
+            "sha256": "7a3cac8f5fbb37914f1de974b2eaa039ba4f3b64f9c793b2c588ac52b99e95c8"
+          },
+          {
+            "path": "crates/ssx-mcp/tests/qualification.rs",
+            "sha256": "1c7612c711a3ae96d66228b9316609d3f68d2a3cf51f8ee6280b7605f02786b8"
+          },
+          {
+            "path": "crates/xtask/src/t01.rs",
+            "sha256": "12e8cdab4eafce5f419d6a6c4527ad67230d6473c96532b6f42c4fbd5a823ce3"
+          }
+        ],
+        "native_qualification": "pending on final A06/T07 composition; no native execution for this source amendment",
+        "production_sdk_auth_sha256_unchanged": "80e2e7d6ec5626cba8441518af7f9c4b73a79540db9b129c712dbf47e186656d"
+      }
     }
   },
   "scope_limit": "Current package tree hashes identify the exact retained composition. Historical patch references are not a fresh archive-to-current reconstruction or a claim of full runtime/consumer/platform acceptance."

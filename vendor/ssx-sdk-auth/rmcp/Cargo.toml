@@ -713,15 +713,6 @@ required-features = [
     "__reqwest",
 ]
 
-[[test]]
-name = "test_with_python"
-path = "tests/test_with_python.rs"
-required-features = [
-    "reqwest",
-    "server",
-    "client",
-    "transport-child-process",
-]
 
 [dependencies.async-trait]
 version = "0.1.89"

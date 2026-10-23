@@ -9,3 +9,23 @@ This is an integration proposal, not repository activation or production qualifi
 ## Explicit native gateway OAuth redirect profile
 
 Additive source-only successor to auth SHA5a158137f05fe766bbc79be29b7130d5041ba74bdb539c3200ad923b1fecf99b. SourceWithinOrigin is selected only by explicit manager opt-in before HTTP. Original Follow and Stop defaults and all23 sanitized diagnostic sites remain. Discovery, registration, authorization-code exchange and refresh use the same method-preserving same-origin/default HTTPS-upgrade five-hop adapter profile. Default SDK HTTP adapter refuses the new variant. No qualification or production activation is claimed.
+
+
+## Native-only development-fixture packaging
+
+Before first SlopSearX publication, omit the upstream test_with_python Rust
+integration target and its unused Python client/server development package.
+These are third-party development fixtures, not the existing SlopSearX backend
+or rollback implementation. Remove only that target declaration from generated
+Cargo.toml and Cargo.toml.orig; retain every SDK feature, dependency, source API,
+license and production transport/auth byte. rmcp-native-dev-fixtures.patch
+records the exact local omission against the preceding composed SDK tree.
+
+The live FastMCP development smoke is explicitly retired from this vendor
+package. Native T01 retains all frozen Python-wire observations and existing
+tests. Its additive SDK builder test captures and bounds actual child stderr,
+checks the complete one-page tool/resource catalogs through list_all helpers,
+then awaits SDK shutdown and the stderr reader. It does not claim live Python
+interoperability, multi-page list_all equivalence, or fresh qualification of the
+separate OAuth SourceWithinOrigin/profile/privacy controls. Qualification of
+this combined source remains pending. Existing backend retirement remains G08.

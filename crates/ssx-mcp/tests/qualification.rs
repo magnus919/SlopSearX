@@ -1951,3 +1951,69 @@ async fn legacy_near_ingress_limit_echo_keeps_complete_amplified_response() -> R
     assert_eq!(legacy.available_output_bytes(), 64 * 1024 * 1024);
     Ok(())
 }
+
+/// Native replacement for the unused upstream Python development smoke's SDK
+/// child-process APIs. The fixture has one catalog page; this does not claim
+/// live Python interoperability or multi-page list_all coverage.
+#[tokio::test]
+async fn native_sdk_child_builder_captures_stderr_and_one_page_catalogs() -> Result<()> {
+    use tokio::io::AsyncReadExt;
+
+    let mut command = tokio::process::Command::new(env!("CARGO_BIN_EXE_mcp-qualification"));
+    command
+        .arg("stdio-stderr")
+        .env_clear()
+        .env("PATH", "")
+        .kill_on_drop(true);
+    let (transport, stderr) = TokioChildProcess::builder(command)
+        .stderr(std::process::Stdio::piped())
+        .spawn()?;
+    let stderr = stderr.ok_or("SDK builder did not return the requested stderr handle")?;
+    let mut capture = tokio::spawn(async move {
+        let mut bytes = Vec::new();
+        stderr.take(65_537).read_to_end(&mut bytes).await?;
+        if bytes.len() > 65_536 {
+            return Err(std::io::Error::other(
+                "native fixture stderr exceeded its bound",
+            ));
+        }
+        Ok::<_, std::io::Error>(bytes)
+    });
+    let observation: Result<()> = async {
+        let client =
+            tokio::time::timeout(Duration::from_secs(5), config().serve(transport)).await??;
+        let catalogs = tokio::time::timeout(Duration::from_secs(5), async {
+            let expected = baseline();
+            compare_descriptor(
+                &expected["observations"]["resources"],
+                &serde_json::to_value(client.list_all_resources().await?)?,
+            )?;
+            compare_descriptor(
+                &expected["observations"]["tools"],
+                &serde_json::to_value(client.list_all_tools().await?)?,
+            )?;
+            Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+        })
+        .await;
+        // Await SDK transport.close/graceful child shutdown even if a catalog
+        // operation failed. Do not cancel this cleanup future with a timeout.
+        let closed = client.cancel().await;
+        catalogs??;
+        closed?;
+        Ok(())
+    }
+    .await;
+    // Retain and join the actual stderr reader on success, protocol failure,
+    // handshake failure and timeout. A failed drain never becomes a pass.
+    let stderr = match tokio::time::timeout(Duration::from_secs(3), &mut capture).await {
+        Ok(result) => result?,
+        Err(error) => {
+            capture.abort();
+            let _ = capture.await;
+            return Err(error.into());
+        }
+    };
+    observation?;
+    assert_eq!(stderr?.as_slice(), b"T01_NATIVE_STDERR_READY\n");
+    Ok(())
+}
