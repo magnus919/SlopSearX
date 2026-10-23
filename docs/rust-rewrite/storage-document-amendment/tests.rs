@@ -1,6 +1,6 @@
 //! xtask-only controls; never included by historical A13 fixture binaries.
 
-use super::storage_document::{archive_path, is_path, verify};
+use super::storage_document::{archive_path, is_path, verify, verify_historical, verify_successor};
 const BINDINGS: &[(&str, &str)] = &[
     (
         "AGENTS.md",
@@ -44,6 +44,83 @@ fn exact_current_and_original_archives_are_accepted() {
         )
         .unwrap();
     }
+    let baseline = include_bytes!("AGENTS.accepted-504.md.frozen");
+    let capsule = include_bytes!("agents-successor-v2.json");
+    let original = BINDINGS[0].1;
+    let accepted_sha = "7d681485699a897464cf248d22fa83bd81e7b85d96a0163f6c9dabc019f988f6";
+    verify_historical("AGENTS.md", original, None, baseline, archive("AGENTS.md")).unwrap();
+    verify_successor(
+        "AGENTS.md",
+        accepted_sha,
+        baseline,
+        current("AGENTS.md"),
+        capsule,
+    )
+    .unwrap();
+    // Accepted504 is historical evidence; it cannot pass as live current.
+    assert!(verify("AGENTS.md", original, None, baseline, archive("AGENTS.md")).is_err());
+    assert!(
+        verify_historical(
+            "AGENTS.md",
+            original,
+            None,
+            current("AGENTS.md"),
+            archive("AGENTS.md")
+        )
+        .is_err()
+    );
+    let mut wrong_baseline = baseline.to_vec();
+    wrong_baseline.push(0);
+    assert!(
+        verify_successor(
+            "AGENTS.md",
+            accepted_sha,
+            &wrong_baseline,
+            current("AGENTS.md"),
+            capsule
+        )
+        .is_err()
+    );
+    assert!(
+        verify_successor(
+            "AGENTS.md",
+            "wrong-caller",
+            baseline,
+            current("AGENTS.md"),
+            capsule
+        )
+        .is_err()
+    );
+    assert!(
+        verify_successor(
+            "CONTRIBUTING.md",
+            accepted_sha,
+            baseline,
+            current("AGENTS.md"),
+            capsule
+        )
+        .is_err()
+    );
+    let mut wrong_current = current("AGENTS.md").to_vec();
+    wrong_current.push(0);
+    assert!(
+        verify_successor("AGENTS.md", accepted_sha, baseline, &wrong_current, capsule).is_err()
+    );
+    let mut wrong_capsule = capsule.to_vec();
+    wrong_capsule.push(0);
+    assert!(
+        verify_successor(
+            "AGENTS.md",
+            accepted_sha,
+            baseline,
+            current("AGENTS.md"),
+            &wrong_capsule
+        )
+        .is_err()
+    );
+    println!(
+        "STORAGE_AGENTS_SUCCESSOR_CONTROLS historical504_separate_actual_current_reconstructed_old_as_current_wrong_archive_caller_and_current_rejected=true"
+    );
 }
 #[test]
 fn wrong_original_hash_or_size_is_rejected() {

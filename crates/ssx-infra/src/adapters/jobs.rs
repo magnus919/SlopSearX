@@ -907,7 +907,11 @@ fn as_i64(v: &ssx_json::Value) -> Option<i64> {
     }
 }
 #[cfg(test)]
+#[path = "../../tests/support/owned_loopback_fixture.rs"]
+mod owned_loopback_fixture;
+#[cfg(test)]
 mod tests {
+    use super::owned_loopback_fixture::OwnedLoopback;
     use super::*;
     use crate::http::AdapterHttp;
     use std::sync::Mutex;
@@ -1719,49 +1723,96 @@ mod tests {
         let _case = CompletedCase(
             "legacy.provider_timeout_and_dropped_search_cancel_the_loopback_exchange",
         );
+        // Both a cold 20ms expiry and a deterministic zero-budget expiry may
+        // finish before any TCP dispatch. Neither permits an unbounded accept join.
+        for timeout_ms in [20, 0] {
+            let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let address = listener.local_addr().unwrap();
+            let accepted = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let observed = accepted.clone();
+            let delayed_server = OwnedLoopback::spawn(async move {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                let mut bytes = Vec::new();
+                let mut chunk = [0u8; 1024];
+                loop {
+                    let n = socket.read(&mut chunk).await.unwrap();
+                    if n == 0 {
+                        return;
+                    }
+                    bytes.extend_from_slice(&chunk[..n]);
+                    assert!(bytes.len() <= 16 * 1024, "loopback request header bound");
+                    if bytes.windows(4).any(|v| v == b"\r\n\r\n") {
+                        break;
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                let body = "{\"jobs\":[]}";
+                let response = format!(
+                    "HTTP/1.1 200 OK\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                let _ = socket.write_all(response.as_bytes()).await;
+            });
+            let engine = JobsAdapter::greenhouse(
+                Arc::new(AdapterHttp::default()),
+                Arc::new(super::super::AllowAllAdmission),
+                GreenhouseConfig {
+                    base_url: format!("http://{address}/v1/boards"),
+                    timeout_ms: timeout_ms.into(),
+                    ..Default::default()
+                },
+            );
+            let result = run(&engine, "Engineer at TimeoutCo").await;
+            delayed_server.stop_and_join().await;
+            assert_eq!(result.status, EngineStatus::Timeout);
+            assert!(result.results.is_empty());
+            assert!(accepted.load(std::sync::atomic::Ordering::SeqCst) <= 1);
+            if timeout_ms == 0 {
+                assert_eq!(accepted.load(std::sync::atomic::Ordering::SeqCst), 0);
+            }
+        }
+
+        // Cancellation before the search future's first poll must also reap a
+        // listener which never saw a connection. This uses the real owner/clock.
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
-        let delayed_server = tokio::spawn(async move {
-            let (mut socket, _) = listener.accept().await.unwrap();
-            let mut bytes = Vec::new();
-            let mut chunk = [0u8; 1024];
-            loop {
-                let n = socket.read(&mut chunk).await.unwrap();
-                if n == 0 {
-                    return;
-                }
-                bytes.extend_from_slice(&chunk[..n]);
-                if bytes.windows(4).any(|v| v == b"\r\n\r\n") {
-                    break;
-                }
-            }
-            tokio::time::sleep(Duration::from_millis(100)).await;
-            let body = "{\"jobs\":[]}";
-            let response = format!(
-                "HTTP/1.1 200 OK\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
-                body.len()
-            );
-            let _ = socket.write_all(response.as_bytes()).await;
+        let accepted = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let observed = accepted.clone();
+        let waiting = OwnedLoopback::spawn(async move {
+            let _ = listener.accept().await.unwrap();
+            observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         });
-        let engine = JobsAdapter::greenhouse(
+        let engine = JobsAdapter::lever(
             Arc::new(AdapterHttp::default()),
             Arc::new(super::super::AllowAllAdmission),
-            GreenhouseConfig {
-                base_url: format!("http://{address}/v1/boards"),
-                timeout_ms: 20.into(),
+            LeverConfig {
+                base_url: format!("http://{address}/v0/postings"),
+                timeout_ms: 5_000.into(),
                 ..Default::default()
             },
         );
-        let result = run(&engine, "Engineer at TimeoutCo").await;
-        assert_eq!(result.status, EngineStatus::Timeout);
-        assert!(result.results.is_empty());
-        delayed_server.await.unwrap();
+        let req = request("Engineer at CancelBeforeDispatchCo");
+        let mut search = tokio::spawn(async move { engine.search(&req).await });
+        search.abort();
+        let cancelled = tokio::time::timeout(Duration::from_secs(3), &mut search).await;
+        waiting.stop_and_join().await;
+        assert!(
+            cancelled
+                .expect("pre-dispatch abort join was not observed")
+                .unwrap_err()
+                .is_cancelled()
+        );
+        assert_eq!(accepted.load(std::sync::atomic::Ordering::SeqCst), 0);
 
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
+        let accepted = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let observed = accepted.clone();
         let (accepted_tx, accepted_rx) = tokio::sync::oneshot::channel();
-        let peer = tokio::spawn(async move {
+        let peer = OwnedLoopback::spawn(async move {
             let (mut socket, _) = listener.accept().await.unwrap();
+            observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             let mut bytes = Vec::new();
             let mut chunk = [0u8; 1024];
             loop {
@@ -1770,6 +1821,7 @@ mod tests {
                     return false;
                 }
                 bytes.extend_from_slice(&chunk[..n]);
+                assert!(bytes.len() <= 16 * 1024, "loopback request header bound");
                 if bytes.windows(4).any(|v| v == b"\r\n\r\n") {
                     break;
                 }
@@ -1795,15 +1847,42 @@ mod tests {
             },
         );
         let req = request("Engineer at CancelCo");
-        let search = tokio::spawn(async move { engine.search(&req).await });
-        accepted_rx.await.unwrap();
+        let mut search = tokio::spawn(async move { engine.search(&req).await });
+        let readiness = tokio::time::timeout(Duration::from_secs(3), async {
+            tokio::select! { biased;
+                result = &mut search => (false, Some(result)),
+                accepted = accepted_rx => (accepted.is_ok(), None),
+            }
+        })
+        .await;
+        let (ready, completed) = readiness.unwrap_or((false, None));
         search.abort();
-        let _ = search.await;
+        let cancelled = if completed.is_none() {
+            Some(tokio::time::timeout(Duration::from_secs(3), &mut search).await)
+        } else {
+            None
+        };
+        if !ready {
+            peer.stop_and_join().await;
+            panic!(
+                "job search did not reach complete loopback request headers before readiness ended: {completed:?}"
+            );
+        }
+        let closed = peer.finish().await;
         assert!(
-            peer.await.unwrap(),
+            cancelled
+                .unwrap()
+                .expect("active search abort join was not observed")
+                .unwrap_err()
+                .is_cancelled()
+        );
+        assert_eq!(accepted.load(std::sync::atomic::Ordering::SeqCst), 1);
+        assert!(
+            closed,
             "dropping search must close its active HTTP exchange"
         );
     }
+
     struct CompletedCase(&'static str);
     impl Drop for CompletedCase {
         fn drop(&mut self) {

@@ -1,9 +1,9 @@
 //! Source-bound native transport qualification; no provider traffic.
-use crate::{Result, command, load_json};
+use crate::{Result, command};
 use serde_json::{Value, json};
 use std::{collections::BTreeSet, path::Path};
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
-    let coverage = load_json(&root.join("docs/rust-rewrite/f08/coverage.json"))?;
+    let coverage = crate::a08::header_successor::verify(root, records)?;
     if coverage["schema_version"] != 1
         || coverage["plan_id"] != "F08"
         || coverage["baseline"] != "7cc420f7ffb61127750e77bf6130e225925f9186"
@@ -70,7 +70,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 .ok_or("invalid F08 test".to_string())
         })
         .collect::<Result<_>>()?;
-    if expected.len() < 21 || actual != expected {
+    if expected.len() != 25 || actual != expected {
         return Err("F08 test inventory differs from reviewed coverage".into());
     }
     command(
@@ -109,7 +109,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 .ok_or("invalid F08 worker test".to_string())
         })
         .collect::<Result<_>>()?;
-    if expected.len() < 4 || actual != expected {
+    if expected.len() != 4 || actual != expected {
         return Err("F08 worker ownership test inventory differs".into());
     }
     command(

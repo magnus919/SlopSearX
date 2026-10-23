@@ -1,7 +1,7 @@
 [workspace]
 members = ["crates/*"]
+exclude = ["vendor/expat", "vendor/libxml"]
 resolver = "3"
-exclude = ["vendor/libxml"]
 
 [workspace.package]
 version = "0.1.0"

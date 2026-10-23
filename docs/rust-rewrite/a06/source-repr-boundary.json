@@ -1,0 +1,20 @@
+{
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "input_bytes": 4194304,
+  "input_sha256": "69bd52fa264c0224ea2afd24e671b0ac123f814d912349e56d4a783e22c319a9",
+  "source_points": 2097150,
+  "source_utf8_bytes": 6291450,
+  "repr_utf8_bytes": 6291452,
+  "repr_sha256": "822794801db331db89bdca20a804d4835760d1c31e96b3cea26d98e82b93e785",
+  "repr_prefix": "'一一",
+  "repr_suffix": "一一'",
+  "exception": null,
+  "scope": "actual CPython json.loads(bytes) and repr; no whole-adapter or provider claim",
+  "input_recipe": {
+    "text": "one double quote, U+4E00 repeated2097150times, one double quote",
+    "encoding": "UTF16LE without BOM"
+  },
+  "native_regression": "adapters::source_json::tests::accepted_utf16_expansion_repr_matches_complete_source_hash",
+  "correction": "construct typed Value::Array/String before existing python_value_string formatter; preserve global JSON limits",
+  "metadata_correction": "Fresh pinned Python recapture corrects suffix extraction from one indexed interior character to final3characters; complete input/repr hashes unchanged."
+}

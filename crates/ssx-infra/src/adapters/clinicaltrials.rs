@@ -370,30 +370,9 @@ pub(super) async fn get_observed(
     parse_deadline: Option<Instant>,
     observer: Observer<'_>,
 ) -> Result<Option<Value>> {
-    get_observed_using_clock(
-        session,
-        req,
-        deadline,
-        empty404,
-        details,
-        parse_deadline,
-        observer,
-        Instant::now,
-    )
-    .await
-}
-#[allow(clippy::too_many_arguments)]
-async fn get_observed_using_clock(
-    session: &mut crate::http::Session,
-    req: Request,
-    deadline: Instant,
-    empty404: bool,
-    details: bool,
-    parse_deadline: Option<Instant>,
-    observer: Observer<'_>,
-    now: impl FnOnce() -> Instant,
-) -> Result<Option<Value>> {
-    check_using(deadline, now)?;
+    if session.deadline_elapsed(deadline) {
+        return Err(timeout());
+    }
     let response = session.execute(req).await.map_err(|e| match e {
         crate::http::Error::Deadline => Failure {
             status: EngineStatus::Timeout,
@@ -418,9 +397,9 @@ async fn get_observed_using_clock(
     let value = parse_body_observed(&response.body, parse_deadline, observer).await?;
     Ok(Some(value))
 }
-#[allow(clippy::too_many_arguments)] // Same private HTTP request policy with its owner clock.
+#[allow(clippy::too_many_arguments)] // Compatibility interface; Session owns the authoritative request clock.
 pub(super) async fn get_observed_for_http(
-    http: &AdapterHttp,
+    _http: &AdapterHttp,
     session: &mut crate::http::Session,
     req: Request,
     deadline: Instant,
@@ -429,7 +408,7 @@ pub(super) async fn get_observed_for_http(
     parse_deadline: Option<Instant>,
     observer: Observer<'_>,
 ) -> Result<Option<Value>> {
-    get_observed_using_clock(
+    get_observed(
         session,
         req,
         deadline,
@@ -437,7 +416,6 @@ pub(super) async fn get_observed_for_http(
         details,
         parse_deadline,
         observer,
-        || http.deadline_now(),
     )
     .await
 }
@@ -1185,3 +1163,7 @@ pub(super) fn fixed_format(
     .map_err(|_| resource())?;
     Ok(out)
 }
+
+#[cfg(test)]
+#[path = "../../tests/support/a07_owner_clock.rs"]
+mod owner_clock_tests;

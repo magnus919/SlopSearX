@@ -179,7 +179,7 @@ fn request(wire: &Queue, q: &str, size: &str, pair: &str) {
         .collect();
     assert_eq!(
         headers,
-        BTreeMap::from([
+        expected_default_headers([
             ("accept", "application/json".into()),
             (
                 "authorization",
@@ -1553,6 +1553,21 @@ async fn unsupported_request_filters_do_not_change_wire_or_claim_media() {
 fn source_inventory_is_closed_and_bound_without_original_execution() {
     use sha2::{Digest, Sha256};
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let default_headers = expected_default_headers([("accept", "application/json".into())]);
+    assert_eq!(default_headers.len(), 2);
+    assert_eq!(default_headers["accept"], "application/json");
+    assert_eq!(
+        default_headers["user-agent"],
+        ssx_infra::http::DEFAULT_USER_AGENT
+    );
+    assert!(
+        std::panic::catch_unwind(|| {
+            expected_default_headers([("user-agent", "unreviewed-override".into())])
+        })
+        .is_err()
+    );
+    source_amendment::causal_successor::a06_source_successor::a13_header_layout_controls(&root)
+        .unwrap();
     let hash = |data: &[u8]| {
         Sha256::digest(data)
             .iter()
@@ -1817,3 +1832,14 @@ fn source_inventory_is_closed_and_bound_without_original_execution() {
 // declaration is intentionally at the end of the module.
 #[path = "../../../docs/rust-rewrite/a13/source-amendments/validator.rs"]
 mod source_amendment;
+
+// Keep the immutable A13 selector locations above stable. Header expectations
+// still include the versioned native identity on every request assertion.
+fn expected_default_headers<const N: usize>(
+    entries: [(&'static str, String); N],
+) -> BTreeMap<&'static str, String> {
+    let mut headers = BTreeMap::from(entries);
+    assert!(!headers.contains_key("user-agent"));
+    headers.insert("user-agent", ssx_infra::http::DEFAULT_USER_AGENT.into());
+    headers
+}

@@ -8,6 +8,7 @@ use std::{
     fs,
     path::Path,
 };
+mod source_composition;
 #[cfg(test)]
 #[path = "../../../docs/rust-rewrite/storage-document-amendment/tests.rs"]
 mod storage_document_tests;
@@ -280,7 +281,7 @@ fn pubchem_clock_binding(
     let integration = amendment["original_integration19"]
         .as_array()
         .ok_or("A07 original19 inventory absent")?;
-    let expected: BTreeSet<String> = integration
+    let mut expected: BTreeSet<String> = integration
         .iter()
         .map(|n| {
             n.as_str()
@@ -289,11 +290,18 @@ fn pubchem_clock_binding(
         })
         .collect::<std::result::Result<_, _>>()?;
     require(
-        integration.len() == 19
-            && expected.len() == 19
+        integration.len() == 19 && expected.len() == 19,
+        "A07 original19 inventory changed",
+    )?;
+    require(
+        expected.insert(source_composition::MATRIX_TEST.into()),
+        "A07 added matrix identity aliases original19",
+    )?;
+    require(
+        expected.len() == 20
             && available.get(&("ssx-infra".into(), "test:a07_biomedical".into()))
                 == Some(&expected),
-        "A07 original19 integration identities changed",
+        "A07 original19 plus sole added matrix integration identities changed",
     )?;
     let controls = amendment["original_resource17"]
         .as_array()
@@ -339,23 +347,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 .ok_or("A07 original PubChem SHA absent")?,
         "A07 frozen PubChem source changed",
     )?;
-    for row in pubchem_amendment["candidate_sources"]
-        .as_array()
-        .ok_or("A07 PubChem current source inventory absent")?
-    {
-        let path = row["path"]
-            .as_str()
-            .ok_or("A07 PubChem source path absent")?;
-        let bytes = fs::read(root.join(path)).map_err(|e| e.to_string())?;
-        require(
-            bytes.len() as u64
-                == row["bytes"]
-                    .as_u64()
-                    .ok_or("A07 PubChem source size absent")?
-                && Some(digest(&bytes).as_str()) == row["sha256"].as_str(),
-            "A07 PubChem candidate source drift",
-        )?;
-    }
+    let composition = source_composition::verify_sources(root, &pubchem_amendment, records)?;
     let ids = primary_ids(root)?;
     let coverage: Value = serde_json::from_slice(
         &fs::read(root.join("docs/rust-rewrite/a07/coverage.json")).map_err(|e| e.to_string())?,
@@ -446,6 +438,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         available.insert((package.to_owned(), target.to_owned()), names);
     }
     pubchem_clock_binding(&pubchem_amendment, &available)?;
+    source_composition::verify_partition(&composition, &ids, &available)?;
     let mut missing_pubchem_control = available.clone();
     missing_pubchem_control.get_mut(&("ssx-infra".into(), "lib".into())).ok_or("A07 lib inventory absent")?.remove("adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner");
     require(
@@ -521,7 +514,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             ]);
         }
         args.extend(["--", "--format", "pretty"]);
-        let output = command(root, "cargo", &args, records)?;
+        let output = source_composition::execute(root, package, target, &args, &ids, records)?;
         verify_executed(&output, expected)?;
     }
     records.push(json!({"A07":{"primary_source_controls":ids.len(),"factory_availability":"actual Registry attachment, separate from historical F06 declaration","temporary_python":"not executed or required","remaining_boundaries":"G02 retained-response/global input accounting and full MCP/HTML transport remain separate"}}));
@@ -565,6 +558,7 @@ mod tests {
     }
     #[test]
     fn duplicate_missing_and_incomplete_primary_controls_fail_closed() {
+        source_composition::controls(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."));
         let mut ids = BTreeSet::new();
         let row = json!({"id":"one","output":{},"requests":[]});
         insert_primary(&mut ids, &row).unwrap();

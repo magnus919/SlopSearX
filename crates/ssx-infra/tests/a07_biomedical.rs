@@ -574,30 +574,136 @@ async fn europepmc_skips_incomplete_records_and_parses_source_dates_without_clai
     }
 }
 
-struct CapturedTransport {
-    replies: Mutex<std::collections::VecDeque<ssx_json::Value>>,
-    seen: Mutex<Vec<ssx_infra::http::Request>>,
-}
-impl ssx_infra::http::Transport for CapturedTransport {
-    fn exchange(&self, request: ssx_infra::http::Request) -> ssx_infra::http::ExchangeFuture<'_> {
-        Box::pin(async move {
-            let url = request.url.clone();
-            self.seen.lock().unwrap().push(request);
-            let reply = self
-                .replies
-                .lock()
-                .unwrap()
-                .pop_front()
-                .ok_or(ssx_infra::http::Error::RequestLimit)?;
-            Ok(ssx_infra::http::Response {
-                status: reply["status"].as_u64().unwrap() as u16,
-                url,
-                headers: Default::default(),
-                body: ssx_json::to_vec(&reply["body"]).unwrap(),
-            })
-        })
+use ssx_infra::http as replay_http;
+#[path = "support/a07_source_replay.rs"]
+mod source_replay;
+use source_replay::CapturedTransport;
+#[tokio::test]
+async fn actual_source_matrix_preserves_requests_and_full_normalized_results() {
+    let matrix: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_matrix.json"
+    ))
+    .unwrap();
+    let mut moved = std::collections::BTreeSet::new();
+    let mut replayed = 0usize;
+    let mut diagnostics = Vec::new();
+    let mut executed = std::collections::BTreeSet::new();
+    let supplement: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_supplement.json"
+    ))
+    .unwrap();
+    let numeric: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_numeric.json"
+    ))
+    .unwrap();
+    let digits: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_digits.json"
+    ))
+    .unwrap();
+    let complete: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_complete.json"
+    ))
+    .unwrap();
+    let complete_rows = complete["records"].as_array().unwrap();
+    assert_eq!(complete_rows.len(), 127);
+    for old in matrix["records"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .chain(supplement["records"].as_array().unwrap())
+        .chain(numeric["records"].as_array().unwrap())
+        .chain(digits["records"].as_array().unwrap())
+    {
+        let current = complete_rows
+            .iter()
+            .find(|row| row["id"] == old["id"])
+            .expect("original control must survive full-field recapture");
+        for key in ["engine", "query", "config", "responses", "requests"] {
+            assert_eq!(
+                current[key], old[key],
+                "source recapture input/request drift at {} {key}",
+                old["id"]
+            );
+        }
+        for key in ["status", "error_message", "raised"] {
+            assert_eq!(
+                current["output"].get(key),
+                old["output"].get(key),
+                "source recapture status drift"
+            );
+        }
+        if let Some(prior) = old["output"]["results"].as_array() {
+            let current = current["output"]["results"].as_array().unwrap();
+            assert_eq!(current.len(), prior.len());
+            for (row, old) in current.iter().zip(prior) {
+                for (key, value) in old.as_object().unwrap() {
+                    assert_eq!(
+                        &row[key.as_str()],
+                        value,
+                        "existing captured normalized field changed"
+                    );
+                }
+            }
+        }
     }
+    let genes: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_gene_shapes.json"
+    ))
+    .unwrap();
+    let dates: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_date_grammar.json"
+    ))
+    .unwrap();
+    let sequences: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_sequences.json"
+    ))
+    .unwrap();
+    let empty_iterables: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/source_empty_iterables.json"
+    ))
+    .unwrap();
+    for record in complete_rows
+        .iter()
+        .chain(genes["records"].as_array().unwrap())
+        .chain(dates["records"].as_array().unwrap())
+        .chain(sequences["records"].as_array().unwrap())
+        .chain(empty_iterables["records"].as_array().unwrap())
+    {
+        let id = record["id"].as_str().unwrap();
+        assert!(executed.insert(id), "duplicate source control {id}");
+        if source_replay::MOVED.contains(&id) {
+            assert_eq!(&source_replay::source_record(id), record);
+            moved.insert(id);
+            continue;
+        }
+        let transport = source_replay::transport(record);
+        let http = Arc::new(AdapterHttp::default());
+        http.set_transport(transport.clone()).unwrap();
+        diagnostics.extend(source_replay::replay_record(record, http, transport).await);
+        replayed += 1;
+    }
+    assert_eq!(
+        executed.len(),
+        172,
+        "source capture must not be silently shortened"
+    );
+    // Diagnostics are explicit proposed differences, not silently normalized parity.
+    if let Ok(path) = std::env::var("A07_DIAGNOSTIC_CAPTURE") {
+        std::fs::write(path, ssx_json::to_string(&diagnostics).unwrap()).unwrap();
+    }
+    let ledger: ssx_json::Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a07/proposed-differences.json"
+    ))
+    .unwrap();
+    let approved_shape=ledger["records"].as_array().unwrap().iter().map(|r|ssx_json::json!({"id":r["id"],"source_error":r["source_error"],"source_raised":r["source_raised"],"native_status":r["native_status"],"native_error":r["native_error"]})).collect::<Vec<_>>();
+    assert_eq!(
+        diagnostics, approved_shape,
+        "diagnostic drift requires an explicit per-case ledger update and review; pending entries are not acceptance"
+    );
+    assert_eq!(replayed, 168);
+    assert_eq!(moved, source_replay::MOVED.into_iter().collect());
 }
+
 #[tokio::test]
 async fn resolved_yaml_environment_scalars_reach_engine_specific_semantics() {
     use std::collections::BTreeMap;

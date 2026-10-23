@@ -1,3 +1,6 @@
+#[path = "support/owned_loopback_fixture.rs"]
+mod owned_loopback_fixture;
+use owned_loopback_fixture::OwnedLoopback;
 use ssx_application::{
     PortFuture,
     rate::{RateLimiter, RateStore},
@@ -277,9 +280,13 @@ async fn both_pilots_classify_http_malformed_and_timeout_cases() {
         assert!(response.results.is_empty());
     }
     for engine in ["npm", "crates"] {
-        let response = exercise_http_case(engine, 200, b"{}", 20, true).await;
-        assert_eq!(response.status, EngineStatus::Timeout, "{engine}");
-        assert!(response.results.is_empty());
+        // Real 20ms timeout classification does not promise dispatch. Zero
+        // budget deterministically covers a fixture still waiting in accept.
+        for timeout_ms in [20, 0] {
+            let response = exercise_http_case(engine, 200, b"{}", timeout_ms, true).await;
+            assert_eq!(response.status, EngineStatus::Timeout, "{engine}");
+            assert!(response.results.is_empty());
+        }
     }
 }
 
@@ -717,10 +724,31 @@ async fn exercise_http_case(
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     let body = body.to_vec();
-    let server = tokio::spawn(async move {
+    let accepted = Arc::new(AtomicUsize::new(0));
+    let observed = accepted.clone();
+    let server = OwnedLoopback::spawn(async move {
         let (mut stream, _) = listener.accept().await.unwrap();
-        let mut request = [0; 2048];
-        let _ = stream.read(&mut request).await.unwrap();
+        observed.fetch_add(1, Ordering::SeqCst);
+        let mut request = Vec::new();
+        let mut chunk = [0; 2048];
+        loop {
+            let count = stream.read(&mut chunk).await.unwrap();
+            if count == 0 {
+                assert!(
+                    stall,
+                    "non-timeout fixture saw EOF before complete request headers"
+                );
+                return;
+            }
+            request.extend_from_slice(&chunk[..count]);
+            assert!(
+                request.len() <= 16 * 1024,
+                "loopback request headers exceeded fixture bound"
+            );
+            if request.windows(4).any(|bytes| bytes == b"\r\n\r\n") {
+                break;
+            }
+        }
         if stall {
             tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             return;
@@ -730,8 +758,8 @@ async fn exercise_http_case(
             "HTTP/1.1 {status} {reason}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
             body.len()
         );
-        let _ = stream.write_all(header.as_bytes()).await;
-        let _ = stream.write_all(&body).await;
+        stream.write_all(header.as_bytes()).await.unwrap();
+        stream.write_all(&body).await.unwrap();
     });
     let mut config = PilotConfig::default();
     config.npm.base_url = format!("http://{address}/npm");
@@ -751,7 +779,15 @@ async fn exercise_http_case(
         .unwrap()
         .search(&SearchRequest::default())
         .await;
-    let _ = server.await;
+    if stall {
+        server.stop_and_join().await;
+    } else {
+        server.finish().await;
+    }
+    assert!(accepted.load(Ordering::SeqCst) <= 1);
+    if stall && timeout_ms == 0 {
+        assert_eq!(accepted.load(Ordering::SeqCst), 0);
+    }
     response
 }
 

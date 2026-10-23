@@ -181,7 +181,12 @@ mod tests {
                 root.join("docs/rust-rewrite/a13/source-amendments/clinicaltrials.rs.9f1a.frozen"),
             )
             .unwrap(),
-            fs::read(root.join(SOURCE_PATH)).unwrap(),
+            // The original manifest's current side is accepted main, not the
+            // new A06 candidate. Keep its positive and every mutant historical.
+            fs::read(root.join(
+                "docs/rust-rewrite/a06/source-amendments/main-d561/crates/ssx-infra/src/adapters/clinicaltrials.rs",
+            ))
+            .unwrap(),
         )
     }
 
@@ -277,6 +282,147 @@ mod tests {
         let mut wrong = raw.clone();
         wrong.push(0);
         assert!(verify_payload(&wrong, good).is_err());
+
+        // Prove the actual candidate through the same typed Git bridge A14
+        // uses in production; an archived positive cannot stand in for it.
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap();
+        let actual = fs::read(root.join(SOURCE_PATH)).unwrap();
+        assert!(
+            verify_payload(
+                &raw,
+                Payload {
+                    current: &actual,
+                    ..good
+                }
+            )
+            .is_err()
+        );
+        let manifest: Value = serde_json::from_slice(&raw).unwrap();
+        verify_sections(&manifest, &archive, &actual).unwrap();
+        let mut records = Vec::new();
+        let actual_blob = command(
+            root,
+            "git",
+            &["hash-object", "--", SOURCE_PATH],
+            &mut records,
+        )
+        .unwrap();
+        assert_ne!(actual_blob.trim(), good.current_blob);
+        let mut shared = |path: &str,
+                          cases_sha: &str,
+                          accepted: &str,
+                          current: &str,
+                          wrong_archive: bool| {
+            crate::a13::a06_source_successor::try_git(
+                root,
+                "docs/rust-rewrite/a14/cases.json",
+                cases_sha,
+                path,
+                accepted,
+                current,
+                |archive_path| {
+                    assert_eq!(
+                        archive_path,
+                        "docs/rust-rewrite/a06/source-amendments/accepted-git/f4cc578e117b3f75b56cd6a7994c3ae38eb61dae.rs.frozen"
+                    );
+                    let value = command(
+                        root,
+                        "git",
+                        &["hash-object", "--", archive_path],
+                        &mut records,
+                    )?;
+                    Ok(if wrong_archive {
+                        "changed".into()
+                    } else {
+                        value
+                    })
+                },
+            )
+        };
+        assert!(
+            shared(
+                SOURCE_PATH,
+                super::super::CASES_SHA,
+                good.accepted_blob,
+                actual_blob.trim(),
+                false
+            )
+            .unwrap()
+            .is_ok()
+        );
+        assert!(
+            shared(
+                SOURCE_PATH,
+                super::super::CASES_SHA,
+                good.accepted_blob,
+                "changed",
+                false
+            )
+            .unwrap()
+            .is_err()
+        );
+        assert!(
+            shared(
+                SOURCE_PATH,
+                super::super::CASES_SHA,
+                "changed",
+                actual_blob.trim(),
+                false
+            )
+            .unwrap()
+            .is_err()
+        );
+        assert!(
+            shared(
+                SOURCE_PATH,
+                "changed",
+                good.accepted_blob,
+                actual_blob.trim(),
+                false
+            )
+            .unwrap()
+            .is_err()
+        );
+        assert!(
+            shared(
+                SOURCE_PATH,
+                super::super::CASES_SHA,
+                good.accepted_blob,
+                actual_blob.trim(),
+                true
+            )
+            .unwrap()
+            .is_err()
+        );
+        assert!(
+            shared(
+                SOURCE_PATH,
+                super::super::CASES_SHA,
+                good.accepted_blob,
+                good.current_blob,
+                false
+            )
+            .unwrap()
+            .is_err()
+        );
+        assert!(
+            shared(
+                "crates/ssx-infra/src/adapters/edgar.rs",
+                super::super::CASES_SHA,
+                good.accepted_blob,
+                actual_blob.trim(),
+                false
+            )
+            .is_none()
+        );
+        assert!(!records.is_empty());
+        eprintln!(
+            "A14_SHARED_CURRENT_HELPER_CONTROLS original_main_positive_and_mutants=true actual_current=true wrong_blob_caller_container_archive_and_old_as_current_rejected=true"
+        );
     }
 
     #[test]

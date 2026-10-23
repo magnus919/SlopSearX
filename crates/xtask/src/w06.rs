@@ -246,7 +246,16 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         HUGE_INTEGER_PRODUCER_SHA,
     )?;
     for (path, expected) in &qualification.owned_sources {
-        if path == "crates/ssx-application/src/lib.rs" {
+        if let Some(result) = crate::a13::a06_source_successor::try_verify(
+            root,
+            "docs/rust-rewrite/w06/qualification.json",
+            COVERAGE_SHA,
+            path,
+            expected,
+            None,
+        ) {
+            result?;
+        } else if path == "crates/ssx-application/src/lib.rs" {
             super::w06_source_amendment::verify(root, expected, records)?;
         } else if path == "Cargo.lock" {
             crate::a13::check_source_pin(

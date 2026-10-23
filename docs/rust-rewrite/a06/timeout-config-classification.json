@@ -1,0 +1,4322 @@
+{
+  "source_config_sha256": "1109a3a4455e152487b81464ed41c9930d9024235ed0c80156d763dd730a6df9",
+  "unique_ids": [
+    "arxiv.config.timeout_ms.false.valid",
+    "arxiv.config.timeout_ms.true.valid",
+    "arxiv.config.timeout_ms.zero.valid",
+    "arxiv.config.timeout_ms.one.valid",
+    "arxiv.config.timeout_ms.negative.valid",
+    "arxiv.config.timeout_ms.integer.valid",
+    "arxiv.config.timeout_ms.float_zero.valid",
+    "arxiv.config.timeout_ms.fraction.valid",
+    "arxiv.config.timeout_ms.text_number.valid",
+    "arxiv.config.timeout_ms.text_empty.valid",
+    "arxiv.config.timeout_ms.text_bad.valid",
+    "arxiv.config.timeout_ms.nan.valid",
+    "arxiv.config.timeout_ms.inf.valid",
+    "arxiv.config.timeout_ms.negative_inf.valid",
+    "openalex.config.timeout_ms.false.valid",
+    "openalex.config.timeout_ms.true.valid",
+    "openalex.config.timeout_ms.zero.valid",
+    "openalex.config.timeout_ms.one.valid",
+    "openalex.config.timeout_ms.negative.valid",
+    "openalex.config.timeout_ms.integer.valid",
+    "openalex.config.timeout_ms.float_zero.valid",
+    "openalex.config.timeout_ms.fraction.valid",
+    "openalex.config.timeout_ms.text_number.valid",
+    "openalex.config.timeout_ms.text_empty.valid",
+    "openalex.config.timeout_ms.text_bad.valid",
+    "openalex.config.timeout_ms.nan.valid",
+    "openalex.config.timeout_ms.inf.valid",
+    "openalex.config.timeout_ms.negative_inf.valid",
+    "semanticscholar.config.timeout_ms.false.valid",
+    "semanticscholar.config.timeout_ms.true.valid",
+    "semanticscholar.config.timeout_ms.zero.valid",
+    "semanticscholar.config.timeout_ms.one.valid",
+    "semanticscholar.config.timeout_ms.negative.valid",
+    "semanticscholar.config.timeout_ms.integer.valid",
+    "semanticscholar.config.timeout_ms.float_zero.valid",
+    "semanticscholar.config.timeout_ms.fraction.valid",
+    "semanticscholar.config.timeout_ms.text_number.valid",
+    "semanticscholar.config.timeout_ms.text_empty.valid",
+    "semanticscholar.config.timeout_ms.text_bad.valid",
+    "semanticscholar.config.timeout_ms.nan.valid",
+    "semanticscholar.config.timeout_ms.inf.valid",
+    "semanticscholar.config.timeout_ms.negative_inf.valid"
+  ],
+  "records": [
+    {
+      "id": "arxiv.config.timeout_ms.false.valid",
+      "config": {
+        "timeout_ms": false
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.true.valid",
+      "config": {
+        "timeout_ms": true
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.zero.valid",
+      "config": {
+        "timeout_ms": 0
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.one.valid",
+      "config": {
+        "timeout_ms": 1
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.negative.valid",
+      "config": {
+        "timeout_ms": -1
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.integer.valid",
+      "config": {
+        "timeout_ms": 3
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.float_zero.valid",
+      "config": {
+        "timeout_ms": 0.0
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.fraction.valid",
+      "config": {
+        "timeout_ms": 2.5
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.text_number.valid",
+      "config": {
+        "timeout_ms": "2"
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.text_empty.valid",
+      "config": {
+        "timeout_ms": ""
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.text_bad.valid",
+      "config": {
+        "timeout_ms": "bad"
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.nan.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "nan"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "reviewed_nonfinite_direct_refusal_context_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.inf.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "inf"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "reviewed_nonfinite_direct_refusal_context_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "arxiv.config.timeout_ms.negative_inf.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "-inf"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.false.valid",
+      "config": {
+        "timeout_ms": false
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.true.valid",
+      "config": {
+        "timeout_ms": true
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.zero.valid",
+      "config": {
+        "timeout_ms": 0
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.one.valid",
+      "config": {
+        "timeout_ms": 1
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.negative.valid",
+      "config": {
+        "timeout_ms": -1
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.integer.valid",
+      "config": {
+        "timeout_ms": 3
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.float_zero.valid",
+      "config": {
+        "timeout_ms": 0.0
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.fraction.valid",
+      "config": {
+        "timeout_ms": 2.5
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.text_number.valid",
+      "config": {
+        "timeout_ms": "2"
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'int'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.text_empty.valid",
+      "config": {
+        "timeout_ms": ""
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'int'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.text_bad.valid",
+      "config": {
+        "timeout_ms": "bad"
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'int'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.nan.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "nan"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "reviewed_nonfinite_direct_refusal_context_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.inf.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "inf"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "reviewed_nonfinite_direct_refusal_context_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "openalex.config.timeout_ms.negative_inf.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "-inf"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.false.valid",
+      "config": {
+        "timeout_ms": false
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.true.valid",
+      "config": {
+        "timeout_ms": true
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.zero.valid",
+      "config": {
+        "timeout_ms": 0
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.one.valid",
+      "config": {
+        "timeout_ms": 1
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.negative.valid",
+      "config": {
+        "timeout_ms": -1
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.integer.valid",
+      "config": {
+        "timeout_ms": 3
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.float_zero.valid",
+      "config": {
+        "timeout_ms": 0.0
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.fraction.valid",
+      "config": {
+        "timeout_ms": 2.5
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "positive_pending_exchange_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.text_number.valid",
+      "config": {
+        "timeout_ms": "2"
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.text_empty.valid",
+      "config": {
+        "timeout_ms": ""
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.text_bad.valid",
+      "config": {
+        "timeout_ms": "bad"
+      },
+      "source_mock_output": {
+        "results": [
+
+        ],
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "exact_source_operand_error_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.nan.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "nan"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "reviewed_nonfinite_direct_refusal_context_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.inf.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "inf"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "reviewed_nonfinite_direct_refusal_context_deadline",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    },
+    {
+      "id": "semanticscholar.config.timeout_ms.negative_inf.valid",
+      "config": {
+        "timeout_ms": {
+          "$source_nonfinite_float": "-inf"
+        }
+      },
+      "source_mock_output": {
+        "results": [
+          {
+            "url": "",
+            "title": "paper-0",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-1",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "",
+            "title": "paper-2",
+            "content": "Cited by: 0",
+            "engine": "semanticscholar",
+            "engines": [
+
+            ],
+            "score": 0.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+              },
+              "provenance": {
+                "engine": "semanticscholar",
+                "adapter_fields": [
+
+                ],
+                "normalized_fields": [
+
+                ],
+                "inferred_fields": [
+
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [
+
+        ],
+        "corrections": [
+
+        ],
+        "infoboxes": [
+
+        ],
+        "synthetic": false
+      },
+      "native_classification": "nonpositive_immediate_timeout_zero_dispatch",
+      "contexts": [
+        "direct",
+        "finite_caller_context"
+      ],
+      "pending_exchange_dropped": true,
+      "lease_restored": true
+    }
+  ],
+  "source_loopback_sha256": "4375e93bc84c6e609d89e3581301fbe6fed6167e6d07db4b41a398e1f3a741fa",
+  "limitations": [
+    "Injected pending exchange has no response delivery; differs intentionally from original immediate MockTransport success.",
+    "Real source loopback18 observations use50ms delayed response; NaN probes externally cancelled/joined after1second and have no fabricated source AdapterResponse.",
+    "Existing reviewed whole-operation finite policy bounds actual context; no timer production changes."
+  ],
+  "semantic_max_ids": [
+    "semanticscholar.config.max_results.false.valid",
+    "semanticscholar.config.max_results.false.malformed",
+    "semanticscholar.config.max_results.true.valid",
+    "semanticscholar.config.max_results.true.malformed",
+    "semanticscholar.config.max_results.zero.valid",
+    "semanticscholar.config.max_results.zero.malformed",
+    "semanticscholar.config.max_results.one.valid",
+    "semanticscholar.config.max_results.one.malformed",
+    "semanticscholar.config.max_results.negative.valid",
+    "semanticscholar.config.max_results.negative.malformed",
+    "semanticscholar.config.max_results.integer.valid",
+    "semanticscholar.config.max_results.integer.malformed",
+    "semanticscholar.config.max_results.float_zero.valid",
+    "semanticscholar.config.max_results.float_zero.malformed",
+    "semanticscholar.config.max_results.fraction.valid",
+    "semanticscholar.config.max_results.fraction.malformed",
+    "semanticscholar.config.max_results.text_number.valid",
+    "semanticscholar.config.max_results.text_number.malformed",
+    "semanticscholar.config.max_results.text_empty.valid",
+    "semanticscholar.config.max_results.text_empty.malformed",
+    "semanticscholar.config.max_results.text_bad.valid",
+    "semanticscholar.config.max_results.text_bad.malformed",
+    "semanticscholar.config.max_results.nan.valid",
+    "semanticscholar.config.max_results.nan.malformed",
+    "semanticscholar.config.max_results.inf.valid",
+    "semanticscholar.config.max_results.inf.malformed",
+    "semanticscholar.config.max_results.negative_inf.valid",
+    "semanticscholar.config.max_results.negative_inf.malformed"
+  ]
+}

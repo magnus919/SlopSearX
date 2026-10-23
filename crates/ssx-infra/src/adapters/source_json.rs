@@ -2,6 +2,14 @@
 //!
 //! This boundary deliberately does not change the finite public JSON codec.
 use std::{future::Future, pin::Pin, time::Instant};
+type ParsedFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, Error>> + Send + 'a>>;
+#[path = "source_json_accounting.rs"]
+mod allocation;
+#[path = "source_json_future.rs"]
+mod future_ownership;
+use allocation::Accounting;
+#[cfg(test)]
+static SHIFT_CHECKPOINTS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 pub const MAX_BYTES: usize = 4 * 1024 * 1024;
 pub const MAX_DEPTH: usize = 100;
@@ -184,6 +192,7 @@ pub enum Error {
     DepthLimit,
     TextLimit,
     Deadline,
+    Resource(ssx_owned_budget::Error),
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProjectionError {
@@ -203,6 +212,7 @@ impl Error {
             ),
             Self::Syntax { .. } | Self::Encoding { .. } => malformed.into(),
             Self::Deadline => unreachable!("deadline must retain timeout status"),
+            Self::Resource(_) => format!("{engine} native JSON allocation limit exceeded"),
         }
     }
 }
@@ -281,7 +291,11 @@ async fn checkpoint(deadline: Option<Instant>) -> Result<(), Error> {
     }
     Ok(())
 }
-async fn decode(bytes: &[u8], deadline: Option<Instant>) -> Result<Vec<u32>, Error> {
+async fn decode(
+    bytes: &[u8],
+    deadline: Option<Instant>,
+    accounting: &mut Accounting,
+) -> Result<Vec<u32>, Error> {
     let (enc, mut pos) = encoding(bytes);
     let mut out = Vec::new();
     let mut next_yield = pos;
@@ -366,7 +380,7 @@ async fn decode(bytes: &[u8], deadline: Option<Instant>) -> Result<Vec<u32>, Err
                 c
             }
         };
-        out.push(point);
+        accounting.push(&mut out, point).map_err(Error::Resource)?;
         if out.len() > MAX_TEXT {
             return Err(Error::TextLimit);
         }
@@ -374,31 +388,72 @@ async fn decode(bytes: &[u8], deadline: Option<Instant>) -> Result<Vec<u32>, Err
     Ok(out)
 }
 
-/// No work survives dropping this future. Deadlines are inherited, never renewed.
+/// Owns all parsed backing allocations. Mandatory bounded consumers borrow the
+/// value and must not clone it into uncharged storage.
+pub struct BudgetValue {
+    value: Value,
+    _charge: Option<ssx_owned_budget::Charge>,
+}
+impl BudgetValue {
+    pub fn value(&self) -> &Value {
+        &self.value
+    }
+}
+
+/// Existing callers retain the accepted source operations and resource policy.
 pub async fn from_slice(bytes: &[u8], deadline: Option<Instant>) -> Result<Value, Error> {
+    let owned = parse_owned(bytes, deadline, None).await?;
+    debug_assert!(owned._charge.is_none());
+    Ok(owned.value)
+}
+
+/// Opt-in helper operation entry. Resource refusal is operational, never source
+/// syntax, and only this entry can produce Error::Resource.
+pub async fn from_slice_budgeted(
+    bytes: &[u8],
+    deadline: Option<Instant>,
+    budget: &ssx_owned_budget::Budget,
+) -> Result<BudgetValue, Error> {
+    parse_owned(bytes, deadline, Some(budget)).await
+}
+
+async fn parse_owned(
+    bytes: &[u8],
+    deadline: Option<Instant>,
+    budget: Option<&ssx_owned_budget::Budget>,
+) -> Result<BudgetValue, Error> {
     if bytes.len() > MAX_BYTES {
         return Err(Error::ByteLimit);
     }
-    let text = decode(bytes, deadline).await?;
+    // Decoded scratch is allocated after its accountant, so cancellation frees
+    // scratch before its backing reservation. It is separate from retained data.
+    let mut decoded_accounting = Accounting::new(budget).map_err(Error::Resource)?;
+    let text = decode(bytes, deadline, &mut decoded_accounting).await?;
     let mut parser = Parser {
         text: &text,
         pos: 0,
         work: 0,
         deadline,
+        accounting: Accounting::new(budget).map_err(Error::Resource)?,
     };
-    let value = parser.value(0).await?;
+    let value = parser.value(0)?.await?;
     parser.whitespace().await?;
     if parser.pos != text.len() {
         return Err(parser.syntax("Extra data"));
     }
     checkpoint(deadline).await?;
-    Ok(value)
+    let charge = parser.accounting.charge();
+    Ok(BudgetValue {
+        value,
+        _charge: charge,
+    })
 }
 struct Parser<'a> {
     text: &'a [u32],
     pos: usize,
     work: usize,
     deadline: Option<Instant>,
+    accounting: Accounting,
 }
 impl Parser<'_> {
     fn syntax(&self, message: &'static str) -> Error {
@@ -437,11 +492,9 @@ impl Parser<'_> {
             false
         }
     }
-    fn value(
-        &mut self,
-        depth: usize,
-    ) -> Pin<Box<dyn Future<Output = Result<Value, Error>> + Send + '_>> {
-        Box::pin(async move {
+    fn value(&mut self, depth: usize) -> Result<ParsedFuture<'_>, Error> {
+        let budget = self.accounting.budget().cloned();
+        let future = async move {
             self.whitespace().await?;
             self.tick().await?;
             match self.text.get(self.pos).copied() {
@@ -457,7 +510,10 @@ impl Parser<'_> {
                         return Ok(Value::Array(out));
                     }
                     loop {
-                        out.push(self.value(depth + 1).await?);
+                        let value = self.value(depth + 1)?.await?;
+                        self.accounting
+                            .push(&mut out, value)
+                            .map_err(Error::Resource)?;
                         self.whitespace().await?;
                         if self.consume("]") {
                             return Ok(Value::Array(out));
@@ -474,6 +530,11 @@ impl Parser<'_> {
                     self.pos += 1;
                     self.whitespace().await?;
                     let mut out: Vec<(Text, Value)> = Vec::new();
+                    let bounded = self.accounting.budget().cloned();
+                    // Scratch charge outlives its index storage, including cancel.
+                    let mut index_accounting =
+                        Accounting::new(bounded.as_ref()).map_err(Error::Resource)?;
+                    let mut sorted_indices: Vec<usize> = Vec::new();
                     let mut positions: std::collections::BTreeMap<Text, usize> =
                         std::collections::BTreeMap::new();
                     if self.consume("}") {
@@ -491,12 +552,39 @@ impl Parser<'_> {
                         if !self.consume(":") {
                             return Err(self.syntax("Expecting ':' delimiter"));
                         }
-                        let value = self.value(depth + 1).await?;
-                        if let Some(index) = positions.get(&key).copied() {
+                        let value = self.value(depth + 1)?.await?;
+                        if bounded.is_some() {
+                            match self.find_key(&key, &out, &sorted_indices).await? {
+                                Ok(index) => out[index].1 = value,
+                                Err(insert) => {
+                                    let index = out.len();
+                                    self.accounting
+                                        .push(&mut out, (key, value))
+                                        .map_err(Error::Resource)?;
+                                    index_accounting
+                                        .push(&mut sorted_indices, index)
+                                        .map_err(Error::Resource)?;
+                                    // Quadratic worst-case insertion is intentional, never
+                                    // a speed claim. Cooperative shifts bound cancellation.
+                                    for cursor in (insert + 1..sorted_indices.len()).rev() {
+                                        if cursor % 1024 == 0 {
+                                            #[cfg(test)]
+                                            SHIFT_CHECKPOINTS
+                                                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                            checkpoint(self.deadline).await?;
+                                        }
+                                        sorted_indices[cursor] = sorted_indices[cursor - 1];
+                                    }
+                                    sorted_indices[insert] = index;
+                                }
+                            }
+                        } else if let Some(index) = positions.get(&key).copied() {
                             out[index].1 = value;
                         } else {
                             positions.insert(key.clone(), out.len());
-                            out.push((key, value));
+                            self.accounting
+                                .push(&mut out, (key, value))
+                                .map_err(Error::Resource)?;
                         }
                         self.whitespace().await?;
                         if self.consume("}") {
@@ -520,7 +608,80 @@ impl Parser<'_> {
                 Some(0x2d | 0x30..=0x39) => self.number().await,
                 _ => Err(self.syntax("Expecting value")),
             }
-        })
+        };
+        match budget {
+            Some(budget) => future_ownership::boxed(future, &budget).map_err(Error::Resource),
+            None => Ok(Box::pin(future)),
+        }
+    }
+    async fn find_key(
+        &self,
+        key: &Text,
+        out: &[(Text, Value)],
+        indices: &[usize],
+    ) -> Result<Result<usize, usize>, Error> {
+        let (mut low, mut high) = (0, indices.len());
+        while low < high {
+            checkpoint(self.deadline).await?;
+            let mid = low + (high - low) / 2;
+            let other = &out[indices[mid]].0;
+            let mut order = std::cmp::Ordering::Equal;
+            for (index, (a, b)) in key.0.iter().zip(&other.0).enumerate() {
+                if index % 1024 == 0 {
+                    checkpoint(self.deadline).await?;
+                }
+                order = a.cmp(b);
+                if !order.is_eq() {
+                    break;
+                }
+            }
+            if order.is_eq() {
+                order = key.0.len().cmp(&other.0.len());
+            }
+            match order {
+                std::cmp::Ordering::Less => high = mid,
+                std::cmp::Ordering::Greater => low = mid + 1,
+                std::cmp::Ordering::Equal => return Ok(Ok(indices[mid])),
+            }
+        }
+        Ok(Err(low))
+    }
+    async fn finish_text(&mut self, points: Vec<u32>) -> Result<Text, Error> {
+        if self.accounting.budget().is_none() {
+            return Ok(Text::from_points(points));
+        }
+        let mut count = 0usize;
+        for (index, point) in points.iter().enumerate() {
+            if index % 1024 == 0 {
+                checkpoint(self.deadline).await?;
+            }
+            let Some(ch) = char::from_u32(*point) else {
+                return Ok(Text(points, None));
+            };
+            count = count
+                .checked_add(ch.len_utf8())
+                .ok_or(Error::Resource(ssx_owned_budget::Error::Overflow))?;
+        }
+        let mut scalar = Vec::new();
+        self.accounting
+            .grow(&mut scalar, count)
+            .map_err(Error::Resource)?;
+        for (index, point) in points.iter().enumerate() {
+            if index % 1024 == 0 {
+                checkpoint(self.deadline).await?;
+            }
+            let mut bytes = [0; 4];
+            scalar.extend_from_slice(
+                char::from_u32(*point)
+                    .expect("validated scalar")
+                    .encode_utf8(&mut bytes)
+                    .as_bytes(),
+            );
+        }
+        Ok(Text(
+            points,
+            Some(String::from_utf8(scalar).expect("scalar UTF8 writer")),
+        ))
     }
     async fn string(&mut self) -> Result<Text, Error> {
         self.pos += 1;
@@ -533,7 +694,7 @@ impl Parser<'_> {
                 .ok_or_else(|| self.syntax("Unterminated string starting at"))?;
             self.pos += 1;
             match c {
-                0x22 => return Ok(Text::from_points(out)),
+                0x22 => return self.finish_text(out).await,
                 0..=0x1f => return Err(self.syntax("Invalid control character at")),
                 0x5c => {
                     let escape = *self
@@ -570,9 +731,9 @@ impl Parser<'_> {
                         }
                         _ => return Err(self.syntax("Invalid \\escape")),
                     };
-                    out.push(c);
+                    self.accounting.push(&mut out, c).map_err(Error::Resource)?;
                 }
-                _ => out.push(c),
+                _ => self.accounting.push(&mut out, c).map_err(Error::Resource)?,
             }
         }
     }
@@ -658,26 +819,53 @@ impl Parser<'_> {
                 self.pos = save;
             }
         }
-        let mut s = String::with_capacity(self.pos - start);
-        for (index, codepoint) in self.text[start..self.pos].iter().enumerate() {
-            if index & 4095 == 0 {
+        let mut token = Vec::new();
+        for index in start..self.pos {
+            if (index - start).is_multiple_of(1024) {
                 checkpoint(self.deadline).await?;
             }
-            s.push(char::from_u32(*codepoint).expect("ASCII number"));
+            self.accounting
+                .push(&mut token, self.text[index] as u8)
+                .map_err(Error::Resource)?;
         }
+        let mut s = String::from_utf8(token).expect("ASCII number");
         if self.pos == integer_end {
             let digits = s.len() - usize::from(s.starts_with('-'));
             if digits > MAX_INTEGER_DIGITS {
                 return Err(Error::IntegerDigits(digits));
             }
             Ok(Value::Number(Number::Integer(Integer(if s == "-0" {
-                "0".into()
+                s.clear();
+                s.push('0');
+                s
             } else {
                 s
             }))))
         } else {
-            let mut normalizer = ssx_json::FloatNormalizer::new(&s)
-                .map_err(|_| self.syntax("invalid JSON float"))?;
+            // Scratch accountant precedes the normalizer, so normalized String
+            // storage is freed before its reservation, also on cancellation.
+            let mut float_scratch =
+                Accounting::new(self.accounting.budget()).map_err(Error::Resource)?;
+            let mut normalizer = if self.accounting.budget().is_some() {
+                let required = s
+                    .len()
+                    .checked_add(8)
+                    .ok_or(Error::Resource(ssx_owned_budget::Error::Overflow))?;
+                let mut buffer = Vec::<u8>::new();
+                float_scratch
+                    .grow(&mut buffer, required)
+                    .map_err(Error::Resource)?;
+                let buffer = String::from_utf8(buffer).expect("empty scratch is UTF8");
+                ssx_json::FloatNormalizer::with_buffer(&s, buffer).map_err(|error| match error {
+                    ssx_json::FloatBufferError::Input(_) => self.syntax("invalid JSON float"),
+                    ssx_json::FloatBufferError::Capacity => {
+                        Error::Resource(ssx_owned_budget::Error::Corrupt)
+                    }
+                })?
+            } else {
+                ssx_json::FloatNormalizer::new(&s).map_err(|_| self.syntax("invalid JSON float"))?
+            };
+            checkpoint(self.deadline).await?;
             while !normalizer
                 .advance(1024)
                 .map_err(|_| self.syntax("invalid JSON float"))?
@@ -738,7 +926,11 @@ impl Text {
     }
     pub fn repr(&self) -> String {
         if let Some(s) = self.as_str() {
-            let escaped = ssx_domain::storage::python_value_string(&ssx_json::json!([s]));
+            // Accepted UTF16/32 JSON bytes can expand beyond the public JSON
+            // byte limit as scalar UTF8. Reuse the existing repr formatter on
+            // typed values without serializing/reparsing that accepted text.
+            let values = ssx_json::Value::Array(vec![ssx_json::Value::String(s.to_owned())]);
+            let escaped = ssx_domain::storage::python_value_string(&values);
             return escaped[1..escaped.len() - 1].into();
         }
         let quote = if self.0.contains(&39) && !self.0.contains(&34) {
@@ -893,6 +1085,33 @@ pub fn opaque_error(value: &Value, engine: &str, field: &str) -> Option<String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn accepted_utf16_expansion_repr_matches_complete_source_hash() {
+        use sha2::{Digest, Sha256};
+        let input = format!("\"{}\"", "一".repeat(2 * 1024 * 1024 - 2));
+        let bytes: Vec<u8> = input.encode_utf16().flat_map(u16::to_le_bytes).collect();
+        assert_eq!(bytes.len(), MAX_BYTES);
+        assert_eq!(
+            Sha256::digest(&bytes)
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>(),
+            "69bd52fa264c0224ea2afd24e671b0ac123f814d912349e56d4a783e22c319a9"
+        );
+        let value = from_slice(&bytes, None).await.unwrap();
+        let text = value.as_text().unwrap();
+        assert_eq!(text.len(), 2_097_150);
+        assert_eq!(text.as_str().unwrap().len(), 6_291_450);
+        let repr = text.repr();
+        assert_eq!(repr.len(), 6_291_452);
+        assert_eq!(
+            Sha256::digest(repr.as_bytes())
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>(),
+            "822794801db331db89bdca20a804d4835760d1c31e96b3cea26d98e82b93e785"
+        );
+    }
     #[tokio::test]
     async fn encodings_and_recursive_float_projection() {
         let input = "{\"x\":[1.234567890123456789,1e3,1e-7,-0.0,1e-9999,99999999999999999999999999999999999999999]}";
@@ -1050,6 +1269,105 @@ mod tests {
 }
 
 #[cfg(test)]
+mod budget_tests {
+    use super::*;
+    #[tokio::test]
+    async fn budgeted_values_preserve_order_duplicates_scalars_and_errors() {
+        let inputs: &[&[u8]] = &[
+            br#"{"z":1,"a":[null,true,2.5],"z":3}"#,
+            br#"{"\ud800":{"b":1},"a":"\ud800","\ud800":[2]}"#,
+            br#"[NaN,Infinity,-Infinity,-0,12345678901234567890,"\ud83d\ude00"]"#,
+            b"{\"x\":1,}",
+            b"[1 2]",
+            b"\xff",
+            b"\xff\xfe[\x001\x00,\x00 \x002\x00]\x00",
+        ];
+        for input in inputs {
+            let budget = ssx_owned_budget::Budget::new(1024 * 1024).unwrap();
+            let plain = from_slice(input, None).await;
+            let bounded = from_slice_budgeted(input, None, &budget).await;
+            match (plain, bounded) {
+                (Ok(plain), Ok(bounded)) => {
+                    assert_eq!(format!("{plain:?}"), format!("{:?}", bounded.value()));
+                    assert!(budget.snapshot().unwrap().used > 0);
+                    drop(bounded);
+                }
+                (Err(plain), Err(bounded)) => assert_eq!(plain, bounded),
+                _ => panic!("budgeted result disagrees"),
+            }
+            assert_eq!(budget.snapshot().unwrap().used, 0);
+        }
+    }
+    #[tokio::test]
+    async fn allocation_refusal_releases_partial_tree_and_scratch() {
+        let input = br#"{"z":[1,2,3,4,5,6,7,8],"a":"many bytes of text"}"#;
+        for limit in [1, 64, 256, 512, 1024] {
+            let budget = ssx_owned_budget::Budget::new(limit).unwrap();
+            assert!(matches!(
+                from_slice_budgeted(input, None, &budget).await,
+                Err(Error::Resource(_))
+            ));
+            assert_eq!(budget.snapshot().unwrap().used, 0);
+        }
+    }
+}
+
+#[cfg(test)]
+mod shift_cancel_test {
+    use super::*;
+    #[tokio::test]
+    async fn cancel_at_observed_adversarial_index_shift_releases_all_charges() {
+        SHIFT_CHECKPOINTS.store(0, std::sync::atomic::Ordering::Relaxed);
+        let mut input = String::from("{");
+        for index in (0..5000).rev() {
+            if input.len() != 1 {
+                input.push(',');
+            }
+            input.push_str(&format!("\"k{index:06}\":0"));
+        }
+        input.push('}');
+        let budget = ssx_owned_budget::Budget::new(64 * 1024 * 1024).unwrap();
+        let child_budget = budget.clone();
+        let task = tokio::spawn(async move {
+            from_slice_budgeted(input.as_bytes(), None, &child_budget).await
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            while SHIFT_CHECKPOINTS.load(std::sync::atomic::Ordering::Relaxed) == 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("actual index-shift checkpoint reached");
+        task.abort();
+        assert!(matches!(task.await, Err(error) if error.is_cancelled()));
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+    }
+}
+
+#[cfg(test)]
+mod expanded_budget_test {
+    use super::*;
+    #[tokio::test]
+    async fn accepted_maximum_utf16_scalar_fits_parser_only_64m_allowance() {
+        let input = format!("\"{}\"", "一".repeat(2 * 1024 * 1024 - 2));
+        let bytes: Vec<u8> = input.encode_utf16().flat_map(u16::to_le_bytes).collect();
+        let budget = ssx_owned_budget::Budget::new(64 * 1024 * 1024).unwrap();
+        let value = from_slice_budgeted(&bytes, None, &budget).await.unwrap();
+        let text = value.value().as_text().unwrap();
+        assert_eq!(text.len(), 2_097_150);
+        assert_eq!(text.as_str().unwrap().len(), 6_291_450);
+        assert!(text.codepoints().iter().all(|point| *point == 0x4e00));
+        let peak = budget.snapshot().unwrap().peak;
+        assert!(peak <= 64 * 1024 * 1024);
+        eprintln!(
+            "parser-only expanded scalar peak requested bytes={peak}; raw/frame/output outside this test"
+        );
+        drop(value);
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+    }
+}
+
+#[cfg(test)]
 mod f15_numeric_tests {
     use super::*;
     #[tokio::test]
@@ -1121,3 +1439,46 @@ mod f15_numeric_tests {
         assert_eq!(count, 14);
     }
 }
+
+#[cfg(test)]
+mod bounded_numeric_test {
+    use super::*;
+    #[tokio::test]
+    async fn shared_normalizer_cancellation_value_uses_charged_scratch() {
+        let input = format!("0.{}1e+1990000", "0".repeat(1_990_000));
+        let budget = ssx_owned_budget::Budget::new(64 * 1024 * 1024).unwrap();
+        let value = from_slice_budgeted(input.as_bytes(), None, &budget)
+            .await
+            .unwrap();
+        let Value::Number(Number::Float(number)) = value.value() else {
+            panic!("float expected")
+        };
+        assert_eq!(number.to_bits(), 0.1f64.to_bits());
+        assert!(budget.snapshot().unwrap().used > 0);
+        drop(value);
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+    }
+}
+
+#[cfg(test)]
+mod resource_diagnostic_tests {
+    use super::*;
+    #[tokio::test]
+    async fn resource_error_is_explicit_and_legacy_message_never_panics() {
+        let budget = ssx_owned_budget::Budget::new(1).unwrap();
+        let error = from_slice_budgeted(b"true", None, &budget)
+            .await
+            .err()
+            .expect("tiny allocation budget refusal");
+        assert!(matches!(error, Error::Resource(_)));
+        assert_eq!(
+            error.message("probe", "malformed"),
+            "probe native JSON allocation limit exceeded"
+        );
+        assert_eq!(budget.snapshot().unwrap().used, 0);
+    }
+}
+
+#[path = "source_json_diagnostic.rs"]
+mod diagnostic;
+pub use diagnostic::{DiagnosticError, message_budgeted};

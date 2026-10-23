@@ -13,8 +13,9 @@ use std::{
     collections::VecDeque,
     sync::{Arc, Mutex},
 };
-const HEADER_DIFFERENCES: &str =
-    include_str!("../../../docs/rust-rewrite/a08/header-differences.json");
+const HEADER_DIFFERENCES: &str = include_str!(
+    "../../../docs/rust-rewrite/a08/source-amendments/default-user-agent-effective-v1.json"
+);
 const DIFFERENCES: &str = include_str!("../../../docs/rust-rewrite/a08/differences.json");
 const REGRESSIONS: &str = include_str!("../../../docs/rust-rewrite/a08/regressions.json");
 const SOURCE: &str = include_str!("../../../docs/rust-rewrite/a08/source.json");
@@ -235,11 +236,18 @@ async fn all_engine_source_replay() {
                 )
             );
             used_headers.insert(case["id"].as_str().unwrap().to_owned());
-            for request in &mut expected_requests {
-                request["headers"]
-                    .as_object_mut()
-                    .unwrap()
-                    .remove("user-agent");
+            // Both identities were asserted above; derive the explicit native
+            // request view without changing captured source/native observations.
+            for (request, native) in expected_requests
+                .iter_mut()
+                .zip(header["native_values"].as_array().unwrap())
+            {
+                let headers = request["headers"].as_object_mut().unwrap();
+                if native.is_null() {
+                    headers.remove("user-agent");
+                } else {
+                    headers.insert("user-agent".into(), native.clone());
+                }
             }
         }
         if let Some(difference) = differences["records"]

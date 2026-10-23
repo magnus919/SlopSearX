@@ -258,6 +258,10 @@ fn assert_request(kind: Kind, r: &Request, q: &str, limit: &str, key: &str) {
     }
     assert_eq!(r.url, expected);
     let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(
+        reqwest::header::USER_AGENT,
+        reqwest::header::HeaderValue::from_static(http::DEFAULT_USER_AGENT),
+    );
     if matches!(kind, Kind::Censys | Kind::VirusTotal | Kind::VulnCheck) {
         headers.insert("accept", "application/json".parse().unwrap());
     }
