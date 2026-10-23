@@ -8,6 +8,8 @@ mod a13_header_layout_successor;
 mod real_clock_successor;
 #[path = "w07-evidence-successor.rs"]
 pub(crate) mod w07_evidence_successor;
+#[path = "../../w07/source-amendments/main_successor.rs"]
+mod w07_main_successor;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
 const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v1.json";
 const VALIDATOR: &str = "docs/rust-rewrite/a13/source-amendments/validator.rs";
@@ -309,6 +311,14 @@ fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         "A06 source must be regular, not symlink",
     )?;
     let raw = fs::read(&path).map_err(|e| e.to_string())?;
+    // Only D's exact main afterimage can reconstruct the accepted A06 current row.
+    let raw = if row["path"] == "crates/xtask/src/main.rs"
+        && row["sha256"] == w07_main_successor::PRIOR_SHA
+    {
+        w07_main_successor::reconstruct(&raw)?
+    } else {
+        raw
+    };
     material(row, &raw, &permissions(&path)?)?;
     Ok(raw)
 }

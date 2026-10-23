@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "plan_id": "W07",
+  "scope": "finite exact native receipt/record/lineage/composition and MCP protocol execution; frozen measured Python wire subset; not production/startup/cutover or all-Python-test coverage",
+  "suites": [
+    {
+      "package": "ssx-application",
+      "target": "lib",
+      "filter": "receipts::",
+      "tests": [
+        "receipts::captured_manifest::tests::cancellation_before_last_walk_still_stops_both_variants",
+        "receipts::captured_manifest::tests::completed_empty_selection_seals_before_the_original_clock_then_cancel_check",
+        "receipts::captured_manifest::tests::completed_walk_selection_error_precedes_new_finish_cancellation",
+        "receipts::encoding::tests::borrowed_node_prefix_matches_existing_encoder_at_exact_manifest_depth",
+        "receipts::encoding::tests::exact_output_budget_deep_store_wrappers_and_cancellation",
+        "receipts::encoding::tests::local_output_matches_shared_canonical_scalars_and_sorted_containers",
+        "receipts::encoding::tests::prefix_fault_composition_preserves_first_error_and_cancellation",
+        "receipts::memory::tests::affine_split_and_shared_owner_release_only_at_actual_last_drop",
+        "receipts::memory::tests::checked_capacity_and_normalizer_growth_are_not_float_formatter_length",
+        "receipts::memory::tests::driver_and_capture_share_pre_dispatch_reservation_until_actual_last_owner",
+        "receipts::memory::tests::interleaved_owned_futures_restore_scope_on_every_pending_ready_and_drop",
+        "receipts::memory::tests::reserve_before_growth_overlaps_old_and_new_and_refuses_without_mutation",
+        "receipts::service::service_contract_tests::manifest_artifact_walk_completes_before_the_selected_result_item_is_read",
+        "receipts::service::service_contract_tests::manifest_conflict_precedes_ports_and_valid_source_resolution_precedes_item_reads",
+        "receipts::service::service_contract_tests::read_rejects_bad_limit_before_grant_or_repository_and_uses_retained_discovery_after_expiry",
+        "receipts::service::service_contract_tests::submit_checks_grant_before_normalization_and_replays_before_expired_source_lookup",
+        "receipts::service::service_contract_tests::submit_normalizes_observation_before_repository_and_never_claims_verification",
+        "receipts::source::tests::large_retained_discovery_projection_avoids_default_parser_reentry"
+      ]
+    },
+    {
+      "package": "ssx-application",
+      "target": "lib",
+      "filter": "lineage::",
+      "tests": [
+        "lineage::capture::shared::manifest::tests::canonical_overflow_drops_raw_but_later_walk_failure_still_wins",
+        "lineage::capture::shared::manifest::tests::combined_canonical_cuts_match_original_graphs_and_keep_raw_spelling",
+        "lineage::capture::shared::manifest::tests::small_canonical_success_never_claims_to_bound_distinct_raw_numeric_backing",
+        "lineage::capture::shared::manifest::tests::twenty_sixth_selection_discards_backing_without_skipping_later_nodes",
+        "lineage::capture::shared::tests::attempts_bound_failed_retention_and_precancel_without_changing_later_error_order",
+        "lineage::capture::shared::tests::full_streamed_bytes_prevent_hash_collision_and_raw_spelling_or_order_merges",
+        "lineage::capture::shared::tests::same_owner_interns_repeated_details_across_distinct_roots_without_skipping_reads",
+        "lineage::capture::tests::fragment_allocates_exact_bytes_and_refuses_over_bound_or_precancel_without_global_parser_changes",
+        "lineage::capture::tests::fragment_is_lossless_ordered_json_including_wrapped_depth_and_literal_reserved_keys",
+        "lineage::resolver::contract_tests::entity_second_read_rechecks_live_policy_before_projected_visitation",
+        "lineage::resolver::contract_tests::held_lineage_reads_revalidate_policy_before_publishing_metadata_or_edges",
+        "lineage::resolver::contract_tests::receipt_identity_is_tenant_scoped_and_wrong_receipt_id_is_missing",
+        "lineage::resolver::contract_tests::receipt_lineage_requires_current_grant_and_historical_engine_allowance",
+        "lineage::workflows::contract_tests::current_research_grant_gates_lookup_and_cross_tenant_rows_fail_closed",
+        "lineage::workflows::contract_tests::expired_parent_record_reports_status_and_timestamp_without_additional_reads"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "lib",
+      "filter": "search::tests::current_policy_source_is_construction_only_and_preserves_default_generation",
+      "tests": [
+        "search::tests::current_policy_source_is_construction_only_and_preserves_default_generation"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "w07_receipts",
+      "filter": "",
+      "tests": [
+        "atomic_replay_conflict_capacity_fixed_horizon_and_tenant_isolation",
+        "bounded_inputs_fail_before_ids_or_writes_and_unavailable_is_not_missing",
+        "capacity_and_size_rejections_preserve_expired_idempotency_and_its_ttl",
+        "competing_different_digests_commit_one_receipt_without_orphan_keys",
+        "corrupt_index_preflight_preserves_expired_idempotency_without_partial_cleanup",
+        "dispatched_timeout_is_unknown_and_never_retries_with_another_id",
+        "every_known_corrupt_preflight_is_atomic_and_never_renews_retention",
+        "fixed_script_fresh_record_identity_faults_are_rejected_before_mutation",
+        "missing_receipts_preserve_index_count_and_malformed_references_fail_without_mutation",
+        "oversize_is_rejected_without_fresh_writes_and_store_close_is_terminal",
+        "same_id_collision_never_overwrites_and_valid_replay_precedes_corrupt_unrelated_index"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "w07_lineage_records",
+      "filter": "",
+      "tests": [
+        "cancellation_before_reads_and_after_dispatched_read_is_drained",
+        "fresh_report_bound_and_authoritative_definition_override_stale_hints",
+        "hints_cannot_bypass_live_policy_and_projection_preserves_error_order",
+        "typed_stores_tenant_binding_expiry_missing_and_readonly_ttls"
+      ]
+    },
+    {
+      "package": "ssx-mcp",
+      "target": "w07_composition",
+      "filter": "",
+      "tests": [
+        "full_and_f13_projected_entity_ports_match_every_frozen_corpus_case",
+        "real_snapshot_receipt_replay_conflict_tenant_and_projected_entity_graph",
+        "same_backend_readiness_terminal_close_and_single_clock_capture"
+      ]
+    },
+    {
+      "package": "ssx-mcp",
+      "target": "w07_mcp",
+      "filter": "",
+      "tests": [
+        "actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof_drain",
+        "authenticated_http_four_tools_replay_lineage_tenant_grants_and_no_source_fetch",
+        "authenticated_legacy_factory_advertises_and_dispatches_four_evidence_tools",
+        "handler_cancellation_signals_and_drains_existing_receipt_operation_before_completion"
+      ]
+    },
+    {
+      "package": "ssx-application",
+      "target": "w07_snapshot_projection",
+      "filter": "",
+      "tests": [
+        "default_repository_projection_preserves_single_read_and_all_service_identity_expiry_failures"
+      ]
+    },
+    {
+      "package": "ssx-mcp",
+      "target": "lib",
+      "filter": "evidence::authority::tests::",
+      "tests": [
+        "evidence::authority::tests::configured_url_is_not_readiness_and_terminal_close_is_observed",
+        "evidence::authority::tests::default_policy_port_still_rechecks_staged_revocation_after_read",
+        "evidence::authority::tests::invalid_generation_or_limit_publication_is_atomic_and_keeps_old_state",
+        "evidence::authority::tests::one_publication_is_one_complete_policy_limit_pair",
+        "evidence::authority::tests::publication_during_read_refreshes_staged_pair_and_saved_report_bound",
+        "evidence::authority::tests::record_adapter_samples_once_and_search_lineage_use_same_authority",
+        "evidence::authority::tests::research_publication_during_each_read_revokes_grant_engine_and_sensitive_access",
+        "evidence::authority::tests::saved_report_second_definition_read_refreshes_grant_and_report_bound"
+      ]
+    },
+    {
+      "package": "ssx-mcp",
+      "target": "lib",
+      "filter": "evidence::tools::tests::",
+      "tests": [
+        "evidence::tools::tests::function_boundary_preserves_strict_bounds_nested_types_and_semantic_artifacts",
+        "evidence::tools::tests::handlers_reuse_application_replay_conflict_tenant_grant_and_manifest_contracts",
+        "evidence::tools::tests::semantic_errors_keep_source_order_defaults_and_field_attribution"
+      ]
+    },
+    {
+      "package": "xtask",
+      "target": "bin:xtask",
+      "filter": "w07::tests::",
+      "tests": [
+        "w07::tests::case_completion_rejects_missing_ignored_duplicate_and_extra_tests",
+        "w07::tests::frozen_sources_reject_nonregular_and_symlink_leaves",
+        "w07::tests::listing_requires_exact_unique_case_identities",
+        "w07::tests::main_successor_requires_exact_finite_insertions",
+        "w07::tests::wire_completion_requires_all_exact_measured_case_identities"
+      ]
+    },
+    {
+      "package": "ssx-mcp",
+      "target": "w07_wire_reference",
+      "filter": "",
+      "tests": [
+        "measured_python_descriptors_and_negative_calls_match_actual_native_http"
+      ]
+    }
+  ],
+  "sources": {
+    "crates/ssx-application/src/lineage/adjacency.rs": "c168ea408305d86e670701cdc01f2c7c4a25078fe5b1106a87bd20bf7487c295",
+    "crates/ssx-application/src/lineage/capture/shared/manifest.rs": "d4d807dab69b513232d22cfdbe98f0e24d9d4772fb995b5076ead9d0f60e1fca",
+    "crates/ssx-application/src/lineage/capture/shared/replay.rs": "697c60d92ff9f4b2e758544a27394b929773215e30971fe4aa1e13fe806a042c",
+    "crates/ssx-application/src/lineage/capture/shared.rs": "56785fc05d0b3025cb1b19ba389756d045b701dbd180d3544f0dcd94d3d7d05e",
+    "crates/ssx-application/src/lineage/capture.rs": "d813bbcee9e254434d5a3bec8e532628c032a47fa1bbcf2c36675eb8d68d0219",
+    "crates/ssx-application/src/lineage/input.rs": "3cfe0d8cfb226e687cfd08af8eb505d4042bfb8e8b7ceec899091c38ed1ebe0b",
+    "crates/ssx-application/src/lineage/resolver.rs": "e772ee162d2ffb2df61baa6865b5beed1729c78506a8f4d317dd046109f9a04c",
+    "crates/ssx-application/src/lineage/workflows.rs": "e6c97d191de2bda786c6231b6e688cc71a7d5618a972f0053844548b7d33431f",
+    "crates/ssx-application/src/lineage.rs": "f087610a7dce527e6f86a44e64c91815041e2af91fa93656a8321efa1cb29762",
+    "crates/ssx-application/src/receipts/captured_manifest/replay.rs": "58c86ff83fec913f341030aacd4b00281c9ea5b62fae365e095b97bf3447483f",
+    "crates/ssx-application/src/receipts/captured_manifest.rs": "e2ef8b5fb0990062e9047ca13bad7f1cabd777afad5e5c2ba3f22971df7d9570",
+    "crates/ssx-application/src/receipts/encoding.rs": "23de44c8704930cf670a67eb17bb616b719c60860ca90bf7dbd7d9fe9fd3b291",
+    "crates/ssx-application/src/receipts/manifest.rs": "07e5ed2905290c406ff350fe74954f31949fb8c3a9c25d560486a3a3f6a9952d",
+    "crates/ssx-application/src/receipts/memory.rs": "b89eea341baa5a4221bb807cdecba19b116d6868682f652e5430debd27b0bff5",
+    "crates/ssx-application/src/receipts/observation.rs": "6b6250a57d28a14488602e3614e5796edbc7d3918ea4a8397c812b4cdb2b4d50",
+    "crates/ssx-application/src/receipts/service.rs": "c67ed8a85bf2893642e3d7c3633ba8fe75b3c57c4800627d9a5885bd5b8265a4",
+    "crates/ssx-application/src/receipts/source.rs": "d97af9cfe2a2e015d50d0c33c517870bdc78346c10ce7c54671ff17065c69bdf",
+    "crates/ssx-application/src/receipts.rs": "f1603e5c7bc25da89e2d8fda38177cc16f704384de6b3a6456d51222d145d583",
+    "crates/ssx-application/tests/w07_snapshot_projection.rs": "75ca664c73cd71a706e11f8c4e52c2f9a3846baaf5da8753ffe0474cfd6cc980",
+    "crates/ssx-infra/src/search.rs": "23989888f2434630b9185d339f8548a8e73e8e08846ce00419609be4b439c05c",
+    "crates/ssx-infra/src/valkey/retrieval/lineage.rs": "6c97e49dd6de263a04b40be4b67438fb1b21fff44979d27bc68e6f6070e6531a",
+    "crates/ssx-infra/src/valkey/retrieval.rs": "aa769a2ca71a96703fa9c5d87ab9320fc593765ff939a367130b558ec8aa99a1",
+    "crates/ssx-infra/src/valkey/retrieval_scripts/insert.lua": "e5785173a45d983f35d3ae2ce7f333ff235c8b284c36c87a0026e7ac468882e8",
+    "crates/ssx-infra/tests/w07_lineage_records.rs": "5b9bc00cd893a9b5745411183f5d85acb09548c15918a0e48e6839dcf6b39092",
+    "crates/ssx-infra/tests/w07_receipts.rs": "a9ffbdd040b04e177ddf206740aadc2ca55caa902a4308cb35ad80339bcc354b",
+    "crates/ssx-infra/tests/w07_support/valkey.rs": "ed4e2e544ff40856f46810532a17cf5fb9a3b393eb35d09a75907c4585b6b699",
+    "crates/ssx-mcp/src/bin/evidence-qualification.rs": "346c3068fbfc24057c41bd9bf3a5c64565112bcc171656554c14957cb04ff519",
+    "crates/ssx-mcp/src/evidence/authority.rs": "b5e42c7b6116e924a2b0650f9d0e7ac371900307c399aa34dea605739edd63b7",
+    "crates/ssx-mcp/src/evidence/factory.rs": "3c77f1a7a3b470f72e324f33fbbf006ff256c6a707f2d9415119f520edad8b96",
+    "crates/ssx-mcp/src/evidence/mod.rs": "31ca14935818a50fa3a59f8561c9e9b71caa512f165cdd7a7ab5b52c465064e6",
+    "crates/ssx-mcp/src/evidence/tools/tests.rs": "e59db600245871647443c6af8995e80a0f947705224e56e2278ad435384bc98e",
+    "crates/ssx-mcp/src/evidence/tools.rs": "c4504b7dffbaf11420350bce226c9e18559ea382316f57fc55a7469f4c12943f",
+    "crates/ssx-mcp/src/search_surface/mod.rs": "db27a4c64584f32eeabfecb7953148bbe7666f90568a3fb00ba9f3cdec4cb091",
+    "crates/ssx-mcp/src/search_surface/validation.rs": "7df42259622e459f1efa28257a6898dbf794f6cc360686be9cb10a25ec40ab0b",
+    "crates/ssx-mcp/tests/w07_composition.rs": "d44e46295e812839e0fd43571c29942df47e16fd51513a8c496f8993faa32064",
+    "crates/ssx-mcp/tests/w07_mcp.rs": "c9578bff5f531a72caec6afdb0602d6992fbd95df17f3405bc65084614064f63",
+    "crates/ssx-mcp/tests/w07_support/mcp.rs": "244e3509015eb7394b9fb2fc682b9cd8240c6fddb0b2a2b422ae5fa715608c2c",
+    "crates/ssx-mcp/tests/w07_support/observer.rs": "266902a7dd9d3589a39a08174b6859b9f5dbebb0ca0aa3127e7617393776cc89",
+    "crates/xtask/fixtures/w11/corpus.json": "a72814e0071a806421b188e73451c91034164438b7942a3055496be4f6562726",
+    "docs/rust-rewrite/w07/capture_wire_reference.py": "fa3b726f0a5a869fbcb74fdab98c84a15236df2b6a1a132413b5b9ede27510b2",
+    "docs/rust-rewrite/w07/mcp-tools-source.json": "f92ba77c01bbb0f3e78e29a4f1fb0f0d25d905e49369cdf451249d58f50874ea",
+    "docs/rust-rewrite/w07/wire-reference-bindings.json": "39bbceda12650d0a893dee465f77795a3cbe66d3db456f55c777c1b714504f59",
+    "slopsearx/artifacts.py": "61aad828f61008623cc23d57b3a51c2c40e591ebfeece8c4065ec9d5a7470678",
+    "slopsearx/mcp/lineage_tools.py": "2e44fe63074adb26ab7f6f68ea925ccb800b5bb8855d163c9ca118c30846e520",
+    "slopsearx/mcp/receipt_tools.py": "a9052e4e0fa7918d076c775e4a2c73ce7ead1e4de114064aa9d38f6a7b6221ed",
+    "slopsearx/retrieval_receipts.py": "f2f11f5652acecdeb4d490ff7fda2523968749518b103428ceff3586c7dcb471",
+    "tests/test_artifact_lineage.py": "0a16a1026a940c2276601b369a84698cf4ed3e6a40acc8f375cd5b00824b6364",
+    "tests/test_artifact_lineage_valkey.py": "717515151ce3efbd6ffe5205309ad2acb1f860af749cb58ca2d8392393e9b5f4",
+    "tests/test_retrieval_receipts.py": "864e7a667093ae584218d1e3ae9aab46b91f49ce0401cafeec6bd28f68aed25b",
+    "tests/test_retrieval_receipts_transport.py": "fd92854849c2af1fc3cfc41a564ca7893e5d98a857d3e44a746b9bcc8b20bacf",
+    "tests/test_retrieval_receipts_valkey.py": "8b5de4dded01b0547e8184cad9123354bee2eef148370192febe8584f012a0e6",
+    "crates/ssx-mcp/tests/w07_wire_reference.rs": "be5c2c16c48e8e7ed14a9670a43a1dda2c47d0c6d7c51248d6e4960d72795f75",
+    "docs/rust-rewrite/t06/entities.json": "e519664f9a3b0d026d0de469c429cea7e0a146e2ecc3ed934339a62e47626232",
+    "docs/rust-rewrite/w07/source-amendments/main_successor.rs": "fbd4796c07233de00acf969e7d51384692f5f42f48a4ec7a76d69125688dbe66",
+    "docs/rust-rewrite/a06/source-amendments/shared-successor.rs": "0294e4483baeb1778e03c71cc801ab23c728154ae49cb33b106f2761a1e0425f"
+  },
+  "wire_reference": {
+    "path": "docs/rust-rewrite/w07/wire-reference.json",
+    "sha256": "e1f67da4007c0e40009d44b4f35c464677ab78894558b4f05781f9430b9226f7"
+  },
+  "packaging_reference": {
+    "path": "docs/rust-rewrite/w07/wire-reference-packaging263.json",
+    "sha256": "5d964ea762d2f723efb12dc7e27e851712440c0e45306d52d6ccd768e5b490f5"
+  }
+}
