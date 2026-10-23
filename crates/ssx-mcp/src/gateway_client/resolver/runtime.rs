@@ -264,10 +264,10 @@ impl SourceRuntime {
         let _ = protocol::request(host, decimal)?;
         // AnyIO ip_address accepts scoped IPv6; asyncio _ipaddr_info explicitly
         // declines %. Unscoped numeric addresses never call getaddrinfo.
-        if !host.contains('%') {
-            if let Ok(ip) = host.parse::<IpAddr>() {
-                return protocol::socket_port(decimal).map(|port| vec![SocketAddr::new(ip, port)]);
-            }
+        if !host.contains('%')
+            && let Ok(ip) = host.parse::<IpAddr>()
+        {
+            return protocol::socket_port(decimal).map(|port| vec![SocketAddr::new(ip, port)]);
         }
         let scoped_host = scoped_literal(host);
         let scoped = scoped_host.is_some();
