@@ -34,11 +34,23 @@
     },
     {
       "path": "crates/ssx-mcp/tests/w07_mcp.rs",
-      "sha256": "15fc48685862f3e3cd98a9efd9913245d815775d6cf7c031a0c84af0420f665c"
+      "sha256": "2e5af017d3c9adebebd43b9c49b78c1d6c6ce3b6734a3a10ab0929c3fcb21e93"
     },
     {
       "path": "docs/rust-rewrite/w07/mcp-tools-source.json",
       "sha256": "f92ba77c01bbb0f3e78e29a4f1fb0f0d25d905e49369cdf451249d58f50874ea"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/w07_support/mcp.rs",
+      "sha256": "681daaff8bcb6db7d7465d03805565ad36ce5e002c526eea0b34dfc04b720210"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/w07_support/observer.rs",
+      "sha256": "266902a7dd9d3589a39a08174b6859b9f5dbebb0ca0aa3127e7617393776cc89"
+    },
+    {
+      "path": "crates/ssx-mcp/src/bin/evidence-qualification.rs",
+      "sha256": "346c3068fbfc24057c41bd9bf3a5c64565112bcc171656554c14957cb04ff519"
     }
   ],
   "library_tests": [
@@ -50,7 +62,8 @@
   "transport_tests": [
     "authenticated_http_four_tools_replay_lineage_tenant_grants_and_no_source_fetch",
     "handler_cancellation_signals_and_drains_existing_receipt_operation_before_completion",
-    "authenticated_legacy_factory_advertises_and_dispatches_four_evidence_tools"
+    "authenticated_legacy_factory_advertises_and_dispatches_four_evidence_tools",
+    "actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof_drain"
   ],
   "inherited_controls": {
     "F03": "full workspace still discovers additive tests; no original frozen controls removed",

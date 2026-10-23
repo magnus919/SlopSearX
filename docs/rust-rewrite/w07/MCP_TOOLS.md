@@ -74,7 +74,7 @@ Bounds remain those of the original contracts: receipt read limits 1–20,
 manifest direct selections at most 25 each, lineage depths 0–5 and node limits
 1–100. Receipt storage preserves its 32 KiB cap and 20-entry index. Manifest
 assembly preserves its 1 MiB encoded limit. The existing native transports
-retain their own complete serialized response limits (HTTP/stdin factory
+retain their own complete serialized response limits (HTTP/stdio factory
 profile 4 MiB; legacy 16 MiB). Input presentation values never select those
 trusted transport limits.
 
@@ -98,8 +98,16 @@ three search-surface library test identities remain intact.
 Before C/D acceptance, execute the current application/MCP tests, compare the
 current runtime descriptors against the source contract, run inherited
 F03/T01/T06/W07 controls and strict Clippy, review the exact source, and preserve
-honest outcomes. The stdio factory still needs an evidence-specific process
-journey. W07 supplies usable native evidence APIs, storage, fixtures, and these
+honest outcomes. The evidence-specific stdio process journey is also authored. It uses the
+factory's attached surface and exact owned stdio transport, with a private
+observer around the existing handler future. Its ID-bound pending marker is
+emitted only after that actual receipt-read future yields; its drained marker
+is emitted only after the future returns. The parent holds only its disposable
+Valkey, closes stdin after the pending acknowledgement, and requires handler
+drain, overall-owner backend close, and child exit before unpausing the server.
+Success and Result-error paths resume the private server and reap the child.
+The observer creates no task, backend, shutdown owner, or replacement policy.
+This process journey has not run. W07 supplies usable native evidence APIs, storage, fixtures, and these
 factories. Full executable startup and workflow registry composition remain
 T02/W09 milestone work; this source increment does not close issue #913.
 

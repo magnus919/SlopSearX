@@ -1,67 +1,24 @@
 //! Authenticated native transport against the same private Valkey/search owner.
 //! Execution belongs to the exclusive root qualification controller.
-#[path = "t06_support/fixture.rs"]
-mod engine_fixture;
+#[path = "w07_support/mcp.rs"]
+mod fixture;
 #[path = "t06_support/server.rs"]
 mod private_valkey;
+use fixture::Fixture;
 use sha2::{Digest, Sha256};
-use ssx_application::{
-    NoopSink,
-    policy::{PolicyService, SearchPolicy},
-    saved::SavedLimits,
-    scope::{CatalogSnapshot, EngineCapability, ScopeResolver},
-    snapshot::{SnapshotService, SnapshotTtl},
-    staged,
-};
-use ssx_domain::{EngineStatus, TenantId};
-use ssx_infra::{
-    search::{
-        EngineBinding, RoutingIdentity, SearchCancellation, SearchClock, SearchConfig,
-        SearchDependencies, SearchService, SystemSearchClock,
-    },
-    valkey::{
-        Valkey,
-        snapshot::{RandomSnapshotIds, SystemSnapshotClock, ValkeySnapshots},
-    },
-};
+use ssx_domain::TenantId;
+use ssx_infra::search::{SearchCancellation, SystemSearchClock};
 use ssx_json::{Value, json};
-use ssx_mcp::{
-    Result,
-    evidence::{
-        authority::{EvidenceAuthority, EvidenceAuthoritySnapshot, SearchPolicyAdapter},
-        factory::EvidenceFactory,
-        tools::TOOL_NAMES,
-    },
-    harness::Host,
-    oauth::NetworkAuth,
-    search_surface::{DiscoveryState, SearchState},
-};
+use ssx_mcp::{Result, evidence::tools::TOOL_NAMES, harness::Host, oauth::NetworkAuth};
 use std::{
-    collections::{BTreeMap, BTreeSet},
     sync::{
-        Arc, RwLock,
+        Arc,
         atomic::{AtomicUsize, Ordering},
     },
     time::Duration,
 };
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 use tokio_util::sync::CancellationToken;
-
-struct Current(RwLock<EvidenceAuthoritySnapshot>);
-impl EvidenceAuthority for Current {
-    fn snapshot(&self) -> EvidenceAuthoritySnapshot {
-        self.0.read().unwrap().clone()
-    }
-}
-struct Discovery;
-impl DiscoveryState for Discovery {
-    fn capabilities(&self) -> Vec<Value> {
-        vec![]
-    }
-    fn diagnostics(&self) -> Value {
-        json!({"valkey_connected":true})
-    }
-}
 fn server() -> private_valkey::Server {
     let path =
         std::env::var("SLOPSEARX_TEST_VALKEY_SERVER").expect("explicit qualified private Valkey");
@@ -79,123 +36,6 @@ fn server() -> private_valkey::Server {
             || std::env::temp_dir().starts_with("/Volumes/tank01/magnus/rust-builds/slopsearx")
     );
     private_valkey::Server::start()
-}
-struct Fixture {
-    factory: EvidenceFactory,
-    service: SearchService,
-    authority: Arc<Current>,
-    dispatches: Arc<AtomicUsize>,
-}
-impl Fixture {
-    fn new(url: &str, source_url: &str) -> Self {
-        let backend = Arc::new(Valkey::new(url, Duration::from_secs(2)).unwrap());
-        let clock: Arc<dyn SearchClock> = Arc::new(SystemSearchClock);
-        let mut search_policy = SearchPolicy::default();
-        search_policy.grants.insert("retrieval_receipts".into());
-        let policy = PolicyService {
-            policy: search_policy,
-            catalog: CatalogSnapshot::new(vec![EngineCapability {
-                name: "wikipedia".into(),
-                enabled: true,
-                active: true,
-                available: true,
-                categories: vec!["general".into()],
-                media_types: vec![],
-                auth_ready: true,
-                circuit_open: false,
-                cost_class: "free".into(),
-                health_status: "unknown".into(),
-                health_stale: false,
-                enforced_filters: BTreeMap::new(),
-            }])
-            .unwrap(),
-            resolver: ScopeResolver {
-                tier1: BTreeSet::from(["wikipedia".into()]),
-                ..Default::default()
-            },
-        };
-        let authority = Arc::new(Current(RwLock::new(EvidenceAuthoritySnapshot {
-            search: policy.clone(),
-            saved_limits: SavedLimits::default(),
-            staged_limits: staged::Limits::default(),
-            auth_configured: BTreeMap::from([("wikipedia".into(), false)]),
-            valkey_connected: true,
-        })));
-        let dispatches = Arc::new(AtomicUsize::new(0));
-        let engine = engine_fixture::FakeEngine {
-            name: "wikipedia".into(),
-            calls: dispatches.clone(),
-            dispatch_receipt: None,
-            count: 1,
-            status: EngineStatus::Ok,
-            delay: Duration::ZERO,
-            results: Some(vec![ssx_domain::SearchResult {
-                title: "captured source".into(),
-                url: source_url.into(),
-                engine: "wikipedia".into(),
-                engines: BTreeSet::from(["wikipedia".into()]),
-                ..Default::default()
-            }]),
-        };
-        let service = SearchService::new(
-            SearchConfig::default(),
-            SearchDependencies {
-                policy: policy.clone(),
-                engines: BTreeMap::from([(
-                    "wikipedia".into(),
-                    EngineBinding {
-                        engine: Arc::new(engine),
-                        generation: "w07-private".into(),
-                        timeout: Duration::from_secs(2),
-                        scrape: false,
-                    },
-                )]),
-                routing_identity: RoutingIdentity {
-                    catalog: None,
-                    sensitive: policy.policy.sensitive_engines.clone(),
-                    tier1: policy.resolver.tier1.clone(),
-                    budget: None,
-                    ranking_strategy: "presence".into(),
-                    work_group_version: "scholarly-work-v3".into(),
-                    rerank_identity: None,
-                    routing_extension: None,
-                },
-                cache: None,
-                client_admission: None,
-                suggestions: None,
-                jev: None,
-                routing_cache: None,
-                metrics: Arc::new(NoopSink),
-                supervisor: Arc::new(NoopSink),
-                audit: Arc::new(NoopSink),
-                cooldowns: None,
-                owned_http: vec![],
-                owned_stores: vec![backend.clone()],
-                clock: clock.clone(),
-                reranker: None,
-            },
-        )
-        .unwrap()
-        .with_policy_source(Arc::new(SearchPolicyAdapter {
-            authority: authority.clone(),
-        }))
-        .unwrap();
-        let snapshots = SnapshotService::new(
-            Arc::new(ValkeySnapshots::new(backend.clone())),
-            Arc::new(SystemSnapshotClock),
-            Arc::new(RandomSnapshotIds),
-            TenantId::new("default").unwrap(),
-            SnapshotTtl::new(3600).unwrap(),
-        );
-        let state = SearchState::new(service.clone(), snapshots, Arc::new(Discovery), 50).unwrap();
-        let factory = EvidenceFactory::new(state, backend, authority.clone(), clock).unwrap();
-        Self {
-            factory,
-            service,
-            authority,
-            dispatches,
-        }
-    }
 }
 async fn rpc(client: &reqwest::Client, url: &str, method: &str, params: Value) -> Result<Value> {
     let response = client
@@ -685,5 +525,292 @@ async fn authenticated_legacy_factory_advertises_and_dispatches_four_evidence_to
     drop(stream);
     host.shutdown().await?;
     fixture.service.shutdown().await;
+    Ok(())
+}
+
+struct StdioProcess {
+    child: tokio::process::Child,
+    input: Option<tokio::process::ChildStdin>,
+    output: tokio::io::BufReader<tokio::process::ChildStdout>,
+    errors: tokio::io::BufReader<tokio::process::ChildStderr>,
+    id: u64,
+}
+impl StdioProcess {
+    fn start(url: &str, source: &str) -> Result<Self> {
+        use std::process::Stdio;
+        let mut child = tokio::process::Command::new(env!("CARGO_BIN_EXE_evidence-qualification"))
+            .args(["stdio", url, source])
+            .env_clear()
+            .env("PATH", "")
+            .env("TMPDIR", std::env::temp_dir())
+            .env("TZ", "UTC")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()?;
+        Ok(Self {
+            input: Some(child.stdin.take().ok_or("child stdin")?),
+            output: tokio::io::BufReader::new(child.stdout.take().ok_or("child stdout")?),
+            errors: tokio::io::BufReader::new(child.stderr.take().ok_or("child stderr")?),
+            child,
+            id: 0,
+        })
+    }
+    async fn send(&mut self, request: Value) -> Result<()> {
+        let input = self.input.as_mut().ok_or("stdio already closed")?;
+        input
+            .write_all(ssx_json::to_string(&request)?.as_bytes())
+            .await?;
+        input.write_all(b"\n").await?;
+        input.flush().await?;
+        Ok(())
+    }
+    async fn rpc(&mut self, method: &str, params: Value) -> Result<Value> {
+        self.id += 1;
+        let id = self.id;
+        self.send(json!({"jsonrpc":"2.0","id":id,"method":method,"params":params}))
+            .await?;
+        loop {
+            let mut line = String::new();
+            let read =
+                tokio::time::timeout(Duration::from_secs(5), self.output.read_line(&mut line))
+                    .await??;
+            need(
+                read > 0 && line.len() <= 4 * 1024 * 1024,
+                "bounded child response missing",
+            )?;
+            let response: Value = ssx_json::from_str(&line)?;
+            if response.get("id").is_none() {
+                continue;
+            }
+            need(response["id"] == id, "stdio response ID mismatch")?;
+            need(
+                response.get("error").is_none(),
+                "unexpected stdio protocol error",
+            )?;
+            return Ok(response["result"].clone());
+        }
+    }
+    async fn call(&mut self, name: &str, args: Value) -> Result<Value> {
+        let result = self
+            .rpc("tools/call", json!({"name":name,"arguments":args}))
+            .await?;
+        need(result["isError"] == false, "unexpected tool type error")?;
+        Ok(ssx_json::from_str(
+            result["content"][0]["text"]
+                .as_str()
+                .ok_or("native tool text")?,
+        )?)
+    }
+    async fn pending_read(&mut self, id: u64) -> Result<()> {
+        tokio::time::timeout(Duration::from_secs(3), async {
+            loop {
+                let mut line = String::new();
+                let read = self.errors.read_line(&mut line).await?;
+                need(
+                    read > 0 && line.len() < 65536,
+                    "pending-read acknowledgement missing",
+                )?;
+                let value: Value = ssx_json::from_str(&line)?;
+                if value["w07_read_pending"] == true && value["id"] == id {
+                    return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(());
+                }
+            }
+        })
+        .await?
+    }
+    async fn reap(&mut self) -> Result<()> {
+        self.input.take();
+        if self.child.try_wait()?.is_none() {
+            self.child.start_kill()?;
+            tokio::time::timeout(Duration::from_secs(3), self.child.wait()).await??;
+        }
+        Ok(())
+    }
+}
+fn need(condition: bool, message: &'static str) -> Result<()> {
+    if condition {
+        Ok(())
+    } else {
+        Err(message.into())
+    }
+}
+async fn stdio_journey(
+    process: &mut StdioProcess,
+    control: &mut redis::Connection,
+    source: &str,
+) -> Result<()> {
+    use tokio::io::AsyncReadExt;
+    process.rpc("initialize",json!({"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"w07-native","version":"1"}})).await?;
+    process
+        .send(json!({"jsonrpc":"2.0","method":"notifications/initialized"}))
+        .await?;
+    let catalog = process.rpc("tools/list", json!({})).await?;
+    let names: Vec<_> = catalog["tools"]
+        .as_array()
+        .ok_or("tool catalog")?
+        .iter()
+        .map(|v| v["name"].as_str().unwrap_or_default())
+        .collect();
+    need(
+        names.ends_with(&TOOL_NAMES),
+        "stdio evidence catalog missing or reordered",
+    )?;
+    let search = process
+        .call(
+            "slopsearx_search",
+            json!({"query":"stdio evidence","include":["results"]}),
+        )
+        .await?;
+    let id = search["results"][0]["result_id"]
+        .as_str()
+        .ok_or("stdio result handle")?;
+    let observation = json!({"result_id":id,"retriever":"stdio-reader","idempotency_key":"stdio-once","status":"succeeded","captured_at":"2026-09-11T04:00:00Z","final_url":source,"capture_ref":"capture://inert"});
+    let first = process.call(TOOL_NAMES[0], observation.clone()).await?;
+    need(
+        first["state"] == "created"
+            && first["receipt"]["attribution"]["authenticated_tenant"] == "default",
+        "trusted stdio tenant not retained",
+    )?;
+    need(
+        first["receipt"]["observations_verified"] == false,
+        "stdio receipt incorrectly verified",
+    )?;
+    need(
+        process.call(TOOL_NAMES[0], observation.clone()).await?["state"] == "replayed",
+        "stdio replay failed",
+    )?;
+    let mut forged = observation;
+    forged["tenant"] = json!("foreign");
+    let rejected = process
+        .rpc(
+            "tools/call",
+            json!({"name":TOOL_NAMES[0],"arguments":forged}),
+        )
+        .await?;
+    need(
+        rejected["isError"] == true,
+        "caller tenant argument escaped function boundary",
+    )?;
+    let read = process.call(TOOL_NAMES[1], json!({"result_id":id})).await?;
+    need(
+        read["total"] == 1 && read["source_snapshot_status"] == "live",
+        "stdio retained read failed",
+    )?;
+    let manifest = process
+        .call(TOOL_NAMES[2], json!({"result_ids":[id]}))
+        .await?;
+    need(
+        manifest["items"][0]["receipts"][0]["receipt_id"] == first["receipt"]["receipt_id"]
+            && manifest["observations_verified"] == false,
+        "stdio manifest lost attributed receipt",
+    )?;
+    let graph = process
+        .call(
+            TOOL_NAMES[3],
+            json!({"artifact":first["receipt"]["artifact"],"max_depth":1}),
+        )
+        .await?;
+    need(
+        graph["contract"] == "slopsearx.artifact_lineage" && graph["nodes"][0]["status"] == "live",
+        "stdio lineage failed",
+    )?;
+    // The only controlled server is this test's disposable Unix-socket Valkey.
+    // Pause exceeds the complete ACK/EOF guard, so automatic expiry cannot
+    // masquerade as an explicitly released read during the success assertion.
+    redis::cmd("CLIENT")
+        .arg("PAUSE")
+        .arg(30000)
+        .arg("ALL")
+        .query::<()>(control)?;
+    process.id += 1;
+    let pending_id = process.id;
+    let read_started = std::time::Instant::now();
+    process.send(json!({"jsonrpc":"2.0","id":pending_id,"method":"tools/call","params":{"name":TOOL_NAMES[1],"arguments":{"result_id":id}}})).await?;
+    process.pending_read(pending_id).await?;
+    process.input.take(); // Actual stdin EOF reaches the existing owned transport.
+    // The shared fixture's store budget is two seconds. Refuse an inconclusive
+    // delayed ACK/EOF rather than accepting a read that already timed out.
+    need(
+        read_started.elapsed() < Duration::from_secs(1),
+        "EOF did not precede the held-read store deadline",
+    )?;
+    let exit = tokio::time::timeout(Duration::from_secs(8), process.child.wait()).await??;
+    need(
+        exit.success(),
+        "evidence child did not exit cleanly before Valkey release",
+    )?;
+    let mut stderr = String::new();
+    (&mut process.errors)
+        .take(65537)
+        .read_to_string(&mut stderr)
+        .await?;
+    need(stderr.len() <= 65536, "bounded child stderr exceeded")?;
+    let rows = stderr
+        .lines()
+        .map(ssx_json::from_str::<Value>)
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    need(
+        rows.iter()
+            .any(|v| v["w07_read_drained"] == true && v["id"] == pending_id),
+        "pending evidence handler did not report drain",
+    )?;
+    need(
+        rows.iter().any(|v| {
+            v["w07_owner_shutdown"] == true && v["backend_closed"] == true && v["dispatches"] == 1
+        }),
+        "overall owner did not close the existing backend",
+    )?;
+    // No CLIENT UNPAUSE has been sent: ACK, handler drain, owner close and actual
+    // child exit all precede releasing the held private server.
+    Ok(())
+}
+#[tokio::test]
+async fn actual_owned_stdio_four_tools_tenant_inert_urls_and_pending_receipt_eof_drain()
+-> Result<()> {
+    let server = server();
+    let sentinel = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let source = format!("http://{}/must-remain-inert", sentinel.local_addr()?);
+    let source_fetches = Arc::new(AtomicUsize::new(0));
+    let seen = source_fetches.clone();
+    let sentinel_task = tokio::spawn(async move {
+        while let Ok((mut stream, _)) = sentinel.accept().await {
+            seen.fetch_add(1, Ordering::SeqCst);
+            let _ = stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                .await;
+        }
+    });
+    let mut control = server.connection();
+    if let Err(error) = control.set_read_timeout(Some(Duration::from_secs(2))) {
+        sentinel_task.abort();
+        let _ = sentinel_task.await;
+        return Err(error.into());
+    }
+    let mut process = match StdioProcess::start(server.url(), &source) {
+        Ok(process) => process,
+        Err(error) => {
+            sentinel_task.abort();
+            let _ = sentinel_task.await;
+            return Err(error);
+        }
+    };
+    let result = stdio_journey(&mut process, &mut control, &source).await;
+    // Retirement runs for success and every Result error/timeout. This command
+    // targets only the owned fixture connection; no ambient application URL.
+    let resumed = redis::cmd("CLIENT")
+        .arg("UNPAUSE")
+        .query::<()>(&mut control);
+    let reaped = process.reap().await;
+    sentinel_task.abort();
+    let _ = sentinel_task.await;
+    result?;
+    resumed?;
+    reaped?;
+    need(
+        source_fetches.load(Ordering::SeqCst) == 0,
+        "evidence fixture fetched an inert URL",
+    )?;
     Ok(())
 }
