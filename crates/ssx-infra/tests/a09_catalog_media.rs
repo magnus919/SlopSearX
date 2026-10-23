@@ -119,6 +119,15 @@ async fn all_engine_source_replay() {
         "../../../docs/rust-rewrite/a09/header-differences.json"
     ))
     .unwrap();
+    let header_profile: Value = serde_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a09/header-profile-amendment.json"
+    ))
+    .unwrap();
+    assert_eq!(
+        header_profile["native_user_agent"],
+        ssx_infra::http::DEFAULT_USER_AGENT
+    );
+    let mut used_profiles = std::collections::BTreeSet::new();
     let mut used_headers = std::collections::BTreeSet::new();
     let mut observed = vec![];
     let mut mismatch = vec![];
@@ -160,7 +169,19 @@ async fn all_engine_source_replay() {
         {
             assert_eq!(header["source_requests"], case["requests"]);
             used_headers.insert(case["id"].as_str().unwrap().to_owned());
-            header["native_requests"].clone()
+            let profile = header_profile["records"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|h| h["id"] == case["id"])
+                .expect("missing current native profile amendment");
+            assert_eq!(profile["source_requests"], header["source_requests"]);
+            assert_eq!(
+                profile["historical_native_requests"],
+                header["native_requests"]
+            );
+            assert!(used_profiles.insert(case["id"].as_str().unwrap().to_owned()));
+            profile["expected_current_native_requests"].clone()
         } else {
             case["requests"].clone()
         };
@@ -203,6 +224,11 @@ async fn all_engine_source_replay() {
         used_headers.len(),
         headers["records"].as_array().unwrap().len(),
         "stale header difference"
+    );
+    assert_eq!(
+        used_profiles.len(),
+        header_profile["records"].as_array().unwrap().len(),
+        "stale current native header profile"
     );
     assert_eq!(
         used.len(),

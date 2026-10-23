@@ -1,0 +1,116 @@
+   Compiling ssx-source-codecs v0.1.0 (/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/crates/ssx-source-codecs)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.41s
+     Running unittests src/lib.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/ssx_source_codecs-b7eee97d04cadfa3)
+
+running 14 tests
+test label_alnum::tests::source_alias_normalization_retains_unicode16_separator_and_ignored_letter_semantics ... ok
+test idna::tests::strict_idna_all_source_parameters_preserve_unicode_failure_and_ascii_outcome ... ok
+test strict_parameter::tests::all_singlebyte_strict_validity_bits_match_complete_actual_source ... ok
+test strict_parameter::tests::all_non_idna_strict_modes_match_complete_source_text_and_error_outcomes ... ok
+test label_alnum::tests::source_dotted_alias_fallback_preserves_dictionary_and_module_precedence ... ok
+test strict_parameter::tests::all_registered_parameter_codecs_match_complete_source_selector_outcomes ... ok
+test strict_parameter::tests::strict_punycode_and_idna_preserve_overflow_offsets_caps_and_first_error_precedence ... ok
+test label_alnum::tests::every_unicode_codepoint_matches_actual_source_isalnum_for_codec_labels ... ok
+test idna::tests::native_nfkc_matches_every_official_unicode_3_2_sequence ... ok
+test doublebyte::strict_tests::every_single_and_pair_strict_outcome_matches_actual_source_and_complete_valid_text ... ok
+test strict_parameter::tests::both_hz_strict_states_match_all_source_pairs_and_complete_valid_text ... ok
+test strict_parameter::tests::strict_utf7_escape_and_name_vectors_match_complete_source_mode_and_valid_text ... ok
+test idna::tests::strict_idna_complete_source_ace_bytes_and_outcomes_for_every_codepoint ... ok
+test strict_parameter::tests::all_iso2022_strict_states_and_targeted_sequences_preserve_complete_outcome_and_precedence ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.72s
+
+     Running tests/doublebyte.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/doublebyte-39791faa51b92b9f)
+
+running 4 tests
+test all_euc_kr_makeup_syllables_and_malformed_controls_match_source ... ok
+test all_euc_jp_three_byte_inputs_match_actual_source ... ok
+test all_two_byte_inputs_and_full_streams_match_actual_source ... ok
+test every_formed_gb18030_four_byte_input_matches_complete_source_output ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.10s
+
+     Running tests/http_facade.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/http_facade-d9b1501075eb18a1)
+
+running 1 test
+test typed_http_facade_retains_source_empty_unknown_rejection_and_surrogate_semantics ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/hz.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/hz-276c1197cc3c24d6)
+
+running 1 test
+test every_byte_pair_in_both_hz_states_matches_complete_source_output ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+
+     Running tests/iso2022.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/iso2022-19f8df43d011417d)
+
+running 2 tests
+test iso2022_escape_g2_malformed_and_full_streams_match_source ... ok
+test all_byte_pairs_in_every_iso2022_designated_state_match_complete_source ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.40s
+
+     Running tests/lower_ascii.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/lower_ascii-9c28ea8625114f35)
+
+running 1 test
+test source_ascii_substring_lowering_preimages_and_complete_controls ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/punycode.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/punycode-5af71c0e3047b2fa)
+
+running 1 test
+test complete_punycode_source_vectors ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/raw_unicode_escape.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/raw_unicode_escape-d05f7c9775e26fb2)
+
+running 1 test
+test complete_raw_unicode_escape_source_vectors ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/singlebyte.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/singlebyte-f029f3f2aa5202bc)
+
+running 1 test
+test every_captured_single_byte_and_alias_matches_complete_source_output ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/source_policy.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/source_policy-05c16a9eb99af4de)
+
+running 1 test
+test complete_source_codec_policy_and_applicability ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/unicode.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/unicode-5a6e7aebdc8353fd)
+
+running 1 test
+test complete_httpx_unicode_malformed_bmp_and_truncation_source_vectors ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.27s
+
+     Running tests/unicode_escape.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/unicode_escape-5f0b144ae56cac54)
+
+running 1 test
+test complete_unicode_escape_source_vectors ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/unicode_names.rs (/private/tmp/slopsearx-rust-a05-target/debug/deps/unicode_names-e3331b3445d79b61)
+
+running 1 test
+test every_source_name_alias_sequence_case_and_range_control ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.81s
+
+   Doc-tests ssx_source_codecs
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

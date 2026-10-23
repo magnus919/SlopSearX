@@ -115,6 +115,7 @@ mod tests {
 
 pub mod browser_identity;
 
+/// Deadline-owned backend-neutral native worker lifecycle.
 pub mod process_pool;
 
 mod html_budget;

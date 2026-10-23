@@ -1545,3 +1545,57 @@ mod borrowed_result_tests {
 #[cfg(test)]
 #[path = "storage/snapshot_projection_tests.rs"]
 mod snapshot_projection_tests;
+
+// Static subset of accepted contracts/unicode/python-text-16.0.0.json.
+// Source SHA256 9f6d9cb6e81031954d91cc03084237592e9d7bb2224f22cab5a5fba8cebefabd
+const PYTHON_DECIMAL_ZEROES: &[u32] = &[
+    0x30, 0x660, 0x6f0, 0x7c0, 0x966, 0x9e6, 0xa66, 0xae6, 0xb66, 0xbe6, 0xc66, 0xce6, 0xd66,
+    0xde6, 0xe50, 0xed0, 0xf20, 0x1040, 0x1090, 0x17e0, 0x1810, 0x1946, 0x19d0, 0x1a80, 0x1a90,
+    0x1b50, 0x1bb0, 0x1c40, 0x1c50, 0xa620, 0xa8d0, 0xa900, 0xa9d0, 0xa9f0, 0xaa50, 0xabf0, 0xff10,
+    0x104a0, 0x10d30, 0x10d40, 0x11066, 0x110f0, 0x11136, 0x111d0, 0x112f0, 0x11450, 0x114d0,
+    0x11650, 0x116c0, 0x116d0, 0x116da, 0x11730, 0x118e0, 0x11950, 0x11bf0, 0x11c50, 0x11d50,
+    0x11da0, 0x11f50, 0x16130, 0x16a60, 0x16ac0, 0x16b50, 0x16d70, 0x1ccf0, 0x1d7ce, 0x1d7d8,
+    0x1d7e2, 0x1d7ec, 0x1d7f6, 0x1e140, 0x1e2f0, 0x1e4f0, 0x1e5f1, 0x1e950, 0x1fbf0,
+];
+/// Unicode16 decimal digit value without lazy JSON initialization or allocation.
+pub fn python_decimal_digit(ch: char) -> Option<u8> {
+    let code = ch as u32;
+    let index = PYTHON_DECIMAL_ZEROES.partition_point(|zero| *zero <= code);
+    if index > 0 {
+        let digit = code - PYTHON_DECIMAL_ZEROES[index - 1];
+        if digit < 10 {
+            return Some(digit as u8);
+        }
+    }
+    None
+}
+#[cfg(test)]
+mod a06_decimal_subset_tests {
+    use super::*;
+    #[test]
+    fn static_decimal_membership_equals_accepted_unicode16_source() {
+        let source: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../contracts/unicode/python-text-16.0.0.json"
+        ))
+        .unwrap();
+        let expected: Vec<u32> = source["decimal_zeroes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_u64().unwrap() as u32)
+            .collect();
+        assert_eq!(PYTHON_DECIMAL_ZEROES, expected);
+        for point in 0..=0x10ffff {
+            let Some(ch) = char::from_u32(point) else {
+                continue;
+            };
+            let expected = expected.iter().find_map(|zero| {
+                point
+                    .checked_sub(*zero)
+                    .filter(|v| *v < 10)
+                    .map(|v| v as u8)
+            });
+            assert_eq!(python_decimal_digit(ch), expected, "scalar U+{point:04X}");
+        }
+    }
+}

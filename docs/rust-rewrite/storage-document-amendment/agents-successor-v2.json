@@ -1,0 +1,34 @@
+{
+  "archive": {
+    "bytes": 16556,
+    "path": "docs/rust-rewrite/storage-document-amendment/AGENTS.accepted-504.md.frozen",
+    "sha256": "7d681485699a897464cf248d22fa83bd81e7b85d96a0163f6c9dabc019f988f6",
+    "source_path": "AGENTS.md"
+  },
+  "baseline": {
+    "bytes": 16556,
+    "path": "AGENTS.md",
+    "sha256": "7d681485699a897464cf248d22fa83bd81e7b85d96a0163f6c9dabc019f988f6"
+  },
+  "baseline_revision": "504df04f43938431edc5b0c974463ae759632fe4",
+  "candidate_revision": "af7cefbc495682daa8eb7d2317d349840a97998c",
+  "current": {
+    "bytes": 17200,
+    "path": "AGENTS.md",
+    "sha256": "284b8126bc0e031af6b6b734e5d699a86e2bae8a92faabd90cd35696411aadb3"
+  },
+  "edits": [
+    {
+      "at": 14239,
+      "insert_utf8": "Avoid duplicate targets and concurrent writers to a shared target.\nAfter moving a checkout, do not assume cached package artifacts match the new\nworkspace root. Check the affected package's dep-info and compile-time or runtime\nfixture-root paths against the current checkout. If they still name the old root,\ninvalidate and rebuild only the affected owned package artifacts in the same\napproved target under the normal exclusive source, target, and Cargo-cache leases; record target usage before and after, and\npreserve the original failure output and provenance. Keep the registry/download\ncache. Do not blanket-clean Cargo, create a duplicate target, or restore/copy the\ncheckout to its former absolute path. See\n",
+      "remove_utf8": "Avoid duplicate targets and concurrent writers to a shared target. See\n"
+    }
+  ],
+  "historical_relation_preserved": {
+    "accepted_504_sha256": "7d681485699a897464cf248d22fa83bd81e7b85d96a0163f6c9dabc019f988f6",
+    "original_archive": "docs/rust-rewrite/storage-document-amendment/AGENTS.before.md",
+    "original_sha256": "d710c84ebad4582dc607cc3bdb806a5a5253259e4cabd5c515f51e55c3588af8"
+  },
+  "kind": "SLOPSEARX_STORAGE_AGENTS_SUCCESSOR_V2",
+  "source_path": "AGENTS.md"
+}

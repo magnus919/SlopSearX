@@ -1,0 +1,93 @@
+{
+  "archive": {
+    "bytes": 63976,
+    "mode": "0644",
+    "path": "docs/rust-rewrite/a13/source-amendments/a13_dehashed.rs.119a.frozen",
+    "sha256": "62cc261819ed5106ed8ddb3cd1115f155c91baa7b12e3bb72853f291b5ae9637"
+  },
+  "caller": {
+    "container": "docs/rust-rewrite/a13/qualification-v1.json",
+    "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+    "original_source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+    "scope": "Existing exact shared caller binding is retained; this child extends only current source/layout, never original qualification/source data.",
+    "selector_count": 21,
+    "source_path": "crates/ssx-infra/tests/a13_dehashed.rs"
+  },
+  "current": {
+    "bytes": 64974,
+    "git_blob": "04d34d30d7bb101f46f8ace3b60dccd75b878ec7",
+    "mode": "0644",
+    "path": "crates/ssx-infra/tests/a13_dehashed.rs",
+    "sha256": "63ec431758d5c2345c3dc9a94c4c84e379163dc65cfdeb00978e8737d3b4c89b"
+  },
+  "current_edits": [
+    {
+      "at": 5392,
+      "insert_utf8": "        expected_default_headers([\n",
+      "remove_utf8": "        BTreeMap::from([\n"
+    },
+    {
+      "at": 5468,
+      "insert_utf8": "",
+      "remove_utf8": "            (\"user-agent\", ssx_infra::http::DEFAULT_USER_AGENT.into()),\n"
+    },
+    {
+      "at": 53848,
+      "insert_utf8": "    let default_headers = expected_default_headers([(\"accept\", \"application/json\".into())]);\n    assert_eq!(default_headers.len(), 2);\n    assert_eq!(default_headers[\"accept\"], \"application/json\");\n    assert_eq!(\n        default_headers[\"user-agent\"],\n        ssx_infra::http::DEFAULT_USER_AGENT\n    );\n    assert!(\n        std::panic::catch_unwind(|| {\n            expected_default_headers([(\"user-agent\", \"unreviewed-override\".into())])\n        })\n        .is_err()\n    );\n    source_amendment::causal_successor::a06_source_successor::a13_header_layout_controls(&root)\n        .unwrap();\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 63976,
+      "insert_utf8": "\n// Keep the immutable A13 selector locations above stable. Header expectations\n// still include the versioned native identity on every request assertion.\nfn expected_default_headers<const N: usize>(\n    entries: [(&'static str, String); N],\n) -> BTreeMap<&'static str, String> {\n    let mut headers = BTreeMap::from(entries);\n    assert!(!headers.contains_key(\"user-agent\"));\n    headers.insert(\"user-agent\", ssx_infra::http::DEFAULT_USER_AGENT.into());\n    headers\n}\n",
+      "remove_utf8": ""
+    }
+  ],
+  "prior": {
+    "bytes": 63976,
+    "git_blob": "652e048d355a20d71ddba0f60d020e8db9fc72aa",
+    "mode": "0644",
+    "path": "crates/ssx-infra/tests/a13_dehashed.rs",
+    "sha256": "62cc261819ed5106ed8ddb3cd1115f155c91baa7b12e3bb72853f291b5ae9637"
+  },
+  "schema": "A13_EXACT_HEADER_LAYOUT_SUCCESSOR_V1",
+  "scope": "Only helper placement/default native User-Agent assertion layout in accepted current DeHashed qualification source; original21 selector locations and every source outcome/wire assertion retained.",
+  "scoped_edits": [
+    {
+      "at": 5392,
+      "insert_utf8": "        expected_default_headers([\n",
+      "remove_utf8": "        BTreeMap::from([\n"
+    },
+    {
+      "at": 53776,
+      "insert_utf8": "    let default_headers = expected_default_headers([(\"accept\", \"application/json\".into())]);\n    assert_eq!(default_headers.len(), 2);\n    assert_eq!(default_headers[\"accept\"], \"application/json\");\n    assert_eq!(\n        default_headers[\"user-agent\"],\n        ssx_infra::http::DEFAULT_USER_AGENT\n    );\n    assert!(\n        std::panic::catch_unwind(|| {\n            expected_default_headers([(\"user-agent\", \"unreviewed-override\".into())])\n        })\n        .is_err()\n    );\n    source_amendment::causal_successor::a06_source_successor::a13_header_layout_controls(&root)\n        .unwrap();\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 56955,
+      "insert_utf8": "        source_amendment::verify_current(\n",
+      "remove_utf8": "        source_amendment::verify(\n"
+    },
+    {
+      "at": 57271,
+      "insert_utf8": "    source_amendment::causal_successor::control_bridge(&root).unwrap();\n",
+      "remove_utf8": "    source_amendment::rejects_mutants(&root).unwrap();\n"
+    },
+    {
+      "at": 57898,
+      "insert_utf8": "    source_amendment::verify_current(\n",
+      "remove_utf8": "    source_amendment::verify(\n"
+    },
+    {
+      "at": 63871,
+      "insert_utf8": "\n// Keep the immutable A13 selector locations above stable. Header expectations\n// still include the versioned native identity on every request assertion.\nfn expected_default_headers<const N: usize>(\n    entries: [(&'static str, String); N],\n) -> BTreeMap<&'static str, String> {\n    let mut headers = BTreeMap::from(entries);\n    assert!(!headers.contains_key(\"user-agent\"));\n    headers.insert(\"user-agent\", ssx_infra::http::DEFAULT_USER_AGENT.into());\n    headers\n}\n",
+      "remove_utf8": ""
+    }
+  ],
+  "scoped_historical": {
+    "bytes": 63871,
+    "mode": "0644",
+    "path": "docs/rust-rewrite/a04/source-amendments/191537e/crates/ssx-infra/tests/a13_dehashed.rs",
+    "sha256": "dd21f09aceb24b0d7c9e751a6295079ffffb01c42299bfde365673c26b8e7487"
+  },
+  "source_parent": "119a4eee9b8e7b7a577f75bcf8f18cbe4c6b46c9"
+}

@@ -1,0 +1,838 @@
+{
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "scope": "temporary offline complete original OpenAlex date/ordering controls; no providers; retire G08; direct adapter relative+absolute combination does not override shared service predispatch rejection",
+  "source_sha256": {
+    "engines/openalex.py": "537f1da9deda5f75ffde429167620c0006d93c485d0e5e8723b5c39f6c102e59",
+    "slopsearx/filters.py": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+    "docs/rust-rewrite/a06/oracle/export_source.py": "fac50ade3842d15169ea76ecb626f2f5a55d0aa8c7454f910c0c262f3175a65c"
+  },
+  "records": [
+    {
+      "id": "openalex.actual_dates.lower_leap",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2024-02-29"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/1",
+            "title": "date 1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 1.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/2",
+            "title": "date 2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 2.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/2"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.upper_leap",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_to": "2024-02-29"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=10&filter=to_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/0",
+            "title": "date 0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-28",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/0"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/1",
+            "title": "date 1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 1.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.equal_leap",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2024-02-29",
+        "date_to": "2024-02-29"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/1",
+            "title": "date 1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 1.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.both_span",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2024-02-28",
+        "date_to": "2024-03-01"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-28%2Cto_publication_date%3A2024-03-01",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/0",
+            "title": "date 0",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-28",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/0"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/1",
+            "title": "date 1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 1.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/2",
+            "title": "date 2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 2.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/2"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.slice_before_filter",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2024-02-29"
+      },
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=2&filter=from_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/1",
+            "title": "date 1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 1.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.valid_century",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2000-02-29",
+        "date_to": "2000-02-29"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2000-02-29%2Cto_publication_date%3A2000-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.invalid_century",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "1900-02-29"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_from must be a valid YYYY-MM-DD calendar date",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.both_bad_precedence",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "badlower",
+        "date_to": "badupper"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_from must be a valid YYYY-MM-DD calendar date",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.relative_valid_direct_adapter",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2024-02-29",
+        "time_range": "week"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/1",
+            "title": "date 1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 1.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/2",
+            "title": "date 2",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 2.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/2"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.relative_invalid",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2024-02-29",
+        "time_range": "all"
+      },
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6IDAsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzEiLCAidGl0bGUiOiAiZGF0ZSAxIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOSIsICJyZWxldmFuY2Vfc2NvcmUiOiAxLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yIiwgInRpdGxlIjogImRhdGUgMiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQtMDMtMDEiLCAicmVsZXZhbmNlX3Njb3JlIjogMiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMjAyNC0wMi0yOSIsICJ0aXRsZSI6ICJBIDIwMjQtMDItMjkgcHVibGljYXRpb24iLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGwsICJyZWxldmFuY2Vfc2NvcmUiOiAzLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsLCAicHVibGljYXRpb25feWVhciI6IDIwMjR9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzQiLCAidGl0bGUiOiAiZGF0ZSA0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IDQsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzUiLCAidGl0bGUiOiAiZGF0ZSA1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMi0yOVQwMDowMDowMFoiLCAicmVsZXZhbmNlX3Njb3JlIjogNSwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNiIsICJ0aXRsZSI6ICJkYXRlIDYiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0MDIyOSIsICJyZWxldmFuY2Vfc2NvcmUiOiA2LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19"
+        }
+      ],
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "time_range must be day, week, month, or year",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.actual_dates.guard_before_malformed",
+      "engine": "openalex",
+      "query": "date control / +",
+      "params": {
+        "date_from": "2024-02-29",
+        "date_to": "2024-02-29"
+      },
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMCIsICJ0aXRsZSI6ICJkYXRlIDAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4IiwgInJlbGV2YW5jZV9zY29yZSI6ICJub3QgYSBzY29yZSIsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IHRydWUsICJkb2kiOiAxN30sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvMSIsICJ0aXRsZSI6ICJkYXRlIDEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5IiwgInJlbGV2YW5jZV9zY29yZSI6IDEsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnLzIiLCAidGl0bGUiOiAiZGF0ZSAyIiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMy0wMSIsICJyZWxldmFuY2Vfc2NvcmUiOiAyLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy8yMDI0LTAyLTI5IiwgInRpdGxlIjogIkEgMjAyNC0wMi0yOSBwdWJsaWNhdGlvbiIsICJwdWJsaWNhdGlvbl9kYXRlIjogbnVsbCwgInJlbGV2YW5jZV9zY29yZSI6IDMsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGwsICJwdWJsaWNhdGlvbl95ZWFyIjogMjAyNH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNCIsICJ0aXRsZSI6ICJkYXRlIDQiLCAicHVibGljYXRpb25fZGF0ZSI6ICJiYWQiLCAicmVsZXZhbmNlX3Njb3JlIjogNCwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogbnVsbH0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvNSIsICJ0aXRsZSI6ICJkYXRlIDUiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5VDAwOjAwOjAwWiIsICJyZWxldmFuY2Vfc2NvcmUiOiA1LCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfSwgeyJpZCI6ICJodHRwczovL29wZW5hbGV4Lm9yZy82IiwgInRpdGxlIjogImRhdGUgNiIsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjQwMjI5IiwgInJlbGV2YW5jZV9zY29yZSI6IDYsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IG51bGx9XX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=date%20control%20/%20%2B&per_page=2&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/1",
+            "title": "date 1",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 1.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

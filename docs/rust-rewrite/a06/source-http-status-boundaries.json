@@ -1,0 +1,1428 @@
+{
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "scope": "temporary offline original whole-adapter status captures;1xx final response is injection seam; no providercalls; retire G08",
+  "source_sha256": {
+    "engines/arxiv.py": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+    "engines/semanticscholar.py": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c",
+    "engines/openalex.py": "537f1da9deda5f75ffde429167620c0006d93c485d0e5e8723b5c39f6c102e59",
+    "docs/rust-rewrite/a06/oracle/export_source.py": "fac50ade3842d15169ea76ecb626f2f5a55d0aa8c7454f910c0c262f3175a65c"
+  },
+  "records": [
+    {
+      "id": "arxiv.http_status_boundary.100",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 100,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Informational response '100 Continue' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.199",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 199,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Informational response '199 ' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/199",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.200",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.299",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 299,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.300",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 300,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect response 300 missing Location header",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.399",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 399,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect response 399 missing Location header",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.400",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 400,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Client error '400 Bad Request' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.499",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 499,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Client error '499 ' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/499",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.500",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 500,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.599",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 599,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Server error '599 ' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/599",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.600",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 600,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid status code '600 ' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/600",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.http_status_boundary.999",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 999,
+          "headers": {},
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid status code '999 ' for url 'https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/999",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.100",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 100,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Informational response '100 Continue' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.199",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 199,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Informational response '199 ' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/199",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.200",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.299",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 299,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.300",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 300,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Redirect response '300 Multiple Choices' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/300",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.399",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 399,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Redirect response '399 ' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/399",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.400",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 400,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Client error '400 Bad Request' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.499",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 499,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Client error '499 ' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/499",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.500",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 500,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.599",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 599,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Server error '599 ' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/599",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.600",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 600,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid status code '600 ' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/600",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.http_status_boundary.999",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 999,
+          "headers": {},
+          "body_b64": "eyJkYXRhIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid status code '999 ' for url 'https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/999",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.100",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 100,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Informational response '100 Continue' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.199",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 199,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Informational response '199 ' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/199",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.200",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.299",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 299,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.300",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 300,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Redirect response '300 Multiple Choices' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/300",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.399",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 399,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Redirect response '399 ' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/399",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.400",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 400,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Client error '400 Bad Request' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.499",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 499,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Client error '499 ' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/499",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.500",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 500,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.599",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 599,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Server error '599 ' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/599",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.600",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 600,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid status code '600 ' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/600",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.http_status_boundary.999",
+      "engine": "openalex",
+      "query": "test",
+      "responses": [
+        {
+          "status": 999,
+          "headers": {},
+          "body_b64": "eyJyZXN1bHRzIjpbXX0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=test&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid status code '999 ' for url 'https://api.openalex.org/works?search=test&per_page=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/999",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

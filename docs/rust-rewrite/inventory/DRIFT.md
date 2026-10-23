@@ -843,3 +843,10 @@ source mapping plus native assertions, never new Python runs or oracle captures.
 No Python source, interpreter command, configured hook or original file hash is
 added or changed. Python invocation inventory and all retirement dispositions
 remain intact; parent review/current-main integration and hosted CI are pending.
+
+
+## A06 source-inventory reconciliation
+
+The A06 integration preserves every current-main source record and ownership decision and adds the 15 A06-owned manual developer-oracle sources from the published adapter branch. Static comparison of the deduplicated merge-index source set and disposition manifest gives 502 paths: 501 `.py` files and `ssx`. Native F01 qualification remains required; this static check is not execution evidence.
+
+All new sources remain temporary backend-coupled tooling owned by A06 and G08 for retirement before final backend removal. They are not client exceptions, runtime dependencies or mandatory Python gate invocations. No oracle was executed for this reconciliation. Eight original published records lack optional SHA-256 and byte-count fields; their historical fields remain unchanged, while F01 binds the actual source Git blobs. Current security/IDNA/A05 metadata, A10 producer identities, W03 archive records and all 741 historical documentation-example records are preserved. The invocation appendix adds only A06-owned manual guidance and retired-driver records.

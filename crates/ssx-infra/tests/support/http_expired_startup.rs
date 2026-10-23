@@ -93,6 +93,82 @@ async fn system_expired_startup_rejects_even_while_its_timer_is_pending() {
         drop(permits);
         http.shutdown_and_wait().await;
     }
+    // The synchronous preflight must record the same owner-clock hit as
+    // the timer path, even when Tokio has not observed its next timer tick.
+    // A stop/cancel result must not fabricate a deadline observation.
+    for (stopped, cancelled) in [(false, false), (false, true), (true, true)] {
+        let (http, observer, driver) = AdapterHttp::pending_replay_owner(false);
+        assert!(driver.is_none());
+        let deadline = http.deadline_now() + Duration::from_micros(250);
+        let cancel = Cancellation::default();
+        std::thread::sleep(Duration::from_millis(1));
+        assert!(http.deadline_now() >= deadline);
+        let mut session = http
+            .session(Options::default(), deadline.into(), cancel.clone())
+            .unwrap();
+        if cancelled {
+            cancel.cancel();
+        }
+        if stopped {
+            http.shutdown();
+        }
+        rejected(
+            &mut session,
+            deadline,
+            if stopped {
+                Error::Closed
+            } else if cancelled {
+                Error::Cancelled
+            } else {
+                Error::Deadline
+            },
+        )
+        .await;
+        assert_eq!(observer.started(), 0);
+        assert_eq!(observer.dropped(), 0);
+        if stopped || cancelled {
+            assert!(
+                observer.hit().is_none(),
+                "higher-priority exit is not expiry"
+            );
+        } else {
+            let (actual, observed) = observer.hit().expect("synchronous System expiry traced");
+            assert_eq!(actual, deadline, "original caller deadline retained");
+            assert!(observed >= actual);
+        }
+        drop(session);
+        http.shutdown_and_wait().await;
+    }
+    // The exact boundary is causal under a private Manual owner: a dispatch
+    // before the deadline records no hit; equal/past rejects without dispatch.
+    for elapsed in [249, 250, 251] {
+        let (http, observer, driver) = AdapterHttp::pending_replay_owner(true);
+        let driver = driver.unwrap();
+        let deadline = driver.now() + Duration::from_micros(250);
+        let mut session = http
+            .session(Options::default(), deadline.into(), Cancellation::default())
+            .unwrap();
+        driver.advance_to(Duration::from_micros(elapsed));
+        if elapsed < 250 {
+            assert!(first_poll(session.execute(request())).await.is_pending());
+            assert_eq!(observer.started(), 1);
+            assert_eq!(observer.dropped(), 1);
+            assert!(
+                observer.hit().is_none(),
+                "predeadline dispatch is not expiry"
+            );
+        } else {
+            rejected(&mut session, deadline, Error::Deadline).await;
+            assert_eq!(observer.started(), 0);
+            assert_eq!(observer.dropped(), 0);
+            let (actual, observed) = observer.hit().expect("exact owner expiry traced");
+            assert_eq!(actual, deadline);
+            assert_eq!(observed, driver.now());
+            assert!(observed >= deadline);
+        }
+        drop(session);
+        http.shutdown_and_wait().await;
+    }
     tokio::time::resume();
 }
 

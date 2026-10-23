@@ -208,9 +208,12 @@ async fn all_four_future_drops_close_real_pending_sockets() {
             assert!(count > 0);
             if name != "edgar" {
                 assert!(
-                    !String::from_utf8_lossy(&data[..count])
+                    String::from_utf8_lossy(&data[..count])
                         .to_ascii_lowercase()
-                        .contains("user-agent:")
+                        .contains(&format!(
+                            "user-agent: {}",
+                            ssx_infra::http::DEFAULT_USER_AGENT.to_ascii_lowercase()
+                        ))
                 );
             }
             tx.send(()).unwrap();

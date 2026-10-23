@@ -1,7 +1,7 @@
 [workspace]
 members = ["crates/*"]
+exclude = ["vendor/expat", "vendor/libxml", "vendor/ssx-http-source/httparse", "vendor/ssx-http-source/hyper", "vendor/ssx-http-source/hyper-util", "vendor/ssx-http-source/reqwest", "vendor/ssx-sdk-auth/rmcp"]
 resolver = "3"
-exclude = ["vendor/libxml", "vendor/ssx-http-source/httparse", "vendor/ssx-http-source/hyper", "vendor/ssx-http-source/hyper-util", "vendor/ssx-http-source/reqwest", "vendor/ssx-sdk-auth/rmcp"]
 
 [workspace.package]
 version = "0.1.0"

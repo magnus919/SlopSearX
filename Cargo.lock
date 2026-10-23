@@ -2739,6 +2739,7 @@ dependencies = [
  "ssx-owned-budget",
  "ssx-registry",
  "ssx-source-codecs",
+ "ssx-source-xml",
  "ssx-wire",
  "time",
  "tokio",
@@ -2836,6 +2837,13 @@ dependencies = [
  "flate2",
  "serde_json",
  "ssx-owned-budget",
+]
+
+[[package]]
+name = "ssx-source-xml"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.11.1",
 ]
 
 [[package]]

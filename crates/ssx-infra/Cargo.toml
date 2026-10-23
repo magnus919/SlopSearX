@@ -10,6 +10,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+ssx-source-xml = { path = "../../vendor/expat" }
 aws-lc-rs.workspace = true
 base64.workspace = true
 serde.workspace = true

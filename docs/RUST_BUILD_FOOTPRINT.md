@@ -68,6 +68,16 @@ It records where build material goes, who owns it, and when it can be removed.
   and review/prune date for shared caches. Avoid duplicate targets and
   concurrent writers. Do not clean or repurpose existing paths before
   checking their owner and references.
+- After moving a checkout, verify the affected package's dep-info and any
+  compile-time `CARGO_MANIFEST_DIR` or runtime fixture-root paths resolve under
+  the current workspace. A cached test binary can still refer to the former
+  absolute root even when the new checkout contains all fixture files. If stale
+  roots are confirmed, invalidate/rebuild only the affected owned package
+  artifact(s) in the same approved target while holding the normal exclusive source, target, and Cargo-cache leases.
+  Measure target usage before and after, and retain the original failure and
+  provenance. Preserve Cargo registry/download caches; do not use blanket
+  `cargo clean`, make a second target, or restore/copy the checkout to its old
+  absolute path.
 
 ## After each merged PR
 

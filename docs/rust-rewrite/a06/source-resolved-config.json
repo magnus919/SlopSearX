@@ -1,0 +1,1855 @@
+{
+  "scope": "actual source load_config YAML+environment -> service normalization -> discover_engines -> original adapter MockTransport; no provider calls",
+  "temporary_producer": {
+    "path": "/private/tmp/a06-resolved-config-source.py",
+    "owner": "A06/G08",
+    "native_runtime": false,
+    "mandatory_gate_executes": false
+  },
+  "source_sha256": {
+    "engines/openalex.py": "537f1da9deda5f75ffde429167620c0006d93c485d0e5e8723b5c39f6c102e59",
+    "engines/semanticscholar.py": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c",
+    "engines/arxiv.py": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+    "slopsearx/payload.py": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+    "slopsearx/filters.py": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+    "slopsearx/config.py": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+  },
+  "records": [
+    {
+      "id": "arxiv.resolved_config.defaults",
+      "engine": "arxiv",
+      "yaml": "",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://export.arxiv.org/api/query",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.file_empty_base",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    base_url: \"\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.file_blank_base",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    base_url: \" \\t\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": " \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.file_unicode_blank",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    base_url: \"\\u001c\\u0085 \\t\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "\u001c\u0085 \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.file_custom_base",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    base_url: \"https://operator.invalid/custom/\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://operator.invalid/custom/",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://operator.invalid/custom/?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "operator.invalid",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.yaml_bool_max",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    max_results: true\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://export.arxiv.org/api/query",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "bool",
+          "value": true
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=true&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.yaml_float_max",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    max_results: 2.0\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://export.arxiv.org/api/query",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "float",
+          "value": 2.0
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=2.0&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.yaml_text_max",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    max_results: \"2\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://export.arxiv.org/api/query",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "str",
+          "value": "2"
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=2&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.env_precedence",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    base_url: \"https://file.invalid/base\"\n    timeout_ms: 8000.5\n    max_results: 8.5\n    api_key: \"offline-file-secret\"\n",
+      "env": {
+        "ENGINE_ARXIV_BASE_URL": "https://environment.invalid/override/",
+        "ENGINE_ARXIV_TIMEOUT_MS": "7000.5",
+        "ENGINE_ARXIV_MAX_RESULTS": "2.5",
+        "ENGINE_ARXIV_API_KEY": "offline-env-secret"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://environment.invalid/override/",
+        "timeout_ms": {
+          "kind": "float",
+          "value": 7000.5
+        },
+        "max_results": {
+          "kind": "float",
+          "value": 2.5
+        },
+        "api_key": "offline-env-secret"
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://environment.invalid/override/?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=2.5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "environment.invalid",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 7.0005,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.env_nan_timeout",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    timeout_ms: 5000.5\n",
+      "env": {
+        "ENGINE_ARXIV_TIMEOUT_MS": "nan"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://export.arxiv.org/api/query",
+        "timeout_ms": {
+          "kind": "float",
+          "value": {
+            "$source_nonfinite_float": "nan"
+          }
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "nan"
+          },
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.env_inf_timeout",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    timeout_ms: 5000.5\n",
+      "env": {
+        "ENGINE_ARXIV_TIMEOUT_MS": "inf"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://export.arxiv.org/api/query",
+        "timeout_ms": {
+          "kind": "float",
+          "value": {
+            "$source_nonfinite_float": "inf"
+          }
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "inf"
+          },
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.resolved_config.env_blank_base",
+      "engine": "arxiv",
+      "yaml": "engines:\n  arxiv:\n    base_url: \"https://file.invalid/base\"\n",
+      "env": {
+        "ENGINE_ARXIV_BASE_URL": " \t"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": " \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 10000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Abridge+%2F%E9%9B%AA%2B%25%3F&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "response_body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIvPg==",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.defaults",
+      "engine": "openalex",
+      "yaml": "",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.openalex.org",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.file_empty_base",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    base_url: \"\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.file_blank_base",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    base_url: \" \\t\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": " \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.file_unicode_blank",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    base_url: \"\\u001c\\u0085 \\t\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "\u001c\u0085 \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.file_custom_base",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    base_url: \"https://operator.invalid/custom/\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://operator.invalid/custom/",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://operator.invalid/custom//works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "operator.invalid",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.yaml_bool_max",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    max_results: true\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.openalex.org",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "bool",
+          "value": true
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=True",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.yaml_float_max",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    max_results: 2.0\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.openalex.org",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "float",
+          "value": 2.0
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=2.0",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.yaml_text_max",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    max_results: \"2\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.openalex.org",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "str",
+          "value": "2"
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=2",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.env_precedence",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    base_url: \"https://file.invalid/base\"\n    timeout_ms: 8000.5\n    max_results: 8.5\n    api_key: \"offline-file-secret\"\n",
+      "env": {
+        "ENGINE_OPENALEX_BASE_URL": "https://environment.invalid/override/",
+        "ENGINE_OPENALEX_TIMEOUT_MS": "7000.5",
+        "ENGINE_OPENALEX_MAX_RESULTS": "2.5",
+        "ENGINE_OPENALEX_API_KEY": "offline-env-secret"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://environment.invalid/override/",
+        "timeout_ms": {
+          "kind": "float",
+          "value": 7000.5
+        },
+        "max_results": {
+          "kind": "float",
+          "value": 2.5
+        },
+        "api_key": "offline-env-secret"
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://environment.invalid/override//works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=2.5",
+          "headers": {
+            "host": "environment.invalid",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 7.0005
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.env_nan_timeout",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    timeout_ms: 5000.5\n",
+      "env": {
+        "ENGINE_OPENALEX_TIMEOUT_MS": "nan"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.openalex.org",
+        "timeout_ms": {
+          "kind": "float",
+          "value": {
+            "$source_nonfinite_float": "nan"
+          }
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "nan"
+          }
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.env_inf_timeout",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    timeout_ms: 5000.5\n",
+      "env": {
+        "ENGINE_OPENALEX_TIMEOUT_MS": "inf"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.openalex.org",
+        "timeout_ms": {
+          "kind": "float",
+          "value": {
+            "$source_nonfinite_float": "inf"
+          }
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "inf"
+          }
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.resolved_config.env_blank_base",
+      "engine": "openalex",
+      "yaml": "engines:\n  openalex:\n    base_url: \"https://file.invalid/base\"\n",
+      "env": {
+        "ENGINE_OPENALEX_BASE_URL": " \t"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": " \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=bridge%20/%E9%9B%AA%2B%25%3F&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.defaults",
+      "engine": "semanticscholar",
+      "yaml": "",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.file_empty_base",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    base_url: \"\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.file_blank_base",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    base_url: \" \\t\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": " \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.file_unicode_blank",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    base_url: \"\\u001c\\u0085 \\t\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "\u001c\u0085 \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.file_custom_base",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    base_url: \"https://operator.invalid/custom/\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://operator.invalid/custom/",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://operator.invalid/custom/?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "operator.invalid",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.yaml_bool_max",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    max_results: true\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "bool",
+          "value": true
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=true&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.yaml_float_max",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    max_results: 2.0\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "float",
+          "value": 2.0
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=2.0&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.yaml_text_max",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    max_results: \"2\"\n",
+      "env": {},
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "str",
+          "value": "2"
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=2&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.env_precedence",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    base_url: \"https://file.invalid/base\"\n    timeout_ms: 8000.5\n    max_results: 8.5\n    api_key: \"offline-file-secret\"\n",
+      "env": {
+        "ENGINE_SEMANTICSCHOLAR_BASE_URL": "https://environment.invalid/override/",
+        "ENGINE_SEMANTICSCHOLAR_TIMEOUT_MS": "7000.5",
+        "ENGINE_SEMANTICSCHOLAR_MAX_RESULTS": "2.5",
+        "ENGINE_SEMANTICSCHOLAR_API_KEY": "offline-env-secret"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://environment.invalid/override/",
+        "timeout_ms": {
+          "kind": "float",
+          "value": 7000.5
+        },
+        "max_results": {
+          "kind": "float",
+          "value": 2.5
+        },
+        "api_key": "offline-env-secret"
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://environment.invalid/override/?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=2.5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "environment.invalid",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "x-api-key": "offline-env-secret"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 7.0005
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.env_nan_timeout",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    timeout_ms: 5000.5\n",
+      "env": {
+        "ENGINE_SEMANTICSCHOLAR_TIMEOUT_MS": "nan"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "timeout_ms": {
+          "kind": "float",
+          "value": {
+            "$source_nonfinite_float": "nan"
+          }
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "nan"
+          }
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.env_inf_timeout",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    timeout_ms: 5000.5\n",
+      "env": {
+        "ENGINE_SEMANTICSCHOLAR_TIMEOUT_MS": "inf"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "timeout_ms": {
+          "kind": "float",
+          "value": {
+            "$source_nonfinite_float": "inf"
+          }
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": {
+            "$source_nonfinite_float": "inf"
+          }
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.resolved_config.env_blank_base",
+      "engine": "semanticscholar",
+      "yaml": "engines:\n  semanticscholar:\n    base_url: \"https://file.invalid/base\"\n",
+      "env": {
+        "ENGINE_SEMANTICSCHOLAR_BASE_URL": " \t"
+      },
+      "query": "bridge /\u96ea+%?",
+      "resolved": {
+        "enabled": true,
+        "base_url": " \t",
+        "timeout_ms": {
+          "kind": "int",
+          "value": 5000
+        },
+        "max_results": {
+          "kind": "int",
+          "value": 5
+        },
+        "api_key": null
+      },
+      "source_service_omitted_base": true,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=bridge+%2F%E9%9B%AA%2B%25%3F&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "response_body_b64": "eyJyZXN1bHRzIjpbXSwiZGF0YSI6W119",
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

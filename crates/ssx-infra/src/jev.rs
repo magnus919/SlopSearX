@@ -195,7 +195,7 @@ fn cached(v: &Value, names: &[String], threshold: f64) -> Option<Decision> {
 /// Own one router per runtime so the F08 client pool is reused. No retries.
 pub struct JevRouter {
     config: JevConfig,
-    http: AdapterHttp,
+    http: std::sync::Arc<AdapterHttp>,
     registry: Registry,
     endpoint: String,
 }
@@ -203,16 +203,36 @@ impl JevRouter {
     pub fn new(config: JevConfig, registry: Registry) -> Self {
         Self {
             config,
-            http: AdapterHttp::default(),
+            http: std::sync::Arc::new(AdapterHttp::default()),
             registry,
             endpoint: ENDPOINT.into(),
         }
     }
-    /// Explicit fixture endpoint; production composition uses `new`.
+    /// Initialize the ordinary F08 profile before publishing this production
+    /// router. Startup work never sends provider requests or spends a query
+    /// deadline. Ephemeral default environments remain explicitly cold.
+    pub async fn new_ready(
+        config: JevConfig,
+        registry: Registry,
+        deadline: tokio::time::Instant,
+        cancel: Cancellation,
+    ) -> crate::http::Result<(Self, crate::http::Preparation)> {
+        let (http, preparation) = AdapterHttp::new_ready(deadline, cancel).await?;
+        Ok((
+            Self {
+                config,
+                http,
+                registry,
+                endpoint: ENDPOINT.into(),
+            },
+            preparation,
+        ))
+    }
+    /// Explicit fixture endpoint; production composition uses `new` or `new_ready`.
     pub fn with_endpoint(config: JevConfig, registry: Registry, endpoint: String) -> Self {
         Self {
             config,
-            http: AdapterHttp::default(),
+            http: std::sync::Arc::new(AdapterHttp::default()),
             registry,
             endpoint,
         }
@@ -410,5 +430,38 @@ pub async fn prepare_optional(
             advice: Vec::new(),
             preview: service.preview(proposal)?,
         }),
+    }
+}
+
+#[cfg(test)]
+mod ready_constructor_tests {
+    use super::*;
+    #[tokio::test]
+    async fn actual_production_ready_router_constructor_prepares_without_dispatch() {
+        if crate::http::default_ca_test_environment(
+            "jev::ready_constructor_tests::actual_production_ready_router_constructor_prepares_without_dispatch",
+        ) {
+            return;
+        }
+        let config = JevConfig::from_environment(&BTreeMap::from([(
+            "TYPESAFE_API_KEY".into(),
+            "synthetic".into(),
+        )]))
+        .unwrap();
+        let (router, preparation) = JevRouter::new_ready(
+            config,
+            Registry::builtins().unwrap(),
+            tokio::time::Instant::now() + Duration::from_secs(10),
+            Cancellation::default(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(preparation, crate::http::Preparation::Prepared);
+        assert_eq!(router.endpoint, ENDPOINT);
+        assert_eq!(router.config.timeout, Duration::from_millis(1000));
+        // Constructor has no query, request, URL or provider exchange path.
+        assert_eq!(router.http.retained_pools(), 1);
+        router.shutdown().await;
+        assert_eq!(router.http.retained_pools(), 0);
     }
 }

@@ -31,8 +31,13 @@ asserts ordered method/URL/query/body, adapter-owned headers, request count, and
 complete outcome/result fields. Measured latency and transport/library default
 User-Agent headers are excluded; EDGAR's authored User-Agent and all declared
 Accept/content-type headers are asserted. Exact per-case library User-Agent
-differences are frozen in `header-differences.json`; real native loopback
-confirms absence for FDA/FRED/Oyez. No full transport-header parity is claimed. Only integer versus f64 encoding of a
+differences remain frozen in `header-differences.json`. Prior source-bound
+native loopback observations of absence for FDA/FRED/Oyez remain historical.
+The A06 versioned default User-Agent is a candidate successor; validation of
+the combined source is pending. Its explicit effective-current header artifact
+(`source-amendments/default-user-agent-effective-v1.json`) retains the frozen
+row identities and source values, while EDGAR's authored override remains
+required. No full transport-header parity is claimed. Only integer versus f64 encoding of a
 numeric result.score is normalized under the accepted FiniteF64 boundary;
 booleans, strings and nonfinite scores are not silently coerced.
 

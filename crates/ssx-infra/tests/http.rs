@@ -431,7 +431,7 @@ async fn replay_malformed_bodies_and_caller_ownership() {
             .iter()
             .map(|b| {
                 (
-                    Request::get("https://fixture.invalid/").unwrap(),
+                    native_expected(Request::get("https://fixture.invalid/").unwrap()),
                     response("https://fixture.invalid/", 200, HeaderMap::new(), b.clone()),
                 )
             })
@@ -468,7 +468,7 @@ async fn gzip_expansion_and_request_bounds() {
     headers.insert(header::CONTENT_ENCODING, HeaderValue::from_static("gzip"));
     headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("1"));
     let replay = Arc::new(Replay::new(vec![(
-        Request::get("https://fixture.invalid/").unwrap(),
+        native_expected(Request::get("https://fixture.invalid/").unwrap()),
         response("https://fixture.invalid/", 200, headers, compressed),
     )]));
     let http = AdapterHttp::default();
@@ -523,11 +523,11 @@ async fn redirect_rules_strip_credentials_and_preserve_307_body() {
         );
         let replay = Arc::new(Replay::new(vec![
             (
-                request.clone(),
+                native_expected(request.clone()),
                 response("https://one.invalid/", status, headers, vec![]),
             ),
             (
-                second,
+                native_expected(second),
                 response("https://two.invalid/", 200, HeaderMap::new(), vec![]),
             ),
         ]));
@@ -552,7 +552,7 @@ async fn request_count_and_redirect_limits() {
     let mut headers = HeaderMap::new();
     headers.insert(header::LOCATION, HeaderValue::from_static("/"));
     let replay = Arc::new(Replay::new(vec![(
-        Request::get("https://fixture.invalid/").unwrap(),
+        native_expected(Request::get("https://fixture.invalid/").unwrap()),
         response("https://fixture.invalid/", 302, headers, vec![]),
     )]));
     http.set_transport(replay).unwrap();
@@ -927,7 +927,7 @@ async fn replay_denies_request_method_url_header_body_mutations() {
         };
         let http = AdapterHttp::default();
         http.set_transport(Arc::new(Replay::new(vec![(
-            expected,
+            native_expected(expected),
             response("https://fixture.invalid/", 200, HeaderMap::new(), vec![]),
         )])))
         .unwrap();
@@ -1126,7 +1126,7 @@ async fn repeated_content_encoding_headers_decode_in_wire_order() {
         }
         let http = AdapterHttp::default();
         http.set_transport(Arc::new(Replay::new(vec![(
-            Request::get("https://fixture.invalid/").unwrap(),
+            native_expected(Request::get("https://fixture.invalid/").unwrap()),
             response("https://fixture.invalid/", 200, headers, encoded.clone()),
         )])))
         .unwrap();
@@ -1325,4 +1325,118 @@ async fn expired_idle_routes_release_adapter_retention_before_checkout_and_retur
         http.shutdown();
         wait_open(&next, 0).await;
     }
+}
+
+// Native replay templates declare the reviewed shared default explicitly;
+// Replay itself still compares complete headers without normalizing expectations.
+fn native_expected(mut request: Request) -> Request {
+    if !request.headers.contains_key(header::USER_AGENT) {
+        request.headers.insert(
+            header::USER_AGENT,
+            HeaderValue::from_static(DEFAULT_USER_AGENT),
+        );
+    }
+    request
+}
+
+#[tokio::test]
+async fn native_user_agent_socket_precedence_redirect_and_session_identity_isolation() {
+    if default_ca_environment(
+        "native_user_agent_socket_precedence_redirect_and_session_identity_isolation",
+    ) {
+        return;
+    }
+    assert_eq!(
+        DEFAULT_USER_AGENT,
+        concat!(
+            "SlopSearX/",
+            env!("CARGO_PKG_VERSION"),
+            " (meta search engine; agent-native)"
+        )
+    );
+    let s = server().await;
+    let http = AdapterHttp::default();
+    let url = format!("{}/ok", s.url);
+    let mut first = session(&http);
+    first.execute(Request::get(&url).unwrap()).await.unwrap();
+    first.headers.insert(
+        header::USER_AGENT,
+        HeaderValue::from_static("session-agent"),
+    );
+    first.headers.insert(
+        header::AUTHORIZATION,
+        HeaderValue::from_static("Bearer tenant-one"),
+    );
+    let mut request = Request::get(&url).unwrap();
+    request.headers.insert(
+        header::USER_AGENT,
+        HeaderValue::from_static("request-agent"),
+    );
+    first.execute(request).await.unwrap();
+    first.execute(Request::get(&url).unwrap()).await.unwrap();
+    drop(first);
+    session(&http)
+        .execute(Request::get(&url).unwrap())
+        .await
+        .unwrap();
+    let mut redirect = http
+        .session(
+            Options {
+                trust_env: false,
+                follow_redirects: true,
+                ..Default::default()
+            },
+            tokio::time::Instant::now() + Duration::from_secs(5),
+            Cancellation::default(),
+        )
+        .unwrap();
+    redirect.headers.insert(
+        header::USER_AGENT,
+        HeaderValue::from_static("session-redirect"),
+    );
+    redirect.headers.insert(
+        header::AUTHORIZATION,
+        HeaderValue::from_static("Bearer route"),
+    );
+    let mut request = Request::get(&format!("{}/redirect307", s.url)).unwrap();
+    request.headers.insert(
+        header::USER_AGENT,
+        HeaderValue::from_static("request-redirect"),
+    );
+    redirect.execute(request).await.unwrap();
+    drop(redirect);
+    session(&http)
+        .execute(Request::get(&url).unwrap())
+        .await
+        .unwrap();
+    {
+        let seen = s.seen.lock().unwrap();
+        assert_eq!(seen.len(), 7);
+        let value = |at: usize, name: &str| {
+            seen[at].lines().find_map(|line| {
+                line.split_once(':')
+                    .filter(|(n, _)| n.eq_ignore_ascii_case(name))
+                    .map(|(_, v)| v.trim().to_owned())
+            })
+        };
+        for at in [0, 3, 6] {
+            assert_eq!(value(at, "user-agent").as_deref(), Some(DEFAULT_USER_AGENT));
+            assert!(value(at, "authorization").is_none());
+            assert!(value(at, "cookie").is_none());
+        }
+        assert_eq!(value(1, "user-agent").as_deref(), Some("request-agent"));
+        assert_eq!(value(2, "user-agent").as_deref(), Some("session-agent"));
+        for at in [1, 2] {
+            assert_eq!(
+                value(at, "authorization").as_deref(),
+                Some("Bearer tenant-one")
+            );
+            assert_eq!(value(at, "cookie").as_deref(), Some("session=one"));
+        }
+        for at in [4, 5] {
+            assert_eq!(value(at, "user-agent").as_deref(), Some("request-redirect"));
+            assert_eq!(value(at, "authorization").as_deref(), Some("Bearer route"));
+        }
+    }
+    http.shutdown_and_wait().await;
 }

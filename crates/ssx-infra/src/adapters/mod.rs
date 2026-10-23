@@ -1,4 +1,7 @@
 //! Native provider adapters currently ported from the registry-search pilot.
+pub mod arxiv;
+mod arxiv_accounting;
+mod arxiv_xml;
 mod brave;
 mod community;
 mod crates_io;
@@ -195,7 +198,8 @@ pub struct F10Admission {
 }
 impl F10Admission {
     /// The composition root retains this handle for lifecycle, reactivation and
-    /// cooldown operations; the adapter bridge only acquires quota decisions.
+    /// cooldown operations; the adapter bridge handles quota admission and
+    /// optional upstream cooldown feedback through the same limiter.
     pub fn new(limiter: Arc<tokio::sync::Mutex<RateLimiter>>) -> Self {
         Self { limiter }
     }
@@ -216,6 +220,23 @@ impl SearchAdmission for F10Admission {
                 Ok(_) => AdmissionDecision::Denied,
                 Err(_) => AdmissionDecision::Unavailable,
             }
+        })
+    }
+    fn set_upstream_cooldown<'a>(
+        &'a self,
+        engine: &'static str,
+        seconds: f64,
+    ) -> PortFuture<'a, ()> {
+        Box::pin(async move {
+            let Ok(key) = EngineKey::new(engine) else {
+                return;
+            };
+            let mut limiter = self.limiter.lock().await;
+            // Use the exact same process-local epoch as admission. Source
+            // adapters ignore optional cooldown publication failures.
+            let _ = limiter
+                .set_upstream_cooldown(&key, seconds, f10_monotonic_seconds())
+                .await;
         })
     }
 }
@@ -366,6 +387,13 @@ pub fn register_packages(
     Ok(())
 }
 
+/// Expat candidate, not a registered adapter.
+pub mod arxiv_expat;
+
+mod arxiv_expat_wire;
+
+pub mod scholarly_wire;
+mod scholarly_word;
 // Python semantics shared only by the A04 adapters. Keep wire encoding separate
 // from URL path handling and apply whitespace conversion only at source calls.
 fn broad_query(params: &[(&str, &str)]) -> String {
@@ -475,9 +503,52 @@ fn broad_scalar_output(
     }
 }
 
+pub mod semantic_scholar;
+
+pub mod scholarly_order;
+
+pub mod scholarly_sort;
+
+pub mod scholarly_config;
+
+pub mod source_payload;
+
+pub mod scholarly_frame;
+
+/// Shared charged HTTPX/email charset selection inside supervised helpers.
+pub mod http_charset;
+
+mod scholarly_helper;
+pub mod scholarly_reply;
+
+mod arxiv_projection;
+
+pub mod arxiv_runtime;
+
+pub mod http_headers;
+
+pub mod hostname_lower;
+
+pub mod source_repr;
+
+pub mod scholarly_float;
+
+pub mod semantic_projection;
+
+pub mod semantic_retry_after;
+
+pub mod semantic_runtime;
+
+pub mod openalex_projection;
+
+#[cfg(test)]
+#[path = "../../tests/support/a06_case.rs"]
+pub(crate) mod a06_case;
 mod duckduckgo;
 mod google;
 mod html_timeout;
+pub mod openalex_runtime;
+pub mod scholarly_runtime;
 pub use duckduckgo::{DuckDuckGoConfig, ScrapeConfig};
 pub use google::GoogleConfig;
 
@@ -661,9 +732,6 @@ pub(crate) fn html_extract_rows(
     }
 }
 
-// Shared selector single-owned by A06; consumed inside existing helpers.
-pub mod http_charset;
-pub mod http_headers;
 // A07 native biomedical implementations; selection remains resolved policy.
 #[cfg(test)]
 mod a07_matrix_replay;
@@ -672,11 +740,6 @@ pub mod europepmc;
 pub mod pubchem;
 pub mod pubmed;
 pub mod uniprot;
-// Accepted budgeted payload component, consumed by the A07 runtime candidate.
-pub mod source_payload;
-
-pub mod source_repr;
-
 /// Source-compatible settings for the five biomedical factories. Availability
 /// does not grant selection: callers retain the resolved enabled policy.
 #[derive(Clone, Debug)]

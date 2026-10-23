@@ -1,4 +1,6 @@
 //! Unapplied PR1034 draft. Current identity and historical evidence are distinct.
+#[path = "../../a06/source-amendments/shared-successor.rs"]
+pub(crate) mod a06_source_successor;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
@@ -197,16 +199,18 @@ fn verify_merged_a13(root: &Path, current_row: &Value) -> Result<(), String> {
     let prior_row = historical_a13_row(root)?;
     let (_, previous, historical) = read_historical_a13_composition(root, &prior_row)?;
     let next = a13_composition_v2_document(root)?;
+    let (accepted_main_row, accepted_main_bytes) =
+        a06_source_successor::a13_baseline(root, current_row)?;
     require(
-        next["current"] == *current_row,
-        "PR1034 A13 current row differs",
+        next["current"] == accepted_main_row,
+        "PR1034 A13 accepted-main predecessor row differs",
     )?;
-    let actual = read_material(root, current_row, "PR1034 CURRENT composed A13")?;
+    let actual = read_material(root, current_row, "A06 actual CURRENT composed A13")?;
     check_source_transition(
         &next,
         &previous.bytes,
-        &actual,
-        &mode(&root.join(XTASK_A13))?,
+        &accepted_main_bytes,
+        "0644", // Archive mode checked by the new transition before this old relation.
         XTASK_A13,
         A13_EDITS_SHA,
     )?;
@@ -647,8 +651,12 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     factory_controls(root)?;
     let manifest = load(root)?;
     manifest_transition_controls(root, &load_v2(root)?)?;
-    additive_composition_controls(root, &manifest)?;
-    a13_composition_controls(root, &manifest)?;
+    // Original version/control relations execute on explicitly archived accepted
+    // main material; new actual-current controls are separate and mandatory.
+    let accepted_main_manifest = load_v3(root)?;
+    additive_composition_controls(root, &accepted_main_manifest)?;
+    a13_composition_controls(root, &accepted_main_manifest)?;
+    a06_source_successor::controls(root)?;
     for binding in manifest["bindings"].as_array().unwrap() {
         let container_path = text(binding, "container_path")?;
         let source = text(binding, "source_path")?;
@@ -750,7 +758,7 @@ impl HistoricalControlEvidence {
 #[cfg(test)]
 pub(crate) fn control_bridge(root: &Path) -> Result<(), String> {
     let actual = fs::read(root.join(HTTP)).map_err(|e| e.to_string())?;
-    if digest(&actual) != CURRENT_HTTP_SHA {
+    if digest(&actual) != CURRENT_HTTP_SHA && !a06_source_successor::current_http(root, &actual)? {
         return super::rejects_mutants(root);
     }
     let manifest = load(root)?;
@@ -802,6 +810,16 @@ pub(crate) fn verify_current(
     expected_sha: &str,
     expected_bytes: Option<usize>,
 ) -> Result<(), String> {
+    if let Some(result) = a06_source_successor::try_verify(
+        root,
+        container_path,
+        container_sha,
+        source_path,
+        expected_sha,
+        expected_bytes,
+    ) {
+        return result;
+    }
     if factory_selected(container_path, source_path) {
         return verify_factory_current(root, container_sha, expected_sha, expected_bytes);
     }
@@ -842,7 +860,7 @@ fn original_routing_equivalence(root: &Path) -> Result<(), String> {
             .ok_or("V6 routing pins absent")?
         {
             let container = text(pin, "container_path")?;
-            if selected(container, source) {
+            if selected(container, source) || a06_source_successor::selected(container, source) {
                 continue;
             }
             let hash = text(pin, "container_sha256")?;
@@ -1021,7 +1039,7 @@ fn validate_v3(previous: &Value, next: &Value) -> Result<(), String> {
         "PR1034 unrelated V2/V3 material differs",
     )
 }
-fn load(root: &Path) -> Result<Value, String> {
+fn load_v3(root: &Path) -> Result<Value, String> {
     let previous = load_v2(root)?;
     let raw = fs::read(root.join(CURRENT_V3)).map_err(|e| e.to_string())?;
     require(digest(&raw) == CURRENT_V3_SHA, "PR1034 V3 manifest differs")?;
@@ -1057,9 +1075,11 @@ fn validate_validator_predecessor(previous: &Value, document: &Value) -> Result<
 fn verify_validator_composition(root: &Path, document: &Value, row: &Value) -> Result<(), String> {
     validate_validator_predecessor(&load_v2(root)?, document)?;
     let transition = &document["validator_transition"];
+    let (accepted_main_row, accepted_main_bytes) =
+        a06_source_successor::validator_baseline(root, row)?;
     require(
-        transition["current"] == *row,
-        "PR1034 validator current row differs",
+        transition["current"] == accepted_main_row,
+        "PR1034 validator accepted-main predecessor row differs",
     )?;
     let old = read_material(
         root,
@@ -1070,8 +1090,8 @@ fn verify_validator_composition(root: &Path, document: &Value, row: &Value) -> R
     check_source_transition(
         transition,
         &old,
-        &actual,
-        &mode(&root.join(VALIDATOR))?,
+        &accepted_main_bytes,
+        "0644", // Archived mode already checked by the new exact transition.
         VALIDATOR,
         VALIDATOR_EDITS_SHA,
     )?;
@@ -1135,7 +1155,13 @@ fn additive_composition_controls(root: &Path, document: &Value) -> Result<(), St
             &transition["predecessor_archive"],
             "PR1034 control predecessor",
         )?;
-        let actual = read_material(root, &transition["current"], "PR1034 control CURRENT")?;
+        let actual = if source == XTASK_A13 {
+            a06_source_successor::a13_baseline(root, &transition["current"])?.1
+        } else if source == VALIDATOR {
+            a06_source_successor::validator_baseline(root, &transition["current"])?.1
+        } else {
+            read_material(root, &transition["current"], "PR1034 control CURRENT")?
+        };
         let positive = |claim: &Value, bytes: &[u8], permissions: &str| {
             check_source_transition(claim, &old, bytes, permissions, source, edits_sha)
         };
@@ -1246,7 +1272,7 @@ fn additive_composition_controls(root: &Path, document: &Value) -> Result<(), St
         }
     }
     eprintln!(
-        "PR1034_SECURITY_A07_COMPOSITION_CONTROLS actual_current_positive=true historical_as_current_mode_scope_missing_duplicate_moved_unrelated_edits_rejected=true"
+        "PR1034_SECURITY_A07_COMPOSITION_CONTROLS accepted_main_predecessor_positive=true actual_A06_current_separately_reconstructed=true historical_as_current_mode_scope_missing_duplicate_moved_unrelated_edits_rejected=true"
     );
     Ok(())
 }
@@ -1603,4 +1629,10 @@ fn factory_controls(root: &Path) -> Result<(), String> {
         "PR1034_FACTORY_HARNESS_SOURCE_CONTROLS actual_current=true historical_as_current_container_mode_preimage_order_missing_duplicate_moved_unrelated_rehashed_rejected=true"
     );
     Ok(())
+}
+
+// The immutable V3 remains historical authority. This effective-current value
+// is derived only after exact main-preimage/actual-current reconstruction.
+fn load(root: &Path) -> Result<Value, String> {
+    a06_source_successor::compose_scoped(root, &load_v3(root)?)
 }

@@ -31,7 +31,7 @@ fn digest(bytes: &[u8]) -> String {
 pub fn is_path(path: &str) -> bool {
     BINDINGS.iter().any(|binding| binding.path == path)
 }
-pub fn verify(
+pub fn verify_historical(
     path: &str,
     original: &str,
     original_bytes: Option<usize>,
@@ -53,6 +53,102 @@ pub fn verify(
     }
     Ok(())
 }
+
+// The old d710 -> accepted504 relation remains above, explicitly historical.
+// Live AGENTS bytes must instead reconstruct the one reviewed next successor.
+const AGENTS_SUCCESSOR_SHA256: &str =
+    "f88d4d259df22ac0f140bb42549157dd7e536346e55943efcfb305ea85d72e6e";
+const ACCEPTED_AGENTS: &[u8] = include_bytes!("AGENTS.accepted-504.md.frozen");
+const AGENTS_SUCCESSOR: &[u8] = include_bytes!("agents-successor-v2.json");
+pub fn verify_successor(
+    path: &str,
+    expected_baseline: &str,
+    baseline: &[u8],
+    current: &[u8],
+    raw: &[u8],
+) -> Result<(), String> {
+    if path != "AGENTS.md" || expected_baseline != BINDINGS[0].after {
+        return Err("Unreviewed AGENTS successor caller".into());
+    }
+    if digest(raw) != AGENTS_SUCCESSOR_SHA256 {
+        return Err("AGENTS successor capsule differs".into());
+    }
+    let doc: serde_json::Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
+    if doc["kind"] != "SLOPSEARX_STORAGE_AGENTS_SUCCESSOR_V2"
+        || doc["source_path"] != path
+        || doc["baseline"]["path"] != path
+        || doc["current"]["path"] != path
+        || doc["archive"]["source_path"] != path
+        || doc["archive"]["path"]
+            != "docs/rust-rewrite/storage-document-amendment/AGENTS.accepted-504.md.frozen"
+        || doc["baseline"]["sha256"] != expected_baseline
+        || doc["archive"]["sha256"] != expected_baseline
+        || digest(baseline) != expected_baseline
+        || doc["baseline"]["bytes"].as_u64() != Some(baseline.len() as u64)
+        || doc["archive"]["bytes"].as_u64() != Some(baseline.len() as u64)
+    {
+        return Err("AGENTS accepted504 archive/caller differs".into());
+    }
+    if doc["current"]["sha256"] != digest(current)
+        || doc["current"]["bytes"].as_u64() != Some(current.len() as u64)
+    {
+        return Err("AGENTS actual current bytes differ".into());
+    }
+    let edits = doc["edits"]
+        .as_array()
+        .ok_or("AGENTS finite edits absent")?;
+    if edits.is_empty() {
+        return Err("AGENTS finite edits empty".into());
+    }
+    let mut rebuilt = Vec::new();
+    let mut cursor = 0;
+    for edit in edits {
+        let at = edit["at"]
+            .as_u64()
+            .and_then(|v| usize::try_from(v).ok())
+            .ok_or("AGENTS edit offset invalid")?;
+        let remove = edit["remove_utf8"]
+            .as_str()
+            .ok_or("AGENTS edit preimage absent")?
+            .as_bytes();
+        let insert = edit["insert_utf8"]
+            .as_str()
+            .ok_or("AGENTS edit insertion absent")?
+            .as_bytes();
+        let end = at.checked_add(remove.len()).ok_or("AGENTS edit overflow")?;
+        if at < cursor || end > baseline.len() || baseline.get(at..end) != Some(remove) {
+            return Err("AGENTS finite edit preimage/order differs".into());
+        }
+        rebuilt.extend_from_slice(&baseline[cursor..at]);
+        rebuilt.extend_from_slice(insert);
+        cursor = end;
+    }
+    rebuilt.extend_from_slice(&baseline[cursor..]);
+    if rebuilt != current {
+        return Err("AGENTS reconstructed successor differs".into());
+    }
+    Ok(())
+}
+pub fn verify(
+    path: &str,
+    original: &str,
+    original_bytes: Option<usize>,
+    current: &[u8],
+    archive: &[u8],
+) -> Result<(), String> {
+    if path != "AGENTS.md" {
+        return verify_historical(path, original, original_bytes, current, archive);
+    }
+    verify_historical(path, original, original_bytes, ACCEPTED_AGENTS, archive)?;
+    verify_successor(
+        path,
+        BINDINGS[0].after,
+        ACCEPTED_AGENTS,
+        current,
+        AGENTS_SUCCESSOR,
+    )
+}
+
 pub fn archive_path(path: &str) -> Result<&'static str, String> {
     BINDINGS
         .iter()

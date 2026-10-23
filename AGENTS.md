@@ -174,7 +174,15 @@ Before a build, record `df` availability, the task directory's current `du`
 usage, and an estimate based on a comparable prior build or the planned inputs.
 Reuse an exclusive target or an approved shared cache when safe; for shared
 caches, record the owner, size, reuse justification, and review/prune date.
-Avoid duplicate targets and concurrent writers to a shared target. See
+Avoid duplicate targets and concurrent writers to a shared target.
+After moving a checkout, do not assume cached package artifacts match the new
+workspace root. Check the affected package's dep-info and compile-time or runtime
+fixture-root paths against the current checkout. If they still name the old root,
+invalidate and rebuild only the affected owned package artifacts in the same
+approved target under the normal exclusive source, target, and Cargo-cache leases; record target usage before and after, and
+preserve the original failure output and provenance. Keep the registry/download
+cache. Do not blanket-clean Cargo, create a duplicate target, or restore/copy the
+checkout to its former absolute path. See
 [`docs/RUST_BUILD_FOOTPRINT.md`](docs/RUST_BUILD_FOOTPRINT.md) for the run and
 cleanup checklist.
 

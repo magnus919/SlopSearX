@@ -14,6 +14,103 @@ use std::{
 pub(crate) mod source_amendment;
 const QUALIFICATION_SHA: &str = "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e";
 const PUBCHEM_OWNER_CLOCK_TEST: &str = "adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner";
+pub(crate) use source_amendment::causal_successor::a06_source_successor;
+const A06_LIB_TESTS: &[&str] = &[
+    "adapters::arxiv::accounting_tests::pinned_expat_direct_and_indirect_trace_counts",
+    "adapters::arxiv_expat::allocation_tests::closed_schema_struct_and_map_reservations_fit_projection_formula",
+    "adapters::arxiv_expat::allocation_tests::large_projection_scans_and_copies_yield_to_cancellation",
+    "adapters::arxiv_expat::allocation_tests::many_empty_author_slots_yield_during_projection_cost_preflight",
+    "adapters::arxiv_expat_wire::tests::near_budget_decode_yields_to_cancellation_and_preserves_multibyte_edges",
+    "adapters::arxiv_expat_wire::tests::refuses_unknown_tags_versions_counts_lengths_utf8_before_copy",
+    "adapters::arxiv_expat_wire::tests::versioned_payload_round_trip_and_exact_count_bound",
+    "adapters::arxiv_runtime::tests::actual_runtime_allocation_refusal_stops_before_http_and_restores_admission",
+    "adapters::arxiv_runtime::tests::actual_runtime_query_copy_cancellation_and_real_deadline_release_charged_buffers",
+    "adapters::arxiv_runtime::tests::actual_source_query_encoder_checks_its_own_real_deadline_after_charged_pending_polls",
+    "adapters::arxiv_runtime::tests::direct_calls_require_explicit_finite_operation_policy_for_unbounded_source_timeout",
+    "adapters::arxiv_runtime::tests::invalid_injected_response_status_is_transport_not_resource",
+    "adapters::arxiv_runtime::tests::redirect_raw_copy_cancellation_and_real_deadline_restore_shared_budget",
+    "adapters::arxiv_runtime::tests::source_invalid_base_url_is_transport_not_resource_before_http_or_parser",
+    "adapters::clinicaltrials::owner_clock_tests::all_four_boolean_timers_expire_at_one_ms_after_one_confirmed_pending_exchange",
+    "adapters::clinicaltrials::owner_clock_tests::clinicaltrials_bool_true_full_source_replay",
+    "adapters::clinicaltrials::owner_clock_tests::europepmc_bool_true_full_source_replay",
+    "adapters::clinicaltrials::owner_clock_tests::owner_get_precheck_rejects_expiry_before_any_exchange",
+    "adapters::clinicaltrials::owner_clock_tests::pubchem_bool_true_full_source_replay",
+    "adapters::clinicaltrials::owner_clock_tests::uniprot_bool_true_full_source_replay",
+    "adapters::hostname_lower::tests::charged_copy_repeated_pending_then_drop_or_real_deadline",
+    "adapters::hostname_lower::tests::complete_pinned_mapping_and_context_controls",
+    "adapters::hostname_lower::tests::refused_output_and_expired_deadline_release",
+    "adapters::openalex_projection::original_abstract_helper_tests::actual_abstract_helper_preserves_original_empty_simple_and_multiple_positions",
+    "adapters::openalex_runtime::tests::actual_runtime_root_refusal_charged_cpu_drop_and_real_deadline_need_no_helper",
+    "adapters::scholarly_config::tests::raw_config_request_and_operation_projection_matches_actual_source",
+    "adapters::scholarly_float::tests::charged_lexical_work_yields_then_cancels_or_expires_and_refuses_small_budget",
+    "adapters::scholarly_float::tests::pinned_original_float_controls_keep_exact_bits",
+    "adapters::scholarly_frame::tests::frame_cancelled_during_copy_restores_charge",
+    "adapters::scholarly_frame::tests::frame_decoder_refuses_truncation_tags_dates_and_trailing_without_copy",
+    "adapters::scholarly_frame::tests::frame_preserves_raw_headers_body_scalar_bits_and_dates",
+    "adapters::scholarly_frame::tests::owned_child_read_charges_before_allocation_and_drops_on_failure",
+    "adapters::scholarly_helper::tests::actual_source_unicode_boundaries_are_exact_without_surrogate_sanitation",
+    "adapters::scholarly_helper::tests::closed_stage_errors_and_complete_frame_validation_precedence",
+    "adapters::scholarly_helper::tests::empty_body_bypasses_selector_and_xml_syntax_is_source_empty",
+    "adapters::scholarly_helper::tests::same_budget_selects_decodes_parses_and_serializes_with_overlap",
+    "adapters::scholarly_order::bounded_numeric_controls::exact_source_numeric_order_and_fixed_max_scratch",
+    "adapters::scholarly_order::tests::actual_two_pair_source_tuple_comparisons",
+    "adapters::scholarly_order::tests::recursive_future_charges_refuse_and_restore_after_observed_cancellation",
+    "adapters::scholarly_reply::tests::typed_closed_stages_round_trip_and_reject_wrong_stage_class_or_payload",
+    "adapters::scholarly_sort::owned_error_controls::source_error_storage_stays_charged_through_result_drop_and_midcopy_cancel",
+    "adapters::scholarly_sort::tests::cancellation_during_gallop_string_comparison",
+    "adapters::scholarly_sort::tests::cancellation_during_large_index_copy",
+    "adapters::scholarly_sort::tests::charged_storage_refusal_retention_and_cancellation_restore_budget",
+    "adapters::scholarly_sort::tests::full_source_order_and_errors_not_only_adapter_prefix",
+    "adapters::scholarly_wire::bounded_arxiv_growth_controls::large_complete_query_matches_full_original_request_bytes",
+    "adapters::scholarly_wire::bounded_arxiv_growth_controls::large_encoding_quota_drop_and_real_deadline_keep_one_root",
+    "adapters::scholarly_wire::tests::exhaustive_unicode_word_ranges_and_actual_source_request_urls",
+    "adapters::scholarly_wire::tests::historical_first_requests_and_openalex_preflight_errors_remain_source_exact",
+    "adapters::semantic_retry_after::tests::exact_pinned_original_retry_after_controls",
+    "adapters::semantic_retry_after::tests::raw_header_work_is_cooperative_and_scratch_is_root_owned",
+    "adapters::semantic_runtime::tests::actual_json_runtime_root_refusal_cancel_and_real_deadline_need_no_helper",
+    "adapters::semantic_scholar::numeric_tests::long_mixed_width_float_whitespace_observes_deadline",
+    "adapters::semantic_scholar::numeric_tests::python_float_lexical_forms_before_shared_decimal_conversion",
+    "adapters::source_json::allocation::tests::failed_growth_preserves_old_storage_and_charge",
+    "adapters::source_json::allocation::tests::root_tracks_replacement_and_retains_nested_buffers",
+    "adapters::source_json::bounded_numeric_test::shared_normalizer_cancellation_value_uses_charged_scratch",
+    "adapters::source_json::budget_tests::allocation_refusal_releases_partial_tree_and_scratch",
+    "adapters::source_json::budget_tests::budgeted_values_preserve_order_duplicates_scalars_and_errors",
+    "adapters::source_json::diagnostic::tests::exact_original_full_adapter_malformed_utf8_utf16_utf32_diagnostics",
+    "adapters::source_json::diagnostic::tests::formatting_keeps_original_operational_class_and_charged_scratch_drops",
+    "adapters::source_json::expanded_budget_test::accepted_maximum_utf16_scalar_fits_parser_only_64m_allowance",
+    "adapters::source_json::resource_diagnostic_tests::resource_error_is_explicit_and_legacy_message_never_panics",
+    "adapters::source_json::shift_cancel_test::cancel_at_observed_adversarial_index_shift_releases_all_charges",
+    "adapters::source_json::tests::accepted_utf16_expansion_repr_matches_complete_source_hash",
+    "adapters::source_payload::selected_values_controls::charged_empty_selected_values_yield_then_cancel_or_expire_and_release",
+    "adapters::source_payload::selected_values_controls::original_adapter_post_first3_arbitrary_author_values_preserve_payload",
+    "http::client_initialization_tests::aborted_unpublished_constructor_guardian_joins_blocked_builder_without_external_owner",
+    "http::client_initialization_tests::builder_error_releases_both_leases_and_reserved_slot_without_idle_client",
+    "http::client_initialization_tests::deadline_keeps_builder_permits_and_slot_until_actual_completion_without_dispatch",
+    "http::client_initialization_tests::injected_and_ephemeral_profiles_never_start_preparation_workers",
+    "http::client_initialization_tests::owner_close_cancels_waiter_but_retains_build_ownership_until_drain",
+    "http::client_initialization_tests::prepared_default_client_is_moved_once_and_reuses_existing_retention_and_expiry",
+    "http::client_initialization_tests::unread_publication_cancelled_before_final_poll_is_rejected_and_drained",
+    "http::client_initialization_tests::unread_publication_expired_before_final_poll_is_rejected_and_drained",
+    "http::client_initialization_tests::unread_successful_publication_still_requires_ack_and_drains_on_receiver_drop",
+    "http::client_initialization_tests::waiter_abort_does_not_release_blocking_builder_ownership_or_retain_late_client",
+    "http::cold_context_tests::cold_default_context_expiry_retains_real_builder_until_owned_drain",
+    "http::owner_clock_tests::abandoned_decoder_waiter_keeps_owner_until_shutdown_joins_real_worker",
+    "http::owner_clock_tests::blocking_decoder_uses_same_owner_before_and_at_exact_boundary",
+    "http::owner_clock_tests::close_then_cancel_then_deadline_precedence_is_preserved",
+    "http::owner_clock_tests::elapsed_owner_deadline_rejects_before_dispatch_and_wins_ready_response_tie",
+    "http::owner_clock_tests::pending_execute_resolves_simultaneous_close_cancel_deadline_in_original_order",
+    "http::scholarly_timeout_clock::controlled_all_42_timeout_scalars_full_factory_pending_exchange",
+    "http::scholarly_timeout_clock::manual_owner_preparation_survives_real_expiry_for_all_three_factories",
+    "http::scholarly_timeout_clock::pending_owner_early_tick_isolation_and_caller_drop_are_bounded",
+    "http::scholarly_timeout_clock::real_system_all_42_timeout_scalars_full_factory_observed_expiry",
+    "http::scholarly_timeout_clock::real_system_one_ms_preparation_expiry_does_not_promise_dispatch",
+    "http::scholarly_timeout_clock::sealed_pending_owner_rejects_replacement_context_and_worker_entry",
+    "jev::ready_constructor_tests::actual_production_ready_router_constructor_prepares_without_dispatch",
+];
+const A06_JSON_TESTS: &[&str] = &[
+    "float::buffer_tests::provided_scratch_never_reallocates_across_grammar_and_numeric_paths",
+    "float::buffer_tests::storage_refusal_and_constructor_errors_are_distinct",
+];
 const QUALIFICATION: &str = "docs/rust-rewrite/a13/qualification-v1.json";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -74,6 +171,16 @@ pub(super) fn check_source_pin(
     expected_sha: &str,
     expected_bytes: Option<usize>,
 ) -> Result<()> {
+    if let Some(result) = a06_source_successor::try_verify(
+        root,
+        container_path,
+        container_sha,
+        path,
+        expected_sha,
+        expected_bytes,
+    ) {
+        return result;
+    }
     if let Some(result) = crate::w06_source_amendment::verify_shared(
         root,
         container_path,
@@ -189,16 +296,35 @@ fn payload_allowed(payload: &str, allowed: &[String]) -> bool {
 fn execution(output: &str, name: &str, allowed: &[String], filtered: usize) -> Result<()> {
     let lines: Vec<_> = output.lines().collect();
     let prefix = format!("test {name} ... ");
+    let progress_prefix = format!("test {name} has been running for over ");
+    let is_progress = |line: &str| {
+        line.strip_prefix(&progress_prefix)
+            .and_then(|s| s.strip_suffix(" seconds"))
+            .is_some_and(|s| {
+                !s.starts_with('0')
+                    && s.bytes().all(|b| b.is_ascii_digit())
+                    && s.parse::<u64>().is_ok_and(|seconds| seconds > 0)
+            })
+    };
     let named: Vec<_> = lines
         .iter()
         .enumerate()
-        .filter(|(_, s)| s.starts_with("test ") && !s.starts_with("test result:"))
+        .filter(|(_, s)| {
+            s.starts_with("test ") && !s.starts_with("test result:") && !is_progress(s)
+        })
         .collect();
     require(
         named.len() == 1,
         "A13 one exact named start/terminal required",
     )?;
     let (start, line) = named[0];
+    require(
+        lines
+            .iter()
+            .enumerate()
+            .all(|(index, line)| !is_progress(line) || index < start),
+        "A13 progress must precede named terminal/start",
+    )?;
     let suffix = line
         .strip_prefix(&prefix)
         .ok_or("A13 wrong harness name/framing")?;
@@ -576,7 +702,28 @@ fn compiled_suite_names(suite: &Suite) -> Vec<String> {
     {
         names.push("process_pool::cleanup_tests::held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup".into());
     }
+    if suite.package == "ssx-infra" && suite.kind == "lib" && suite.target == "ssx_infra" {
+        names.extend(A06_LIB_TESTS.iter().map(|name| (*name).to_owned()));
+    }
+    if suite.package == "ssx-json" && suite.kind == "lib" && suite.target == "ssx_json" {
+        names.extend(A06_JSON_TESTS.iter().map(|name| (*name).to_owned()));
+    }
     names
+}
+// The frozen qualification keeps its original128 markers. The reviewed header
+// successor adds one mandatory marker to this exact current-source selector.
+fn current_parent_markers(spec: &Selector) -> Vec<String> {
+    let mut expected = spec.markers.clone();
+    if spec.id == "dehashed-source_inventory_is_closed_and_bound_without_original_execution"
+        && spec.package == "ssx-infra"
+        && spec.kind == "test"
+        && spec.target == "a13_dehashed"
+        && spec.name == "source_inventory_is_closed_and_bound_without_original_execution"
+        && spec.source == "crates/ssx-infra/tests/a13_dehashed.rs"
+    {
+        expected.push("A13_HEADER_LAYOUT_CONTROLS exact119a_archive_current_and_scoped_proofs_wrong_caller_mode_old_as_current_and_rehashed_edits_rejected=true".into());
+    }
+    expected
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     #[cfg(test)]
@@ -684,7 +831,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             compiled_suite_names(suite).len() - 1,
         )?;
         let actual = markers(&output, &spec.name, &spec.inline_payloads)?;
-        let mut expected = spec.markers.clone();
+        let parent_markers = current_parent_markers(spec);
+        let mut expected = parent_markers.clone();
         if spec.child.is_some() {
             expected.extend(child(&actual, spec, records)?);
         }
@@ -693,7 +841,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             &expected,
             "A13 complete parent markers/child raw fields missing/extra/duplicate",
         )?;
-        records.push(json!({"A13_native_completion":spec.name,"parent_markers":spec.markers,"original_execution":false,"provider_calls":0}));
+        records.push(json!({"A13_native_completion":spec.name,"parent_markers":parent_markers,"original_execution":false,"provider_calls":0}));
     }
     let output = command(
         root,
@@ -763,6 +911,53 @@ mod tests {
     fn strict_harness_framing() {
         let good = output("selected", "", false);
         assert!(execution(&good, "selected", &[], 0).is_ok());
+        let progress = "test selected has been running for over 60 seconds\n";
+        let slow = good.replace("test selected ...", &format!("{progress}test selected ..."));
+        assert!(execution(&slow, "selected", &[], 0).is_ok());
+        for bad in [
+            slow.replace("test selected has", "test other has"),
+            slow.replace("test selected ... ok", "test other ... ok"),
+            slow.replace("test selected ... ok\n", ""),
+            slow.replace("test selected ... ok", "test selected ... FAILED"),
+            slow.replace("test selected ... ok", "test selected ... ignored"),
+            slow.replace(
+                "test selected ... ok",
+                "test selected ... ok\ntest selected ... ok",
+            ),
+            good.replace(
+                "test selected ... ok\n",
+                &format!("test selected ... ok\n{progress}"),
+            ),
+        ] {
+            assert!(execution(&bad, "selected", &[], 0).is_err(), "{bad}");
+        }
+        for seconds in [
+            "",
+            "0",
+            "060",
+            "-1",
+            "+60",
+            "1.5",
+            "nan",
+            "18446744073709551616",
+        ] {
+            assert!(
+                execution(
+                    &slow.replace("60 seconds", &format!("{seconds} seconds")),
+                    "selected",
+                    &[],
+                    0
+                )
+                .is_err(),
+                "{seconds}"
+            );
+        }
+        for bad in [
+            slow.replace(" seconds", " second"),
+            slow.replace(" seconds", " seconds extra"),
+        ] {
+            assert!(execution(&bad, "selected", &[], 0).is_err(), "{bad}");
+        }
         for bad in [
             good.replace("selected", "other"),
             good.replace("... ok", "... arbitrary"),
@@ -795,6 +990,15 @@ mod tests {
         let allowed = strings(&["A13_REMAINING_CASE_COMPLETE selected"]);
         let split = output("selected", &allowed[0], true);
         assert!(execution(&split, "selected", &allowed, 0).is_ok());
+        assert!(
+            execution(
+                &split.replace("test selected ...", &format!("{progress}test selected ...")),
+                "selected",
+                &allowed,
+                0
+            )
+            .is_ok()
+        );
         assert!(
             execution(
                 &split.replace("A13_REMAINING", "junk A13_REMAINING"),
@@ -927,6 +1131,66 @@ mod tests {
     }
     #[test]
     fn compiled_inventory_is_closed() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        a06_source_successor::controls(&root).unwrap();
+        let qualification: Qualification =
+            serde_json::from_str(&std::fs::read_to_string(root.join(QUALIFICATION)).unwrap())
+                .unwrap();
+        validate(&qualification).unwrap();
+        let spec = qualification
+            .selectors
+            .iter()
+            .find(|spec| {
+                spec.id
+                    == "dehashed-source_inventory_is_closed_and_bound_without_original_execution"
+            })
+            .unwrap();
+        let extended = current_parent_markers(spec);
+        assert_eq!(
+            spec.markers,
+            strings(&["A13_DEHASHED_CASE_COMPLETE source-bindings-closed"])
+        );
+        assert_eq!(extended.len(), 2);
+        assert_eq!(extended[0], spec.markers[0]);
+        let header = "A13_HEADER_LAYOUT_CONTROLS exact119a_archive_current_and_scoped_proofs_wrong_caller_mode_old_as_current_and_rehashed_edits_rejected=true";
+        assert_eq!(extended[1], header);
+        assert!(same(&spec.markers, &extended, "missing header control").is_err());
+        let mut duplicate = extended.clone();
+        duplicate.push(header.into());
+        assert!(same(&duplicate, &extended, "duplicate header control").is_err());
+        let mut extra = extended.clone();
+        extra.push("A13_UNREVIEWED_CONTROL true".into());
+        assert!(same(&extra, &extended, "extra marker").is_err());
+        let mut altered = extended.clone();
+        altered[1].push('x');
+        assert!(same(&altered, &extended, "altered header control").is_err());
+        for field in ["id", "package", "kind", "target", "name", "source"] {
+            let mut value: Value =
+                serde_json::from_str(&std::fs::read_to_string(root.join(QUALIFICATION)).unwrap())
+                    .unwrap();
+            let selected = value["selectors"]
+                .as_array_mut()
+                .unwrap()
+                .iter_mut()
+                .find(|row| row["id"] == spec.id)
+                .unwrap();
+            selected[field] = json!("wrong");
+            let wrong: Selector = serde_json::from_value(selected.clone()).unwrap();
+            assert_eq!(current_parent_markers(&wrong), spec.markers);
+            assert!(
+                same(
+                    &extended,
+                    &current_parent_markers(&wrong),
+                    "wrong selector marker"
+                )
+                .is_err()
+            );
+        }
+        for other in &qualification.selectors {
+            if other.id != spec.id {
+                assert_eq!(current_parent_markers(other), other.markers);
+            }
+        }
         assert_eq!(
             listed("alpha: test\nbeta: test\n2 tests, 0 benchmarks\n").unwrap(),
             strings(&["alpha", "beta"])
@@ -945,12 +1209,63 @@ mod tests {
             kind: kind.into(),
             names: strings(&["sentinel"]),
         };
+        let json = compiled_suite_names(&suite_for("ssx-json", "lib", "ssx_json"));
+        assert_eq!(json.len(), 1 + A06_JSON_TESTS.len());
+        assert_eq!(A06_JSON_TESTS.len(), 2);
+        assert_eq!(
+            A06_JSON_TESTS
+                .iter()
+                .copied()
+                .collect::<BTreeSet<_>>()
+                .len(),
+            2
+        );
+        for name in A06_JSON_TESTS {
+            assert_eq!(
+                json.iter()
+                    .filter(|actual| actual.as_str() == *name)
+                    .count(),
+                1
+            );
+            let mut omitted = json.clone();
+            omitted.retain(|actual| actual.as_str() != *name);
+            assert!(same(&omitted, &json, "A06 omitted JSON compiled identity").is_err());
+            let mut repeated = json.clone();
+            repeated.push((*name).into());
+            assert!(same(&repeated, &json, "A06 duplicated JSON compiled identity").is_err());
+        }
+        let mut extra_json = json.clone();
+        extra_json.push("unrelated::unexpected_json_test".into());
+        assert!(same(&extra_json, &json, "A06 extra JSON compiled identity").is_err());
+        for (package, kind, target) in [
+            ("other", "lib", "ssx_json"),
+            ("ssx-json", "test", "ssx_json"),
+            ("ssx-json", "lib", "other"),
+        ] {
+            assert_eq!(
+                compiled_suite_names(&suite_for(package, kind, target)),
+                strings(&["sentinel"])
+            );
+        }
         let exact = compiled_suite_names(&suite_for("ssx-infra", "lib", "ssx_infra"));
         let count = |needle: &str| exact.iter().filter(|name| name.as_str() == needle).count();
         assert_eq!(count("sentinel"), 1);
         assert_eq!(count(PUBCHEM_OWNER_CLOCK_TEST), 1);
         let cold = "adapters::html_helper_tests::cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies";
         assert_eq!(count(cold), 1);
+        assert_eq!(
+            A06_LIB_TESTS.iter().copied().collect::<BTreeSet<_>>().len(),
+            A06_LIB_TESTS.len()
+        );
+        for name in A06_LIB_TESTS {
+            assert_eq!(count(name), 1, "A06 mandatory compiled identity {name}");
+            let mut omitted = exact.clone();
+            omitted.retain(|actual| actual.as_str() != *name);
+            assert!(same(&omitted, &exact, "A06 omitted compiled identity").is_err());
+            let mut repeated = exact.clone();
+            repeated.push((*name).into());
+            assert!(same(&repeated, &exact, "A06 duplicated compiled identity").is_err());
+        }
         for (package, kind, target) in [
             ("other", "lib", "ssx_infra"),
             ("ssx-infra", "test", "ssx_infra"),

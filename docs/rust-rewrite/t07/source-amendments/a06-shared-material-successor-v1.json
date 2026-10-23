@@ -1,0 +1,534 @@
+{
+  "kind": "T07_A06_EXACT_SHARED_MATERIAL_SUCCESSOR_V1",
+  "source_parent": "51fda0f70e2051e145478783ca9c32e1f4de9596",
+  "paths": [
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "transitions": [
+    {
+      "prior": {
+        "bytes": 1984,
+        "git_blob": "6dc332bf47713645e032e1e44d8b92ed74cdd16f",
+        "mode": "0644",
+        "path": "Cargo.toml",
+        "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3"
+      },
+      "archive": {
+        "bytes": 1984,
+        "git_blob": "6dc332bf47713645e032e1e44d8b92ed74cdd16f",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/t07/source-amendments/a06-51fda0f7/Cargo.toml",
+        "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3",
+        "source_path": "Cargo.toml"
+      },
+      "current": {
+        "path": "Cargo.toml",
+        "bytes": 2489,
+        "sha256": "3e42da30b3d9c9ca417cbd082cc1553d2fc2bf1e31f2d754199d48cc601cc6e3",
+        "git_blob": "c727e383e647ed0a5a498f35d26fdd571d971d59",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 35,
+          "remove_utf8": "exclude = [\"vendor/expat\", \"vendor/libxml\"]\n",
+          "insert_utf8": "exclude = [\"vendor/expat\", \"vendor/libxml\", \"vendor/ssx-http-source/httparse\", \"vendor/ssx-http-source/hyper\", \"vendor/ssx-http-source/hyper-util\", \"vendor/ssx-http-source/reqwest\", \"vendor/ssx-sdk-auth/rmcp\"]\n"
+        },
+        {
+          "at": 1984,
+          "remove_utf8": "",
+          "insert_utf8": "\n# Explicit T07 reviewed HTTP/OAuth source composition.\n[patch.crates-io]\nhttparse = { path = \"vendor/ssx-http-source/httparse\" }\nhyper = { path = \"vendor/ssx-http-source/hyper\" }\nhyper-util = { path = \"vendor/ssx-http-source/hyper-util\" }\nreqwest = { path = \"vendor/ssx-http-source/reqwest\" }\nrmcp = { path = \"vendor/ssx-sdk-auth/rmcp\" }\n"
+        }
+      ]
+    },
+    {
+      "prior": {
+        "bytes": 87524,
+        "git_blob": "1abbba24593cd35a9633bb3a5a58f2b5cd1c2d6b",
+        "mode": "0644",
+        "path": "Cargo.lock",
+        "sha256": "92ee06e2da26d90c014ffabe812d52af88b084b0edfc4b362c9c33716e0ecd7d"
+      },
+      "archive": {
+        "bytes": 87524,
+        "git_blob": "1abbba24593cd35a9633bb3a5a58f2b5cd1c2d6b",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/t07/source-amendments/a06-51fda0f7/Cargo.lock",
+        "sha256": "92ee06e2da26d90c014ffabe812d52af88b084b0edfc4b362c9c33716e0ecd7d",
+        "source_path": "Cargo.lock"
+      },
+      "current": {
+        "path": "Cargo.lock",
+        "bytes": 91393,
+        "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1",
+        "git_blob": "bdf7413f848d86be3a91158aaa4c5637ac7f32b4",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 2976,
+          "remove_utf8": " \"thiserror\",\n",
+          "insert_utf8": " \"thiserror 2.0.21\",\n"
+        },
+        {
+          "at": 5983,
+          "remove_utf8": "",
+          "insert_utf8": "version = \"0.22.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6\"\n\n[[package]]\nname = \"base64\"\n"
+        },
+        {
+          "at": 6881,
+          "remove_utf8": "",
+          "insert_utf8": "\n[[package]]\nname = \"block-buffer\"\nversion = \"0.10.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71\"\ndependencies = [\n \"generic-array\",\n]\n"
+        },
+        {
+          "at": 8576,
+          "remove_utf8": " \"cpufeatures\",\n \"rand_core\",\n",
+          "insert_utf8": " \"cpufeatures 0.3.1\",\n \"rand_core 0.10.1\",\n"
+        },
+        {
+          "at": 8835,
+          "remove_utf8": "",
+          "insert_utf8": " \"js-sys\",\n"
+        },
+        {
+          "at": 8860,
+          "remove_utf8": "",
+          "insert_utf8": " \"wasm-bindgen\",\n"
+        },
+        {
+          "at": 12517,
+          "remove_utf8": "",
+          "insert_utf8": "version = \"0.2.17\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280\"\ndependencies = [\n \"libc\",\n]\n\n[[package]]\nname = \"cpufeatures\"\n"
+        },
+        {
+          "at": 12927,
+          "remove_utf8": "",
+          "insert_utf8": "]\n\n[[package]]\nname = \"crypto-common\"\nversion = \"0.1.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a\"\ndependencies = [\n \"generic-array\",\n \"typenum\",\n"
+        },
+        {
+          "at": 15709,
+          "remove_utf8": "",
+          "insert_utf8": "version = \"0.10.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292\"\ndependencies = [\n \"block-buffer 0.10.4\",\n \"crypto-common 0.1.7\",\n]\n\n[[package]]\nname = \"digest\"\n"
+        },
+        {
+          "at": 15888,
+          "remove_utf8": " \"block-buffer\",\n",
+          "insert_utf8": " \"block-buffer 0.12.1\",\n"
+        },
+        {
+          "at": 15919,
+          "remove_utf8": " \"crypto-common\",\n",
+          "insert_utf8": " \"crypto-common 0.2.2\",\n"
+        },
+        {
+          "at": 22428,
+          "remove_utf8": "",
+          "insert_utf8": "name = \"generic-array\"\nversion = \"0.14.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a\"\ndependencies = [\n \"typenum\",\n \"version_check\",\n]\n\n[[package]]\n"
+        },
+        {
+          "at": 23165,
+          "remove_utf8": " \"rand_core\",\n",
+          "insert_utf8": " \"rand_core 0.10.1\",\n"
+        },
+        {
+          "at": 25387,
+          "remove_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87\"\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 25997,
+          "remove_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c\"\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 26700,
+          "remove_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ddc03d96684f9226b8a787cdb71488417b53ab5ea8fdb1dac946cb9431cc8bff\"\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 26860,
+          "remove_utf8": " \"base64\",\n",
+          "insert_utf8": " \"base64 0.23.1\",\n"
+        },
+        {
+          "at": 31490,
+          "remove_utf8": " \"thiserror\",\n",
+          "insert_utf8": " \"thiserror 2.0.21\",\n"
+        },
+        {
+          "at": 33521,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 38427,
+          "remove_utf8": "",
+          "insert_utf8": "name = \"oauth2\"\nversion = \"5.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d\"\ndependencies = [\n \"base64 0.22.1\",\n \"chrono\",\n \"getrandom 0.2.17\",\n \"http\",\n \"rand 0.8.8\",\n \"serde\",\n \"serde_json\",\n \"serde_path_to_error\",\n \"sha2 0.10.9\",\n \"thiserror 1.0.69\",\n \"url\",\n]\n\n[[package]]\n"
+        },
+        {
+          "at": 40357,
+          "remove_utf8": " \"base64\",\n",
+          "insert_utf8": " \"base64 0.23.1\",\n"
+        },
+        {
+          "at": 42671,
+          "remove_utf8": "",
+          "insert_utf8": "name = \"ppv-lite86\"\nversion = \"0.2.21\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9\"\ndependencies = [\n \"zerocopy\",\n]\n\n[[package]]\n"
+        },
+        {
+          "at": 44354,
+          "remove_utf8": " \"thiserror\",\n",
+          "insert_utf8": " \"thiserror 2.0.21\",\n"
+        },
+        {
+          "at": 44676,
+          "remove_utf8": " \"rand\",\n",
+          "insert_utf8": " \"rand 0.10.3\",\n"
+        },
+        {
+          "at": 44763,
+          "remove_utf8": " \"thiserror\",\n",
+          "insert_utf8": " \"thiserror 2.0.21\",\n"
+        },
+        {
+          "at": 45556,
+          "remove_utf8": "",
+          "insert_utf8": "version = \"0.8.8\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c\"\ndependencies = [\n \"libc\",\n \"rand_chacha\",\n \"rand_core 0.6.4\",\n]\n\n[[package]]\nname = \"rand\"\n"
+        },
+        {
+          "at": 45768,
+          "remove_utf8": " \"rand_core\",\n",
+          "insert_utf8": " \"rand_core 0.10.1\",\n]\n\n[[package]]\nname = \"rand_chacha\"\nversion = \"0.3.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88\"\ndependencies = [\n \"ppv-lite86\",\n \"rand_core 0.6.4\",\n]\n\n[[package]]\nname = \"rand_core\"\nversion = \"0.6.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c\"\ndependencies = [\n \"getrandom 0.2.17\",\n"
+        },
+        {
+          "at": 46188,
+          "remove_utf8": " \"rand_core\",\n",
+          "insert_utf8": " \"rand_core 0.10.1\",\n"
+        },
+        {
+          "at": 48430,
+          "remove_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029\"\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 48590,
+          "remove_utf8": " \"base64\",\n",
+          "insert_utf8": " \"base64 0.23.1\",\n"
+        },
+        {
+          "at": 49481,
+          "remove_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ab5023804cbe0304cbe06197ac16e645a0a0d0ffa2953bf735c15c2fa0213350\"\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 49657,
+          "remove_utf8": " \"base64\",\n",
+          "insert_utf8": " \"base64 0.23.1\",\n"
+        },
+        {
+          "at": 49756,
+          "remove_utf8": "",
+          "insert_utf8": " \"oauth2\",\n"
+        },
+        {
+          "at": 49805,
+          "remove_utf8": " \"rand\",\n",
+          "insert_utf8": " \"rand 0.10.3\",\n"
+        },
+        {
+          "at": 49895,
+          "remove_utf8": " \"thiserror\",\n",
+          "insert_utf8": " \"thiserror 2.0.21\",\n"
+        },
+        {
+          "at": 49981,
+          "remove_utf8": "",
+          "insert_utf8": " \"url\",\n"
+        },
+        {
+          "at": 58404,
+          "remove_utf8": "",
+          "insert_utf8": "version = \"0.10.9\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283\"\ndependencies = [\n \"cfg-if\",\n \"cpufeatures 0.2.17\",\n \"digest 0.10.7\",\n]\n\n[[package]]\nname = \"sha2\"\n"
+        },
+        {
+          "at": 58594,
+          "remove_utf8": " \"cpufeatures\",\n \"digest\",\n",
+          "insert_utf8": " \"cpufeatures 0.3.1\",\n \"digest 0.11.3\",\n"
+        },
+        {
+          "at": 61059,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 61485,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 61607,
+          "remove_utf8": "",
+          "insert_utf8": " \"axum\",\n \"base64 0.23.1\",\n \"chrono\",\n"
+        },
+        {
+          "at": 61616,
+          "remove_utf8": "",
+          "insert_utf8": " \"redis\",\n \"reqwest\",\n"
+        },
+        {
+          "at": 61625,
+          "remove_utf8": "",
+          "insert_utf8": " \"serde_json\",\n \"sha2 0.11.1\",\n \"ssx-application\",\n \"ssx-config\",\n \"ssx-domain\",\n \"ssx-infra\",\n \"ssx-json\",\n \"ssx-mcp\",\n \"ssx-registry\",\n"
+        },
+        {
+          "at": 61638,
+          "remove_utf8": "",
+          "insert_utf8": " \"tokio\",\n \"tokio-util\",\n"
+        },
+        {
+          "at": 61729,
+          "remove_utf8": " \"base64\",\n",
+          "insert_utf8": " \"base64 0.23.1\",\n"
+        },
+        {
+          "at": 61798,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 62046,
+          "remove_utf8": " \"base64\",\n",
+          "insert_utf8": " \"base64 0.23.1\",\n"
+        },
+        {
+          "at": 62214,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 62615,
+          "remove_utf8": "",
+          "insert_utf8": " \"async-trait\",\n"
+        },
+        {
+          "at": 62624,
+          "remove_utf8": " \"base64\",\n",
+          "insert_utf8": " \"base64 0.23.1\",\n \"flate2\",\n"
+        },
+        {
+          "at": 62652,
+          "remove_utf8": "",
+          "insert_utf8": " \"indexmap\",\n \"libc\",\n \"nix\",\n \"oauth2\",\n"
+        },
+        {
+          "at": 62719,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 62886,
+          "remove_utf8": "",
+          "insert_utf8": " \"tracing\",\n"
+        },
+        {
+          "at": 63602,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 67090,
+          "remove_utf8": "",
+          "insert_utf8": "version = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52\"\ndependencies = [\n \"thiserror-impl 1.0.69\",\n]\n\n[[package]]\nname = \"thiserror\"\n"
+        },
+        {
+          "at": 67269,
+          "remove_utf8": " \"thiserror-impl\",\n",
+          "insert_utf8": " \"thiserror-impl 2.0.21\",\n]\n\n[[package]]\nname = \"thiserror-impl\"\nversion = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n"
+        },
+        {
+          "at": 73931,
+          "remove_utf8": "",
+          "insert_utf8": " \"serde_derive\",\n"
+        },
+        {
+          "at": 84667,
+          "remove_utf8": " \"thiserror\",\n",
+          "insert_utf8": " \"thiserror 2.0.21\",\n"
+        },
+        {
+          "at": 84797,
+          "remove_utf8": " \"sha2\",\n",
+          "insert_utf8": " \"sha2 0.11.1\",\n"
+        },
+        {
+          "at": 85871,
+          "remove_utf8": "",
+          "insert_utf8": "]\n\n[[package]]\nname = \"zerocopy\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8\"\ndependencies = [\n \"zerocopy-derive\",\n]\n\n[[package]]\nname = \"zerocopy-derive\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n"
+        }
+      ]
+    }
+  ],
+  "composition_proof": {
+    "all_existing_registry_package_records_unchanged": true,
+    "registry_records": 352,
+    "OAuth16_registry_tuples": [
+      {
+        "name": "base64",
+        "version": "0.22.1",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+      },
+      {
+        "name": "block-buffer",
+        "version": "0.10.4",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
+      },
+      {
+        "name": "cpufeatures",
+        "version": "0.2.17",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
+      },
+      {
+        "name": "crypto-common",
+        "version": "0.1.7",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
+      },
+      {
+        "name": "digest",
+        "version": "0.10.7",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
+      },
+      {
+        "name": "generic-array",
+        "version": "0.14.7",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
+      },
+      {
+        "name": "oauth2",
+        "version": "5.0.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d"
+      },
+      {
+        "name": "ppv-lite86",
+        "version": "0.2.21",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
+      },
+      {
+        "name": "rand",
+        "version": "0.8.8",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c"
+      },
+      {
+        "name": "rand_chacha",
+        "version": "0.3.1",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
+      },
+      {
+        "name": "rand_core",
+        "version": "0.6.4",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
+      },
+      {
+        "name": "sha2",
+        "version": "0.10.9",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
+      },
+      {
+        "name": "thiserror",
+        "version": "1.0.69",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
+      },
+      {
+        "name": "thiserror-impl",
+        "version": "1.0.69",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+      },
+      {
+        "name": "zerocopy",
+        "version": "0.8.63",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8"
+      },
+      {
+        "name": "zerocopy-derive",
+        "version": "0.8.63",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f"
+      }
+    ],
+    "five_local_forks": [
+      {
+        "name": "httparse",
+        "version": "1.10.1",
+        "lock_record_sha256": "3f03f15a80fdda0fa44d5d01a0d8bf21796f556dc93213d655ec321d999ef769",
+        "local_tree_sha256": "20520aa93afe7a2e83b458e59fde6973ab1964847dd21cde94f21e837733a2f0",
+        "provenance_path": "vendor/ssx-http-source/PROVENANCE.json",
+        "provenance_sha256": "44fb2b88ef678cd3b107c2efdc819c1429ae71866a33ed55f6a7133c62654e76"
+      },
+      {
+        "name": "hyper",
+        "version": "1.12.0",
+        "lock_record_sha256": "6eae5e62eb601d1c17697276b66ffb1f65393e77f784cce7ca987f13ecbf8266",
+        "local_tree_sha256": "461e84494c9e8dc41d9fd81c28dc3b6267c00368f87b9015ab71ec361b075be4",
+        "provenance_path": "vendor/ssx-http-source/PROVENANCE.json",
+        "provenance_sha256": "44fb2b88ef678cd3b107c2efdc819c1429ae71866a33ed55f6a7133c62654e76"
+      },
+      {
+        "name": "hyper-util",
+        "version": "0.1.21",
+        "lock_record_sha256": "317185e8764a60853d910f0f4a8beb3997269bc7b7b6a326270860431bd12a0b",
+        "local_tree_sha256": "fe22d31c349738b9504ca90e588125c2c106b85e64ec4eeff9fd7321f4789f2d",
+        "provenance_path": "vendor/ssx-http-source/PROVENANCE.json",
+        "provenance_sha256": "44fb2b88ef678cd3b107c2efdc819c1429ae71866a33ed55f6a7133c62654e76"
+      },
+      {
+        "name": "reqwest",
+        "version": "0.13.5",
+        "lock_record_sha256": "0d2842656002b8cf27ee34b2c73845be2effe2855a485a6980995372f9673273",
+        "local_tree_sha256": "f988891178503da783f05058bd631be4433b831ffca4b199bcdae61c7e8dd20a",
+        "provenance_path": "vendor/ssx-http-source/PROVENANCE.json",
+        "provenance_sha256": "44fb2b88ef678cd3b107c2efdc819c1429ae71866a33ed55f6a7133c62654e76"
+      },
+      {
+        "name": "rmcp",
+        "version": "3.5.1",
+        "lock_record_sha256": "2c31849398afd30a0940b5b96853e9f1d3dfcb26ba78f72f3ddda8388c56947d",
+        "local_tree_sha256": "6d18acf1b0fe4346b3e17ff0f659b233bb78c307ed544966127bbc185ee0e60d",
+        "provenance_path": "vendor/ssx-sdk-auth/PROVENANCE.json",
+        "provenance_sha256": "f28275b239a7f541eb82b8d41353eb6117483b4c29551ff73ac5da28bbaaef57"
+      }
+    ],
+    "only_added_package": {
+      "name": "ssx-source-xml",
+      "version": "0.1.0",
+      "dependencies": [
+        "sha2 0.11.1"
+      ]
+    },
+    "only_existing_local_package_edge_delta": "ssx-infra adds ssx-source-xml; all existing deps preserved",
+    "candidate_preimage": {
+      "Cargo.toml": {
+        "sha256": "991a64bfba9ee1736aab00c84ab588142b600b34638814c17b8b4cd92d4f14c4",
+        "bytes": 2473
+      },
+      "Cargo.lock": {
+        "sha256": "6e99cda90ac4df5f25c94df4322c94fbc21a6ecbf0400b024885f082d2532a80",
+        "bytes": 91284
+      }
+    }
+  }
+}

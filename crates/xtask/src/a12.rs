@@ -35,6 +35,36 @@ fn one_pass(stdout: &str, name: &str) -> bool {
             .iter()
             .any(|l| l.starts_with("test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; "))
 }
+const DEFAULT_IDENTITY_TEST_PATH: &str = "crates/ssx-infra/tests/a12_security.rs";
+const DEFAULT_IDENTITY_OLD_SHA: &str =
+    "601e6e9c1260dc1550820be5057db2dea37e41e81d9ba7d030f02dddfa2446db";
+const DEFAULT_IDENTITY_CURRENT_SHA: &str =
+    "ee1339e68e04241029c78e17711fbff5b1a7b2e6033f5f6816de80bf46ef87ec";
+const DEFAULT_IDENTITY_INSERT: &str = "    headers.insert(\n        reqwest::header::USER_AGENT,\n        reqwest::header::HeaderValue::from_static(http::DEFAULT_USER_AGENT),\n    );\n";
+fn default_identity_source(
+    raw: &[u8],
+    expected_sha: &str,
+    expected_bytes: Option<usize>,
+) -> Result<()> {
+    require(
+        expected_sha == DEFAULT_IDENTITY_OLD_SHA && expected_bytes.is_none(),
+        "A12 exact historical default-identity source caller changed",
+    )?;
+    require(
+        digest(raw) == DEFAULT_IDENTITY_CURRENT_SHA,
+        "A12 current default-identity test source changed",
+    )?;
+    let current = std::str::from_utf8(raw).map_err(|e| e.to_string())?;
+    require(
+        current.matches(DEFAULT_IDENTITY_INSERT).count() == 1,
+        "A12 exact one default-identity insertion required",
+    )?;
+    let historical = current.replacen(DEFAULT_IDENTITY_INSERT, "", 1);
+    require(
+        digest(historical.as_bytes()) == DEFAULT_IDENTITY_OLD_SHA,
+        "A12 default-identity insertion changes other original assertions",
+    )
+}
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let bytes = fs::read(root.join("docs/rust-rewrite/a12/qualification-v1.json"))
         .map_err(|e| e.to_string())?;
@@ -55,15 +85,25 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             !Path::new(p).is_absolute() && !p.split('/').any(|v| v == "..") && pins.insert(p),
             "A12 duplicate/unsafe path",
         )?;
-        crate::a13::check_source_pin(
-            root,
-            "docs/rust-rewrite/a12/qualification-v1.json",
-            &digest(&bytes),
-            p,
-            pin["sha256"].as_str().ok_or("A12 source digest absent")?,
-            pin["bytes"].as_u64().map(|value| value as usize),
-        )
-        .map_err(|_| "A12 source pin stale".to_owned())?;
+        let expected_sha = pin["sha256"].as_str().ok_or("A12 source digest absent")?;
+        let expected_bytes = pin["bytes"].as_u64().map(|value| value as usize);
+        if p == DEFAULT_IDENTITY_TEST_PATH {
+            default_identity_source(
+                &fs::read(root.join(p)).map_err(|e| e.to_string())?,
+                expected_sha,
+                expected_bytes,
+            )?;
+        } else {
+            crate::a13::check_source_pin(
+                root,
+                "docs/rust-rewrite/a12/qualification-v1.json",
+                &digest(&bytes),
+                p,
+                expected_sha,
+                expected_bytes,
+            )
+            .map_err(|_| "A12 source pin stale".to_owned())?;
+        }
     }
     require(pins.len() >= 20, "A12 source coverage absent")?;
     let map: Value = serde_json::from_slice(
@@ -179,6 +219,42 @@ mod tests {
     use super::one_pass;
     #[test]
     fn exact_positive_completion_is_required() {
+        let current = include_bytes!("../../ssx-infra/tests/a12_security.rs");
+        assert!(
+            super::default_identity_source(current, super::DEFAULT_IDENTITY_OLD_SHA, None).is_ok()
+        );
+        assert!(super::default_identity_source(current, "wrong", None).is_err());
+        assert!(
+            super::default_identity_source(
+                current,
+                super::DEFAULT_IDENTITY_OLD_SHA,
+                Some(current.len())
+            )
+            .is_err()
+        );
+        let current = std::str::from_utf8(current).unwrap();
+        for mutated in [
+            current.replacen(super::DEFAULT_IDENTITY_INSERT, "", 1),
+            current.replace("http::DEFAULT_USER_AGENT", "\"wrong-agent\""),
+            current.replace(
+                super::DEFAULT_IDENTITY_INSERT,
+                &format!(
+                    "{}{}",
+                    super::DEFAULT_IDENTITY_INSERT,
+                    super::DEFAULT_IDENTITY_INSERT
+                ),
+            ),
+            current.replace("synthetic-secret", "changed-secret"),
+        ] {
+            assert!(
+                super::default_identity_source(
+                    mutated.as_bytes(),
+                    super::DEFAULT_IDENTITY_OLD_SHA,
+                    None
+                )
+                .is_err()
+            );
+        }
         let valid = "\nrunning 1 test\ntest selected ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.01s\n";
         assert!(one_pass(valid, "selected"));
         for invalid in [
