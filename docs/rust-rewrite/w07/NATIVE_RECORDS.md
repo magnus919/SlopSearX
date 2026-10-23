@@ -139,3 +139,54 @@ created backend owners before the fixture retires. The other three test bodies
 are unchanged. These explicit owner closes were exercised by the successful native tests.
 Production Authority remains an injected coherent-snapshot port: this candidate
 contains no live operator authority implementation or runtime/MCP activation.
+
+
+## Shared evidence composition (W07 scope B)
+
+Scope B composes borrowed references to the same `Arc<ValkeyBackend>`,
+`SnapshotService`, and `SearchClock`, with an injected current-policy owner.
+Construction is explicit and does not activate a new MCP tool, HTTP route,
+portal response, provider dispatch, or gateway behavior. The existing runtime
+owner remains responsible for startup, bounded PING readiness, cancellation,
+and shutdown. The component owns no replacement backend or background task.
+The portal impact is therefore limited to a construction-only seam: existing
+browser-visible behavior remains unchanged. Dispatch integration and end-to-end
+portal acceptance belong to the remaining delivery scopes.
+
+Every authority publication is validated atomically. Post-read authorization
+boundaries resample current grants, retained-engine eligibility, and the
+corresponding staged/report limits from one coherent publication. Revocation
+remains effective after each await; a policy snapshot is not frozen for an
+entire operation. Legacy injected application ports retain fixed numeric-limit
+defaults while explicitly rechecking current grants. Entity collection shares
+the full/projected implementation, including the frozen F13 corpus.
+
+Focused native qualification passed on integrated source
+`637dcc99a04a718c35cfdb186f60f777511615fb` (8,171 source files, unchanged
+through the run). All 119 xtask controls and 60 focused business tests passed,
+with no ignored tests: eight authority controls, one frozen entity corpus,
+14 lineage boundaries, 18 receipt regressions, one search-construction control,
+three real shared-component tests, and 15 existing record/receipt regressions.
+The controls include publication during staged, saved-definition, selected
+report, research and second entity reads; denial prevents downstream report or
+projected visitor work. Strict scoped library, component, record and xtask
+all-target Clippy checks passed. Formatting passed. Earlier lint and finite
+source-proof wiring failures remain preserved rather than relabeled as passes.
+
+Immutable local receipts under the registered Rust build root:
+
+- `w07-evidence-composition-focused-20261023/resume-integrated/RESULT.json`,
+  SHA256 `f00746d3f4cd5e8312f9ce1f24f2594be1c7a615068d09e38393e8c8ccc0d136`.
+- `w07-evidence-composition-focused-20261023/strict-xtask/RESULT.json`,
+  SHA256 `5e56334105c1ac0138455dcdcbf91316bf6a8eb98621b57caa77506ad00c160f`.
+
+Both native owners retired, all three exclusive leases were released, and the
+private Valkey scratch was empty and removed. Shared target/cache reuse used
+profile debug=0 and a finite package provenance cleanup after the prior owner.
+The source successor preserves frozen inventories and historical negative
+controls, proving the exact three predecessor sources before accepting the one
+new construction-test identity (383 to 384 current A06 library tests).
+
+This is focused component evidence, not full-workspace qualification,
+production activation, transport performance, or complete W07 delivery.
+Issue #913 remains open for scopes C/D. See the [case study](../CASE_STUDY.md).
