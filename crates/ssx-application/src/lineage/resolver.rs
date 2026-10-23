@@ -939,8 +939,10 @@ mod contract_tests {
                 _ => {}
             }
             let policy = Arc::new(Mutex::new(initial));
-            let mut scope = ssx_domain::ScopeDecision::default();
-            scope.selected_engines = vec!["brave".into()];
+            let scope = ssx_domain::ScopeDecision {
+                selected_engines: vec!["brave".into()],
+                ..Default::default()
+            };
             let snapshot = SearchSnapshot::new(
                 SnapshotId::new("snapshot-a").unwrap(),
                 "q".into(),
@@ -1125,8 +1127,10 @@ mod contract_tests {
                     initial.policy.sensitive_allowed = true;
                     let policy = Arc::new(Mutex::new(initial));
                     let gate = Arc::new(ReadGate::default());
-                    let mut scope = ssx_domain::ScopeDecision::default();
-                    scope.selected_engines = vec!["brave".into()];
+                    let scope = ssx_domain::ScopeDecision {
+                        selected_engines: vec!["brave".into()],
+                        ..Default::default()
+                    };
                     let snapshots = Arc::new(HeldSnapshots {
                         snapshot: SearchSnapshot::new(
                             SnapshotId::new("snapshot-held").unwrap(),
