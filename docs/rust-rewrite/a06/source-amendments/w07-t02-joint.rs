@@ -287,6 +287,15 @@ fn row(path: &str) -> Result<&'static Row> {
         .ok_or_else(|| "W07/T02 unlisted source".into())
 }
 fn inverse(row: &Row, actual: &[u8], mode: u32, prior: &Prior) -> Result<Vec<u8>> {
+    inverse_with_edits(row, actual, mode, prior, prior.edits)
+}
+fn inverse_with_edits(
+    row: &Row,
+    actual: &[u8],
+    mode: u32,
+    prior: &Prior,
+    edits: &[(usize, &str, &str)],
+) -> Result<Vec<u8>> {
     need(
         mode == 0o644 && actual.len() == row.bytes && sha(actual) == row.sha,
         "exact joint bytes/mode",
@@ -294,7 +303,7 @@ fn inverse(row: &Row, actual: &[u8], mode: u32, prior: &Prior) -> Result<Vec<u8>
     let mut out = Vec::new();
     let mut end = 0;
     let mut previous = None;
-    for &(at, remove, insert) in prior.edits {
+    for &(at, remove, insert) in edits {
         let next = at.checked_add(remove.len()).ok_or("joint span overflow")?;
         need(
             at >= end
@@ -462,11 +471,31 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                     "changed source mode",
                 )?;
             }
-            for (at, remove, insert) in p.edits {
+            for (index, &(at, remove, insert)) in p.edits.iter().enumerate() {
+                if remove.is_empty() {
+                    need(!insert.is_empty(), "vacuous joint span")?;
+                    let mut omitted = p.edits.to_vec();
+                    omitted.remove(index);
+                    let mut duplicate = p.edits.to_vec();
+                    duplicate.insert(index, p.edits[index]);
+                    let mut moved = p.edits.to_vec();
+                    moved[index].0 = at.checked_add(1).ok_or("joint control offset overflow")?;
+                    for edits in [omitted, duplicate, moved] {
+                        need(
+                            edits.as_slice() != p.edits,
+                            "unchanged joint edit descriptor",
+                        )?;
+                        need(
+                            inverse_with_edits(r, &actual, mode, p, &edits).is_err(),
+                            "missing/duplicate/relocated insertion-only joint edit",
+                        )?;
+                    }
+                    continue;
+                }
                 let mut missing = actual.clone();
-                missing.drain(*at..*at + remove.len());
+                missing.drain(at..at + remove.len());
                 let mut duplicate = actual.clone();
-                duplicate.splice(*at..*at, remove.as_bytes().iter().copied());
+                duplicate.splice(at..at, remove.as_bytes().iter().copied());
                 let mut moved = missing.clone();
                 moved.extend_from_slice(remove.as_bytes());
                 for bad in [missing, duplicate, moved] {
