@@ -884,8 +884,8 @@ async fn cancellation_before_reads_and_after_dispatched_read_is_drained() {
     // The unchanged fixture retains and retires its original private Valkey Child.
 }
 
-// Explicit mutation while a real final W04 CAS reply is withheld. This does not
-// replace the existing cancellation/Nil barrier control.
+// Explicit mutation while an empty initial hint or a final W04 CAS reply is
+// withheld. This does not replace the existing cancellation/Nil barrier control.
 struct LiveAuthority {
     mutation: AtomicUsize,
     samples: AtomicUsize,
@@ -988,6 +988,8 @@ async fn held_report_case(mutation: usize, empty: bool) {
         .await
         .unwrap()
         .unwrap();
+    let mut empty_hint_requests = relay.requests();
+    empty_hint_requests.push(exact_command.clone());
     relay.arm();
     let tenant = tenant();
     let cancel = Cancellation::default();
@@ -1014,10 +1016,23 @@ async fn held_report_case(mutation: usize, empty: bool) {
                 .count(),
             occurrence
         );
-        assert!(
-            authority.samples.load(Ordering::SeqCst) >= 2,
-            "initial hint and actual W04 authority samples must precede held final reply"
-        );
+        if empty {
+            assert_eq!(
+                authority.samples.load(Ordering::SeqCst),
+                1,
+                "only initial authority is sampled before the empty hint reply drains"
+            );
+            assert_eq!(
+                relay.requests(),
+                empty_hint_requests,
+                "empty hint must precede every W04 or metadata read"
+            );
+        } else {
+            assert!(
+                authority.samples.load(Ordering::SeqCst) >= 2,
+                "initial hint and actual W04 authority samples must precede held final reply"
+            );
+        }
         if mutation == 5 {
             let mut hint = redis::cmd("ZREVRANGE");
             hint.arg(&keys[1]).arg(0).arg(0);
@@ -1062,6 +1077,18 @@ async fn held_report_case(mutation: usize, empty: bool) {
             assert!(
                 matches!(result, Read::PolicyDenied),
                 "superseded authority disclosed report metadata: {result:?}"
+            );
+        }
+        if empty {
+            assert_eq!(
+                authority.samples.load(Ordering::SeqCst),
+                2,
+                "empty hint must reach the final live authority fence after draining"
+            );
+            assert_eq!(
+                relay.requests(),
+                empty_hint_requests,
+                "empty hint must not dispatch W04 or metadata reads"
             );
         }
         r.backend.ping().await.unwrap();
