@@ -1655,7 +1655,12 @@ fn source_inventory_is_closed_and_bound_without_original_execution() {
     source_amendment::causal_successor::control_bridge(&root).unwrap();
     let remaining_path = "docs/rust-rewrite/a13/remaining/source-map.json";
     let remaining_sha = "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22";
-    let remaining = std::fs::read(root.join(remaining_path)).unwrap();
+    let remaining = source_amendment::causal_successor::a06_source_successor::historical_caller(
+        &root,
+        remaining_path,
+        remaining_sha,
+    )
+    .unwrap();
     assert_eq!(hash(&remaining), remaining_sha);
     let remaining_map: serde_json::Value = serde_json::from_slice(&remaining).unwrap();
     let remaining_http = remaining_map["sources"]

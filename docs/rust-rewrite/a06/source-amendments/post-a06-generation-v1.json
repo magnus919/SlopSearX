@@ -532,8 +532,8 @@
       },
       "current": {
         "path": "crates/ssx-infra/tests/a13_dehashed.rs",
-        "sha256": "fd99cc39ac8b696d6effae71ddf2b70c91888103e26e50430a61205f2d244819",
-        "bytes": 64974,
+        "sha256": "54f41684a2f7534c581bee17f562af4d6d97eacc81766d6433c2d2a998c22ed6",
+        "bytes": 65083,
         "mode": "0644"
       },
       "source_commit": "233c7934f9e2da5c2e94f0c1213945335d786502",
@@ -548,6 +548,11 @@
           "at": 57000,
           "remove_utf8": "    let expected_container_sha = \"226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d\";\n",
           "insert_utf8": "    let expected_container_sha = \"292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d\";\n"
+        },
+        {
+          "at": 58120,
+          "remove_utf8": "    let remaining = std::fs::read(root.join(remaining_path)).unwrap();\n",
+          "insert_utf8": "    let remaining = source_amendment::causal_successor::a06_source_successor::historical_caller(\n        &root,\n        remaining_path,\n        remaining_sha,\n    )\n    .unwrap();\n"
         }
       ],
       "scoped_historical": {
@@ -586,6 +591,11 @@
           "at": 57271,
           "remove_utf8": "    source_amendment::rejects_mutants(&root).unwrap();\n",
           "insert_utf8": "    source_amendment::causal_successor::control_bridge(&root).unwrap();\n"
+        },
+        {
+          "at": 57494,
+          "remove_utf8": "    let remaining = std::fs::read(root.join(remaining_path)).unwrap();\n",
+          "insert_utf8": "    let remaining = source_amendment::causal_successor::a06_source_successor::historical_caller(\n        &root,\n        remaining_path,\n        remaining_sha,\n    )\n    .unwrap();\n"
         },
         {
           "at": 57898,
@@ -1266,8 +1276,8 @@
       },
       "current": {
         "path": "crates/ssx-infra/tests/a13_dehashed.rs",
-        "sha256": "fd99cc39ac8b696d6effae71ddf2b70c91888103e26e50430a61205f2d244819",
-        "bytes": 64974,
+        "sha256": "54f41684a2f7534c581bee17f562af4d6d97eacc81766d6433c2d2a998c22ed6",
+        "bytes": 65083,
         "mode": "0644"
       },
       "source_commit": "f7cb4ad1e6d8a72b053cf09cfffb29cc607d9827",
@@ -1306,7 +1316,7 @@
         {
           "at": 56424,
           "remove_utf8": "    assert_eq!(actual, expected_paths);\n",
-          "insert_utf8": "    source_amendment::causal_successor::control_bridge(&root).unwrap();\n    let remaining_path = \"docs/rust-rewrite/a13/remaining/source-map.json\";\n    let remaining_sha = \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\";\n    let remaining = std::fs::read(root.join(remaining_path)).unwrap();\n    assert_eq!(hash(&remaining), remaining_sha);\n    let remaining_map: serde_json::Value = serde_json::from_slice(&remaining).unwrap();\n    let remaining_http = remaining_map[\"sources\"]\n        .as_array()\n        .unwrap()\n        .iter()\n        .find(|source| source[\"path\"] == \"crates/ssx-infra/src/http.rs\")\n        .unwrap();\n    source_amendment::verify_current(\n        &root,\n        remaining_path,\n        remaining_sha,\n        \"crates/ssx-infra/src/http.rs\",\n        remaining_http[\"sha256\"].as_str().unwrap(),\n        remaining_http[\"bytes\"].as_u64().map(|bytes| bytes as usize),\n    )\n    .unwrap();\n"
+          "insert_utf8": "    source_amendment::causal_successor::control_bridge(&root).unwrap();\n    let remaining_path = \"docs/rust-rewrite/a13/remaining/source-map.json\";\n    let remaining_sha = \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\";\n    let remaining = source_amendment::causal_successor::a06_source_successor::historical_caller(\n        &root,\n        remaining_path,\n        remaining_sha,\n    )\n    .unwrap();\n    assert_eq!(hash(&remaining), remaining_sha);\n    let remaining_map: serde_json::Value = serde_json::from_slice(&remaining).unwrap();\n    let remaining_http = remaining_map[\"sources\"]\n        .as_array()\n        .unwrap()\n        .iter()\n        .find(|source| source[\"path\"] == \"crates/ssx-infra/src/http.rs\")\n        .unwrap();\n    source_amendment::verify_current(\n        &root,\n        remaining_path,\n        remaining_sha,\n        \"crates/ssx-infra/src/http.rs\",\n        remaining_http[\"sha256\"].as_str().unwrap(),\n        remaining_http[\"bytes\"].as_u64().map(|bytes| bytes as usize),\n    )\n    .unwrap();\n"
         },
         {
           "at": 61928,
