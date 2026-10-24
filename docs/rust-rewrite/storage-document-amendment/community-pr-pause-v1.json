@@ -1,0 +1,52 @@
+{
+  "baseline_revision": "d623c739653fca4812aca982f8ab703e1fbf361a",
+  "candidate_revision": "9bae4746b27e7e33a7bad7a7ce048d6234c84f8a",
+  "documents": [
+    {
+      "archive_path": "docs/rust-rewrite/storage-document-amendment/AGENTS.pre-pause-d623.md.frozen",
+      "baseline": {
+        "bytes": 17200,
+        "sha256": "284b8126bc0e031af6b6b734e5d699a86e2bae8a92faabd90cd35696411aadb3"
+      },
+      "current": {
+        "bytes": 17862,
+        "sha256": "c03796fb1f5a22435fa2a806449718c9208f43813ed0e125e5a05055f479baf2"
+      },
+      "edits": [
+        {
+          "at": 29,
+          "insert_utf8": "## Community pull requests temporarily paused\n\nSlopSearX is being rewritten in Rust. External and community pull requests are\ntemporarily not being accepted, including Python contributions. Do not start or\ncontinue Python PR work for community submission during this pause; contributors\nshould not invest in new Python PRs or revisions intended for acceptance now.\n\nMaintainers may continue the Rust rewrite and related maintenance work. This\npause remains in effect until maintainers announce that community submissions\nhave reopened. The engineering and workflow guidance below still applies to\nmaintainer work and to community contributions after reopening.\n\n",
+          "remove_utf8": ""
+        }
+      ],
+      "source_path": "AGENTS.md"
+    },
+    {
+      "archive_path": "docs/rust-rewrite/storage-document-amendment/CONTRIBUTING.pre-pause-d623.md.frozen",
+      "baseline": {
+        "bytes": 8705,
+        "sha256": "5526fb36792e2e14c7fab4f476b557c63e3d9e8aaab324078152d732e9dd3016"
+      },
+      "current": {
+        "bytes": 9298,
+        "sha256": "b9c6a5c95e9b1ab749df4532d96e03a3b9b2a90bd854ed8f7bf20e5b3864645d"
+      },
+      "edits": [
+        {
+          "at": 29,
+          "insert_utf8": "## Community pull requests temporarily paused\n\nSlopSearX is being rewritten in Rust. We are temporarily not accepting external\nor community pull requests, including Python contributions. Please do not invest\ntime in new Python PRs or revise existing Python PRs for acceptance during this\npause.\n\nMaintainers may continue the Rust rewrite and related maintenance work. The\ncommunity PR pause remains in effect until maintainers announce that submissions\nhave reopened. The contribution guidance below applies to maintainer work during\nthe pause and to community contributions after reopening.\n\n",
+          "remove_utf8": ""
+        }
+      ],
+      "source_path": "CONTRIBUTING.md"
+    }
+  ],
+  "historical_relations_preserved": [
+    "Original storage-policy archives and BINDINGS remain unchanged.",
+    "The accepted504 AGENTS archive and agents-successor-v2.json remain unchanged.",
+    "A07/A08/A09 coverage inventories and A13 source-amendment chain remain unchanged."
+  ],
+  "kind": "SLOPSEARX_COMMUNITY_PR_PAUSE_V1",
+  "pull_request": 1046,
+  "reason": "Maintainer-directed temporary pause on external/community PRs during the Rust rewrite; maintainers continue rewrite and maintenance, reopening requires a maintainer announcement. Only the notices immediately after each root title are inserted."
+}
