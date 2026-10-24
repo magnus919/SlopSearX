@@ -27,7 +27,7 @@ use ssx_domain::{
 use ssx_json::{Value, json};
 use std::{
     collections::BTreeMap,
-    future::{Future, poll_fn},
+    future::poll_fn,
     num::NonZeroU64,
     sync::{
         Arc,
@@ -233,11 +233,18 @@ impl Records for WorkflowRecords {
             let mut value = record.value().clone();
             value["selected_result_attempt_id"] = json!("attempt-0");
             value["state"] = json!("completed");
-            value["stages"][0]["state"] = json!("done");
             value["budget"]["reserved"] = json!(1);
             value["budget"]["observed"] = json!(1);
-            let enforcement = value["stages"][0]["enforcement"].clone();
-            value["stages"][0]["attempts"] = json!([{"attempt_id":"attempt-0","cursor":"snap-last","state":"done",
+            let stage = value
+                .get_mut("stages")
+                .unwrap()
+                .as_array_mut()
+                .unwrap()
+                .first_mut()
+                .unwrap();
+            stage["state"] = json!("done");
+            let enforcement = stage["enforcement"].clone();
+            stage["attempts"] = json!([{"attempt_id":"attempt-0","cursor":"snap-last","state":"done",
                 "started_at":1,"finished_at":2,"reserved_engine_calls":1,"observed_engine_calls":1,
                 "engine_outcomes":[],"enforcement":enforcement}]);
             Ok(Read::Found(Record::from_value(value).unwrap()))
