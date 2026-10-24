@@ -1582,7 +1582,7 @@ fn source_inventory_is_closed_and_bound_without_original_execution() {
         std::fs::read(root.join("docs/rust-rewrite/a13/dehashed-source-map-v1.json")).unwrap();
     assert_eq!(
         hash(&bytes),
-        "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d"
+        "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d"
     );
     let map: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(map["kind"], "STATIC_SOURCE_DERIVATION_AND_NATIVE_COMPONENT");
@@ -1630,7 +1630,7 @@ fn source_inventory_is_closed_and_bound_without_original_execution() {
         .map(|source| source["path"].as_str().unwrap())
         .collect();
     let expected_container = "docs/rust-rewrite/a13/dehashed-source-map-v1.json";
-    let expected_container_sha = "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d";
+    let expected_container_sha = "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d";
     assert!(closed(&paths, &expected_paths));
     let mut duplicate = paths.clone();
     duplicate.push(paths[0]);

@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0.0",
   "baseline_sha": "20109f9083babd014971951e8c02565ae51c2326",
-  "source": "Static full-record union of current main and published A06-owned additions; native F01 requalification pending.",
+  "source": "Static exact-record union of A06 and T02 Python disposition rows; merged-index validation refreshed, native F01 requalification pending.",
   "summary": {
-    "tracked_python_source_count": 502,
+    "tracked_python_source_count": 503,
     "extensionless_python_entrypoints": 1,
-    "executable_config_python_invocation_lines": 63,
+    "executable_config_python_invocation_lines": 66,
     "interpreter_configuration_lines": 106,
     "documentation_shebang_script_count": 8,
     "documented_example_invocation_references": 49,
@@ -13,20 +13,20 @@
       "historical evidence": 4,
       "backend/runtime": 122,
       "backend-coupled tooling/test": 375,
-      "client-only": 1
+      "client-only": 2
     },
     "documentation_file_modes": {
       "100644": 742
     },
     "source_path_set_validation": {
-      "method": "Static exact-set comparison of deduplicated current W merge-index paths ending .py/.pyw/.pyi plus ssx against files[].path.",
-      "tracked_expected_count": 502,
-      "manifest_count": 502,
+      "method": "Static exact-set comparison of current merged-index tracked .py/.pyw/.pyi paths plus extensionless ssx against files[].path.",
+      "tracked_expected_count": 503,
+      "manifest_count": 503,
       "exact_match": true,
       "extensionless_python_paths": [
         "ssx"
       ],
-      "validation_scope": "Static source-set reconciliation of current main 50de34d and published A06 6e4ed9e; native F01 requalification pending."
+      "validation_scope": "Static source-set reconciliation on the unqualified A06+T02 merge candidate; native F01 requalification remains pending."
     },
     "historical_evidence_py_txt_path_count": 742,
     "non_runtime_historical_py_txt_path_count": 741,
@@ -43,7 +43,8 @@
     "historical evidence"
   ],
   "client_only_files": [
-    "ssx"
+    "ssx",
+    "tests/test_native_html_theme_browser.py"
   ],
   "files": [
     {
@@ -6307,6 +6308,17 @@
         "A10",
         "O05"
       ]
+    },
+    {
+      "path": "tests/test_native_html_theme_browser.py",
+      "classification": "client-only",
+      "migration_owner": "T02",
+      "migration_owners": [
+        "T02"
+      ],
+      "disposition": "wire_only_client_for_native_http_browser_smoke",
+      "evidence": "Wire-only Playwright client: imports os, typing.Any, pytest and playwright.sync_api; navigates a supplied native HTTP URL and asserts visible theme behavior. It does not import slopsearx/engines, start a server/process, use FFI, or contact a provider.",
+      "reason": "T02 owns this optional browser client for the native HTTP renderer; Rust CI builds and starts the target separately, while this client only observes the HTTP surface through Chromium."
     },
     {
       "path": "tests/test_new_engines.py",

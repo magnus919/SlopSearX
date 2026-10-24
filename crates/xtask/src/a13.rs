@@ -12,7 +12,7 @@ use std::{
 };
 #[path = "../../../docs/rust-rewrite/a13/source-amendments/validator.rs"]
 pub(crate) mod source_amendment;
-const QUALIFICATION_SHA: &str = "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e";
+const QUALIFICATION_SHA: &str = "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e";
 const PUBCHEM_OWNER_CLOCK_TEST: &str = "adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner";
 pub(crate) use source_amendment::causal_successor::a06_source_successor;
 const A06_LIB_TESTS: &[&str] = &[

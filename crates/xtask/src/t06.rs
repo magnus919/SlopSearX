@@ -1,5 +1,5 @@
 //! Source-bound actual T06 search/discovery qualification. Never executes Python.
-use crate::a13::a06_source_successor::w07_evidence_successor;
+use crate::a13::a06_source_successor::{native_search, w07_evidence_successor};
 use crate::{Result, command};
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 pub(crate) mod lock_amendment;
@@ -57,7 +57,13 @@ fn validate_storage(bytes: &[u8], archive: &[u8]) -> Result<Value> {
     Ok(value)
 }
 fn validate_native_file(root: &Path, row: &Value, bytes: &[u8], storage: &Value) -> Result<()> {
-    if row["file"] == "crates/ssx-infra/src/search.rs" {
+    if row["file"] == native_search::SOURCE {
+        native_search::verify(
+            root,
+            row["file"].as_str().ok_or("T06 native fixture path")?,
+            row["sha256"].as_str().ok_or("T06 native fixture hash")?,
+            bytes,
+        )?;
         return w07_evidence_successor::t06_native_search(root, row, bytes).map(|_| ());
     }
     let expected = if row["file"] == storage["file"] {
@@ -303,6 +309,7 @@ mod tests {
     fn altered_t06_bindings_cannot_self_certify() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         w07_evidence_successor::controls(&root).unwrap();
+        native_search::controls(&root).unwrap();
         let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
         validate(raw).unwrap();
         let native = include_bytes!("../../../docs/rust-rewrite/t06/native_fixture_bindings.json");

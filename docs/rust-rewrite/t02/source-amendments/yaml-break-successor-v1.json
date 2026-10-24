@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "kind": "T02_YAML_BREAK_SUCCESSOR_V1",
+  "coverage_sha256": "5ce1ab45a2e2006daa03ebf4a4fcd9ed62d9d59b8490ddc8f5eb82b19fc37f28",
+  "baseline_commit": "6120c8604bd96a560cda1e8b2b2374c6ab6abeb6",
+  "controls": {
+    "path": "docs/rust-rewrite/t02/yaml-break-source-controls-v1.json",
+    "sha256": "5e00f07a6b613a8d2bca60010dac90499cc1d09698a764d3c466abcc4223051c",
+    "bytes": 15077
+  },
+  "transitions": [
+    {
+      "path": "crates/ssx-http/src/formats.rs",
+      "baseline_commit": "6120c8604bd96a560cda1e8b2b2374c6ab6abeb6",
+      "baseline_blob": "e2950965510206c55dc94ed501d3cb66af8474c7",
+      "archive": "docs/rust-rewrite/t02/source-amendments/yaml-break-6120/formats.rs.frozen",
+      "old_sha256": "a4232f4daa997aedce09658c60b97324854e0dc6587125c216ed392310b17a15",
+      "old_bytes": 11491,
+      "current_sha256": "83f1cfb71779f44d01362c19b8db97242308416ad9b5066e1539961c9a55e508",
+      "current_bytes": 15352,
+      "mode": 420,
+      "edits": [
+        {
+          "offset": 4913,
+          "delete": "fn scalar(v: &Value) -> String {\n    match v {\n        Value::Null => \"null\".into(),\n        Value::String(s) => {\n            let lower = s.to_lowercase();\n            let plain = !s.is_empty()\n                && !s.starts_with([\n                    '-', '?', ':', ',', '[', ']', '{', '}', '#', '&', '*', '!', '|', '>', '\\'',\n                    '\"', '%', '@', '`',\n                ])\n                && s.trim() == s\n                && !s.contains(['\\n', '\\r'])\n                && !s.contains(\": \")\n                && !s.contains(\" #\")\n                && !s.ends_with(':')\n                && ![\n                    \"null\", \"~\", \"true\", \"false\", \"yes\", \"no\", \"on\", \"off\", \".nan\", \".inf\",\n                    \"-.inf\", \"+.inf\",\n                ]\n                .contains(&lower.as_str())\n                && !s\n                    .chars()\n                    .next()\n                    .is_some_and(|c| c.is_ascii_digit() || matches!(c, '+' | '-' | '.'))\n                && !s.chars().any(char::is_control);\n            if plain {\n                s.clone()\n            } else if !s.chars().any(char::is_control) {\n                format!(\"'{}'\", s.replace('\\'', \"''\"))\n            } else {\n                ssx_json::to_string(v).expect(\"string\")\n",
+          "insert": "// PyYAML 6.0.3 Emitter.analyze_scalar / scalar writers (allow_unicode=True).\n// CR is a special character, not a foldable YAML break; it must be escaped.\nfn yaml_break(c: char) -> bool {\n    matches!(c, '\\n' | '\\u{85}' | '\\u{2028}' | '\\u{2029}')\n}\nfn yaml_special(c: char) -> bool {\n    !(c == '\\n'\n        || (' '..='~').contains(&c)\n        || ((c == '\\u{85}'\n            || ('\\u{a0}'..='\\u{d7ff}').contains(&c)\n            || ('\\u{e000}'..='\\u{fffd}').contains(&c)\n            || ('\\u{10000}'..'\\u{10ffff}').contains(&c))\n            && c != '\\u{feff}'))\n}\nfn yaml_column(out: &str) -> usize {\n    out.rsplit(yaml_break).next().unwrap_or(\"\").chars().count()\n}\nfn yaml_indent(indent: usize, out: &mut String) {\n    out.push('\\n');\n    out.push_str(&\" \".repeat(indent + 2));\n}\nfn double_quoted(s: &str, indent: usize, split: bool, out: &mut String) {\n    let text = s.chars().collect::<Vec<_>>();\n    out.push('\"');\n    let mut start = 0;\n    for end in 0..=text.len() {\n        let ch = text.get(end).copied();\n        if ch.is_none_or(|c| {\n            matches!(\n                c,\n                '\"' | '\\\\' | '\\u{85}' | '\\u{2028}' | '\\u{2029}' | '\\u{feff}'\n            ) || !((' '..='~').contains(&c)\n                || ('\\u{a0}'..='\\u{d7ff}').contains(&c)\n                || ('\\u{e000}'..='\\u{fffd}').contains(&c))\n        }) {\n            out.extend(text[start..end].iter());\n            start = end;\n            if let Some(c) = ch {\n                let escape = match c {\n                    '\\0' => \"\\\\0\".into(),\n                    '\\u{7}' => \"\\\\a\".into(),\n                    '\\u{8}' => \"\\\\b\".into(),\n                    '\\t' => \"\\\\t\".into(),\n                    '\\n' => \"\\\\n\".into(),\n                    '\\u{b}' => \"\\\\v\".into(),\n                    '\\u{c}' => \"\\\\f\".into(),\n                    '\\r' => \"\\\\r\".into(),\n                    '\\u{1b}' => \"\\\\e\".into(),\n                    '\"' => \"\\\\\\\"\".into(),\n                    '\\\\' => \"\\\\\\\\\".into(),\n                    '\\u{85}' => \"\\\\N\".into(),\n                    '\\u{a0}' => \"\\\\_\".into(),\n                    '\\u{2028}' => \"\\\\L\".into(),\n                    '\\u{2029}' => \"\\\\P\".into(),\n                    c if c <= '\\u{ff}' => format!(\"\\\\x{:02X}\", c as u32),\n                    c if c <= '\\u{ffff}' => format!(\"\\\\u{:04X}\", c as u32),\n                    c => format!(\"\\\\U{:08X}\", c as u32),\n                };\n                out.push_str(&escape);\n                start = end + 1;\n"
+        },
+        {
+          "offset": 6184,
+          "delete": "        Value::Array(a) if a.is_empty() => \"[]\".into(),\n        Value::Object(o) if o.is_empty() => \"{}\".into(),\n        _ => v.to_string(),\n",
+          "insert": "        if split\n            && end > 0\n            && end + 1 < text.len()\n            && (ch == Some(' ') || start >= end)\n            && yaml_column(out) as isize + end as isize - start as isize > 80\n        {\n            if start < end {\n                out.extend(text[start..end].iter());\n                start = end;\n            }\n            out.push('\\\\');\n            yaml_indent(indent, out);\n            if text[start] == ' ' {\n                out.push('\\\\');\n            }\n        }\n    }\n    out.push('\"');\n}\nfn text_scalar(s: &str, indent: usize, key: bool, out: &mut String) {\n    let text = s.chars().collect::<Vec<_>>();\n    let multiline = text.iter().copied().any(yaml_break);\n    let single = !text.iter().copied().any(yaml_special)\n        && !text\n            .windows(2)\n            .any(|w| (w[0] == ' ' && yaml_break(w[1])) || (yaml_break(w[0]) && w[1] == ' '))\n        && !(key && multiline);\n    let lower = s.to_lowercase();\n    let plain = single\n        && !multiline\n        && !s.is_empty()\n        && !s.starts_with([\n            '-', '?', ':', ',', '[', ']', '{', '}', '#', '&', '*', '!', '|', '>', '\\'', '\"', '%',\n            '@', '`',\n        ])\n        && s.trim() == s\n        && !s.contains(\": \")\n        && !s.contains(\" #\")\n        && !s.ends_with(':')\n        && ![\n            \"null\", \"~\", \"true\", \"false\", \"yes\", \"no\", \"on\", \"off\", \".nan\", \".inf\", \"-.inf\",\n            \"+.inf\",\n        ]\n        .contains(&lower.as_str())\n        && !s\n            .chars()\n            .next()\n            .is_some_and(|c| c.is_ascii_digit() || matches!(c, '+' | '-' | '.'));\n    if !single {\n        double_quoted(s, indent, !key, out);\n        return;\n    }\n    if !plain {\n        out.push('\\'');\n    }\n    let mut index = 0;\n    while index < text.len() {\n        let start = index;\n        if text[index] == ' ' {\n            while index < text.len() && text[index] == ' ' {\n                index += 1;\n            }\n            if !key\n                && index == start + 1\n                && yaml_column(out) > 80\n                && (plain || (start != 0 && index != text.len()))\n            {\n                yaml_indent(indent, out);\n            } else {\n                out.extend(text[start..index].iter());\n            }\n        } else if yaml_break(text[index]) {\n            while index < text.len() && yaml_break(text[index]) {\n                index += 1;\n            }\n            // A leading LF needs an extra physical line break to prevent folding.\n            if text[start] == '\\n' {\n                out.push('\\n');\n            }\n            out.extend(text[start..index].iter());\n            out.push_str(&\" \".repeat(indent + 2));\n        } else {\n            let c = text[index];\n            out.push(c);\n            if !plain && c == '\\'' {\n                out.push(c);\n            }\n            index += 1;\n        }\n    }\n    if !plain {\n        out.push('\\'');\n    }\n}\nfn scalar(value: &Value, indent: usize, key: bool, out: &mut String) {\n    match value {\n        Value::String(s) => text_scalar(s, indent, key, out),\n        _ => out.push_str(&value.to_string()),\n"
+        },
+        {
+          "offset": 6530,
+          "delete": "    let text = scalar(value);\n    let mut chunks = text.split_inclusive(' ').peekable();\n    while let Some(chunk) = chunks.next() {\n        let space = chunk.ends_with(' ');\n        let word = if space {\n            &chunk[..chunk.len() - 1]\n        } else {\n            chunk\n        };\n        out.push_str(word);\n        if space {\n            let column = out.rsplit('\\n').next().unwrap_or(\"\").chars().count();\n            if column > 80\n                && chunks.peek().is_some_and(|next| !next.starts_with(' '))\n                && !word.is_empty()\n            {\n                out.push('\\n');\n                out.push_str(&\" \".repeat(indent + 2));\n            } else {\n                out.push(' ');\n            }\n        }\n    }\n",
+          "insert": "    scalar(value, indent, false, out);\n"
+        },
+        {
+          "offset": 7488,
+          "delete": "                out.push_str(&scalar(&Value::String(key.clone())));\n",
+          "insert": "                if key.chars().any(yaml_break) {\n                    // PyYAML uses an explicit mapping key for multiline scalars.\n                    out.push_str(\"? \");\n                    scalar(&Value::String(key.clone()), indent, false, out);\n                    out.push('\\n');\n                    out.push_str(&pad);\n                } else {\n                    scalar(&Value::String(key.clone()), indent, true, out);\n                }\n"
+        },
+        {
+          "offset": 8764,
+          "delete": "            out.push_str(&scalar(value));\n",
+          "insert": "            scalar_line(value, indent, out);\n"
+        }
+      ],
+      "current_blob": "97ad86a50d3646c9da618393f96159034c33e857"
+    },
+    {
+      "path": "crates/ssx-http/examples/t02_fixture.rs",
+      "baseline_commit": "6120c8604bd96a560cda1e8b2b2374c6ab6abeb6",
+      "baseline_blob": "3f974e333075d91421d115e73990d4c59ad38f21",
+      "archive": "docs/rust-rewrite/t02/source-amendments/yaml-break-6120/t02_fixture.rs.frozen",
+      "old_sha256": "3ea961f5760bfccde11ef632b90d4766952c834fcfa97508947095342b900838",
+      "old_bytes": 13529,
+      "current_sha256": "28f15580777155c58b70e8ca7f749f111aff62ef20e0d6ac8aff4a7d0826bb26",
+      "current_bytes": 14214,
+      "mode": 420,
+      "edits": [
+        {
+          "offset": 4495,
+          "delete": "",
+          "insert": "            }\n            if let Some(text) = request\n                .query\n                .strip_prefix(\"yaml-break:\")\n                .and_then(|s| s.strip_suffix(\":end\"))\n            {\n                result.content = text.into();\n                let breaks = text\n                    .chars()\n                    .filter(|c| matches!(c, '\\n' | '\\r' | '\\u{85}' | '\\u{2028}' | '\\u{2029}'))\n                    .collect::<String>();\n                let mut data = json!({\"note\":text});\n                data[format!(\"key{breaks}end\").as_str()] = json!(text);\n                result.payload =\n                    Some(json!({\"domain\":\"security\",\"type\":\"vulnerability\",\"data\":data}));\n"
+        }
+      ],
+      "current_blob": "eed739e31a987457c3d11bf97daf807442c808fe"
+    },
+    {
+      "path": "crates/ssx-http/tests/t02_http.rs",
+      "baseline_commit": "6120c8604bd96a560cda1e8b2b2374c6ab6abeb6",
+      "baseline_blob": "829e0cb0e72d85cd21a03f9d473a2c9adbbf91d8",
+      "archive": "docs/rust-rewrite/t02/source-amendments/yaml-break-6120/t02_http.rs.frozen",
+      "old_sha256": "b178e40ccaa4ebd73567df9ed1994097858237ae430f097d7dcb27efec0cfbc7",
+      "old_bytes": 67370,
+      "current_sha256": "5f35fb67da317b8ecda19b9f26ea824ef4f90ec505916cc6d13611841eb2315e",
+      "current_bytes": 70408,
+      "mode": 420,
+      "edits": [
+        {
+          "offset": 67370,
+          "delete": "",
+          "insert": "\n#[tokio::test]\nasync fn successful_yaml_break_scalars_match_pinned_emitter_on_actual_http() {\n    let _process_test_guard = PROCESS_TEST_LOCK.lock().await;\n    let controls: Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/t02/yaml-break-source-controls-v1.json\"\n    ))\n    .unwrap();\n    let rows = controls[\"records\"].as_array().unwrap();\n    assert_eq!(rows.len(), 18);\n    let out = directory(\"yaml-break-scalars\");\n    let (mut process, base, _) = start(&out, \"dark\");\n    let client = reqwest::Client::builder()\n        .no_proxy()\n        .timeout(Duration::from_secs(5))\n        .build()\n        .unwrap();\n    let mut differences = Vec::new();\n    for (index, case) in rows.iter().enumerate() {\n        let mut query = url::form_urlencoded::Serializer::new(String::new());\n        query.append_pair(\"q\", case[\"query\"].as_str().unwrap());\n        query.append_pair(\"format\", \"yaml\");\n        let request_target = format!(\"{base}/search?{}\", query.finish());\n        let response = client.get(&request_target).send().await.unwrap();\n        let status = response.status().as_u16();\n        let media = response.headers()[\"content-type\"]\n            .to_str()\n            .unwrap()\n            .to_owned();\n        let body = response.text().await.unwrap();\n        let document = body\n            .split_once(\"---\\n## Results Summary\\n\")\n            .map(|(yaml, _)| yaml)\n            .unwrap_or(\"\");\n        let mut mismatches = Vec::new();\n        for (field, expected) in case[\"fragments\"].as_object().unwrap() {\n            if !document.contains(expected.as_str().unwrap()) {\n                mismatches.push(field.clone());\n            }\n        }\n        if status != 200\n            || media != \"text/vnd.yaml+markdown; charset=utf-8\"\n            || !mismatches.is_empty()\n        {\n            differences\n                .push(json!({\"id\":case[\"id\"],\"status\":status,\"media\":media,\"fields\":mismatches}));\n        }\n        fs::write(out.join(format!(\"{index:02}.json\")),json!({\"id\":case[\"id\"],\"request_target\":request_target,\"status\":status,\"media\":media,\"body\":body,\"mismatches\":mismatches}).to_string()).unwrap();\n    }\n    let calls = fs::read_to_string(out.join(\"engine-calls.jsonl\")).unwrap();\n    let calls = calls\n        .lines()\n        .map(|line| ssx_json::from_str::<Value>(line).unwrap())\n        .collect::<Vec<_>>();\n    let clean = stop(&mut process).await;\n    fs::write(out.join(\"terminal.json\"),json!({\"expected\":rows.len(),\"completed\":rows.len(),\"differences\":differences,\"engine_calls\":calls.len(),\"child_joined\":clean}).to_string()).unwrap();\n    assert!(clean, \"owned actual HTTP child must shut down successfully\");\n    assert_eq!(\n        calls.len(),\n        rows.len(),\n        \"every successful input must reach the counted engine\"\n    );\n    for (call, case) in calls.iter().zip(rows) {\n        assert_eq!(call[\"query\"], case[\"query\"]);\n    }\n    assert!(\n        differences.is_empty(),\n        \"successful YAML scalar source differences: {differences:?}\"\n    );\n}\n"
+        }
+      ],
+      "current_blob": "c5c7af648fca9d0794db4aa04de432f577e09416"
+    }
+  ]
+}

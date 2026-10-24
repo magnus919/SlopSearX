@@ -1,0 +1,1111 @@
+{
+  "schema": 1,
+  "plan_id": "O01",
+  "scope": "Native API/private backend observability qualification; no bootstrap or HTTP route completion claim",
+  "artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+    },
+    {
+      "path": "crates/ssx-application/src/lib.rs",
+      "sha256": "a7102f8c75244e74680cf8773c527d21fb2dcd177a29f0bd27abeef2beeb880e"
+    },
+    {
+      "path": "crates/ssx-infra/src/lib.rs",
+      "sha256": "eeb7f887e1075b6f8096d2d7538ed27b27b174ddafb3908b1fd81beb93ce2464"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/event_metrics.rs",
+      "sha256": "c7fdfbdd72e42b36105adb8c64affdf1f438f2a8b7e61f22f36cce4c93e073d8"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/logging.rs",
+      "sha256": "23832ab9825a66198fa44c3e4731483e2a0f68a1336fdf6bdd549474e2e999e9"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/metrics.rs",
+      "sha256": "cccca54dc139061f691d183c0b073cb479229be0c5c3990752686ce3457bc460"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/mod.rs",
+      "sha256": "a2cff0ef1848fcac8c6c7630406217e824d9a6a3b860235843fe69074c5733ae"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/original_metrics_tests.rs",
+      "sha256": "6afa8721589aea5044d515a20e4d038d08dde9169dd6dbd1d7fb63b29e4f0719"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/sentry.rs",
+      "sha256": "f3ef8224683c0c462f53f1437558c902add7e570e8fd9939ad1eb9f875527c7c"
+    },
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8"
+    },
+    {
+      "path": "crates/ssx-infra/tests/o01.rs",
+      "sha256": "98a959bf3826aaf86e49124f60beb72d294e0c5361e7674799f13807b0583fd7"
+    },
+    {
+      "path": "crates/ssx-infra/tests/o01_w05_metrics.rs",
+      "sha256": "46b3a6977d0737148cebccb3def24b162eac231f115f7e3521f14939cc5ddb49"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/metric-state-source.json",
+      "sha256": "be49a3afc880f5ec6d6761d075327864937b08bd444f1538b77e13cec133bc95"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/native-differences.json",
+      "sha256": "2c56a05235c5958795872e18aaf1a850561b9719e56feb3dabbbff956bfc8805"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/original-render-source.json",
+      "sha256": "5bd765715c180173875e418477d2445e67593a17a1bd4e7f9a6a1b9ce80a6bb5"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/sentry-protocol-source.json",
+      "sha256": "76b8a4d2cf5873caac5bd82f825a341188c69291260f62f0d8f9def425de1807"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/source-supplement.json",
+      "sha256": "3be31afefbb03204440275261ddf65fd4993cc83fa46880b4c10d8f0b6718aad"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/source.json",
+      "sha256": "01a380d3f90f38468cdd3fd3208d47c3dddc4287f527633c3040353fafe624a4"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/sources.json",
+      "sha256": "55a7917cc6a0ea77d46e8988e0f11ff4ba1ba5628036e8d2cab6d18437562de2"
+    },
+    {
+      "path": "slopsearx/metrics.py",
+      "sha256": "2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc"
+    },
+    {
+      "path": "slopsearx/stats.py",
+      "sha256": "04dd73d675394d3d0cea39a9841db4fad19d9de16515236d227c00bbc12d1169"
+    },
+    {
+      "path": "slopsearx/audit.py",
+      "sha256": "11896df807d77088ae4985540936705a8c27a463cd1aa4f7ecca5bbd4a1f5c32"
+    },
+    {
+      "path": "slopsearx/logging.py",
+      "sha256": "b4208d3c051914bea94404de16248959abee4ca61dffcaa641cc5b2e4d18652e"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "sha256": "ca0a9862b2551dc9d1e9705f2bbd616548caca7de8438ae0f7670d91d8308306"
+    },
+    {
+      "path": "tests/test_saved_event_metrics.py",
+      "sha256": "f5d1e75b4fbdc5dc20d4dcd1308ddb586eacab1b1eb9df5a2560f0d09545aae6"
+    },
+    {
+      "path": "tests/test_workflow_metrics.py",
+      "sha256": "ecd288c89f1a146541a5665667c271bc4ba0c6c103e64202983ac7ee3b7374b4"
+    },
+    {
+      "path": "tests/test_audit.py",
+      "sha256": "899b5d078cb5c2d942c1fdcc66831e435cde497a1135f8edeb899ddf2c03b43c"
+    },
+    {
+      "path": "tests/test_observed_health.py",
+      "sha256": "40e1000319fa048ee63ee6eb8906fefdfd0c7e7832d834693cdf216ff98b0a83"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/original-execution-source.json",
+      "sha256": "4ccf891e07cf2b0e344df434e2cbc22ca249c5f5bc954ab3e2db47797d76cc9d"
+    },
+    {
+      "path": "docs/rust-rewrite/o01/README.md",
+      "sha256": "8ccd1bbc9794bc7eb0a7d5c3e6806d77098eed66b001d7680f4c90cc9fdf1858"
+    },
+    {
+      "path": "docs/rust-rewrite/o01/original44-map.json",
+      "sha256": "a43d3d74ca4f5e47544f0609079b2b37e885f8b30738f228379368972c4684b1"
+    },
+    {
+      "path": "docs/rust-rewrite/o01/fixed-metric-families.json",
+      "sha256": "c5876b33111ce7874ac469e2a86c892914ba72e0d750b5a0bbc0847de24508f6"
+    }
+  ],
+  "native_targets": [
+    {
+      "package": "ssx-infra",
+      "target": "lib",
+      "filter": "observability::",
+      "tests": [
+        "observability::lifecycle_tests::cancelled_shutdown_caller_retains_exporter_and_next_shutdown_joins_socket",
+        "observability::lifecycle_tests::exporter_panic_still_signals_completion",
+        "observability::logging::console_writer_tests::console_writer_preserves_validated_correlation_and_timing",
+        "observability::logging::correlation_tests::request_uuid_and_query_correlation_are_separate_validated_fields",
+        "observability::logging::original_configuration_rows::five_original_explicit_environment_configuration_cases_select_exact_native_profile",
+        "observability::logging::sentry_source_controls::disabled_fallback_selection_and_native_config_bounds",
+        "observability::logging::sentry_source_controls::pinned_sdk_dsn_controls_preserve_endpoint_auth_and_explicit_native_identity",
+        "observability::logging::tests::diagnostics_do_not_contain_raw_text",
+        "observability::logging::tests::sentry_disabled_invalid_and_safe_configuration",
+        "observability::metrics::bucket_source_controls::actual_custom_and_invalid_source_profiles_use_the_production_helpers",
+        "observability::metrics::bucket_source_controls::empty_bounds_render_and_changed_lengths_refuse_without_mutation",
+        "observability::metrics::bucket_source_controls::invalid_observations_retain_no_buckets_and_native_profile_cap_is_explicit",
+        "observability::metrics::catalog_admission::catalog_stops_before_unbounded_duplicate_input",
+        "observability::metrics::explicit_state_controls::original_gap_some_age_and_zero_queued_positive_age_are_preserved",
+        "observability::metrics::explicit_state_controls::same_length_duplicate_or_missing_labels_refuse_without_retaining_series",
+        "observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+        "observability::metrics::original_metrics_tests::original_histogram_assertions",
+        "observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+        "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+        "observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+        "observability::metrics::source_replay::actual_source_metric_catalog_and_workflow_render",
+        "observability::metrics::tests::all_metric_definitions_have_unique_identity",
+        "observability::metrics::tests::closed_workflow_and_event_vocabularies",
+        "observability::metrics::tests::empty_success_is_not_error_and_caller_cancelled_is_excluded",
+        "observability::metrics::tests::fixed_buckets_counts_and_invalid_values",
+        "observability::metrics::tests::traffic_does_not_invent_series",
+        "observability::metrics::wire_controls::accumulated_histogram_overflow_uses_prometheus_spelling",
+        "observability::metrics::wire_controls::actual_source_numbers_and_escaped_series_order",
+        "observability::metrics::workflow_helpers::workflow_transitions_recovery_and_event_reads_close_stale_gauges",
+        "observability::sentry::lifecycle_controls::cancelled_then_concurrent_shutdown_retains_handle_until_real_response_and_join",
+        "observability::sentry::lifecycle_controls::completion_guard_signals_even_when_its_task_panics",
+        "observability::sentry::lifecycle_controls::non_success_and_connection_refusal_are_nonfatal_without_retry",
+        "observability::sentry::never_polled_control::never_polled_worker_abort_drops_each_envelope_and_signals_completion",
+        "observability::sentry::tests::disabled_and_sample_zero_create_no_sender_http_owner_or_worker",
+        "observability::sentry::tests::full_queue_and_hanging_post_shutdown_account_for_discarded_work_and_close_socket",
+        "observability::sentry::tests::public_operational_error_posts_exact_envelope_auth_and_native_identity",
+        "observability::sentry::tests::redirect_is_failed_once_without_forwarding_authentication"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "o01",
+      "filter": "",
+      "tests": [
+        "actual_source_audit_and_stat_pipeline_values_round_trip",
+        "actual_source_engine_metrics_preserve_all_classified_statuses",
+        "approximate_audit_stream_cap_and_ttl_are_applied_to_existing_stream",
+        "checked_audit_totals_preserve_boundary_and_refuse_overflow_without_queueing",
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+        "original_object_and_dictionary_audit_fields_share_exact_native_typed_projection",
+        "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+        "overload_is_bounded_and_shutdown_joins_stuck_exporter",
+        "passive_health_keeps_unknown_stale_and_synthetic_measurements_distinct",
+        "real_telemetry_exports_internal_panics_without_upstream_health_or_status",
+        "redacted_and_disabled_auditing_are_distinct",
+        "request_job_spans_settle_on_success_and_cancellation",
+        "retained_audit_and_stats_use_native_private_valkey",
+        "shared_search_audit_uses_unsliced_outcomes_when_status_is_excluded",
+        "shared_search_cache_metrics_preserve_hit_miss_negative_and_bypass",
+        "six_original_stats_statuses_match_actual_private_backend_fields_and_retention",
+        "explicit_raw_retention_and_absent_store_are_qualified",
+        "unavailable_store_is_nonfatal_and_not_retried"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "o01_w05_metrics",
+      "filter": "",
+      "tests": [
+        "actual_private_publication_read_ack_capacity_and_closed_store_render_no_false_success",
+        "all_fifteen_callbacks_render_once_and_typed_age_resets_only_source_cases"
+      ]
+    }
+  ],
+  "completed_original": [
+    {
+      "node": "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_metrics.py::TestCounter::test_header",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestCounter::test_increment",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestCounter::test_multiple_labels",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestGauge::test_overwrite",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestGauge::test_set_and_render",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_metrics.py::test_label_escaping_roundtrips",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "class": "native-original-assertions-bounded-worker",
+      "difference": "source async functions scheduled fire-and-forget by service; native callback queues owned asynchronous pipeline and explicit shutdown joins; no Python coroutine-introspection identity"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-availability-typed-port"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    },
+    {
+      "node": "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "class": "native-original-assertions-fixed-registry"
+    }
+  ],
+  "completed_supplement": [
+    {
+      "id": "logging.config.29",
+      "consumer": "five_original_explicit_environment_configuration_cases_select_exact_native_profile",
+      "class": "source-configuration-api",
+      "difference": "native identity; closed error events without traces/profiling; supplied environment value only, no bootstrap activation"
+    },
+    {
+      "id": "logging.config.30",
+      "consumer": "five_original_explicit_environment_configuration_cases_select_exact_native_profile",
+      "class": "source-configuration-api",
+      "difference": "native identity; closed error events without traces/profiling; supplied environment value only, no bootstrap activation"
+    },
+    {
+      "id": "logging.config.31",
+      "consumer": "five_original_explicit_environment_configuration_cases_select_exact_native_profile",
+      "class": "source-configuration-api",
+      "difference": "native identity; closed error events without traces/profiling; supplied environment value only, no bootstrap activation"
+    },
+    {
+      "id": "logging.config.32",
+      "consumer": "five_original_explicit_environment_configuration_cases_select_exact_native_profile",
+      "class": "source-configuration-api",
+      "difference": "native identity; closed error events without traces/profiling; supplied environment value only, no bootstrap activation"
+    },
+    {
+      "id": "logging.config.33",
+      "consumer": "five_original_explicit_environment_configuration_cases_select_exact_native_profile",
+      "class": "source-configuration-api",
+      "difference": "native identity; closed error events without traces/profiling; supplied environment value only, no bootstrap activation"
+    },
+    {
+      "id": "histogram.buckets.34",
+      "consumer": "actual_custom_and_invalid_source_profiles_use_the_production_helpers",
+      "class": "source-bounded-helper"
+    },
+    {
+      "id": "histogram.buckets.35",
+      "consumer": "actual_custom_and_invalid_source_profiles_use_the_production_helpers",
+      "class": "source-bounded-helper"
+    },
+    {
+      "id": "histogram.buckets.36",
+      "consumer": "actual_custom_and_invalid_source_profiles_use_the_production_helpers",
+      "class": "source-bounded-helper"
+    },
+    {
+      "id": "histogram.buckets.37",
+      "consumer": "actual_custom_and_invalid_source_profiles_use_the_production_helpers",
+      "class": "source-bounded-helper"
+    },
+    {
+      "id": "histogram.buckets.38",
+      "consumer": "actual_custom_and_invalid_source_profiles_use_the_production_helpers",
+      "class": "source-bounded-helper"
+    },
+    {
+      "id": "audit.none",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "audit.disconnected",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "audit.no-client",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "audit.failed",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "stats.none",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "stats.disconnected",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "stats.no-client",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "stats.failed",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "class": "reviewed-typed-port-supersession",
+      "difference": "optional authority represents absent/disconnected/no-client; actual connection refusal tests nonfatal failure, not source mockexecute faultphase/commands parity"
+    },
+    {
+      "id": "audit.statuses.object",
+      "consumer": "original_object_and_dictionary_audit_fields_share_exact_native_typed_projection",
+      "class": "source-private-backend",
+      "normalization": "object/dictionary collapse to native typed outcomes; live timestamp replaces frozen clock"
+    },
+    {
+      "id": "audit.statuses.dict",
+      "consumer": "original_object_and_dictionary_audit_fields_share_exact_native_typed_projection",
+      "class": "source-private-backend",
+      "normalization": "object/dictionary collapse to native typed outcomes; live timestamp replaces frozen clock"
+    },
+    {
+      "id": "audit.latency.0",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.1",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.123",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.0.0",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.-0.0",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "reviewed-typed-port-supersession"
+    },
+    {
+      "id": "audit.latency.1.05",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.1.15",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.1.25",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.1.35",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.123.4",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.123.45",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.123.55",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "audit.latency.999999999999.95",
+      "consumer": "original_thirteen_audit_latencies_match_except_reviewed_duration_signed_zero",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "stats.status.ok",
+      "consumer": "six_original_stats_statuses_match_actual_private_backend_fields_and_retention",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "stats.status.rate_limited",
+      "consumer": "six_original_stats_statuses_match_actual_private_backend_fields_and_retention",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "stats.status.blocked",
+      "consumer": "six_original_stats_statuses_match_actual_private_backend_fields_and_retention",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "stats.status.error",
+      "consumer": "six_original_stats_statuses_match_actual_private_backend_fields_and_retention",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "stats.status.timeout",
+      "consumer": "six_original_stats_statuses_match_actual_private_backend_fields_and_retention",
+      "class": "source-private-backend"
+    },
+    {
+      "id": "stats.status.unavailable",
+      "consumer": "six_original_stats_statuses_match_actual_private_backend_fields_and_retention",
+      "class": "source-private-backend"
+    }
+  ],
+  "original_bindings": [
+    {
+      "source_node": "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestCounter::test_header",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestCounter::test_increment",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestCounter::test_multiple_labels",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestGauge::test_overwrite",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestGauge::test_set_and_render",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_histogram_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+    },
+    {
+      "source_node": "tests/test_metrics.py::test_label_escaping_roundtrips",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited",
+      "consumer": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+      "consumer": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection",
+      "package": "ssx-infra",
+      "target": "o01",
+      "qualified_name": "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    },
+    {
+      "source_node": "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label",
+      "consumer": "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+    }
+  ],
+  "downstream_http_handoffs": [
+    "tests/test_metrics.py::TestMetricsEndpoint::test_metrics_endpoint_returns_200",
+    "tests/test_metrics.py::test_user_input_does_not_create_unbounded_metric_series"
+  ],
+  "reference_classes": [
+    {
+      "fixture": "source.json",
+      "classification": "24 rows consumed by dedicated native tests; histogram and disabled_failed reference-only; no per-row gate completion claim"
+    },
+    {
+      "fixture": "sentry-protocol-source.json",
+      "classification": "7 DSN controls consumed; envelope is protocol reference, not exact native event replay"
+    },
+    {
+      "fixture": "metric-state-source.json",
+      "classification": "4 actual assertion controls; no per-row gate completion claim"
+    },
+    {
+      "fixture": "source.json metrics",
+      "classification": "35 name/help/kind metadata comparisons and complete rendered snapshot; labels proved separately by closed registry tests"
+    }
+  ],
+  "limitations": [
+    "Two actual HTTP routes are T02 obligations",
+    "Production bootstrap/exporter composition remains W09/T02",
+    "No global RSS/GNU/platform or production claim"
+  ],
+  "original_source_execution": "crates/xtask/fixtures/o01/original-execution-source.json"
+}

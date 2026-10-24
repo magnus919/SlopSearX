@@ -1,0 +1,88 @@
+{
+  "scope": "pure original Accept helper grammar only, not HTTP Unicode header support",
+  "records": [
+    {
+      "id": "accept-helper:000",
+      "input": "application/json;q=\u0661.\u0660,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:001",
+      "input": "application/json;q=\uff11.\uff10,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:002",
+      "input": "application/json;q=\ud835\udfd9.\ud835\udfd8,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:003",
+      "input": "application/json;q=\u0660.\u0665,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:004",
+      "input": "application/json;q=0.\u0665,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:005",
+      "input": "application/json;q=\u0661_\u0660,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:006",
+      "input": "application/json;q=\u00851.0\u0085,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:007",
+      "input": "application/json;q=\u001c1.0,text/csv;q=0.5",
+      "output": "csv"
+    },
+    {
+      "id": "accept-helper:008",
+      "input": "application/json;q=1.0\u001c,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:009",
+      "input": "application/json;q=\u0661e\u0660,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:010",
+      "input": "application/json;q=1e\u0661,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:011",
+      "input": "application/json;q=0.\u2075,text/csv;q=0.5",
+      "output": "csv"
+    },
+    {
+      "id": "accept-helper:012",
+      "input": "application/json;q=nan,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:013",
+      "input": "application/json;q=+Infinity,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:014",
+      "input": "application/json;q=1_0,text/csv;q=0.5",
+      "output": "json"
+    },
+    {
+      "id": "accept-helper:015",
+      "input": "application/json;q=0__5,text/csv;q=0.5",
+      "output": "csv"
+    }
+  ],
+  "source_sha256": "6984dea478e4a43d5c9e72e7a72d5af23824de6dfbc0695cb8fdef79176a90dc",
+  "source_unchanged": true,
+  "network_allowed": false
+}

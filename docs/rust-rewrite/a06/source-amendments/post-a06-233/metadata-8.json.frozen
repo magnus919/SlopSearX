@@ -1,0 +1,839 @@
+{
+  "schema_version": 2,
+  "plan_id": "W06",
+  "source_cases": [
+    "plan.valid",
+    "plan.valid_single",
+    "plan.valid_filters",
+    "plan.query_blank",
+    "plan.query_too_long",
+    "plan.objectives_extra",
+    "plan.expansion_missing",
+    "plan.expansion_without_scope",
+    "plan.filters_unknown",
+    "plan.filters_safesearch",
+    "plan.filters_freshness",
+    "plan.filters_time_range",
+    "plan.language_nonstring_source_accepts",
+    "plan.scope_empty",
+    "plan.fallback_empty_dict",
+    "plan.scope_both",
+    "plan.scope_duplicate",
+    "plan.scope_unknown",
+    "plan.scope_intent_media",
+    "plan.scope_overlap",
+    "plan.scope_exceeds_calls",
+    "plan.strict_full_scope",
+    "plan.order_query_before_objectives",
+    "plan.order_deadline_before_calls",
+    "plan.order_expansion_before_filters",
+    "plan.order_overlap_before_budget_strict",
+    "plan.deadline_ms_0",
+    "plan.deadline_ms_1",
+    "plan.deadline_ms_2",
+    "plan.deadline_ms_3",
+    "plan.deadline_ms_4",
+    "plan.deadline_ms_5",
+    "plan.max_engine_calls_0",
+    "plan.max_engine_calls_1",
+    "plan.max_engine_calls_2",
+    "plan.max_engine_calls_3",
+    "plan.max_engine_calls_4",
+    "plan.max_engine_calls_5",
+    "plan.operator_cap",
+    "runner.nonempty",
+    "runner.clean_empty",
+    "runner.clean_empty_single",
+    "runner.fallback_nonempty",
+    "runner.fallback_clean_empty",
+    "runner.cached_empty",
+    "runner.partial_empty",
+    "runner.deadline_empty",
+    "runner.error_empty",
+    "runner.missing_outcomes",
+    "runner.wrong_engine_ok",
+    "runner.nonempty_partial",
+    "runner.nonempty_error",
+    "runner.nonempty_deadline",
+    "runner.nonempty_missing_outcomes",
+    "runner.absolute_deadline",
+    "runner.execution_exception",
+    "runner.initial_policy_rejection",
+    "runner.deadline_before_dispatch",
+    "runner.deadline_after_renewal",
+    "runner.renewal_lost",
+    "source.valid_historical_query",
+    "source.missing",
+    "source.truncated",
+    "source.report_size",
+    "source.incomparable",
+    "source.reasons",
+    "source.blank_query",
+    "source.nonstring_query",
+    "source.missing_engines",
+    "source.empty_engines",
+    "source.grant_denied",
+    "source.store_unavailable",
+    "source.report_scope_revoked",
+    "source.malformed_id",
+    "replay.same",
+    "replay.query",
+    "replay.requested_objectives",
+    "replay.scope_order",
+    "replay.fallback",
+    "replay.consent",
+    "replay.filters",
+    "replay.normalized_default_filters",
+    "replay.narrowed_cap_rejects_after_equivalence",
+    "replay.source_resolution_before_lookup",
+    "replay.query_source_conflict_before_resolution",
+    "retained.explicit_active_removed",
+    "retained.explicit_auth_missing",
+    "retained.explicit_circuit_open",
+    "retained.explicit_health_unavailable",
+    "retained.explicit_disabled",
+    "retained.explicit_unknown",
+    "retained.explicit_sensitive_denied",
+    "retained.explicit_sensitive_allowed",
+    "retained.unused_fallback_sensitive_denied",
+    "retained.intent_routing_active_changed",
+    "retained.intent_jobs_grant_revoked",
+    "retained.staged_grant_revoked",
+    "retained.operator_cap_narrowed",
+    "saved_authority.auth_changed",
+    "saved_authority.categories_changed",
+    "saved_authority.unrelated_sensitive_configuration_changed",
+    "saved_authority.selected_sensitive_allowed",
+    "saved_authority.active_removed",
+    "saved_authority.health_and_circuit_changed",
+    "saved_authority.definition_disabled",
+    "saved_authority.historical_disabled",
+    "saved_authority.definition_unknown",
+    "saved_authority.historical_unknown",
+    "saved_authority.definition_sensitive_denied",
+    "saved_authority.historical_sensitive_denied",
+    "saved_authority.saved_grant_denied",
+    "review.plan.initial_scope.empty",
+    "review.plan.initial_scope.string",
+    "review.plan.initial_scope.blank_item",
+    "review.plan.initial_scope.integer_item",
+    "review.plan.initial_scope.null_item",
+    "review.plan.initial_scope.oversize",
+    "review.plan.fallback_scope.empty",
+    "review.plan.fallback_scope.string",
+    "review.plan.fallback_scope.blank_item",
+    "review.plan.fallback_scope.integer_item",
+    "review.plan.fallback_scope.null_item",
+    "review.plan.fallback_scope.oversize",
+    "review.plan.falsey_list.false",
+    "review.plan.falsey_list.true",
+    "review.plan.falsey_false.false",
+    "review.plan.falsey_false.true",
+    "review.plan.falsey_zero.false",
+    "review.plan.falsey_zero.true",
+    "review.plan.falsey_zero_float.false",
+    "review.plan.falsey_zero_float.true",
+    "review.plan.falsey_string.false",
+    "review.plan.falsey_string.true",
+    "review.plan.falsey_map.false",
+    "review.plan.falsey_map.true",
+    "review.plan.falsey_null.false",
+    "review.plan.falsey_null.true",
+    "review.view.include_string",
+    "review.view.include_integer_item",
+    "review.view.include_unknown",
+    "review.view.include_map",
+    "review.view.include_empty",
+    "review.view.default",
+    "review.view.max_false",
+    "review.view.max_float",
+    "review.view.max_zero",
+    "review.view.max_negative",
+    "review.view.max_one",
+    "review.submit.precondition.missing.objectives_null",
+    "review.submit.precondition.missing.objectives_list",
+    "review.submit.precondition.missing.scope_null",
+    "review.submit.precondition.missing.scope_list",
+    "review.submit.precondition.missing.both_null",
+    "review.submit.precondition.missing.shape_and_scope_null",
+    "review.submit.precondition.missing.objectives_shape",
+    "review.submit.precondition.missing.scope_empty",
+    "review.submit.precondition.missing.query_null_first",
+    "review.submit.precondition.missing.query_blank",
+    "review.submit.precondition.missing.invalid_include",
+    "review.submit.precondition.existing.objectives_null",
+    "review.submit.precondition.existing.objectives_list",
+    "review.submit.precondition.existing.scope_null",
+    "review.submit.precondition.existing.scope_list",
+    "review.submit.precondition.existing.both_null",
+    "review.submit.precondition.existing.shape_and_scope_null",
+    "review.submit.precondition.existing.objectives_shape",
+    "review.submit.precondition.existing.scope_empty",
+    "review.submit.precondition.existing.query_null_first",
+    "review.submit.precondition.existing.query_blank",
+    "review.submit.precondition.existing.invalid_include",
+    "review.submit.precondition.unavailable.objectives_null",
+    "review.submit.precondition.unavailable.objectives_list",
+    "review.submit.precondition.unavailable.scope_null",
+    "review.submit.precondition.unavailable.scope_list",
+    "review.submit.precondition.unavailable.both_null",
+    "review.submit.precondition.unavailable.shape_and_scope_null",
+    "review.submit.precondition.unavailable.objectives_shape",
+    "review.submit.precondition.unavailable.scope_empty",
+    "review.submit.precondition.unavailable.query_null_first",
+    "review.submit.precondition.unavailable.query_blank",
+    "review.submit.precondition.unavailable.invalid_include",
+    "review.submit.key.blank",
+    "review.submit.key.oversize",
+    "review.submit.key.trimmed_oversize",
+    "review.submit.key.trimmed_valid",
+    "review.submit.conflict.query",
+    "review.submit.conflict.objectives",
+    "review.submit.conflict.scope",
+    "review.submit.conflict.filters",
+    "review.submit.conflict.fallback",
+    "review.submit.conflict.consent",
+    "review.submit.composition.changed_source",
+    "review.submit.composition.source_omitted",
+    "review.submit.composition.source_added",
+    "review.submit.composition.query_and_source",
+    "review.source.shape_empty",
+    "review.source.shape_extra",
+    "review.source.kind_integer",
+    "review.source.id_integer",
+    "review.source.unknown_kind",
+    "review.source.empty_id",
+    "review.source.control_id",
+    "review.source.oversize_id",
+    "review.source.wrong_contract",
+    "review.source.wrong_version",
+    "review.source.unsupported_transition",
+    "review.source.composite_colon_run",
+    "review.source.malformed_composite",
+    "review.submit.store.unavailable",
+    "review.submit.store.missing",
+    "review.submit.store.expired",
+    "review.get.store.unavailable",
+    "review.get.store.missing",
+    "review.get.store.expired",
+    "review.retry.store.unavailable",
+    "review.retry.store.missing",
+    "review.retry.store.expired",
+    "review.retry.key.blank",
+    "review.retry.key.oversize",
+    "review.replay.deadline_float",
+    "review.replay.calls_float",
+    "review.replay.both_float",
+    "review.replay.deadline_true",
+    "review.replay.calls_true",
+    "review.replay.both_true",
+    "review.replay.filters_empty_list",
+    "review.replay.filters_false",
+    "review.replay.filters_empty_string",
+    "review.replay.filters_number",
+    "review.replay.filters_nonempty_string",
+    "review.replay.filters_empty_map",
+    "review.submit.admission_collision",
+    "huge_truthiness.positive_huge_integer.false",
+    "huge_truthiness.positive_huge_integer.true",
+    "huge_truthiness.negative_huge_integer.false",
+    "huge_truthiness.negative_huge_integer.true",
+    "huge_truthiness.zero_integer.false",
+    "huge_truthiness.zero_integer.true",
+    "huge_truthiness.negative_zero_integer.false",
+    "huge_truthiness.negative_zero_integer.true",
+    "huge_truthiness.zero_float.false",
+    "huge_truthiness.zero_float.true",
+    "huge_truthiness.negative_zero_float.false",
+    "huge_truthiness.negative_zero_float.true",
+    "huge_truthiness.finite_nonzero_float.false",
+    "huge_truthiness.finite_nonzero_float.true",
+    "huge_truthiness.finite_negative_nonzero_float.false",
+    "huge_truthiness.finite_negative_nonzero_float.true"
+  ],
+  "native_cases": [
+    "native.nonempty_initial_real_acquisition_snapshot_fence_replay",
+    "native.clean_empty_runs_disjoint_fallback_with_owned_histories",
+    "native.failed_empty.error",
+    "native.failed_empty.timeout",
+    "native.failed_empty.blocked",
+    "native.failed_empty.mixed_partial",
+    "native.cached_empty_never_authorizes_fallback_observed_zero",
+    "native.preview_strict_integer_scope_filters_and_replay_identity",
+    "hardening.language.null",
+    "hardening.language.bool",
+    "hardening.language.integer",
+    "hardening.language.list",
+    "hardening.language.map",
+    "native.acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+    "native.duplicate_owners_and_index_loss_conserve_unknown_retry_budgets",
+    "native.owned_shutdown_interrupts_blocked_renewal_and_preserves_shared_flights",
+    "native.policy_revocation_after_acquisition_retains_no_reference",
+    "native.saved_source_membership_lineage_replay_and_error_precedence",
+    "native.killed_native_owner_restart_preserves_identity_and_unknown_spend",
+    "render.runner.nonempty",
+    "render.runner.clean_empty",
+    "render.runner.clean_empty_single",
+    "render.runner.fallback_nonempty",
+    "render.runner.fallback_clean_empty",
+    "render.runner.cached_empty",
+    "render.runner.partial_empty",
+    "render.runner.deadline_empty",
+    "render.runner.error_empty",
+    "render.runner.missing_outcomes",
+    "render.runner.wrong_engine_ok",
+    "render.runner.nonempty_partial",
+    "render.runner.nonempty_error",
+    "render.runner.nonempty_deadline",
+    "render.runner.nonempty_missing_outcomes",
+    "render.runner.absolute_deadline",
+    "render.runner.execution_exception",
+    "render.runner.initial_policy_rejection",
+    "render.runner.deadline_before_dispatch",
+    "render.runner.deadline_after_renewal",
+    "render.runner.renewal_lost",
+    "native.renewal_reply_barrier_shutdown_is_joined_and_keeps_foreign_owner",
+    "native.snapshot_blocked_no_reference",
+    "native.snapshot_orphan_no_reference",
+    "native.save_unknown_reply",
+    "native.save_acknowledged",
+    "native.dropped_caller_owned_http_joined",
+    "native.background_discovery_index_loss",
+    "native.deadline_after_renewal_no_dispatch",
+    "native.initial_policy_rejection_cleanup",
+    "native.recovery_ack_exact_once",
+    "native.recovery_unknown_reply",
+    "native.retained_reads_and_replay_preserve_evidence_without_authorizing_dispatch",
+    "native.claim_acknowledged_vs_unknown",
+    "native.presave_policy_recheck",
+    "native.typed_acquisition_failure_diagnostic"
+  ],
+  "targets": [
+    {
+      "package": "ssx-application",
+      "target": "w06",
+      "tests": [
+        {
+          "name": "source_plans_preserve_full_outcomes_and_identity_bytes",
+          "cases": [
+            "plan.valid",
+            "plan.valid_single",
+            "plan.valid_filters",
+            "plan.query_blank",
+            "plan.query_too_long",
+            "plan.objectives_extra",
+            "plan.expansion_missing",
+            "plan.expansion_without_scope",
+            "plan.filters_unknown",
+            "plan.filters_safesearch",
+            "plan.filters_freshness",
+            "plan.filters_time_range",
+            "plan.language_nonstring_source_accepts",
+            "plan.scope_empty",
+            "plan.fallback_empty_dict",
+            "plan.scope_both",
+            "plan.scope_duplicate",
+            "plan.scope_unknown",
+            "plan.scope_intent_media",
+            "plan.scope_overlap",
+            "plan.scope_exceeds_calls",
+            "plan.strict_full_scope",
+            "plan.order_query_before_objectives",
+            "plan.order_deadline_before_calls",
+            "plan.order_expansion_before_filters",
+            "plan.order_overlap_before_budget_strict",
+            "plan.deadline_ms_0",
+            "plan.deadline_ms_1",
+            "plan.deadline_ms_2",
+            "plan.deadline_ms_3",
+            "plan.deadline_ms_4",
+            "plan.deadline_ms_5",
+            "plan.max_engine_calls_0",
+            "plan.max_engine_calls_1",
+            "plan.max_engine_calls_2",
+            "plan.max_engine_calls_3",
+            "plan.max_engine_calls_4",
+            "plan.max_engine_calls_5",
+            "plan.operator_cap"
+          ]
+        },
+        {
+          "name": "source_completion_preserves_full_records_and_dispatch_requests",
+          "cases": [
+            "runner.nonempty",
+            "runner.clean_empty",
+            "runner.clean_empty_single",
+            "runner.fallback_nonempty",
+            "runner.fallback_clean_empty",
+            "runner.cached_empty",
+            "runner.partial_empty",
+            "runner.deadline_empty",
+            "runner.error_empty",
+            "runner.missing_outcomes",
+            "runner.wrong_engine_ok",
+            "runner.nonempty_partial",
+            "runner.nonempty_error",
+            "runner.nonempty_deadline",
+            "runner.nonempty_missing_outcomes",
+            "runner.absolute_deadline",
+            "runner.execution_exception",
+            "runner.initial_policy_rejection",
+            "runner.deadline_before_dispatch",
+            "runner.deadline_after_renewal"
+          ]
+        },
+        {
+          "name": "source_replay_equivalence_preserves_original_requested_objectives",
+          "cases": [
+            "replay.same",
+            "replay.query",
+            "replay.requested_objectives",
+            "replay.scope_order",
+            "replay.fallback",
+            "replay.consent",
+            "replay.filters",
+            "replay.normalized_default_filters"
+          ]
+        },
+        {
+          "name": "source_retained_authority_preserves_full_policy_envelopes",
+          "cases": [
+            "retained.explicit_active_removed",
+            "retained.explicit_auth_missing",
+            "retained.explicit_circuit_open",
+            "retained.explicit_health_unavailable",
+            "retained.explicit_disabled",
+            "retained.explicit_unknown",
+            "retained.explicit_sensitive_denied",
+            "retained.explicit_sensitive_allowed",
+            "retained.unused_fallback_sensitive_denied",
+            "retained.intent_routing_active_changed",
+            "retained.intent_jobs_grant_revoked",
+            "retained.staged_grant_revoked",
+            "retained.operator_cap_narrowed"
+          ]
+        },
+        {
+          "name": "source_review_plans_preserve_malformed_scope_and_fallback_order",
+          "cases": [
+            "review.plan.initial_scope.empty",
+            "review.plan.initial_scope.string",
+            "review.plan.initial_scope.blank_item",
+            "review.plan.initial_scope.integer_item",
+            "review.plan.initial_scope.null_item",
+            "review.plan.initial_scope.oversize",
+            "review.plan.fallback_scope.empty",
+            "review.plan.fallback_scope.string",
+            "review.plan.fallback_scope.blank_item",
+            "review.plan.fallback_scope.integer_item",
+            "review.plan.fallback_scope.null_item",
+            "review.plan.fallback_scope.oversize",
+            "review.plan.falsey_list.false",
+            "review.plan.falsey_list.true",
+            "review.plan.falsey_false.false",
+            "review.plan.falsey_false.true",
+            "review.plan.falsey_zero.false",
+            "review.plan.falsey_zero.true",
+            "review.plan.falsey_zero_float.false",
+            "review.plan.falsey_zero_float.true",
+            "review.plan.falsey_string.false",
+            "review.plan.falsey_string.true",
+            "review.plan.falsey_map.false",
+            "review.plan.falsey_map.true",
+            "review.plan.falsey_null.false",
+            "review.plan.falsey_null.true"
+          ]
+        },
+        {
+          "name": "source_huge_integer_fallback_truthiness_preserves_validation_order",
+          "cases": [
+            "huge_truthiness.positive_huge_integer.false",
+            "huge_truthiness.positive_huge_integer.true",
+            "huge_truthiness.negative_huge_integer.false",
+            "huge_truthiness.negative_huge_integer.true",
+            "huge_truthiness.zero_integer.false",
+            "huge_truthiness.zero_integer.true",
+            "huge_truthiness.negative_zero_integer.false",
+            "huge_truthiness.negative_zero_integer.true",
+            "huge_truthiness.zero_float.false",
+            "huge_truthiness.zero_float.true",
+            "huge_truthiness.negative_zero_float.false",
+            "huge_truthiness.negative_zero_float.true",
+            "huge_truthiness.finite_nonzero_float.false",
+            "huge_truthiness.finite_nonzero_float.true",
+            "huge_truthiness.finite_negative_nonzero_float.false",
+            "huge_truthiness.finite_negative_nonzero_float.true"
+          ]
+        }
+      ],
+      "worker_probes": []
+    },
+    {
+      "package": "ssx-infra",
+      "target": "w06",
+      "tests": [
+        {
+          "name": "nonempty_initial_real_acquisition_snapshot_fence_replay",
+          "cases": [
+            "native.nonempty_initial_real_acquisition_snapshot_fence_replay"
+          ]
+        },
+        {
+          "name": "clean_empty_runs_disjoint_fallback_with_owned_histories",
+          "cases": [
+            "native.clean_empty_runs_disjoint_fallback_with_owned_histories"
+          ]
+        },
+        {
+          "name": "failed_empty_initial_never_authorizes_fallback",
+          "cases": [
+            "native.failed_empty.error",
+            "native.failed_empty.timeout",
+            "native.failed_empty.blocked",
+            "native.failed_empty.mixed_partial"
+          ]
+        },
+        {
+          "name": "cached_empty_never_authorizes_fallback_observed_zero",
+          "cases": [
+            "native.cached_empty_never_authorizes_fallback_observed_zero"
+          ]
+        },
+        {
+          "name": "preview_strict_integer_scope_filters_and_replay_identity",
+          "cases": [
+            "native.preview_strict_integer_scope_filters_and_replay_identity",
+            "hardening.language.null",
+            "hardening.language.bool",
+            "hardening.language.integer",
+            "hardening.language.list",
+            "hardening.language.map"
+          ]
+        },
+        {
+          "name": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+          "cases": [
+            "native.acknowledged_deadline_budget_claims_and_recovery_are_not_inferred"
+          ]
+        },
+        {
+          "name": "duplicate_owners_and_index_loss_conserve_unknown_retry_budgets",
+          "cases": [
+            "native.duplicate_owners_and_index_loss_conserve_unknown_retry_budgets"
+          ]
+        },
+        {
+          "name": "owned_shutdown_interrupts_blocked_renewal_and_preserves_shared_flights",
+          "cases": [
+            "native.owned_shutdown_interrupts_blocked_renewal_and_preserves_shared_flights"
+          ]
+        },
+        {
+          "name": "policy_revocation_after_acquisition_retains_no_reference",
+          "cases": [
+            "native.policy_revocation_after_acquisition_retains_no_reference"
+          ]
+        },
+        {
+          "name": "saved_source_membership_lineage_replay_and_error_precedence",
+          "cases": [
+            "native.saved_source_membership_lineage_replay_and_error_precedence"
+          ]
+        },
+        {
+          "name": "killed_native_owner_restart_preserves_identity_and_unknown_spend",
+          "cases": [
+            "native.killed_native_owner_restart_preserves_identity_and_unknown_spend"
+          ]
+        },
+        {
+          "name": "source_rendered_responses_use_full_native_snapshots_and_shared_mcp_projection",
+          "cases": [
+            "render.runner.nonempty",
+            "render.runner.clean_empty",
+            "render.runner.clean_empty_single",
+            "render.runner.fallback_nonempty",
+            "render.runner.fallback_clean_empty",
+            "render.runner.cached_empty",
+            "render.runner.partial_empty",
+            "render.runner.deadline_empty",
+            "render.runner.error_empty",
+            "render.runner.missing_outcomes",
+            "render.runner.wrong_engine_ok",
+            "render.runner.nonempty_partial",
+            "render.runner.nonempty_error",
+            "render.runner.nonempty_deadline",
+            "render.runner.nonempty_missing_outcomes",
+            "render.runner.absolute_deadline",
+            "render.runner.execution_exception",
+            "render.runner.initial_policy_rejection",
+            "render.runner.deadline_before_dispatch",
+            "render.runner.deadline_after_renewal",
+            "render.runner.renewal_lost"
+          ]
+        },
+        {
+          "name": "source_saved_report_resolution_preserves_full_original_error_envelopes",
+          "cases": [
+            "source.valid_historical_query",
+            "source.missing",
+            "source.truncated",
+            "source.report_size",
+            "source.incomparable",
+            "source.reasons",
+            "source.blank_query",
+            "source.nonstring_query",
+            "source.missing_engines",
+            "source.empty_engines",
+            "source.grant_denied",
+            "source.store_unavailable",
+            "source.report_scope_revoked",
+            "source.malformed_id"
+          ]
+        },
+        {
+          "name": "source_replay_checks_requested_identity_and_resolves_sources_before_lookup",
+          "cases": [
+            "replay.narrowed_cap_rejects_after_equivalence",
+            "replay.source_resolution_before_lookup",
+            "replay.query_source_conflict_before_resolution"
+          ]
+        },
+        {
+          "name": "renewal_reply_barrier_shutdown_is_joined_and_keeps_foreign_owner",
+          "cases": [
+            "native.renewal_reply_barrier_shutdown_is_joined_and_keeps_foreign_owner"
+          ]
+        },
+        {
+          "name": "snapshot_reply_lease_loss_or_caller_drop_never_publishes_stale_reference",
+          "cases": [
+            "native.snapshot_blocked_no_reference",
+            "native.snapshot_orphan_no_reference"
+          ]
+        },
+        {
+          "name": "acknowledged_save_and_unknown_save_are_distinct_commit_races",
+          "cases": [
+            "native.save_unknown_reply",
+            "native.save_acknowledged"
+          ]
+        },
+        {
+          "name": "dropped_caller_cancels_and_joins_owned_http_without_closing_shared_search",
+          "cases": [
+            "native.dropped_caller_owned_http_joined"
+          ]
+        },
+        {
+          "name": "background_discovery_rebuilds_ready_index_and_joins_shutdown",
+          "cases": [
+            "native.background_discovery_index_loss"
+          ]
+        },
+        {
+          "name": "deadline_after_acknowledged_renewal_is_rechecked_without_dispatch",
+          "cases": [
+            "native.deadline_after_renewal_no_dispatch"
+          ]
+        },
+        {
+          "name": "initial_policy_rejection_closes_owned_claim_without_acquisition",
+          "cases": [
+            "native.initial_policy_rejection_cleanup"
+          ]
+        },
+        {
+          "name": "recovery_acknowledgments_are_exact_single_owner_and_unknown_reply_is_not_an_event",
+          "cases": [
+            "native.recovery_ack_exact_once",
+            "native.recovery_unknown_reply"
+          ]
+        },
+        {
+          "name": "retained_reads_and_replay_preserve_evidence_without_authorizing_dispatch",
+          "cases": [
+            "native.retained_reads_and_replay_preserve_evidence_without_authorizing_dispatch"
+          ]
+        },
+        {
+          "name": "source_initial_renewal_loss_preserves_full_claim_without_dispatch",
+          "cases": [
+            "runner.renewal_lost"
+          ]
+        },
+        {
+          "name": "claim_events_require_exact_acknowledgment_and_never_infer_lost_reply",
+          "cases": [
+            "native.claim_acknowledged_vs_unknown"
+          ]
+        },
+        {
+          "name": "publication_rechecks_policy_after_acquisition_before_sending_save",
+          "cases": [
+            "native.presave_policy_recheck"
+          ]
+        },
+        {
+          "name": "typed_shared_search_failure_uses_reviewed_public_diagnostic_and_unknown_budget",
+          "cases": [
+            "native.typed_acquisition_failure_diagnostic"
+          ]
+        },
+        {
+          "name": "source_review_invalid_and_default_views_preserve_complete_envelopes",
+          "cases": [
+            "review.view.include_string",
+            "review.view.include_integer_item",
+            "review.view.include_unknown",
+            "review.view.include_map",
+            "review.view.include_empty",
+            "review.view.default",
+            "review.view.max_false",
+            "review.view.max_float",
+            "review.view.max_zero",
+            "review.view.max_negative",
+            "review.view.max_one"
+          ]
+        },
+        {
+          "name": "source_review_admission_collision_preserves_winner_and_exact_conflict",
+          "cases": [
+            "review.submit.admission_collision"
+          ]
+        },
+        {
+          "name": "source_saved_report_authority_uses_current_retained_policy_not_creation_fingerprint",
+          "cases": [
+            "saved_authority.auth_changed",
+            "saved_authority.categories_changed",
+            "saved_authority.unrelated_sensitive_configuration_changed",
+            "saved_authority.selected_sensitive_allowed",
+            "saved_authority.active_removed",
+            "saved_authority.health_and_circuit_changed",
+            "saved_authority.definition_disabled",
+            "saved_authority.historical_disabled",
+            "saved_authority.definition_unknown",
+            "saved_authority.historical_unknown",
+            "saved_authority.definition_sensitive_denied",
+            "saved_authority.historical_sensitive_denied",
+            "saved_authority.saved_grant_denied"
+          ]
+        },
+        {
+          "name": "source_review_public_preconditions_replay_sources_and_store_errors_are_exact",
+          "cases": [
+            "review.submit.precondition.missing.objectives_null",
+            "review.submit.precondition.missing.objectives_list",
+            "review.submit.precondition.missing.scope_null",
+            "review.submit.precondition.missing.scope_list",
+            "review.submit.precondition.missing.both_null",
+            "review.submit.precondition.missing.shape_and_scope_null",
+            "review.submit.precondition.missing.objectives_shape",
+            "review.submit.precondition.missing.scope_empty",
+            "review.submit.precondition.missing.query_null_first",
+            "review.submit.precondition.missing.query_blank",
+            "review.submit.precondition.missing.invalid_include",
+            "review.submit.precondition.existing.objectives_null",
+            "review.submit.precondition.existing.objectives_list",
+            "review.submit.precondition.existing.scope_null",
+            "review.submit.precondition.existing.scope_list",
+            "review.submit.precondition.existing.both_null",
+            "review.submit.precondition.existing.shape_and_scope_null",
+            "review.submit.precondition.existing.objectives_shape",
+            "review.submit.precondition.existing.scope_empty",
+            "review.submit.precondition.existing.query_null_first",
+            "review.submit.precondition.existing.query_blank",
+            "review.submit.precondition.existing.invalid_include",
+            "review.submit.precondition.unavailable.objectives_null",
+            "review.submit.precondition.unavailable.objectives_list",
+            "review.submit.precondition.unavailable.scope_null",
+            "review.submit.precondition.unavailable.scope_list",
+            "review.submit.precondition.unavailable.both_null",
+            "review.submit.precondition.unavailable.shape_and_scope_null",
+            "review.submit.precondition.unavailable.objectives_shape",
+            "review.submit.precondition.unavailable.scope_empty",
+            "review.submit.precondition.unavailable.query_null_first",
+            "review.submit.precondition.unavailable.query_blank",
+            "review.submit.precondition.unavailable.invalid_include",
+            "review.submit.key.blank",
+            "review.submit.key.oversize",
+            "review.submit.key.trimmed_oversize",
+            "review.submit.key.trimmed_valid",
+            "review.submit.conflict.query",
+            "review.submit.conflict.objectives",
+            "review.submit.conflict.scope",
+            "review.submit.conflict.filters",
+            "review.submit.conflict.fallback",
+            "review.submit.conflict.consent",
+            "review.submit.composition.changed_source",
+            "review.submit.composition.source_omitted",
+            "review.submit.composition.source_added",
+            "review.submit.composition.query_and_source",
+            "review.source.shape_empty",
+            "review.source.shape_extra",
+            "review.source.kind_integer",
+            "review.source.id_integer",
+            "review.source.unknown_kind",
+            "review.source.empty_id",
+            "review.source.control_id",
+            "review.source.oversize_id",
+            "review.source.wrong_contract",
+            "review.source.wrong_version",
+            "review.source.unsupported_transition",
+            "review.source.composite_colon_run",
+            "review.source.malformed_composite",
+            "review.submit.store.unavailable",
+            "review.submit.store.missing",
+            "review.submit.store.expired",
+            "review.get.store.unavailable",
+            "review.get.store.missing",
+            "review.get.store.expired",
+            "review.retry.store.unavailable",
+            "review.retry.store.missing",
+            "review.retry.store.expired",
+            "review.retry.key.blank",
+            "review.retry.key.oversize",
+            "review.replay.deadline_float",
+            "review.replay.calls_float",
+            "review.replay.both_float",
+            "review.replay.deadline_true",
+            "review.replay.calls_true",
+            "review.replay.both_true",
+            "review.replay.filters_empty_list",
+            "review.replay.filters_false",
+            "review.replay.filters_empty_string",
+            "review.replay.filters_number",
+            "review.replay.filters_nonempty_string",
+            "review.replay.filters_empty_map"
+          ]
+        }
+      ],
+      "worker_probes": [
+        "native_staged_owner_process_probe"
+      ]
+    }
+  ],
+  "owned_sources": {
+    "Cargo.lock": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860",
+    "crates/ssx-application/src/lib.rs": "a7102f8c75244e74680cf8773c527d21fb2dcd177a29f0bd27abeef2beeb880e",
+    "crates/ssx-application/src/policy.rs": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+    "crates/ssx-application/src/staged.rs": "c153cb0f71c4ac661e7dcb26b429ad66285c4c3debba8178711bf8f7ae537a75",
+    "crates/ssx-application/tests/w06.rs": "07353aca4fe7778a29daaf9282dc6254420480cd19dda8783975d84b0d56344c",
+    "crates/ssx-infra/Cargo.toml": "98ba70c193036e309e2f8f01a9bd96a75476bbb96bf53f2e2d47ebf8baeb6ac2",
+    "crates/ssx-infra/src/lib.rs": "eeb7f887e1075b6f8096d2d7538ed27b27b174ddafb3908b1fd81beb93ce2464",
+    "crates/ssx-infra/src/staged_runner.rs": "b74c4b14c09205c213ce163fea702d58bbb8826144e87db6819a1b2c7516cb06",
+    "crates/ssx-infra/src/staged_service.rs": "c9c279c9e34485650dad904aaf9c27586235aa9e215290c217fd02201a46746b",
+    "crates/ssx-infra/src/valkey/saved.rs": "4d503e90865bc6227c88331f0b2228a21279e87297d74a359dbbf48ad6dedb6f",
+    "crates/ssx-infra/src/valkey/scripts.rs": "8d9ab94a6c7bb8d834bb411b8f348a10391d80854e455a85fb3889a53577572e",
+    "crates/ssx-infra/src/valkey/staged.rs": "2af5c91484844d63f4d1b6d917c8f9eb9f7c9ee18b69237f1399c50f5c5e781c",
+    "crates/ssx-infra/src/valkey/scripts/staged_interrupt_acknowledged.lua": "112e2f9aba13f8a188f1922de7681f81cad12e257f727f021ed95c93e58d45b9",
+    "crates/ssx-infra/tests/w06.rs": "c0076c432cd1f241e8c70270f8f2c3283f48fc056eb8761aa884b3ea57ceb63e"
+  },
+  "reference_controls": [
+    "review.runner.deadline_after_acknowledged_renewal",
+    "review.runner.actual_shared_rate_denial",
+    "review.runner.presave_revocation.sensitive",
+    "review.runner.presave_revocation.staged_grant"
+  ]
+}

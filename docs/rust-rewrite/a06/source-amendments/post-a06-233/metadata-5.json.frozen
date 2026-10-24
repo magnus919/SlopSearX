@@ -1,0 +1,604 @@
+{
+  "kind": "STATIC_SOURCE_DERIVATION_AND_NATIVE_COMPONENT",
+  "status": "BOUNDED_HISTORICAL_COMPONENT_QUALIFIED",
+  "source_base": "80ecfcf5bcd7393bbe1457fa5f406d439525e4f8",
+  "python_executed": false,
+  "provider_calls": 0,
+  "source_runs": [],
+  "current_source_binding": {
+    "head": "601a46a0697a05f063e3ae084f68e798607e360f",
+    "pending_merge_head": "dfb434381af32826fdbee6bc484db71c887e0df6",
+    "scope": "sources rows bind actual current candidate bytes; source_base/baseline and per-row identity labels retain historical derivation classifications, not current Git revision claims",
+    "original_backend_executed": false,
+    "provider_calls": 0
+  },
+  "sources": [
+    {
+      "path": "engines/dehashed.py",
+      "sha256": "0af39ca824817ce1bf065c72fbf463e64ef604a68ef5780292328de335d2eeba",
+      "bytes": 5205,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "tests/test_dehashed.py",
+      "sha256": "69de13ea249605010f29c0dd23389fcafe0df49fa18e37c3cf05533bda2e49ce",
+      "bytes": 2017,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "bytes": 28263,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "bytes": 17458,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "slopsearx/jev.py",
+      "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03",
+      "bytes": 13437,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+      "bytes": 130718,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "slopsearx/filters.py",
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+      "bytes": 10364,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/threat_intel.rs",
+      "sha256": "dde2a34576051a820a48d1b422956443f726a600970cb5868b5318c7b74619f8",
+      "bytes": 25213,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+      "sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7",
+      "bytes": 33943,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "sha256": "0f42f0c200f1e84f427b03bcb5e9d8fc5251180b7d0f58e22c9e0b724370509d",
+      "bytes": 38543,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_repr.rs",
+      "sha256": "06680a00d9d8b17082d09a175c44797e5a7a984b64096d18f102b8a2cb2d23fd",
+      "bytes": 17246,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "sha256": "826006a11ef93c6c6127cdaa7f340d5f8aa1261941d388b38c2437d5ea7f89fb",
+      "bytes": 53896,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/http.rs",
+      "sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+      "bytes": 41754,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8",
+      "bytes": 82956,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-application/src/policy.rs",
+      "sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+      "bytes": 38237,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-domain/src/records.rs",
+      "sha256": "5e08c70c9adb8dc1f12562d560191ccf7b262edca73c6e6154057620e353d5bc",
+      "bytes": 11011,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-config/src/lib.rs",
+      "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+      "bytes": 49685,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-registry/src/lib.rs",
+      "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+      "bytes": 11205,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-owned-budget/src/lib.rs",
+      "sha256": "3e7990a9aceed34b62aa8e2ddd030d24d15a8f04853aa6d8a1fd9ebeb364f903",
+      "bytes": 15287,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "sha256": "98ba70c193036e309e2f8f01a9bd96a75476bbb96bf53f2e2d47ebf8baeb6ac2",
+      "bytes": 1205,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860",
+      "bytes": 87421,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "docs/rust-rewrite/f08/README.md",
+      "sha256": "ee18fcdbac2fbedc14b19e4d857be02d824ebd634e567d3bc0769f8fe323449c",
+      "bytes": 6817,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "docs/rust-rewrite/f05/README.md",
+      "sha256": "0006525e760456dd3656019aa4968b53f469f361853f31f13247e3424237aaca",
+      "bytes": 3237,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "docs/rust-rewrite/f09/README.md",
+      "sha256": "24ee261a6c3effcb506524d50dcecfa08fc6ea7920f58b98ba46993ac94a74b7",
+      "bytes": 8194,
+      "identity": "BASE_GIT_SOURCE"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/mod.rs",
+      "sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791",
+      "bytes": 32368,
+      "identity": "APPLIED_DEVELOPMENT_MODULE_EXPORT"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/dehashed.rs",
+      "sha256": "fe3dce1c28f946942af81bfec2c1426443fc622b5299b487e60b9fdba5548545",
+      "bytes": 14772,
+      "identity": "QUALIFIED_NATIVE_COMPONENT_IMPLEMENTATION"
+    },
+    {
+      "path": "docs/rust-rewrite/a13/dehashed-static-fixture-v1.json",
+      "sha256": "186698d3f589bcb43fa3933dd374e99c01d5fd32a018d9a402caa06bfddd610d",
+      "bytes": 1022,
+      "identity": "STATIC_SYNTHETIC_SOURCE_DERIVATION"
+    },
+    {
+      "path": "docs/rust-rewrite/a13/README.md",
+      "sha256": "f5c08e0bbf8744cabe65151980520221a19a706316a1f9f4166ac47f8c7ab8e5",
+      "bytes": 4861,
+      "identity": "COMPONENT_DOCUMENTATION"
+    },
+    {
+      "path": "docs/rust-rewrite/a13/PARITY.md",
+      "sha256": "3721c4853ad1f34e203a78619667c8f5a8fbbb1b5844ea5044651000febc5ba0",
+      "bytes": 5829,
+      "identity": "COMPONENT_DOCUMENTATION"
+    },
+    {
+      "path": "docs/rust-rewrite/a13/BOUNDS_REVIEW.md",
+      "sha256": "ee88b6aab10d20a07188acd8b0bb3941c9143edb49937e3f1ab186c9307f1231",
+      "bytes": 3642,
+      "identity": "COMPONENT_DOCUMENTATION"
+    },
+    {
+      "path": "docs/rust-rewrite/a13/PORTAL_IMPACT.md",
+      "sha256": "198604af609c815220463cf0702a680be26a466c57d5333810d92806636b35a1",
+      "bytes": 1798,
+      "identity": "COMPONENT_DOCUMENTATION"
+    }
+  ],
+  "original_tests": [
+    {
+      "function": "test_search_returns_entries",
+      "nodeid": "tests/test_dehashed.py::TestDeHashedAdapter::test_search_returns_entries",
+      "source_executed": false,
+      "source_excerpt": "    async def test_search_returns_entries(self, adapter):\n        data = {\n            \"entries\": [\n                {\n                    \"email\": \"test@example.com\",\n                    \"username\": \"testuser\",\n                    \"password\": \"secret123\",\n                    \"hashed_password\": \"hash123\",\n                    \"ip_address\": \"1.2.3.4\",\n                    \"database_name\": \"TestDB\",\n                    \"obtained_from\": \"BreachCorp\",\n                }\n            ]\n        }\n        async with MockHTTP(lambda r: httpx.Response(200, json=data)):\n            result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 1\n        assert \"test@example.com\" in result.results[0].content\n        assert \"secr\" in result.results[0].content  # truncated password appears\n\n",
+      "native_selector": "full_source_success_and_complete_outbound",
+      "native_case": "source-success"
+    },
+    {
+      "function": "test_missing_api_key",
+      "nodeid": "tests/test_dehashed.py::TestDeHashedAdapter::test_missing_api_key",
+      "source_executed": false,
+      "source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key\" in (result.error_message or \"\")\n\n",
+      "native_selector": "missing_key_and_admission_precedence",
+      "native_case": "missing-key"
+    },
+    {
+      "function": "test_rate_limited",
+      "nodeid": "tests/test_dehashed.py::TestDeHashedAdapter::test_rate_limited",
+      "source_executed": false,
+      "source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.RATE_LIMITED\n\n",
+      "native_selector": "http_status_classification_and_redaction",
+      "native_case": "status-429"
+    },
+    {
+      "function": "test_adapter_registered",
+      "nodeid": "tests/test_dehashed.py::TestDeHashedAdapter::test_adapter_registered",
+      "source_executed": false,
+      "source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"dehashed\" in list_engines()\n",
+      "native_selector": "registry_factory_preserves_all_catalog_metadata",
+      "native_case": "real-registration"
+    }
+  ],
+  "native_tests": [
+    "full_source_success_and_complete_outbound",
+    "missing_key_and_admission_precedence",
+    "http_status_classification_and_redaction",
+    "basic_auth_first_colon_unicode_and_empty_components",
+    "source_slices_and_request_limits_are_independent",
+    "empty_and_wrong_shape_source_operations",
+    "fallback_titles_literal_url_and_source_content_order",
+    "used_prefixes_and_unused_unicode_values",
+    "late_failure_is_atomic_and_operation_errors_precede_typed_title",
+    "configured_invalid_inputs_and_codec_refusals_are_atomic",
+    "registry_factory_preserves_all_catalog_metadata",
+    "entered_exchange_cancellation_drops_actual_future_and_keeps_http_owner",
+    "preexpired_caller_context_never_admits_or_dispatches",
+    "genuine_factory_crosses_shared_policy_only_with_sensitive_grant",
+    "entered_exchange_shutdown_joins_and_rejects_reuse",
+    "private_pipe_failures_retain_actual_read_prefix",
+    "private_literal_loopback_complete_http_contract",
+    "actual_configured_and_caller_deadlines_drop_entered_exchange_without_retry",
+    "resolved_settings_and_source_base_query_construction",
+    "unsupported_request_filters_do_not_change_wire_or_claim_media",
+    "source_inventory_is_closed_and_bound_without_original_execution"
+  ],
+  "case_groups": [
+    {
+      "selector": "full_source_success_and_complete_outbound",
+      "case_ids": [
+        "source-success"
+      ]
+    },
+    {
+      "selector": "missing_key_and_admission_precedence",
+      "case_ids": [
+        "missing-key",
+        "admission-denied-first",
+        "admission-unavailable-first"
+      ]
+    },
+    {
+      "selector": "http_status_classification_and_redaction",
+      "case_ids": [
+        "status-301",
+        "status-401",
+        "status-403",
+        "status-404",
+        "status-429",
+        "status-500",
+        "transport-timeout",
+        "transport-error"
+      ]
+    },
+    {
+      "selector": "basic_auth_first_colon_unicode_and_empty_components",
+      "case_ids": [
+        "auth-colonless",
+        "auth-first-colon",
+        "auth-unicode",
+        "auth-empty-user",
+        "auth-empty-both",
+        "config-debug-redacted",
+        "auth-header-debug-redacted"
+      ]
+    },
+    {
+      "selector": "source_slices_and_request_limits_are_independent",
+      "case_ids": [
+        "slice-zero",
+        "slice-one",
+        "slice-negative",
+        "slice-negative-all",
+        "slice-bool-true",
+        "slice-bool-false",
+        "slice-string-refused",
+        "slice-float-refused",
+        "slice-nan-refused"
+      ]
+    },
+    {
+      "selector": "empty_and_wrong_shape_source_operations",
+      "case_ids": [
+        "missing-entries",
+        "empty-entries",
+        "empty-string",
+        "sliced-string-empty",
+        "nonempty-string",
+        "null-entries",
+        "mapping-entries",
+        "outer-array",
+        "outer-null",
+        "scalar-row"
+      ]
+    },
+    {
+      "selector": "fallback_titles_literal_url_and_source_content_order",
+      "case_ids": [
+        "fallback-and-url"
+      ]
+    },
+    {
+      "selector": "used_prefixes_and_unused_unicode_values",
+      "case_ids": [
+        "password-tail-surrogate",
+        "hash-tail-surrogate",
+        "unused-name-surrogate",
+        "unused-extra-surrogate",
+        "array-password-slice",
+        "selected-surrogate-refused"
+      ]
+    },
+    {
+      "selector": "late_failure_is_atomic_and_operation_errors_precede_typed_title",
+      "case_ids": [
+        "late-row-atomic",
+        "prefix-before-title",
+        "subscription-before-index",
+        "typed-title-after-content"
+      ]
+    },
+    {
+      "selector": "configured_invalid_inputs_and_codec_refusals_are_atomic",
+      "case_ids": [
+        "invalid-base",
+        "zero-timeout",
+        "text-timeout",
+        "malformed-json",
+        "byte-limit"
+      ]
+    },
+    {
+      "selector": "registry_factory_preserves_all_catalog_metadata",
+      "case_ids": [
+        "real-registration"
+      ]
+    },
+    {
+      "selector": "entered_exchange_cancellation_drops_actual_future_and_keeps_http_owner",
+      "case_ids": [
+        "entered-cancel-and-reuse"
+      ]
+    },
+    {
+      "selector": "preexpired_caller_context_never_admits_or_dispatches",
+      "case_ids": [
+        "preexpired-context"
+      ]
+    },
+    {
+      "selector": "genuine_factory_crosses_shared_policy_only_with_sensitive_grant",
+      "case_ids": [
+        "policy-generic",
+        "policy-targeted",
+        "policy-jobs",
+        "policy-security",
+        "policy-science",
+        "policy-preview",
+        "policy-authorized-real-factory"
+      ]
+    },
+    {
+      "selector": "entered_exchange_shutdown_joins_and_rejects_reuse",
+      "case_ids": [
+        "entered-shutdown"
+      ]
+    },
+    {
+      "selector": "private_pipe_failures_retain_actual_read_prefix",
+      "case_ids": [
+        "pipe-prefix-before-read-error",
+        "pipe-prefix-before-cancel",
+        "pipe-prefix-before-timeout"
+      ]
+    },
+    {
+      "selector": "private_literal_loopback_complete_http_contract",
+      "case_ids": [
+        "literal-http-parent-exit"
+      ]
+    },
+    {
+      "selector": "actual_configured_and_caller_deadlines_drop_entered_exchange_without_retry",
+      "case_ids": [
+        "configured-deadline-entered",
+        "caller-deadline-entered"
+      ]
+    },
+    {
+      "selector": "resolved_settings_and_source_base_query_construction",
+      "case_ids": [
+        "resolved-config",
+        "source-base-query-fragment",
+        "direct-empty-base"
+      ]
+    },
+    {
+      "selector": "unsupported_request_filters_do_not_change_wire_or_claim_media",
+      "case_ids": [
+        "ignored-request-fields"
+      ]
+    },
+    {
+      "selector": "source_inventory_is_closed_and_bound_without_original_execution",
+      "case_ids": [
+        "source-bindings-closed"
+      ]
+    }
+  ],
+  "case_ids": [
+    "source-success",
+    "missing-key",
+    "admission-denied-first",
+    "admission-unavailable-first",
+    "status-301",
+    "status-401",
+    "status-403",
+    "status-404",
+    "status-429",
+    "status-500",
+    "transport-timeout",
+    "transport-error",
+    "auth-colonless",
+    "auth-first-colon",
+    "auth-unicode",
+    "auth-empty-user",
+    "auth-empty-both",
+    "config-debug-redacted",
+    "auth-header-debug-redacted",
+    "slice-zero",
+    "slice-one",
+    "slice-negative",
+    "slice-negative-all",
+    "slice-bool-true",
+    "slice-bool-false",
+    "slice-string-refused",
+    "slice-float-refused",
+    "slice-nan-refused",
+    "missing-entries",
+    "empty-entries",
+    "empty-string",
+    "sliced-string-empty",
+    "nonempty-string",
+    "null-entries",
+    "mapping-entries",
+    "outer-array",
+    "outer-null",
+    "scalar-row",
+    "fallback-and-url",
+    "password-tail-surrogate",
+    "hash-tail-surrogate",
+    "unused-name-surrogate",
+    "unused-extra-surrogate",
+    "array-password-slice",
+    "selected-surrogate-refused",
+    "late-row-atomic",
+    "prefix-before-title",
+    "subscription-before-index",
+    "typed-title-after-content",
+    "invalid-base",
+    "zero-timeout",
+    "text-timeout",
+    "malformed-json",
+    "byte-limit",
+    "real-registration",
+    "entered-cancel-and-reuse",
+    "preexpired-context",
+    "policy-generic",
+    "policy-targeted",
+    "policy-jobs",
+    "policy-security",
+    "policy-science",
+    "policy-preview",
+    "policy-authorized-real-factory",
+    "entered-shutdown",
+    "pipe-prefix-before-read-error",
+    "pipe-prefix-before-cancel",
+    "pipe-prefix-before-timeout",
+    "literal-http-parent-exit",
+    "configured-deadline-entered",
+    "caller-deadline-entered",
+    "resolved-config",
+    "source-base-query-fragment",
+    "direct-empty-base",
+    "ignored-request-fields",
+    "source-bindings-closed"
+  ],
+  "unit_selectors": [
+    "adapters::dehashed::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+    "adapters::dehashed::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows"
+  ],
+  "unit_case_ids": [
+    "projection-stored-drop",
+    "projection-late-failure",
+    "projection-atomic-quota"
+  ],
+  "completion_rules": {
+    "exact_list_and_execution_counter": true,
+    "zero_or_ignored_rejected": true,
+    "parent_case_marker": "A13_DEHASHED_CASE_COMPLETE",
+    "unit_case_marker": "A13_DEHASHED_UNIT_COMPLETE",
+    "private_child_marker": "A13_DEHASHED_PRIVATE_CHILD_COMPLETE",
+    "unix_only_literal_http_case": true,
+    "private_child_stdout_base64": "A13_DEHASHED_CHILD_STDOUT_BASE64",
+    "private_child_stderr_base64": "A13_DEHASHED_CHILD_STDERR_BASE64",
+    "private_child_lifecycle": "A13_DEHASHED_CHILD_LIFECYCLE",
+    "private_child_marker_location": "decoded child stdout only; not a standalone plaintext parent marker",
+    "private_pipe_failure_controls": [
+      "pipe-prefix-before-read-error",
+      "pipe-prefix-before-cancel",
+      "pipe-prefix-before-timeout"
+    ],
+    "private_child_read_outcomes": "eof/read_error_kind/limit_hit/timed_out/task_cancelled/task_panicked/incomplete; retained prefix is published only after reader join"
+  },
+  "deferred": [
+    "HIBP factory/source corpus",
+    "IntelX factory/delay/error corpus",
+    "Research/Worker recovered authority through real follow-on packs",
+    "Mixed HIBP/IntelX scope with actual bindings",
+    "Full A13 xtask/CI registration and source inventory",
+    "Production factory installation/W09",
+    "Portal gate",
+    "graphify AST/hooks/format/native qualification"
+  ],
+  "native_qualification": {
+    "scope": "ROOT_ACCEPTED_HISTORICAL_DEHASHED_COMPONENT_ONLY",
+    "source_head": "80ecfcf5bcd7393bbe1457fa5f406d439525e4f8",
+    "successful_outer_command_inventory": 37,
+    "successful_execution_split": [
+      32,
+      3,
+      2
+    ],
+    "integration_selectors": 21,
+    "integration_case_identities": 76,
+    "unit_selectors": 2,
+    "unit_case_identities": 3,
+    "supporting_gates": [
+      "F06",
+      "F08",
+      "F09",
+      "A09",
+      "A11",
+      "F01",
+      "O06"
+    ],
+    "handoff_manifest_sha256": "517d66d5a4d41e521da9b7c002932f83acf27c5d20f2d4660b1626a6a8c6251c",
+    "handoff_local_supplement": "/Volumes/tank01/magnus/rust-builds/slopsearx/a13-dehashed-qualified-component-handoff-v1/manifest.json",
+    "original_runtime_captures": 0,
+    "provider_calls": 0,
+    "portal_gate_or_browser_executed": false,
+    "original_build_and_strict_failures_preserved": true,
+    "collector_STOPs_preserved": [
+      "F08 named ignored subprocess helper",
+      "A11 six joined child/parent profiles"
+    ],
+    "offline_negative_controls": {
+      "F08": 7,
+      "A11": 11
+    },
+    "documentation_successor": "Metadata checks validate this successor separately; historical runtime receipts retain their original source identity.",
+    "remaining": [
+      "HIBP",
+      "IntelX",
+      "complete A13 gate and CI/inventory",
+      "normal current-main integration",
+      "composed portal gate",
+      "production composition"
+    ]
+  }
+}

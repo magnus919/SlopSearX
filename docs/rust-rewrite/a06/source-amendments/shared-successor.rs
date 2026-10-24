@@ -4,6 +4,9 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 #[path = "a13-header-layout-successor.rs"]
 mod a13_header_layout_successor;
+#[path = "post-a06-generation.rs"]
+mod post_a06_generation;
+pub(crate) use post_a06_generation::native_search;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
 #[path = "w07-evidence-successor.rs"]
@@ -19,8 +22,10 @@ const MANIFEST_SHA: &str = "864e6158d6d51cb13793ed4abed3df577c795c1ffb08940eb730
 const BASELINE: &str = "d5615ace90b827f31789ccf04c72aaad4516e8f7";
 #[path = "a13-json-inventory-successor.rs"]
 mod a13_json_inventory_successor;
-#[path = "a13-marker-successor.rs"]
+#[path = "a13-marker-successor-v2.rs"]
 mod a13_marker_successor;
+#[path = "a13-qualification-successor.rs"]
+mod a13_qualification_successor;
 const A13: &str = "crates/xtask/src/a13.rs";
 const SHA_PAIRS: &[(&str, &str)] = &[
     ("docs/rust-rewrite/a09/coverage.json", "Cargo.lock"),
@@ -306,6 +311,12 @@ fn material(row: &Value, raw: &[u8], mode: &str) -> Result<(), String> {
     )
 }
 fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if let Some(prior) = post_a06_generation::historical(root, row)? {
+        return Ok(prior);
+    }
+    read_exact(root, row)
+}
+fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     let path = root.join(text(row, "path")?);
     let stat = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
     need(
@@ -544,6 +555,8 @@ fn frozen(root: &Path, doc: &Value) -> Result<(), String> {
                 row,
                 real_clock_successor::Role::FrozenSupport,
             )?;
+        } else if row["path"] == "docs/rust-rewrite/a13/qualification-v1.json" {
+            verify_current_qualification(root, row)?;
         } else {
             read(root, row)?;
         }
@@ -620,6 +633,11 @@ pub(crate) fn try_verify(
     expected: &str,
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
+    if let Some(result) =
+        post_a06_generation::try_current(root, container, container_sha, path, expected, bytes)
+    {
+        return Some(result);
+    }
     if let Some(result) = try_a06_artifact(root, container, container_sha, path, expected, bytes) {
         return Some(result);
     }
@@ -742,6 +760,8 @@ pub(crate) fn compose_scoped(root: &Path, previous: &Value) -> Result<Value, Str
                 *row = a13_header_layout_successor::scoped(root, row, &historical)?;
             }
         }
+        let historical = read(root, &row["historical191"])?;
+        *row = post_a06_generation::scoped(root, row, &historical)?;
     }
     for row in next["additional_current_materials"]
         .as_array_mut()
@@ -765,6 +785,7 @@ pub(crate) fn compose_scoped(root: &Path, previous: &Value) -> Result<Value, Str
                     row,
                     real_clock_successor::Role::SharedCurrent,
                 )?;
+                *row = post_a06_generation::effective(root, row)?;
             }
         }
     }
@@ -803,6 +824,7 @@ pub(crate) fn validator_baseline(
         &row["current"],
         real_clock_successor::Role::SharedCurrent,
     )?;
+    let effective = post_a06_generation::effective(root, &effective)?;
     need(
         *requested == row["baseline"] || *requested == row["current"] || *requested == effective,
         "A06 validator predecessor/current request differs",
@@ -814,7 +836,9 @@ pub(crate) fn security_lock_baseline(
     supplied_current: &[u8],
 ) -> Result<Vec<u8>, String> {
     let doc = load(root)?;
-    let (before, actual) = verify_transition(root, source(&doc, "Cargo.lock")?)?;
+    let row = source(&doc, "Cargo.lock")?;
+    let (before, _) = verify_transition(root, row)?;
+    let actual = post_a06_generation::actual(root, &row["current"])?;
     let supplied_current = if digest(supplied_current) == w07_test_dependency::LOCK_CURRENT_SHA {
         w07_test_dependency::historical_lock(root, supplied_current)?
     } else {
@@ -881,7 +905,10 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
     w07_test_dependency::controls(root)?;
+    native_search::controls(root)?;
+    post_a06_generation::controls(root)?;
     a13_json_inventory_successor::controls(root)?;
+    a13_qualification_successor::controls(root)?;
     real_clock_successor::controls(root)?;
     w07_evidence_successor::controls(root)?;
     let doc = load(root)?;
@@ -1025,7 +1052,8 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         "A06 V2 missing validator accepted",
     )?;
     let lock = source(&doc, "Cargo.lock")?;
-    let (before, actual) = verify_transition(root, lock)?;
+    let (before, _) = verify_transition(root, lock)?;
+    let actual = post_a06_generation::actual(root, &lock["current"])?;
     security_lock_successor(root, &before, &actual)?;
     let mut wrong_baseline = before.clone();
     wrong_baseline.push(0);
@@ -1526,4 +1554,27 @@ pub(crate) fn a13_header_layout_controls(root: &Path) -> Result<(), String> {
 
 pub(crate) fn a13_inventory_library_source(root: &Path, expected: &Value) -> Result<(), String> {
     a13_json_inventory_successor::library_source(root, expected)
+}
+
+pub(crate) fn verify_current_qualification(root: &Path, expected: &Value) -> Result<(), String> {
+    a13_qualification_successor::verify(root, expected)
+}
+
+/// Historical caller bytes are available only after exact live generation proof.
+pub(crate) fn historical_caller(
+    root: &Path,
+    path: &str,
+    expected_sha: &str,
+) -> Result<Vec<u8>, String> {
+    post_a06_generation::caller_material(root, path, expected_sha)
+}
+
+#[cfg(test)]
+pub(crate) fn generation_control_operand(
+    root: &Path,
+    path: &str,
+    expected: &Value,
+    supplied_current: &[u8],
+) -> Result<Vec<u8>, String> {
+    post_a06_generation::control_operand(root, path, expected, supplied_current)
 }

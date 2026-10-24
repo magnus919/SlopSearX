@@ -6,9 +6,12 @@ use sha2::{Digest, Sha256};
 use std::path::Path;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 mod lock_amendment;
+#[path = "../../../docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"]
+mod native_search;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    native_search::controls(&root).unwrap();
     let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
     assert_eq!(
         Sha256::digest(raw)
@@ -110,7 +113,8 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
             row["sha256"].as_str().unwrap()
         };
         let actual = std::fs::read(root.join(name)).unwrap();
-        let proven = if name == "crates/ssx-infra/src/search.rs" {
+        let proven = if name == native_search::SOURCE {
+            native_search::verify(&root, name, row["sha256"].as_str().unwrap(), &actual).unwrap();
             w07_evidence_successor::t06_native_search(&root, row, &actual).unwrap()
         } else {
             actual
