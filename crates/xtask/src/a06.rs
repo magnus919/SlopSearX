@@ -177,6 +177,9 @@ fn admission_capsule(root: &Path) -> Result<Value> {
 fn verify_artifact(root: &Path, row: &Value) -> Result<()> {
     let path = row["path"].as_str().ok_or("A06 artifact path missing")?;
     let expected = row["sha256"].as_str().ok_or("A06 artifact hash missing")?;
+    if path == "docs/rust-rewrite/a13/qualification-v1.json" {
+        return crate::a13::a06_source_successor::verify_current_qualification(root, row);
+    }
     if ADMISSION_PATHS.contains(&path) {
         let doc = admission_capsule(root)?;
         let selected = doc["sources"]

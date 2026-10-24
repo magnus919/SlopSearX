@@ -174,6 +174,125 @@ jobs:
           PORTAL_BROWSER_SMOKE: "1"
         run: pytest --no-cov -q tests/test_portal_browser.py
 
+
+  native-portal-theme-browser:
+    name: Native portal theme browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install wire-only browser client dependencies
+        run: python -m pip install pytest pytest-cov "playwright>=1.50"
+      - name: Install deterministic Chromium runtime
+        run: python -m playwright install --with-deps chromium
+      - name: Install repository-pinned Rust toolchain
+        run: |
+          toolchain="$(sed -n 's/^channel = "\([^"]*\)"/\1/p' rust-toolchain.toml)"
+          test "$toolchain" = "1.99.0"
+          rustup toolchain install "$toolchain" --profile minimal
+      - name: Confirm pinned Rust toolchain
+        run: rustup run 1.99.0 rustc --version --verbose
+      - name: Build native HTTP fixture
+        run: cargo build --locked -p ssx-http --example t02_fixture
+      - name: Exercise the native HTML theme over HTTP
+        env:
+          PORTAL_NATIVE_HTML_THEME_SMOKE: "1"
+        run: |
+          set -euo pipefail
+          server_pid=""
+          fifo=""
+          stem=""
+          stop_fixture() {
+            if [ -n "$server_pid" ]; then
+              if kill -0 "$server_pid" 2>/dev/null; then
+                printf 'STOP\n' >&3 2>/dev/null || true
+                for attempt in $(seq 1 50); do
+                  if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
+                  sleep 0.1
+                done
+                if kill -0 "$server_pid" 2>/dev/null; then kill -TERM "$server_pid"; fi
+                for attempt in $(seq 1 20); do
+                  if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
+                  sleep 0.1
+                done
+                if kill -0 "$server_pid" 2>/dev/null; then kill -KILL "$server_pid"; fi
+              fi
+              exec 3>&- || true
+              wait "$server_pid" 2>/dev/null || true
+              server_pid=""
+            fi
+            if [ -n "$fifo" ]; then rm -f "$fifo"; fifo=""; fi
+            if [ -n "$stem" ]; then rm -f "$stem.log" "$stem.calls"; stem=""; fi
+          }
+          trap stop_fixture EXIT
+          run_theme() {
+            local theme="$1"
+            stem="$RUNNER_TEMP/native-theme-$theme"
+            fifo="$stem.stdin"
+            local log="$stem.log"
+            local calls="$stem.calls"
+            mkfifo "$fifo"
+            env -i PATH="$PATH" target/debug/examples/t02_fixture \
+              "$calls" "$theme" stdin contract <"$fifo" >"$log" 2>&1 &
+            server_pid=$!
+            exec 3<>"$fifo"
+            local ready=""
+            for attempt in $(seq 1 50); do
+              if grep -q '"address"' "$log"; then ready=1; break; fi
+              if ! kill -0 "$server_pid" 2>/dev/null; then cat "$log" >&2; return 1; fi
+              sleep 0.1
+            done
+            if [ -z "$ready" ]; then echo "native fixture startup timed out" >&2; cat "$log" >&2; return 1; fi
+            local address
+            address="$(sed -n 's/.*"address":"\([^"]*\)".*/\1/p' "$log" | head -n 1)"
+            if [ -z "$address" ]; then echo "native fixture did not publish its loopback address" >&2; cat "$log" >&2; return 1; fi
+            local output
+            if output="$(PORTAL_NATIVE_HTML_THEME_SMOKE=1 \
+                PORTAL_NATIVE_HTML_BASE_URL="http://$address/" \
+                PORTAL_NATIVE_HTML_DEFAULT_THEME="$theme" \
+                python -m pytest --no-cov -q tests/test_native_html_theme_browser.py 2>&1)"; then
+              :
+            else
+              local result=$?
+              printf '%s\n' "$output"
+              return "$result"
+            fi
+            printf '%s\n' "$output"
+            if ! printf '%s\n' "$output" | grep -Eq '^1 passed(, [0-9]+ warnings?)? in [0-9.]+s$'; then
+              echo "expected exactly one passing native theme browser test" >&2
+              return 1
+            fi
+            if printf '%s\n' "$output" | grep -Eq 'skipped'; then
+              echo "native theme browser test must not skip" >&2
+              return 1
+            fi
+            if [ ! -e "$calls" ] || [ -s "$calls" ]; then
+              echo "theme landing/toggle requests unexpectedly dispatched a search" >&2
+              if [ -e "$calls" ]; then cat "$calls" >&2; fi
+              return 1
+            fi
+            printf 'STOP\n' >&3
+            for attempt in $(seq 1 50); do
+              if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
+              sleep 0.1
+            done
+            if kill -0 "$server_pid" 2>/dev/null; then
+              echo "native fixture did not stop after STOP" >&2
+              return 1
+            fi
+            exec 3>&-
+            if ! wait "$server_pid"; then echo "native fixture exited unsuccessfully" >&2; return 1; fi
+            server_pid=""
+            rm -f "$fifo" "$log" "$calls"
+            fifo=""
+            stem=""
+          }
+          run_theme dark
+          run_theme darker
   test:
     runs-on: ubuntu-latest
     strategy:

@@ -10,6 +10,10 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+ssx-registry.workspace = true
+ssx-config.workspace = true
+ssx-infra.workspace = true
+aws-lc-rs.workspace = true
 url.workspace = true
 sha2.workspace = true
 rustls.workspace = true
@@ -25,10 +29,8 @@ tower.workspace = true
 tower-http.workspace = true
 
 [dev-dependencies]
-ssx-config.workspace = true
-aws-lc-rs.workspace = true
+serde-saphyr = { version = "=2.0.0", default-features = false, features = ["deserialize"] }
 base64.workspace = true
 reqwest.workspace = true
 redis.workspace = true
 rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
-ssx-infra.workspace = true

@@ -1,0 +1,79 @@
+{
+  "scope": "Root-confirmed independent review corrections after retained410-binding snapshot; final421-binding gate required.",
+  "findings": [
+    {
+      "id": "offset-extra-colons",
+      "source": "slopsearx/formatter.py:_iso_to_epoch datetime.strptime %z",
+      "fix": "Reject colons outside offset positions2/5 and reject a seconds colon without two seconds digits.",
+      "source_cases": [
+        "formatter_epoch:300",
+        "formatter_epoch:301"
+      ],
+      "native_tests": [
+        "reviewed_malformed_offsets_match_original_http_null_pubdates",
+        "reviewed_offsets_category_labels_and_duplicate_queries_match_original_http"
+      ],
+      "expected": "Both source and native actual JSON pubdate:null; pure Rust helper returnsNone cross-bound to original fullHTTP result."
+    },
+    {
+      "id": "mapped-category-deduplication",
+      "source": "slopsearx/server.py:899-902 maps unknown labels toother then deduplicates",
+      "fix": "Map metric category labels before collecting their unique set.",
+      "source_cases": [
+        "review_unknown_categories",
+        "review_metrics_initial",
+        "review_metrics_category"
+      ],
+      "expected": "Unknown1,unknown2 gives503/zeroadaptercalls and exactlyother+1."
+    },
+    {
+      "id": "duplicate-query-last-value",
+      "source": "Starlette request.query_params and search_impl select final duplicateq.",
+      "fix": "Completion middleware selects final duplicateq before deciding rootlanding exclusion.",
+      "source_cases": [
+        "review_duplicate_empty_then_test",
+        "review_duplicate_test_then_empty",
+        "review_metrics_category",
+        "review_metrics_duplicate_search",
+        "review_metrics_duplicate_landing"
+      ],
+      "expected": "Empty\u2192test JSONsearch increments server/completed-success/histogramcount once; reverse HTMLlanding leaves entire native metrics body byte-identical."
+    }
+  ],
+  "new_native_binding_counts": {
+    "review_wire": 9,
+    "formatter_review_pure_cross_bound": 2,
+    "total_added": 11,
+    "total_with_preserved410": 421
+  },
+  "retained_new_test_failures": [
+    {
+      "log": "/private/tmp/t02-review-http-first.log",
+      "reason": "Comparator required alloutcome histograms before any observation. Original/native complete samplemaps actually equal. Corrected to allow onlyjoint completeabsence, still rejectpartial/mismatchedseries."
+    },
+    {
+      "log": "/private/tmp/t02-review-http-second.log",
+      "reason": "New explicit delta test misspelled empty-label metric key without{}. Raw wholemetrics comparisons passed and actualcounter3\u21924; corrected literalkey, no expectation relaxation."
+    }
+  ],
+  "source_packet_sha256": "f716f95ecd009acb3c0332702ed9f6cdceacf3973c8647a6a37ba084b053b163",
+  "reviewed_source_manifest_sha256": "6c53531e4d4298f4603c16f3b6aca02bb0b6231484449af4fa077ddbe7428093",
+  "focused_native_http_pass_log": "/private/tmp/t02-review-http-third.log",
+  "focused_native_http_pass_log_sha256": "b05a9910546874973a3de07d470a9cec5aaaa8a07752a48611cdf24ec7096aa4",
+  "initial_comparator_failure_analysis": {
+    "native_receipt": "/var/folders/gn/gpr8z9bn72z5kqm_fmjndj180000gn/T/t02-http-review-0e7acd9ae47d7a89a8597c16810cbe81/review_metrics_initial.json",
+    "native_receipt_sha256": "b1f4fc876c54b53887dec22979128d0b2b4117e8e117fb0dad0c953b4f6e15f4",
+    "source_sample_map_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "native_sample_map_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "missing": [],
+    "extra": [],
+    "different_values": [],
+    "all_outcome_histogram_samples_absent": true
+  },
+  "post_fix_full_native": {
+    "log": "/private/tmp/t02-review-full-native-first.log",
+    "sha256": "82bcc41991cf42a441c627c02649870ec2362110aeb16ccf256825e11dfb77e9",
+    "exit_code": 0,
+    "unique_completion_bindings": 421
+  }
+}

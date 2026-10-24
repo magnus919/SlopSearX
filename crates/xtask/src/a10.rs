@@ -23,7 +23,7 @@ use std::{
     fs,
     path::Path,
 };
-const COVERAGE_SHA: &str = "85a7121b09c7963326e0bb17b9fc30172649e349fb591a8a3494228af711ce14";
+const COVERAGE_SHA: &str = "abd85bf644e311c4f6ed00f1e1315e788a930d937c017ecec7f3befeb378c01a";
 fn require(value: bool, message: &str) -> Result<()> {
     if value { Ok(()) } else { Err(message.into()) }
 }
@@ -243,6 +243,127 @@ fn coverage(root: &Path, pack: &Value) -> Result<()> {
     }
     Ok(())
 }
+// One test-only cleanup suffix changed; the frozen A10 source row remains the caller.
+const WORKER_PATH: &str = "crates/ssx-infra/src/html_rows_worker.rs";
+const WORKER_PRIOR_SHA: &str = "31194cd4a7d987f6ce106d5f4278337050ac7571625a30c8c5f67edc117b528e";
+const WORKER_CURRENT_SHA: &str = "4b3b0e2ad5e0e0e73f683a81a66d218dd0eb329d199d587f87d2688141a278fe";
+const WORKER_PRIOR_BLOB: &str = "ed650782fccb5f433d0b5fd30cd6136310e4040b";
+const WORKER_CLEANUP_BEFORE: &str = r#"            // Preserve exact command/marker for receipt inspection; only owned
+            // fixture files are created and no broad process cleanup is used.
+"#;
+const WORKER_CLEANUP_AFTER: &str = r#"            // Receipt bytes survive successful fixture retirement in captured stdout.
+            // On any earlier failure the controller retains files until child retirement.
+            let entered = std::fs::read(&marker).unwrap();
+            assert!(
+                script.len() <= 8192 && entered.len() <= 128,
+                "private fixture receipt bound"
+            );
+            println!("A05_MEDIA_FIXTURE_RECEIPT command={script:?} entered={entered:?}");
+            std::fs::remove_file(&command).unwrap();
+            std::fs::remove_file(&marker).unwrap();
+            std::fs::remove_dir(&directory).unwrap();
+            assert!(
+                !directory.exists(),
+                "successful owned fixture must be absent"
+            );
+"#;
+fn worker_cleanup_previous(
+    container_sha: &str,
+    container: &[u8],
+    row: &Value,
+    current: &[u8],
+    mode: u32,
+) -> Result<Vec<u8>> {
+    require(
+        container_sha == COVERAGE_SHA
+            && sha(container) == COVERAGE_SHA
+            && *row == json!({"path": WORKER_PATH, "sha256": WORKER_PRIOR_SHA}),
+        "A10 exact worker cleanup caller differs",
+    )?;
+    require(
+        mode == 0o644 && current.len() == 26237 && sha(current) == WORKER_CURRENT_SHA,
+        "A10 exact current worker cleanup bytes/mode differ",
+    )?;
+    let text = std::str::from_utf8(current).map_err(|e| e.to_string())?;
+    require(
+        text.matches(WORKER_CLEANUP_AFTER).count() == 1,
+        "A10 exact cleanup suffix absent/duplicated",
+    )?;
+    let prior = text
+        .replacen(WORKER_CLEANUP_AFTER, WORKER_CLEANUP_BEFORE, 1)
+        .into_bytes();
+    require(
+        prior.len() == 25633 && sha(&prior) == WORKER_PRIOR_SHA,
+        "A10 exact cleanup predecessor differs",
+    )?;
+    Ok(prior)
+}
+#[cfg(unix)]
+fn worker_cleanup_mode(path: &Path) -> Result<u32> {
+    use std::os::unix::fs::PermissionsExt;
+    Ok(fs::symlink_metadata(path)
+        .map_err(|e| e.to_string())?
+        .permissions()
+        .mode()
+        & 0o7777)
+}
+#[cfg(not(unix))]
+fn worker_cleanup_mode(_: &Path) -> Result<u32> {
+    Err("A10 worker cleanup mode proof requires Unix".into())
+}
+fn check_owned_source(root: &Path, container_sha: &str, row: &Value) -> Result<()> {
+    let path = row["path"].as_str().ok_or("A10 source path missing")?;
+    if path != WORKER_PATH {
+        return crate::a13::check_source_pin(
+            root,
+            "docs/rust-rewrite/a10/qualification.json",
+            container_sha,
+            path,
+            row["sha256"].as_str().ok_or("A10 source hash missing")?,
+            row["bytes"].as_u64().map(|value| value as usize),
+        );
+    }
+    let file = root.join(path);
+    let metadata = fs::symlink_metadata(&file).map_err(|e| e.to_string())?;
+    require(
+        metadata.is_file() && !metadata.file_type().is_symlink(),
+        "A10 current worker must be regular non-symlink",
+    )?;
+    let mode = worker_cleanup_mode(&file)?;
+    let current = fs::read(file).map_err(|e| e.to_string())?;
+    let container = fs::read(root.join("docs/rust-rewrite/a10/qualification.json"))
+        .map_err(|e| e.to_string())?;
+    let prior = worker_cleanup_previous(container_sha, &container, row, &current, mode)?;
+    let git = std::process::Command::new("git")
+        .args([
+            "show",
+            "e50b32d2e5dc218455a0f361a819c5486c10a8c6:crates/ssx-infra/src/html_rows_worker.rs",
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    require(
+        git.status.success() && git.stdout == prior,
+        "A10 worker predecessor Git bytes differ",
+    )?;
+    let tree = std::process::Command::new("git")
+        .args([
+            "ls-tree",
+            "e50b32d2e5dc218455a0f361a819c5486c10a8c6",
+            "--",
+            WORKER_PATH,
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    require(
+        tree.status.success()
+            && tree.stdout
+                == format!("100644 blob {WORKER_PRIOR_BLOB}\t{WORKER_PATH}\n").as_bytes(),
+        "A10 worker predecessor Git mode/blob differ",
+    )
+}
+
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let rust = command(root, "rustc", &["--version", "--verbose"], records)?;
     require(
@@ -260,16 +381,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         .as_array()
         .ok_or("A10 owned source bindings missing")?
     {
-        let path = row["path"].as_str().unwrap();
-        crate::a13::check_source_pin(
-            root,
-            "docs/rust-rewrite/a10/qualification.json",
-            &sha(&bytes),
-            path,
-            row["sha256"].as_str().unwrap(),
-            row["bytes"].as_u64().map(|value| value as usize),
-        )
-        .map_err(|_| "A10 candidate source/fixture/ledger changed".to_owned())?;
+        check_owned_source(root, &sha(&bytes), row)
+            .map_err(|_| "A10 candidate source/fixture/ledger changed".to_owned())?;
     }
     for row in pack["original_sources"]
         .as_array()
@@ -405,5 +518,60 @@ mod tests {
             assert!(markers(bad, &cases).is_err());
         }
         assert!(markers("A10_CASE_COMPLETE actual-id\n", &[]).is_err());
+        #[cfg(unix)]
+        {
+            // This same named control also closes the one finite cleanup predecessor.
+            let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap();
+            let container =
+                fs::read(root.join("docs/rust-rewrite/a10/qualification.json")).unwrap();
+            let current = fs::read(root.join(WORKER_PATH)).unwrap();
+            let row = json!({"path": WORKER_PATH, "sha256": WORKER_PRIOR_SHA});
+            check_owned_source(root, COVERAGE_SHA, &row).unwrap();
+            assert!(worker_cleanup_previous("wrong", &container, &row, &current, 0o644).is_err());
+            let mut bad_container = container.clone();
+            bad_container.push(0);
+            assert!(
+                worker_cleanup_previous(COVERAGE_SHA, &bad_container, &row, &current, 0o644)
+                    .is_err()
+            );
+            for (key, value) in [
+                ("path", json!("wrong")),
+                ("sha256", json!("wrong")),
+                ("bytes", json!(25633)),
+            ] {
+                let mut changed = row.clone();
+                changed[key] = value;
+                assert!(
+                    worker_cleanup_previous(COVERAGE_SHA, &container, &changed, &current, 0o644)
+                        .is_err()
+                );
+            }
+            for mode in [0o600, 0o755, 0o4644] {
+                assert!(
+                    worker_cleanup_previous(COVERAGE_SHA, &container, &row, &current, mode)
+                        .is_err()
+                );
+            }
+            let text = std::str::from_utf8(&current).unwrap();
+            let at = text.find(WORKER_CLEANUP_AFTER).unwrap();
+            let mut missing = current.clone();
+            missing.drain(at..at + WORKER_CLEANUP_AFTER.len());
+            let mut duplicate = current.clone();
+            duplicate.splice(at..at, WORKER_CLEANUP_AFTER.bytes());
+            let mut moved = missing.clone();
+            moved.extend_from_slice(WORKER_CLEANUP_AFTER.as_bytes());
+            let mut changed = current.clone();
+            changed.push(0);
+            for raw in [missing, duplicate, moved, changed] {
+                assert!(raw != current);
+                assert!(
+                    worker_cleanup_previous(COVERAGE_SHA, &container, &row, &raw, 0o644).is_err()
+                );
+            }
+        }
     }
 }

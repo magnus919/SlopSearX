@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "kind": "T02_CURRENT_MAIN_TWO_SOURCE_SUCCESSOR_V1",
+  "coverage_sha256": "49c113e42009501981348382d8b866e8379579f47f6bd63b25aad93405cc4b71",
+  "baseline_pr": "f7cb4ad1e6d8a72b053cf09cfffb29cc607d9827",
+  "incoming_main": "50de34d821cc94d538ac5cf1c5149552da15222d",
+  "qualification": "SOURCE_ONLY_CURRENT_MAIN_INTEGRATION_NATIVE_PENDING",
+  "transitions": [
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "baseline_commit": "f7cb4ad1e6d8a72b053cf09cfffb29cc607d9827",
+      "baseline_blob": "2f34a38467884895319ac7837c72a04708aee73b",
+      "archive": "docs/rust-rewrite/t02/source-amendments/f7cb4ad1/crates/ssx-infra/src/search.rs",
+      "old_sha256": "e5b4047c9a8b4a965eea97f643f8dcdec9bdd7c19b42b2e3a2f6f74a65746c6a",
+      "old_bytes": 83421,
+      "current_sha256": "4aec7730d0c6dd7d7620c983d7decab67b9a6aa249066e3db2af107553600331",
+      "current_bytes": 86609,
+      "mode": 420,
+      "edits": [
+        {
+          "offset": 2509,
+          "delete": "",
+          "insert": "}\n/// Monotonic search-execution clock, separate from calendar/epoch capture.\n/// The default is System. Only trusted construction can supply an alternate;\n/// public server startup has no operator/environment/request selection path.\npub trait SearchDeadlineClock: Send + Sync {\n    fn now(&self) -> Instant;\n    fn sleep_until(&self, deadline: Instant) -> PortFuture<'_, ()>;\n}\n#[derive(Clone, Default)]\nenum DeadlineClock {\n    #[default]\n    System,\n    Injected(Arc<dyn SearchDeadlineClock>),\n}\nimpl DeadlineClock {\n    fn now(&self) -> Instant {\n        match self {\n            Self::System => Instant::now(),\n            Self::Injected(clock) => clock.now(),\n        }\n    }\n    async fn sleep_until(&self, deadline: Instant) {\n        match self {\n            Self::System => tokio::time::sleep_until(deadline).await,\n            Self::Injected(clock) => clock.sleep_until(deadline).await,\n        }\n    }\n    async fn timeout_at<T>(\n        &self,\n        deadline: Instant,\n        future: impl std::future::Future<Output = T>,\n    ) -> Option<T> {\n        match self {\n            // Preserve Tokio's exact existing poll/deadline semantics by default.\n            Self::System => tokio::time::timeout_at(deadline, future).await.ok(),\n            Self::Injected(clock) => {\n                tokio::select! { biased; _ = clock.sleep_until(deadline) => None, value = future => Some(value) }\n            }\n        }\n    }\n"
+        },
+        {
+          "offset": 9537,
+          "delete": "",
+          "insert": "    deadline_clock: DeadlineClock,\n"
+        },
+        {
+          "offset": 16159,
+          "delete": "",
+          "insert": "}\nimpl SearchService {\n    /// Construction-only injection. Refuse replacement after the owner is shared.\n    /// Normal constructors and production startup always retain the System clock.\n    pub fn with_deadline_clock(\n        mut self,\n        clock: Arc<dyn SearchDeadlineClock>,\n    ) -> Result<Self, SearchError> {\n        Arc::get_mut(&mut self.0)\n            .ok_or(SearchError::InvalidConfiguration)?\n            .deadline_clock = DeadlineClock::Injected(clock);\n        Ok(self)\n    }\n\n"
+        },
+        {
+          "offset": 18068,
+          "delete": "",
+          "insert": "            deadline_clock: DeadlineClock::System,\n"
+        },
+        {
+          "offset": 41014,
+          "delete": "                        Instant::now(),\n",
+          "insert": "                        owner.deadline_clock.now(),\n"
+        },
+        {
+          "offset": 49594,
+          "delete": "    fn undispatched(index: usize, response: AdapterResponse, service_deadline: Instant) -> Self {\n        Self(index, response, Instant::now() >= service_deadline)\n",
+          "insert": "    fn undispatched(\n        index: usize,\n        response: AdapterResponse,\n        service_deadline: Instant,\n        observed: Instant,\n    ) -> Self {\n        Self(index, response, observed >= service_deadline)\n"
+        },
+        {
+          "offset": 49765,
+          "delete": "",
+          "insert": "    #[cfg(test)]\n"
+        },
+        {
+          "offset": 49848,
+          "delete": "        (Instant::now() >= deadline).then(|| {\n",
+          "insert": "        Self::before_dispatch_deadline_at(index, deadline, Instant::now())\n    }\n    fn before_dispatch_deadline_at(\n        index: usize,\n        deadline: Instant,\n        observed: Instant,\n    ) -> Option<Self> {\n        (observed >= deadline).then(|| {\n"
+        },
+        {
+          "offset": 50144,
+          "delete": "",
+          "insert": "    #[cfg(test)]\n"
+        },
+        {
+          "offset": 50163,
+          "delete": "",
+          "insert": "        index: usize,\n        response: AdapterResponse,\n        execution_deadline: Instant,\n        service_deadline: Instant,\n        binding_timeout: Duration,\n    ) -> Self {\n        Self::dispatched_at(\n            index,\n            response,\n            execution_deadline,\n            service_deadline,\n            binding_timeout,\n            Instant::now(),\n        )\n    }\n    fn dispatched_at(\n"
+        },
+        {
+          "offset": 50331,
+          "delete": "",
+          "insert": "        completed_at: Instant,\n"
+        },
+        {
+          "offset": 50434,
+          "delete": "        let completed_at = Instant::now();\n",
+          "insert": ""
+        },
+        {
+          "offset": 55777,
+          "delete": "            if let Some(expired) = Finished::before_dispatch_deadline(index, deadline) {\n",
+          "insert": "            if let Some(expired) =\n                Finished::before_dispatch_deadline_at(index, deadline, owner.deadline_clock.now())\n            {\n"
+        },
+        {
+          "offset": 56514,
+          "delete": "",
+          "insert": "                    owner.deadline_clock.now(),\n"
+        },
+        {
+          "offset": 56796,
+          "delete": "",
+          "insert": "                    owner.deadline_clock.now(),\n"
+        },
+        {
+          "offset": 56830,
+          "delete": "            if let Some(expired) = Finished::before_dispatch_deadline(index, deadline) {\n",
+          "insert": "            if let Some(expired) =\n                Finished::before_dispatch_deadline_at(index, deadline, owner.deadline_clock.now())\n            {\n"
+        },
+        {
+          "offset": 57357,
+          "delete": "",
+          "insert": "                    owner.deadline_clock.now(),\n"
+        },
+        {
+          "offset": 57525,
+          "delete": "            let engine_deadline = Instant::now().checked_add(binding.timeout);\n",
+          "insert": "            let engine_deadline = owner.deadline_clock.now().checked_add(binding.timeout);\n"
+        },
+        {
+          "offset": 57696,
+          "delete": "            let response = tokio::time::timeout_at(\n                execution_deadline,\n                binding.engine.search_with_context(\n                    &request,\n                    SearchContext {\n                        deadline: execution_deadline.into_std(),\n                    },\n                ),\n            )\n            .await\n            .unwrap_or_else(|_| timeout_response(binding.timeout));\n",
+          "insert": "            let response = owner\n                .deadline_clock\n                .timeout_at(\n                    execution_deadline,\n                    binding.engine.search_with_context(\n                        &request,\n                        SearchContext {\n                            deadline: execution_deadline.into_std(),\n                        },\n                    ),\n                )\n                .await\n                .unwrap_or_else(|| timeout_response(binding.timeout));\n"
+        },
+        {
+          "offset": 58609,
+          "delete": "            Finished::dispatched(\n",
+          "insert": "            Finished::dispatched_at(\n"
+        },
+        {
+          "offset": 58787,
+          "delete": "",
+          "insert": "                owner.deadline_clock.now(),\n"
+        },
+        {
+          "offset": 59077,
+          "delete": "        && Instant::now() < deadline\n",
+          "insert": "        && inner.deadline_clock.now() < deadline\n"
+        },
+        {
+          "offset": 60070,
+          "delete": "            _ = tokio::time::sleep_until(deadline) => { break; }\n",
+          "insert": "            _ = inner.deadline_clock.sleep_until(deadline) => { break; }\n"
+        },
+        {
+          "offset": 66700,
+          "delete": "                deadline.min(Instant::now() + Duration::from_secs(1))\n",
+          "insert": "                deadline.min(inner.deadline_clock.now() + Duration::from_secs(1))\n"
+        },
+        {
+          "offset": 66791,
+          "delete": "                Instant::now() + Duration::from_secs(1)\n",
+          "insert": "                inner.deadline_clock.now() + Duration::from_secs(1)\n"
+        },
+        {
+          "offset": 66862,
+          "delete": "            if rerank_deadline > Instant::now() {\n",
+          "insert": "            if rerank_deadline > inner.deadline_clock.now() {\n"
+        },
+        {
+          "offset": 67334,
+          "delete": "                let decision = tokio::select! { _ = cancelled(&mut cancel) => { rerank_tasks.shutdown().await; suggestion_tasks.shutdown().await; return Err(SearchError::Cancelled); }, decision = rerank_tasks.join_next() => decision, _ = tokio::time::sleep_until(rerank_deadline) => None };\n",
+          "insert": "                let decision = tokio::select! { _ = cancelled(&mut cancel) => { rerank_tasks.shutdown().await; suggestion_tasks.shutdown().await; return Err(SearchError::Cancelled); }, decision = rerank_tasks.join_next() => decision, _ = inner.deadline_clock.sleep_until(rerank_deadline) => None };\n"
+        },
+        {
+          "offset": 68695,
+          "delete": "            _ = tokio::time::sleep_until(deadline), if interactive => { response.deadline_exceeded = true; }\n",
+          "insert": "            _ = inner.deadline_clock.sleep_until(deadline), if interactive => { response.deadline_exceeded = true; }\n"
+        }
+      ],
+      "current_blob": "403f287b856eba2b6a05968c453d394456eba605"
+    },
+    {
+      "path": "Cargo.lock",
+      "baseline_commit": "f7cb4ad1e6d8a72b053cf09cfffb29cc607d9827",
+      "baseline_blob": "6246845bf0e379123b31aba5fba3bab79415be2e",
+      "archive": "docs/rust-rewrite/t02/source-amendments/f7cb4ad1/Cargo.lock",
+      "old_sha256": "5633a2999f932cc1e91a451c3bc6b6ff68baa9d9fcbe68f8b5d5dfbae3fb8a35",
+      "old_bytes": 87455,
+      "current_sha256": "6fb367877c645aaa4ee0fe078b630b180e08096074c35412c8c5932abd64a3f0",
+      "current_bytes": 87456,
+      "mode": 420,
+      "edits": [
+        {
+          "offset": 52517,
+          "delete": "version = \"0.103.15\"\n",
+          "insert": "version = \"0.103.16\"\n"
+        },
+        {
+          "offset": 52603,
+          "delete": "checksum = \"f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2\"\n",
+          "insert": "checksum = \"4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281\"\n"
+        },
+        {
+          "offset": 78040,
+          "delete": "version = \"1.0.9\"\n",
+          "insert": "version = \"1.0.10\"\n"
+        },
+        {
+          "offset": 78123,
+          "delete": "checksum = \"b96554aa2acc8ccdb7e1c9a58a7a68dd5d13bccc69cd124cb09406db612a1c9b\"\n",
+          "insert": "checksum = \"58ec80e73fd8baf57bf0d9615554c75348bda990d6d5bbeab964dd068319fecb\"\n"
+        }
+      ],
+      "current_blob": "738fad8fb323ca10a1bb787c35541d59dc4d4ea8"
+    }
+  ]
+}
