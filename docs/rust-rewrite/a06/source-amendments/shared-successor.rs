@@ -10,6 +10,8 @@ mod real_clock_successor;
 pub(crate) mod w07_evidence_successor;
 #[path = "../../w07/source-amendments/main_successor.rs"]
 mod w07_main_successor;
+#[path = "../../w07/source-amendments/test_dependency_successor.rs"]
+mod w07_test_dependency;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
 const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v1.json";
 const VALIDATOR: &str = "docs/rust-rewrite/a13/source-amendments/validator.rs";
@@ -316,6 +318,8 @@ fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         && row["sha256"] == w07_main_successor::PRIOR_SHA
     {
         w07_main_successor::reconstruct(&raw)?
+    } else if row["path"] == "Cargo.lock" && row["sha256"] == w07_test_dependency::LOCK_PRIOR_SHA {
+        w07_test_dependency::historical_lock(root, &raw)?
     } else {
         raw
     };
@@ -811,6 +815,11 @@ pub(crate) fn security_lock_baseline(
 ) -> Result<Vec<u8>, String> {
     let doc = load(root)?;
     let (before, actual) = verify_transition(root, source(&doc, "Cargo.lock")?)?;
+    let supplied_current = if digest(supplied_current) == w07_test_dependency::LOCK_CURRENT_SHA {
+        w07_test_dependency::historical_lock(root, supplied_current)?
+    } else {
+        supplied_current.to_vec()
+    };
     need(
         supplied_current == actual,
         "A06 supplied lock differs from actual current",
@@ -871,6 +880,7 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    w07_test_dependency::controls(root)?;
     a13_json_inventory_successor::controls(root)?;
     real_clock_successor::controls(root)?;
     w07_evidence_successor::controls(root)?;

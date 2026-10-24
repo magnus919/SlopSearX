@@ -150,7 +150,8 @@
         "w07::tests::frozen_sources_reject_nonregular_and_symlink_leaves",
         "w07::tests::listing_requires_exact_unique_case_identities",
         "w07::tests::main_successor_requires_exact_finite_insertions",
-        "w07::tests::wire_completion_requires_all_exact_measured_case_identities"
+        "w07::tests::wire_completion_requires_all_exact_measured_case_identities",
+        "w07::tests::test_dependency_successor_requires_exact_lock_manifest_and_modes"
       ]
     },
     {
@@ -228,7 +229,7 @@
     "crates/ssx-mcp/tests/w07_wire_reference.rs": "91cbb2b2cb3f8ec2be2fb4e93e97261af7e992e993cde0e6777aba533d21ed43",
     "docs/rust-rewrite/t06/entities.json": "e519664f9a3b0d026d0de469c429cea7e0a146e2ecc3ed934339a62e47626232",
     "docs/rust-rewrite/w07/source-amendments/main_successor.rs": "fbd4796c07233de00acf969e7d51384692f5f42f48a4ec7a76d69125688dbe66",
-    "docs/rust-rewrite/a06/source-amendments/shared-successor.rs": "b555e98a29e28bc0211beca26632ac84235a35627a7b8db63da85bf4dcc9e3bd",
+    "docs/rust-rewrite/a06/source-amendments/shared-successor.rs": "520cd914f7fdc93f4f414fb1954cd354d2e0907dfcdc72b4c9fb08366471efb9",
     "crates/ssx-mcp/tests/t06_source_bindings.rs": "11818140b31f5518c599a3a0bd171648f3ad22fdc5452da80632e5452d9a3079",
     "crates/xtask/src/a03.rs": "81df67e0eb7e19ee2f5456527754f061033859bb4f37bf41fd65ac20d3936df1",
     "crates/xtask/src/t04.rs": "a2fea314bccff94d1e224d21a086c5ed5cdc6b23f125b29e67e292fcefaed861",
@@ -237,7 +238,10 @@
     "docs/rust-rewrite/t06/source-amendments/lock_amendment.rs": "e4781692fc1c26b36de292eec98f9a222c2df079f2fe94823903b4849ff32651",
     "docs/rust-rewrite/t06/source-amendments/current-lock-amendment-v1.json": "852f1e2971f5ba3fc5b8a71e5ed4ef7b50d27d14bdf1078406fb83f57cbc5662",
     "docs/rust-rewrite/t06/source-amendments/packaging-capture-commands.json": "c002bf5ba6b9dc23f366c3b72b1d6a5d779416d76b2a514ffdc985c7a41b9786",
-    "docs/rust-rewrite/t06/source-amendments/packaging-wire-producer.py.txt": "fa3b726f0a5a869fbcb74fdab98c84a15236df2b6a1a132413b5b9ede27510b2"
+    "docs/rust-rewrite/t06/source-amendments/packaging-wire-producer.py.txt": "fa3b726f0a5a869fbcb74fdab98c84a15236df2b6a1a132413b5b9ede27510b2",
+    "Cargo.lock": "9b2ab4a8dfb4a6c41c0af3575a6f77c0bbaf139f7efe83f40e60b9380974fd58",
+    "crates/ssx-mcp/Cargo.toml": "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
+    "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs": "1437743aeb281aa422c21cb9e5cb96ae98557e30c3c10f96a7a79239ed95855f"
   },
   "wire_reference": {
     "path": "docs/rust-rewrite/t06/source-amendments/packaging262-wire.json",

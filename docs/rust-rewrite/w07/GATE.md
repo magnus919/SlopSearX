@@ -95,8 +95,34 @@ old byte; the other124 measured source bindings retain strict byte hashes.
 
 Both T06 source consumers retain the W07 V3 search proof and add the UV proof.
 W07 also executes the exact accepted five-test source-binding target, including
-the four amendment rejection controls. It now requires79 named native tests
+the four amendment rejection controls. That integration required79 named native tests
 and22 individual measured wire completions. No D native qualification is claimed.
 The A06 owner's strict checks and123 controls passed on that owner's source;
 its remaining consumer gates were still running when this source integration
 was authorized. Those results are not relabeled as a D or full A06 gate pass.
+
+## Direct test dependency correction
+
+The first D workspace check stopped with E0433 before Clippy or semantic suites:
+the strict shared Valkey fixture requires AWS-LC directly in its test crate.
+The MCP crate now declares `aws-lc-rs.workspace = true` only under dev dependencies.
+An actual bounded offline Cargo metadata run generated only the corresponding
+`ssx-mcp` lock edge to the already pinned package. No package version, source or
+checksum changed. The strict fixture and all measured Python inputs stay unchanged.
+
+`source-amendments/test_dependency_successor.rs` admits the exact paired MCP
+manifest and Cargo.lock afterimages, removes only their fixed insertions and
+proves every original byte. The actual D predecessor is Cargo.lock SHA
+`92ee06e2da26d90c014ffabe812d52af88b084b0edfc4b362c9c33716e0ecd7d`.
+Only that exact Cargo.lock row enters this reconstruction before the existing
+A06/A13 chain; historical manifests and earlier proof capsules stay frozen.
+Current W07 admission requires the new pair. Duplicate, moved, extra SDK,
+other-package, mixed-profile, missing, symlink and mode changes fail closed.
+The shared aggregate controls execute the same rejection controls.
+
+The corrected registry binds66 current sources and requires80 exact native
+identities plus22 measured wire completions. The full xtask unit inventory gains
+one explicit dependency-proof test, bringing its expected count to129. These are
+source declarations pending actual qualification on the corrected source.
+Earlier128/79 counts and successful formatting retain their original source scope;
+the stopped workspace check remains an actual failure, never a gate pass.

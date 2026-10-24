@@ -11,11 +11,13 @@ use std::{
 
 #[path = "../../../docs/rust-rewrite/w07/source-amendments/main_successor.rs"]
 mod main_successor;
+#[path = "../../../docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs"]
+mod test_dependency_successor;
 use main_successor::{
     CURRENT_SHA as MAIN_CURRENT_SHA, PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
-const REGISTRY_SHA: &str = "15801304ace38cdba728f44fb0d89e38c308885958ea0b9d8f77a368404f5319";
+const REGISTRY_SHA: &str = "1840c7d33b7548fa89d653a4bcf9d1d999ea29a21f9b46ad46f3c5f5cba72b49";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -187,6 +189,7 @@ fn reference(root: &Path, binding: &Reference, packaging: &str) -> Result<Value>
     Ok(packet)
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
+    test_dependency_successor::controls(root)?;
     let registry = frozen(root, REGISTRY, REGISTRY_SHA)?;
     let qualification: Qualification =
         serde_json::from_slice(&registry).map_err(|e| e.to_string())?;
@@ -378,6 +381,15 @@ mod tests {
         assert!(frozen(&root.0, "alias", &digest).is_err());
         fs::create_dir(root.0.join("directory")).unwrap();
         assert!(frozen(&root.0, "directory", &digest).is_err());
+    }
+    #[test]
+    fn test_dependency_successor_requires_exact_lock_manifest_and_modes() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap();
+        test_dependency_successor::controls(root).unwrap();
     }
     #[test]
     fn main_successor_requires_exact_finite_insertions() {
