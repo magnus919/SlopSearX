@@ -229,6 +229,31 @@ fn read(root: &Path, row: &Row) -> Result<(Vec<u8>, u32)> {
         Err("W07/T02 source mode proof requires Unix".into())
     }
 }
+/// The direct dev edge belongs to one exact physical MCP manifest on every lock route.
+fn paired_manifest(root: &Path) -> Result<()> {
+    let path = root.join("crates/ssx-mcp/Cargo.toml");
+    let meta = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
+    need(
+        meta.is_file() && !meta.file_type().is_symlink(),
+        "regular non-symlink paired MCP manifest",
+    )?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let bytes = fs::read(path).map_err(|e| e.to_string())?;
+        need(
+            meta.permissions().mode() & 0o7777 == 0o644
+                && bytes.len() == 1234
+                && sha(&bytes)
+                    == "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
+            "exact paired MCP manifest bytes/mode",
+        )
+    }
+    #[cfg(not(unix))]
+    {
+        Err("W07/T02 paired manifest source mode proof requires Unix".into())
+    }
+}
 /// Only the three exact physical afterimages can yield either sealed parent.
 /// A parent supplied in place of actual current bytes is always rejected.
 pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -> Result<Vec<u8>> {
@@ -238,6 +263,9 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
         supplied == actual,
         "supplied bytes are not physical joint source",
     )?;
+    if path == "Cargo.lock" {
+        paired_manifest(root)?;
+    }
     let w07 = inverse(r, &actual, mode, &r.w07)?;
     let t02 = inverse(r, &actual, mode, &r.t02)?;
     Ok(match parent {
@@ -337,6 +365,13 @@ fn filesystem_controls(root: &Path) -> Result<()> {
     let directory = std::env::temp_dir().join(format!("w07-joint-{}-{suffix}", std::process::id()));
     fs::create_dir(&directory).map_err(|e| e.to_string())?;
     let owned = Owned(directory);
+    let manifest_path = owned.0.join("crates/ssx-mcp/Cargo.toml");
+    fs::create_dir_all(manifest_path.parent().ok_or("paired manifest parent")?)
+        .map_err(|e| e.to_string())?;
+    let manifest = fs::read(root.join("crates/ssx-mcp/Cargo.toml")).map_err(|e| e.to_string())?;
+    fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
+    fs::set_permissions(&manifest_path, fs::Permissions::from_mode(0o644))
+        .map_err(|e| e.to_string())?;
     for r in ROWS {
         let (actual, _) = read(root, r)?;
         let path = owned.0.join(r.path);
@@ -373,6 +408,47 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         )?;
         fs::remove_dir(&path).map_err(|e| e.to_string())?;
         fs::rename(backup, path).map_err(|e| e.to_string())?;
+    }
+    let lock = fs::read(owned.0.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    for kind in [Parent::W07, Parent::T02] {
+        let mut changed = manifest.clone();
+        changed[0] ^= 1;
+        fs::write(&manifest_path, changed).map_err(|e| e.to_string())?;
+        need(
+            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            "wrong paired manifest accepted",
+        )?;
+        fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
+        for mode in [0o600, 0o755, 0o4644] {
+            fs::set_permissions(&manifest_path, fs::Permissions::from_mode(mode))
+                .map_err(|e| e.to_string())?;
+            need(
+                parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+                "paired manifest mode accepted",
+            )?;
+        }
+        fs::set_permissions(&manifest_path, fs::Permissions::from_mode(0o644))
+            .map_err(|e| e.to_string())?;
+        let backup = manifest_path.with_extension("owned-backup");
+        fs::rename(&manifest_path, &backup).map_err(|e| e.to_string())?;
+        need(
+            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            "missing paired manifest accepted",
+        )?;
+        symlink(&backup, &manifest_path).map_err(|e| e.to_string())?;
+        need(
+            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            "symlink paired manifest accepted",
+        )?;
+        fs::remove_file(&manifest_path).map_err(|e| e.to_string())?;
+        fs::create_dir(&manifest_path).map_err(|e| e.to_string())?;
+        need(
+            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            "nonregular paired manifest accepted",
+        )?;
+        fs::remove_dir(&manifest_path).map_err(|e| e.to_string())?;
+        fs::rename(backup, &manifest_path).map_err(|e| e.to_string())?;
+        parent(&owned.0, "Cargo.lock", &lock, kind)?;
     }
     Ok(())
 }
