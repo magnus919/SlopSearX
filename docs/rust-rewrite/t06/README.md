@@ -72,3 +72,38 @@ extra/missing/duplicate inverse spans, row/path/hash/mode/manifest/Git controls,
 and missing proof material. The existing exact inventory/count checks remain
 fail-closed. This proof changes qualification only; no portal request, response,
 rendering, policy or engine behavior changes.
+
+## Real OpenAlex science boundary (#984)
+
+The additive `science_openalex` target composes the actual registered OpenAlex
+adapter, descriptor-derived policy declarations, shared `SearchService`, real
+private Valkey cache/snapshots and authenticated MCP HTTP transport with the
+pinned Rust SDK client. It reuses the unchanged A06 actual-date response and
+request fixtures, the existing private Valkey server and owned loopback helper.
+No fake OpenAlex engine, Python backend, gateway or external upstream is used.
+
+The three source-declared tests require these assertions before completion:
+
+- Lower-only, upper-only, equal leap-day and two-sided science calls preserve
+  exact upstream GET filter bytes, publication days, selected source, public
+  `meta.date_filter` and layer-qualified `enforcement`. Repeated calls hit the
+  real cache without another upstream request; changed bounds use a distinct
+  key. The MCP presentation bound leaves the canonical full response intact.
+  Missing or mismatched stored proof requires actual OpenAlex reacquisition and
+  typed proof/publication-day readback. Structured output must equal tool text.
+- Missing/wrong bearer tokens and denied grants, unaudited/unavailable sources,
+  invalid/reversed bounds, relative dates, mixed/unsupported/sensitive scope and
+  strict SafeSearch never reach adapter admission, client quota or cache I/O;
+  no upstream request or shared record is created. The science grant does not
+  confer sensitive-engine access.
+- Actual successful empty upstream JSON stays empty success, while actual
+  HTTP500 stays `all_engines_failed` with the OpenAlex error outcome.
+
+The existing T06 gate runs this separate three-name target in addition to every
+original source binding, fixture and transport test. Frozen JSON, historic test
+identities and policy defaults are unchanged. Portal impact: these are additive
+contract tests, with no production request/response or browser-visible change.
+This is the science MCP composition slice of #984; public HTTP GET/form POST,
+T03 portal/date links, gateway and production activation remain separate work.
+Source presence is not qualification: record exact-head native commands/results
+and cleanup under the normal resource grant before claiming acceptance.
