@@ -297,10 +297,15 @@ async fn environment_no_proxy_route_bypasses_configured_credentials_on_actual_wi
     .unwrap();
     let net = network(config, Arc::new(SourceCookieJar::default()));
     let server = async {
-        let (mut stream, _) = origin.accept().await?;
+        // Either actual route is served by this same owned future. An incorrect
+        // proxy dial therefore completes HTTP and reaches the named route witness.
+        let (mut stream, via_proxy) = tokio::select! {
+            value = origin.accept() => (value?.0, false),
+            value = proxy.accept() => (value?.0, true),
+        };
         let wire = request(&mut stream).await?;
         reply(&mut stream, "200 OK").await?;
-        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(wire)
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>((wire, via_proxy))
     };
     let client = async {
         net.send_once(reqwest::Method::GET, url, HeaderMap::new(), Vec::new())
@@ -312,7 +317,8 @@ async fn environment_no_proxy_route_bypasses_configured_credentials_on_actual_wi
     })
     .await;
     net.shutdown().await.unwrap();
-    let (wire, ()) = result.unwrap().unwrap();
+    let ((wire, via_proxy), ()) = result.unwrap().unwrap();
+    assert!(!via_proxy, "NO_PROXY contacted proxy mutant");
     assert!(
         !wire.contains("proxy-authorization:"),
         "NO_PROXY generated credential leak mutant"
