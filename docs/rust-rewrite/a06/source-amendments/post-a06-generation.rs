@@ -5,7 +5,7 @@ use std::{fs, path::Path, process::Command};
 #[path = "native-search-reader.rs"]
 pub(crate) mod native_search;
 const CAPSULE: &str = "docs/rust-rewrite/a06/source-amendments/post-a06-generation-v1.json";
-const SHA: &str = "52b653d827e15e5982630c8aba6493e5806f6622a6baf71c1197f14453156319";
+const SHA: &str = "3ff125fdcbca12bf6312ef875a613360319fdd11349fd2524a0fb932f31979cd";
 fn document(raw: &[u8]) -> Result<Value, String> {
     super::need(super::digest(raw) == SHA, "T02 generation capsule changed")?;
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
@@ -22,7 +22,7 @@ fn document(raw: &[u8]) -> Result<Value, String> {
 fn load(root: &Path) -> Result<Value, String> {
     document(&super::read_exact(
         root,
-        &json!({"path":CAPSULE,"sha256":SHA,"bytes":127536,"mode":"0644"}),
+        &json!({"path":CAPSULE,"sha256":SHA,"bytes":126027,"mode":"0644"}),
     )?)
 }
 fn tuple(expected: &Value, sealed: &Value) -> bool {

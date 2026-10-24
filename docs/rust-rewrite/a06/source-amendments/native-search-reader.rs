@@ -7,7 +7,7 @@ pub(crate) const SOURCE: &str = "crates/ssx-infra/src/search.rs";
 const OLD: &str = "fcac2929eb6637960d5e1086c321f0eac62fc0f8446cf73f22d6b43406137b12";
 const CURRENT: &str = "a1b310e2ef8692c96109bfd780c0e37d7e50692231e11eceb48e05860e0b5927";
 const CAPSULE: &str = "docs/rust-rewrite/a06/source-amendments/post-a06-generation-v1.json";
-const CAPSULE_SHA: &str = "52b653d827e15e5982630c8aba6493e5806f6622a6baf71c1197f14453156319";
+const CAPSULE_SHA: &str = "3ff125fdcbca12bf6312ef875a613360319fdd11349fd2524a0fb932f31979cd";
 const ARCHIVE: &str = "docs/rust-rewrite/a06/source-amendments/post-a06-233/search.rs.frozen";
 const COMMIT: &str = "233c7934f9e2da5c2e94f0c1213945335d786502";
 const BLOB: &str = "793b3a7edbbddead1866f72f97cc3bf5c789f9e7";
@@ -58,7 +58,7 @@ fn read(root: &Path, path: &str) -> Result<Material> {
 }
 fn row(raw: &[u8]) -> Result<Value> {
     need(
-        raw.len() == 127536 && digest(raw) == CAPSULE_SHA,
+        raw.len() == 126027 && digest(raw) == CAPSULE_SHA,
         "sealed existing capsule",
     )?;
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;

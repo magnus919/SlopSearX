@@ -624,8 +624,8 @@
       },
       "current": {
         "path": "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
-        "sha256": "45268c21428bbdce69c3f42f881e79004e3019156ab4b4d6500e2cb870c5a2bc",
-        "bytes": 41197,
+        "sha256": "02d4eee88ea2c397255cdcc2a4be881b1d9b077f018ae401ed3fd4250c665ec0",
+        "bytes": 40820,
         "mode": "0644"
       },
       "source_commit": "233c7934f9e2da5c2e94f0c1213945335d786502",
@@ -637,9 +637,9 @@
           "insert_utf8": "        \"9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f\"\n"
         },
         {
-          "at": 37069,
-          "remove_utf8": "    let mut seen = BTreeSet::new();\n    for source in map[\"sources\"].as_array().unwrap() {\n",
-          "insert_utf8": "    let historical_map: serde_json::Value = serde_json::from_slice(\n        &source_amendment::causal_successor::a06_source_successor::historical_caller(\n            &root,\n            \"docs/rust-rewrite/a13/remaining/source-map.json\",\n            \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\",\n        )\n        .unwrap(),\n    )\n    .unwrap();\n    let mut seen = BTreeSet::new();\n    for source in historical_map[\"sources\"].as_array().unwrap() {\n"
+          "at": 37367,
+          "remove_utf8": "            \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\",\n",
+          "insert_utf8": "            \"9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f\",\n"
         }
       ],
       "scoped_historical": {
@@ -660,14 +660,14 @@
           "insert_utf8": "        \"9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f\"\n"
         },
         {
-          "at": 37052,
-          "remove_utf8": "    let mut seen = BTreeSet::new();\n    for source in map[\"sources\"].as_array().unwrap() {\n",
-          "insert_utf8": "    let historical_map: serde_json::Value = serde_json::from_slice(\n        &source_amendment::causal_successor::a06_source_successor::historical_caller(\n            &root,\n            \"docs/rust-rewrite/a13/remaining/source-map.json\",\n            \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\",\n        )\n        .unwrap(),\n    )\n    .unwrap();\n    let mut seen = BTreeSet::new();\n    for source in historical_map[\"sources\"].as_array().unwrap() {\n"
-        },
-        {
           "at": 37226,
           "remove_utf8": "        source_amendment::verify(\n",
           "insert_utf8": "        source_amendment::verify_current(\n"
+        },
+        {
+          "at": 37342,
+          "remove_utf8": "            \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\",\n",
+          "insert_utf8": "            \"9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f\",\n"
         }
       ]
     },
@@ -1350,8 +1350,8 @@
       },
       "current": {
         "path": "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
-        "sha256": "45268c21428bbdce69c3f42f881e79004e3019156ab4b4d6500e2cb870c5a2bc",
-        "bytes": 41197,
+        "sha256": "02d4eee88ea2c397255cdcc2a4be881b1d9b077f018ae401ed3fd4250c665ec0",
+        "bytes": 40820,
         "mode": "0644"
       },
       "source_commit": "f7cb4ad1e6d8a72b053cf09cfffb29cc607d9827",
@@ -1368,14 +1368,9 @@
           "insert_utf8": "    source_amendment::causal_successor::control_bridge(&root).unwrap();\n"
         },
         {
-          "at": 36898,
-          "remove_utf8": "    let mut seen = BTreeSet::new();\n    for source in map[\"sources\"].as_array().unwrap() {\n",
-          "insert_utf8": "    let historical_map: serde_json::Value = serde_json::from_slice(\n        &source_amendment::causal_successor::a06_source_successor::historical_caller(\n            &root,\n            \"docs/rust-rewrite/a13/remaining/source-map.json\",\n            \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\",\n        )\n        .unwrap(),\n    )\n    .unwrap();\n    let mut seen = BTreeSet::new();\n    for source in historical_map[\"sources\"].as_array().unwrap() {\n"
-        },
-        {
           "at": 37072,
           "remove_utf8": "        assert_eq!(\n            source[\"sha256\"],\n            digest(&std::fs::read(root.join(p)).unwrap())\n        );\n",
-          "insert_utf8": "        source_amendment::verify_current(\n            &root,\n            \"docs/rust-rewrite/a13/remaining/source-map.json\",\n            \"af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22\",\n            p,\n            source[\"sha256\"].as_str().unwrap(),\n            source[\"bytes\"].as_u64().map(|bytes| bytes as usize),\n        )\n        .unwrap();\n"
+          "insert_utf8": "        source_amendment::verify_current(\n            &root,\n            \"docs/rust-rewrite/a13/remaining/source-map.json\",\n            \"9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f\",\n            p,\n            source[\"sha256\"].as_str().unwrap(),\n            source[\"bytes\"].as_u64().map(|bytes| bytes as usize),\n        )\n        .unwrap();\n"
         }
       ]
     },
