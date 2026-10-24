@@ -29,3 +29,46 @@ fixture binding container and all source captures; the only fixture change
 is to honor the registered root and process temporary directory on macOS.
 The gate verifies the archived preimage and exact current source, and keeps
 all other native fixture pins unchanged.
+
+The additive [security lock amendment](source-amendments/current-lock-amendment-v1.json)
+accepts only the exact `19fa47f4` successor of the original `uv.lock`. The shared
+native verifier checks the current full-file SHA, byte count and regular-file
+mode, reverses three exact package-entry spans, and requires the reconstructed
+bytes to recover the complete historical lock hash. T06's source binding rows,
+captures and expected outcomes retain their original hashes. The live lock
+checks in T04, T05 and A03 use the same finite verifier; T01's historical Git
+provenance and the historical manual-capture guard retain their original scope.
+
+`filelock` 4.1.0 → 4.2.1 and `virtualenv` 21.14.5 → 21.14.10 are outside the normal
+runtime dependency closure. `packaging` 26.2 → 26.3 is shared with the runtime:
+`slopsearx → fastmcp → fastmcp-slim[server] → packaging`. The static audit follows
+mandatory dependencies and selected extras, conservatively retains every marker
+branch, and excludes the root development extra. It finds 85 runtime packages;
+only `packaging` changes. All 135 other lock package entries are byte-identical,
+including FastMCP, MCP, Pydantic and PyYAML. FastMCP 4.0.11 uses `packaging.version`
+for component ordering, optional pydocket minimum-version checks, release checks
+and prefab form-default support, so an unchanged SDK entry is not by itself a
+claim that the runtime profile is unchanged.
+
+The retained [26.2](source-amendments/packaging262-wire.json) and
+[26.3](source-amendments/packaging263-wire.json) packets compare the complete
+38-tool catalog and 22 negative call results, including six T06 calls, without
+normalization. The same CPython 3.14.7, FastMCP 4.0.11, MCP 2.3.0, Pydantic 2.13.4,
+producer and measured Python sources were used; the new run selected an isolated,
+hash-pinned `packaging` 26.3 overlay. All 18 non-lock T06 source hashes match those
+measured sources. The overlay kept the historical source-lock guard; the packet
+records the actual imported packaging version separately. The shared verifier
+hashes both raw packets and the inert [producer archive](source-amendments/packaging-wire-producer.py.txt),
+then compares the full descriptor/result JSON trees and source identities.
+The retained [manual commands](source-amendments/packaging-capture-commands.json)
+record the actual private environment, arguments, exits and raw output hashes.
+These observations establish that finite comparison, with zero engine/provider
+dispatch; they do not recapture all T06 outcomes or establish SDK-wide parity.
+The original T06 captures remain observations of `packaging` 26.2.
+
+The exact T06 source-binding test inventory adds four named amendment controls
+for current/historical identities, individual changed-entry and SDK mutations,
+extra/missing/duplicate inverse spans, row/path/hash/mode/manifest/Git controls,
+and missing proof material. The existing exact inventory/count checks remain
+fail-closed. This proof changes qualification only; no portal request, response,
+rendering, policy or engine behavior changes.

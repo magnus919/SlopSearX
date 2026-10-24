@@ -1,0 +1,52 @@
+{
+  "scope": "actual manual reference commands; all subprocesses completed exit0; source/backend and SDK private; no nativeCargo/T_C access",
+  "cwd": "/Volumes/tank01/magnus/rust-builds/slopsearx/worktrees/w07-d-native-gate-20261023",
+  "producer": {
+    "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/worktrees/w07-d-native-gate-20261023/docs/rust-rewrite/w07/capture_wire_reference.py",
+    "sha256": "fa3b726f0a5a869fbcb74fdab98c84a15236df2b6a1a132413b5b9ede27510b2"
+  },
+  "commands": [
+    {
+      "environment_overrides": {
+        "DYLD_FRAMEWORK_PATH": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/frameworks",
+        "DYLD_LIBRARY_PATH": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/pkg-expanded/Python_Framework.pkg/Payload/Versions/3.14/lib",
+        "PYTHONHOME": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/pkg-expanded/Python_Framework.pkg/Payload/Versions/3.14",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TMPDIR": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/tmp",
+        "PYTHONPATH": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/site"
+      },
+      "argv": [
+        "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/pkg-expanded/Python_Framework.pkg/Payload/Versions/3.14/bin/python3.14",
+        "docs/rust-rewrite/w07/capture_wire_reference.py",
+        "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/output/wire-reference-v4-packaging262.json"
+      ],
+      "exit": 0,
+      "log": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/logs/oracle-wire-v4.log",
+      "log_sha256": "a710dd505968969fb5cecf05c7c07e606c398fcc435a4c6ccf9e26f3a4f08a38",
+      "output": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/output/wire-reference-v4-packaging262.json",
+      "output_sha256": "e1f67da4007c0e40009d44b4f35c464677ab78894558b4f05781f9430b9226f7"
+    },
+    {
+      "environment_overrides": {
+        "DYLD_FRAMEWORK_PATH": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/frameworks",
+        "DYLD_LIBRARY_PATH": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/pkg-expanded/Python_Framework.pkg/Payload/Versions/3.14/lib",
+        "PYTHONHOME": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/pkg-expanded/Python_Framework.pkg/Payload/Versions/3.14",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TMPDIR": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/tmp",
+        "PYTHONPATH": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/packaging263:/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/site"
+      },
+      "argv": [
+        "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/pkg-expanded/Python_Framework.pkg/Payload/Versions/3.14/bin/python3.14",
+        "docs/rust-rewrite/w07/capture_wire_reference.py",
+        "--packaging-version",
+        "26.3",
+        "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/output/wire-reference-v5-packaging263.json"
+      ],
+      "exit": 0,
+      "log": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/logs/oracle-wire-v5.log",
+      "log_sha256": "45c47ba86b5d5d42737aadab092e591e8d3d57e60be64c9c4f560e32f50f8dcd",
+      "output": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/output/wire-reference-v5-packaging263.json",
+      "output_sha256": "5d964ea762d2f723efb12dc7e27e851712440c0e45306d52d6ccd768e5b490f5"
+    }
+  ]
+}

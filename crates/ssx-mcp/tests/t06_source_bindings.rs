@@ -1,18 +1,30 @@
 //! Native source-drift gate: reads frozen bytes, never executes Python.
 use sha2::{Digest, Sha256};
 use std::path::Path;
+#[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
+mod lock_amendment;
 #[path = "../../../docs/rust-rewrite/t07/source-amendments/t06-opaque-successor.rs"]
 mod t07_opaque_successor;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let bindings: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../docs/rust-rewrite/t06/source_bindings_v2.json"
-    ))
-    .unwrap();
+    let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
+    assert_eq!(
+        Sha256::digest(raw)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>(),
+        "11660374ae3fd544590cb014b532eda4d6f3a95ef8f0bc062b308bd7911fc771",
+        "reviewed source binding container drift"
+    );
+    let bindings: serde_json::Value = serde_json::from_slice(raw).unwrap();
     for key in ["sources", "artifacts"] {
         for row in bindings[key].as_array().unwrap() {
             let name = row["file"].as_str().unwrap();
+            if key == "sources" && name == lock_amendment::SOURCE_PATH {
+                lock_amendment::verify(&root, name, row["sha256"].as_str().unwrap()).unwrap();
+                continue;
+            }
             let bytes = std::fs::read(root.join(name)).unwrap();
             assert_eq!(
                 Sha256::digest(bytes)

@@ -80,7 +80,19 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             &["rev-parse", &format!("{BASELINE}:{path}")],
             records,
         )?;
-        if Some(current.trim()) != pin.as_str() || current.trim() != accepted.trim() {
+        if path == crate::t06::lock_amendment::SOURCE_PATH {
+            crate::t06::lock_amendment::verify(
+                root,
+                path,
+                crate::t06::lock_amendment::HISTORICAL_SHA256,
+            )?;
+            crate::t06::lock_amendment::verify_git_pins(
+                path,
+                pin.as_str().ok_or("T05 lock row hash")?,
+                accepted.trim(),
+                current.trim(),
+            )?;
+        } else if Some(current.trim()) != pin.as_str() || current.trim() != accepted.trim() {
             return Err(format!("T05 accepted source drift:{path}"));
         }
     }
