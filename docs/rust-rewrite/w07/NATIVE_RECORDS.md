@@ -190,3 +190,28 @@ new construction-test identity (383 to 384 current A06 library tests).
 This is focused component evidence, not full-workspace qualification,
 production activation, transport performance, or complete W07 delivery.
 Issue #913 remains open for scopes C/D. See the [case study](../CASE_STUDY.md).
+
+## Final authoritative reply fence (source repair; qualification pending)
+
+The final-read repair retains a typed cumulative witness of every engine set and
+W04 membership bound actually authorized before an awaited report read. After
+that read, and again before returning an enumeration (including zero hints), a
+fresh authority snapshot must preserve all those permissions. An engine enabled
+only after the initial hint read is included in this witness. A report bound
+narrowed below any membership bound used by W04 discards the complete projection;
+it never selects another run or truncates the previously selected result. The
+stored definition remains W04's authority. Malformed/backend error and
+cancellation precedence, original read ownership and readonly TTL behavior stay
+intact. Held real final-CAS reply controls are authored for this boundary; actual
+native qualification of this source repair is pending.
+
+The witness deliberately rejects conservatively: it includes all retained-allowed
+catalog engines in every policy sample used, and the maximum actual W04
+membership bound, even when the outer index hint selected fewer rows. Revoking
+an otherwise unused previously allowed engine or reducing that membership bound
+can therefore deny the whole in-flight projection. Concurrent widening never
+erases an earlier bound, and a later narrowing cannot reuse the original hint
+bound as disclosure authority. This avoids reauthorizing from an untrusted caller
+snapshot and adds no epoch, retry or additional asynchronous store operation.
+The repair changes the existing readonly composition seam; it activates no new
+HTTP, MCP or portal route and changes no browser-visible Python portal contract.

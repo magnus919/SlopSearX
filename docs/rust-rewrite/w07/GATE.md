@@ -138,3 +138,39 @@ its canonical export. Each crate loads one copy, and the standalone infra A13
 fixture retains its own shared module and aggregate controls. This changes no
 proof logic, historical capsule, main afterimage or expected test identity.
 The source correction awaits fresh native qualification.
+
+## Final-read policy repair (pending qualification)
+
+The sealed `b6b6d239` run actually passed formatting, strict workspace all-target
+check and Clippy, all129 xtask tests, W07's80 native identities and22 measured
+wire cases, T01 and T06. F03 then stopped in the real F10 Unix proxy test because
+`proxy.sock` exceeded Darwin's socket path limit under the owned Tank TMP root.
+The separate fixture correction uses basename `p`, retaining the full random
+directory identity, real Unix socket, existing lifecycle and Tank location.
+F03 build/readiness did not run. The original failure and clean resource yield
+remain retained in `w07-d-native-gate-20261023/native-v6`.
+
+Independent review then found final-read authority gaps in saved lineage and
+research/staged manifest resolution. Saved lineage now samples current grants,
+retained engine eligibility and the coherent report bound after the report await.
+A narrowed bound discards the whole original selection, including an old selected
+run. NativeRecords accumulates the retained engine sets and actual W04 membership
+limits used by each authoritative report read, then rejects narrowing after that
+read and before returning even an empty enumeration. W04 still owns stored
+definition authorization; stale caller engines do not become authority.
+Research manifest resolution resamples research authority after every snapshot,
+including a second cursor; staged resolution revalidates coherent policy and
+limits after its final snapshot.
+
+The current registry adds13 application held-future controls and7 actual private
+Valkey held-reply controls, for100 declared native identities plus the unchanged22
+measured wire completions. It binds67 current sources. The original four record
+test names remain; the existing shrinking-bound case now requires denial, while
+its separate fixed-bound positive retains the stale-caller-definition check.
+The real reply relay retains the original exact Nil cancellation control and
+adds exact final definition-CAS bytes with explicit release and joined retirement.
+The expanded-engine/revocation and membership4-to3-versus-hint1 controls distinguish
+a cumulative authority witness from an initial-only witness. These new controls
+have not executed yet; the earlier80-case result is not qualification of this
+repair. Frozen Python oracles, older source capsules, main afterimage, F01/F02
+inventories and the full129 xtask identity set remain unchanged.

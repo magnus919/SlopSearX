@@ -323,6 +323,16 @@ impl WorkflowResolver {
             edges,
         ))
     }
+    fn saved_read_allowed(&self, definition: &SavedDefinition, used_bound: usize) -> bool {
+        let (policy, _, current_bound) = self
+            .policy
+            .current_with_limits(&self.staged_limits, self.saved_max_reports);
+        policy.policy.grants.contains("saved_searches")
+            && policy
+                .retained_engine_rejection(&definition.engines, "engines")
+                .is_ok()
+            && current_bound.min(100) >= used_bound
+    }
     async fn saved(
         &self,
         tenant: &TenantId,
@@ -374,6 +384,9 @@ impl WorkflowResolver {
             Ok(v) => v,
             Err(e) => return Ok(*e),
         };
+        if !self.saved_read_allowed(&definition, reports_limit.min(100)) {
+            return Ok(denied(root));
+        }
         let mut edges = vec![];
         for report in reports {
             if let Some(run) = report["run_id"].as_str().filter(|s| !s.is_empty()) {
@@ -444,6 +457,9 @@ impl WorkflowResolver {
             Ok(v) => v,
             Err(e) => return Ok(*e),
         };
+        if !self.saved_read_allowed(&definition, reports_limit.min(100)) {
+            return Ok(denied(root));
+        }
         let Some(report) = reports
             .into_iter()
             .find(|r| r["run_id"].as_str() == Some(&parts[1]))

@@ -51,6 +51,26 @@
       ]
     },
     {
+      "package": "ssx-application",
+      "target": "w07_policy_fences",
+      "filter": "",
+      "tests": [
+        "research_second_cursor_final_reply_rechecks_grant",
+        "research_second_cursor_final_reply_rechecks_retained_job_scope",
+        "saved_final_reply_preserves_error_and_cancellation_precedence",
+        "saved_report_final_reply_rechecks_engine",
+        "saved_report_final_reply_rechecks_grant",
+        "saved_report_final_reply_rejects_bound_shrink_without_reselecting_old_run",
+        "saved_search_final_reply_rechecks_bound",
+        "saved_search_final_reply_rechecks_engine",
+        "saved_search_final_reply_rechecks_grant",
+        "staged_final_snapshot_reply_rechecks_coherent_limits",
+        "staged_final_snapshot_reply_rechecks_grant",
+        "unchanged_manifest_authority_preserves_both_workflows",
+        "unchanged_saved_authority_preserves_both_kinds"
+      ]
+    },
+    {
       "package": "ssx-infra",
       "target": "lib",
       "filter": "search::tests::current_policy_source_is_construction_only_and_preserves_default_generation",
@@ -83,8 +103,15 @@
       "tests": [
         "cancellation_before_reads_and_after_dispatched_read_is_drained",
         "fresh_report_bound_and_authoritative_definition_override_stale_hints",
+        "held_empty_hint_reply_rechecks_saved_grant_without_metadata",
+        "held_final_recent_report_reply_rechecks_retained_engine",
+        "held_final_recent_report_reply_rechecks_saved_grant",
+        "held_final_recent_report_reply_rejects_bound_shrink_for_old_selected_run",
+        "held_final_report_rejects_engine_allowed_after_hint_then_revoked",
+        "held_final_report_rejects_membership_shrink_still_above_hint_bound",
         "hints_cannot_bypass_live_policy_and_projection_preserves_error_order",
-        "typed_stores_tenant_binding_expiry_missing_and_readonly_ttls"
+        "typed_stores_tenant_binding_expiry_missing_and_readonly_ttls",
+        "unchanged_authority_after_held_final_recent_report_preserves_projection"
       ]
     },
     {
@@ -183,12 +210,12 @@
     "crates/ssx-application/src/lineage/capture.rs": "d813bbcee9e254434d5a3bec8e532628c032a47fa1bbcf2c36675eb8d68d0219",
     "crates/ssx-application/src/lineage/input.rs": "3cfe0d8cfb226e687cfd08af8eb505d4042bfb8e8b7ceec899091c38ed1ebe0b",
     "crates/ssx-application/src/lineage/resolver.rs": "e772ee162d2ffb2df61baa6865b5beed1729c78506a8f4d317dd046109f9a04c",
-    "crates/ssx-application/src/lineage/workflows.rs": "e6c97d191de2bda786c6231b6e688cc71a7d5618a972f0053844548b7d33431f",
+    "crates/ssx-application/src/lineage/workflows.rs": "85733a4983fbd6eaf29e9666db496443c290b0926757e2a2799f2c9f628f8dc3",
     "crates/ssx-application/src/lineage.rs": "f087610a7dce527e6f86a44e64c91815041e2af91fa93656a8321efa1cb29762",
     "crates/ssx-application/src/receipts/captured_manifest/replay.rs": "58c86ff83fec913f341030aacd4b00281c9ea5b62fae365e095b97bf3447483f",
     "crates/ssx-application/src/receipts/captured_manifest.rs": "e2ef8b5fb0990062e9047ca13bad7f1cabd777afad5e5c2ba3f22971df7d9570",
     "crates/ssx-application/src/receipts/encoding.rs": "23de44c8704930cf670a67eb17bb616b719c60860ca90bf7dbd7d9fe9fd3b291",
-    "crates/ssx-application/src/receipts/manifest.rs": "07e5ed2905290c406ff350fe74954f31949fb8c3a9c25d560486a3a3f6a9952d",
+    "crates/ssx-application/src/receipts/manifest.rs": "11d36e6fa3ad575c7723bf5e35127f843509ba1c558bfdbb3e1b51ef9b1a6374",
     "crates/ssx-application/src/receipts/memory.rs": "b89eea341baa5a4221bb807cdecba19b116d6868682f652e5430debd27b0bff5",
     "crates/ssx-application/src/receipts/observation.rs": "6b6250a57d28a14488602e3614e5796edbc7d3918ea4a8397c812b4cdb2b4d50",
     "crates/ssx-application/src/receipts/service.rs": "c67ed8a85bf2893642e3d7c3633ba8fe75b3c57c4800627d9a5885bd5b8265a4",
@@ -196,10 +223,10 @@
     "crates/ssx-application/src/receipts.rs": "f1603e5c7bc25da89e2d8fda38177cc16f704384de6b3a6456d51222d145d583",
     "crates/ssx-application/tests/w07_snapshot_projection.rs": "75ca664c73cd71a706e11f8c4e52c2f9a3846baaf5da8753ffe0474cfd6cc980",
     "crates/ssx-infra/src/search.rs": "23989888f2434630b9185d339f8548a8e73e8e08846ce00419609be4b439c05c",
-    "crates/ssx-infra/src/valkey/retrieval/lineage.rs": "6c97e49dd6de263a04b40be4b67438fb1b21fff44979d27bc68e6f6070e6531a",
+    "crates/ssx-infra/src/valkey/retrieval/lineage.rs": "59bb731c5333cef26ff5ec5eb8274b661550b607d6b553626073b510d23ee2be",
     "crates/ssx-infra/src/valkey/retrieval.rs": "aa769a2ca71a96703fa9c5d87ab9320fc593765ff939a367130b558ec8aa99a1",
     "crates/ssx-infra/src/valkey/retrieval_scripts/insert.lua": "e5785173a45d983f35d3ae2ce7f333ff235c8b284c36c87a0026e7ac468882e8",
-    "crates/ssx-infra/tests/w07_lineage_records.rs": "5b9bc00cd893a9b5745411183f5d85acb09548c15918a0e48e6839dcf6b39092",
+    "crates/ssx-infra/tests/w07_lineage_records.rs": "b94c4af16d4f811a0383b220f060080f3d93273b84e26fa2588e6cfa03680a26",
     "crates/ssx-infra/tests/w07_receipts.rs": "a9ffbdd040b04e177ddf206740aadc2ca55caa902a4308cb35ad80339bcc354b",
     "crates/ssx-infra/tests/w07_support/valkey.rs": "ed4e2e544ff40856f46810532a17cf5fb9a3b393eb35d09a75907c4585b6b699",
     "crates/ssx-mcp/src/bin/evidence-qualification.rs": "346c3068fbfc24057c41bd9bf3a5c64565112bcc171656554c14957cb04ff519",
@@ -241,7 +268,8 @@
     "docs/rust-rewrite/t06/source-amendments/packaging-wire-producer.py.txt": "fa3b726f0a5a869fbcb74fdab98c84a15236df2b6a1a132413b5b9ede27510b2",
     "Cargo.lock": "9b2ab4a8dfb4a6c41c0af3575a6f77c0bbaf139f7efe83f40e60b9380974fd58",
     "crates/ssx-mcp/Cargo.toml": "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
-    "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs": "1437743aeb281aa422c21cb9e5cb96ae98557e30c3c10f96a7a79239ed95855f"
+    "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs": "1437743aeb281aa422c21cb9e5cb96ae98557e30c3c10f96a7a79239ed95855f",
+    "crates/ssx-application/tests/w07_policy_fences.rs": "cb66d88e443a970e3c0782d74da8d39a9d135c17922ffed597bb7966638259e1"
   },
   "wire_reference": {
     "path": "docs/rust-rewrite/t06/source-amendments/packaging262-wire.json",
