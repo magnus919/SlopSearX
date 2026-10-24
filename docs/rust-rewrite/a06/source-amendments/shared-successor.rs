@@ -333,6 +333,10 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
             && row["sha256"] == "96e9a7760d163fc5ea2afa23033e58cfb7e59d0f2d93f66d8847ef352e0b765d")
         || (row["path"] == "crates/ssx-infra/src/search.rs"
             && row["sha256"] == "a1b310e2ef8692c96109bfd780c0e37d7e50692231e11eceb48e05860e0b5927")
+        || (row["path"] == "crates/xtask/src/a13.rs"
+            && row["sha256"] == "7b8c213676b77a5511da43bb1f8bb3d889d4964e3ffceb4719b21801cd5fea95")
+        || (row["path"] == "docs/rust-rewrite/a13/source-amendments/validator.rs"
+            && row["sha256"] == "bb1eec7b1376a2437d7069588634d9c40bf985a233b66106b1e5b49c0a473c58")
     {
         w07_t02_joint::parent(root, text(row, "path")?, &raw, w07_t02_joint::Parent::T02)?
     } else if row["path"] == "crates/xtask/src/main.rs"

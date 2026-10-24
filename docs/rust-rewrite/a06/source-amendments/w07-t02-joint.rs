@@ -162,6 +162,111 @@ const ROWS: &[Row] = &[
             ],
         },
     },
+    Row {
+        path: "crates/xtask/src/a13.rs",
+        sha: "681d6f0d1f1ec6af77bb88aa1774aa8aa8669f390dd801bf7391308db7494ff0",
+        bytes: 57322,
+        w07: Prior {
+            commit: "88cd243140b6a4200141e04361e6342b80008a80",
+            sha: "cbaabdef5996afb5300cf7b13c620eac94be6fd71babb19abf184c595e3e6a6c",
+            bytes: 57322,
+            blob: "2afb1a6182eaa3ba9ca5712bb32a3e410cc7f9f1",
+            edits: &[(
+                454,
+                "const QUALIFICATION_SHA: &str = \"77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e\";\n",
+                "const QUALIFICATION_SHA: &str = \"e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e\";\n",
+            )],
+        },
+        t02: Prior {
+            commit: "ea947918335f812c67c3b3e47a23ce4ede2a2d30",
+            sha: "7b8c213676b77a5511da43bb1f8bb3d889d4964e3ffceb4719b21801cd5fea95",
+            bytes: 56700,
+            blob: "31f03497b0bf9014907a004deaaae84858d9a2ce",
+            edits: &[
+                (
+                    34330,
+                    "        names.push(a06_source_successor::w07_evidence_successor::TEST.into());\n",
+                    "",
+                ),
+                (
+                    49740,
+                    "        a06_source_successor::w07_evidence_successor::controls(&root).unwrap();\n",
+                    "",
+                ),
+                (
+                    54878,
+                    "        let w07 = a06_source_successor::w07_evidence_successor::TEST;\n        assert_eq!(count(w07), 1);\n        let mut omitted_w07 = exact.clone();\n        omitted_w07.retain(|name| name != w07);\n        assert!(same(&omitted_w07, &exact, \"W07 missing additive identity\").is_err());\n        let mut duplicate_w07 = exact.clone();\n        duplicate_w07.push(w07.into());\n        assert!(same(&duplicate_w07, &exact, \"W07 duplicate additive identity\").is_err());\n",
+                    "",
+                ),
+            ],
+        },
+    },
+    Row {
+        path: "docs/rust-rewrite/a13/source-amendments/validator.rs",
+        sha: "9e58e8da346f242483915dda3ecbf369371adf665f178eeb301a8a0b1ba62cc1",
+        bytes: 51220,
+        w07: Prior {
+            commit: "88cd243140b6a4200141e04361e6342b80008a80",
+            sha: "a0752936363e5b3053f2e96dc04eac746b6f955f1bf40a14a34671a5f2120bfe",
+            bytes: 50431,
+            blob: "19d4a48b10815595d9af22490c77eda1d26c2cbc",
+            edits: &[
+                (
+                    14307,
+                    "",
+                    "    let container = fs::read(root.join(container_path)).map_err(|error| error.to_string())?;\n",
+                ),
+                (
+                    14433,
+                    "    let container = causal_successor::a06_source_successor::historical_caller(\n        root,\n        container_path,\n        container_sha,\n    )?;\n",
+                    "",
+                ),
+                (
+                    34114,
+                    "        let container = causal_successor::a06_source_successor::historical_caller(\n            root,\n            cp,\n            pin[\"container_sha256\"]\n                .as_str()\n                .ok_or(\"A13 lock caller hash absent\")?,\n        )?;\n",
+                    "        let container_path = root.join(cp);\n        let container = fs::read(&container_path).map_err(|e| e.to_string())?;\n",
+                ),
+                (
+                    37611,
+                    "    let container = causal_successor::a06_source_successor::historical_caller(\n        root,\n        cp,\n        pin[\"container_sha256\"]\n            .as_str()\n            .ok_or(\"A13 third-package caller hash absent\")?,\n    )?;\n",
+                    "    let container = fs::read(root.join(cp)).map_err(|e| e.to_string())?;\n",
+                ),
+                (
+                    40406,
+                    "            let container = causal_successor::a06_source_successor::historical_caller(\n                root,\n                container_path,\n                pin[\"container_sha256\"]\n                    .as_str()\n                    .ok_or(\"A13 additive caller hash absent\")?,\n            )?;\n",
+                    "            let container = fs::read(root.join(container_path)).map_err(|e| e.to_string())?;\n",
+                ),
+                (
+                    41766,
+                    "                causal_successor::a06_source_successor::generation_control_operand(\n                    root,\n                    path,\n                    &entry[\"successor\"],\n                    &actual_current,\n                )?\n",
+                    "                actual_current\n",
+                ),
+                (
+                    46202,
+                    "    let container = causal_successor::a06_source_successor::historical_caller(\n        root,\n        container_path,\n        container_sha,\n    )?;\n",
+                    "    let container = fs::read(root.join(container_path)).map_err(|error| error.to_string())?;\n",
+                ),
+            ],
+        },
+        t02: Prior {
+            commit: "ea947918335f812c67c3b3e47a23ce4ede2a2d30",
+            sha: "bb1eec7b1376a2437d7069588634d9c40bf985a233b66106b1e5b49c0a473c58",
+            bytes: 50322,
+            blob: "426a136fc9444fe093a7b3be6ca9ec0037682dcc",
+            edits: &[
+                (
+                    24388,
+                    "        let current = if source_path == \"crates/ssx-infra/src/search.rs\" {\n            use causal_successor::a06_source_successor::w07_evidence_successor::{\n                self, SearchOperand,\n            };\n            w07_evidence_successor::search_operand(\n                root,\n                SearchOperand::RuntimePin,\n                &amendment[\"successor\"],\n                &current,\n            )?\n        } else {\n            current\n        };\n",
+                    "",
+                ),
+                (
+                    41303,
+                    "            } else if path == \"crates/ssx-infra/src/search.rs\" {\n                use causal_successor::a06_source_successor::w07_evidence_successor::{\n                    self, SearchOperand,\n                };\n                w07_evidence_successor::search_operand(\n                    root,\n                    SearchOperand::AdditiveControl,\n                    &entry[\"successor\"],\n                    &actual_current,\n                )?\n",
+                    "",
+                ),
+            ],
+        },
+    },
 ];
 fn need(ok: bool, why: &str) -> Result<()> {
     if ok {
@@ -254,7 +359,7 @@ fn paired_manifest(root: &Path) -> Result<()> {
         Err("W07/T02 paired manifest source mode proof requires Unix".into())
     }
 }
-/// Only the three exact physical afterimages can yield either sealed parent.
+/// Only the five exact physical afterimages can yield either sealed parent.
 /// A parent supplied in place of actual current bytes is always rejected.
 pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -> Result<Vec<u8>> {
     let r = row(path)?;
@@ -273,6 +378,41 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
         Parent::T02 => t02,
     })
 }
+/// The historical Git identity belongs to the proved parent frame, never to
+/// the physical joint file. Both Git bytes and mode/blob must independently agree.
+pub(crate) fn parent_git_blob(
+    root: &Path,
+    path: &str,
+    supplied: &[u8],
+    selected: Parent,
+) -> Result<String> {
+    let bytes = parent(root, path, supplied, selected)?;
+    let r = row(path)?;
+    let p = match selected {
+        Parent::W07 => &r.w07,
+        Parent::T02 => &r.t02,
+    };
+    let git = Command::new("git")
+        .args(["show", &format!("{}:{}", p.commit, path)])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        git.status.success() && git.stdout == bytes,
+        "proved parent Git bytes",
+    )?;
+    let tree = Command::new("git")
+        .args(["ls-tree", p.commit, "--", path])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        tree.status.success()
+            && tree.stdout == format!("100644 blob {}\t{}\n", p.blob, path).as_bytes(),
+        "proved parent Git mode/blob",
+    )?;
+    Ok(p.blob.into())
+}
 /// Real Git parents and both exact inverses, plus rejection controls. No new test identity.
 pub(crate) fn controls(root: &Path) -> Result<()> {
     need(
@@ -283,6 +423,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let (actual, mode) = read(root, r)?;
         for (kind, p) in [(Parent::W07, &r.w07), (Parent::T02, &r.t02)] {
             let prior = parent(root, r.path, &actual, kind)?;
+            need(
+                parent_git_blob(root, r.path, &actual, kind)? == p.blob,
+                "same proved parent Git frame",
+            )?;
             let git = Command::new("git")
                 .args(["show", &format!("{}:{}", p.commit, r.path)])
                 .current_dir(root)

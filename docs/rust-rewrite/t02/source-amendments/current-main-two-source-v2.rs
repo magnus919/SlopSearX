@@ -183,17 +183,36 @@ fn collect(
         })
         .collect()
 }
+// These are the frozen T02 parent-frame operands. Physical joint identity is
+// proved first; the projected Git blob is never evidence of the physical file.
 fn load_inputs(root: &Path, c: &Capsule) -> Result<Vec<Inputs>> {
     collect(
         c,
-        |p| read(root, p),
+        |p| {
+            let mut material = read(root, p)?;
+            if BINDINGS.iter().any(|binding| binding.path == p) {
+                material.bytes = crate::a13::a06_source_successor::w07_t02_joint::parent(
+                    root,
+                    p,
+                    &material.bytes,
+                    crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
+                )?;
+            }
+            Ok(material)
+        },
         |t| {
             let old = git(root, &["cat-file", "blob", &t.baseline_blob])?;
             let tree = String::from_utf8(git(root, &["ls-tree", PR, "--", &t.path])?)
                 .map_err(|e| e.to_string())?;
-            let current = String::from_utf8(git(root, &["hash-object", "--", &t.path])?)
-                .map_err(|e| e.to_string())?;
-            Ok((old, tree, current))
+            let physical = read(root, &t.path)?;
+            let parent_blob = crate::a13::a06_source_successor::w07_t02_joint::parent_git_blob(
+                root,
+                &t.path,
+                &physical.bytes,
+                crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
+            )?;
+            let proved_parent_blob_line = format!("{parent_blob}\n");
+            Ok((old, tree, proved_parent_blob_line))
         },
     )
 }
@@ -284,6 +303,47 @@ pub(super) fn controls(root: &Path) -> Result<()> {
     let c = decode(&raw.bytes, CAPSULE_SHA)?;
     let good = load_inputs(root, &c)?;
     verify_materials(&c, &good)?;
+    for (index, transition) in c.transitions.iter().enumerate() {
+        let physical = read(root, &transition.path)?;
+        need(
+            physical.bytes != good[index].current.bytes,
+            "T02 physical joint and parent operands were conflated",
+        )?;
+        need(
+            crate::a13::a06_source_successor::w07_t02_joint::parent(
+                root,
+                &transition.path,
+                &good[index].current.bytes,
+                crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
+            )
+            .is_err(),
+            "T02 parent bytes accepted as physical joint current",
+        )?;
+        need(
+            crate::a13::a06_source_successor::w07_t02_joint::parent_git_blob(
+                root,
+                &transition.path,
+                &good[index].current.bytes,
+                crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
+            )
+            .is_err(),
+            "T02 parent supplied as physical joint Git witness",
+        )?;
+        let mut wrong = good.clone();
+        wrong[index].current.bytes = physical.bytes;
+        need(
+            verify_materials(&c, &wrong).is_err(),
+            "T02 physical bytes accepted in projected parent slot",
+        )?;
+        let mut wrong = good.clone();
+        wrong[index].current_blob =
+            String::from_utf8(git(root, &["hash-object", "--", &transition.path])?)
+                .map_err(|e| e.to_string())?;
+        need(
+            verify_materials(&c, &wrong).is_err(),
+            "T02 physical Git blob accepted in projected parent slot",
+        )?;
+    }
     for b in &BINDINGS {
         need(
             verify(root, b.path, b.old_sha256, COVERAGE_SHA).is_some_and(|r| r.is_ok()),
