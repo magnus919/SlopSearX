@@ -1,19 +1,21 @@
 # W07 native MCP evidence boundary
 
-This C increment attaches four evidence tools to the existing native search
-surface. It continues B commit `98330f1a94b5f50ad228117ce392601c0ce4dea4`;
-that predecessor is a dependency, not merged-main evidence. C is source-only
-until the root qualification controller executes the recorded current tests.
-No native test, Cargo check, or production activation is claimed here.
+The C increment attached four evidence tools to the existing native search
+surface, continuing B commit `98330f1a94b5f50ad228117ce392601c0ce4dea4`.
+This document retains C's original implementation and qualification checkpoints;
+its source-only and pending-execution statements below are historical. Current
+integrated J qualification is recorded in [GATE.md](GATE.md). No production
+activation is claimed.
 
 The tool order is submission, receipt read, manifest export, and artifact
 lineage. Names, parameters, strict integer annotations, defaults, descriptions,
 and return annotations are recorded from the current pinned Python AST in
 [`mcp-tools-source.json`](mcp-tools-source.json). That file also pins the actual
 registry and server sources. Metadata and cleaned schemas follow the frozen
-FastMCP 4.0.11 T06 profile. This is a source projection awaiting runtime
-comparison, not a new measured Python descriptor capture. Historical EXP-122
-metadata is not used as the oracle.
+FastMCP 4.0.11 T06 profile. This file remains a source projection. The separate
+measured Python descriptor/negative-call captures and actual native replay are
+recorded in [GATE.md](GATE.md); the projection is not reclassified as a measured
+capture. Historical EXP-122 metadata is not used as the oracle.
 
 ## Shared owner and transport attachment
 
@@ -78,13 +80,14 @@ retain their own complete serialized response limits (HTTP/stdio factory
 profile 4 MiB; legacy 16 MiB). Input presentation values never select those
 trusted transport limits.
 
-## Source qualification and remaining execution
+## Original C qualification plan (historical)
 
 The current finite C inventory is in
 [`mcp-tools-inventory.json`](mcp-tools-inventory.json). Authored tests cover fake
 ports, strict/nested argument types, error order, replay/conflict, tenant and
 grant isolation, the actual authenticated HTTP/legacy factories, an inert-URL
-listener, and cancellation held at an owned receipt read. They have not run.
+listener, and cancellation held at an owned receipt read. At this authoring
+checkpoint they had not run; later results retain their exact source scope.
 Each actual HTTP, legacy and stdio `tools/list` response is compared in full
 for the four descriptors against the pinned source projection, including
 parameter schemas, defaults, descriptions and metadata.
@@ -121,7 +124,8 @@ Same-connection and reserved-admin `UNPAUSE` experiments returned OS35 after a
 successful journey; their failed runs remain preserved. The server-internal
 cause is unknown and is unnecessary for a disposable fixture that is never reused.
 The observer creates no task, backend, shutdown owner, or replacement policy.
-The complete current C vector still requires qualification. W07 supplies usable native evidence APIs, storage, fixtures, and these
+At that source-only checkpoint, the complete C vector still required
+qualification. W07 supplies native evidence APIs, storage, fixtures, and these
 factories. Full executable startup and workflow registry composition remain
 T02/W09 milestone work; this source increment does not close issue #913.
 
@@ -133,10 +137,10 @@ responses, snapshot identities, or portal routes. The shared search policy gate
 is retained, and the cancellation change only observes an existing signal.
 No browser-visible contract change or portal documentation change is needed.
 The required portal gate remains part of eventual exact-head qualification;
-it has not been run for this C source revision.
+the historical C component run below did not execute that hosted gate.
 
 
-## Current local qualification
+## Historical d76 local qualification
 
 At source `d76f3ab5d1e3cab2cc058a3a108cc3b9730a7f47`, the seven C
 library/transport tests, 119 xtask controls, 61 focused shared application/store
@@ -151,7 +155,7 @@ entrypoints through an A13 fixture wrapper. Workspace tests, build and readiness
 were not reached. The source correction adds the missing W07 child-control call
 to the existing shared `controls` wrapper, so that path executes its positive
 and negative contracts. It adds no lint allowance or runtime behavior change;
-its native F03 rerun remains pending a new resource grant. Frozen capsules and
+its native F03 rerun was pending at that checkpoint. Frozen capsules and
 original negative controls are unchanged.
 
 Immutable local receipts live under the registered Rust build root in
@@ -161,8 +165,8 @@ removed, and all three resource leases released. Earlier compile errors and
 both unsuccessful `UNPAUSE` experiments remain in v1–v4. The measured d76 source
 and its receipts remain separate from this later source/document correction.
 
-The W07D executable gate, independent Python reference capture integration,
-reviewed main/dependency integration, and full milestone acceptance remain
-separate work. The source-projected descriptor file and declaration inventory
-retain their authoring-time status; the results above do not reinterpret those
-metadata fields as a native gate. No publication or issue closure is claimed.
+Subsequent W07 D/J gate execution, independent Python reference capture and
+main/dependency integration are documented in [GATE.md](GATE.md). The original
+source-projected descriptor and declaration inventory retain their authoring-time
+status; the historical C results above do not reinterpret those metadata fields
+as a native gate. Publication and full issue acceptance remain separate.
