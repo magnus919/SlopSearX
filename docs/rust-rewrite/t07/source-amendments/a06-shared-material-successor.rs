@@ -5,6 +5,8 @@ const CAPSULE: &str =
     "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor-v1.json";
 const CAPSULE_SHA: &str = "f106ec3a76a2c84a31bdfa85330a9538e7a03bd2ce1d69c68f3c27ef4f5cdbec";
 const CAPSULE_BYTES: u64 = 22354;
+#[path = "gateway-cookie-proxy-lock-successor.rs"]
+mod gateway_cookie_proxy_lock_successor;
 #[path = "gateway-dns-lock-successor.rs"]
 mod gateway_dns_lock_successor;
 #[path = "gateway-xtask-main-successor.rs"]

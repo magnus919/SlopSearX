@@ -59,7 +59,7 @@ pub(super) fn actual_bytes(
     before: &[u8],
 ) -> Result<Vec<u8>, String> {
     let doc = load(root)?;
-    let actual = read(root, &doc["current"])?;
+    let actual = super::gateway_cookie_proxy_lock_successor::archived_prior(root, &doc["current"])?;
     validate(
         &doc,
         expected,
@@ -67,14 +67,15 @@ pub(super) fn actual_bytes(
         &actual,
         &permissions(&root.join("Cargo.lock"))?,
     )?;
-    Ok(actual)
+    super::gateway_cookie_proxy_lock_successor::actual_bytes(root, &doc["current"], &actual)
 }
 #[cfg(test)]
 pub(super) fn controls(root: &Path) -> Result<(), String> {
     let doc = load(root)?;
     let expected = &doc["prior"];
     let before = read(root, &doc["archive"])?;
-    let actual = actual_bytes(root, expected, &before)?;
+    let actual = super::gateway_cookie_proxy_lock_successor::archived_prior(root, &doc["current"])?;
+    validate(&doc, expected, &before, &actual, "0644")?;
     let mut wrong = expected.clone();
     wrong["path"] = json!("Cargo.unlisted");
     need(
@@ -113,5 +114,6 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
             "T07 DNS TLS rollback accepted",
         )?;
     }
+    super::gateway_cookie_proxy_lock_successor::controls(root)?;
     Ok(())
 }

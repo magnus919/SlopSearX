@@ -1,0 +1,61 @@
+{
+  "kind": "T07_GATEWAY_COOKIE_PROXY_LOCK_SUCCESSOR_V1",
+  "source_parent": "c6147891422f56e02ca36195ca866776d3a50f3e",
+  "paths": [
+    "Cargo.lock"
+  ],
+  "prior": {
+    "path": "Cargo.lock",
+    "bytes": 91701,
+    "sha256": "ebbcd0e37416ef61cb75415b56136603ba6ef5ce506ba2fceb07c1cd97bc75c8",
+    "git_blob": "ce43f5f34d5f903602e7d915ad5adec4ab42eaa8",
+    "mode": "0644"
+  },
+  "archive": {
+    "path": "docs/rust-rewrite/t07/source-amendments/gateway-cookie-proxy-predecessor-v1/Cargo.lock",
+    "bytes": 91701,
+    "sha256": "ebbcd0e37416ef61cb75415b56136603ba6ef5ce506ba2fceb07c1cd97bc75c8",
+    "git_blob": "ce43f5f34d5f903602e7d915ad5adec4ab42eaa8",
+    "mode": "0644",
+    "source_path": "Cargo.lock"
+  },
+  "current": {
+    "path": "Cargo.lock",
+    "bytes": 91779,
+    "sha256": "6d24703b44100d1b634ef9b3c32dbc516ef2cd07e9a9381a3ef7c474ddd3a61b",
+    "git_blob": "31531dde19d9c14cb08697bd76cb227a349be6e5",
+    "mode": "0644"
+  },
+  "edits": [
+    {
+      "at": 51183,
+      "remove_utf8": "",
+      "insert_utf8": " \"chrono\",\n"
+    },
+    {
+      "at": 51363,
+      "remove_utf8": "",
+      "insert_utf8": " \"libc\",\n"
+    },
+    {
+      "at": 51380,
+      "remove_utf8": "",
+      "insert_utf8": " \"num-bigint 0.4.8\",\n"
+    },
+    {
+      "at": 51432,
+      "remove_utf8": "",
+      "insert_utf8": " \"regex\",\n"
+    },
+    {
+      "at": 65773,
+      "remove_utf8": "",
+      "insert_utf8": " \"rcgen\",\n"
+    },
+    {
+      "at": 65999,
+      "remove_utf8": "",
+      "insert_utf8": " \"tokio-rustls\",\n"
+    }
+  ]
+}
