@@ -1,0 +1,113 @@
+{
+  "status": "authored counterfactuals only; no mutation compiled/run; each needs actual 101 named assertion, restoration and fresh positive in future exclusive lane",
+  "controls": [
+    {
+      "name": "cookie_extract_skipped",
+      "source": "crates/ssx-mcp/src/gateway_client/network.rs",
+      "mutation": "remove self.cookies.extract call",
+      "control": "response_cookie_redirect_selection_replaces_caller_and_persists_deletion",
+      "expected_witness": "cookie extraction/path-order mutant"
+    },
+    {
+      "name": "caller_cookie_remerged_on_redirect",
+      "source": "crates/ssx-mcp/src/gateway_client/network.rs",
+      "mutation": "omit headers.remove(COOKIE)",
+      "control": "response_cookie_redirect_selection_replaces_caller_and_persists_deletion",
+      "expected_witness": "redirect caller-cookie remerge mutant",
+      "first_causal_assertion": "after initial caller positive, assert no caller on redirect BEFORE the cookie path-order assertion"
+    },
+    {
+      "name": "cookie_selection_after_follow_predicate",
+      "source": "crates/ssx-mcp/src/gateway_client/network.rs",
+      "mutation": "return None from follow gate before prepare_cookies",
+      "control": "unfollowed_redirect_prepares_cookie_before_origin_method_and_budget_gates",
+      "expected_witness": "cookie construction was skipped"
+    },
+    {
+      "name": "explicit_proxy_removed",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+      "mutation": "discard captured caller fields",
+      "control": "two_real_proxy_routes_keep_caller_precedence_and_no_proxy_has_no_ambient_credentials",
+      "expected_witness": "caller proxy removal/overwrite mutant"
+    },
+    {
+      "name": "route_default_overrides_caller",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+      "mutation": "always overwrite caller with selected default",
+      "control": "two_real_proxy_routes_keep_caller_precedence_and_no_proxy_has_no_ambient_credentials",
+      "expected_witness": "caller proxy removal/overwrite mutant"
+    },
+    {
+      "name": "generated_route_header_promoted_to_caller",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+      "mutation": "recapture mutated headers every attempt",
+      "control": "caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers",
+      "expected_witness": "stale route A authorization survived route B"
+    },
+    {
+      "name": "no_proxy_ignored",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+      "mutation": "select proxy wildcard before more-specific direct bypass",
+      "control": "environment_no_proxy_route_bypasses_configured_credentials_on_actual_wire",
+      "expected_witness": "NO_PROXY"
+    },
+    {
+      "name": "queued_cancel_resolves_or_keeps_credit",
+      "source": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime.rs",
+      "mutation": "retain canceled waiter or dial before source_acquire",
+      "control": "queued_caller_cancellation_never_resolves_and_released_credit_uses_new_caller",
+      "expected_witness": "queued cancellation DNS mutant / replacement completion"
+    },
+    {
+      "name": "connect_uses_origin_caller",
+      "source": "vendor/ssx-http-source/reqwest/src/connect/source_http1.rs",
+      "mutation": "replace CONNECT default with origin caller header",
+      "control": "connect_uses_selected_proxy_credentials_separately_from_origin_caller_header",
+      "expected_witness": "CONNECT proxy credentials overwritten"
+    },
+    {
+      "name": "bare_max_age_per_cookie_skip",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_jar.rs",
+      "mutation": "return per-cookie None for bare Max-Age",
+      "control": "valueless_max_age_rejects_whole_batch_before_any_cookie_construction",
+      "expected_witness": "jar remains empty"
+    },
+    {
+      "name": "batch_constructs_before_normalization_complete",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_jar.rs",
+      "mutation": "construct/delete during normalization loop",
+      "control": "later_normalization_type_error_prevents_earlier_expiry_deletion",
+      "expected_witness": "old cookie retained"
+    },
+    {
+      "name": "numeric_month_underscore_rejected",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_date.rs",
+      "mutation": "use plain u32 parse before Python integer lexical owner",
+      "control": "underscored_numeric_month_expiry_is_not_silently_session_cookie",
+      "expected_witness": "expired record absent"
+    },
+    {
+      "name": "oauth_bare_request_merges_client_cookie",
+      "source": "crates/ssx-mcp/src/gateway_client/network.rs",
+      "mutation": "set merge_initial_cookies=true for send_built_request",
+      "control": "oauth_built_request_does_not_merge_client_cookie_but_redirect_uses_shared_jar",
+      "expected_witness": "OAuth bare Request merged client cookies mutant"
+    },
+    {
+      "name": "cookie_scheme_not_normalized",
+      "source": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
+      "mutation": "replace scheme.to_ascii_lowercase() with scheme.into()",
+      "control": "uppercase_configured_https_returns_secure_cookie_on_next_initial_request",
+      "expected_witness": "uppercase configured HTTPS omitted Secure cookie mutant",
+      "focused_parser_control": "source_pool::source_cookies::scheme_controls::cookie_scheme_is_ascii_lowercase_without_normalizing_authority"
+    },
+    {
+      "name": "redirect_budget_gate_before_cookie_construction",
+      "source": "crates/ssx-mcp/src/gateway_client/network.rs",
+      "mutation": "return for followed == max_redirects before prepare_redirect",
+      "control": "zero_redirect_budget_still_prepares_same_origin_get_307_cookie",
+      "expected_witness": "zero-budget cookie construction skipped mutant"
+    }
+  ],
+  "selected_run": "run the exact named control for each mutant, then restore and run a fresh positive; no compiled or runtime outcome is claimed"
+}

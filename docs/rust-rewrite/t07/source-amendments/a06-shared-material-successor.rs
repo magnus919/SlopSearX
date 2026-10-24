@@ -9,6 +9,8 @@ const CAPSULE_BYTES: u64 = 22354;
 mod gateway_cookie_proxy_lock_successor;
 #[path = "gateway-dns-lock-successor.rs"]
 mod gateway_dns_lock_successor;
+#[path = "gateway-unit-route-successor.rs"]
+mod gateway_unit_route_successor;
 #[path = "gateway-xtask-main-successor.rs"]
 mod gateway_xtask_main_successor;
 #[path = "t06-opaque-successor.rs"]

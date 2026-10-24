@@ -3,7 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
-const BINDINGS: &str = "82100af2b9d6bd220591d1be72fd337a93dd79c5fdccb6fca4378f0af731bb86";
+const BINDINGS: &str = "875dd1130a0e7af57132111ff56a0469f53e5233ff5648c437aa877343d19d70";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -149,6 +149,12 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     {
         return Err("T07 complete vendor membership differs or contains generated markers".into());
     }
+    let unit_path = std::env::var_os("SLOPSEARX_T07_UNIT_PROFILE_ROOT")
+        .ok_or("T07 requires a preregistered external unit profile root")?;
+    let unit_path = Path::new(&unit_path);
+    let unit = crate::t07_unit_profile::Profile::open(root, unit_path, unit_path.exists())?;
+    // Every selected project target and the genuine unit root compile before any runtime case.
+    unit.compile(true, records)?;
     // Compilation itself proves the real concrete fork APIs are active, not a
     // marker string or a synthetic substitute in the executable.
     command(
@@ -217,6 +223,12 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .ok_or("T07 DNS owner inventory absent")?,
         records,
     )?;
+    unit.tests(
+        value["source_pool_unit_tests"]
+            .as_array()
+            .ok_or("T07 source-pool unit inventory absent")?,
+        records,
+    )?;
     let count = |key: &str| -> Result<usize> {
         value[key]
             .as_array()
@@ -226,7 +238,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let focused_native_cases = count("library_tests")?
         + count("seam_tests")?
         + count("process_tests")?
-        + count("dns_owner_tests")?;
+        + count("dns_owner_tests")?
+        + count("source_pool_unit_tests")?;
     let stdio_owner_controls = count("stdio_owner_tests")?;
     records.push(json!({"contract":"native_gateway_source_bound","source_files":seen.len(),"focused_native_cases":focused_native_cases,"stdio_owner_controls":stdio_owner_controls,"dns_owner_controls":count("dns_owner_tests")?,"focused_native_selectors_total":focused_native_cases+stdio_owner_controls,"python_executed":false,"provider_calls":0,"full_transport_component_acceptance":"independent R1/R2/profile/SDK source-bound receipts and inherited T01/T05/T06/F08 remain required"}));
     Ok(())

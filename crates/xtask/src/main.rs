@@ -37,6 +37,7 @@ mod t04;
 mod t05;
 mod t06;
 mod t07;
+mod t07_unit_profile;
 mod t09;
 mod w00;
 mod w01;
@@ -565,6 +566,9 @@ fn main() {
     let args: Vec<_> = std::env::args().skip(1).collect();
     #[cfg(unix)]
     if gateway_package::cli(&root, &args) {
+        return;
+    }
+    if t07_unit_profile::cli(&root, &args) {
         return;
     }
     if args.len() == 2 && args[0] == "a06-source-cases" {

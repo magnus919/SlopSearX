@@ -26,6 +26,7 @@ jobs:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: 1
       SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
       CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
     steps:
@@ -118,6 +119,9 @@ jobs:
 
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
+
+      - name: Prepare dedicated portable unit fixture scratch
+        run: mkdir -p "$SLOPSEARX_T07_UNIT_TEST_ROOT"
 
       - name: Workspace tests, including xtask
         run: cargo test --locked --workspace
@@ -332,8 +336,14 @@ jobs:
       - name: Native search and discovery through authenticated transports
         run: cargo xtask check T06 --output target/rust-evidence/T06.json
 
+      - name: Prepare complete genuine Reqwest unit root
+        run: cargo xtask prepare-t07-unit --profile-dir "$RUNNER_TEMP/ssx-t07-unit"
+      - name: Compile exact locked unit profile before offline T07 controls
+        run: cargo xtask bootstrap-t07-unit --profile-dir "$RUNNER_TEMP/ssx-t07-unit"
       - name: Native gateway client and owned OAuth lifecycle
         run: cargo xtask check T07 --output target/rust-evidence/T07.json
+        env:
+          SLOPSEARX_T07_UNIT_PROFILE_ROOT: ${{ runner.temp }}/ssx-t07-unit
 
       - name: MCP transport and gateway qualification
         run: cargo xtask check T01 --output target/rust-evidence/T01.json

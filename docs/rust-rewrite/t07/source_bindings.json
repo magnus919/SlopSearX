@@ -4,7 +4,11 @@
   "files": [
     {
       "path": ".github/workflows/rust.yml",
-      "sha256": "0d5ce62777aa3751da3d9404d4a49b829f7200374fc263dbe5257035e941b215"
+      "sha256": "3a5b3c1d8c6988a50bc00b9a7d51c1789c81e38580d1448bae6e61c6b1a02560"
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "sha256": "243ccd061ac4d1739e59ccddbc1cf0e88c832695a8df463305712bfdd75a8000"
     },
     {
       "path": "Cargo.lock",
@@ -224,11 +228,15 @@
     },
     {
       "path": "crates/xtask/src/main.rs",
-      "sha256": "cf29f49aa50f10c39aba47e6eadb3020602821a7ef1055ce709cca644e43023d"
+      "sha256": "272553def5ba145a76aa2908eb68f3a0d8f5464363927201f461bd647a7c53ce"
     },
     {
       "path": "crates/xtask/src/t01.rs",
       "sha256": "12e8cdab4eafce5f419d6a6c4527ad67230d6473c96532b6f42c4fbd5a823ce3"
+    },
+    {
+      "path": "crates/xtask/src/t07_unit_profile.rs",
+      "sha256": "0f2ca4eaea4fd2e31297e52dc5060d4f8656ee559b6ebb2d69c157e6feddbace"
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
@@ -300,7 +308,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor.rs",
-      "sha256": "779f102ebedefa407b5a9a66b0f0e38ab10ae16602524d5c9159645410bce34c"
+      "sha256": "da0f538101f6f687ab1051a699eec64a4aac687b8b6586ee77f0a2b7e77e7743"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-cookie-proxy-lock-successor-v1.json",
@@ -327,6 +335,26 @@
       "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1"
     },
     {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/.github/workflows/rust.yml",
+      "sha256": "0d5ce62777aa3751da3d9404d4a49b829f7200374fc263dbe5257035e941b215"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/.pre-commit-config.yaml",
+      "sha256": "f29df73b2881ac5f8df1c94f15f02ba0da1dae114c3900e2a8840485fa0f66a1"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/crates/xtask/src/main.rs",
+      "sha256": "cf29f49aa50f10c39aba47e6eadb3020602821a7ef1055ce709cca644e43023d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor-v1.json",
+      "sha256": "4fabaf5668fbe765a315e1399d54138db4d51e0342fc16331e0e791cdc6cacf2"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor.rs",
+      "sha256": "30a6853ada8efc947ea9290e9bc8c4a211ffb7304ec558450b8282bb5ab6e865"
+    },
+    {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-predecessor-v1/main.rs",
       "sha256": "e695b32f8617ff35ca939b4e8f8f00831ca3465319ba3961680574db1da8a1f2"
     },
@@ -336,7 +364,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-successor.rs",
-      "sha256": "f4ee8f5258d108ac9191b88f0ae58d712572965b5232e3f36f19396c1defe1ce"
+      "sha256": "0c255f7d1c6acb421d919ccf23af18ad5d9feffc74881f0e99c70457284a1195"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-predecessor-v1/opaque.rs",
@@ -465,6 +493,22 @@
     {
       "path": "docs/rust-rewrite/t07/token-model-source.json",
       "sha256": "13d503fbff522b6208b521e926f136e74a46991514569365aab0b15d8d74ba39"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/Cargo.lock",
+      "sha256": "772da776c5233912b2d921b3f3fed2cb42901d7ecd32dac184329795c6f1c805"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/README.md",
+      "sha256": "fd575ae9d4d489ad3492d022342edbb921cdd261ed6d79404761081027c0ad04"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/counterfactuals.json",
+      "sha256": "c8589e08244d36859cf8b9276c8fa66d935ad176b172b14d91aa6733f4e580c1"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/declaration.json",
+      "sha256": "3f4b9c7b9bc1dc6aaa1b4d34a451f7bffb9446055fdf9f7ce36896a0bdc85118"
     },
     {
       "path": "slopsearx/mcp/gateway.py",
@@ -2277,5 +2321,26 @@
     "actual_gateway_sigterm_cancels_held_dns_with_parent_stdin_open",
     "actual_gateway_eof_bounds_session_delete_held_fresh_dns_and_joins_original_child",
     "actual_gateway_sigterm_bounds_session_delete_held_fresh_dns_with_stdin_open"
+  ],
+  "source_pool_unit_tests": [
+    "source_pool::source_cookie_clock::tests::source_local_year_uses_checked_platform_result_without_utc_fallback",
+    "source_pool::source_cookie_clock::tests::source_wall_seconds_keep_integral_and_negative_nanosecond_branches",
+    "source_pool::source_cookie_date::tests::loose_numeric_month_preserves_python_decimal_underscores",
+    "source_pool::source_cookie_date::tests::source_cookie_date_language_window_and_calendar_arithmetic",
+    "source_pool::source_cookie_headers::tests::source_cookie_date_failure_aborts_ns_batch_before_cookie_construction",
+    "source_pool::source_cookie_headers::tests::source_cookie_header_split_preserves_ns_comma_and_rfc_quoted_pairs",
+    "source_pool::source_cookie_jar::tests::finite_integer_float_roundtrip_and_duplicate_max_age_semantics",
+    "source_pool::source_cookie_jar::tests::later_normalization_type_error_prevents_earlier_expiry_deletion",
+    "source_pool::source_cookie_jar::tests::max_age_overflow_drops_batch_but_prior_deletion_survives_and_digit_refusal_is_per_cookie",
+    "source_pool::source_cookie_jar::tests::raw_percent_cookie_domain_does_not_leak_to_normalized_host",
+    "source_pool::source_cookie_jar::tests::secure_port_and_caller_cookie_rules_keep_source_views",
+    "source_pool::source_cookie_jar::tests::set_cookie2_only_is_ignored_but_ns_presence_reaches_default_version_zero",
+    "source_pool::source_cookie_jar::tests::source_cookie_order_overwrite_and_rfc2109_default_path_are_observable",
+    "source_pool::source_cookie_jar::tests::underscored_numeric_month_expiry_is_not_silently_session_cookie",
+    "source_pool::source_cookie_jar::tests::valueless_max_age_rejects_whole_batch_before_any_cookie_construction",
+    "source_pool::source_cookies::scheme_controls::cookie_scheme_is_ascii_lowercase_without_normalizing_authority",
+    "source_pool::source_cookies::tests::cookie_integer_language_uses_frozen_decimal_digits_and_underscores",
+    "source_pool::source_cookies::tests::cookie_observations_preserve_raw_userinfo_path_port_and_local_host",
+    "source_pool::tests::caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers"
   ]
 }

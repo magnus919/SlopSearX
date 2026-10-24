@@ -1,0 +1,129 @@
+{
+  "kind": "T07_PORTABLE_UNIT_ROUTE_SUCCESSOR_V1",
+  "source_parent": "0f77197409ced9454e9930521f147f76fdd3c557",
+  "paths": [
+    "crates/xtask/src/main.rs",
+    ".github/workflows/rust.yml",
+    ".pre-commit-config.yaml"
+  ],
+  "transitions": [
+    {
+      "prior": {
+        "path": "crates/xtask/src/main.rs",
+        "bytes": 40115,
+        "sha256": "cf29f49aa50f10c39aba47e6eadb3020602821a7ef1055ce709cca644e43023d",
+        "git_blob": "4541d8acd2b18afb1751d79ad3c48ddbe7bdad9d",
+        "mode": "0644"
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/crates/xtask/src/main.rs",
+        "bytes": 40115,
+        "sha256": "cf29f49aa50f10c39aba47e6eadb3020602821a7ef1055ce709cca644e43023d",
+        "git_blob": "4541d8acd2b18afb1751d79ad3c48ddbe7bdad9d",
+        "mode": "0644",
+        "source_path": "crates/xtask/src/main.rs"
+      },
+      "current": {
+        "path": "crates/xtask/src/main.rs",
+        "bytes": 40204,
+        "sha256": "272553def5ba145a76aa2908eb68f3a0d8f5464363927201f461bd647a7c53ce",
+        "git_blob": "4183621145ef958633910778157f6f802d17f584",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 474,
+          "remove_utf8": "",
+          "insert_utf8": "mod t07_unit_profile;\n"
+        },
+        {
+          "at": 20821,
+          "remove_utf8": "",
+          "insert_utf8": "    if t07_unit_profile::cli(&root, &args) {\n        return;\n    }\n"
+        }
+      ]
+    },
+    {
+      "prior": {
+        "path": ".github/workflows/rust.yml",
+        "bytes": 24654,
+        "sha256": "0d5ce62777aa3751da3d9404d4a49b829f7200374fc263dbe5257035e941b215",
+        "git_blob": "40fb56469cb4e3c604f4be822a03c11bcc726531",
+        "mode": "0644"
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/.github/workflows/rust.yml",
+        "bytes": 24654,
+        "sha256": "0d5ce62777aa3751da3d9404d4a49b829f7200374fc263dbe5257035e941b215",
+        "git_blob": "40fb56469cb4e3c604f4be822a03c11bcc726531",
+        "mode": "0644",
+        "source_path": ".github/workflows/rust.yml"
+      },
+      "current": {
+        "path": ".github/workflows/rust.yml",
+        "bytes": 25236,
+        "sha256": "3a5b3c1d8c6988a50bc00b9a7d51c1789c81e38580d1448bae6e61c6b1a02560",
+        "git_blob": "d1d5a9d73c1c55b15f2cadbd96cf5dd52c828420",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 614,
+          "remove_utf8": "",
+          "insert_utf8": "      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"
+        },
+        {
+          "at": 4420,
+          "remove_utf8": "",
+          "insert_utf8": "\n      - name: Prepare dedicated portable unit fixture scratch\n        run: mkdir -p \"$SLOPSEARX_T07_UNIT_TEST_ROOT\"\n"
+        },
+        {
+          "at": 16250,
+          "remove_utf8": "",
+          "insert_utf8": "      - name: Prepare complete genuine Reqwest unit root\n        run: cargo xtask prepare-t07-unit --profile-dir \"$RUNNER_TEMP/ssx-t07-unit\"\n      - name: Compile exact locked unit profile before offline T07 controls\n        run: cargo xtask bootstrap-t07-unit --profile-dir \"$RUNNER_TEMP/ssx-t07-unit\"\n"
+        },
+        {
+          "at": 16386,
+          "remove_utf8": "",
+          "insert_utf8": "        env:\n          SLOPSEARX_T07_UNIT_PROFILE_ROOT: ${{ runner.temp }}/ssx-t07-unit\n"
+        }
+      ]
+    },
+    {
+      "prior": {
+        "path": ".pre-commit-config.yaml",
+        "bytes": 10299,
+        "sha256": "f29df73b2881ac5f8df1c94f15f02ba0da1dae114c3900e2a8840485fa0f66a1",
+        "git_blob": "579cbc79fe9834577ea2ca71b34fc9d6ff5bbdf1",
+        "mode": "0644"
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/.pre-commit-config.yaml",
+        "bytes": 10299,
+        "sha256": "f29df73b2881ac5f8df1c94f15f02ba0da1dae114c3900e2a8840485fa0f66a1",
+        "git_blob": "579cbc79fe9834577ea2ca71b34fc9d6ff5bbdf1",
+        "mode": "0644",
+        "source_path": ".pre-commit-config.yaml"
+      },
+      "current": {
+        "path": ".pre-commit-config.yaml",
+        "bytes": 12547,
+        "sha256": "243ccd061ac4d1739e59ccddbc1cf0e88c832695a8df463305712bfdd75a8000",
+        "git_blob": "8b9e14394e51ceb9d6b8c050587adf43198f8c89",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 209,
+          "remove_utf8": "        exclude: ^docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^docs/rust-rewrite/o01/evidence/original53-v[12]-stdout\\.log$\n",
+          "insert_utf8": "        exclude: ^docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^docs/rust-rewrite/o01/evidence/original53-v[12]-stdout\\.log$|^(?:vendor/ssx\\-http\\-source/httparse/build\\.rs|vendor/ssx\\-http\\-source/httparse/src/simd/mod\\.rs|vendor/ssx\\-http\\-source/httparse/src/simd/neon\\.rs|vendor/ssx\\-http\\-source/patches/hyper\\.patch|vendor/ssx\\-http\\-source/patches/reqwest\\.patch|vendor/ssx\\-sdk\\-auth/patches/rmcp\\-native\\-dev\\-fixtures\\.patch|vendor/ssx\\-sdk\\-auth/patches/rmcp\\-source\\-policy\\.patch|vendor/ssx\\-sdk\\-auth/patches/rmcp\\.patch|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_json_schema_detection\\.rs)$\n"
+        },
+        {
+          "at": 2689,
+          "remove_utf8": "        exclude: ^(docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)|crates/xtask/fixtures/f13/native-record\\.json|docs/rust-rewrite/t06/validation\\.json)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^(?:contracts/unicode/python-text-source/Objects__unicodectype\\.c\\.txt|contracts/unicode/python-text-source/Objects__unicodetype_db\\.h\\.txt|contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap\\.rs\\.frozen$|^docs/rust-rewrite/a07/qualification/pubchem-owner-clock-negative\\.stdout$|^logs/a05-codec-donor-final-alias-regression\\.log$\n",
+          "insert_utf8": "        exclude: ^(docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)|crates/xtask/fixtures/f13/native-record\\.json|docs/rust-rewrite/t06/validation\\.json)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^(?:contracts/unicode/python-text-source/Objects__unicodectype\\.c\\.txt|contracts/unicode/python-text-source/Objects__unicodetype_db\\.h\\.txt|contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap\\.rs\\.frozen$|^docs/rust-rewrite/a07/qualification/pubchem-owner-clock-negative\\.stdout$|^logs/a05-codec-donor-final-alias-regression\\.log$|^(?:docs/rust\\-rewrite/t07/source\\-inputs/CPYTHON\\-unicodectype\\.c\\.txt|docs/rust\\-rewrite/t07/source\\-inputs/CPYTHON\\-unicodetype_db\\.h\\.txt|docs/rust\\-rewrite/t07/source\\-inputs/fastmcp\\-4\\.0\\.11\\.dist\\-info__LICENSE\\.txt|vendor/ssx\\-http\\-source/httparse/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/httparse/LICENSE\\-MIT|vendor/ssx\\-http\\-source/hyper\\-util/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/hyper/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/reqwest/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/reqwest/LICENSE\\-MIT|vendor/ssx\\-http\\-source/reqwest/src/source_pool/python\\-text\\-source/Modules__unicodedata_db\\.h\\.txt|vendor/ssx\\-http\\-source/reqwest/src/source_pool/python\\-text\\-source/Objects__unicodectype\\.c\\.txt|vendor/ssx\\-http\\-source/reqwest/src/source_pool/python\\-text\\-source/Objects__unicodetype_db\\.h\\.txt|vendor/ssx\\-sdk\\-auth/patches/rmcp\\-native\\-dev\\-fixtures\\.patch|vendor/ssx\\-sdk\\-auth/rmcp/\\.cargo_vcs_info\\.json|vendor/ssx\\-sdk\\-auth/rmcp/src/handler/server/resource\\.rs|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_deserialization/tool_list_result\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema_current\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema_current\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_tool_handler\\.rs|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/\\.gitignore|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/client\\.js|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/server\\.js|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/streamable_server\\.js)$\n"
+        }
+      ]
+    }
+  ]
+}

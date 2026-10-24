@@ -1,0 +1,4575 @@
+{
+  "schema_version": 1,
+  "kind": "T07_GENUINE_REQWEST_UNIT_PROFILE_V1",
+  "package_root": "vendor/ssx-http-source/reqwest",
+  "package_files": [
+    {
+      "path": ".cargo_vcs_info.json",
+      "bytes": 94,
+      "mode": "0o644",
+      "sha256": "dbafdf8a7d169124d6e1a995ad00745d0e78324d96ecee0472333a6956d61fa9"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 68511,
+      "mode": "0o644",
+      "sha256": "ad5f07a0e11fec6daa3f13ff3573b09d6336ac2ca744073353bcaf51b04ad04a"
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 13932,
+      "mode": "0o644",
+      "sha256": "f2c81c01425afbcb21066273d54806bad89ec89a9f0e3e2b554f17d3c7810182"
+    },
+    {
+      "path": "Cargo.toml.orig",
+      "bytes": 9233,
+      "mode": "0o644",
+      "sha256": "5ab1bc6ce8c058d20620f65c9241445f24c5c1d8cb46246c8908499986b49d1c"
+    },
+    {
+      "path": "LICENSE-APACHE",
+      "bytes": 10833,
+      "mode": "0o644",
+      "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+    },
+    {
+      "path": "LICENSE-MIT",
+      "bytes": 1063,
+      "mode": "0o644",
+      "sha256": "dd87e27dfbaa888cb77ea34592648a7743636b8dce07e49543bddda0fcfc73bc"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2456,
+      "mode": "0o644",
+      "sha256": "d353552b3feae9e57c7a8ce10be9b6d22bd6df5268602cd2e01f21c345a8cd5c"
+    },
+    {
+      "path": "SSX-PATCH.md",
+      "bytes": 2004,
+      "mode": "0o644",
+      "sha256": "b846808d15048cf92137b06aa354a3071e95c83a9021009fe4038ed8f0a6e38e"
+    },
+    {
+      "path": "src/async_impl/body.rs",
+      "bytes": 12787,
+      "mode": "0o644",
+      "sha256": "5f817e5c8713fc08aa410057540c6ffa37a1595340bddd2c2f39479b5c0103e9"
+    },
+    {
+      "path": "src/async_impl/client.rs",
+      "bytes": 124009,
+      "mode": "0o644",
+      "sha256": "da990eb217f7f000091e46e0a6408e405718a5e5a53073d2b8d28c4d7d773ed5"
+    },
+    {
+      "path": "src/async_impl/h3_client/connect.rs",
+      "bytes": 8907,
+      "mode": "0o644",
+      "sha256": "709f7c95884ac1ac4d6759d2cacaa7140c3f289a80fa4387de375f040166ee02"
+    },
+    {
+      "path": "src/async_impl/h3_client/dns.rs",
+      "bytes": 1279,
+      "mode": "0o644",
+      "sha256": "0b0876288eeba6c39331b3bd6b8b01cd4ab01e0362a1e859d961fcc5d520b43a"
+    },
+    {
+      "path": "src/async_impl/h3_client/mod.rs",
+      "bytes": 3554,
+      "mode": "0o644",
+      "sha256": "3d7a499aec889845749098bf620dbd8c7e5338b5104a28dd12d3c8162532cab5"
+    },
+    {
+      "path": "src/async_impl/h3_client/pool.rs",
+      "bytes": 12817,
+      "mode": "0o644",
+      "sha256": "fbba471dd143a347971df9f5862467317ae690ecc1ec5787340bd9117bed46c2"
+    },
+    {
+      "path": "src/async_impl/mod.rs",
+      "bytes": 340,
+      "mode": "0o644",
+      "sha256": "d207798170e6263f62e652a5cca27bf868e7e17c910ba3ee8907a303cb34608d"
+    },
+    {
+      "path": "src/async_impl/multipart.rs",
+      "bytes": 23519,
+      "mode": "0o644",
+      "sha256": "fa28f3689c3975cad971f902c368b89485317be28aaca0ea4de67ca71413f093"
+    },
+    {
+      "path": "src/async_impl/request.rs",
+      "bytes": 36240,
+      "mode": "0o644",
+      "sha256": "f21760887406fddb7ffe3453bb822690c6c4c5b8032853aeb137cd54a7f22213"
+    },
+    {
+      "path": "src/async_impl/response.rs",
+      "bytes": 15698,
+      "mode": "0o644",
+      "sha256": "ab12ec2046e4037e0ba370279362c9a8bbc7bcd5f8b08cfff43c86c28e40eaee"
+    },
+    {
+      "path": "src/async_impl/upgrade.rs",
+      "bytes": 2018,
+      "mode": "0o644",
+      "sha256": "b3944107063f2b5886b754ff80c4d3af34c9a97c4e9206d3bac3f4f3d6ae5d8a"
+    },
+    {
+      "path": "src/blocking/body.rs",
+      "bytes": 11009,
+      "mode": "0o644",
+      "sha256": "578d58f3c661a4c43b771e982bac1dd08a6fedaf98f8baacd096fbe0cad63f7a"
+    },
+    {
+      "path": "src/blocking/client.rs",
+      "bytes": 57663,
+      "mode": "0o644",
+      "sha256": "c451ef06fe74bd4dce581ea0d2514c6944e6d72ff97703b1e5d133bf7a3d8c25"
+    },
+    {
+      "path": "src/blocking/mod.rs",
+      "bytes": 3545,
+      "mode": "0o644",
+      "sha256": "0f6e73f94fc6088261fc93b3b95fa99b6293fdd482103dcc08f2bf8c5ca44f4f"
+    },
+    {
+      "path": "src/blocking/multipart.rs",
+      "bytes": 15146,
+      "mode": "0o644",
+      "sha256": "9b023b57b7f075d9d2ccd48c530cb29344f45f0ce4868f7dcc8ce9d093f6b312"
+    },
+    {
+      "path": "src/blocking/request.rs",
+      "bytes": 34706,
+      "mode": "0o644",
+      "sha256": "1d0646f1a7f8578de096ea57be8920286ec1390849cad04cfe1f0ff33f676726"
+    },
+    {
+      "path": "src/blocking/response.rs",
+      "bytes": 14237,
+      "mode": "0o644",
+      "sha256": "0ef0d5bfed59109238316f0f6dddf44dcfe68843f4491c59d24fab166cd766f4"
+    },
+    {
+      "path": "src/blocking/wait.rs",
+      "bytes": 2402,
+      "mode": "0o644",
+      "sha256": "2146c76d4c930aee3f18a03d7a030921cf5dd86e4b29582908b4a44be6e2166f"
+    },
+    {
+      "path": "src/config.rs",
+      "bytes": 3819,
+      "mode": "0o644",
+      "sha256": "21d3c917c317e2c56ddc227897f88ee0506b11fdc83d1efdad22d4a9c4796eed"
+    },
+    {
+      "path": "src/connect.rs",
+      "bytes": 73394,
+      "mode": "0o644",
+      "sha256": "d0efe3c19da9aba54598c89b3a68789a97b9c7877e05b43af74a0a7782f18009"
+    },
+    {
+      "path": "src/connect/source_http1.rs",
+      "bytes": 11169,
+      "mode": "0o644",
+      "sha256": "5e369d3930d4058d8c8cef7338947b8e8a51fb9d9c4c297a32e38dcad79fd201"
+    },
+    {
+      "path": "src/connect/source_phase.rs",
+      "bytes": 2042,
+      "mode": "0o644",
+      "sha256": "109187c730e273374568fd2d032c26f3e2f3a6e2d11d3086ea43c88c01a8e4ab"
+    },
+    {
+      "path": "src/cookie.rs",
+      "bytes": 8979,
+      "mode": "0o644",
+      "sha256": "9878bfaa8dfd02677e5724e24fada55d1f45d98a52efbc738057412606994adf"
+    },
+    {
+      "path": "src/dns/gai.rs",
+      "bytes": 769,
+      "mode": "0o644",
+      "sha256": "d078d9982d7e5e9e977e90ded62080fc3ac0b124753de508147f15ff8818aff8"
+    },
+    {
+      "path": "src/dns/hickory.rs",
+      "bytes": 2318,
+      "mode": "0o644",
+      "sha256": "8807276a535b1029ebf95432f885ae8434cca46d8f20c6f9a532bed78e786e41"
+    },
+    {
+      "path": "src/dns/mod.rs",
+      "bytes": 284,
+      "mode": "0o644",
+      "sha256": "cf9875316437ff762962a867bb3650dfe93f5cb6ec0a8e3397bfa20e36fb9c44"
+    },
+    {
+      "path": "src/dns/resolve.rs",
+      "bytes": 5620,
+      "mode": "0o644",
+      "sha256": "87cd433e1e75984007d39a50003fcc5a53b41067cd9e5585710318767a80d425"
+    },
+    {
+      "path": "src/error.rs",
+      "bytes": 15744,
+      "mode": "0o644",
+      "sha256": "b7aa133184a6519cd71d6f28fe2424f2db55ea4b9bef3a17b5df2d8be176a0d5"
+    },
+    {
+      "path": "src/into_url.rs",
+      "bytes": 2880,
+      "mode": "0o644",
+      "sha256": "761e9d0e04f652b201317d746cbe2a538de0604240914913fbe968114d88893d"
+    },
+    {
+      "path": "src/lib.rs",
+      "bytes": 12906,
+      "mode": "0o644",
+      "sha256": "f90e7bc42d19853fc756dc1fdf0bd579d8e2b7d68eb4286dd87aad6fc59191e8"
+    },
+    {
+      "path": "src/proxy.rs",
+      "bytes": 30979,
+      "mode": "0o644",
+      "sha256": "f48c0ec2ce2204850f8776e7bc9a9fcd2ee77923d69991704e384db5488a8e1f"
+    },
+    {
+      "path": "src/redirect.rs",
+      "bytes": 15562,
+      "mode": "0o644",
+      "sha256": "cca8be5601090128836d77dd86b85e4627ed1fba0588c2145445d008e19852b9"
+    },
+    {
+      "path": "src/response.rs",
+      "bytes": 1058,
+      "mode": "0o644",
+      "sha256": "12cf82de2499a426686ed4f3719cce73e269b7b9ddc9c88458e7378beb2c58a8"
+    },
+    {
+      "path": "src/retry.rs",
+      "bytes": 15720,
+      "mode": "0o644",
+      "sha256": "ce2c5307a449047a9f7187b52d91ddd369c0468900f4f6b0b390a849515ff525"
+    },
+    {
+      "path": "src/source_pool.rs",
+      "bytes": 22918,
+      "mode": "0o644",
+      "sha256": "38099adf861d6ba0a1c3996e892e2fea08edf4a2977bcdbc418307114642ae0f"
+    },
+    {
+      "path": "src/source_pool/environment.rs",
+      "bytes": 5516,
+      "mode": "0o644",
+      "sha256": "254dcdba0a70a0bc3dcb77b67450ad4496084369ab9c2d4c53ade978255ff299"
+    },
+    {
+      "path": "src/source_pool/os_proxy.rs",
+      "bytes": 11519,
+      "mode": "0o644",
+      "sha256": "99888949d5e5cc26d23169941649022e107b36d36a7758266fb1aa5d52a5eec8"
+    },
+    {
+      "path": "src/source_pool/platform_api.rs",
+      "bytes": 17859,
+      "mode": "0o644",
+      "sha256": "3740dbda09b8b1dcf56a8cd60bbf8578b3cf0aaf7df6c81a5e7afb4836882348"
+    },
+    {
+      "path": "src/source_pool/printable_data.rs",
+      "bytes": 48494,
+      "mode": "0o644",
+      "sha256": "e31cfbdbdfe9fa96d5f97580b90801acd76aad0bb4941959f827980ad6f3c9d1"
+    },
+    {
+      "path": "src/source_pool/python-text-source/Include__cpython__unicodeobject.h.txt",
+      "bytes": 27627,
+      "mode": "0o644",
+      "sha256": "a3f5e7c3f6795fb1f0794fd4e41df2fc823c1a7844e82fe96ccc42c94f63146b"
+    },
+    {
+      "path": "src/source_pool/python-text-source/Include__patchlevel.h.txt",
+      "bytes": 1773,
+      "mode": "0o644",
+      "sha256": "16a8955952cbaefd16f85909b73a0a6c182ec813f9544a12c28897c95b8d3f22"
+    },
+    {
+      "path": "src/source_pool/python-text-source/LICENSE.txt",
+      "bytes": 13804,
+      "mode": "0o644",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+    },
+    {
+      "path": "src/source_pool/python-text-source/Modules___sre__sre.c.txt",
+      "bytes": 95890,
+      "mode": "0o644",
+      "sha256": "6d847eb25d5c50e3b33dcb2e39accd9c73f619c2d211a34ed32bb93e9c7299a8"
+    },
+    {
+      "path": "src/source_pool/python-text-source/Modules__unicodedata_db.h.txt",
+      "bytes": 588046,
+      "mode": "0o644",
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110"
+    },
+    {
+      "path": "src/source_pool/python-text-source/Objects__unicodectype.c.txt",
+      "bytes": 7236,
+      "mode": "0o644",
+      "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61"
+    },
+    {
+      "path": "src/source_pool/python-text-source/Objects__unicodeobject.c.txt",
+      "bytes": 496004,
+      "mode": "0o644",
+      "sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3"
+    },
+    {
+      "path": "src/source_pool/python-text-source/Objects__unicodetype_db.h.txt",
+      "bytes": 281705,
+      "mode": "0o644",
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134"
+    },
+    {
+      "path": "src/source_pool/python_text.rs",
+      "bytes": 9633,
+      "mode": "0o644",
+      "sha256": "25d0676eb1b1f704a9d537b7d4e00f71109a39371ad37e2b5ed9d25ba9550ab6"
+    },
+    {
+      "path": "src/source_pool/python_text_data.rs",
+      "bytes": 63764,
+      "mode": "0o644",
+      "sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7"
+    },
+    {
+      "path": "src/source_pool/source_cookie_clock.rs",
+      "bytes": 3827,
+      "mode": "0o644",
+      "sha256": "dfd960fe5d590ddb9278312a27b697c5cd5a7f83055c43f58e0e5648efe1ee58"
+    },
+    {
+      "path": "src/source_pool/source_cookie_date.rs",
+      "bytes": 6907,
+      "mode": "0o644",
+      "sha256": "ed578904597951e8f3b66a848c7870bb5146dc1fce56cf6ba7e770a3d2cf7031"
+    },
+    {
+      "path": "src/source_pool/source_cookie_headers.rs",
+      "bytes": 7886,
+      "mode": "0o644",
+      "sha256": "5d58b3df98723667456df2b18c187e14a851f38099cdae01842c8d15295ae1dd"
+    },
+    {
+      "path": "src/source_pool/source_cookie_jar.rs",
+      "bytes": 25250,
+      "mode": "0o644",
+      "sha256": "3637b7502ec0d864e674f4946904f7ad473fbaf565f9d5ecbbabd1cb77f76677"
+    },
+    {
+      "path": "src/source_pool/source_cookies.rs",
+      "bytes": 9453,
+      "mode": "0o644",
+      "sha256": "288e96d527db84cff6a10704b96b7973b848c5d424b12a5b07948fc753801894"
+    },
+    {
+      "path": "src/source_pool/source_text.rs",
+      "bytes": 10527,
+      "mode": "0o644",
+      "sha256": "0483e5528ac2eb2c6ae18f3a6193f75428c6dd8155bc00aea86405ee023b475e"
+    },
+    {
+      "path": "src/tls.rs",
+      "bytes": 30806,
+      "mode": "0o644",
+      "sha256": "a32a7a2cb98994af681c1258315512c379988ff3fe500eb6e51a1a33fc4d6a6d"
+    },
+    {
+      "path": "src/util.rs",
+      "bytes": 3949,
+      "mode": "0o644",
+      "sha256": "427379213bb803187023327eba8d15aed7ac9d42a0a9e874966fd0278eb948a8"
+    },
+    {
+      "path": "src/wasm/body.rs",
+      "bytes": 9152,
+      "mode": "0o644",
+      "sha256": "81eea1079d4bee8e23e9be0b7488a07373a23c8eddf5c05aa9ec2b83810f9061"
+    },
+    {
+      "path": "src/wasm/client.rs",
+      "bytes": 15055,
+      "mode": "0o644",
+      "sha256": "3f88f32bb51051d54d5dd9fb9256063da8cc762aeaa1d8b03d3fda88fae6969e"
+    },
+    {
+      "path": "src/wasm/mod.rs",
+      "bytes": 2219,
+      "mode": "0o644",
+      "sha256": "79c7aeac9b9d271e4cfe931b39314aef3a7ad78184a84424306e772652535e0b"
+    },
+    {
+      "path": "src/wasm/multipart.rs",
+      "bytes": 11410,
+      "mode": "0o644",
+      "sha256": "4a347e2beedc2686d5d3818e205715cc6abe7ca678e26bf89de89a2ecb548f40"
+    },
+    {
+      "path": "src/wasm/request.rs",
+      "bytes": 20055,
+      "mode": "0o644",
+      "sha256": "51f71c622a95f78c0d2251353bca0ac428caf8ee7ea34c1285e4d50fee515aa6"
+    },
+    {
+      "path": "src/wasm/response.rs",
+      "bytes": 5827,
+      "mode": "0o644",
+      "sha256": "c7931612eb1c370345e938c8ce8a1f600f42b479ae81441f20d8832948cdd7c6"
+    }
+  ],
+  "original_manifest_declarations": {
+    "package": {
+      "edition": "2021",
+      "rust-version": "1.85.0",
+      "name": "reqwest",
+      "version": "0.13.5",
+      "authors": [
+        "Sean McArthur <sean@seanmonstar.com>"
+      ],
+      "build": false,
+      "include": [
+        "SSX-PATCH.md",
+        "README.md",
+        "Cargo.toml",
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "src/**/*.rs"
+      ],
+      "autolib": false,
+      "autobins": false,
+      "autoexamples": false,
+      "autotests": false,
+      "autobenches": false,
+      "description": "higher level HTTP client library",
+      "documentation": "https://docs.rs/reqwest",
+      "readme": "README.md",
+      "keywords": [
+        "http",
+        "request",
+        "client"
+      ],
+      "categories": [
+        "web-programming::http-client",
+        "wasm"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/seanmonstar/reqwest",
+      "metadata": {
+        "docs": {
+          "rs": {
+            "all-features": true,
+            "rustdoc-args": [
+              "--cfg",
+              "docsrs",
+              "--cfg",
+              "reqwest_unstable"
+            ],
+            "targets": [
+              "x86_64-unknown-linux-gnu",
+              "wasm32-unknown-unknown"
+            ]
+          }
+        },
+        "playground": {
+          "features": [
+            "blocking",
+            "cookies",
+            "query",
+            "form",
+            "json",
+            "multipart"
+          ]
+        }
+      }
+    },
+    "features": {
+      "ssx-http1-source-pool": [
+        "ssx-http1-source-connect",
+        "hyper-util/ssx-http1-source-pool",
+        "dep:regex",
+        "dep:chrono",
+        "dep:num-bigint",
+        "dep:libc"
+      ],
+      "ssx-http1-source-connect": [
+        "ssx-http1-source-read",
+        "hyper-util/ssx-http1-source-connect",
+        "rustls"
+      ],
+      "ssx-send-operation-timeout": [
+        "hyper/ssx-send-operation-timeout"
+      ],
+      "ssx-http1-source-read": [
+        "ssx-send-operation-timeout",
+        "hyper/ssx-http1-source-read"
+      ],
+      "__native-tls": [
+        "dep:hyper-tls",
+        "dep:native-tls-crate",
+        "__tls",
+        "dep:tokio-native-tls"
+      ],
+      "__native-tls-alpn": [
+        "native-tls-crate?/alpn",
+        "hyper-tls?/alpn"
+      ],
+      "__rustls": [
+        "dep:hyper-rustls",
+        "dep:tokio-rustls",
+        "dep:rustls",
+        "__tls"
+      ],
+      "__rustls-aws-lc-rs": [
+        "hyper-rustls?/aws-lc-rs",
+        "tokio-rustls?/aws-lc-rs",
+        "rustls?/aws-lc-rs",
+        "quinn?/rustls-aws-lc-rs"
+      ],
+      "__tls": [
+        "dep:rustls-pki-types",
+        "tokio/io-util"
+      ],
+      "blocking": [
+        "dep:futures-channel",
+        "futures-channel?/sink",
+        "dep:futures-util",
+        "futures-util?/io",
+        "futures-util?/sink",
+        "tokio/sync"
+      ],
+      "brotli": [
+        "tower-http/decompression-br"
+      ],
+      "charset": [
+        "dep:encoding_rs",
+        "dep:mime"
+      ],
+      "cookies": [
+        "dep:cookie_crate",
+        "dep:cookie_store"
+      ],
+      "default": [
+        "default-tls",
+        "charset",
+        "http2",
+        "system-proxy"
+      ],
+      "default-tls": [
+        "rustls"
+      ],
+      "deflate": [
+        "tower-http/decompression-deflate"
+      ],
+      "form": [
+        "dep:serde",
+        "dep:serde_urlencoded"
+      ],
+      "gzip": [
+        "tower-http/decompression-gzip"
+      ],
+      "hickory-dns": [
+        "dep:hickory-resolver",
+        "dep:once_cell"
+      ],
+      "http2": [
+        "dep:h2",
+        "hyper/http2",
+        "hyper-util/http2",
+        "hyper-rustls?/http2"
+      ],
+      "http3": [
+        "rustls",
+        "dep:h3",
+        "dep:h3-quinn",
+        "dep:quinn",
+        "tokio/macros"
+      ],
+      "json": [
+        "dep:serde",
+        "dep:serde_json"
+      ],
+      "multipart": [
+        "dep:mime_guess",
+        "dep:futures-util"
+      ],
+      "native-tls": [
+        "__native-tls",
+        "__native-tls-alpn"
+      ],
+      "native-tls-no-alpn": [
+        "__native-tls"
+      ],
+      "native-tls-vendored": [
+        "__native-tls",
+        "native-tls-crate?/vendored",
+        "__native-tls-alpn"
+      ],
+      "native-tls-vendored-no-alpn": [
+        "__native-tls",
+        "native-tls-crate?/vendored"
+      ],
+      "query": [
+        "dep:serde",
+        "dep:serde_urlencoded"
+      ],
+      "rustls": [
+        "__rustls-aws-lc-rs",
+        "dep:rustls-platform-verifier",
+        "__rustls"
+      ],
+      "rustls-no-provider": [
+        "dep:rustls-platform-verifier",
+        "__rustls"
+      ],
+      "socks": [],
+      "stream": [
+        "tokio/fs",
+        "dep:futures-util",
+        "dep:tokio-util",
+        "dep:wasm-streams"
+      ],
+      "system-proxy": [
+        "hyper-util/client-proxy-system"
+      ],
+      "zstd": [
+        "tower-http/decompression-zstd"
+      ]
+    },
+    "lib": {
+      "name": "reqwest",
+      "path": "src/lib.rs"
+    },
+    "dependencies": {
+      "base64": {
+        "version": "0.23"
+      },
+      "bytes": {
+        "version": "1.2"
+      },
+      "futures-core": {
+        "version": "0.3.28",
+        "default-features": false
+      },
+      "futures-util": {
+        "version": "0.3.28",
+        "optional": true,
+        "default-features": false
+      },
+      "http": {
+        "version": "1.1"
+      },
+      "mime_guess": {
+        "version": "2.0",
+        "optional": true,
+        "default-features": false
+      },
+      "serde": {
+        "version": "1.0",
+        "optional": true
+      },
+      "serde_json": {
+        "version": "1.0",
+        "optional": true
+      },
+      "serde_urlencoded": {
+        "version": "0.7.1",
+        "optional": true
+      },
+      "sync_wrapper": {
+        "version": "1.0",
+        "features": [
+          "futures"
+        ]
+      },
+      "url": {
+        "version": "2.4"
+      },
+      "regex": {
+        "version": "=1.13.1",
+        "optional": true
+      },
+      "chrono": {
+        "version": "=0.4.45",
+        "default-features": false,
+        "features": [
+          "std"
+        ],
+        "optional": true
+      },
+      "num-bigint": {
+        "version": "=0.4.8",
+        "optional": true
+      },
+      "libc": {
+        "version": "=0.2.190",
+        "optional": true
+      }
+    },
+    "dev-dependencies": {
+      "libc": {
+        "version": "0"
+      },
+      "num_cpus": {
+        "version": "1.0"
+      },
+      "tower": {
+        "version": "0.5.2",
+        "features": [
+          "limit"
+        ],
+        "default-features": false
+      }
+    },
+    "target": {
+      "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))": {
+        "dependencies": {
+          "js-sys": {
+            "version": "0.3.77"
+          },
+          "wasm-bindgen": {
+            "version": "0.2.89"
+          },
+          "wasm-bindgen-futures": {
+            "version": "0.4.18"
+          },
+          "wasm-streams": {
+            "version": "0.5",
+            "optional": true
+          },
+          "web-sys": {
+            "version": "0.3.28",
+            "features": [
+              "AbortController",
+              "AbortSignal",
+              "Headers",
+              "Request",
+              "RequestInit",
+              "RequestMode",
+              "Response",
+              "Window",
+              "FormData",
+              "Blob",
+              "BlobPropertyBag",
+              "ServiceWorkerGlobalScope",
+              "RequestCredentials",
+              "File",
+              "ReadableStream",
+              "ReferrerPolicy",
+              "RequestCache"
+            ]
+          }
+        },
+        "dev-dependencies": {
+          "wasm-bindgen": {
+            "version": "0.2.89",
+            "features": [
+              "serde-serialize"
+            ]
+          },
+          "wasm-bindgen-test": {
+            "version": "0.3"
+          }
+        }
+      },
+      "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))": {
+        "dependencies": {
+          "cookie_crate": {
+            "version": "0.18.0",
+            "optional": true,
+            "package": "cookie"
+          },
+          "cookie_store": {
+            "version": "0.22.0",
+            "optional": true
+          },
+          "encoding_rs": {
+            "version": "0.8",
+            "optional": true
+          },
+          "futures-channel": {
+            "version": "0.3",
+            "optional": true
+          },
+          "h2": {
+            "version": "0.4",
+            "optional": true
+          },
+          "h3": {
+            "version": "0.0.8",
+            "optional": true
+          },
+          "h3-quinn": {
+            "version": "0.0.10",
+            "optional": true
+          },
+          "hickory-resolver": {
+            "version": "0.26",
+            "features": [
+              "tokio"
+            ],
+            "optional": true
+          },
+          "http-body": {
+            "version": "1"
+          },
+          "http-body-util": {
+            "version": "0.1.2"
+          },
+          "hyper": {
+            "version": "1.1",
+            "features": [
+              "http1",
+              "client"
+            ]
+          },
+          "hyper-rustls": {
+            "version": "0.27.0",
+            "features": [
+              "http1",
+              "tls12"
+            ],
+            "optional": true,
+            "default-features": false
+          },
+          "hyper-tls": {
+            "version": "0.6",
+            "optional": true
+          },
+          "hyper-util": {
+            "version": "0.1.12",
+            "features": [
+              "http1",
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "tokio"
+            ]
+          },
+          "log": {
+            "version": "0.4.17"
+          },
+          "mime": {
+            "version": "0.3.16",
+            "optional": true
+          },
+          "native-tls-crate": {
+            "version": "0.2.16",
+            "optional": true,
+            "package": "native-tls"
+          },
+          "once_cell": {
+            "version": "1.18",
+            "optional": true
+          },
+          "percent-encoding": {
+            "version": "2.3"
+          },
+          "pin-project-lite": {
+            "version": "0.2.11"
+          },
+          "quinn": {
+            "version": "0.11.1",
+            "features": [
+              "runtime-tokio"
+            ],
+            "optional": true,
+            "default-features": false
+          },
+          "rustls": {
+            "version": "0.23.4",
+            "features": [
+              "std",
+              "tls12"
+            ],
+            "optional": true,
+            "default-features": false
+          },
+          "rustls-pki-types": {
+            "version": "1.9.0",
+            "features": [
+              "std"
+            ],
+            "optional": true
+          },
+          "rustls-platform-verifier": {
+            "version": ">=0.6.0, <0.8.0",
+            "optional": true
+          },
+          "tokio": {
+            "version": "1.0",
+            "features": [
+              "net",
+              "time"
+            ],
+            "default-features": false
+          },
+          "tokio-native-tls": {
+            "version": "0.3.0",
+            "optional": true
+          },
+          "tokio-rustls": {
+            "version": "0.26",
+            "features": [
+              "tls12"
+            ],
+            "optional": true,
+            "default-features": false
+          },
+          "tokio-util": {
+            "version": "0.7.9",
+            "features": [
+              "io"
+            ],
+            "optional": true,
+            "default-features": false
+          },
+          "tower": {
+            "version": "0.5.2",
+            "features": [
+              "retry",
+              "timeout",
+              "util"
+            ],
+            "default-features": false
+          },
+          "tower-http": {
+            "version": "0.6.8",
+            "features": [
+              "follow-redirect"
+            ],
+            "default-features": false
+          },
+          "tower-service": {
+            "version": "0.3"
+          }
+        },
+        "dev-dependencies": {
+          "brotli_crate": {
+            "version": "8",
+            "package": "brotli"
+          },
+          "doc-comment": {
+            "version": "0.3"
+          },
+          "env_logger": {
+            "version": "0.10"
+          },
+          "flate2": {
+            "version": "1.0.13"
+          },
+          "futures-util": {
+            "version": "0.3.28",
+            "features": [
+              "std",
+              "alloc"
+            ],
+            "default-features": false
+          },
+          "hyper": {
+            "version": "1.1.0",
+            "features": [
+              "http1",
+              "http2",
+              "client",
+              "server"
+            ],
+            "default-features": false
+          },
+          "hyper-util": {
+            "version": "0.1.12",
+            "features": [
+              "http1",
+              "http2",
+              "client",
+              "client-legacy",
+              "server-auto",
+              "server-graceful",
+              "tokio"
+            ]
+          },
+          "serde": {
+            "version": "1.0",
+            "features": [
+              "derive"
+            ]
+          },
+          "tokio": {
+            "version": "1.0",
+            "features": [
+              "macros",
+              "rt-multi-thread"
+            ],
+            "default-features": false
+          },
+          "zstd_crate": {
+            "version": "0.13",
+            "package": "zstd"
+          }
+        }
+      }
+    },
+    "lints": {
+      "rust": {
+        "unexpected_cfgs": {
+          "level": "warn",
+          "priority": 0,
+          "check-cfg": [
+            "cfg(reqwest_unstable)"
+          ]
+        }
+      }
+    }
+  },
+  "metadata_dependency_declarations": [
+    {
+      "name": "base64",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.23",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "bytes",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.2",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "chrono",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "=0.4.45",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [
+        "std"
+      ],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "futures-core",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3.28",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "futures-util",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3.28",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "http",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.1",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "libc",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "=0.2.190",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "mime_guess",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^2.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "num-bigint",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "=0.4.8",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "regex",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "=1.13.1",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "serde",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "serde_json",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "serde_urlencoded",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.7.1",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "sync_wrapper",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [
+        "futures"
+      ],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "url",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^2.4",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "libc",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "num_cpus",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "tower",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.5.2",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [
+        "limit"
+      ],
+      "target": null,
+      "registry": null
+    },
+    {
+      "name": "js-sys",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3.77",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "registry": null
+    },
+    {
+      "name": "wasm-bindgen",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.2.89",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "registry": null
+    },
+    {
+      "name": "wasm-bindgen-futures",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.4.18",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "registry": null
+    },
+    {
+      "name": "wasm-streams",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.5",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "registry": null
+    },
+    {
+      "name": "web-sys",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3.28",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [
+        "AbortController",
+        "AbortSignal",
+        "Headers",
+        "Request",
+        "RequestInit",
+        "RequestMode",
+        "Response",
+        "Window",
+        "FormData",
+        "Blob",
+        "BlobPropertyBag",
+        "ServiceWorkerGlobalScope",
+        "RequestCredentials",
+        "File",
+        "ReadableStream",
+        "ReferrerPolicy",
+        "RequestCache"
+      ],
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "registry": null
+    },
+    {
+      "name": "wasm-bindgen",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.2.89",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [
+        "serde-serialize"
+      ],
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "registry": null
+    },
+    {
+      "name": "wasm-bindgen-test",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "registry": null
+    },
+    {
+      "name": "cookie",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.18.0",
+      "kind": null,
+      "rename": "cookie_crate",
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "cookie_store",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.22.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "encoding_rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.8",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "futures-channel",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "h2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.4",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "h3",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.0.8",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "h3-quinn",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.0.10",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "hickory-resolver",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.26",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [
+        "tokio"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "http-body",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "http-body-util",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.1.2",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "hyper",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.1",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [
+        "http1",
+        "client"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "hyper-rustls",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.27.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [
+        "http1",
+        "tls12"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "hyper-tls",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.6",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "hyper-util",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.1.12",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [
+        "http1",
+        "client",
+        "client-legacy",
+        "client-proxy",
+        "tokio"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "log",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.4.17",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "mime",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3.16",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "native-tls",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.2.16",
+      "kind": null,
+      "rename": "native-tls-crate",
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "once_cell",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.18",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "percent-encoding",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^2.3",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "pin-project-lite",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.2.11",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "quinn",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.11.1",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [
+        "runtime-tokio"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "rustls",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.23.4",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [
+        "std",
+        "tls12"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "rustls-pki-types",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.9.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [
+        "std"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "rustls-platform-verifier",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": ">=0.6.0, <0.8.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tokio",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [
+        "net",
+        "time"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tokio-native-tls",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3.0",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tokio-rustls",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.26",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [
+        "tls12"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tokio-util",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.7.9",
+      "kind": null,
+      "rename": null,
+      "optional": true,
+      "uses_default_features": false,
+      "features": [
+        "io"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tower",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.5.2",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [
+        "retry",
+        "timeout",
+        "util"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tower-http",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.6.8",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [
+        "follow-redirect"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tower-service",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3",
+      "kind": null,
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "brotli",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^8",
+      "kind": "dev",
+      "rename": "brotli_crate",
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "doc-comment",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "env_logger",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.10",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "flate2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0.13",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "futures-util",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.3.28",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [
+        "std",
+        "alloc"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "hyper",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.1.0",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [
+        "http1",
+        "http2",
+        "client",
+        "server"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "hyper-util",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.1.12",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [
+        "http1",
+        "http2",
+        "client",
+        "client-legacy",
+        "server-auto",
+        "server-graceful",
+        "tokio"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "serde",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": true,
+      "features": [
+        "derive"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "tokio",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^1.0",
+      "kind": "dev",
+      "rename": null,
+      "optional": false,
+      "uses_default_features": false,
+      "features": [
+        "macros",
+        "rt-multi-thread"
+      ],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    },
+    {
+      "name": "zstd",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "req": "^0.13",
+      "kind": "dev",
+      "rename": "zstd_crate",
+      "optional": false,
+      "uses_default_features": true,
+      "features": [],
+      "target": "cfg(not(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"))))",
+      "registry": null
+    }
+  ],
+  "metadata_feature_declarations": {
+    "__native-tls": [
+      "dep:hyper-tls",
+      "dep:native-tls-crate",
+      "__tls",
+      "dep:tokio-native-tls"
+    ],
+    "__native-tls-alpn": [
+      "native-tls-crate?/alpn",
+      "hyper-tls?/alpn"
+    ],
+    "__rustls": [
+      "dep:hyper-rustls",
+      "dep:tokio-rustls",
+      "dep:rustls",
+      "__tls"
+    ],
+    "__rustls-aws-lc-rs": [
+      "hyper-rustls?/aws-lc-rs",
+      "tokio-rustls?/aws-lc-rs",
+      "rustls?/aws-lc-rs",
+      "quinn?/rustls-aws-lc-rs"
+    ],
+    "__tls": [
+      "dep:rustls-pki-types",
+      "tokio/io-util"
+    ],
+    "blocking": [
+      "dep:futures-channel",
+      "futures-channel?/sink",
+      "dep:futures-util",
+      "futures-util?/io",
+      "futures-util?/sink",
+      "tokio/sync"
+    ],
+    "brotli": [
+      "tower-http/decompression-br"
+    ],
+    "charset": [
+      "dep:encoding_rs",
+      "dep:mime"
+    ],
+    "cookies": [
+      "dep:cookie_crate",
+      "dep:cookie_store"
+    ],
+    "default": [
+      "default-tls",
+      "charset",
+      "http2",
+      "system-proxy"
+    ],
+    "default-tls": [
+      "rustls"
+    ],
+    "deflate": [
+      "tower-http/decompression-deflate"
+    ],
+    "form": [
+      "dep:serde",
+      "dep:serde_urlencoded"
+    ],
+    "gzip": [
+      "tower-http/decompression-gzip"
+    ],
+    "hickory-dns": [
+      "dep:hickory-resolver",
+      "dep:once_cell"
+    ],
+    "http2": [
+      "dep:h2",
+      "hyper/http2",
+      "hyper-util/http2",
+      "hyper-rustls?/http2"
+    ],
+    "http3": [
+      "rustls",
+      "dep:h3",
+      "dep:h3-quinn",
+      "dep:quinn",
+      "tokio/macros"
+    ],
+    "json": [
+      "dep:serde",
+      "dep:serde_json"
+    ],
+    "multipart": [
+      "dep:mime_guess",
+      "dep:futures-util"
+    ],
+    "native-tls": [
+      "__native-tls",
+      "__native-tls-alpn"
+    ],
+    "native-tls-no-alpn": [
+      "__native-tls"
+    ],
+    "native-tls-vendored": [
+      "__native-tls",
+      "native-tls-crate?/vendored",
+      "__native-tls-alpn"
+    ],
+    "native-tls-vendored-no-alpn": [
+      "__native-tls",
+      "native-tls-crate?/vendored"
+    ],
+    "query": [
+      "dep:serde",
+      "dep:serde_urlencoded"
+    ],
+    "rustls": [
+      "__rustls-aws-lc-rs",
+      "dep:rustls-platform-verifier",
+      "__rustls"
+    ],
+    "rustls-no-provider": [
+      "dep:rustls-platform-verifier",
+      "__rustls"
+    ],
+    "socks": [],
+    "ssx-http1-source-connect": [
+      "ssx-http1-source-read",
+      "hyper-util/ssx-http1-source-connect",
+      "rustls"
+    ],
+    "ssx-http1-source-pool": [
+      "ssx-http1-source-connect",
+      "hyper-util/ssx-http1-source-pool",
+      "dep:regex",
+      "dep:chrono",
+      "dep:num-bigint",
+      "dep:libc"
+    ],
+    "ssx-http1-source-read": [
+      "ssx-send-operation-timeout",
+      "hyper/ssx-http1-source-read"
+    ],
+    "ssx-send-operation-timeout": [
+      "hyper/ssx-send-operation-timeout"
+    ],
+    "stream": [
+      "tokio/fs",
+      "dep:futures-util",
+      "dep:tokio-util",
+      "dep:wasm-streams"
+    ],
+    "system-proxy": [
+      "hyper-util/client-proxy-system"
+    ],
+    "zstd": [
+      "tower-http/decompression-zstd"
+    ]
+  },
+  "targets": [
+    {
+      "kind": [
+        "lib"
+      ],
+      "crate_types": [
+        "lib"
+      ],
+      "name": "reqwest",
+      "src_path": "src/lib.rs",
+      "edition": "2021",
+      "doc": true,
+      "doctest": true,
+      "test": true
+    }
+  ],
+  "requested_features": [
+    "ssx-http1-source-pool"
+  ],
+  "default_features": true,
+  "forks": [
+    {
+      "name": "reqwest",
+      "root": "vendor/ssx-http-source/reqwest",
+      "manifest_sha256": "f2c81c01425afbcb21066273d54806bad89ec89a9f0e3e2b554f17d3c7810182",
+      "files": [
+        {
+          "path": "vendor/ssx-http-source/reqwest/.cargo_vcs_info.json",
+          "bytes": 94,
+          "mode": "0o644",
+          "sha256": "dbafdf8a7d169124d6e1a995ad00745d0e78324d96ecee0472333a6956d61fa9"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/Cargo.lock",
+          "bytes": 68511,
+          "mode": "0o644",
+          "sha256": "ad5f07a0e11fec6daa3f13ff3573b09d6336ac2ca744073353bcaf51b04ad04a"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
+          "bytes": 13932,
+          "mode": "0o644",
+          "sha256": "f2c81c01425afbcb21066273d54806bad89ec89a9f0e3e2b554f17d3c7810182"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/Cargo.toml.orig",
+          "bytes": 9233,
+          "mode": "0o644",
+          "sha256": "5ab1bc6ce8c058d20620f65c9241445f24c5c1d8cb46246c8908499986b49d1c"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/LICENSE-APACHE",
+          "bytes": 10833,
+          "mode": "0o644",
+          "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/LICENSE-MIT",
+          "bytes": 1063,
+          "mode": "0o644",
+          "sha256": "dd87e27dfbaa888cb77ea34592648a7743636b8dce07e49543bddda0fcfc73bc"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/README.md",
+          "bytes": 2456,
+          "mode": "0o644",
+          "sha256": "d353552b3feae9e57c7a8ce10be9b6d22bd6df5268602cd2e01f21c345a8cd5c"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/SSX-PATCH.md",
+          "bytes": 2004,
+          "mode": "0o644",
+          "sha256": "b846808d15048cf92137b06aa354a3071e95c83a9021009fe4038ed8f0a6e38e"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/body.rs",
+          "bytes": 12787,
+          "mode": "0o644",
+          "sha256": "5f817e5c8713fc08aa410057540c6ffa37a1595340bddd2c2f39479b5c0103e9"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/client.rs",
+          "bytes": 124009,
+          "mode": "0o644",
+          "sha256": "da990eb217f7f000091e46e0a6408e405718a5e5a53073d2b8d28c4d7d773ed5"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/connect.rs",
+          "bytes": 8907,
+          "mode": "0o644",
+          "sha256": "709f7c95884ac1ac4d6759d2cacaa7140c3f289a80fa4387de375f040166ee02"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/dns.rs",
+          "bytes": 1279,
+          "mode": "0o644",
+          "sha256": "0b0876288eeba6c39331b3bd6b8b01cd4ab01e0362a1e859d961fcc5d520b43a"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/mod.rs",
+          "bytes": 3554,
+          "mode": "0o644",
+          "sha256": "3d7a499aec889845749098bf620dbd8c7e5338b5104a28dd12d3c8162532cab5"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/pool.rs",
+          "bytes": 12817,
+          "mode": "0o644",
+          "sha256": "fbba471dd143a347971df9f5862467317ae690ecc1ec5787340bd9117bed46c2"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/mod.rs",
+          "bytes": 340,
+          "mode": "0o644",
+          "sha256": "d207798170e6263f62e652a5cca27bf868e7e17c910ba3ee8907a303cb34608d"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/multipart.rs",
+          "bytes": 23519,
+          "mode": "0o644",
+          "sha256": "fa28f3689c3975cad971f902c368b89485317be28aaca0ea4de67ca71413f093"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/request.rs",
+          "bytes": 36240,
+          "mode": "0o644",
+          "sha256": "f21760887406fddb7ffe3453bb822690c6c4c5b8032853aeb137cd54a7f22213"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/response.rs",
+          "bytes": 15698,
+          "mode": "0o644",
+          "sha256": "ab12ec2046e4037e0ba370279362c9a8bbc7bcd5f8b08cfff43c86c28e40eaee"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/async_impl/upgrade.rs",
+          "bytes": 2018,
+          "mode": "0o644",
+          "sha256": "b3944107063f2b5886b754ff80c4d3af34c9a97c4e9206d3bac3f4f3d6ae5d8a"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/blocking/body.rs",
+          "bytes": 11009,
+          "mode": "0o644",
+          "sha256": "578d58f3c661a4c43b771e982bac1dd08a6fedaf98f8baacd096fbe0cad63f7a"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/blocking/client.rs",
+          "bytes": 57663,
+          "mode": "0o644",
+          "sha256": "c451ef06fe74bd4dce581ea0d2514c6944e6d72ff97703b1e5d133bf7a3d8c25"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/blocking/mod.rs",
+          "bytes": 3545,
+          "mode": "0o644",
+          "sha256": "0f6e73f94fc6088261fc93b3b95fa99b6293fdd482103dcc08f2bf8c5ca44f4f"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/blocking/multipart.rs",
+          "bytes": 15146,
+          "mode": "0o644",
+          "sha256": "9b023b57b7f075d9d2ccd48c530cb29344f45f0ce4868f7dcc8ce9d093f6b312"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/blocking/request.rs",
+          "bytes": 34706,
+          "mode": "0o644",
+          "sha256": "1d0646f1a7f8578de096ea57be8920286ec1390849cad04cfe1f0ff33f676726"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/blocking/response.rs",
+          "bytes": 14237,
+          "mode": "0o644",
+          "sha256": "0ef0d5bfed59109238316f0f6dddf44dcfe68843f4491c59d24fab166cd766f4"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/blocking/wait.rs",
+          "bytes": 2402,
+          "mode": "0o644",
+          "sha256": "2146c76d4c930aee3f18a03d7a030921cf5dd86e4b29582908b4a44be6e2166f"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/config.rs",
+          "bytes": 3819,
+          "mode": "0o644",
+          "sha256": "21d3c917c317e2c56ddc227897f88ee0506b11fdc83d1efdad22d4a9c4796eed"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/connect.rs",
+          "bytes": 73394,
+          "mode": "0o644",
+          "sha256": "d0efe3c19da9aba54598c89b3a68789a97b9c7877e05b43af74a0a7782f18009"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/connect/source_http1.rs",
+          "bytes": 11169,
+          "mode": "0o644",
+          "sha256": "5e369d3930d4058d8c8cef7338947b8e8a51fb9d9c4c297a32e38dcad79fd201"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/connect/source_phase.rs",
+          "bytes": 2042,
+          "mode": "0o644",
+          "sha256": "109187c730e273374568fd2d032c26f3e2f3a6e2d11d3086ea43c88c01a8e4ab"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/cookie.rs",
+          "bytes": 8979,
+          "mode": "0o644",
+          "sha256": "9878bfaa8dfd02677e5724e24fada55d1f45d98a52efbc738057412606994adf"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/dns/gai.rs",
+          "bytes": 769,
+          "mode": "0o644",
+          "sha256": "d078d9982d7e5e9e977e90ded62080fc3ac0b124753de508147f15ff8818aff8"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/dns/hickory.rs",
+          "bytes": 2318,
+          "mode": "0o644",
+          "sha256": "8807276a535b1029ebf95432f885ae8434cca46d8f20c6f9a532bed78e786e41"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/dns/mod.rs",
+          "bytes": 284,
+          "mode": "0o644",
+          "sha256": "cf9875316437ff762962a867bb3650dfe93f5cb6ec0a8e3397bfa20e36fb9c44"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/dns/resolve.rs",
+          "bytes": 5620,
+          "mode": "0o644",
+          "sha256": "87cd433e1e75984007d39a50003fcc5a53b41067cd9e5585710318767a80d425"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/error.rs",
+          "bytes": 15744,
+          "mode": "0o644",
+          "sha256": "b7aa133184a6519cd71d6f28fe2424f2db55ea4b9bef3a17b5df2d8be176a0d5"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/into_url.rs",
+          "bytes": 2880,
+          "mode": "0o644",
+          "sha256": "761e9d0e04f652b201317d746cbe2a538de0604240914913fbe968114d88893d"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/lib.rs",
+          "bytes": 12906,
+          "mode": "0o644",
+          "sha256": "f90e7bc42d19853fc756dc1fdf0bd579d8e2b7d68eb4286dd87aad6fc59191e8"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/proxy.rs",
+          "bytes": 30979,
+          "mode": "0o644",
+          "sha256": "f48c0ec2ce2204850f8776e7bc9a9fcd2ee77923d69991704e384db5488a8e1f"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/redirect.rs",
+          "bytes": 15562,
+          "mode": "0o644",
+          "sha256": "cca8be5601090128836d77dd86b85e4627ed1fba0588c2145445d008e19852b9"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/response.rs",
+          "bytes": 1058,
+          "mode": "0o644",
+          "sha256": "12cf82de2499a426686ed4f3719cce73e269b7b9ddc9c88458e7378beb2c58a8"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/retry.rs",
+          "bytes": 15720,
+          "mode": "0o644",
+          "sha256": "ce2c5307a449047a9f7187b52d91ddd369c0468900f4f6b0b390a849515ff525"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+          "bytes": 22918,
+          "mode": "0o644",
+          "sha256": "38099adf861d6ba0a1c3996e892e2fea08edf4a2977bcdbc418307114642ae0f"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/environment.rs",
+          "bytes": 5516,
+          "mode": "0o644",
+          "sha256": "254dcdba0a70a0bc3dcb77b67450ad4496084369ab9c2d4c53ade978255ff299"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/os_proxy.rs",
+          "bytes": 11519,
+          "mode": "0o644",
+          "sha256": "99888949d5e5cc26d23169941649022e107b36d36a7758266fb1aa5d52a5eec8"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/platform_api.rs",
+          "bytes": 17859,
+          "mode": "0o644",
+          "sha256": "3740dbda09b8b1dcf56a8cd60bbf8578b3cf0aaf7df6c81a5e7afb4836882348"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/printable_data.rs",
+          "bytes": 48494,
+          "mode": "0o644",
+          "sha256": "e31cfbdbdfe9fa96d5f97580b90801acd76aad0bb4941959f827980ad6f3c9d1"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Include__cpython__unicodeobject.h.txt",
+          "bytes": 27627,
+          "mode": "0o644",
+          "sha256": "a3f5e7c3f6795fb1f0794fd4e41df2fc823c1a7844e82fe96ccc42c94f63146b"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Include__patchlevel.h.txt",
+          "bytes": 1773,
+          "mode": "0o644",
+          "sha256": "16a8955952cbaefd16f85909b73a0a6c182ec813f9544a12c28897c95b8d3f22"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/LICENSE.txt",
+          "bytes": 13804,
+          "mode": "0o644",
+          "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Modules___sre__sre.c.txt",
+          "bytes": 95890,
+          "mode": "0o644",
+          "sha256": "6d847eb25d5c50e3b33dcb2e39accd9c73f619c2d211a34ed32bb93e9c7299a8"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Modules__unicodedata_db.h.txt",
+          "bytes": 588046,
+          "mode": "0o644",
+          "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Objects__unicodectype.c.txt",
+          "bytes": 7236,
+          "mode": "0o644",
+          "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Objects__unicodeobject.c.txt",
+          "bytes": 496004,
+          "mode": "0o644",
+          "sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Objects__unicodetype_db.h.txt",
+          "bytes": 281705,
+          "mode": "0o644",
+          "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python_text.rs",
+          "bytes": 9633,
+          "mode": "0o644",
+          "sha256": "25d0676eb1b1f704a9d537b7d4e00f71109a39371ad37e2b5ed9d25ba9550ab6"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python_text_data.rs",
+          "bytes": 63764,
+          "mode": "0o644",
+          "sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_clock.rs",
+          "bytes": 3827,
+          "mode": "0o644",
+          "sha256": "dfd960fe5d590ddb9278312a27b697c5cd5a7f83055c43f58e0e5648efe1ee58"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_date.rs",
+          "bytes": 6907,
+          "mode": "0o644",
+          "sha256": "ed578904597951e8f3b66a848c7870bb5146dc1fce56cf6ba7e770a3d2cf7031"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_headers.rs",
+          "bytes": 7886,
+          "mode": "0o644",
+          "sha256": "5d58b3df98723667456df2b18c187e14a851f38099cdae01842c8d15295ae1dd"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_jar.rs",
+          "bytes": 25250,
+          "mode": "0o644",
+          "sha256": "3637b7502ec0d864e674f4946904f7ad473fbaf565f9d5ecbbabd1cb77f76677"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
+          "bytes": 9453,
+          "mode": "0o644",
+          "sha256": "288e96d527db84cff6a10704b96b7973b848c5d424b12a5b07948fc753801894"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_text.rs",
+          "bytes": 10527,
+          "mode": "0o644",
+          "sha256": "0483e5528ac2eb2c6ae18f3a6193f75428c6dd8155bc00aea86405ee023b475e"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/tls.rs",
+          "bytes": 30806,
+          "mode": "0o644",
+          "sha256": "a32a7a2cb98994af681c1258315512c379988ff3fe500eb6e51a1a33fc4d6a6d"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/util.rs",
+          "bytes": 3949,
+          "mode": "0o644",
+          "sha256": "427379213bb803187023327eba8d15aed7ac9d42a0a9e874966fd0278eb948a8"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/wasm/body.rs",
+          "bytes": 9152,
+          "mode": "0o644",
+          "sha256": "81eea1079d4bee8e23e9be0b7488a07373a23c8eddf5c05aa9ec2b83810f9061"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/wasm/client.rs",
+          "bytes": 15055,
+          "mode": "0o644",
+          "sha256": "3f88f32bb51051d54d5dd9fb9256063da8cc762aeaa1d8b03d3fda88fae6969e"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/wasm/mod.rs",
+          "bytes": 2219,
+          "mode": "0o644",
+          "sha256": "79c7aeac9b9d271e4cfe931b39314aef3a7ad78184a84424306e772652535e0b"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/wasm/multipart.rs",
+          "bytes": 11410,
+          "mode": "0o644",
+          "sha256": "4a347e2beedc2686d5d3818e205715cc6abe7ca678e26bf89de89a2ecb548f40"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/wasm/request.rs",
+          "bytes": 20055,
+          "mode": "0o644",
+          "sha256": "51f71c622a95f78c0d2251353bca0ac428caf8ee7ea34c1285e4d50fee515aa6"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/wasm/response.rs",
+          "bytes": 5827,
+          "mode": "0o644",
+          "sha256": "c7931612eb1c370345e938c8ce8a1f600f42b479ae81441f20d8832948cdd7c6"
+        }
+      ]
+    },
+    {
+      "name": "httparse",
+      "root": "vendor/ssx-http-source/httparse",
+      "manifest_sha256": "067da5f6334526ce5f080909e5c271dd0968ab4198a65eea51d93b242febb48a",
+      "files": [
+        {
+          "path": "vendor/ssx-http-source/httparse/.cargo_vcs_info.json",
+          "bytes": 94,
+          "mode": "0o644",
+          "sha256": "304c6a5cc4e924fef4ca4629de055fdf731825833e6a0764aa03e4581580297c"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/.github/FUNDING.yml",
+          "bytes": 22,
+          "mode": "0o644",
+          "sha256": "e65635279e36972a4cecce26f3bb8115c09fd6d5d3e3e79d11a973877d4600a8"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/.github/workflows/ci.yml",
+          "bytes": 6660,
+          "mode": "0o644",
+          "sha256": "1045b35d3703f490e153c9a8513acf22496d5a3b0659fee70784c3cf425cb0f5"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/.github/workflows/cibench.yml",
+          "bytes": 4121,
+          "mode": "0o644",
+          "sha256": "3b09cf335f208b52d97ccb9a1ca803cece87c80a9b859b8236b9f4e25ab75456"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/.github/workflows/cifuzz.yml",
+          "bytes": 703,
+          "mode": "0o644",
+          "sha256": "7814b157965db6452cba4ff3ebe30555c002daaff4baf46a985fa232cb768def"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/.gitignore",
+          "bytes": 18,
+          "mode": "0o644",
+          "sha256": "f9b1ca6ae27d1c18215265024629a8960c31379f206d9ed20f64e0b2dcf79805"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/Cargo.lock",
+          "bytes": 17569,
+          "mode": "0o644",
+          "sha256": "ec51aecd295189c21ca216e1bb6e1f04e9f45d7dfc62da5c00480aebbf87a515"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/Cargo.toml",
+          "bytes": 1670,
+          "mode": "0o644",
+          "sha256": "067da5f6334526ce5f080909e5c271dd0968ab4198a65eea51d93b242febb48a"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/Cargo.toml.orig",
+          "bytes": 926,
+          "mode": "0o644",
+          "sha256": "3a0da8a3d1c3ab896e16182c9a876b4ad4c265faa3042cde693621ea95c94060"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/LICENSE-APACHE",
+          "bytes": 10847,
+          "mode": "0o644",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/LICENSE-MIT",
+          "bytes": 1063,
+          "mode": "0o644",
+          "sha256": "391a5396cec6230bfabd4ef4eb2350eb895bc5efce377a2218f5702ed020d3e3"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/README.md",
+          "bytes": 1659,
+          "mode": "0o644",
+          "sha256": "eb23916ad2e4e904ee31e2af02e71ffd8f2d0c97f9e529f3e02f300a120e2c8b"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/benches/parse.rs",
+          "bytes": 9177,
+          "mode": "0o644",
+          "sha256": "1c76d3831410e0c2da0cbbee43431c2d28e2f1969664dea2a6a0e81f0a1c88be"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/build.rs",
+          "bytes": 4321,
+          "mode": "0o644",
+          "sha256": "eba8e341d746a6cf54249c62afe9eb237e7c21fcf9937223e894549e3a34d489"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/clippy.toml",
+          "bytes": 14,
+          "mode": "0o644",
+          "sha256": "fd62dce2727b03fd4a8f6f3241e9da1e24ac2ff053d3986b0576c140823ec1ea"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/iter.rs",
+          "bytes": 5361,
+          "mode": "0o644",
+          "sha256": "630132d2d6fafa80c126b7b20b097c5ac7215575f7b61c8f8d7101b58ca57d0a"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/lib.rs",
+          "bytes": 108951,
+          "mode": "0o644",
+          "sha256": "4c51f5ec314715bfe33d5cd11d110f8eea59540418559ea7ea00b3945c01c155"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/macros.rs",
+          "bytes": 1468,
+          "mode": "0o644",
+          "sha256": "4e152282a120ec322f0873c65d2c334d7161f0085e91c52d45793c87f83e3e5c"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/simd/avx2.rs",
+          "bytes": 6938,
+          "mode": "0o644",
+          "sha256": "ce35db9ab9783880f44786a9d65727b0c5862a957d845e9f3d8a358b3ca4b01a"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/simd/mod.rs",
+          "bytes": 3418,
+          "mode": "0o644",
+          "sha256": "4fe941717937542c4c88eb95ffefb26db8492e4b5a1d46696fce0b5329702a21"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/simd/neon.rs",
+          "bytes": 7464,
+          "mode": "0o644",
+          "sha256": "fed66a5d37873dbf901ad2b69e9d08711c570a4a5fc958e13539808501ec9ac3"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/simd/runtime.rs",
+          "bytes": 1496,
+          "mode": "0o644",
+          "sha256": "fec921120b04042d9c3dbc78ced3477e112f16e4d06be68ac8d50ddce54b8da7"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/simd/sse42.rs",
+          "bytes": 3883,
+          "mode": "0o644",
+          "sha256": "04c1c6f29375eb87d0e7712deadd9ba3c94d20525b67ff869a266cc6b75cedf6"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/src/simd/swar.rs",
+          "bytes": 7375,
+          "mode": "0o644",
+          "sha256": "24d15cfaa7b1ac8f2a5ff74a590eb0e9f0c87de6058c2c65919e33f9f1923080"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/tests/uri.rs",
+          "bytes": 102934,
+          "mode": "0o644",
+          "sha256": "62664aa2db82b2b24174ef74b7b00b675806608bfcb64763f97b639b62dd3701"
+        }
+      ]
+    },
+    {
+      "name": "hyper",
+      "root": "vendor/ssx-http-source/hyper",
+      "manifest_sha256": "55398bc277aab4fb8e13cfc37e7758054f225d2f58bf3679c03682cb388e6833",
+      "files": [
+        {
+          "path": "vendor/ssx-http-source/hyper/.cargo_vcs_info.json",
+          "bytes": 94,
+          "mode": "0o644",
+          "sha256": "ce2a9a274c279810c04796e650842b1db82faac0a8da8a59a5f2cd536774f256"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/Cargo.lock",
+          "bytes": 16953,
+          "mode": "0o644",
+          "sha256": "eccfa5f4325ec5623d82c7ef8a1b598a647a885f0048962ed1b558bf7547d023"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/Cargo.toml",
+          "bytes": 7049,
+          "mode": "0o644",
+          "sha256": "55398bc277aab4fb8e13cfc37e7758054f225d2f58bf3679c03682cb388e6833"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/Cargo.toml.orig",
+          "bytes": 9989,
+          "mode": "0o644",
+          "sha256": "b8f4b122b2720d5f8d51dde90ed38d731e63ab532a7cc6f4b00095404be1afa6"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/LICENSE",
+          "bytes": 1062,
+          "mode": "0o644",
+          "sha256": "2d01890414494742ba4a509fcec8efa40f6d8be22cbd72be7cff08d6fda4ec89"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/README.md",
+          "bytes": 1606,
+          "mode": "0o644",
+          "sha256": "9f8d9269b8bfb0cfb17d119c65cebcc33f67310bcec7fbf06b8527def78c1502"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/SSX-PATCH.md",
+          "bytes": 1935,
+          "mode": "0o644",
+          "sha256": "270a6696f85b33d647d7e8511070567a9952cefa4d66a8a7cfa69b2c95a944dd"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/body/chan.rs",
+          "bytes": 9954,
+          "mode": "0o644",
+          "sha256": "ae030d3294c4608571b22e24a219684aa289f4980d2f7dad054a306fb3779ad9"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/body/incoming.rs",
+          "bytes": 17960,
+          "mode": "0o644",
+          "sha256": "beda2a554f36c93036ebba3cf687aea4cab79c291213192df488c016402f2b5b"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/body/length.rs",
+          "bytes": 4016,
+          "mode": "0o644",
+          "sha256": "81a1ec988bc76df77a65a6a34d47c6935eb3f72f242bdc6f0c141e02e9a6f498"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/body/mod.rs",
+          "bytes": 3222,
+          "mode": "0o644",
+          "sha256": "5296424f2f8148925c8cf18992e4d59b827b9fa84eb8b3a8dad040c532ce04ef"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/cfg.rs",
+          "bytes": 864,
+          "mode": "0o644",
+          "sha256": "de5fee5bba45a982c10e8f09fc24677be5494bf6da0b39a3a132f0f6eb3fe41e"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/client/conn/http1.rs",
+          "bytes": 25682,
+          "mode": "0o644",
+          "sha256": "b463ecca328eb6968391ddd2826d420c7ad6272c084438300b809727fc2bad07"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/client/conn/http2.rs",
+          "bytes": 26357,
+          "mode": "0o644",
+          "sha256": "0ec553b8106fbc1eec7ed2b84ce4f37128512e4bbbf73096b822c2c1a8bbfcb5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/client/conn/mod.rs",
+          "bytes": 843,
+          "mode": "0o644",
+          "sha256": "9a3a11f287ac5f8a2eb2f27af4d66cf201f92dc580f773f9cb5495f32756ee28"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/client/dispatch.rs",
+          "bytes": 16517,
+          "mode": "0o644",
+          "sha256": "cce049418dcd9e1700b87701d6e78a4a021ba0e9912e9b669fec3d3f037d4e29"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/client/mod.rs",
+          "bytes": 758,
+          "mode": "0o644",
+          "sha256": "6bab8369943bad42c3258eff7631efc757fa6db8c56bf4271dc48f1c45b243a5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/client/tests.rs",
+          "bytes": 8715,
+          "mode": "0o644",
+          "sha256": "de0001609ef0b82d34d6e152b20d19f0b2f79ab6708bc4b3748a40acd3325238"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/buf.rs",
+          "bytes": 4023,
+          "mode": "0o644",
+          "sha256": "5fc624b4bebfada06c394babe3e654346f51cf48b9465a12e4d21e3e783284c1"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/date.rs",
+          "bytes": 3455,
+          "mode": "0o644",
+          "sha256": "6b48438b51d0cccb110112acb0eb5cbd87f5ad8089bf5301c633548e801baae9"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/either.rs",
+          "bytes": 959,
+          "mode": "0o644",
+          "sha256": "cf162a4087419ea3d83514177da81813e301736bbe5399b58f39c96f214c6429"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/future.rs",
+          "bytes": 559,
+          "mode": "0o644",
+          "sha256": "dbeb3a936470ad0fc320780654c6437b9e94c17795ad33a5999879cf8bbe9002"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/io/compat.rs",
+          "bytes": 5073,
+          "mode": "0o644",
+          "sha256": "cf65d083ca6d83cd627cf787dd12c0223714305adfeb3f2ec9277c62d5a0ced1"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/io/mod.rs",
+          "bytes": 251,
+          "mode": "0o644",
+          "sha256": "1f9002411f8a74be746e86d7a6afa5a7c3bdfe7c75943bed5ac752b802b1594d"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/io/rewind.rs",
+          "bytes": 4543,
+          "mode": "0o644",
+          "sha256": "b31df6879e14b2d6fb0d07eb5a43033eed9592f68770863bde4303597d958122"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/lock.rs",
+          "bytes": 367,
+          "mode": "0o644",
+          "sha256": "7af9938238eb1fc1176d0f97a04f8a286d632cd9283b0afcf1f075ecd6bbe25f"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/mod.rs",
+          "bytes": 718,
+          "mode": "0o644",
+          "sha256": "c0a7b8316329e37b6e5776fe585adb9ef482e889de5d61634dac686a69b480bf"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/task.rs",
+          "bytes": 1724,
+          "mode": "0o644",
+          "sha256": "a85877dfc0d233dacf6df0568d135ee7b0abb1f54873cc237bbdf4e14240edf5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/common/time.rs",
+          "bytes": 2700,
+          "mode": "0o644",
+          "sha256": "348a438955d3984b0244090bd8f37c10e6626ecc675bdc08f964b5217b1f9ef1"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/error.rs",
+          "bytes": 26806,
+          "mode": "0o644",
+          "sha256": "22b72baf2c46ced7768006271d3752efc2f78cf848ef138540db6adbdf63ea10"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ext/h1_reason_phrase.rs",
+          "bytes": 6724,
+          "mode": "0o644",
+          "sha256": "14ce65c6ab3d8f5437ccbf7296e02d7a57f25e82d6146ae4b220efe289f2ceeb"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ext/informational.rs",
+          "bytes": 2317,
+          "mode": "0o644",
+          "sha256": "1e5618061f60f55beacc7790f7b817be3dd1997ed1356668161802a6bfd73bc0"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ext/mod.rs",
+          "bytes": 10397,
+          "mode": "0o644",
+          "sha256": "9fe244f5a2d989635c6d422f9658153d8c2f2e3836a5362237581dabe85c7967"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ext/send_operation.rs",
+          "bytes": 1051,
+          "mode": "0o644",
+          "sha256": "26676183dde5bba0773b2f0b4904a64fbb1f0c7d5b7ec8b3b4c9242b8e2cad44"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ext/source_read.rs",
+          "bytes": 1088,
+          "mode": "0o644",
+          "sha256": "2ff4650ac2a52f6b50a5fe067a6ca44b6d9b2b94197893b2cf90571a09546868"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/body.rs",
+          "bytes": 11316,
+          "mode": "0o644",
+          "sha256": "614955cfca938025a7b471d9bc91004edfd1ff028b66553ce757b5b0ec040dce"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/client.rs",
+          "bytes": 10806,
+          "mode": "0o644",
+          "sha256": "7da8af38624d2059e6a7f03eeaeeff44bb6424fb580ad41a361663c9342ce5bf"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/error.rs",
+          "bytes": 3104,
+          "mode": "0o644",
+          "sha256": "dd269cd749cfe2679ba499e9dc0832469cbf4f8101157fd88d00c0fb526868d8"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/http_types.rs",
+          "bytes": 25143,
+          "mode": "0o644",
+          "sha256": "e2bb6c4dcccc79c41bb66a25114cd11e73e9baf15dbc0961f94d2ac1bcf8cabc"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/io.rs",
+          "bytes": 6946,
+          "mode": "0o644",
+          "sha256": "1d70f9ffca6dfb6131f83c75e7b5e3631dd1a25f1854032a40891622b016ac25"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/macros.rs",
+          "bytes": 1785,
+          "mode": "0o644",
+          "sha256": "6bb6f08224be10c40d98434e2130dea3c9ca3c40b9d11b18f43619624148f080"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/mod.rs",
+          "bytes": 3243,
+          "mode": "0o644",
+          "sha256": "80639b0ff428ff21ebf1e87c7800558002efc5f51424fe21fba6bf57ca8818e6"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/ffi/task.rs",
+          "bytes": 19347,
+          "mode": "0o644",
+          "sha256": "3d81ac2f00965c7dd24c265ca733776abe5d3ec404dace230d70d204bcb624c5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/headers.rs",
+          "bytes": 6712,
+          "mode": "0o644",
+          "sha256": "c8acc76bb2a2aac07896df1e356d84b7c1d9d718594cf950277b3b5ffbe98fae"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/lib.rs",
+          "bytes": 5510,
+          "mode": "0o644",
+          "sha256": "d2db6fe1da5f09a8062a8fb4f44fac931a17220f5c18603ff455846706b3d243"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/mock.rs",
+          "bytes": 6380,
+          "mode": "0o644",
+          "sha256": "7c77d16f952bda6ce51995548b1a1b8652739fca70115df96598440a524d86d4"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h1/conn.rs",
+          "bytes": 52220,
+          "mode": "0o644",
+          "sha256": "6494033e2abb052b5be4dcef0f61bcd65339360696933f9aa43f09ea8b99e64c"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h1/decode.rs",
+          "bytes": 43205,
+          "mode": "0o644",
+          "sha256": "5fc4f3a580cdeef18ad986fac7d63099637d0482acfd54f78d7ec08de40b295a"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h1/dispatch.rs",
+          "bytes": 49048,
+          "mode": "0o644",
+          "sha256": "e0416c9983bc27d4468f103d730479efbae62b335aee0543642787e991d29872"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h1/encode.rs",
+          "bytes": 21963,
+          "mode": "0o644",
+          "sha256": "eec0acd88ff2a10b3d981417b2c6daf2aef7828a9197d1b16e632a21059bf136"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h1/io.rs",
+          "bytes": 35700,
+          "mode": "0o644",
+          "sha256": "e55359959393afc7a96d1961aae2e362657c67d250f79e2e7bcb13a307c4dd0e"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h1/mod.rs",
+          "bytes": 2973,
+          "mode": "0o644",
+          "sha256": "f35f0b8ed6ee959694b8776acc0d7d754b0e4718a755b2b20d1fb8c8828dbeae"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h1/role.rs",
+          "bytes": 136472,
+          "mode": "0o644",
+          "sha256": "ee42a2e80eca9ac06c9558c44ed0bcfed4dc556797cf0e9fe46797970ab96813"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h2/client.rs",
+          "bytes": 26308,
+          "mode": "0o644",
+          "sha256": "56d715d09cdeddb91606dd0a9cfaa3de360ef31c07179ab9df6d24d9da0868af"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h2/mod.rs",
+          "bytes": 11705,
+          "mode": "0o644",
+          "sha256": "8f10d6023aa310984b7e9450e9fe9db2dde3a5c34ad6f78c6a16210ad868258a"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h2/ping.rs",
+          "bytes": 15086,
+          "mode": "0o644",
+          "sha256": "44cdfcd5ecef5fc7d5ee42e87ba4be6a1f02ba13c6bb813d0a37cb6c9162293c"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h2/server.rs",
+          "bytes": 19675,
+          "mode": "0o644",
+          "sha256": "4a31750ff85d513011234d497cd00114a6b8ebb83e7c416cdfbace185e9fb47f"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/h2/upgrade.rs",
+          "bytes": 10171,
+          "mode": "0o644",
+          "sha256": "ce6bdec717c291a4ecbbc2354d3e1170875d05661946dd1ab9d2af2e58ccb376"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/proto/mod.rs",
+          "bytes": 2080,
+          "mode": "0o644",
+          "sha256": "7a1ac66edcc24b364eae3581abf151459a5259b4c521561aa7203c9ca4473da4"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/rt/bounds.rs",
+          "bytes": 4352,
+          "mode": "0o644",
+          "sha256": "bc1d1865d67672625afcfef4ef495c249f94b73c9cd6910662d3aed2e73d0f32"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/rt/io.rs",
+          "bytes": 17532,
+          "mode": "0o644",
+          "sha256": "97231117887089e0a9fcd165b14f839c9abb6e3fc75dee5c02cb76604ae9730e"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/rt/mod.rs",
+          "bytes": 1574,
+          "mode": "0o644",
+          "sha256": "4bdc9348a48e924b262c965265863a7ff465881f91c393b019120854241cd386"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/rt/timer.rs",
+          "bytes": 4307,
+          "mode": "0o644",
+          "sha256": "9f377be659ac9f60a5de4716d17bea6dd6f1af1f5693166db4d2bbb3b8b2c4f6"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/server/conn/http1.rs",
+          "bytes": 20465,
+          "mode": "0o644",
+          "sha256": "6f84d0e780f49dc8745b9e54125edf1360b1ec54cada21c0a238e5098decf162"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/server/conn/http2.rs",
+          "bytes": 10979,
+          "mode": "0o644",
+          "sha256": "625bc621eab3dd7110574a8e5e0bc9bfe931556d062cfea8cef104c708802ea5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/server/conn/mod.rs",
+          "bytes": 942,
+          "mode": "0o644",
+          "sha256": "b2393dc0d68c09b560f7c9bcc61ed3bf99fce4d746eda9e1ad158891ee56f2be"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/server/mod.rs",
+          "bytes": 378,
+          "mode": "0o644",
+          "sha256": "192142f7d2f2da63699abeaca0bbfedc06bd1714531da2e53795828da5e946f3"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/service/http.rs",
+          "bytes": 2076,
+          "mode": "0o644",
+          "sha256": "74b6a556f77bcbf6d2a17e8be3d619c54cc2e73f04bcb66666169d3f40c78a11"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/service/mod.rs",
+          "bytes": 1065,
+          "mode": "0o644",
+          "sha256": "91711508cdef3879404859238f5978eb3e066dcdae1c2c06c8bfd84787103053"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/service/service.rs",
+          "bytes": 3918,
+          "mode": "0o644",
+          "sha256": "e08f14d369311406bf34159f4e831d1dadd5be83bc78a21fb3dad78031017df6"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/service/util.rs",
+          "bytes": 1954,
+          "mode": "0o644",
+          "sha256": "a35d37abcd2fcf5c3c6a0c0241a9a9361922fe0da989f3314ab0b490db6b2b0b"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/trace.rs",
+          "bytes": 2551,
+          "mode": "0o644",
+          "sha256": "a766c472433c7569440862e978eceeea78220af170220e9fdc90b71bab731344"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper/src/upgrade.rs",
+          "bytes": 12656,
+          "mode": "0o644",
+          "sha256": "a9406f2cf45bb2f3574371a60cab20a60733f36fee65828c4f395f1fcf31e520"
+        }
+      ]
+    },
+    {
+      "name": "hyper-util",
+      "root": "vendor/ssx-http-source/hyper-util",
+      "manifest_sha256": "533ef224d8f5b8ab65a3c75991753ab64dfd1367227a0f7ba6d023ffeb4b2ab1",
+      "files": [
+        {
+          "path": "vendor/ssx-http-source/hyper-util/.cargo_vcs_info.json",
+          "bytes": 94,
+          "mode": "0o644",
+          "sha256": "f94d31dc5ef0005a0f13752db671f6181a11f55cf4dc13b0ffa907df7b5ea07e"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/.github/workflows/CI.yml",
+          "bytes": 3190,
+          "mode": "0o644",
+          "sha256": "7ad54078dafa6954c6281104d024013b70d6507f652b6cba6321fe3d16a395dd"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/.github/workflows/rustdoc-preview.yml",
+          "bytes": 3319,
+          "mode": "0o644",
+          "sha256": "41594e2b05d382d726793d81a4c9a391807d85cd425f234b994545e02aea44ba"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/.gitignore",
+          "bytes": 320,
+          "mode": "0o644",
+          "sha256": "b95521619d6ecdf500cd0e035fd4ddd9716147916ddd2ebf17f43213f357869d"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/CHANGELOG.md",
+          "bytes": 9079,
+          "mode": "0o644",
+          "sha256": "9f90c6c77ac3a8a32612779fd7bd07e064ec918db13e1b19d6521baf74c68ed1"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/Cargo.lock",
+          "bytes": 21235,
+          "mode": "0o644",
+          "sha256": "63eec12a60cf824c88c06c001dcfc4f211f3161599c9f8ebc2aa5d4ea7278311"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/Cargo.toml",
+          "bytes": 5175,
+          "mode": "0o644",
+          "sha256": "533ef224d8f5b8ab65a3c75991753ab64dfd1367227a0f7ba6d023ffeb4b2ab1"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/Cargo.toml.orig",
+          "bytes": 3670,
+          "mode": "0o644",
+          "sha256": "ecdace19ddd41ff8f9d3c2b87d4cdc3daa1c5820d64a268817f6431ab1ba856c"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/LICENSE",
+          "bytes": 1062,
+          "mode": "0o644",
+          "sha256": "9e0a97848ea543aef745c98e84fde696a9a3e0735538f6daefdd3cb1942effc1"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/README.md",
+          "bytes": 436,
+          "mode": "0o644",
+          "sha256": "b47cc5fcb41e5d802bd175f0014f5636eefb897419720ab125b446e0b7f6f666"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/examples/client.rs",
+          "bytes": 1070,
+          "mode": "0o644",
+          "sha256": "819859e84a75857828bfd47d6e653466ddd09e8de1ef36cc9367c2cb3307db12"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/examples/client_tracing.rs",
+          "bytes": 1871,
+          "mode": "0o644",
+          "sha256": "0c3c23752c34f9013204cb20a4ca62aefe8534cb971bfd28f11abd09837222ed"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/examples/server.rs",
+          "bytes": 2786,
+          "mode": "0o644",
+          "sha256": "040af5e11a3e1defca81160b28088d4ac6da94d53e7b3ef0171ca9f4104a7140"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/examples/server_graceful.rs",
+          "bytes": 2316,
+          "mode": "0o644",
+          "sha256": "e4d65a46c7d2f44266b5c540596da1e753eeb74c580c9265296352d6e8bde83c"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/client.rs",
+          "bytes": 71225,
+          "mode": "0o644",
+          "sha256": "7928a716dfe27da9fca7ce8dac1e3924f2d9e88246b9f5ad677bb48289b3b667"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/capture.rs",
+          "bytes": 6295,
+          "mode": "0o644",
+          "sha256": "e11c194268e124d617d7a174a28cfec35e7cc1573fed87eb5f14974a00e471aa"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/dns.rs",
+          "bytes": 10116,
+          "mode": "0o644",
+          "sha256": "3a4225a352ecc10c5724793697d967a58a5a6ac1e8f908eb4c0248e8e7d36657"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/http.rs",
+          "bytes": 51864,
+          "mode": "0o644",
+          "sha256": "40f571d7b26e1d3f5f239e48aced0187f9535005c83841e2d7b982ee52e44fb6"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/mod.rs",
+          "bytes": 12370,
+          "mode": "0o644",
+          "sha256": "0b471b9813f46bdb80ca2b2263d9adef5f89051b8230e528968a2b2fe87dcb20"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/mod.rs",
+          "bytes": 113,
+          "mode": "0o644",
+          "sha256": "2dc7d98c83f3303d9f275fe3517a251ed7b0bc78ff101ab8f641158ee6c98abf"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/mod.rs",
+          "bytes": 8633,
+          "mode": "0o644",
+          "sha256": "0f25e92ac7a75b91e8b7bfa68a82853fc5c14ea4b5e46fe0c02c097e77bff578"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v4/errors.rs",
+          "bytes": 473,
+          "mode": "0o644",
+          "sha256": "ae6df7f24ea4c81aaa955255ed61885f1fd5ffde597a050f6b08218f7c5ee134"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v4/messages.rs",
+          "bytes": 6697,
+          "mode": "0o644",
+          "sha256": "ff040b850a27a7aefcd2cdd4ce6d859847a6f6772fccab099e5a10704915bad1"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v4/mod.rs",
+          "bytes": 4838,
+          "mode": "0o644",
+          "sha256": "ffdf22b52c8be73999af7695552ea9cfa74372f193cecd5856c43712c62b156f"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v5/errors.rs",
+          "bytes": 1147,
+          "mode": "0o644",
+          "sha256": "e28013c08b05fc5743d9a475d4ab89bd563d22f0b2009b504f19b4974fde8880"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v5/messages.rs",
+          "bytes": 14487,
+          "mode": "0o644",
+          "sha256": "c4f5165d42e951f447eb04a48253b61cc082375cf34a971d0f7633770c0e5e83"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v5/mod.rs",
+          "bytes": 9481,
+          "mode": "0o644",
+          "sha256": "29bb17833d3167c80526553d13dce01406230e318e780b00385de39c2bd157f5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/tunnel.rs",
+          "bytes": 9739,
+          "mode": "0o644",
+          "sha256": "e584da5d3d91c65740a719a3a60d36d520e93e3a99289f0d80e04e2dff0383bb"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_schedule.rs",
+          "bytes": 3442,
+          "mode": "0o644",
+          "sha256": "6afd0ce248b3e8453a8c8db0bf41f3e0d412b2d8404a7bc6bc31c1e79bbd66f8"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/mod.rs",
+          "bytes": 305,
+          "mode": "0o644",
+          "sha256": "a893df119a025ce5e8226868f76130b50b15dd0a4c8ae007556b14f29cd3520a"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool.rs",
+          "bytes": 38184,
+          "mode": "0o644",
+          "sha256": "2628c26ac14dc48678f3cded2be7f5fd23e7c3304d5eeb99ca9a488e5bc2792e"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source.rs",
+          "bytes": 33489,
+          "mode": "0o644",
+          "sha256": "c611472be412f65842ed26845f9eac10b6277a3fbd56969e306eb4550545ad61"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime.rs",
+          "bytes": 27537,
+          "mode": "0o644",
+          "sha256": "679aa6127535d1880e2cf470c67777919d4c6ab47406e14510c25eb41a28ff3d"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime/io.rs",
+          "bytes": 5212,
+          "mode": "0o644",
+          "sha256": "ef8fb8ff7d89f00fd7ef74a16322b38c9481d115e24f606d5097745dddf259ab"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/mod.rs",
+          "bytes": 958,
+          "mode": "0o644",
+          "sha256": "f55757c447232eb50e0684386bed2952c7805ca0a652d44b57151f9c23262658"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/pool/cache.rs",
+          "bytes": 29392,
+          "mode": "0o644",
+          "sha256": "e3a2ef6305d6cbb0ab3832c113a7201a8f949139aa6f977074768b7ffc66c343"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/pool/map.rs",
+          "bytes": 5806,
+          "mode": "0o644",
+          "sha256": "80ac0d584b047a14503826a5e62a0c58b07a121658c55640eaf861eee02ebd97"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/pool/mod.rs",
+          "bytes": 323,
+          "mode": "0o644",
+          "sha256": "cedd0f9c035af53e1e41d5b09a811283b81aed573fb42fe6969ac123077283d6"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/pool/negotiate.rs",
+          "bytes": 19224,
+          "mode": "0o644",
+          "sha256": "ac747a3e229ed246641d66dfd32d93bc41bba1f16d85e54504c871da41399524"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/pool/singleton.rs",
+          "bytes": 25110,
+          "mode": "0o644",
+          "sha256": "014231ef327f47497d27654363c9949e05d582d50cb9a24000516a015e71a070"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/proxy/matcher.rs",
+          "bytes": 30228,
+          "mode": "0o644",
+          "sha256": "c2478808ea3894a8344020386b3cfa377c82637c7e66220097371051d394c329"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/proxy/mod.rs",
+          "bytes": 38,
+          "mode": "0o644",
+          "sha256": "1a6b7fdc17aa57aa356a5b8cd44c8a8401aa0a87258334ff8da62444a1b0885a"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/common/exec.rs",
+          "bytes": 1127,
+          "mode": "0o644",
+          "sha256": "7503861e9c5aa6c33c682bb9a0d9dc3a0e93a17b9f5402711f63d38069e34a29"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/common/lazy.rs",
+          "bytes": 1741,
+          "mode": "0o644",
+          "sha256": "f0c1fc4f5e6c0df3786f872f9915e399ca5a80b8f9fa5ad9d4898b943fbacb42"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/common/mod.rs",
+          "bytes": 452,
+          "mode": "0o644",
+          "sha256": "fd19cd60e4aeeb12a67e0719f268904485040cbc435dd80f4d9338acf5bb2200"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/common/rewind.rs",
+          "bytes": 3724,
+          "mode": "0o644",
+          "sha256": "333cfde1eefa3419de76ff65367d30a48e03560cc18f4b5770d883b98e7ac864"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/common/sync.rs",
+          "bytes": 2374,
+          "mode": "0o644",
+          "sha256": "047d79590bbbf59aae35664b1b38f4d0e6478aa10116ab33a9f231e59b3fa32d"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/common/timer.rs",
+          "bytes": 872,
+          "mode": "0o644",
+          "sha256": "8ee2b70568c2a87e1cd9e84084b11255deb995a3cc720723a787ee411a3a79f8"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/lib.rs",
+          "bytes": 2865,
+          "mode": "0o644",
+          "sha256": "a12123fb8ad0bcc12480a567099aa9836f2ca6c7c80eaacccfc738a557e9f731"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/rt/io.rs",
+          "bytes": 752,
+          "mode": "0o644",
+          "sha256": "97ac2c2bdd00347d772c4d6b2cd733dd78a646d7c0c60af4294ecbeb1a489887"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/rt/mod.rs",
+          "bytes": 425,
+          "mode": "0o644",
+          "sha256": "5726ebeb27da45b437aa65782915d1b335baf7ec6c2f3abb3a5f2dac24778514"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio.rs",
+          "bytes": 12096,
+          "mode": "0o644",
+          "sha256": "143023606be7994c8ecbf538eb5816cbedd62172cb3fbb5f981ea411a1581d28"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio/with_hyper_io.rs",
+          "bytes": 4531,
+          "mode": "0o644",
+          "sha256": "67b91e27248354ae138507a78dd62bbbe845ef16bcf6f59e00923c5877541f7e"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio/with_tokio_io.rs",
+          "bytes": 4751,
+          "mode": "0o644",
+          "sha256": "70f30a1475ed64047800da86b4e24a4a74e340be5046bc043f2b0b1ac8000fa5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/rt/tracing.rs",
+          "bytes": 19295,
+          "mode": "0o644",
+          "sha256": "5fb8be1bc1aec598707a73f949f28464c3e8da98f05cc5b4dee950b0070f6876"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/server/conn/auto/mod.rs",
+          "bytes": 45854,
+          "mode": "0o644",
+          "sha256": "0f28859d1e7f2b6dd9bb255a07cd6e11d5acc0caf87159ea9217ae5e1b3d67d0"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/server/conn/auto/upgrade.rs",
+          "bytes": 2013,
+          "mode": "0o644",
+          "sha256": "293d823c1fb34d4bb505f835b8b26255a7bafc10c56bc9235c3cb151ebb1e72c"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/server/conn/mod.rs",
+          "bytes": 91,
+          "mode": "0o644",
+          "sha256": "f192ca3fb030351ad22dba11f58edf02503598e3f9c18652a445f3973d16b723"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/server/graceful.rs",
+          "bytes": 16004,
+          "mode": "0o644",
+          "sha256": "39d6fc356a4112125ae61e1a083e0875a486ffc55904aa4697165b80df957e45"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/server/mod.rs",
+          "bytes": 92,
+          "mode": "0o644",
+          "sha256": "c30d25551b75ec6c2915ba9da0a5638488c2760a27c589c02415dec1441fb746"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/service/glue.rs",
+          "bytes": 1936,
+          "mode": "0o644",
+          "sha256": "e79b4226013d4b3eaaadaa72b2dc7dc264cd8f5b2267d907a19f4f0e1c1538f0"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/service/mod.rs",
+          "bytes": 1459,
+          "mode": "0o644",
+          "sha256": "e70a66aa974af3500cd0ab1e68397079f8b271af69276b6df90216df18420e0c"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/service/oneshot.rs",
+          "bytes": 1608,
+          "mode": "0o644",
+          "sha256": "55c2384ab2f5490faaf5f839cbd8abc8e3fd7bb24c870e7bd90ac760c6900f21"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/tests/legacy_client.rs",
+          "bytes": 57639,
+          "mode": "0o644",
+          "sha256": "58f889ce2f6fc51cfb02c6b7a08f80d8f059e85ba98275ec3353af460622fdb6"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/tests/proxy.rs",
+          "bytes": 25420,
+          "mode": "0o644",
+          "sha256": "d923304bb47e55a9653b45c2b186a3b845c01c14bf7775788152abd6e9126d35"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/tests/test_utils/mod.rs",
+          "bytes": 4779,
+          "mode": "0o644",
+          "sha256": "9f922de06ad05d8c88e31d08850b4d48e751726c503cb3fc661c69431bb428d1"
+        }
+      ]
+    },
+    {
+      "name": "rmcp",
+      "root": "vendor/ssx-sdk-auth/rmcp",
+      "manifest_sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a",
+      "files": [
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/.cargo_vcs_info.json",
+          "bytes": 105,
+          "mode": "0o644",
+          "sha256": "2e9efd3603fafd7a4125ebac74cc3fb9629645f8731d9ba3d3af32d00733f523"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/CHANGELOG.md",
+          "bytes": 65412,
+          "mode": "0o644",
+          "sha256": "2fdf8da6bf3052c375b3b0cc5613014a888a4237ce9d737387e7eaf37d9684ca"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/Cargo.lock",
+          "bytes": 72978,
+          "mode": "0o644",
+          "sha256": "658d9f9b421b359c234f44a071de8dd0cc7c25a5855759c23c2b3f4d04bafbe7"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml",
+          "bytes": 18405,
+          "mode": "0o644",
+          "sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml.orig",
+          "bytes": 13405,
+          "mode": "0o644",
+          "sha256": "6bd53bfd3ef16ad9485ca35cd5bb27da3275df911eed3f84b2480cb1ebe7e46c"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/LICENSE-APACHE",
+          "bytes": 10833,
+          "mode": "0o644",
+          "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/README.md",
+          "bytes": 3382,
+          "mode": "0o644",
+          "sha256": "e2bed55087789ee5f9195ef39eb17c9ba2430a20806e89f3cd1b070a4364812b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/SSX-PATCH.md",
+          "bytes": 3484,
+          "mode": "0o644",
+          "sha256": "2f7941f342e474094c9c5a1e41c0bd7911ce6dfb55d17e81d4a8cde733bed726"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/build.rs",
+          "bytes": 858,
+          "mode": "0o644",
+          "sha256": "31b905abf91292bab290271e993e347e06a1944e6305f742f69dbd01e6b89349"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/error.rs",
+          "bytes": 2599,
+          "mode": "0o644",
+          "sha256": "240e197f7a463e848202cc4883ec033c94a20a47d86201b28c9dc80a4d25818a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler.rs",
+          "bytes": 86,
+          "mode": "0o644",
+          "sha256": "dc1087d79c9566009906a26162321096ab77aea17499dfabcbb49964aba5b9ed"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/client.rs",
+          "bytes": 16235,
+          "mode": "0o644",
+          "sha256": "30fa690622fc9e96274471fce8c210eb12daac81d44ee0d45737c90df061de7f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/client/progress.rs",
+          "bytes": 3173,
+          "mode": "0o644",
+          "sha256": "d190d05e4b22ad49be7820594b0463272de031f5b97084b5c50c0a157758443e"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server.rs",
+          "bytes": 37340,
+          "mode": "0o644",
+          "sha256": "f5f48bc77c329c01505c26f59ca93cfc16e1be558b219459ffc950c238bde22b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/common.rs",
+          "bytes": 13356,
+          "mode": "0o644",
+          "sha256": "0b7b2b8511891dee305245459eedfd7cb4bdef8f0b2cd6c3806144e53282cd2f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/prompt.rs",
+          "bytes": 13710,
+          "mode": "0o644",
+          "sha256": "5d9ba6444c1b92da54c106f62dd4734ace3e1ff3ad331207c818ba3446d489ee"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/resource.rs",
+          "bytes": 1,
+          "mode": "0o644",
+          "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router.rs",
+          "bytes": 7752,
+          "mode": "0o644",
+          "sha256": "d3d3c473bfcac764461f410a989c1b41b465048d29b790d169bf35aab7a8cb23"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/prompt.rs",
+          "bytes": 5450,
+          "mode": "0o644",
+          "sha256": "2245cac16b4d82c89363589f876681e1911e5cf70170c42ed3cddbdfe0f03eed"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/tool.rs",
+          "bytes": 22888,
+          "mode": "0o644",
+          "sha256": "aeeaaf8a6032c457833fca1d25367201349354f0a7e28a460db3fed077f4a8a6"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/tool/tool_traits.rs",
+          "bytes": 10785,
+          "mode": "0o644",
+          "sha256": "4fca15a89dac8627c79488d7d2ed53df84d730a0e2b977a00781d6b35fab0044"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/tool.rs",
+          "bytes": 13965,
+          "mode": "0o644",
+          "sha256": "8249f076e95dec0c29e3a4ed244afdd246839259beb39284c45ca4136c2a7457"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/tool_name_validation.rs",
+          "bytes": 8075,
+          "mode": "0o644",
+          "sha256": "1ada28573a196eb2745a24d98fcccff7b4553deae898f4840fdd0fd5cd215897"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper.rs",
+          "bytes": 66,
+          "mode": "0o644",
+          "sha256": "e594439b9d2c2df8911fb16c93290c55f717db83d74098b9d68817da44f9befe"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper/json.rs",
+          "bytes": 1429,
+          "mode": "0o644",
+          "sha256": "571fa0e222aae051add1aa9ef1c77130a3cb55950e7884a55cb3889e2b6195c3"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper/parameters.rs",
+          "bytes": 2032,
+          "mode": "0o644",
+          "sha256": "4b2ba0e54cd347a38978bfa6c8fa1e2dec81ff478937b2c4c8601535549a9d4f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/lib.rs",
+          "bytes": 1344,
+          "mode": "0o644",
+          "sha256": "075c3bf5ccd74441c182da6cd3cf44943d7a5cb6009c1b5e30dc63fee44e4846"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model.rs",
+          "bytes": 200285,
+          "mode": "0o644",
+          "sha256": "b0e808e9f325235e3a19ba1a8b95feec5226b57bf243d02d3dcce81f4c3df63a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/annotated.rs",
+          "bytes": 4074,
+          "mode": "0o644",
+          "sha256": "b84a728bcfa14ce969d9407c3833050b4c6a5a5165bafdd69741a1ec51652e6a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/capabilities.rs",
+          "bytes": 25586,
+          "mode": "0o644",
+          "sha256": "078db0cf7e7a9569203897cb1ed671ba789c99fec631b3f16e8a0d1fc10bc1c9"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/content.rs",
+          "bytes": 15045,
+          "mode": "0o644",
+          "sha256": "dee55056d587a4c4ee56114526167bb8cc7af8eebb4fc621465913330fe622b4"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/elicitation_schema.rs",
+          "bytes": 78189,
+          "mode": "0o644",
+          "sha256": "3921e0ebbad32b0df6fe4c788f35914e786ce4356a79c471825d20f72a8e37cf"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/extension.rs",
+          "bytes": 9728,
+          "mode": "0o644",
+          "sha256": "64eec582535739e33ed6c7ecf8aeccc9a8c1558d1457acc8437f4e3304c72ac2"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/meta.rs",
+          "bytes": 29376,
+          "mode": "0o644",
+          "sha256": "2a6081a34f31486f227522d6f9d6efc334b5ee62ed371104db66c1e020ed8dcc"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/mrtr.rs",
+          "bytes": 20026,
+          "mode": "0o644",
+          "sha256": "462fc966dd35ce4a1deba3812fca4b2a2a7e614e50617acde0ab98c665d5612a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/prompt.rs",
+          "bytes": 11134,
+          "mode": "0o644",
+          "sha256": "8e8f682dd127fc764d2ebd2b0eee7f7e79528202c4851eed1f2ebe11577178b7"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/request_state.rs",
+          "bytes": 55371,
+          "mode": "0o644",
+          "sha256": "41e69cad94869be4b93120f3cd39a10fad4a3730585240b712c2ada1b311b416"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/resource.rs",
+          "bytes": 10600,
+          "mode": "0o644",
+          "sha256": "474ec6cb64f5e60711ebfd80269dcc604978daa6030dd08d20eb7b3aeef5789b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/serde_impl.rs",
+          "bytes": 35002,
+          "mode": "0o644",
+          "sha256": "14e5683f5a4b180a7b326953206d1205ebd1f17acb6aaceb0cd8d0bef6a701e0"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/task.rs",
+          "bytes": 19474,
+          "mode": "0o644",
+          "sha256": "28f5f256ce73d733d7536d20abe900e3b0f6533425b23e9ee797c10e08f66858"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model/tool.rs",
+          "bytes": 8239,
+          "mode": "0o644",
+          "sha256": "5251faf9065961e2a8521ef5e91eb8466885c609e1c5d2ea716604b51392f47e"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/service.rs",
+          "bytes": 74846,
+          "mode": "0o644",
+          "sha256": "d4a625e7e49009b2ce25b4498ddef88ef6242915b7aa2e53826da4e9b531d473"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/service/client.rs",
+          "bytes": 103759,
+          "mode": "0o644",
+          "sha256": "a122773fd2aa273e7707c3b083ce78094acae1c19fd80f319ce4bebc8d4f0814"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/service/client/cache.rs",
+          "bytes": 14262,
+          "mode": "0o644",
+          "sha256": "f036c13be5dd5058867e9cc1b8d0764fa179f6b39978da650d91627785db81e6"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/service/server.rs",
+          "bytes": 54627,
+          "mode": "0o644",
+          "sha256": "8637e3d780d7b2a6708871998e0fcc7ff416bbb615df9ff4199e953562c0d794"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/service/tower.rs",
+          "bytes": 1445,
+          "mode": "0o644",
+          "sha256": "4b1971d7ab78ea57ef32380120ed8c74865632e034e51ab7d46448adafef8d29"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/task_manager.rs",
+          "bytes": 39036,
+          "mode": "0o644",
+          "sha256": "814e43d227380982cf076005047141991f08931a1f2226f0eee72390fd9f2529"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport.rs",
+          "bytes": 11013,
+          "mode": "0o644",
+          "sha256": "94cbb9c311f7c4e4dd61e231e3574e2e581941a4b355afb2e2be4396e0e25d31"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/async_rw.rs",
+          "bytes": 28821,
+          "mode": "0o644",
+          "sha256": "b4234e7d5df9f80cdcc67755f64c72e4fe7909749754ff569e518e6ebcb7d846"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth.rs",
+          "bytes": 376598,
+          "mode": "0o644",
+          "sha256": "80e2e7d6ec5626cba8441518af7f9c4b73a79540db9b129c712dbf47e186656d"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/enterprise.rs",
+          "bytes": 28961,
+          "mode": "0o644",
+          "sha256": "e685c7bd4c5087a14b834805c1afd595a7d9d2c40a8507111750466836bab5c2"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/enterprise_tests.rs",
+          "bytes": 44987,
+          "mode": "0o644",
+          "sha256": "77aa0d65839d5e4e41c0e0fab1aed5ff2e6e97558236146d28c1a3fc02a9d7da"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/child_process.rs",
+          "bytes": 10311,
+          "mode": "0o644",
+          "sha256": "8612b2607643c89d1bfcabf222070b5f9355df788aabd0cb9d331d764263810e"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common.rs",
+          "bytes": 660,
+          "mode": "0o644",
+          "sha256": "8a4a32f5e206f276754170232224ac9697de6a53240a7482d2a98b53380ec908"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/auth.rs",
+          "bytes": 81,
+          "mode": "0o644",
+          "sha256": "7e0e1e85ec7f8836dd2295c7608eb8e2cf05e5b72306277dfe2598fa538e9ea4"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/auth/streamable_http_client.rs",
+          "bytes": 14265,
+          "mode": "0o644",
+          "sha256": "7746ca9648b04514b96a9b1e8c1e481a914adc3d8db23b6dee647f5eb156ad89"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/client_side_sse.rs",
+          "bytes": 31289,
+          "mode": "0o644",
+          "sha256": "c09cfc644ba4fcec523d255dd014452755e0da3dc1af1bdb83e6122aa59a5544"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/http_header.rs",
+          "bytes": 4783,
+          "mode": "0o644",
+          "sha256": "910010a61f31a5fbd39f583638fc69132d29da757c4336081569dc09a9a93c38"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/mcp_headers.rs",
+          "bytes": 24952,
+          "mode": "0o644",
+          "sha256": "dcf23cff04bb514dbca9a1b9a3931fbd240dd356403ecba7b46449d3f4c3de59"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/reqwest.rs",
+          "bytes": 89,
+          "mode": "0o644",
+          "sha256": "469486be9b576c6a1ff6a40121dd948e7b46d1de82ad5322a6438cb1567099e3"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/reqwest/streamable_http_client.rs",
+          "bytes": 24748,
+          "mode": "0o644",
+          "sha256": "b713b293a5b7f64a8ac625b40863cb7019167a55d6ec80c999e447fa797aec03"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/server_side_http.rs",
+          "bytes": 12899,
+          "mode": "0o644",
+          "sha256": "c4f82b5a6c36b8e48d8124741c5aaa0764b8e27afb16ee022f19af987505a376"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/unix_socket.rs",
+          "bytes": 22685,
+          "mode": "0o644",
+          "sha256": "40166733db6aa4ceb12a4a09681333aabad05e56c1e0839f4798cfed552500ec"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/io.rs",
+          "bytes": 201,
+          "mode": "0o644",
+          "sha256": "86cbe078a7c03964340570d8940ca6a3276cf7c8056dbd4d64a9f654a7fa077f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/sink_stream.rs",
+          "bytes": 2388,
+          "mode": "0o644",
+          "sha256": "9fad3dad1a6adbbc231b52929f3360bbd876fcd167cd8284b06b67dcd882935b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_client.rs",
+          "bytes": 105770,
+          "mode": "0o644",
+          "sha256": "72a36d33f4906ba9c50f99ce2cd8252fad193e7efb65d24b411c873fdfa6df39"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server.rs",
+          "bytes": 348,
+          "mode": "0o644",
+          "sha256": "d6f452846ef27b422c2572e1b9e8b9955f95a57d0587e1185612a147275ede66"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session.rs",
+          "bytes": 6811,
+          "mode": "0o644",
+          "sha256": "aa3f798d4c6eecc6682134f43438adcc5d4ff1640a202109843d48d276b5fc30"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session/local.rs",
+          "bytes": 52086,
+          "mode": "0o644",
+          "sha256": "bafdbe6ad4bc4a272cb95a84d3324962d5c1be51f5bec5fb081b56568ca838c7"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session/never.rs",
+          "bytes": 3831,
+          "mode": "0o644",
+          "sha256": "5a490461b6f7f84bfb02b7e7aa0b69861527996e1f8d786744cf07beb4400174"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session/store.rs",
+          "bytes": 4788,
+          "mode": "0o644",
+          "sha256": "7b7efb9f014464a060fa52fb6cdc4cf4acc734035f51048c5c39a4e5d15a01ae"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/tower.rs",
+          "bytes": 98041,
+          "mode": "0o644",
+          "sha256": "281352686d04c7a45dd010b2ee158737cad1272e0e3b667e255baab48a6a5147"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/worker.rs",
+          "bytes": 19274,
+          "mode": "0o644",
+          "sha256": "efc23380046726fb20daea8ad868ca38825155f9b6ddb1ec3fe51644632aac76"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/ws.rs",
+          "bytes": 51,
+          "mode": "0o644",
+          "sha256": "57025a04e15634a80dc4e8247601b62014ce835568b049f3ea433164bdd7811b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/common/calculator.rs",
+          "bytes": 1537,
+          "mode": "0o644",
+          "sha256": "aace1a629823077eccfd2fc22da9c02c03929e0724df55c9b2270f0fd00efd8d"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/common/handlers.rs",
+          "bytes": 6358,
+          "mode": "0o644",
+          "sha256": "1d239d8b79d6943b42389b4aab8dc969c941772490b500dff1a2f57c9d70bd97"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/common/mod.rs",
+          "bytes": 38,
+          "mode": "0o644",
+          "sha256": "97f837d42a2c8133d5cff7d58910a67cef0a67798a728d23097f0d60e455f961"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_auth_error_classification.rs",
+          "bytes": 2824,
+          "mode": "0o644",
+          "sha256": "1452cd4bcaedf1d484e5799a889b0df3a373b17b7b712fd8b6f5a97b93b028a6"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_cache_hints.rs",
+          "bytes": 3358,
+          "mode": "0o644",
+          "sha256": "b99a0f230ee39a805f569382760b81dbd99210ed7e631efbe9f32edc9f3cb20c"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_cancelled_response.rs",
+          "bytes": 20963,
+          "mode": "0o644",
+          "sha256": "bab73041c697003d3b67efcf824846af9b236e2dec702399c3f630561510f57a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_client_credentials.rs",
+          "bytes": 8372,
+          "mode": "0o644",
+          "sha256": "fb4d715db23df97b270f81065c703ab911e473d392f3991a4acdeb6f09f039bf"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_client_initialization.rs",
+          "bytes": 5613,
+          "mode": "0o644",
+          "sha256": "70232ea02e09be3fa927ff91a9e2e0ff458ebc1f688e550309f70b5645a0c13a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_client_lifecycle_modes.rs",
+          "bytes": 29009,
+          "mode": "0o644",
+          "sha256": "2f1dee429d583750d69aba41baed7ceded9eeed0fcea6b1c8c36857cc949e154"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_close_connection.rs",
+          "bytes": 4076,
+          "mode": "0o644",
+          "sha256": "918772f5ceb6b3a8fa2a801b85ec94d0937e74db527397c0534b0e227c1e8489"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_completion.rs",
+          "bytes": 7003,
+          "mode": "0o644",
+          "sha256": "38eaa4c98ed94895b406be681d13a215976f0916bd96d230920816bd802200fa"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_complex_schema.rs",
+          "bytes": 2378,
+          "mode": "0o644",
+          "sha256": "1b5821bcb3efd7e101c5f27a7fb7fc98d964c9e7e57527ed021c872b2e2fd546"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_custom_headers.rs",
+          "bytes": 48177,
+          "mode": "0o644",
+          "sha256": "eb4b1dd8b438e3ae6499951eb8c3d86dd6d4eeb703dcfb485105dfa7199f99f0"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_custom_request.rs",
+          "bytes": 6297,
+          "mode": "0o644",
+          "sha256": "b73911b23eefb352a07baa5a4294b64f25a08b53525b31b6929dd10fa4db83e6"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_deserialization.rs",
+          "bytes": 14913,
+          "mode": "0o644",
+          "sha256": "77667c484fb67477b1e11017bd07ddf364b84a475177b3c0fe763ee68186f4d1"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_deserialization/tool_list_result.json",
+          "bytes": 835,
+          "mode": "0o644",
+          "sha256": "6bf673681ba3b6a30380f067076b0bbaa7c63950ecc5f77725ae0b8383baaa9d"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_discover_http_client_startup.rs",
+          "bytes": 11974,
+          "mode": "0o644",
+          "sha256": "8e2fd7e966468e38b43ce5cc30ba3e5976190668cb4c3381b660b3fa277e7013"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_elicitation.rs",
+          "bytes": 70460,
+          "mode": "0o644",
+          "sha256": "f0f8f7331694c5938d4715e3a61f0dc13d3791b09d92bff4aa3b37b9ff7c4cc4"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_embedded_resource_meta.rs",
+          "bytes": 3566,
+          "mode": "0o644",
+          "sha256": "265b8264a19853974aeadddb5512515e2d08574a41f0bc582dd1734f25a0c90d"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_handler_cache_hints.rs",
+          "bytes": 8876,
+          "mode": "0o644",
+          "sha256": "54919099a973fb82794de5d4161369483b0407121b19d1ff8a13ff71df5c1a60"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_handler_wrappers.rs",
+          "bytes": 973,
+          "mode": "0o644",
+          "sha256": "b0d24d7343fd9139110693b159a9a82ba8bb2ad9ca82bcbb08565a1c46fe2392"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_inflight_response_drain.rs",
+          "bytes": 4952,
+          "mode": "0o644",
+          "sha256": "f7a096bb9849de653bcb7b04967109729dff3921b7a48194449ffb62d4ffc685"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_json_schema_detection.rs",
+          "bytes": 5835,
+          "mode": "0o644",
+          "sha256": "5b5ac0b409b70385c2b43ddadf0f59a987279af59c088d72d5597df5e6b2d1d4"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_list_tools_result.rs",
+          "bytes": 1523,
+          "mode": "0o644",
+          "sha256": "088927eb3946af919a62059cd92ecc3913537a0f302ec7124839dde7f8759f73"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_list_tools_result/list_tools_result.json",
+          "bytes": 1553,
+          "mode": "0o644",
+          "sha256": "81a34ef905aad85620b72a4d03898ebb538abf6ec4e875a17b3ed88f93d33e73"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_live_oauth_refresh.rs",
+          "bytes": 8069,
+          "mode": "0o644",
+          "sha256": "d49fad3d673eee10b95e7297ec26462a1430cb43c1905e11817fd6b5818c42d7"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_local_client_handler.rs",
+          "bytes": 324,
+          "mode": "0o644",
+          "sha256": "454203858af20d8c88ee19c15d5fa5b17de8861c817d26c274b5a915d5ac5cc5"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_logging.rs",
+          "bytes": 10633,
+          "mode": "0o644",
+          "sha256": "8f43e9dd84d82bf4e4afff19090cab52a9ca5afb44be0b492e2e0c00bab50752"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_protocol.rs",
+          "bytes": 12994,
+          "mode": "0o644",
+          "sha256": "fa4cef7f65e0ef15f1bab4ea54a965d7e220b0c770ffbce3adca5af100f7506a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema.rs",
+          "bytes": 5923,
+          "mode": "0o644",
+          "sha256": "ef4ee3f9658cbc9878e753bcae5a71433dfa97c4dbf34f0ed6f1a9cf02e913eb"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema.json",
+          "bytes": 67263,
+          "mode": "0o644",
+          "sha256": "1d06e528a1858d16b071b32e1759730f455a7229a033682e7d19b71095c87842"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema_current.json",
+          "bytes": 67263,
+          "mode": "0o644",
+          "sha256": "1d06e528a1858d16b071b32e1759730f455a7229a033682e7d19b71095c87842"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema.json",
+          "bytes": 119691,
+          "mode": "0o644",
+          "sha256": "6a3a7a38e2cbc456e7aa8bc4d2bfeccffa26075d5ec3e3e69e2b7c49cfcdb7cf"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema_current.json",
+          "bytes": 119225,
+          "mode": "0o644",
+          "sha256": "afd49ef61c84f2df8c7167a848653004ac054905115fc60dc1cc096cf2059255"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_meta_helpers.rs",
+          "bytes": 3347,
+          "mode": "0o644",
+          "sha256": "43fef280b3ead4f122941834dee0fe98558e825ed0aa5754caab7b43b146167e"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_mrtr_behavior.rs",
+          "bytes": 25579,
+          "mode": "0o644",
+          "sha256": "e9600e04afe44d76ee4a137e050701296e35dc8aa86eaa8252a74225399b5774"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_notification.rs",
+          "bytes": 7524,
+          "mode": "0o644",
+          "sha256": "2c14dfc30d7180e679ba1459c103dfd007219feb56de1fee0ed38d45c602c7b3"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_progress_subscriber.rs",
+          "bytes": 3881,
+          "mode": "0o644",
+          "sha256": "ba58bc722306c64fdacf0671c809fdfa0e21df24bddd057dc5568caad0b03658"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_handler.rs",
+          "bytes": 4090,
+          "mode": "0o644",
+          "sha256": "7ec4d994751af16f35a249c709227ed0eecde208ab044221c598e9200b58461f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_macro_annotations.rs",
+          "bytes": 8204,
+          "mode": "0o644",
+          "sha256": "69cc34d9ddfff68d6ef146ef1859d49b3664e8dd10be5d83f62412249f9b2509"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_macros.rs",
+          "bytes": 11677,
+          "mode": "0o644",
+          "sha256": "dfa6c0730a579cbebb3bbd9f6bd394345c9a0383627f48cd2096b9a40273df1c"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_routers.rs",
+          "bytes": 4372,
+          "mode": "0o644",
+          "sha256": "e4ef7cc429b5e627b8f520a072fd7ee4393eda0c88354e081912047b56c670c9"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_protocol_version_negotiation.rs",
+          "bytes": 10604,
+          "mode": "0o644",
+          "sha256": "4d24f4b94249269e0640e3fcf99f74c6f5badc3ca3e8420615320f1ab8ab0dad"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_request_timeout_progress.rs",
+          "bytes": 6176,
+          "mode": "0o644",
+          "sha256": "7acf4a130cdc5d1ce1b19060d000264d339cb1cc78dd9a97d4f95bc5facc012f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_resource_link.rs",
+          "bytes": 3127,
+          "mode": "0o644",
+          "sha256": "d330fac925145bbc48b20eb1c143e19c21e93f6975a9a72c4f3af67fac88385f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_resource_link_integration.rs",
+          "bytes": 4604,
+          "mode": "0o644",
+          "sha256": "d30c81437c8d0c49b5eea0233cce99a7e07c5cc64f912913a8264f34f0b9a3ba"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_resource_not_found_version.rs",
+          "bytes": 3106,
+          "mode": "0o644",
+          "sha256": "6c367a131d799c078cb9e4b78b493bbf93864aa119cc875748cd46960e822cb3"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_result_type_version.rs",
+          "bytes": 2944,
+          "mode": "0o644",
+          "sha256": "334cd4f90b7830b914f8404450cdbf0298a35409900096379dc611cc4dbfde87"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_result_type_wire.rs",
+          "bytes": 6286,
+          "mode": "0o644",
+          "sha256": "19287f62f8010615e849208bc87df5195be5e9ecce274a21f1e312f8dbcf7397"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sampling.rs",
+          "bytes": 22787,
+          "mode": "0o644",
+          "sha256": "ec0f58b75c12164d3c27875d95529868ebb513db1c070d0b097ed7d952d4490f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sep_2260_request_association.rs",
+          "bytes": 9664,
+          "mode": "0o644",
+          "sha256": "0c31fdaf8a180a0c8c467b372d5bb9ce2e06e270d56370bf92ed5e5e726f8325"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sep_2260_stream_enforcement.rs",
+          "bytes": 11325,
+          "mode": "0o644",
+          "sha256": "542fa4eba005f450533ffff95ca628b797d678a9e6d1094af7d5128478043108"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sep_2260_stream_routing.rs",
+          "bytes": 5663,
+          "mode": "0o644",
+          "sha256": "259ca04eaba0b7d5b65093b21bde45f2eb76cb116cca83c56f75e2afcd4f7efe"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_discover.rs",
+          "bytes": 7964,
+          "mode": "0o644",
+          "sha256": "c1c708c63bcaae0bc13ec4d2a262e099fe60666546f83ac149451a39d980ae9d"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_discover_client.rs",
+          "bytes": 2270,
+          "mode": "0o644",
+          "sha256": "8fc7a835b2efb18d449d61432ee32d5e576bf9398b79f739fbd0f656ea4e2f0f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_discover_http.rs",
+          "bytes": 11879,
+          "mode": "0o644",
+          "sha256": "d502f8544a64046a0500ee75dfc7716e49c8067953bcfb74e41d9bd4813d6885"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_initialization.rs",
+          "bytes": 23194,
+          "mode": "0o644",
+          "sha256": "209d38474ed722faec2b9f020b982831fb9914ae6f63e22708349b42c1ac076f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sse_concurrent_streams.rs",
+          "bytes": 27800,
+          "mode": "0o644",
+          "sha256": "58b601f3016724b7115a3394b1632c885bc77a1babd3e83995197cf13814be59"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_stateless_protocol_version.rs",
+          "bytes": 7579,
+          "mode": "0o644",
+          "sha256": "5a0065588dbc694070adc520d8b18e537559d3341dfbfe87307ff9fe41ce5900"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_stateless_server_requests.rs",
+          "bytes": 10882,
+          "mode": "0o644",
+          "sha256": "e2c14cb113d413e9537c5cac003c37f7f93de09da37359dcacedc183211908f0"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_stdio_response_concurrency.rs",
+          "bytes": 6046,
+          "mode": "0o644",
+          "sha256": "5e12b8545f7578de08bbbc8cc30392b11a72354f75ca4160113b198eb90e6f84"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_4xx_error_body.rs",
+          "bytes": 4975,
+          "mode": "0o644",
+          "sha256": "f1e24dff597517a6fa5cfb8c7781f7eab52e53c9c23ec1b0465c87ff12929d00"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_client_concurrency.rs",
+          "bytes": 42660,
+          "mode": "0o644",
+          "sha256": "53d57ab89ae6ba9b6a6dfd80cb38f36c83469d9fcd5f8a25f8b709c7c7d119e2"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_connection_reuse.rs",
+          "bytes": 3948,
+          "mode": "0o644",
+          "sha256": "0410d0ab5196237278b8d99d19ad38d6e9dc3d470f52076ffaf9df63d0403e2d"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_disconnect_cancel.rs",
+          "bytes": 6890,
+          "mode": "0o644",
+          "sha256": "f5ffdbf1dea1db30815264513343e013db6a59248afdd5eb1415dc9f07ea05dc"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_empty_2xx_notification.rs",
+          "bytes": 1469,
+          "mode": "0o644",
+          "sha256": "59987f6b8363cb129befba1deee14308e8205c54277e04019e1afe5af66da4e4"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_event_store.rs",
+          "bytes": 12954,
+          "mode": "0o644",
+          "sha256": "f6ee60c53250cd2effb203d3b8f06b306208bde0b1defcc2fdf8930f92fced1f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_get_stream_auth_challenge.rs",
+          "bytes": 3864,
+          "mode": "0o644",
+          "sha256": "cec190a65f9eaded2b89b9494c12579b98fbcb7f96e21b2b79252715b30ab5b9"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_idle_timeout_log.rs",
+          "bytes": 7947,
+          "mode": "0o644",
+          "sha256": "82bd0d078b4afbea692862425dc079225e66acac2448264b3c1986150f624a87"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_init_timeout.rs",
+          "bytes": 2073,
+          "mode": "0o644",
+          "sha256": "03176347e944966884d95fce35173d1e8d29caedf032b5afd56436e1599c4f69"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_json_response.rs",
+          "bytes": 12819,
+          "mode": "0o644",
+          "sha256": "13759c9e756683c225f78174cb489263d06c1a93fc90afe74e4adbde6ad126e0"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_malformed_json_request.rs",
+          "bytes": 6762,
+          "mode": "0o644",
+          "sha256": "d90eade7c85c91fe5f5dc43acc206d657cb53bdf619b675c7ca8e78a874a2e2c"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_priming.rs",
+          "bytes": 18063,
+          "mode": "0o644",
+          "sha256": "440032ca72227782a2195104e3e3a933fe38ec29b4055053ddc030115020a78b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_protocol_version.rs",
+          "bytes": 32223,
+          "mode": "0o644",
+          "sha256": "ddb5614a88bbb60259b194ce0cc6b33a67a168291d8531d90128aed3310d5502"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_session_store.rs",
+          "bytes": 16794,
+          "mode": "0o644",
+          "sha256": "3701b4a7002e33bc8fbfe9e10235839a10e29e03a0778e8e8497ed6c5c684550"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_stale_session.rs",
+          "bytes": 16272,
+          "mode": "0o644",
+          "sha256": "45ab819e2f3358121c941a125fae46e222afd13f164ebd2c8d624a72db01ee6f"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_standard_headers.rs",
+          "bytes": 12117,
+          "mode": "0o644",
+          "sha256": "7f2f762f1f5c98b306a98423cf1ec222e7724789ef85a99ec2bf58ad21c5ef52"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_structured_output.rs",
+          "bytes": 15143,
+          "mode": "0o644",
+          "sha256": "3fe39efa9f323c666e1ab3a4d2f90b5409afd3909853c7c4513767cd1d3f7839"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_subscriptions.rs",
+          "bytes": 22211,
+          "mode": "0o644",
+          "sha256": "1d042a1cc430463001eff79505fa2127be7709bf19df785676537e32d56b2750"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_subscriptions_model.rs",
+          "bytes": 8943,
+          "mode": "0o644",
+          "sha256": "7d0eeb30505e5945e40c74760f4fad62c0020096ce36e85a3f3815a295266667"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_subscriptions_streamable_http.rs",
+          "bytes": 10551,
+          "mode": "0o644",
+          "sha256": "45bd32989426f22d63a2c4b255ec071af4167e381442f3b2a1cb32c92d7e1445"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_task.rs",
+          "bytes": 14383,
+          "mode": "0o644",
+          "sha256": "e2fdacfb98888011a5d5b92b83d59215011872bbb1877cc2667ccf150d888981"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_builder_methods.rs",
+          "bytes": 3484,
+          "mode": "0o644",
+          "sha256": "5b589a8dd7d66a9ad00986971949073b52dba3f2e518964ca3135ab9d48792f6"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_disable_notification.rs",
+          "bytes": 5550,
+          "mode": "0o644",
+          "sha256": "2226c2c83cf2a4cb1390a090f6231b9647ab462085e5606d37fdd8dce410e8d1"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_handler.rs",
+          "bytes": 1,
+          "mode": "0o644",
+          "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_macro_annotations.rs",
+          "bytes": 1510,
+          "mode": "0o644",
+          "sha256": "e836db7da11d30b8542f7dd64ed04f6f8202e7362d9a7d80c03d30185e373ee8"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_macros.rs",
+          "bytes": 17763,
+          "mode": "0o644",
+          "sha256": "a63c9a95b8b758c21f6ca4f56c0a9fe55dd9d805c772d0b5a068f47babdb66d2"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_result_meta.rs",
+          "bytes": 1400,
+          "mode": "0o644",
+          "sha256": "1817c57fa58bf3b09594e4c632ddc45952e9d754e5096f322000e1d514b509a7"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_routers.rs",
+          "bytes": 11923,
+          "mode": "0o644",
+          "sha256": "ddcc2622ca111f67efb2f3aa39f7f4852fa5e22aef0ac85016959cd2fcc17861"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_trace_context.rs",
+          "bytes": 2882,
+          "mode": "0o644",
+          "sha256": "a6a10a08242b859d4640ff84a0ca27ac2f8136f57d94ad8dae51febc19dd2df7"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_unix_socket_transport.rs",
+          "bytes": 11751,
+          "mode": "0o644",
+          "sha256": "d36ad39811a7fe9970282d088c431676408a3fb2961810bf7d1834d116961b25"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js.rs",
+          "bytes": 4694,
+          "mode": "0o644",
+          "sha256": "8ea7e3db85b9c5ca15247eadf4d222d3ed0d06b554095a91c4a79f63f6e61419"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/.gitignore",
+          "bytes": 31,
+          "mode": "0o644",
+          "sha256": "5ffdbe92c121baedcd42f33b4e66e15026dc06fd48932478c48aca34474aa368"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/client.js",
+          "bytes": 763,
+          "mode": "0o644",
+          "sha256": "1f1b26431e26706dc2d380f9fc3475bc78ada1c0c0ebe7302c1c59267a64b123"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/package.json",
+          "bytes": 355,
+          "mode": "0o644",
+          "sha256": "5ae5c2acca557c0150ee0111f87fd3ad71f68e6b94e4d5dd5261f4acc3c869cb"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/server.js",
+          "bytes": 736,
+          "mode": "0o644",
+          "sha256": "760f0721c1b9f44272cc3416a71172a9163044c12d2b58310c72d3286081df81"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/streamable_client.js",
+          "bytes": 773,
+          "mode": "0o644",
+          "sha256": "af4ccaf89ec0b34cda1b2af71edf9acd04924410a4ed4f579a0ccbd1360ec18a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/streamable_server.js",
+          "bytes": 2884,
+          "mode": "0o644",
+          "sha256": "01074613ae942d99028c3f31b1ff35e64817c6de30ab8beabeb3823cb97e7498"
+        }
+      ]
+    }
+  ],
+  "lock": {
+    "path": "docs/rust-rewrite/t07/unit-profile/Cargo.lock",
+    "bytes": 69009,
+    "sha256": "772da776c5233912b2d921b3f3fed2cb42901d7ecd32dac184329795c6f1c805"
+  },
+  "resolver_config": "resolver.incompatible-rust-versions=\"allow\"",
+  "command_limits": {
+    "seconds": 900,
+    "stdout_bytes": 67108864,
+    "stderr_bytes": 16777216
+  },
+  "platform_scope": "portable preparation; native process-group ownership/runtime qualification currently Unix; Windows acceptance remains open"
+}
