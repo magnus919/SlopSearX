@@ -112,6 +112,30 @@ fn permission_bits(raw: u32) -> u32 {
     raw & 0o7777
 }
 fn load(root: &Path, path: &str) -> Result<Material> {
+    let old = match path {
+        "crates/ssx-infra/tests/a08_factories.rs" => Some((
+            "329ff395b82e91eed0a0ab384367bbb745e1011812584391ce03f44210c24a92",
+            28889,
+        )),
+        "crates/ssx-infra/tests/support/default_ca_environment.rs" => Some((
+            "00aee0178f3f111449e5a6e99f495538a1eafa29ec95ced7d8343a3a8ee1108c",
+            959,
+        )),
+        _ => None,
+    };
+    if let Some((sha, bytes)) = old {
+        return Ok(Material {
+            bytes: crate::a13::a06_source_successor::default_ca_fixture_operand(
+                root,
+                path,
+                sha,
+                Some(bytes),
+            )
+            .ok_or("A08 default-CA fixture tuple not selected")??,
+            mode: 0o644,
+        });
+    }
+
     let p = root.join(path);
     let m = fs::symlink_metadata(&p).map_err(|e| e.to_string())?;
     require(

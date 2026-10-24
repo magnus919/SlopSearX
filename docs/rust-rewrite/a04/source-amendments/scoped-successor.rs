@@ -73,6 +73,18 @@ fn check_material(row: &Value, raw: &[u8], actual_mode: &str, stage: &str) -> Re
     )
 }
 fn read_material(root: &Path, row: &Value, stage: &str) -> Result<Vec<u8>, String> {
+    if text(row, "path")? == "crates/ssx-infra/tests/a09_factories.rs" {
+        let prior = a06_source_successor::default_ca_fixture_operand(
+            root,
+            text(row, "path")?,
+            text(row, "sha256")?,
+            row["bytes"].as_u64().map(|n| n as usize),
+        )
+        .ok_or("A09 default-CA fixture tuple not selected")??;
+        check_material(row, &prior, "0644", stage)?;
+        return Ok(prior);
+    }
+
     let path = root.join(text(row, "path")?);
     let metadata = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
     require(
