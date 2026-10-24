@@ -1033,8 +1033,17 @@ pub fn inventory(engine: &str) {
     ]
     .into_iter()
     .collect();
+    let historical_map: serde_json::Value = serde_json::from_slice(
+        &source_amendment::causal_successor::a06_source_successor::historical_caller(
+            &root,
+            "docs/rust-rewrite/a13/remaining/source-map.json",
+            "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+        )
+        .unwrap(),
+    )
+    .unwrap();
     let mut seen = BTreeSet::new();
-    for source in map["sources"].as_array().unwrap() {
+    for source in historical_map["sources"].as_array().unwrap() {
         let p = source["path"].as_str().unwrap();
         assert!(seen.insert(p));
         source_amendment::verify_current(
