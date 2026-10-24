@@ -297,7 +297,7 @@ async fn killed_native_waiter_after_commit_cannot_leave_an_immortal_bucket() {
         sync::oneshot,
     };
     let server = Server::start();
-    let proxy = server.dir.join("proxy.sock");
+    let proxy = server.dir.join("p");
     let listener = UnixListener::bind(&proxy).unwrap();
     let upstream = server.dir.join("s.sock");
     let (tx, rx) = oneshot::channel();
