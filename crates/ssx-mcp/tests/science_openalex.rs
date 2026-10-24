@@ -135,14 +135,16 @@ struct Upstream {
     base: String,
     requests: Arc<Mutex<Vec<String>>>,
     owner: OwnedLoopback<()>,
+    expected_requests: Option<usize>,
 }
 impl Upstream {
-    async fn start(status: u16, body: Vec<u8>) -> Self {
+    async fn start(status: u16, body: Vec<u8>, expected_requests: Option<usize>) -> Self {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let base = format!("http://{}", listener.local_addr().unwrap());
         let requests = Arc::new(Mutex::new(Vec::new()));
         let observed = requests.clone();
         let owner = OwnedLoopback::spawn(async move {
+            let mut replies = 0;
             loop {
                 let (mut socket, _) = listener.accept().await.unwrap();
                 let mut request = Vec::new();
@@ -164,12 +166,17 @@ impl Upstream {
                 socket.write_all(head.as_bytes()).await.unwrap();
                 socket.write_all(&body).await.unwrap();
                 socket.shutdown().await.unwrap();
+                replies += 1;
+                if Some(replies) == expected_requests {
+                    return;
+                }
             }
         });
         Self {
             base,
             requests,
             owner,
+            expected_requests,
         }
     }
     fn lines(&self) -> Vec<String> {
@@ -181,7 +188,11 @@ impl Upstream {
             .collect()
     }
     async fn close(self) {
-        assert!(self.owner.stop_and_join().await.is_none());
+        if self.expected_requests.is_some() {
+            self.owner.finish().await;
+        } else {
+            assert!(self.owner.stop_and_join().await.is_none());
+        }
     }
 }
 #[derive(Clone, Copy)]
@@ -202,8 +213,8 @@ struct Fixture {
     counts: Arc<Counts>,
 }
 impl Fixture {
-    async fn new(mode: Mode, status: u16, body: Vec<u8>) -> Self {
-        let upstream = Upstream::start(status, body).await;
+    async fn new(mode: Mode, status: u16, body: Vec<u8>, expected_requests: Option<usize>) -> Self {
+        let upstream = Upstream::start(status, body, expected_requests).await;
         let server = private_valkey::Server::start();
         let store = Arc::new(server.store());
         assert!(store.ping().await.is_ok());
@@ -490,7 +501,7 @@ fn assert_result(value: &Value, days: &[&str], expected: &Value, cached: bool) {
 
 #[tokio::test]
 async fn authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cache() {
-    let fixture = Fixture::new(Mode::Audited, 200, equal_body()).await;
+    let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(7)).await;
     let client = fixture.connect().await;
     let c = corpus();
     let mut equal_key = None;
@@ -752,7 +763,7 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
             "safesearch_unenforced",
         ),
     ] {
-        let fixture = Fixture::new(mode, 200, equal_body()).await;
+        let fixture = Fixture::new(mode, 200, equal_body(), None).await;
         let url = format!("http://{}/mcp", fixture.host.address);
         let raw = reqwest::Client::builder()
             .no_proxy()
@@ -806,7 +817,13 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
 #[tokio::test]
 async fn science_real_openalex_empty_and_http_failure_remain_distinct() {
     for (status, expected) in [(200, "ok"), (500, "error")] {
-        let fixture = Fixture::new(Mode::Audited, status, br#"{"results":[]}"#.to_vec()).await;
+        let fixture = Fixture::new(
+            Mode::Audited,
+            status,
+            br#"{"results":[]}"#.to_vec(),
+            Some(1),
+        )
+        .await;
         let client = fixture.connect().await;
         let result = call(&client, args()).await;
         assert_eq!(fixture.upstream.lines().len(), 1);
