@@ -95,27 +95,42 @@ fn pair(lock: &[u8], manifest: &[u8]) -> Result<Vec<u8>> {
 pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
     let lock = read(root, "Cargo.lock")?;
     let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
-    let old = pair(&lock, &manifest)?;
-    need(
-        supplied == lock || supplied == old,
-        "W07 supplied dependency lock differs from its exact source pair",
+    if sha(&lock) == LOCK_PRIOR_SHA {
+        let old = pair(&lock, &manifest)?;
+        need(supplied == lock, "W07 supplied historical lock differs")?;
+        return Ok(old);
+    }
+    let parent = super::w07_t02_joint::parent(
+        root,
+        "Cargo.lock",
+        supplied,
+        super::w07_t02_joint::Parent::W07,
     )?;
-    Ok(old)
+    pair(&parent, &manifest)
 }
 /// W07 current admission requires the actual new direct dev edge, never old pins alone.
 pub fn verify_current(root: &Path) -> Result<()> {
     let lock = read(root, "Cargo.lock")?;
     let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
     need(
-        sha(&lock) == LOCK_CURRENT_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
+        sha(&lock) == super::w07_t02_joint::LOCK_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
         "W07 current test dependency edge and manifest are required",
     )?;
-    pair(&lock, &manifest).map(|_| ())
+    let parent =
+        super::w07_t02_joint::parent(root, "Cargo.lock", &lock, super::w07_t02_joint::Parent::W07)?;
+    pair(&parent, &manifest).map(|_| ())
 }
 /// Called by the W07 named unit and every shared aggregate proof consumer.
 pub fn controls(root: &Path) -> Result<()> {
     verify_current(root)?;
-    let lock = read(root, "Cargo.lock")?;
+    super::w07_t02_joint::controls(root)?;
+    let physical_lock = read(root, "Cargo.lock")?;
+    let lock = super::w07_t02_joint::parent(
+        root,
+        "Cargo.lock",
+        &physical_lock,
+        super::w07_t02_joint::Parent::W07,
+    )?;
     let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
     let old_lock = reconstruct_lock(&lock)?;
     let old_manifest = reconstruct_manifest(&manifest)?;
@@ -171,7 +186,7 @@ pub fn controls(root: &Path) -> Result<()> {
             "W07 SDK/other-package lock delta accepted",
         )?;
     }
-    filesystem_controls(&lock, &manifest, &old_lock, &old_manifest)
+    filesystem_controls(&physical_lock, &manifest, &old_lock, &old_manifest)
 }
 #[cfg(not(unix))]
 fn filesystem_controls(_: &[u8], _: &[u8], _: &[u8], _: &[u8]) -> Result<()> {

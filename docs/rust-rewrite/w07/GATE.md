@@ -174,3 +174,35 @@ a cumulative authority witness from an initial-only witness. These new controls
 have not executed yet; the earlier80-case result is not qualification of this
 repair. Frozen Python oracles, older source capsules, main afterimage, F01/F02
 inventories and the full129 xtask identity set remain unchanged.
+
+## Joint W07/T02 source integration
+
+The normal merge of W07 `88cd2431` and T02 `b79a5a9c`, followed by the
+accepted A13 historical-reader correction `08861a34`, is source integration
+only. Neither the prior T02 run nor the historical W07 80-test run qualifies
+this combined source or the 20 held-final-read regressions. The current
+selection remains exactly 100 named native tests and 22 measured wire cases.
+
+`a06/source-amendments/w07-t02-joint.rs` admits only the exact combined
+`xtask/main.rs`, `Cargo.lock`, and infrastructure `search.rs` afterimages.
+A regular non-symlink 0644 physical leaf, complete hash and size, and equality
+with the supplied actual bytes are required before either parent inverse.
+Its six ordered inverse arrays preserve both reviewed parent hashes and Git
+blobs. Historical parent bytes supplied as current source are rejected.
+
+The canonical readers then use the existing parent proofs: combined main to
+W07 cb11 and frozen e695; combined lock to the W07 direct test-dependency pair
+and unchanged 92ee predecessor, or to T02 96e9; combined search to W07 239898
+and its unchanged V3 capsule, or T02 a1b and its unchanged fcac transition.
+The MCP manifest remains paired exactly with the one direct AWS-LC dev edge;
+the T02 HTTP edges remain present. No dependency version, source or checksum
+changes are introduced by this composition. The 72 current source bindings
+include the new reader, its W07 proof consumer, and the three exact T02 guard/capsule operands; the
+frozen historical observations and source manifests remain unchanged.
+
+Both T06 consumers retain their original predecessor/caller rejection controls.
+The joint reader adds rejection controls for historical supplied material,
+changed bytes, missing, duplicate and relocated spans, unknown paths, file
+modes, missing leaves, symlinks and nonregular leaves. These controls are
+authored and require current native qualification; source reconstruction and
+formatting alone do not count as their execution.

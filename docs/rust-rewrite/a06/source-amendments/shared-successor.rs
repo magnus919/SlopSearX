@@ -13,6 +13,8 @@ mod real_clock_successor;
 pub(crate) mod w07_evidence_successor;
 #[path = "../../w07/source-amendments/main_successor.rs"]
 pub(crate) mod w07_main_successor;
+#[path = "w07-t02-joint.rs"]
+pub(crate) mod w07_t02_joint;
 #[path = "../../w07/source-amendments/test_dependency_successor.rs"]
 pub(crate) mod w07_test_dependency;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
@@ -324,7 +326,23 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         "A06 source must be regular, not symlink",
     )?;
     let raw = fs::read(&path).map_err(|e| e.to_string())?;
-    // Only D's exact main afterimage can reconstruct the accepted A06 current row.
+    // Joint normalization is permitted only for these exact historical/current tuples.
+    let raw = if (row["path"] == "crates/xtask/src/main.rs"
+        && row["sha256"] == "8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c")
+        || (row["path"] == "Cargo.lock"
+            && row["sha256"] == "96e9a7760d163fc5ea2afa23033e58cfb7e59d0f2d93f66d8847ef352e0b765d")
+        || (row["path"] == "crates/ssx-infra/src/search.rs"
+            && row["sha256"] == "a1b310e2ef8692c96109bfd780c0e37d7e50692231e11eceb48e05860e0b5927")
+    {
+        w07_t02_joint::parent(root, text(row, "path")?, &raw, w07_t02_joint::Parent::T02)?
+    } else if row["path"] == "crates/xtask/src/main.rs"
+        && row["sha256"] == w07_main_successor::PRIOR_SHA
+    {
+        w07_t02_joint::parent(root, text(row, "path")?, &raw, w07_t02_joint::Parent::W07)?
+    } else {
+        raw
+    };
+    // D's original inverse remains unchanged after the physical joint proof.
     let raw = if row["path"] == "crates/xtask/src/main.rs"
         && row["sha256"] == w07_main_successor::PRIOR_SHA
     {
@@ -839,11 +857,12 @@ pub(crate) fn security_lock_baseline(
     let row = source(&doc, "Cargo.lock")?;
     let (before, _) = verify_transition(root, row)?;
     let actual = post_a06_generation::actual(root, &row["current"])?;
-    let supplied_current = if digest(supplied_current) == w07_test_dependency::LOCK_CURRENT_SHA {
-        w07_test_dependency::historical_lock(root, supplied_current)?
-    } else {
-        supplied_current.to_vec()
-    };
+    let supplied_current = w07_t02_joint::parent(
+        root,
+        "Cargo.lock",
+        supplied_current,
+        w07_t02_joint::Parent::T02,
+    )?;
     need(
         supplied_current == actual,
         "A06 supplied lock differs from actual current",
@@ -1053,7 +1072,12 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     )?;
     let lock = source(&doc, "Cargo.lock")?;
     let (before, _) = verify_transition(root, lock)?;
-    let actual = post_a06_generation::actual(root, &lock["current"])?;
+    let expected = post_a06_generation::actual(root, &lock["current"])?;
+    let actual = fs::read(root.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    need(
+        w07_t02_joint::parent(root, "Cargo.lock", &actual, w07_t02_joint::Parent::T02)? == expected,
+        "A06 physical lock parent differs from canonical current proof",
+    )?;
     security_lock_successor(root, &before, &actual)?;
     let mut wrong_baseline = before.clone();
     wrong_baseline.push(0);
@@ -1070,7 +1094,7 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         security_lock_successor(root, &before, &wrong_current)
             .err()
             .as_deref()
-            == Some("A06 supplied lock differs from actual current"),
+            == Some("W07/T02 joint source: supplied bytes are not physical joint source"),
         "A06 altered actual lock accepted",
     )?;
     for path in [

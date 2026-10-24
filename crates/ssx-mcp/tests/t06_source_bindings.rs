@@ -2,6 +2,8 @@
 #[allow(dead_code)]
 #[path = "../../../docs/rust-rewrite/a06/source-amendments/w07-evidence-successor.rs"]
 mod w07_evidence_successor;
+#[path = "../../../docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs"]
+mod w07_t02_joint;
 use sha2::{Digest, Sha256};
 use std::path::Path;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]

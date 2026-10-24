@@ -167,6 +167,11 @@ pub(crate) fn prior(root: &Path, path: &str, expected: &Value) -> Result<Vec<u8>
     )?;
     let file = root.join(path);
     let actual = std::fs::read(&file).map_err(|e| e.to_string())?;
+    let actual = if path == SEARCH {
+        super::w07_t02_joint::parent(root, path, &actual, super::w07_t02_joint::Parent::W07)?
+    } else {
+        actual
+    };
     reconstruct(row, &actual, &permissions(&file)?)
 }
 pub(crate) fn effective_current(
@@ -258,6 +263,11 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     for path in PATHS {
         let row = row(&doc, path)?;
         let actual = std::fs::read(root.join(path)).map_err(|e| e.to_string())?;
+        let actual = if path == SEARCH {
+            super::w07_t02_joint::parent(root, path, &actual, super::w07_t02_joint::Parent::W07)?
+        } else {
+            actual
+        };
         let prior = reconstruct(row, &actual, "0644")?;
         need(
             reconstruct(row, &actual, "0755").is_err(),

@@ -10,13 +10,12 @@ use std::{
 };
 
 use crate::a13::a06_source_successor::{
-    w07_main_successor as main_successor, w07_test_dependency as test_dependency_successor,
+    w07_main_successor as main_successor, w07_t02_joint,
+    w07_test_dependency as test_dependency_successor,
 };
-use main_successor::{
-    CURRENT_SHA as MAIN_CURRENT_SHA, PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main,
-};
+use main_successor::{PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main};
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
-const REGISTRY_SHA: &str = "8e740a842f90de84370889b1fb7ee344b8553be3fe3e95f0222b885a1a6cca2e";
+const REGISTRY_SHA: &str = "4fb054c55d1f8e09d03695dea87ba440750ec0a889908867db5a65359ee0cdb4";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -204,11 +203,14 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         frozen(root, path, digest)?;
     }
     let original = frozen(root, MAIN_ARCHIVE, MAIN_SHA)?;
-    frozen(root, "crates/xtask/src/main.rs", MAIN_CURRENT_SHA)?;
-    if reconstruct_main(
-        &fs::read(root.join("crates/xtask/src/main.rs")).map_err(|e| e.to_string())?,
-    )? != original
-    {
+    let current = frozen(root, "crates/xtask/src/main.rs", w07_t02_joint::MAIN_SHA)?;
+    let parent = w07_t02_joint::parent(
+        root,
+        "crates/xtask/src/main.rs",
+        &current,
+        w07_t02_joint::Parent::W07,
+    )?;
+    if reconstruct_main(&parent)? != original {
         return Err("W07 main source capsule mismatch".into());
     }
     let oracle = reference(root, &qualification.wire_reference, "26.2")?;
@@ -395,9 +397,17 @@ mod tests {
         let prior =
             include_bytes!("../../../docs/rust-rewrite/w07/source-amendments/pre-d-main.rs");
         assert_eq!(sha(prior), MAIN_SHA);
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let live = include_bytes!("main.rs");
-        assert_eq!(reconstruct_main(live).unwrap(), prior);
-        let text = String::from_utf8(live.to_vec()).unwrap();
+        let parent = w07_t02_joint::parent(
+            &root,
+            "crates/xtask/src/main.rs",
+            live,
+            w07_t02_joint::Parent::W07,
+        )
+        .unwrap();
+        assert_eq!(reconstruct_main(&parent).unwrap(), prior);
+        let text = String::from_utf8(parent).unwrap();
         for bad in [
             text.replace("mod w07;\n", ""),
             format!("mod w07;\n{text}"),
