@@ -9,9 +9,9 @@ mod real_clock_successor;
 #[path = "w07-evidence-successor.rs"]
 pub(crate) mod w07_evidence_successor;
 #[path = "../../w07/source-amendments/main_successor.rs"]
-mod w07_main_successor;
+pub(crate) mod w07_main_successor;
 #[path = "../../w07/source-amendments/test_dependency_successor.rs"]
-mod w07_test_dependency;
+pub(crate) mod w07_test_dependency;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
 const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v1.json";
 const VALIDATOR: &str = "docs/rust-rewrite/a13/source-amendments/validator.rs";

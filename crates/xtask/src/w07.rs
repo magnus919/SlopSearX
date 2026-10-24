@@ -9,15 +9,14 @@ use std::{
     path::Path,
 };
 
-#[path = "../../../docs/rust-rewrite/w07/source-amendments/main_successor.rs"]
-mod main_successor;
-#[path = "../../../docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs"]
-mod test_dependency_successor;
+use crate::a13::a06_source_successor::{
+    w07_main_successor as main_successor, w07_test_dependency as test_dependency_successor,
+};
 use main_successor::{
     CURRENT_SHA as MAIN_CURRENT_SHA, PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
-const REGISTRY_SHA: &str = "1840c7d33b7548fa89d653a4bcf9d1d999ea29a21f9b46ad46f3c5f5cba72b49";
+const REGISTRY_SHA: &str = "21273ae324606782dfeb9b3fefa7eab6b3b6a1f850e5ed7e62c0d7202687fe2d";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]

@@ -126,3 +126,15 @@ one explicit dependency-proof test, bringing its expected count to129. These are
 source declarations pending actual qualification on the corrected source.
 Earlier128/79 counts and successful formatting retain their original source scope;
 the stopped workspace check remains an actual failure, never a gate pass.
+
+## Canonical successor imports
+
+On source9b625, the exclusive D run passed formatting and the strict workspace
+check, then stopped at Clippy because xtask loaded both W07 successor files
+through its shared A13 proof and its direct W07 imports. The original failure,
+process retirement and resource yield remain retained in `native-v3`; no semantic
+suite ran. W07 now imports the existing shared A13 successor modules through
+its canonical export. Each crate loads one copy, and the standalone infra A13
+fixture retains its own shared module and aggregate controls. This changes no
+proof logic, historical capsule, main afterimage or expected test identity.
+The source correction awaits fresh native qualification.
