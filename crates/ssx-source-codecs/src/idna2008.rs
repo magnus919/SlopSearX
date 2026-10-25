@@ -88,7 +88,7 @@ fn compose(first: u32, second: u32) -> Option<u32> {
         return Some(0xac00 + (first - 0x1100) * 588 + (second - 0x1161) * 28);
     }
     if (0xac00..0xd7a4).contains(&first)
-        && (first - 0xac00) % 28 == 0
+        && (first - 0xac00).is_multiple_of(28)
         && (0x11a8..0x11c3).contains(&second)
     {
         return Some(first + second - 0x11a7);
