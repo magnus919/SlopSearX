@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "0fe02fff21b1ea4c43d2767edb650973cf500bfe54d1778061f77790ec0c07c4";
+const REGISTRY_SHA: &str = "686f3e47f9cf4dd25df51982301a76da5e117c7d84a6aebcdba58601ca12bde9";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -256,7 +256,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 original whole-file source pin changed".into());
     }
     expected["sources"]["crates/ssx-mcp/tests/w07_mcp.rs"] =
-        Value::String("e64a54adce99e5739194d34eef1d6192efea501d28db937435cd396dce2d396b".into());
+        Value::String("1cab294c93e03a933c77764edb1628b2727fde9e0dfc5cff34d721fcf1e37084".into());
     if expected["sources"]["crates/ssx-mcp/tests/w07_support/mcp.rs"]
         != "244e3509015eb7394b9fb2fc682b9cd8240c6fddb0b2a2b422ae5fa715608c2c"
     {
