@@ -91,7 +91,46 @@ macro_rules! e {
 }
 
 // We might change this... :shrug:
-type PoolKey = (http::uri::Scheme, http::uri::Authority);
+#[derive(Clone, Debug)]
+enum PoolKey {
+    Default(http::uri::Scheme, http::uri::Authority),
+    #[cfg(feature = "ssx-http1-source-pool")]
+    Source(hyper::ext::SourceRequestIdentity),
+}
+impl PartialEq for PoolKey {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Default(a, b), Self::Default(c, d)) => a == c && b == d,
+            #[cfg(feature = "ssx-http1-source-pool")]
+            (Self::Source(a), Self::Source(b)) => {
+                a.0.scheme() == b.0.scheme()
+                    && a.0.raw_host() == b.0.raw_host()
+                    && a.0.origin_port() == b.0.origin_port()
+            }
+            #[cfg(feature = "ssx-http1-source-pool")]
+            _ => false,
+        }
+    }
+}
+impl Eq for PoolKey {}
+impl std::hash::Hash for PoolKey {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        use std::hash::Hash;
+        match self {
+            Self::Default(scheme, authority) => {
+                scheme.hash(state);
+                authority.hash(state);
+            }
+            #[cfg(feature = "ssx-http1-source-pool")]
+            Self::Source(owner) => {
+                1u8.hash(state);
+                owner.0.scheme().hash(state);
+                owner.0.raw_host().hash(state);
+                owner.0.origin_port().hash(state);
+            }
+        }
+    }
+}
 
 enum TrySendError<B> {
     Retryable {
@@ -234,7 +273,23 @@ where
             other => return ResponseFuture::error_version(other),
         };
 
-        let pool_key = match extract_domain(req.uri_mut(), is_http_connect) {
+        #[cfg(feature = "ssx-http1-source-pool")]
+        let identity = req
+            .extensions()
+            .get::<hyper::ext::SourceRequestIdentity>()
+            .cloned();
+        let pool_key = match {
+            #[cfg(feature = "ssx-http1-source-pool")]
+            if let Some(owner) = identity {
+                Ok(PoolKey::Source(owner))
+            } else {
+                extract_domain(req.uri_mut(), is_http_connect)
+            }
+            #[cfg(not(feature = "ssx-http1-source-pool"))]
+            {
+                extract_domain(req.uri_mut(), is_http_connect)
+            }
+        } {
             Ok(s) => s,
             Err(err) => {
                 return ResponseFuture::new(future::err(err));
@@ -326,7 +381,33 @@ where
                 ));
             }
 
-            if self.config.set_host {
+            #[cfg(feature = "ssx-http1-source-pool")]
+            let source_identity = req
+                .extensions()
+                .get::<hyper::ext::SourceRequestIdentity>()
+                .cloned();
+            #[cfg(feature = "ssx-http1-source-pool")]
+            let has_source_identity = source_identity.is_some();
+            #[cfg(not(feature = "ssx-http1-source-pool"))]
+            let has_source_identity = false;
+            #[cfg(feature = "ssx-http1-source-pool")]
+            if let Some(identity) = source_identity {
+                if self.config.set_host && !req.headers().contains_key(HOST) {
+                    let host = HeaderValue::from_str(&identity.0.authority())
+                        .map_err(|error| TrySendError::Nope(e!(SendRequest, error)))?;
+                    req.headers_mut().insert(HOST, host);
+                }
+                let form = if req.method() == Method::CONNECT {
+                    hyper::ext::SourceTargetForm::Connect
+                } else if pooled.conn_info.is_proxied {
+                    hyper::ext::SourceTargetForm::Absolute
+                } else {
+                    hyper::ext::SourceTargetForm::Origin
+                };
+                req.extensions_mut()
+                    .insert(hyper::ext::SourceRequestTarget { identity, form });
+            }
+            if self.config.set_host && !has_source_identity {
                 let uri = req.uri().clone();
                 req.headers_mut().entry(HOST).or_insert_with(|| {
                     let hostname = uri.host().expect("authority implies host");
@@ -341,7 +422,9 @@ where
             }
 
             // CONNECT always sends authority-form, so check it first...
-            if req.method() == Method::CONNECT {
+            if has_source_identity {
+                // The encoder uses the same owner's exact source target.
+            } else if req.method() == Method::CONNECT {
                 authority_form(req.uri_mut());
             } else if pooled.conn_info.is_proxied {
                 absolute_form(req.uri_mut());
@@ -568,7 +651,7 @@ where
             pool::SourceAcquired::Reused(pooled) => Ok(pooled),
             pool::SourceAcquired::Connect(reservation) => {
                 let connector = self.connector.clone();
-                let dst = domain_as_uri(pool_key);
+                let dst = domain_as_uri(pool_key)?;
                 let owner = reservation.owner().clone();
                 let job = owner.job().map_err(|e| e!(Connect, e))?;
                 let io = job
@@ -639,7 +722,10 @@ where
                     return Either::Right(future::err(canceled));
                 }
             };
-            let dst = domain_as_uri(pool_key);
+            let dst = match domain_as_uri(pool_key) {
+                Ok(dst) => dst,
+                Err(error) => return Either::Right(future::err(error)),
+            };
             Either::Left(
                 connector
                     .connect(super::connect::sealed::Internal, dst)
@@ -1064,7 +1150,7 @@ fn authority_form(uri: &mut Uri) {
 fn extract_domain(uri: &mut Uri, is_http_connect: bool) -> Result<PoolKey, Error> {
     let uri_clone = uri.clone();
     match (uri_clone.scheme(), uri_clone.authority()) {
-        (Some(scheme), Some(auth)) => Ok((scheme.clone(), auth.clone())),
+        (Some(scheme), Some(auth)) => Ok(PoolKey::Default(scheme.clone(), auth.clone())),
         (None, Some(auth)) if is_http_connect => {
             let scheme = match auth.port_u16() {
                 Some(443) => {
@@ -1076,7 +1162,7 @@ fn extract_domain(uri: &mut Uri, is_http_connect: bool) -> Result<PoolKey, Error
                     Scheme::HTTP
                 }
             };
-            Ok((scheme, auth.clone()))
+            Ok(PoolKey::Default(scheme, auth.clone()))
         }
         _ => {
             debug!("Client requires absolute-form URIs, received: {:?}", uri);
@@ -1085,13 +1171,26 @@ fn extract_domain(uri: &mut Uri, is_http_connect: bool) -> Result<PoolKey, Error
     }
 }
 
-fn domain_as_uri((scheme, auth): PoolKey) -> Uri {
-    http::uri::Builder::new()
-        .scheme(scheme)
-        .authority(auth)
-        .path_and_query("/")
-        .build()
-        .expect("domain is valid Uri")
+fn domain_as_uri(key: PoolKey) -> Result<Uri, Error> {
+    match key {
+        PoolKey::Default(scheme, auth) => http::uri::Builder::new()
+            .scheme(scheme)
+            .authority(auth)
+            .path_and_query("/")
+            .build()
+            .map_err(|error| e!(Connect, error)),
+        #[cfg(feature = "ssx-http1-source-pool")]
+        PoolKey::Source(owner) => {
+            // This is the genuine request's origin target, not a fabricated
+            // absolute destination. The source connector retains the same Arc
+            // and derives its actual endpoint from it, never from this Uri.
+            owner
+                .0
+                .origin_target()
+                .parse()
+                .map_err(|error| e!(Connect, error))
+        }
+    }
 }
 
 fn set_scheme(uri: &mut Uri, scheme: Scheme) {

@@ -12,3 +12,9 @@ pub mod multipart;
 pub(crate) mod request;
 mod response;
 mod upgrade;
+
+#[cfg(feature = "ssx-http1-source-pool")]
+pub use self::{
+    request::{SourceRequest, SourceRequestBuilder},
+    response::SourceResponse,
+};

@@ -1,7 +1,7 @@
 use super::protocol::{self, FRAME_LIMIT};
 use std::io::{self, Read, Write};
 
-#[cfg(feature = "gateway-dns-fixtures")]
+#[cfg(all(unix, feature = "gateway-dns-fixtures"))]
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6};
 
 pub(crate) fn main() -> io::Result<()> {
@@ -11,12 +11,13 @@ pub(crate) fn main() -> io::Result<()> {
     io::stdin()
         .take((FRAME_LIMIT + 1) as u64)
         .read_to_end(&mut input)?;
-    let (host, decimal) = protocol::decode_request(&input)?;
-    let output = lookup(host, decimal)?;
+    let request = protocol::decode_request(&input)?;
+    let output = lookup(request.kind, request.host, request.decimal.unwrap_or("0"))?;
     io::stdout().write_all(&output)?;
     io::stdout().flush()
 }
-fn lookup(host: &str, decimal: &str) -> io::Result<Vec<u8>> {
+#[cfg(unix)]
+fn lookup(kind: protocol::RequestKind, host: &str, decimal: &str) -> io::Result<Vec<u8>> {
     let hints = dns_lookup::AddrInfoHints {
         flags: 0,
         address: libc::AF_UNSPEC,
@@ -36,7 +37,7 @@ fn lookup(host: &str, decimal: &str) -> io::Result<Vec<u8>> {
             } else {
                 0
             };
-            return Ok(protocol::error_response(gai, errno));
+            return Ok(protocol::error_response(kind, gai, errno));
         }
     };
     let mut addresses = Vec::new();
@@ -48,18 +49,17 @@ fn lookup(host: &str, decimal: &str) -> io::Result<Vec<u8>> {
         // CPython's printable tuple flow value requires ntohl for comparison.
         record_bytes += if addr.is_ipv4() { 7 } else { 27 };
         if record_bytes > FRAME_LIMIT {
-            let mut output = protocol::MAGIC.to_vec();
-            output.push(2);
-            return Ok(output);
+            return Ok(protocol::operational_response(kind));
         }
         addresses.push(addr);
     }
-    protocol::response(&addresses).map_err(|_| io::ErrorKind::InvalidData.into())
+    Ok(protocol::response(kind, &addresses)
+        .unwrap_or_else(|_| protocol::operational_response(kind)))
 }
 
 // Separate feature-gated executable: deterministic native process/IO controls.
 // Production helper accepts no test commands, environment switch or mode flag.
-#[cfg(feature = "gateway-dns-fixtures")]
+#[cfg(all(unix, feature = "gateway-dns-fixtures"))]
 #[allow(
     clippy::zombie_processes,
     reason = "Native fixture deliberately leaves an inherited-group descendant for retirement testing"
@@ -88,7 +88,9 @@ pub(crate) fn fixture_main() -> io::Result<()> {
     io::stdin()
         .take((FRAME_LIMIT + 1) as u64)
         .read_to_end(&mut input)?;
-    let (host, _) = protocol::decode_request(&input)?;
+    let request = protocol::decode_request(&input)?;
+    let host = request.host;
+    let kind = request.kind;
     // Fixture-only audit/control file, supplied by the private process test.
     // Production helper_main never reads this variable or accepts fixture modes.
     if let Some(path) = std::env::var_os("SLOPSEARX_DNS_FIXTURE_CONTROL") {
@@ -130,8 +132,11 @@ pub(crate) fn fixture_main() -> io::Result<()> {
             }
         }
         return io::stdout().write_all(
-            &protocol::response(&[SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0))])
-                .map_err(|_| io::ErrorKind::InvalidData)?,
+            &protocol::response(
+                kind,
+                &[SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0))],
+            )
+            .map_err(|_| io::ErrorKind::InvalidData)?,
         );
     }
 
@@ -163,16 +168,40 @@ pub(crate) fn fixture_main() -> io::Result<()> {
         return io::stdout().write_all(b"invalid");
     }
     if host == "gai-error.invalid" {
-        return io::stdout().write_all(&protocol::error_response(libc::EAI_NONAME, 0));
+        return io::stdout().write_all(&protocol::error_response(kind, libc::EAI_NONAME, 0));
+    }
+    if host == "staged-source.invalid" {
+        if kind != protocol::RequestKind::AnyIoCandidates || request.decimal != Some("65537") {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        let rows = [std::net::SocketAddr::V6(std::net::SocketAddrV6::new(
+            "::2".parse().unwrap(),
+            3,
+            77,
+            19,
+        ))];
+        return io::stdout().write_all(&protocol::response(kind, &rows).unwrap());
+    }
+    if host == "::2%19" {
+        if kind != protocol::RequestKind::AsyncIoCandidate || request.decimal != Some("65537") {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        let rows = [std::net::SocketAddr::V6(std::net::SocketAddrV6::new(
+            "::2".parse().unwrap(),
+            37,
+            88,
+            23,
+        ))];
+        return io::stdout().write_all(&protocol::response(kind, &rows).unwrap());
     }
     if host == "empty.invalid" {
-        return io::stdout().write_all(&protocol::response(&[]).unwrap());
+        return io::stdout().write_all(&protocol::response(kind, &[]).unwrap());
     }
     let records = vec![
         SocketAddr::V6(SocketAddrV6::new(Ipv6Addr::LOCALHOST, 7, 17, 4)),
         SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9)),
     ];
-    io::stdout().write_all(&protocol::response(&records).unwrap())?;
+    io::stdout().write_all(&protocol::response(kind, &records).unwrap())?;
     if host.ends_with("%delayed") || host.ends_with("%eof-hold") {
         // Safe fixture-only pipe detachment: EOF can precede leader exit.
         // No filesystem artifact is created; /dev/null is an existing device.
@@ -188,4 +217,28 @@ pub(crate) fn fixture_main() -> io::Result<()> {
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
     Ok(())
+}
+
+#[cfg(windows)]
+fn lookup(kind: protocol::RequestKind, host: &str, decimal: &str) -> io::Result<Vec<u8>> {
+    match ssx_windows_owner::lookup(host, decimal) {
+        Ok(addrs) => Ok(protocol::response(kind, &addrs)
+            .unwrap_or_else(|_| protocol::operational_response(kind))),
+        Err(ssx_windows_owner::LookupError::Gai(code)) => {
+            Ok(protocol::error_response(kind, code, 0))
+        }
+        Err(ssx_windows_owner::LookupError::Startup(code)) => {
+            Err(io::Error::from_raw_os_error(code))
+        }
+        Err(ssx_windows_owner::LookupError::OperationalLimit) => {
+            Ok(protocol::operational_response(kind))
+        }
+        Err(ssx_windows_owner::LookupError::InputContract) => {
+            Err(io::ErrorKind::InvalidInput.into())
+        }
+    }
+}
+#[cfg(all(windows, feature = "gateway-dns-fixtures"))]
+pub(crate) fn fixture_main() -> io::Result<()> {
+    super::windows_fixture::main()
 }

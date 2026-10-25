@@ -1227,6 +1227,8 @@ impl RawGatewayStart {
                 deadline: Duration::ZERO,
                 transport_budgeted: true,
                 source_projection: false,
+                #[cfg(windows)]
+                input_runtime: Default::default(),
                 session: Default::default(),
                 initialize_result: None,
                 protocol: "2025-11-25".into(),
@@ -1331,6 +1333,8 @@ pub struct RawGateway {
     deadline: Duration,
     transport_budgeted: bool,
     source_projection: bool,
+    #[cfg(windows)]
+    input_runtime: crate::gateway_client::stdio_input_windows::InputRuntime,
     session: std::sync::Arc<std::sync::Mutex<Option<std::sync::Arc<String>>>>,
     initialize_result: Option<Box<RawValue>>,
     protocol: String,
@@ -1559,6 +1563,8 @@ impl RawGateway {
             deadline,
             transport_budgeted: false,
             source_projection: false,
+            #[cfg(windows)]
+            input_runtime: Default::default(),
             session: Default::default(),
             initialize_result: None,
             protocol: "2025-11-25".into(),
@@ -1592,9 +1598,14 @@ impl RawGateway {
             gateway: self.clone(),
             wire: wire.clone(),
         };
-        #[cfg(unix)]
+        #[cfg(any(unix, windows))]
         {
+            #[cfg(unix)]
             let mut input = crate::gateway_client::stdio_input::InputOwner::stdin()?;
+            #[cfg(windows)]
+            let mut input = self
+                .input_runtime
+                .stdin(&crate::gateway_client::resolver::install::current_input_image()?)?;
             let result = stdio_handler_io(
                 handler,
                 std::sync::Arc::new(self.catalogs.clone()),
@@ -1605,10 +1616,10 @@ impl RawGateway {
                 tokio::io::stdout(),
             )
             .await;
-            let drained = input.shutdown();
+            let drained = input.close().await;
             result.and(drained)
         }
-        #[cfg(not(unix))]
+        #[cfg(not(any(unix, windows)))]
         {
             let _ = (handler, wire, cancel);
             Err("gateway cancellable OS input is not implemented for this platform".into())
@@ -1640,47 +1651,60 @@ impl RawGateway {
         }
     }
     pub async fn close(&self) -> Result<()> {
-        let session = self.session.lock().unwrap().clone();
-        if let Some(session) = session {
-            let mut headers = vec![
-                ("mcp-session-id", session.to_string()),
-                ("mcp-protocol-version", self.protocol.clone()),
-            ];
-            if let Some(token) = &self.token {
-                headers.push(("authorization", format!("Bearer {token}")));
+        #[cfg(windows)]
+        let input = self.input_runtime.close().await;
+        let session_result: Result<()> = (async {
+            let session = self.session.lock().unwrap().clone();
+            if let Some(session) = session {
+                let mut headers = vec![
+                    ("mcp-session-id", session.to_string()),
+                    ("mcp-protocol-version", self.protocol.clone()),
+                ];
+                if let Some(token) = &self.token {
+                    headers.push(("authorization", format!("Bearer {token}")));
+                }
+                // Final cleanup must reach the retained network/resolver join even
+                // when DELETE needs fresh DNS or the peer holds response headers.
+                // Match rmcp's five-second session-cleanup grace. Unlike rmcp's
+                // logged timeout, our existing fail-closed cleanup contract returns
+                // failure and retains the session identity for a possible retry.
+                let limit = if self.transport_budgeted {
+                    GATEWAY_SESSION_CLEANUP_TIMEOUT
+                } else {
+                    self.deadline
+                };
+                let deadline = Some(tokio::time::Instant::now() + limit);
+                let response = gateway_until(
+                    deadline,
+                    self.http.open(GatewayHttpRequest {
+                        auth: GatewayAuthMode::ExistingBearer,
+                        method: reqwest::Method::DELETE,
+                        url: self.url.clone(),
+                        headers,
+                        body: None,
+                    }),
+                )
+                .await?;
+                let status = response.status();
+                if status.is_success() || status == 404 {
+                    self.clear_closed_session(&session);
+                } else if status != 405 {
+                    return Err("remote session cleanup failed".into());
+                }
+                // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does
+                // not establish remote closure: retain identity for a later attempt.
             }
-            // Final cleanup must reach the retained network/resolver join even
-            // when DELETE needs fresh DNS or the peer holds response headers.
-            // Match rmcp's five-second session-cleanup grace. Unlike rmcp's
-            // logged timeout, our existing fail-closed cleanup contract returns
-            // failure and retains the session identity for a possible retry.
-            let limit = if self.transport_budgeted {
-                GATEWAY_SESSION_CLEANUP_TIMEOUT
-            } else {
-                self.deadline
-            };
-            let deadline = Some(tokio::time::Instant::now() + limit);
-            let response = gateway_until(
-                deadline,
-                self.http.open(GatewayHttpRequest {
-                    auth: GatewayAuthMode::ExistingBearer,
-                    method: reqwest::Method::DELETE,
-                    url: self.url.clone(),
-                    headers,
-                    body: None,
-                }),
-            )
-            .await?;
-            let status = response.status();
-            if status.is_success() || status == 404 {
-                self.clear_closed_session(&session);
-            } else if status != 405 {
-                return Err("remote session cleanup failed".into());
-            }
-            // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does
-            // not establish remote closure: retain identity for a later attempt.
+            Ok(())
+        })
+        .await;
+        #[cfg(windows)]
+        {
+            input.and(session_result)
         }
-        Ok(())
+        #[cfg(not(windows))]
+        {
+            session_result
+        }
     }
 }
 
@@ -2324,6 +2348,8 @@ mod close_tests {
                 deadline: Duration::from_secs(1),
                 transport_budgeted: false,
                 source_projection: false,
+                #[cfg(windows)]
+                input_runtime: Default::default(),
                 session: Default::default(),
                 initialize_result: None,
                 protocol: String::new(),
@@ -2351,6 +2377,8 @@ mod close_tests {
             deadline: Duration::from_secs(1),
             transport_budgeted: false,
             source_projection: false,
+            #[cfg(windows)]
+            input_runtime: Default::default(),
             session: Default::default(),
             initialize_result: None,
             protocol: String::new(),

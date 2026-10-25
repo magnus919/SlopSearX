@@ -1,0 +1,425 @@
+{
+  "status": "REVIEW_ONLY_NOT_APPLIED_COMPILED_OR_EXECUTED",
+  "baseline": "5fad073fc0574a02a4491e287d66c7a4977dc8a4",
+  "core_parent": "7ca1bce4c7275a0473fcf03dea6809679a29ea11",
+  "scope": "same immutable source and configured-proxy URL owners through request/prepared operation/response/routing/pool/connect and exact HTTP1 wire serialization; one absolute DNS/TCP deadline plus awaited scoped retirement outside timeout; existing legacy bridge preserved, MCP resolver adapter and SDK/gateway/metadata adoption remain separate",
+  "packages": [
+    {
+      "package": "hyper",
+      "before_actual_tree_sha256": "461e84494c9e8dc41d9fd81c28dc3b6267c00368f87b9015ab71ec361b075be4",
+      "before_declared_tree_sha256": "461e84494c9e8dc41d9fd81c28dc3b6267c00368f87b9015ab71ec361b075be4",
+      "preexisting_declared_drift": [],
+      "exact_causal_delta": [
+        {
+          "path": "Cargo.toml",
+          "before": {
+            "path": "Cargo.toml",
+            "bytes": 7049,
+            "sha256": "55398bc277aab4fb8e13cfc37e7758054f225d2f58bf3679c03682cb388e6833"
+          },
+          "after": {
+            "path": "Cargo.toml",
+            "bytes": 7103,
+            "sha256": "860e543c05cd8633f0d82b14f9aa8603ed1a48e93bbdc8c517a238440b51d73e"
+          }
+        },
+        {
+          "path": "src/ext/mod.rs",
+          "before": {
+            "path": "src/ext/mod.rs",
+            "bytes": 10397,
+            "sha256": "9fe244f5a2d989635c6d422f9658153d8c2f2e3836a5362237581dabe85c7967"
+          },
+          "after": {
+            "path": "src/ext/mod.rs",
+            "bytes": 10642,
+            "sha256": "9ce76c8095fea044de41a8ac1b7afb5b0ce1e2916c9d2b2ebee0834ee67b8948"
+          }
+        },
+        {
+          "path": "src/ext/source_identity.rs",
+          "before": null,
+          "after": {
+            "path": "src/ext/source_identity.rs",
+            "bytes": 3980,
+            "sha256": "8963e5cee14d36d542d099ca0e6e78298b3dae51cd0c27de25fb5d7ca5cfc533"
+          }
+        },
+        {
+          "path": "src/proto/h1/role.rs",
+          "before": {
+            "path": "src/proto/h1/role.rs",
+            "bytes": 136472,
+            "sha256": "ee42a2e80eca9ac06c9558c44ed0bcfed4dc556797cf0e9fe46797970ab96813"
+          },
+          "after": {
+            "path": "src/proto/h1/role.rs",
+            "bytes": 136903,
+            "sha256": "05b014270468c0eec8e3cf5d4d146d3cd1a0f338ac429105a79ef16a9bc13bd2"
+          }
+        }
+      ],
+      "after_tree_sha256": "a7035dd759e5480dc6877a88eb568070b6224c09c3d2f498b20acc72b4ed7aec"
+    },
+    {
+      "package": "hyper-util",
+      "before_actual_tree_sha256": "fe22d31c349738b9504ca90e588125c2c106b85e64ec4eeff9fd7321f4789f2d",
+      "before_declared_tree_sha256": "fe22d31c349738b9504ca90e588125c2c106b85e64ec4eeff9fd7321f4789f2d",
+      "preexisting_declared_drift": [],
+      "exact_causal_delta": [
+        {
+          "path": "Cargo.toml",
+          "before": {
+            "path": "Cargo.toml",
+            "bytes": 5175,
+            "sha256": "533ef224d8f5b8ab65a3c75991753ab64dfd1367227a0f7ba6d023ffeb4b2ab1"
+          },
+          "after": {
+            "path": "Cargo.toml",
+            "bytes": 5210,
+            "sha256": "12a25f77c65175f13448f4098877bb270de2f1221fd51fa0ad1a28da00ed39b9"
+          }
+        },
+        {
+          "path": "src/client/legacy/client.rs",
+          "before": {
+            "path": "src/client/legacy/client.rs",
+            "bytes": 71225,
+            "sha256": "7928a716dfe27da9fca7ce8dac1e3924f2d9e88246b9f5ad677bb48289b3b667"
+          },
+          "after": {
+            "path": "src/client/legacy/client.rs",
+            "bytes": 75251,
+            "sha256": "3436142ebc9bcaafa6eaf12adb50c7956cd89edde4fb4c1997b0fa2be05d84e8"
+          }
+        },
+        {
+          "path": "src/client/legacy/connect/http.rs",
+          "before": {
+            "path": "src/client/legacy/connect/http.rs",
+            "bytes": 51864,
+            "sha256": "40f571d7b26e1d3f5f239e48aced0187f9535005c83841e2d7b982ee52e44fb6"
+          },
+          "after": {
+            "path": "src/client/legacy/connect/http.rs",
+            "bytes": 57009,
+            "sha256": "1792585638e01d1db9ba63fc461f5bac37f6c624009689a70e99df0368d4e4ba"
+          }
+        },
+        {
+          "path": "src/client/legacy/connect/mod.rs",
+          "before": {
+            "path": "src/client/legacy/connect/mod.rs",
+            "bytes": 12370,
+            "sha256": "0b471b9813f46bdb80ca2b2263d9adef5f89051b8230e528968a2b2fe87dcb20"
+          },
+          "after": {
+            "path": "src/client/legacy/connect/mod.rs",
+            "bytes": 12438,
+            "sha256": "6fceb8d3e6a56cacb22a4bd210518e0f7af0ce2986e089c1f2fa8c53460e2e1e"
+          }
+        },
+        {
+          "path": "src/client/legacy/connect/source_endpoint.rs",
+          "before": null,
+          "after": {
+            "path": "src/client/legacy/connect/source_endpoint.rs",
+            "bytes": 5353,
+            "sha256": "2c998cc3f36368bf9c1116156a8d5bd36f14bd502abc41cb855be69cd5527989"
+          }
+        },
+        {
+          "path": "src/client/legacy/connect/source_schedule.rs",
+          "before": {
+            "path": "src/client/legacy/connect/source_schedule.rs",
+            "bytes": 3442,
+            "sha256": "6afd0ce248b3e8453a8c8db0bf41f3e0d412b2d8404a7bc6bc31c1e79bbd66f8"
+          },
+          "after": {
+            "path": "src/client/legacy/connect/source_schedule.rs",
+            "bytes": 3427,
+            "sha256": "5af111babc91285646a4137e4f8be683eae261a1cb68157005a018051d1d3b7a"
+          }
+        }
+      ],
+      "after_tree_sha256": "acf69819ce0c4d41422086ae23a26668319ae36e5a2ece5f629e01e103f2a015"
+    },
+    {
+      "package": "reqwest",
+      "before_actual_tree_sha256": "d5a8240f9d62c2ae18f4d4d4515d018263b36b4fae57675cd3f58b69f948ce2a",
+      "before_declared_tree_sha256": "e0b806f3b4fc9fdef28c2bef850093f4ae03df9bdf6d93b32dbfb1980269504f",
+      "preexisting_declared_drift": [
+        {
+          "path": "src/source_pool/source_cookies.rs",
+          "declared": {
+            "path": "src/source_pool/source_cookies.rs",
+            "bytes": 9453,
+            "sha256": "288e96d527db84cff6a10704b96b7973b848c5d424b12a5b07948fc753801894"
+          },
+          "actual_baseline": {
+            "path": "src/source_pool/source_cookies.rs",
+            "bytes": 9897,
+            "sha256": "e47b5da392bc7d1ece44570a4895230b422054598a18beb7f4937ac5c1b4f51b"
+          }
+        }
+      ],
+      "exact_causal_delta": [
+        {
+          "path": "Cargo.toml",
+          "before": {
+            "path": "Cargo.toml",
+            "bytes": 14081,
+            "sha256": "4745db5e1d9599acc0820f3b49ac61a66e029122ff686e8639aeb6a07bef0b6b"
+          },
+          "after": {
+            "path": "Cargo.toml",
+            "bytes": 14131,
+            "sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc"
+          }
+        },
+        {
+          "path": "src/async_impl/client.rs",
+          "before": {
+            "path": "src/async_impl/client.rs",
+            "bytes": 124009,
+            "sha256": "da990eb217f7f000091e46e0a6408e405718a5e5a53073d2b8d28c4d7d773ed5"
+          },
+          "after": {
+            "path": "src/async_impl/client.rs",
+            "bytes": 153823,
+            "sha256": "c0ca51721d0bce32a287b5fe58219d5cdabd45ab517deddd68b4b69ef9bd0c74"
+          }
+        },
+        {
+          "path": "src/async_impl/mod.rs",
+          "before": {
+            "path": "src/async_impl/mod.rs",
+            "bytes": 340,
+            "sha256": "d207798170e6263f62e652a5cca27bf868e7e17c910ba3ee8907a303cb34608d"
+          },
+          "after": {
+            "path": "src/async_impl/mod.rs",
+            "bytes": 484,
+            "sha256": "a6f6dac9ddb6ad9cd406290e5a441d5cccf62e1e5cca78ef20033ac18cc10a37"
+          }
+        },
+        {
+          "path": "src/async_impl/request.rs",
+          "before": {
+            "path": "src/async_impl/request.rs",
+            "bytes": 36240,
+            "sha256": "f21760887406fddb7ffe3453bb822690c6c4c5b8032853aeb137cd54a7f22213"
+          },
+          "after": {
+            "path": "src/async_impl/request.rs",
+            "bytes": 42005,
+            "sha256": "f046be821521f12342896de480a00a7194fa9f4987f248ec9d5ab4ceac249b01"
+          }
+        },
+        {
+          "path": "src/async_impl/response.rs",
+          "before": {
+            "path": "src/async_impl/response.rs",
+            "bytes": 15698,
+            "sha256": "ab12ec2046e4037e0ba370279362c9a8bbc7bcd5f8b08cfff43c86c28e40eaee"
+          },
+          "after": {
+            "path": "src/async_impl/response.rs",
+            "bytes": 18489,
+            "sha256": "349e3f3890472a3361040778a5ea71199fa88446a9a6e8900cb6e04d28c93226"
+          }
+        },
+        {
+          "path": "src/async_impl/upgrade.rs",
+          "before": {
+            "path": "src/async_impl/upgrade.rs",
+            "bytes": 2018,
+            "sha256": "b3944107063f2b5886b754ff80c4d3af34c9a97c4e9206d3bac3f4f3d6ae5d8a"
+          },
+          "after": {
+            "path": "src/async_impl/upgrade.rs",
+            "bytes": 2023,
+            "sha256": "fae5a2cfcf92962613efa939301cafd44c8e47066c69dc652f7eed7626147a43"
+          }
+        },
+        {
+          "path": "src/connect.rs",
+          "before": {
+            "path": "src/connect.rs",
+            "bytes": 73394,
+            "sha256": "d0efe3c19da9aba54598c89b3a68789a97b9c7877e05b43af74a0a7782f18009"
+          },
+          "after": {
+            "path": "src/connect.rs",
+            "bytes": 74150,
+            "sha256": "765a2d493a02b2adcf9f7484b52914a1bf0572ec6982fe37b85cef5cf75596f4"
+          }
+        },
+        {
+          "path": "src/connect/source_http1.rs",
+          "before": {
+            "path": "src/connect/source_http1.rs",
+            "bytes": 11169,
+            "sha256": "5e369d3930d4058d8c8cef7338947b8e8a51fb9d9c4c297a32e38dcad79fd201"
+          },
+          "after": {
+            "path": "src/connect/source_http1.rs",
+            "bytes": 17061,
+            "sha256": "04f3b3d0c39085b999dad12da6f554702ffa178fd89a3d792538a4ff9e361f58"
+          }
+        },
+        {
+          "path": "src/connect/source_phase.rs",
+          "before": {
+            "path": "src/connect/source_phase.rs",
+            "bytes": 2042,
+            "sha256": "109187c730e273374568fd2d032c26f3e2f3a6e2d11d3086ea43c88c01a8e4ab"
+          },
+          "after": {
+            "path": "src/connect/source_phase.rs",
+            "bytes": 2925,
+            "sha256": "42c5a06be75c81e03b83d80953a7560a3b1737488ef63cb0cd2e9bf0877678f8"
+          }
+        },
+        {
+          "path": "src/cookie.rs",
+          "before": {
+            "path": "src/cookie.rs",
+            "bytes": 8979,
+            "sha256": "9878bfaa8dfd02677e5724e24fada55d1f45d98a52efbc738057412606994adf"
+          },
+          "after": {
+            "path": "src/cookie.rs",
+            "bytes": 9143,
+            "sha256": "23ae78f3ffacb06090666d10f81d4a9c5e4ba866f1a8ef6dccc703227e3cf231"
+          }
+        },
+        {
+          "path": "src/dns/mod.rs",
+          "before": {
+            "path": "src/dns/mod.rs",
+            "bytes": 284,
+            "sha256": "cf9875316437ff762962a867bb3650dfe93f5cb6ec0a8e3397bfa20e36fb9c44"
+          },
+          "after": {
+            "path": "src/dns/mod.rs",
+            "bytes": 559,
+            "sha256": "4eb01dfa6fc76e08ba7501b7948d8043a12d8406045de828b89d0e8cdfb4f874"
+          }
+        },
+        {
+          "path": "src/dns/resolve.rs",
+          "before": {
+            "path": "src/dns/resolve.rs",
+            "bytes": 5620,
+            "sha256": "87cd433e1e75984007d39a50003fcc5a53b41067cd9e5585710318767a80d425"
+          },
+          "after": {
+            "path": "src/dns/resolve.rs",
+            "bytes": 7038,
+            "sha256": "ca68b4326c3da2ee6b1b29036e620b1445c4bb2a1936911f5dc635afa534850f"
+          }
+        },
+        {
+          "path": "src/lib.rs",
+          "before": {
+            "path": "src/lib.rs",
+            "bytes": 12906,
+            "sha256": "f90e7bc42d19853fc756dc1fdf0bd579d8e2b7d68eb4286dd87aad6fc59191e8"
+          },
+          "after": {
+            "path": "src/lib.rs",
+            "bytes": 13037,
+            "sha256": "2ad3f2ed94f1abadb8c228f0c70fae94b795d599f766e6fed5a09c342cc550bf"
+          }
+        },
+        {
+          "path": "src/redirect.rs",
+          "before": {
+            "path": "src/redirect.rs",
+            "bytes": 15562,
+            "sha256": "cca8be5601090128836d77dd86b85e4627ed1fba0588c2145445d008e19852b9"
+          },
+          "after": {
+            "path": "src/redirect.rs",
+            "bytes": 15841,
+            "sha256": "072a275ac2f0dbd21c4eae3aa6d907ea2e32583921f5c95a56ba26934bab0909"
+          }
+        },
+        {
+          "path": "src/retry.rs",
+          "before": {
+            "path": "src/retry.rs",
+            "bytes": 15720,
+            "sha256": "ce2c5307a449047a9f7187b52d91ddd369c0468900f4f6b0b390a849515ff525"
+          },
+          "after": {
+            "path": "src/retry.rs",
+            "bytes": 15879,
+            "sha256": "d637969c7b4920bd388e32d1bf3182267df57d3ae35ffa3894df5da744d4ac8b"
+          }
+        },
+        {
+          "path": "src/source_pool.rs",
+          "before": {
+            "path": "src/source_pool.rs",
+            "bytes": 23045,
+            "sha256": "95677596150e96f59df321a0ff998b426771d343a517dfa8a7f7856f2cb7451d"
+          },
+          "after": {
+            "path": "src/source_pool.rs",
+            "bytes": 33777,
+            "sha256": "2f7c872187dd3781b590d22ba3e4f6220d4ce7e0160ede9e43582099fa299b39"
+          }
+        },
+        {
+          "path": "src/source_pool/source_url.rs",
+          "before": {
+            "path": "src/source_pool/source_url.rs",
+            "bytes": 49597,
+            "sha256": "704bf6b952ef01df3579167cb0074141af36c662bf54a2419c85f3e51cb6b710"
+          },
+          "after": {
+            "path": "src/source_pool/source_url.rs",
+            "bytes": 51143,
+            "sha256": "e622a10b1b844933278a13d748f1da3cfd2b894436954e320c6c04d459a88109"
+          }
+        }
+      ],
+      "after_tree_sha256": "6f5416c138db17517d1d78323ca01eafd08255f81147aab2a264a4bc93a05da7"
+    }
+  ],
+  "primary_source_inputs": [
+    {
+      "path": "/Users/magnus/.cache/uv/archive-v0/jVYSEFw-Wd9Z7bnJ/httpcore2/_models.py",
+      "distribution": "httpcore2==2.13.1",
+      "bytes": 17422,
+      "sha256": "8042ddf23bd393e9e45f32ef5880287651bb129e9c13421b2e3d83f0170c1067",
+      "RECORD_hash_verified": true,
+      "source_url": "https://github.com/pydantic/httpx2/tree/main/src/httpcore2",
+      "source_url_is_version_pin": false
+    },
+    {
+      "path": "/Users/magnus/.cache/uv/archive-v0/jVYSEFw-Wd9Z7bnJ/httpcore2/_async/http_proxy.py",
+      "distribution": "httpcore2==2.13.1",
+      "bytes": 14766,
+      "sha256": "ba374f61bcef34f33cbe9c51d4dd98a133b053d84f4a034b7550be6fee1ab412",
+      "RECORD_hash_verified": true,
+      "source_url": "https://github.com/pydantic/httpx2/tree/main/src/httpcore2",
+      "source_url_is_version_pin": false
+    },
+    {
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/t07-combined-materialization-v2/cargo-home/registry/src/index.crates.io-1949cf8c6b5b557f/http-1.5.0/src/uri/authority.rs",
+      "version": "http==1.5.0",
+      "bytes": 22217,
+      "sha256": "5f4214714bcfe8db10f6806f02f7cdde673323a797ca7d31814e761f8d1ee646",
+      "Cargo_registry_source_checksum_verified": true,
+      "package_checksum": "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0"
+    }
+  ],
+  "new_registry_dependency_packages": 0,
+  "Cargo_lock_unchanged_sha256": "14d9ef0b330bdd07d1c41034883e4d940eae2e67c6dc6f4af9c8a619a23d4bd9",
+  "declared_new_tests": 10,
+  "tests_executed": 0,
+  "no_source_binding_registry_frozen_fixture_change": true
+}

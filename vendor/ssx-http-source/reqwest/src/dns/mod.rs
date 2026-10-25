@@ -10,3 +10,10 @@ pub(crate) mod gai;
 #[cfg(feature = "hickory-dns")]
 pub(crate) mod hickory;
 pub(crate) mod resolve;
+
+#[cfg(feature = "ssx-http1-source-pool")]
+pub use resolve::{
+    SourceCandidate, SourceCandidateResolver, SourceCandidateResolving, SourceFamily, SourceName,
+    SourceResolution, SourceResolutionFuture, SourceResolutionUnsupported, SourceResolving,
+    SourceRetiring,
+};

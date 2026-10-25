@@ -1,117 +1,19 @@
+pub use super::process::SourceResolverHelper;
+use super::process::{self, Control, OwnedChild as Child};
 use super::protocol::{self, SourceResolveError, SourceResolveStage};
-use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
-    fs::File,
-    io::{self, Read},
     net::{IpAddr, SocketAddr},
-    os::unix::{
-        fs::MetadataExt,
-        process::{CommandExt, ExitStatusExt},
-    },
-    path::PathBuf,
-    process::{Child, Command, Stdio},
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, AtomicU32, Ordering},
+        atomic::{AtomicBool, Ordering},
     },
     time::Duration,
 };
 use tokio::{
-    io::{AsyncRead, AsyncReadExt, AsyncWriteExt},
-    process::{ChildStderr, ChildStdin, ChildStdout},
     sync::{oneshot, watch},
     task::JoinSet,
 };
-
-/// Explicit trusted installation identity. Digest is verified against an opened
-/// file at construction; metadata is rechecked before each path-based exec.
-/// The installation directory must prevent replacement: path exec has a TOCTOU
-/// window and this API does not claim fd-based/cryptographic execution binding.
-#[derive(Clone)]
-pub struct SourceResolverHelper {
-    path: PathBuf,
-    identity: FileIdentity,
-    #[cfg(feature = "gateway-dns-fixtures")]
-    fail_pipe_conversion: bool,
-}
-#[derive(Clone, Eq, PartialEq)]
-struct FileIdentity {
-    dev: u64,
-    ino: u64,
-    len: u64,
-    mtime: i64,
-    mtime_nsec: i64,
-}
-impl FileIdentity {
-    fn of(metadata: &std::fs::Metadata) -> Self {
-        Self {
-            dev: metadata.dev(),
-            ino: metadata.ino(),
-            len: metadata.len(),
-            mtime: metadata.mtime(),
-            mtime_nsec: metadata.mtime_nsec(),
-        }
-    }
-}
-impl std::fmt::Debug for SourceResolverHelper {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SourceResolverHelper")
-            .finish_non_exhaustive()
-    }
-}
-impl SourceResolverHelper {
-    pub fn new(path: PathBuf, expected_sha256: [u8; 32]) -> io::Result<Self> {
-        if !path.is_absolute() || std::fs::symlink_metadata(&path)?.file_type().is_symlink() {
-            return Err(io::ErrorKind::InvalidInput.into());
-        }
-        let mut file = File::open(&path)?;
-        let before = file.metadata()?;
-        if !before.is_file() || before.mode() & 0o111 == 0 {
-            return Err(io::ErrorKind::InvalidInput.into());
-        }
-        let identity = FileIdentity::of(&before);
-        let mut hash = Sha256::new();
-        let mut block = [0; 65536];
-        loop {
-            let n = file.read(&mut block)?;
-            if n == 0 {
-                break;
-            }
-            hash.update(&block[..n]);
-        }
-        let actual: [u8; 32] = hash.finalize().into();
-        if actual != expected_sha256 || identity != FileIdentity::of(&file.metadata()?) {
-            return Err(io::ErrorKind::InvalidData.into());
-        }
-        Ok(Self {
-            path,
-            identity,
-            #[cfg(feature = "gateway-dns-fixtures")]
-            fail_pipe_conversion: false,
-        })
-    }
-    #[cfg(feature = "gateway-dns-fixtures")]
-    #[doc(hidden)]
-    pub fn inject_pipe_conversion_failure_for_test(mut self) -> Self {
-        self.fail_pipe_conversion = true;
-        self
-    }
-    fn command(&self) -> io::Result<Command> {
-        let metadata = std::fs::symlink_metadata(&self.path)?;
-        if !metadata.is_file() || self.identity != FileIdentity::of(&metadata) {
-            return Err(io::ErrorKind::InvalidData.into());
-        }
-        let mut command = Command::new(&self.path);
-        command
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .process_group(0);
-        Ok(command)
-    }
-}
-
 /// Failed cleanup is sticky across close retries; semantic GAI/socket failures
 /// do not make close fail when every process was reaped and group was absent.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -131,11 +33,8 @@ impl std::fmt::Display for SourceCloseError {
 impl std::error::Error for SourceCloseError {}
 struct Row {
     cancel: watch::Sender<bool>,
-    group: Arc<AtomicU32>,
+    control: Arc<Control>,
     ready: Arc<AtomicBool>,
-    // Monotonic true -> false under the signal gate before FIRST try_wait.
-    // A false value can never authorize another group signal.
-    signalable: Arc<Mutex<bool>>,
     residual: Option<Child>,
 }
 struct State {
@@ -175,7 +74,7 @@ struct Inner {
     state: Mutex<State>,
     closer: tokio::sync::Mutex<()>,
 }
-fn locked<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+pub(super) fn locked<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(|error| error.into_inner())
 }
 impl Drop for Inner {
@@ -188,13 +87,7 @@ impl Drop for Inner {
             .unwrap_or_else(|error| error.into_inner());
         for row in state.rows.values() {
             row.cancel.send_replace(true);
-            let signalable = locked(&row.signalable);
-            if *signalable {
-                signal(
-                    row.group.load(Ordering::Acquire),
-                    nix::sys::signal::Signal::SIGKILL,
-                );
-            }
+            row.control.cancel_fallback();
         }
     }
 }
@@ -257,34 +150,78 @@ impl SourceRuntime {
         lookup_budget: Duration,
         native_sockaddrs: bool,
     ) -> Result<Vec<SocketAddr>, SourceResolveError> {
+        // Public legacy aggregate API retains its original ordering/contract.
+        // Production source endpoints use SourceFlow's explicit lazy stages.
         if locked(&self.inner.state).closing {
             return Err(SourceResolveError::new(SourceResolveStage::Closed));
         }
-        // Validate the trusted raw endpoint contract before literal handling.
-        let _ = protocol::request(host, decimal)?;
-        // AnyIO ip_address accepts scoped IPv6; asyncio _ipaddr_info explicitly
-        // declines %. Unscoped numeric addresses never call getaddrinfo.
+        let _ = protocol::request(protocol::RequestKind::AnyIoCandidates, host, Some(decimal))?;
         if !host.contains('%')
             && let Ok(ip) = host.parse::<IpAddr>()
         {
-            return protocol::socket_port(decimal).map(|port| vec![SocketAddr::new(ip, port)]);
+            return protocol::socket_port(decimal).map(|p| vec![SocketAddr::new(ip, p)]);
         }
         let scoped_host = scoped_literal(host);
         let scoped = scoped_host.is_some();
-        // AnyIO passes IPv6Address.compressed, preserving the scope string.
-        // CPython3.14 uses dotted IPv4 for mapped IPv6, as Rust Display does.
-        let input = protocol::request(scoped_host.as_deref().unwrap_or(host), decimal)?;
-        let stage = if scoped {
-            SourceResolveStage::AsyncIoGetAddrInfo
+        let kind = if native_sockaddrs {
+            protocol::RequestKind::DnsOnly
+        } else if scoped {
+            protocol::RequestKind::AsyncIoCandidate
         } else {
-            SourceResolveStage::AnyIoGetAddrInfo
+            protocol::RequestKind::AnyIoCandidates
         };
+        let input = protocol::request(
+            kind,
+            scoped_host.as_deref().unwrap_or(host),
+            if native_sockaddrs {
+                None
+            } else {
+                Some(decimal)
+            },
+        )?;
+        let reply = self
+            .exchange_reply(
+                input,
+                kind,
+                lookup_budget,
+                #[cfg(feature = "gateway-source-endpoints")]
+                None,
+            )
+            .await
+            .map_err(|mut error| {
+                // Retain the old public DNS hook's scoped error label. The new
+                // source adapter uses explicit kinds and does not take this path.
+                if native_sockaddrs && scoped && error.stage == SourceResolveStage::AnyIoGetAddrInfo
+                {
+                    error.stage = SourceResolveStage::AsyncIoGetAddrInfo;
+                }
+                error
+            })?;
+        if reply.addresses.is_empty() {
+            return Err(SourceResolveError::new(SourceResolveStage::EmptyAddresses));
+        }
+        if scoped || native_sockaddrs {
+            return Ok(reply.addresses);
+        }
+        let port = protocol::socket_port(decimal)?;
+        Ok(reply
+            .addresses
+            .into_iter()
+            .map(|a| SocketAddr::new(a.ip(), port))
+            .collect())
+    }
+    /// One global admission/row/JoinSet state machine owns every native child.
+    async fn exchange_reply(
+        &self,
+        input: Vec<u8>,
+        kind: protocol::RequestKind,
+        budget: Duration,
+        #[cfg(feature = "gateway-source-endpoints")] scope: Option<Arc<scoped::ScopeInner>>,
+    ) -> Result<protocol::Reply, SourceResolveError> {
         let (send, receive) = oneshot::channel();
         let (cancel, _) = watch::channel(false);
         let request_guard = CancelOnDrop(cancel.clone());
         {
-            // One lock commits closing/admission/row+task ownership atomically.
-            // The cancellation row exists before the task can first be polled.
             let mut state = locked(&self.inner.state);
             state.reap_ready();
             if state.closing {
@@ -295,49 +232,31 @@ impl SourceRuntime {
                 .next
                 .checked_add(1)
                 .ok_or_else(|| SourceResolveError::new(SourceResolveStage::OperationalLimit))?;
-            let group = Arc::new(AtomicU32::new(0));
+            #[cfg(feature = "gateway-source-endpoints")]
+            let scoped_guard = scope
+                .map(|scope| scoped::ScopeTaskGuard::register(scope, id, cancel.clone()))
+                .transpose()?;
+            let control = Arc::new(Control::new());
             let ready = Arc::new(AtomicBool::new(false));
-            let signalable = Arc::new(Mutex::new(true));
             state.rows.insert(
                 id,
                 Row {
                     cancel: cancel.clone(),
-                    group: group.clone(),
+                    control: control.clone(),
                     ready: ready.clone(),
-                    signalable: signalable.clone(),
                     residual: None,
                 },
             );
             let helper = self.inner.helper.clone();
-            let original_decimal = decimal.to_owned();
             state.tasks.spawn(async move {
-                let (result, residual) = supervise(
-                    helper,
-                    input,
-                    cancel.subscribe(),
-                    group,
-                    ready,
-                    signalable,
-                    lookup_budget,
-                )
-                .await;
-                let result = result.and_then(|bytes| {
-                    let addrs = protocol::decode_response(&bytes, stage)?;
-                    if addrs.is_empty() {
-                        return Err(SourceResolveError::new(SourceResolveStage::EmptyAddresses));
-                    }
-                    if scoped || native_sockaddrs {
-                        return Ok(addrs);
-                    }
-                    // AnyIO ignores GAI returned ports; each asyncio numeric
-                    // shortcut retains original integer. All non-u16 outcomes
-                    // fail at socket conversion before TCP attempts can start.
-                    let port = protocol::socket_port(&original_decimal)?;
-                    Ok(addrs
-                        .into_iter()
-                        .map(|addr| SocketAddr::new(addr.ip(), port))
-                        .collect())
-                });
+                let (result, residual) =
+                    process::supervise(helper, input, cancel.subscribe(), control, ready, budget)
+                        .await;
+                let result = result.and_then(|bytes| protocol::decode_response(&bytes, kind));
+                #[cfg(feature = "gateway-source-endpoints")]
+                if let Some(guard) = scoped_guard {
+                    guard.finish(residual.is_none());
+                }
                 let _ = send.send(result);
                 (id, residual)
             });
@@ -347,6 +266,10 @@ impl SourceRuntime {
             .unwrap_or_else(|_| Err(SourceResolveError::new(SourceResolveStage::Helper)));
         drop(request_guard);
         result
+    }
+    #[cfg(feature = "gateway-source-endpoints")]
+    pub(super) fn source_flow(&self, deadline: tokio::time::Instant) -> SourceFlow {
+        SourceFlow::new(self.clone(), deadline)
     }
     /// Close is cancellation safe: dropping this future leaves tasks and rows
     /// registered, closing stays true, and the next close resumes joining them.
@@ -368,22 +291,16 @@ impl SourceRuntime {
                 .filter_map(|(id, row)| {
                     row.residual
                         .take()
-                        .map(|child| (*id, child, row.group.clone(), row.signalable.clone()))
+                        .map(|child| (*id, child, row.control.clone()))
                 })
                 .collect();
-            for (id, mut child, group, signalable) in retries {
+            for (id, mut child, control) in retries {
                 state.tasks.spawn(async move {
-                    // Residual rows are reaping/observation only. The leader may
-                    // already have been reaped; its PGID is never signalled again.
-                    let outcome = retire(
-                        &mut child,
-                        group.load(Ordering::Acquire),
-                        &signalable,
-                        false,
-                    )
-                    .await;
+                    // Unix's signal gate remains disarmed after reaping. Windows
+                    // retries retain original process/job handles, never PID authority.
+                    let outcome = process::retire(&mut child, &control, false).await;
                     if outcome.group_absent {
-                        group.store(0, Ordering::Release);
+                        control.clear_identity();
                     }
                     if outcome.retired() {
                         (id, None)
@@ -421,7 +338,7 @@ impl SourceRuntime {
             .rows
             .values()
             .filter(|row| row.ready.load(Ordering::Acquire))
-            .map(|row| row.group.load(Ordering::Acquire))
+            .map(|row| row.control.identity())
             .filter(|id| *id != 0)
             .collect()
     }
@@ -435,10 +352,53 @@ impl SourceRuntime {
             state
                 .rows
                 .values()
-                .map(|row| row.group.load(Ordering::Acquire))
+                .map(|row| row.control.identity())
                 .filter(|id| *id != 0)
                 .collect(),
         )
+    }
+}
+// Exact CPython3.14.7 ipaddress.compressed source stages. Native inet_ntop
+// belongs only to first getaddrinfo rows; it must not format initial literals.
+fn literal_ip_text(address: IpAddr) -> String {
+    match address {
+        IpAddr::V4(ip) => {
+            let b = ip.octets();
+            format!("{}.{}.{}.{}", b[0], b[1], b[2], b[3])
+        }
+        IpAddr::V6(ip) => {
+            let h = ip.segments();
+            if h[..5] == [0; 5] && h[5] == 0xffff {
+                let b = ip.octets();
+                return format!("::ffff:{}.{}.{}.{}", b[12], b[13], b[14], b[15]);
+            }
+            let (mut start, mut longest, mut current_start, mut current) =
+                (0usize, 0usize, 0usize, 0usize);
+            for (i, v) in h.iter().enumerate() {
+                if *v == 0 {
+                    if current == 0 {
+                        current_start = i;
+                    }
+                    current += 1;
+                    if current > longest {
+                        start = current_start;
+                        longest = current;
+                    }
+                } else {
+                    current = 0;
+                }
+            }
+            let text = h.iter().map(|v| format!("{v:x}")).collect::<Vec<_>>();
+            if longest > 1 {
+                format!(
+                    "{}::{}",
+                    text[..start].join(":"),
+                    text[start + longest..].join(":")
+                )
+            } else {
+                text.join(":")
+            }
+        }
     }
 }
 fn scoped_literal(host: &str) -> Option<String> {
@@ -447,10 +407,519 @@ fn scoped_literal(host: &str) -> Option<String> {
         return None;
     }
     let address = address.parse::<std::net::Ipv6Addr>().ok()?;
-    Some(format!("{address}%{scope}"))
+    Some(format!("{}%{scope}", literal_ip_text(IpAddr::V6(address))))
+}
+
+#[cfg(feature = "gateway-source-endpoints")]
+pub(super) use scoped::SourceFlow;
+#[cfg(all(feature = "gateway-source-endpoints", feature = "gateway-dns-fixtures"))]
+pub(super) use scoped::fixture_controls;
+#[cfg(feature = "gateway-source-endpoints")]
+mod scoped {
+    use super::*;
+    // Per-resolution cancellation registration only. Original child/IO ownership is
+    // exclusively the existing Runtime State/Row/JoinSet above, never a second manager.
+    struct ScopeRequests {
+        closed: bool,
+        active: BTreeMap<u64, watch::Sender<bool>>,
+        ids: std::collections::BTreeSet<u64>,
+        cleanup_deadline: Option<tokio::time::Instant>,
+        cleanup_result: Option<Result<(), ScopedCloseError>>,
+    }
+    pub(super) struct ScopeInner {
+        runtime: SourceRuntime,
+        deadline: tokio::time::Instant,
+        requests: Mutex<ScopeRequests>,
+        failed: std::sync::atomic::AtomicUsize,
+        timed_out: AtomicBool,
+    }
+    impl ScopeInner {
+        fn cancel(&self) {
+            let mut rows = locked(&self.requests);
+            if rows.closed {
+                return;
+            }
+            // The first synchronous cancel (including Drop) owns the only grace.
+            rows.cleanup_deadline = Some(tokio::time::Instant::now() + Duration::from_secs(5));
+            rows.closed = true;
+            for send in rows.active.values() {
+                send.send_replace(true);
+            }
+        }
+    }
+    pub(super) struct ScopeTaskGuard {
+        scope: Arc<ScopeInner>,
+        id: u64,
+        finished: bool,
+    }
+    impl ScopeTaskGuard {
+        pub(super) fn register(
+            scope: Arc<ScopeInner>,
+            id: u64,
+            cancel: watch::Sender<bool>,
+        ) -> Result<Self, SourceResolveError> {
+            {
+                let mut rows = locked(&scope.requests);
+                if rows.closed {
+                    return Err(SourceResolveError::new(SourceResolveStage::Cancelled));
+                }
+                rows.active.insert(id, cancel);
+                rows.ids.insert(id);
+            }
+            Ok(Self {
+                scope,
+                id,
+                finished: false,
+            })
+        }
+        pub(super) fn finish(mut self, retired: bool) {
+            if !retired {
+                self.scope.failed.fetch_add(1, Ordering::AcqRel);
+            }
+            self.finished = true;
+            locked(&self.scope.requests).active.remove(&self.id);
+        }
+    }
+    impl Drop for ScopeTaskGuard {
+        fn drop(&mut self) {
+            if !self.finished {
+                self.scope.failed.fetch_add(1, Ordering::AcqRel);
+                locked(&self.scope.requests).active.remove(&self.id);
+            }
+        }
+    }
+    #[derive(Clone)]
+    pub(crate) struct SourceFlow {
+        inner: Arc<ScopeInner>,
+    }
+    #[derive(Clone, Debug)]
+    pub(crate) struct ScopedCloseError {
+        failed_supervisors: usize,
+        unretired_rows: usize,
+        retirement_timed_out: bool,
+    }
+    impl std::fmt::Display for ScopedCloseError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(
+                f,
+                "source resolution retirement: {} failed supervisors, {} unjoined rows, timeout={}",
+                self.failed_supervisors, self.unretired_rows, self.retirement_timed_out
+            )
+        }
+    }
+    impl std::error::Error for ScopedCloseError {}
+    impl SourceFlow {
+        pub(super) fn new(runtime: SourceRuntime, deadline: tokio::time::Instant) -> Self {
+            Self {
+                inner: Arc::new(ScopeInner {
+                    runtime,
+                    deadline,
+                    requests: Mutex::new(ScopeRequests {
+                        closed: false,
+                        active: BTreeMap::new(),
+                        ids: std::collections::BTreeSet::new(),
+                        cleanup_deadline: None,
+                        cleanup_result: None,
+                    }),
+                    failed: std::sync::atomic::AtomicUsize::new(0),
+                    timed_out: AtomicBool::new(false),
+                }),
+            }
+        }
+        pub(crate) fn cancel(&self) {
+            self.inner.cancel();
+        }
+        fn remaining(&self) -> Result<Duration, SourceResolveError> {
+            if locked(&self.inner.runtime.inner.state).closing {
+                return Err(SourceResolveError::new(SourceResolveStage::Closed));
+            }
+            if locked(&self.inner.requests).closed {
+                return Err(SourceResolveError::new(SourceResolveStage::Cancelled));
+            }
+            self.inner
+                .deadline
+                .checked_duration_since(tokio::time::Instant::now())
+                .filter(|d| !d.is_zero())
+                .ok_or_else(|| SourceResolveError::new(SourceResolveStage::TimedOut))
+        }
+        async fn exchange(
+            &self,
+            kind: protocol::RequestKind,
+            host: &str,
+            decimal: &str,
+        ) -> Result<protocol::Reply, SourceResolveError> {
+            let input = protocol::request(kind, host, Some(decimal))?;
+            let remaining = self.remaining()?;
+            self.inner
+                .runtime
+                .exchange_reply(input, kind, remaining, Some(self.inner.clone()))
+                .await
+        }
+        pub(crate) async fn prepare(
+            &self,
+            host: &str,
+            decimal: &str,
+        ) -> Result<Vec<protocol::Candidate>, SourceResolveError> {
+            self.remaining()?;
+            let _ = protocol::request(protocol::RequestKind::AnyIoCandidates, host, Some(decimal))?;
+            if !host.contains('%')
+                && let Ok(ip) = host.parse::<IpAddr>()
+            {
+                return Ok(vec![protocol::Candidate {
+                    family: if ip.is_ipv4() {
+                        protocol::Family::V4
+                    } else {
+                        protocol::Family::V6
+                    },
+                    native_host_text: super::literal_ip_text(ip),
+                }]);
+            }
+            if let Some(host) = scoped_literal(host) {
+                return Ok(vec![protocol::Candidate {
+                    family: protocol::Family::V6,
+                    native_host_text: host,
+                }]);
+            }
+            // Only first GAI runs here. Native text/scope stay separate from final
+            // addresses. The lower connector applies the original family ordering.
+            let reply = self
+                .exchange(protocol::RequestKind::AnyIoCandidates, host, decimal)
+                .await?;
+            if reply.candidates.is_empty() {
+                return Err(SourceResolveError::new(SourceResolveStage::EmptyAddresses));
+            }
+            Ok(reply.candidates)
+        }
+        pub(crate) async fn resolve_candidate(
+            &self,
+            candidate: &protocol::Candidate,
+            decimal: &str,
+        ) -> Result<Vec<SocketAddr>, SourceResolveError> {
+            self.remaining()?;
+            let host = &candidate.native_host_text;
+            if !host.contains('%')
+                && let Ok(ip) = host.parse::<IpAddr>()
+            {
+                // This is the platform-specific actual async-connect conversion,
+                // after first GAI, never a URL/domain or early DNS validation cast.
+                return protocol::socket_port(decimal).map(|p| vec![SocketAddr::new(ip, p)]);
+            }
+            // Percent host text declines asyncio's numeric shortcut. Resolve only
+            // this launched candidate, preserving all FINAL port/flow/scope fields.
+            let reply = self
+                .exchange(protocol::RequestKind::AsyncIoCandidate, host, decimal)
+                .await?;
+            if reply.addresses.is_empty() {
+                return Err(SourceResolveError::new(SourceResolveStage::EmptyAddresses));
+            }
+            Ok(reply.addresses)
+        }
+        pub(crate) async fn cancel_and_wait(&self) -> Result<(), ScopedCloseError> {
+            self.cancel();
+            // One deadline is committed BEFORE waiting for the global closer. A
+            // dropped close future or a repeated outer cleanup cannot renew it.
+            let (deadline, ids) = {
+                let rows = locked(&self.inner.requests);
+                if let Some(result) = &rows.cleanup_result {
+                    return result.clone();
+                }
+                let deadline = rows.cleanup_deadline.expect("synchronous cancel set grace");
+                (deadline, rows.ids.clone())
+            };
+            if ids.is_empty() {
+                return locked(&self.inner.requests)
+                    .cleanup_result
+                    .get_or_insert(Ok(()))
+                    .clone();
+            }
+            if tokio::time::Instant::now() >= deadline {
+                self.inner.timed_out.store(true, Ordering::Release);
+                let failed = self.inner.failed.load(Ordering::Acquire);
+                let pending = {
+                    let state = locked(&self.inner.runtime.inner.state);
+                    ids.iter().filter(|id| state.rows.contains_key(id)).count()
+                };
+                return locked(&self.inner.requests)
+                    .cleanup_result
+                    .get_or_insert(Err(ScopedCloseError {
+                        failed_supervisors: failed,
+                        unretired_rows: pending,
+                        retirement_timed_out: true,
+                    }))
+                    .clone();
+            }
+            let joins = async {
+                let _serial = self.inner.runtime.inner.closer.lock().await;
+                if let Some(result) = &locked(&self.inner.requests).cleanup_result {
+                    return Some(result.clone());
+                }
+                loop {
+                    let result = std::future::poll_fn(|cx| {
+                        let mut state = locked(&self.inner.runtime.inner.state);
+                        state.reap_ready();
+                        // Another admission/diagnostic caller can already have
+                        // joined our ready task. Check own IDs on EVERY poll.
+                        if ids.iter().all(|id| !state.rows.contains_key(id))
+                            || self.inner.failed.load(Ordering::Acquire) > 0
+                        {
+                            std::task::Poll::Ready(None)
+                        } else {
+                            state.tasks.poll_join_next(cx)
+                        }
+                    })
+                    .await;
+                    match result {
+                        Some(result) => locked(&self.inner.runtime.inner.state).completed(result),
+                        None => break,
+                    }
+                }
+                None
+            };
+            match tokio::time::timeout_at(deadline, joins).await {
+                Ok(Some(result)) => return result,
+                Ok(None) => (),
+                Err(_) => self.inner.timed_out.store(true, Ordering::Release),
+            }
+            let failed = self.inner.failed.load(Ordering::Acquire);
+            let pending = {
+                let state = locked(&self.inner.runtime.inner.state);
+                ids.iter().filter(|id| state.rows.contains_key(id)).count()
+            };
+            let timed = self.inner.timed_out.load(Ordering::Acquire);
+            let result = if failed == 0 && pending == 0 && !timed {
+                Ok(())
+            } else {
+                Err(ScopedCloseError {
+                    failed_supervisors: failed,
+                    unretired_rows: pending,
+                    retirement_timed_out: timed,
+                })
+            };
+            // First terminal result wins; no later call starts IO or retries failure.
+            // Original residual rows remain owned for explicit application close.
+            locked(&self.inner.requests)
+                .cleanup_result
+                .get_or_insert(result)
+                .clone()
+        }
+    }
+    #[cfg(feature = "gateway-dns-fixtures")]
+    pub(crate) async fn fixture_controls(runtime: SourceRuntime) -> crate::Result<()> {
+        super::super::source_adapter::synchronous_cancel_control(runtime.clone()).await;
+        let flow = runtime.source_flow(tokio::time::Instant::now() + Duration::from_secs(20));
+        let rows = flow.prepare("staged-source.invalid", "65537").await?;
+        assert_eq!(
+            rows.len(),
+            1,
+            "only first native candidate returned before lazy stage"
+        );
+        assert_eq!(
+            rows[0].native_host_text, "::2%19",
+            "first scope survives host projection"
+        );
+        let final_rows = flow.resolve_candidate(&rows[0], "65537").await?;
+        assert_eq!(
+            final_rows,
+            vec![SocketAddr::V6(std::net::SocketAddrV6::new(
+                "::2".parse().unwrap(),
+                37,
+                88,
+                23
+            ))],
+            "secondary native port/flow/scope authoritative"
+        );
+        flow.cancel_and_wait().await?;
+        assert_eq!(runtime.ownership_snapshot().1, 0);
+        let flow = runtime.source_flow(tokio::time::Instant::now() + Duration::from_secs(20));
+        let work = flow.clone();
+        let guard = super::super::source_adapter::preparation_guard(work.clone());
+        let unpolled = async move {
+            let _guard = guard;
+            work.prepare("hold.invalid", "80").await
+        };
+        let drop_start = tokio::time::Instant::now();
+        drop(unpolled);
+        let drop_deadline = locked(&flow.inner.requests).cleanup_deadline.unwrap();
+        assert!(drop_deadline >= drop_start + Duration::from_secs(5));
+        assert!(drop_deadline <= tokio::time::Instant::now() + Duration::from_secs(5));
+        flow.cancel();
+        assert_eq!(
+            locked(&flow.inner.requests).cleanup_deadline,
+            Some(drop_deadline),
+            "unpolled Drop starts one grace; repeated synchronous cancel cannot reset it"
+        );
+        assert_eq!(
+            flow.prepare("127.0.0.1", "80").await.err().unwrap().stage,
+            SourceResolveStage::Cancelled,
+            "unpolled first future cancels scope without dispatch"
+        );
+        flow.cancel_and_wait().await?;
+        assert_eq!(runtime.ownership_snapshot().1, 0);
+        async fn entered(runtime: &SourceRuntime) -> crate::Result<()> {
+            tokio::time::timeout(Duration::from_secs(3), async {
+                while runtime.ready_process_groups().is_empty() {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await?;
+            Ok(())
+        }
+        let flow = runtime.source_flow(tokio::time::Instant::now() + Duration::from_secs(20));
+        let work = flow.clone();
+        let guard = super::super::source_adapter::preparation_guard(work.clone());
+        let task = tokio::spawn(async move {
+            let _guard = guard;
+            work.prepare("hold.invalid", "80").await
+        });
+        entered(&runtime).await?;
+        task.abort();
+        assert!(task.await.unwrap_err().is_cancelled());
+        flow.cancel_and_wait().await?;
+        assert_eq!(
+            runtime.ownership_snapshot().1,
+            0,
+            "dropped first GAI joins original runtime row"
+        );
+        // A different legitimate reader can reap our completed JoinSet row.
+        // Its foreign active row must not keep this flow's close Pending.
+        let own = runtime.source_flow(tokio::time::Instant::now() + Duration::from_secs(20));
+        let foreign = runtime.source_flow(tokio::time::Instant::now() + Duration::from_secs(20));
+        let work = own.clone();
+        let guard = super::super::source_adapter::preparation_guard(work.clone());
+        let own_task = tokio::spawn(async move {
+            let _guard = guard;
+            work.prepare("hold.invalid", "80").await
+        });
+        let work = foreign.clone();
+        let guard = super::super::source_adapter::preparation_guard(work.clone());
+        let foreign_task = tokio::spawn(async move {
+            let _guard = guard;
+            work.prepare("hold.invalid", "80").await
+        });
+        tokio::time::timeout(Duration::from_secs(3), async {
+            while runtime.ready_process_groups().len() != 2 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await?;
+        let own_ids = locked(&own.inner.requests).ids.clone();
+        let foreign_ids = locked(&foreign.inner.requests).ids.clone();
+        let mut closing = Box::pin(own.cancel_and_wait());
+        std::future::poll_fn(|cx| {
+            use std::future::Future;
+            assert!(closing.as_mut().poll(cx).is_pending());
+            std::task::Poll::Ready(())
+        })
+        .await;
+        tokio::time::timeout(Duration::from_secs(4), async {
+            loop {
+                runtime.ownership_snapshot();
+                if own_ids
+                    .iter()
+                    .all(|id| !locked(&runtime.inner.state).rows.contains_key(id))
+                {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await?;
+        assert!(
+            foreign_ids
+                .iter()
+                .all(|id| locked(&runtime.inner.state).rows.contains_key(id)),
+            "foreign helper remains held"
+        );
+        std::future::poll_fn(|cx| {
+            use std::future::Future;
+            match closing.as_mut().poll(cx) {
+                std::task::Poll::Ready(result) => {
+                    assert!(result.is_ok());
+                    std::task::Poll::Ready(())
+                }
+                std::task::Poll::Pending => panic!("joined own flow cannot await foreign helper"),
+            }
+        })
+        .await;
+        drop(closing);
+        assert!(own_task.await?.is_err());
+        foreign_task.abort();
+        assert!(foreign_task.await.unwrap_err().is_cancelled());
+        foreign.cancel_and_wait().await?;
+        assert_eq!(runtime.ownership_snapshot().1, 0);
+        let flow = runtime.source_flow(tokio::time::Instant::now() + Duration::from_secs(20));
+        let work = flow.clone();
+        let guard = super::super::source_adapter::preparation_guard(work.clone());
+        let task = tokio::spawn(async move {
+            let _guard = guard;
+            work.prepare("hold.invalid", "80").await
+        });
+        entered(&runtime).await?;
+        let held = runtime.inner.closer.lock().await;
+        task.abort();
+        assert!(task.await.unwrap_err().is_cancelled());
+        let deadline = locked(&flow.inner.requests).cleanup_deadline.unwrap();
+        tokio::time::sleep_until(deadline).await;
+        // Delaying the FIRST poll must not buy another five seconds, even when
+        // the original JoinSet closer is still owned by another operation.
+        let mut delayed = Box::pin(flow.cancel_and_wait());
+        std::future::poll_fn(|cx| {
+            use std::future::Future;
+            assert!(
+                matches!(delayed.as_mut().poll(cx), std::task::Poll::Ready(Err(error))
+                if error.retirement_timed_out),
+                "first delayed poll has no fresh grace"
+            );
+            std::task::Poll::Ready(())
+        })
+        .await;
+        drop(delayed);
+        assert_eq!(
+            locked(&flow.inner.requests).cleanup_deadline,
+            Some(deadline)
+        );
+        let mut again = Box::pin(flow.cancel_and_wait());
+        std::future::poll_fn(|cx| {
+            use std::future::Future;
+            assert!(
+                matches!(again.as_mut().poll(cx), std::task::Poll::Ready(Err(_))),
+                "repeat cleanup returns cached failure, not a fresh timeout/IO"
+            );
+            std::task::Poll::Ready(())
+        })
+        .await;
+        drop(again);
+        drop(held);
+        runtime.close().await?;
+        assert_eq!(runtime.ownership_snapshot(), (true, 0, vec![]));
+        let closed = runtime.source_flow(tokio::time::Instant::now() + Duration::from_secs(1));
+        assert_eq!(
+            closed.prepare("127.0.0.1", "80").await.err().unwrap().stage,
+            SourceResolveStage::Closed,
+            "numeric source fast path must honor application admission closure"
+        );
+        closed.cancel_and_wait().await?;
+        Ok(())
+    }
 }
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn literal_compressed_text_has_its_own_mapped_and_compatible_branches() {
+        use std::net::IpAddr;
+        assert_eq!(
+            super::literal_ip_text("::192.0.2.1".parse::<IpAddr>().unwrap()),
+            "::c000:201"
+        );
+        assert_eq!(
+            super::literal_ip_text("::ffff:c000:201".parse::<IpAddr>().unwrap()),
+            "::ffff:192.0.2.1"
+        );
+        assert_eq!(
+            super::scoped_literal("::192.0.2.1%zone").as_deref(),
+            Some("::c000:201%zone")
+        );
+    }
     #[test]
     fn anyio_scoped_literal_compression_keeps_source_scope() {
         assert_eq!(
@@ -463,395 +932,4 @@ mod tests {
         );
         assert_eq!(super::scoped_literal("example.invalid%scope"), None);
     }
-}
-async fn cancelled(cancel: &mut watch::Receiver<bool>) {
-    loop {
-        if *cancel.borrow_and_update() {
-            return;
-        }
-        if cancel.changed().await.is_err() {
-            return;
-        }
-    }
-}
-async fn bounded_read(
-    reader: impl AsyncRead + Unpin,
-    limit: usize,
-) -> Result<Vec<u8>, SourceResolveError> {
-    let mut bytes = Vec::new();
-    reader
-        .take((limit + 1) as u64)
-        .read_to_end(&mut bytes)
-        .await
-        .map_err(|_| SourceResolveError::new(SourceResolveStage::Helper))?;
-    if bytes.len() > limit {
-        return Err(SourceResolveError::new(
-            SourceResolveStage::OperationalLimit,
-        ));
-    }
-    Ok(bytes)
-}
-struct GroupGuard {
-    group: u32,
-    signalable: Arc<Mutex<bool>>,
-}
-impl Drop for GroupGuard {
-    fn drop(&mut self) {
-        // The gate is disarmed before any reaping poll. Drop must never
-        // signal an integer PGID after child reaping has become possible.
-        let signalable = locked(&self.signalable);
-        if *signalable {
-            signal(self.group, nix::sys::signal::Signal::SIGKILL);
-        }
-    }
-}
-fn signal(group: u32, kind: nix::sys::signal::Signal) {
-    if group > 1 && group <= i32::MAX as u32 {
-        let _ = nix::sys::signal::killpg(nix::unistd::Pid::from_raw(group as i32), kind);
-    }
-}
-fn group_absent(group: u32) -> bool {
-    if group == 0 {
-        return true;
-    } // only stored after established group absence
-    if group == 1 || group > i32::MAX as u32 {
-        return false;
-    }
-    matches!(
-        nix::sys::signal::killpg(
-            nix::unistd::Pid::from_raw(group as i32),
-            None::<nix::sys::signal::Signal>
-        ),
-        Err(nix::errno::Errno::ESRCH)
-    )
-}
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct ObservedExit {
-    code: Option<i32>,
-    signal: Option<i32>,
-    core_dumped: bool,
-}
-impl ObservedExit {
-    fn of(status: std::process::ExitStatus) -> Self {
-        Self {
-            code: status.code(),
-            signal: status.signal(),
-            core_dumped: status.core_dumped(),
-        }
-    }
-    fn success(self) -> bool {
-        self.code == Some(0)
-    }
-    fn matches(self, status: std::process::ExitStatus) -> bool {
-        self == Self::of(status)
-    }
-}
-// Safe process-exit observation must NOT reap the direct leader. It is armed
-// before helper input can permit GAI work or a normal successful exit.
-struct ExitObserver {
-    pid: nix::unistd::Pid,
-    #[cfg(target_vendor = "apple")]
-    queue: nix::sys::event::Kqueue,
-}
-impl ExitObserver {
-    fn new(pid: u32) -> Result<Self, SourceResolveError> {
-        let pid = nix::unistd::Pid::from_raw(pid as i32);
-        #[cfg(target_vendor = "apple")]
-        {
-            use nix::sys::event::{EvFlags, EventFilter, FilterFlag, KEvent, Kqueue};
-            let queue =
-                Kqueue::new().map_err(|_| SourceResolveError::new(SourceResolveStage::Helper))?;
-            let event = KEvent::new(
-                pid.as_raw() as usize,
-                EventFilter::EVFILT_PROC,
-                EvFlags::EV_ADD | EvFlags::EV_ENABLE | EvFlags::EV_ONESHOT,
-                FilterFlag::NOTE_EXIT | FilterFlag::NOTE_EXITSTATUS,
-                0,
-                0,
-            );
-            queue
-                .kevent(
-                    &[event],
-                    &mut [],
-                    Some(libc::timespec {
-                        tv_sec: 0,
-                        tv_nsec: 0,
-                    }),
-                )
-                .map_err(|_| SourceResolveError::new(SourceResolveStage::Helper))?;
-            Ok(Self { pid, queue })
-        }
-        #[cfg(not(target_vendor = "apple"))]
-        {
-            Ok(Self { pid })
-        }
-    }
-    async fn exited(&mut self) -> Result<ObservedExit, SourceResolveError> {
-        loop {
-            if let Some(status) = self.peek()? {
-                return Ok(status);
-            }
-            tokio::time::sleep(Duration::from_millis(1)).await;
-        }
-    }
-    fn peek(&mut self) -> Result<Option<ObservedExit>, SourceResolveError> {
-        let failure = || SourceResolveError::new(SourceResolveStage::Helper);
-        #[cfg(target_vendor = "apple")]
-        {
-            use nix::sys::event::{EvFlags, EventFilter, FilterFlag, KEvent};
-            let mut events = [KEvent::new(
-                0,
-                EventFilter::EVFILT_PROC,
-                EvFlags::empty(),
-                FilterFlag::empty(),
-                0,
-                0,
-            )];
-            let count = match self.queue.kevent(
-                &[],
-                &mut events,
-                Some(libc::timespec {
-                    tv_sec: 0,
-                    tv_nsec: 0,
-                }),
-            ) {
-                Ok(count) => count,
-                Err(nix::errno::Errno::EINTR) => return Ok(None),
-                Err(_) => return Err(failure()),
-            };
-            if count == 0 {
-                return Ok(None);
-            }
-            let event = events[0];
-            if event.ident() != self.pid.as_raw() as usize
-                || event.flags().contains(EvFlags::EV_ERROR)
-                || !event
-                    .fflags()
-                    .contains(FilterFlag::NOTE_EXIT | FilterFlag::NOTE_EXITSTATUS)
-            {
-                return Err(failure());
-            }
-            // Apple NOTE_EXITSTATUS data carries the child wait status in the
-            // low status bits. We requested no NOTE_EXIT_DETAIL additions.
-            Ok(Some(ObservedExit::of(std::process::ExitStatus::from_raw(
-                (event.data() & 0xffff) as i32,
-            ))))
-        }
-        #[cfg(not(target_vendor = "apple"))]
-        {
-            use nix::sys::wait::{Id, WaitPidFlag, WaitStatus, waitid};
-            let status = match waitid(
-                Id::Pid(self.pid),
-                WaitPidFlag::WEXITED | WaitPidFlag::WNOWAIT | WaitPidFlag::WNOHANG,
-            ) {
-                Ok(status) => status,
-                Err(nix::errno::Errno::EINTR) => return Ok(None),
-                Err(_) => return Err(failure()),
-            };
-            match status {
-                WaitStatus::StillAlive => Ok(None),
-                WaitStatus::Exited(_, code) => Ok(Some(ObservedExit {
-                    code: Some(code),
-                    signal: None,
-                    core_dumped: false,
-                })),
-                WaitStatus::Signaled(_, signal, core_dumped) => Ok(Some(ObservedExit {
-                    code: None,
-                    signal: Some(signal as i32),
-                    core_dumped,
-                })),
-                _ => Err(failure()),
-            }
-        }
-    }
-}
-struct Retirement {
-    status: Option<std::process::ExitStatus>,
-    group_absent: bool,
-}
-impl Retirement {
-    fn retired(&self) -> bool {
-        self.status.is_some() && self.group_absent
-    }
-}
-async fn retire(
-    child: &mut Child,
-    group: u32,
-    signalable: &Mutex<bool>,
-    completed_io: bool,
-) -> Retirement {
-    let sent_term = {
-        let signalable = locked(signalable);
-        if *signalable {
-            signal(group, nix::sys::signal::Signal::SIGTERM);
-            true
-        } else {
-            false
-        }
-    };
-    if sent_term && !completed_io {
-        // Incomplete IO includes held lookup, timeout, overflow and cancel.
-        // completed_io also requires original non-reaping exit observation;
-        // pipe EOF by itself never establishes successful exit.
-        tokio::time::sleep(Duration::from_millis(100)).await;
-    }
-    {
-        // Every Drop/retirement signal takes this SAME gate. Final KILL and
-        // disarm are atomic relative to those signals; no stale check/send can
-        // race the first reaping poll on another runtime worker.
-        let mut signalable = locked(signalable);
-        if *signalable {
-            signal(group, nix::sys::signal::Signal::SIGKILL);
-            *signalable = false;
-        }
-    }
-    let status = tokio::time::timeout(Duration::from_secs(2), async {
-        loop {
-            match child.try_wait() {
-                Ok(Some(status)) => break Some(status),
-                Ok(None) => tokio::time::sleep(Duration::from_millis(5)).await,
-                Err(_) => break None,
-            }
-        }
-    })
-    .await
-    .ok()
-    .flatten();
-    // Observation only after reaping becomes possible. A reused PGID may cause
-    // conservative failed retirement, but can never receive one of our signals.
-    let group_absent = tokio::time::timeout(Duration::from_secs(2), async {
-        loop {
-            if group_absent(group) {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(5)).await;
-        }
-    })
-    .await
-    .is_ok();
-    Retirement {
-        status,
-        group_absent,
-    }
-}
-fn fail<T>(stage: SourceResolveStage) -> Result<T, SourceResolveError> {
-    Err(SourceResolveError::new(stage))
-}
-async fn supervise(
-    helper: SourceResolverHelper,
-    input: Vec<u8>,
-    mut cancel: watch::Receiver<bool>,
-    group: Arc<AtomicU32>,
-    ready: Arc<AtomicBool>,
-    signalable: Arc<Mutex<bool>>,
-    lookup_budget: Duration,
-) -> (Result<Vec<u8>, SourceResolveError>, Option<Child>) {
-    if *cancel.borrow() {
-        return (fail(SourceResolveStage::Cancelled), None);
-    }
-    let mut command = match helper.command() {
-        Ok(command) => command,
-        Err(_) => return (fail(SourceResolveStage::Helper), None),
-    };
-    if *cancel.borrow() {
-        return (fail(SourceResolveStage::Cancelled), None);
-    }
-    let mut child = match command.spawn() {
-        Ok(child) => child,
-        Err(_) => return (fail(SourceResolveStage::Helper), None),
-    };
-    // std::process::Child exposes the exact owned identity immediately; async
-    // pipe conversion below can fail without discarding the child handle.
-    let pid = child.id();
-    group.store(pid, Ordering::Release);
-    let guard = GroupGuard {
-        group: pid,
-        signalable: signalable.clone(),
-    };
-    // Child is blocked on stdin until after registered cancellation is checked.
-    let result = if *cancel.borrow() {
-        fail(SourceResolveStage::Cancelled)
-    } else {
-        let observer = ExitObserver::new(pid);
-        #[cfg(feature = "gateway-dns-fixtures")]
-        let observer = if helper.fail_pipe_conversion {
-            Err(SourceResolveError::new(SourceResolveStage::Helper))
-        } else {
-            observer
-        };
-        let stdin = child.stdin.take().map(ChildStdin::from_std).transpose();
-        let stdout = child.stdout.take().map(ChildStdout::from_std).transpose();
-        let stderr = child.stderr.take().map(ChildStderr::from_std).transpose();
-        if let (Ok(Some(mut stdin)), Ok(Some(mut stdout)), Ok(Some(stderr)), Ok(mut observer)) =
-            (stdin, stdout, stderr, observer)
-        {
-            let io_cancel = cancel.clone();
-            let io = async {
-                let mut handshake = [0; 16];
-                stdout
-                    .read_exact(&mut handshake)
-                    .await
-                    .map_err(|_| SourceResolveError::new(SourceResolveStage::Helper))?;
-                if &handshake != protocol::MAGIC {
-                    return fail(SourceResolveStage::Helper);
-                }
-                ready.store(true, Ordering::Release);
-                if *io_cancel.borrow() {
-                    return fail(SourceResolveStage::Cancelled);
-                }
-                let send = async {
-                    stdin
-                        .write_all(&input)
-                        .await
-                        .map_err(|_| SourceResolveError::new(SourceResolveStage::Helper))?;
-                    stdin
-                        .shutdown()
-                        .await
-                        .map_err(|_| SourceResolveError::new(SourceResolveStage::Helper))?;
-                    drop(stdin);
-                    Ok(())
-                };
-                // Never wait/poll/try_wait the child in this IO future.
-                // Even crash and full pipe EOF leave the leader unreaped until
-                // the retirement owner has sent its final process-group signal.
-                let ((), out, _err, original_exit) = tokio::try_join!(
-                    send,
-                    bounded_read(stdout, protocol::FRAME_LIMIT),
-                    bounded_read(stderr, protocol::STDERR_LIMIT),
-                    observer.exited()
-                )?;
-                Ok((out, original_exit))
-            };
-            tokio::select! { biased;
-                _=cancelled(&mut cancel)=>fail(SourceResolveStage::Cancelled),
-                result=tokio::time::timeout(lookup_budget,io)=>match result { Ok(result)=>result, Err(_)=>fail(SourceResolveStage::TimedOut) },
-            }
-        } else {
-            fail(SourceResolveStage::Helper)
-        }
-    };
-    let completed_io = result.is_ok();
-    let outcome = retire(&mut child, pid, &signalable, completed_io).await;
-    // guard takes the disarmed gate and cannot send a stale PGID signal.
-    drop(guard);
-    if outcome.group_absent {
-        group.store(0, Ordering::Release);
-    }
-    let retired = outcome.retired();
-    let result = if !retired {
-        Err(SourceResolveError::new(SourceResolveStage::Helper))
-    } else {
-        result.and_then(|(bytes, original_exit)| {
-            if original_exit.success()
-                && outcome
-                    .status
-                    .is_some_and(|status| original_exit.matches(status))
-            {
-                Ok(bytes)
-            } else {
-                Err(SourceResolveError::new(SourceResolveStage::Helper))
-            }
-        })
-    };
-    (result, if retired { None } else { Some(child) })
 }

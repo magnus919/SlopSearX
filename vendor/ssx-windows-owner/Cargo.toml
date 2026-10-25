@@ -1,0 +1,20 @@
+[package]
+name = "ssx-windows-owner"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+license = "MIT"
+
+# Deliberately separate from the application's unsafe_code=forbid workspace.
+# This private crate is the complete, reviewed Windows FFI boundary.
+[features]
+fixtures = []
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[target.'cfg(windows)'.dependencies]
+sha2 = "=0.11.1"
+tokio = { version = "=1.53.3", features = ["net", "io-util", "time", "sync"] }
+windows-sys = { version = "=0.61.2", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_IO", "Win32_System_JobObjects", "Win32_System_Pipes", "Win32_System_Threading", "Win32_Networking_WinSock"] }

@@ -4,26 +4,30 @@ use std::future::Future;
 use std::net::IpAddr;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::task::{ready, Context, Poll};
+use std::task::{Context, Poll, ready};
 use std::time::Duration;
 use std::{collections::HashMap, convert::TryInto, net::SocketAddr};
 use std::{fmt, str};
 
+use super::Body;
 use super::request::{Request, RequestBuilder};
 use super::response::Response;
-use super::Body;
-#[cfg(feature = "http3")]
-use crate::async_impl::h3_client::connect::{H3ClientConfig, H3Connector};
+#[cfg(feature = "__tls")]
+use crate::Certificate;
+#[cfg(any(feature = "__native-tls", feature = "__rustls"))]
+use crate::Identity;
 #[cfg(feature = "http3")]
 use crate::async_impl::h3_client::H3Client;
+#[cfg(feature = "http3")]
+use crate::async_impl::h3_client::connect::{H3ClientConfig, H3Connector};
 use crate::config::{RequestConfig, TotalTimeout};
 #[cfg(unix)]
 use crate::connect::uds::UnixSocketProvider;
 #[cfg(target_os = "windows")]
 use crate::connect::windows_named_pipe::WindowsNamedPipeProvider;
 use crate::connect::{
-    sealed::{Conn, Unnameable},
     BoxedConnectorLayer, BoxedConnectorService, Connector, ConnectorBuilder,
+    sealed::{Conn, Unnameable},
 };
 #[cfg(feature = "cookies")]
 use crate::cookie;
@@ -31,7 +35,7 @@ use crate::cookie;
 use crate::cookie::service::CookieService;
 #[cfg(feature = "hickory-dns")]
 use crate::dns::hickory::HickoryDnsResolver;
-use crate::dns::{gai::GaiResolver, DnsResolverWithOverrides, DynResolver, Resolve};
+use crate::dns::{DnsResolverWithOverrides, DynResolver, Resolve, gai::GaiResolver};
 use crate::error::{self, BoxError};
 use crate::into_url::try_uri;
 use crate::proxy::Matcher as ProxyMatcher;
@@ -40,15 +44,11 @@ use crate::redirect::{self, TowerRedirectPolicy};
 use crate::tls::CertificateRevocationList;
 #[cfg(feature = "__tls")]
 use crate::tls::{self, TlsBackend};
-#[cfg(feature = "__tls")]
-use crate::Certificate;
-#[cfg(any(feature = "__native-tls", feature = "__rustls"))]
-use crate::Identity;
 use crate::{IntoUrl, Method, Proxy, Url};
 
-use http::header::{Entry, HeaderMap, HeaderValue, ACCEPT, PROXY_AUTHORIZATION, USER_AGENT};
-use http::uri::Scheme;
 use http::Uri;
+use http::header::{ACCEPT, Entry, HeaderMap, HeaderValue, PROXY_AUTHORIZATION, USER_AGENT};
+use http::uri::Scheme;
 use hyper_util::client::legacy::connect::HttpConnector;
 #[cfg(feature = "__native-tls")]
 use native_tls_crate::TlsConnector;
@@ -154,11 +154,17 @@ impl Service<hyper::Request<crate::async_impl::body::Body>> for HyperService {
 
     fn call(&mut self, req: hyper::Request<crate::async_impl::body::Body>) -> Self::Future {
         #[cfg(feature = "ssx-http1-source-pool")]
-        if let Some(pool)=&self.source_pool {
-            let mut req=req;
-            let selection=pool.attempt(&mut req);
-            let hyper=self.hyper.clone();
-            return Box::pin(async move {let(mount,connector)=selection?;hyper.source_http1_request(req,&mount,connector).await.map_err(crate::error::request)});
+        if let Some(pool) = &self.source_pool {
+            let mut req = req;
+            let selection = pool.attempt(&mut req);
+            let hyper = self.hyper.clone();
+            return Box::pin(async move {
+                let (mount, connector) = selection?;
+                hyper
+                    .source_http1_request(req, &mount, connector)
+                    .await
+                    .map_err(crate::error::request)
+            });
         }
         let clone = self.hyper.clone();
         let mut inner = std::mem::replace(&mut self.hyper, clone);
@@ -436,7 +442,9 @@ impl ClientBuilder {
                 || config.timeout.is_some()
                 || !config.connector_layers.is_empty()
             {
-                return Err(error::builder("source HTTP/1 connector rejects non-HTTP1, aggregate timeout or connector layers"));
+                return Err(error::builder(
+                    "source HTTP/1 connector rejects non-HTTP1, aggregate timeout or connector layers",
+                ));
             }
             #[cfg(unix)]
             if config.unix_socket.is_some() {
@@ -452,8 +460,14 @@ impl ClientBuilder {
             }
         }
         #[cfg(feature = "ssx-http1-source-pool")]
-        if config.source_pool.is_some() && (config.source_connect_profile.is_none() || config.auto_sys_proxy || !config.proxies.is_empty()) {
-            return Err(error::builder("source pool requires source connector profile and its explicit finite proxy table"));
+        if config.source_pool.is_some()
+            && (config.source_connect_profile.is_none()
+                || config.auto_sys_proxy
+                || !config.proxies.is_empty())
+        {
+            return Err(error::builder(
+                "source pool requires source connector profile and its explicit finite proxy table",
+            ));
         }
         let mut proxies = config.proxies;
         if config.auto_sys_proxy {
@@ -779,7 +793,7 @@ impl ClientBuilder {
                         if !config.tls_certs_only {
                             // Should this just warn? Error for now...
                             return Err(crate::error::builder(
-                                    "disabling rustls hostname verification only allowed with tls_certs_only()"
+                                "disabling rustls hostname verification only allowed with tls_certs_only()",
                             ));
                         }
 
@@ -1062,12 +1076,19 @@ impl ClientBuilder {
             Some(format!("{:?}", &config.redirect_policy))
         };
 
-        let connector=connector_builder.build(config.connector_layers);
+        let connector = connector_builder.build(config.connector_layers);
         #[cfg(feature = "ssx-http1-source-pool")]
-        let (hyper_client,source_pool)=if let Some(pool)=config.source_pool {
-            let(hyper,control)=builder.build_source_http1(connector.clone(),pool.ledger()).map_err(error::builder)?;
-            (hyper,Some(crate::source_pool::Prepared::new(pool,control,connector)))
-        }else{(builder.build(connector),None)};
+        let (hyper_client, source_pool) = if let Some(pool) = config.source_pool {
+            let (hyper, control) = builder
+                .build_source_http1(connector.clone(), pool.ledger())
+                .map_err(error::builder)?;
+            (
+                hyper,
+                Some(crate::source_pool::Prepared::new(pool, control, connector)),
+            )
+        } else {
+            (builder.build(connector), None)
+        };
         #[cfg(not(feature = "ssx-http1-source-pool"))]
         let hyper_client = builder.build(connector);
         let hyper_service = HyperService {
@@ -1076,6 +1097,14 @@ impl ClientBuilder {
             source_pool: source_pool.clone(),
         };
 
+        #[cfg(feature = "ssx-http1-source-pool")]
+        let source_request_ready = source_pool
+            .as_ref()
+            .is_some_and(|pool| pool.source_requests_enabled())
+            && config.redirect_policy.is_none()
+            && config.retry_policy.is_never();
+        #[cfg(all(feature = "ssx-http1-source-pool", feature = "cookies"))]
+        let source_request_ready = source_request_ready && config.cookie_store.is_none();
         let redirect_policy = {
             let mut p = TowerRedirectPolicy::new(config.redirect_policy);
             p.with_referer(config.referer)
@@ -1154,7 +1183,11 @@ impl ClientBuilder {
                 },
                 headers: config.headers,
                 #[cfg(feature = "ssx-http1-source-pool")]
-                source_pool_control: source_pool.as_ref().map(|pool|pool.control.clone()),
+                source_pool_control: source_pool.as_ref().map(|pool| pool.control.clone()),
+                #[cfg(feature = "ssx-http1-source-pool")]
+                source_request_ready,
+                #[cfg(feature = "ssx-http1-source-pool")]
+                source_pool_prepared: source_pool.clone(),
                 referer: config.referer,
                 read_timeout: config.read_timeout,
                 #[cfg(feature = "ssx-http1-source-connect")]
@@ -1547,7 +1580,13 @@ impl ClientBuilder {
     #[cfg(feature = "ssx-http1-source-pool")]
     /// Use a finite pre-resolved HTTPX mount table. Call no_proxy() first to
     /// explicitly disable implicit Reqwest system proxy selection.
-    pub fn source_http1_pool(mut self, config: crate::source_pool::SourceHttp1PoolConfig) -> ClientBuilder {self.config.source_pool=Some(config);self}
+    pub fn source_http1_pool(
+        mut self,
+        config: crate::source_pool::SourceHttp1PoolConfig,
+    ) -> ClientBuilder {
+        self.config.source_pool = Some(config);
+        self
+    }
 
     /// Set a timeout for only the connect phase of a `Client`.
     ///
@@ -2686,7 +2725,9 @@ impl Client {
     #[cfg(feature = "ssx-http1-source-pool")]
     /// Close authority for the opted-in source pool. Call close().await before
     /// dropping the consumer; retained upgrades must be released by their owner.
-    pub fn source_http1_pool_control(&self)->Option<crate::source_pool::SourcePoolControl>{self.inner.source_pool_control.clone()}
+    pub fn source_http1_pool_control(&self) -> Option<crate::source_pool::SourcePoolControl> {
+        self.inner.source_pool_control.clone()
+    }
 
     /// Executes a `Request`.
     ///
@@ -2707,14 +2748,100 @@ impl Client {
         self.execute_request(request)
     }
 
-    pub(super) fn execute_request(&self, req: Request) -> Pending {
-        let (method, url, mut headers, body, version, extensions) = req.pieces();
+    pub(super) fn execute_request(&self, request: Request) -> Pending {
+        let (method, url, headers, body, version, extensions) = request.pieces();
+        Pending {
+            inner: self.execute_prepared(PreparedOperation {
+                method,
+                target: PreparedTarget::Default(url),
+                headers,
+                body,
+                version,
+                extensions,
+            }),
+        }
+    }
+    #[cfg(feature = "ssx-http1-source-pool")]
+    /// Build an additive request from its complete immutable source URL.
+    pub fn source_request(
+        &self,
+        method: Method,
+        source_url: impl Into<Arc<crate::source_pool::SourceUrl>>,
+    ) -> super::request::SourceRequestBuilder {
+        super::request::SourceRequestBuilder {
+            client: self.clone(),
+            request: Ok(super::request::SourceRequest::new(method, source_url)),
+        }
+    }
+    #[cfg(feature = "ssx-http1-source-pool")]
+    /// Execute a source request without synthesizing an ordinary URL or automatic redirects.
+    pub async fn execute_source_request(
+        &self,
+        request: super::request::SourceRequest,
+    ) -> Result<super::response::SourceResponse, crate::Error> {
+        let result = self
+            .execute_prepared(PreparedOperation {
+                method: request.method,
+                target: PreparedTarget::Source(request.source_url),
+                headers: request.headers,
+                body: request.body,
+                version: request.version,
+                extensions: request.extensions,
+            })
+            .await?;
+        match result {
+            PreparedResult::Source(response) => Ok(response),
+            PreparedResult::Default(_) => Err(error::builder(
+                "unexpected default response on source operation",
+            )),
+        }
+    }
+
+    fn execute_prepared(&self, operation: PreparedOperation) -> PreparedPending {
+        let PreparedOperation {
+            method,
+            target,
+            mut headers,
+            body,
+            version,
+            extensions,
+        } = operation;
+        #[cfg(feature = "ssx-http1-source-pool")]
+        if target.is_default()
+            && self
+                .inner
+                .source_pool_prepared
+                .as_ref()
+                .is_some_and(|pool| pool.source_requests_enabled())
+        {
+            return PreparedPending::new_err(error::builder(
+                "source-owned transport requires SourceRequest identity",
+            ));
+        }
+        #[cfg(feature = "ssx-http1-source-pool")]
+        let extensions = {
+            let mut extensions = extensions;
+            if let PreparedTarget::Source(owner) = &target {
+                if !self.inner.source_request_ready {
+                    return PreparedPending::new_err(error::builder(
+                        "source request requires explicit source pool, no automatic redirects/retries, and application-owned cookies",
+                    ));
+                }
+                if let Some(pool) = &self.inner.source_pool_prepared {
+                    if let Err(error) = pool.validate_source_route(owner) {
+                        return PreparedPending::new_err(error);
+                    }
+                }
+                extensions.insert(owner.clone());
+            }
+            extensions
+        };
         #[cfg(feature = "ssx-http1-source-connect")]
         let extensions = {
             let mut extensions = extensions;
             if let Some(profile) = self.inner.source_connect_profile {
                 if self.inner.total_timeout.fetch(&extensions).is_some() {
-                    return Pending::new_err(error::builder(
+                    return PreparedPending::new_err(error::builder(
                         "source profile rejects aggregate request timeout",
                     ));
                 }
@@ -2729,7 +2856,7 @@ impl Client {
             .is_some()
             && (!self.inner.send_operation_http1_only || version > http::Version::HTTP_11)
         {
-            return Pending::new_err(error::builder(
+            return PreparedPending::new_err(error::builder(
                 "send-operation timeout requires an HTTP/1-only client and request",
             ));
         }
@@ -2745,17 +2872,17 @@ impl Client {
                     .get::<hyper::ext::SendOperationTimeout>()
                     .is_none())
         {
-            return Pending::new_err(error::builder(
+            return PreparedPending::new_err(error::builder(
                 "source HTTP/1 read profile requires an HTTP/1-only client and send timeout",
             ));
         }
-        if url.scheme() != "http" && url.scheme() != "https" {
-            return Pending::new_err(error::url_bad_scheme(url));
+        if target.scheme() != "http" && target.scheme() != "https" {
+            return PreparedPending::new_err(target.bad_scheme());
         }
 
         // check if we're in https_only mode and check the scheme of the current URL
-        if self.inner.https_only && url.scheme() != "https" {
-            return Pending::new_err(error::url_bad_scheme(url));
+        if self.inner.https_only && target.scheme() != "https" {
+            return PreparedPending::new_err(target.bad_scheme());
         }
 
         // insert default headers in the request headers
@@ -2766,15 +2893,41 @@ impl Client {
             }
         }
 
-        let uri = match try_uri(&url) {
+        let uri = match target.request_uri() {
             Ok(uri) => uri,
-            _ => return Pending::new_err(error::url_invalid_uri(url)),
+            Err(error) => return PreparedPending::new_err(error),
         };
+        #[cfg(feature = "ssx-http1-source-pool")]
+        if let PreparedTarget::Source(owner) = &target {
+            let auth = extensions
+                .get::<super::request::SourceExplicitAuth>()
+                .map(|auth| auth.0.clone())
+                .or_else(|| {
+                    if extensions
+                        .get::<super::request::SourceUrlAuth>()
+                        .is_some_and(|flag| !flag.0)
+                    {
+                        return None;
+                    }
+                    let username = owner.username();
+                    let password = owner.password();
+                    if username.is_empty() && password.is_empty() {
+                        None
+                    } else {
+                        Some(crate::util::basic_auth(username, Some(password)))
+                    }
+                });
+            if let Some(auth) = auth {
+                headers.insert(crate::header::AUTHORIZATION, auth);
+            }
+        }
 
         let body = body.unwrap_or_else(Body::empty);
 
-        self.proxy_auth(&uri, &mut headers);
-        self.proxy_custom_headers(&uri, &mut headers);
+        if target.is_default() {
+            self.proxy_auth(&uri, &mut headers);
+            self.proxy_custom_headers(&uri, &mut headers);
+        }
 
         let builder = hyper::Request::builder()
             .method(method.clone())
@@ -2800,6 +2953,10 @@ impl Client {
                 if let Some(timeout) = extensions.get::<hyper::ext::SourceHttp1ReadTimeout>() {
                     req.extensions_mut().insert(*timeout);
                 }
+                #[cfg(feature = "ssx-http1-source-pool")]
+                if let PreparedTarget::Source(owner) = &target {
+                    req.extensions_mut().insert(owner.clone());
+                }
                 let mut hyper = self.inner.hyper.clone();
                 ResponseFuture::Default(hyper.call(req))
             }
@@ -2823,10 +2980,10 @@ impl Client {
         let read_timeout = self.inner.read_timeout;
         let read_timeout_fut = read_timeout.map(tokio::time::sleep).map(Box::pin);
 
-        Pending {
-            inner: PendingInner::Request(Box::pin(PendingRequest {
+        PreparedPending {
+            inner: PreparedPendingInner::Request(Box::pin(PreparedPendingRequest {
                 method,
-                url,
+                target,
                 headers,
 
                 client: self.inner.clone(),
@@ -2991,7 +3148,9 @@ impl Config {
             f.field("source_connect_profile", p);
         }
         #[cfg(feature = "ssx-http1-source-pool")]
-        if let Some(ref p) = self.source_pool {f.field("source_pool",p);}
+        if let Some(ref p) = self.source_pool {
+            f.field("source_pool", p);
+        }
         if let Some(ref d) = self.connect_timeout {
             f.field("connect_timeout", d);
         }
@@ -3111,6 +3270,10 @@ type LayeredFuture<T> = <LayeredService<T> as Service<http::Request<Body>>>::Fut
 struct ClientRef {
     #[cfg(feature = "ssx-http1-source-pool")]
     source_pool_control: Option<crate::source_pool::SourcePoolControl>,
+    #[cfg(feature = "ssx-http1-source-pool")]
+    source_request_ready: bool,
+    #[cfg(feature = "ssx-http1-source-pool")]
+    source_pool_prepared: Option<Arc<crate::source_pool::Prepared>>,
     #[cfg(feature = "ssx-http1-source-connect")]
     source_connect_profile: Option<crate::connect::source_http1::Profile>,
     #[cfg(feature = "ssx-send-operation-timeout")]
@@ -3169,21 +3332,21 @@ impl ClientRef {
 }
 
 pin_project! {
-    pub struct Pending {
+    struct PreparedPending {
         #[pin]
-        inner: PendingInner,
+        inner: PreparedPendingInner,
     }
 }
 
-enum PendingInner {
-    Request(Pin<Box<PendingRequest>>),
+enum PreparedPendingInner {
+    Request(Pin<Box<PreparedPendingRequest>>),
     Error(Option<crate::Error>),
 }
 
 pin_project! {
-    struct PendingRequest {
+    struct PreparedPendingRequest {
         method: Method,
-        url: Url,
+        target: PreparedTarget,
         headers: HeaderMap,
 
         client: Arc<ClientRef>,
@@ -3204,7 +3367,7 @@ enum ResponseFuture {
     H3(LayeredFuture<H3Client>),
 }
 
-impl PendingRequest {
+impl PreparedPendingRequest {
     fn in_flight(self: Pin<&mut Self>) -> Pin<&mut ResponseFuture> {
         self.project().in_flight
     }
@@ -3218,63 +3381,63 @@ impl PendingRequest {
     }
 }
 
-impl Pending {
-    pub(super) fn new_err(err: crate::Error) -> Pending {
-        Pending {
-            inner: PendingInner::Error(Some(err)),
+impl PreparedPending {
+    pub(super) fn new_err(err: crate::Error) -> PreparedPending {
+        PreparedPending {
+            inner: PreparedPendingInner::Error(Some(err)),
         }
     }
 
-    fn inner(self: Pin<&mut Self>) -> Pin<&mut PendingInner> {
+    fn inner(self: Pin<&mut Self>) -> Pin<&mut PreparedPendingInner> {
         self.project().inner
     }
 }
 
-impl Future for Pending {
-    type Output = Result<Response, crate::Error>;
+impl Future for PreparedPending {
+    type Output = Result<PreparedResult, crate::Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let inner = self.inner();
         match inner.get_mut() {
-            PendingInner::Request(ref mut req) => Pin::new(req).poll(cx),
-            PendingInner::Error(ref mut err) => Poll::Ready(Err(err
+            PreparedPendingInner::Request(ref mut req) => Pin::new(req).poll(cx),
+            PreparedPendingInner::Error(ref mut err) => Poll::Ready(Err(err
                 .take()
-                .expect("Pending error polled more than once"))),
+                .expect("PreparedPending error polled more than once"))),
         }
     }
 }
 
-impl Future for PendingRequest {
-    type Output = Result<Response, crate::Error>;
+impl Future for PreparedPendingRequest {
+    type Output = Result<PreparedResult, crate::Error>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if let Some(delay) = self.as_mut().total_timeout().as_mut().as_pin_mut() {
             if let Poll::Ready(()) = delay.poll(cx) {
-                return Poll::Ready(Err(
-                    crate::error::request(crate::error::TimedOut).with_url(self.url.clone())
-                ));
+                return Poll::Ready(Err(self
+                    .target
+                    .attach_error(crate::error::request(crate::error::TimedOut))));
             }
         }
 
         if let Some(delay) = self.as_mut().read_timeout().as_mut().as_pin_mut() {
             if let Poll::Ready(()) = delay.poll(cx) {
-                return Poll::Ready(Err(
-                    crate::error::request(crate::error::TimedOut).with_url(self.url.clone())
-                ));
+                return Poll::Ready(Err(self
+                    .target
+                    .attach_error(crate::error::request(crate::error::TimedOut))));
             }
         }
 
         let res = match self.as_mut().in_flight().get_mut() {
             ResponseFuture::Default(r) => match ready!(Pin::new(r).poll(cx)) {
                 Err(e) => {
-                    return Poll::Ready(Err(e.if_no_url(|| self.url.clone())));
+                    return Poll::Ready(Err(self.target.attach_error_if_missing(e)));
                 }
                 Ok(res) => res.map(super::body::boxed),
             },
             #[cfg(feature = "http3")]
             ResponseFuture::H3(r) => match ready!(Pin::new(r).poll(cx)) {
                 Err(e) => {
-                    return Poll::Ready(Err(crate::error::request(e).with_url(self.url.clone())));
+                    return Poll::Ready(Err(self.target.attach_error(crate::error::request(e))));
                 }
                 Ok(res) => res.map(super::body::boxed),
             },
@@ -3284,31 +3447,57 @@ impl Future for PendingRequest {
             .extensions()
             .get::<tower_http::follow_redirect::RequestUri>()
         {
-            self.url = match Url::parse(&url.0.to_string()) {
-                Ok(url) => url,
-                Err(e) => return Poll::Ready(Err(crate::error::decode(e))),
+            match &mut self.target {
+                PreparedTarget::Default(current) => {
+                    *current = match Url::parse(&url.0.to_string()) {
+                        Ok(url) => url,
+                        Err(error) => return Poll::Ready(Err(crate::error::decode(error))),
+                    }
+                }
+                #[cfg(feature = "ssx-http1-source-pool")]
+                PreparedTarget::Source(_) => {}
+            }
+        }
+        let result = match &self.target {
+            PreparedTarget::Default(url) => PreparedResult::Default(Response::new(
+                res,
+                url.clone(),
+                self.total_timeout.take(),
+                self.read_timeout,
+            )),
+            #[cfg(feature = "ssx-http1-source-pool")]
+            PreparedTarget::Source(owner) => {
+                PreparedResult::Source(super::response::SourceResponse::new(
+                    res,
+                    owner.clone(),
+                    self.total_timeout.take(),
+                    self.read_timeout,
+                ))
             }
         };
-
-        let res = Response::new(
-            res,
-            self.url.clone(),
-            self.total_timeout.take(),
-            self.read_timeout,
-        );
-        Poll::Ready(Ok(res))
+        Poll::Ready(Ok(result))
     }
 }
 
-impl fmt::Debug for Pending {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.inner {
-            PendingInner::Request(ref req) => f
-                .debug_struct("Pending")
-                .field("method", &req.method)
-                .field("url", &req.url)
-                .finish(),
-            PendingInner::Error(ref err) => f.debug_struct("Pending").field("error", err).finish(),
+impl fmt::Debug for PreparedPending {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.inner {
+            PreparedPendingInner::Request(request) => match &request.target {
+                PreparedTarget::Default(url) => f
+                    .debug_struct("Pending")
+                    .field("method", &request.method)
+                    .field("url", url)
+                    .finish(),
+                #[cfg(feature = "ssx-http1-source-pool")]
+                PreparedTarget::Source(owner) => f
+                    .debug_struct("SourcePending")
+                    .field("method", &request.method)
+                    .field("source_url", owner)
+                    .finish(),
+            },
+            PreparedPendingInner::Error(error) => {
+                f.debug_struct("Pending").field("error", error).finish()
+            }
         }
     }
 }
@@ -3346,5 +3535,618 @@ mod tests {
     fn test_future_size() {
         let s = std::mem::size_of::<super::Pending>();
         assert!(s < 128, "size_of::<Pending>() == {s}, too big");
+    }
+}
+
+struct PreparedOperation {
+    method: Method,
+    target: PreparedTarget,
+    headers: HeaderMap,
+    body: Option<Body>,
+    version: http::Version,
+    extensions: http::Extensions,
+}
+#[derive(Debug)]
+enum PreparedTarget {
+    Default(Url),
+    #[cfg(feature = "ssx-http1-source-pool")]
+    Source(Arc<crate::source_pool::SourceUrl>),
+}
+impl PreparedTarget {
+    fn scheme(&self) -> &str {
+        match self {
+            Self::Default(url) => url.scheme(),
+            #[cfg(feature = "ssx-http1-source-pool")]
+            Self::Source(owner) => owner.scheme(),
+        }
+    }
+    fn is_default(&self) -> bool {
+        matches!(self, Self::Default(_))
+    }
+    fn bad_scheme(&self) -> crate::Error {
+        match self {
+            Self::Default(url) => error::url_bad_scheme(url.clone()),
+            #[cfg(feature = "ssx-http1-source-pool")]
+            Self::Source(_) => error::builder("source request requires HTTP or HTTPS"),
+        }
+    }
+    fn request_uri(&self) -> Result<Uri, crate::Error> {
+        match self {
+            Self::Default(url) => try_uri(url).map_err(|_| error::url_invalid_uri(url.clone())),
+            #[cfg(feature = "ssx-http1-source-pool")]
+            Self::Source(owner) => {
+                owner.raw_host_bytes().map_err(error::builder)?;
+                owner.netloc_bytes().map_err(error::builder)?;
+                let identity = hyper::ext::SourceRequestIdentity(owner.clone());
+                hyper::ext::SourceRequestTarget {
+                    identity,
+                    form: hyper::ext::SourceTargetForm::Origin,
+                }
+                .bytes()
+                .map_err(error::builder)?;
+                owner.raw_path().parse().map_err(error::builder)
+            }
+        }
+    }
+    fn attach_error(&self, error: crate::Error) -> crate::Error {
+        match self {
+            Self::Default(url) => error.with_url(url.clone()),
+            #[cfg(feature = "ssx-http1-source-pool")]
+            Self::Source(_) => error,
+        }
+    }
+    fn attach_error_if_missing(&self, error: crate::Error) -> crate::Error {
+        match self {
+            Self::Default(url) => error.if_no_url(|| url.clone()),
+            #[cfg(feature = "ssx-http1-source-pool")]
+            Self::Source(_) => error,
+        }
+    }
+}
+enum PreparedResult {
+    Default(Response),
+    #[cfg(feature = "ssx-http1-source-pool")]
+    Source(super::response::SourceResponse),
+}
+pin_project! {
+    /// Future for an ordinary request, preserving its real default URL response.
+    pub struct Pending {
+        #[pin]
+        inner: PreparedPending,
+    }
+}
+impl Pending {
+    pub(super) fn new_err(error: crate::Error) -> Self {
+        Self {
+            inner: PreparedPending::new_err(error),
+        }
+    }
+}
+impl Future for Pending {
+    type Output = Result<Response, crate::Error>;
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match ready!(self.project().inner.poll(cx))? {
+            PreparedResult::Default(response) => Poll::Ready(Ok(response)),
+            #[cfg(feature = "ssx-http1-source-pool")]
+            PreparedResult::Source(_) => Poll::Ready(Err(error::builder(
+                "unexpected source response on default operation",
+            ))),
+        }
+    }
+}
+impl fmt::Debug for Pending {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+#[cfg(all(
+    test,
+    feature = "ssx-http1-source-pool",
+    not(feature = "rustls-no-provider")
+))]
+mod source_request_tests {
+    use super::*;
+    use crate::source_pool::SourceUrl;
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    };
+    use tokio::{
+        io::{AsyncReadExt, AsyncWriteExt},
+        net::TcpListener,
+    };
+
+    #[test]
+    fn source_clone_keeps_one_owner_and_refuses_streaming_replay_without_reading() {
+        let owner = Arc::new(SourceUrl::parse("http://u:p@RAW.test:0/a?#").unwrap());
+        let mut request = super::super::request::SourceRequest::new(Method::POST, owner.clone());
+        *request.body_mut() = Some(Body::from("reusable"));
+        assert!(Arc::ptr_eq(
+            request.try_clone().unwrap().source_url(),
+            &owner
+        ));
+        let polled = Arc::new(AtomicUsize::new(0));
+        let dropped = Arc::new(AtomicBool::new(false));
+        *request.body_mut() = Some(Body::wrap(ProbeBody {
+            polled: polled.clone(),
+            dropped: dropped.clone(),
+        }));
+        assert!(request.try_clone().is_none());
+        assert_eq!(polled.load(Ordering::SeqCst), 0);
+        drop(request);
+        assert!(dropped.load(Ordering::SeqCst));
+    }
+    struct ProbeBody {
+        polled: Arc<AtomicUsize>,
+        dropped: Arc<AtomicBool>,
+    }
+    impl Drop for ProbeBody {
+        fn drop(&mut self) {
+            self.dropped.store(true, Ordering::SeqCst);
+        }
+    }
+    impl http_body::Body for ProbeBody {
+        type Data = bytes::Bytes;
+        type Error = std::convert::Infallible;
+        fn poll_frame(
+            self: Pin<&mut Self>,
+            _: &mut Context<'_>,
+        ) -> Poll<Option<Result<http_body::Frame<Self::Data>, Self::Error>>> {
+            self.polled.fetch_add(1, Ordering::SeqCst);
+            Poll::Pending
+        }
+    }
+    #[tokio::test]
+    async fn default_client_refuses_source_operation_before_any_socket() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let owner =
+            SourceUrl::parse(&format!("http://{}/", listener.local_addr().unwrap())).unwrap();
+        let error = crate::Client::new()
+            .source_request(Method::GET, owner)
+            .send()
+            .await
+            .unwrap_err();
+        assert!(error.is_builder());
+        assert_eq!(
+            listener.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        let source =
+            crate::source_pool::source_request_builder(Duration::from_secs(1), &Default::default())
+                .unwrap()
+                .build()
+                .unwrap();
+        let control = source.source_http1_pool_control().unwrap();
+        assert!(
+            source
+                .get(format!("http://{}/", listener.local_addr().unwrap()))
+                .send()
+                .await
+                .unwrap_err()
+                .is_builder()
+        );
+        assert_eq!(
+            listener.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        tokio::time::timeout(Duration::from_secs(1), control.close())
+            .await
+            .unwrap();
+        let owner = Arc::new(SourceUrl::parse("http://loopback.test:-1/a").unwrap());
+        let calls = Arc::new(AtomicUsize::new(0));
+        let resolver = Arc::new(RejectPort {
+            owner: owner.clone(),
+            calls: calls.clone(),
+            expected_host: "loopback.test",
+            expected_port: "-1",
+        });
+        let overridden =
+            crate::source_pool::source_request_builder(Duration::from_secs(1), &Default::default())
+                .unwrap()
+                .dns_resolver(resolver)
+                .resolve("loopback.test", listener.local_addr().unwrap())
+                .build()
+                .unwrap();
+        let control = overridden.source_http1_pool_control().unwrap();
+        assert!(
+            overridden
+                .source_request(Method::GET, owner)
+                .send()
+                .await
+                .is_err()
+        );
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            0,
+            "DNS-only override must not silently escape into source resolver"
+        );
+        tokio::time::timeout(Duration::from_secs(1), control.close())
+            .await
+            .unwrap();
+    }
+    #[derive(Clone)]
+    struct LoopbackEndpoint {
+        address: std::net::SocketAddr,
+        retired: Arc<AtomicUsize>,
+    }
+    struct LoopbackCandidateScope {
+        address: std::net::SocketAddr,
+        retired: Arc<AtomicUsize>,
+        closed: Arc<AtomicBool>,
+        cleanup_at: std::sync::Mutex<Option<tokio::time::Instant>>,
+    }
+    impl crate::dns::Resolve for LoopbackEndpoint {
+        fn resolve(&self, _: crate::dns::Name) -> crate::dns::Resolving {
+            panic!("source proxy must not be projected through the DNS-only resolver");
+        }
+        fn resolve_source(&self, name: crate::dns::SourceName) -> crate::dns::SourceResolving {
+            assert_eq!(name.raw_host(), "127.0.0.1");
+            assert_eq!(name.origin_port().unwrap(), self.address.port().to_string());
+            assert_eq!(name.identity().0.origin_target(), "/config-only?fixture");
+            let owner: Arc<dyn crate::dns::SourceCandidateResolver> =
+                Arc::new(LoopbackCandidateScope {
+                    address: self.address,
+                    retired: self.retired.clone(),
+                    closed: Arc::new(AtomicBool::new(false)),
+                    cleanup_at: std::sync::Mutex::new(None),
+                });
+            let resolver = owner.clone();
+            crate::dns::SourceResolving {
+                owner,
+                future: Box::pin(async move {
+                    Ok(crate::dns::SourceResolution {
+                        candidates: vec![crate::dns::SourceCandidate {
+                            family: crate::dns::SourceFamily::V4,
+                            native_host_text: "127.0.0.1".to_owned(),
+                        }],
+                        resolver,
+                    })
+                }),
+            }
+        }
+    }
+    impl crate::dns::SourceCandidateResolver for LoopbackCandidateScope {
+        fn cancel_and_wait(&self) -> crate::dns::SourceRetiring {
+            // Deliberately cross the two-second connect deadline after TCP wins.
+            // Both repeated waits retain this one retirement instant.
+            let at =
+                *self.cleanup_at.lock().unwrap().get_or_insert_with(|| {
+                    tokio::time::Instant::now() + Duration::from_millis(2200)
+                });
+            let done = self.closed.clone();
+            let retired = self.retired.clone();
+            Box::pin(async move {
+                tokio::time::sleep_until(at).await;
+                if !done.swap(true, Ordering::SeqCst) {
+                    retired.fetch_add(1, Ordering::SeqCst);
+                }
+                Ok(())
+            })
+        }
+        fn resolve_candidate(
+            &self,
+            name: crate::dns::SourceName,
+            candidate: crate::dns::SourceCandidate,
+        ) -> crate::dns::SourceCandidateResolving {
+            assert_eq!(name.raw_host(), "127.0.0.1");
+            assert_eq!(candidate.native_host_text, "127.0.0.1");
+            let address = self.address;
+            Box::pin(async move { Ok(vec![address]) })
+        }
+    }
+    #[tokio::test]
+    async fn source_route_writes_exact_wire_after_cleanup_crosses_connect_deadline() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let retired = Arc::new(AtomicUsize::new(0));
+        let resolver = Arc::new(LoopbackEndpoint {
+            address,
+            retired: retired.clone(),
+        });
+        let proxy = format!("http://proxy-user:proxy-pass@{address}/config-only?fixture#retained");
+        let server = tokio::spawn(async move {
+            let (mut io, _) = listener.accept().await.unwrap();
+            let mut wire = Vec::new();
+            loop {
+                let mut byte = [0];
+                io.read_exact(&mut byte).await.unwrap();
+                wire.push(byte[0]);
+                if wire.ends_with(b"\r\n\r\n") {
+                    break;
+                }
+                assert!(wire.len() < 8192);
+            }
+            io.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok")
+                .await
+                .unwrap();
+            wire
+        });
+        let mut environment = std::collections::BTreeMap::new();
+        environment.insert("http".to_owned(), proxy);
+        let client =
+            crate::source_pool::source_request_builder(Duration::from_secs(2), &environment)
+                .unwrap()
+                .dns_resolver(resolver)
+                .build()
+                .unwrap();
+        let control = client.source_http1_pool_control().unwrap();
+        let owner = Arc::new(SourceUrl::parse("http://u:p@RAW.test:0/a/../b?#ignored").unwrap());
+        let mut response = client
+            .source_request(Method::GET, owner.clone())
+            .send()
+            .await
+            .unwrap();
+        assert!(Arc::ptr_eq(response.source_url(), &owner));
+        assert_eq!(response.chunk().await.unwrap().unwrap(), "ok");
+        assert!(response.chunk().await.unwrap().is_none());
+        let wire = String::from_utf8(server.await.unwrap()).unwrap();
+        assert!(
+            wire.starts_with("GET http://raw.test:0/b? HTTP/1.1\r\n"),
+            "{wire:?}"
+        );
+        assert!(
+            wire.to_ascii_lowercase()
+                .contains("\r\nhost: raw.test:0\r\n"),
+            "{wire:?}"
+        );
+        assert!(
+            wire.to_ascii_lowercase()
+                .contains("\r\nauthorization: basic dtpw\r\n"),
+            "{wire:?}"
+        );
+        assert!(!wire.contains("u:p@") && !wire.contains("ignored"));
+        assert!(!wire.contains("config-only") && !wire.contains("retained"));
+        assert!(
+            wire.contains("Basic cHJveHktdXNlcjpwcm94eS1wYXNz"),
+            "{wire:?}"
+        );
+        assert_eq!(
+            retired.load(Ordering::SeqCst),
+            1,
+            "source resolution retirement precedes HTTP response exposure"
+        );
+
+        drop(response);
+        tokio::time::timeout(Duration::from_secs(2), control.close())
+            .await
+            .unwrap();
+    }
+    #[derive(Debug)]
+    struct PortBoundary;
+    impl std::fmt::Display for PortBoundary {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("fixture source port boundary")
+        }
+    }
+    impl std::error::Error for PortBoundary {}
+    struct RejectPort {
+        owner: Arc<SourceUrl>,
+        calls: Arc<AtomicUsize>,
+        expected_host: &'static str,
+        expected_port: &'static str,
+    }
+    impl crate::dns::Resolve for RejectPort {
+        fn resolve(&self, _: crate::dns::Name) -> crate::dns::Resolving {
+            panic!("DNS-only resolver must not receive source endpoint")
+        }
+        fn resolve_source(&self, name: crate::dns::SourceName) -> crate::dns::SourceResolving {
+            let expected: Arc<dyn hyper::ext::SourceIdentity> = self.owner.clone();
+            assert!(Arc::ptr_eq(&name.identity().0, &expected));
+            assert_eq!(name.raw_host(), self.expected_host);
+            assert_eq!(name.origin_port(), Some(self.expected_port));
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            let mut lookup = crate::dns::SourceResolving::unsupported();
+            lookup.future =
+                Box::pin(async { Err(Box::new(PortBoundary) as crate::error::BoxError) });
+            lookup
+        }
+    }
+    #[tokio::test]
+    async fn signed_source_port_reaches_owned_resolver_without_uri_or_u16_projection() {
+        let owner = Arc::new(SourceUrl::parse("http://loopback.test:-1/a").unwrap());
+        let calls = Arc::new(AtomicUsize::new(0));
+        let resolver = Arc::new(RejectPort {
+            owner: owner.clone(),
+            calls: calls.clone(),
+            expected_host: "loopback.test",
+            expected_port: "-1",
+        });
+        let client =
+            crate::source_pool::source_request_builder(Duration::from_secs(2), &Default::default())
+                .unwrap()
+                .dns_resolver(resolver)
+                .build()
+                .unwrap();
+        let control = client.source_http1_pool_control().unwrap();
+        let error = client
+            .source_request(Method::GET, owner)
+            .send()
+            .await
+            .unwrap_err();
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        let mut source: &(dyn std::error::Error + 'static) = &error;
+        loop {
+            if source.is::<PortBoundary>() {
+                break;
+            }
+            source = source
+                .source()
+                .expect("typed fixture resolver error must survive transport");
+        }
+        tokio::time::timeout(Duration::from_secs(2), control.close())
+            .await
+            .unwrap();
+    }
+    struct PendingResolver {
+        started: Arc<AtomicUsize>,
+        dropped: Arc<AtomicUsize>,
+        changed: Arc<tokio::sync::Notify>,
+    }
+    struct LookupDrop(Arc<AtomicUsize>);
+    impl Drop for LookupDrop {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+    impl crate::dns::Resolve for PendingResolver {
+        fn resolve(&self, _: crate::dns::Name) -> crate::dns::Resolving {
+            panic!("source lookup must retain its typed endpoint")
+        }
+        fn resolve_source(&self, _: crate::dns::SourceName) -> crate::dns::SourceResolving {
+            let (started, dropped, changed) = (
+                self.started.clone(),
+                self.dropped.clone(),
+                self.changed.clone(),
+            );
+            let mut lookup = crate::dns::SourceResolving::unsupported();
+            lookup.future = Box::pin(async move {
+                let _drop = LookupDrop(dropped);
+                started.fetch_add(1, Ordering::SeqCst);
+                changed.notify_one();
+                std::future::pending().await
+            });
+            lookup
+        }
+    }
+    #[tokio::test]
+    async fn dropping_source_connect_and_queued_body_retires_original_pool_owners() {
+        use futures_util::stream::{FuturesUnordered, StreamExt};
+        let (started, dropped, changed) = (
+            Arc::new(AtomicUsize::new(0)),
+            Arc::new(AtomicUsize::new(0)),
+            Arc::new(tokio::sync::Notify::new()),
+        );
+        let resolver = Arc::new(PendingResolver {
+            started: started.clone(),
+            dropped: dropped.clone(),
+            changed: changed.clone(),
+        });
+        let client = crate::source_pool::source_request_builder(
+            Duration::from_secs(10),
+            &Default::default(),
+        )
+        .unwrap()
+        .dns_resolver(resolver)
+        .build()
+        .unwrap();
+        let control = client.source_http1_pool_control().unwrap();
+        let mut requests = FuturesUnordered::new();
+        // Existing source ledger has exactly 100 entries per transport mount.
+        for index in 0..100 {
+            let owner = SourceUrl::parse(&format!("http://pending{index}.test/a")).unwrap();
+            requests.push(client.source_request(Method::GET, owner).send());
+        }
+        tokio::time::timeout(Duration::from_secs(2), async {
+            loop {
+                let notified = changed.notified();
+                if started.load(Ordering::SeqCst) == 100 { break; }
+                tokio::select! { result = requests.next() => panic!("pending fixture completed: {result:?}"), _ = notified => {} }
+            }
+        }).await.unwrap();
+        let body_dropped = Arc::new(AtomicBool::new(false));
+        let body_polled = Arc::new(AtomicUsize::new(0));
+        let mut queued = Box::pin(
+            client
+                .source_request(
+                    Method::POST,
+                    SourceUrl::parse("http://queued.test/a").unwrap(),
+                )
+                .body(Body::wrap(ProbeBody {
+                    polled: body_polled.clone(),
+                    dropped: body_dropped.clone(),
+                }))
+                .send(),
+        );
+        std::future::poll_fn(|cx| {
+            assert!(queued.as_mut().poll(cx).is_pending());
+            Poll::Ready(())
+        })
+        .await;
+        assert_eq!(
+            started.load(Ordering::SeqCst),
+            100,
+            "queued operation must not start a resolver"
+        );
+        drop(queued);
+        assert_eq!(body_polled.load(Ordering::SeqCst), 0);
+        assert!(body_dropped.load(Ordering::SeqCst));
+        drop(requests);
+        tokio::time::timeout(Duration::from_secs(2), control.close())
+            .await
+            .unwrap();
+        assert_eq!(
+            dropped.load(Ordering::SeqCst),
+            100,
+            "close joins retirement of every original source lookup future"
+        );
+    }
+    #[tokio::test]
+    async fn source_route_host_decoding_failure_precedes_transport_scheme_refusal() {
+        let mounts = crate::source_pool::SourceHttp1PoolConfig::new_source(
+            Duration::from_secs(1),
+            vec![("all://example.test".into(), None)],
+        )
+        .unwrap();
+        let client =
+            crate::source_pool::source_request_builder(Duration::from_secs(1), &Default::default())
+                .unwrap()
+                .source_http1_pool(mounts)
+                .build()
+                .unwrap();
+        let control = client.source_http1_pool_control().unwrap();
+        let error = client
+            .source_request(
+                Method::GET,
+                SourceUrl::parse("ftp://xn--.bad_label/a").unwrap(),
+            )
+            .send()
+            .await
+            .unwrap_err();
+        let mut cause: &(dyn std::error::Error + 'static) = &error;
+        loop {
+            if let Some(source) = cause.downcast_ref::<crate::source_pool::SourceUrlError>() {
+                assert_eq!(source.kind, crate::source_pool::SourceUrlErrorKind::Idna);
+                break;
+            }
+            cause = cause
+                .source()
+                .expect("source URL display error must precede unsupported transport scheme");
+        }
+        tokio::time::timeout(Duration::from_secs(1), control.close())
+            .await
+            .unwrap();
+    }
+    #[tokio::test]
+    async fn empty_source_host_reaches_endpoint_stage_without_an_invented_absolute_uri() {
+        let owner = Arc::new(SourceUrl::parse("http:/a?").unwrap());
+        let calls = Arc::new(AtomicUsize::new(0));
+        let resolver = Arc::new(RejectPort {
+            owner: owner.clone(),
+            calls: calls.clone(),
+            expected_host: "",
+            expected_port: "80",
+        });
+        let client =
+            crate::source_pool::source_request_builder(Duration::from_secs(1), &Default::default())
+                .unwrap()
+                .dns_resolver(resolver)
+                .build()
+                .unwrap();
+        let control = client.source_http1_pool_control().unwrap();
+        let error = client
+            .source_request(Method::GET, owner)
+            .send()
+            .await
+            .unwrap_err();
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert!(
+            !error.is_builder(),
+            "constructor-admitted empty host must not acquire a new builder rejection"
+        );
+        tokio::time::timeout(Duration::from_secs(1), control.close())
+            .await
+            .unwrap();
     }
 }

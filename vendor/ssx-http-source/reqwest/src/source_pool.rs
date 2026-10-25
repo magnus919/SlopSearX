@@ -28,17 +28,17 @@ fn source_lower(text: &str) -> String {
 }
 
 use crate::{connect::Connector, proxy::Intercepted};
-use http::{header::PROXY_AUTHORIZATION, Uri};
+use http::{Uri, header::PROXY_AUTHORIZATION};
 pub use hyper_util::client::legacy::pool::{SourcePoolControl, SourcePoolTimedOut};
 use std::{collections::BTreeMap, num::NonZeroUsize, sync::Arc, time::Duration};
 
 #[derive(Clone, Debug)]
-struct Pattern {
+struct LegacyPattern {
     scheme: String,
     host: String,
     port: Option<u16>,
 }
-impl Pattern {
+impl LegacyPattern {
     fn parse(text: &str) -> crate::Result<Self> {
         let (scheme, authority) = text
             .split_once("://")
@@ -136,30 +136,140 @@ impl Pattern {
         host_matches && (self.port.is_none() || self.port == port)
     }
 }
+#[derive(Clone, Debug)]
+struct SourcePattern {
+    scheme: String,
+    host: String,
+    port: Option<String>,
+}
+impl SourcePattern {
+    fn parse(text: &str) -> crate::Result<Self> {
+        if !text.is_empty() && !text.contains(':') {
+            return Err(crate::error::builder(
+                "source mount pattern needs a URL form",
+            ));
+        }
+        let owner = SourceUrl::parse(text).map_err(crate::error::builder)?;
+        let host = owner.display_host().map_err(crate::error::builder)?;
+        Ok(Self {
+            scheme: if owner.scheme() == "all" {
+                String::new()
+            } else {
+                owner.scheme().to_owned()
+            },
+            host: if host == "*" { String::new() } else { host },
+            port: owner.port().map(str::to_owned),
+        })
+    }
+    fn matches_source(&self, owner: &SourceUrl) -> crate::Result<bool> {
+        if !self.scheme.is_empty() && self.scheme != owner.scheme() {
+            return Ok(false);
+        }
+        if !self.host.is_empty() {
+            let host = owner.display_host().map_err(crate::error::builder)?;
+            let matched = if let Some(suffix) = self.host.strip_prefix("*.") {
+                host.len() > suffix.len() + 1 && host.ends_with(&format!(".{suffix}"))
+            } else if let Some(suffix) = self.host.strip_prefix('*') {
+                host == suffix
+                    || (host.len() > suffix.len() + 1 && host.ends_with(&format!(".{suffix}")))
+            } else {
+                host == self.host
+            };
+            if !matched {
+                return Ok(false);
+            }
+        }
+        Ok(self
+            .port
+            .as_deref()
+            .is_none_or(|port| owner.port() == Some(port)))
+    }
+    fn priority(&self) -> (bool, std::cmp::Reverse<usize>, std::cmp::Reverse<usize>) {
+        (
+            self.port.is_none(),
+            std::cmp::Reverse(self.host.chars().count()),
+            std::cmp::Reverse(self.scheme.len()),
+        )
+    }
+}
+// A configured proxy is another real SourceUrl owner, never a dummy matcher
+// destination or a URL recovered from a normalized URI.
+#[derive(Clone)]
+pub(crate) struct SourceProxy {
+    pub(crate) owner: Arc<SourceUrl>,
+    pub(crate) auth: Option<http::HeaderValue>,
+}
+impl SourceProxy {
+    fn parse(input: &str) -> crate::Result<Arc<Self>> {
+        let owner = Arc::new(SourceUrl::parse(input).map_err(crate::error::builder)?);
+        if !matches!(owner.scheme(), "http" | "https") {
+            return Err(crate::error::builder(
+                "source bridge requires HTTP/HTTPS proxy",
+            ));
+        }
+        owner.raw_host_bytes().map_err(crate::error::builder)?;
+        let (username, password) = (owner.username(), owner.password());
+        let auth = if username.is_empty() && password.is_empty() {
+            None
+        } else {
+            Some(crate::util::basic_auth(username, Some(password)))
+        };
+        Ok(Arc::new(Self { owner, auth }))
+    }
+}
+impl std::fmt::Debug for SourceProxy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SourceProxy")
+            .field("owner", &self.owner)
+            .finish_non_exhaustive()
+    }
+}
+
 /// Explicit source proxy snapshot. Each nonempty pattern gets its OWN transport
 /// mount, even when multiple patterns point at the same proxy URL. Bypass rules
 /// use the common default direct mount, as HTTPX's None transports do.
 #[derive(Clone)]
 pub struct SourceHttp1PoolConfig {
     wait: Duration,
-    routes: Vec<(Pattern, usize)>,
+    routes: Vec<(LegacyPattern, usize)>,
+    source_routes: Vec<(SourcePattern, usize)>,
+    source_owned: bool,
     mounts: Vec<Option<Intercepted>>,
+    source_mounts: Vec<Option<Arc<SourceProxy>>>,
 }
 impl std::fmt::Debug for SourceHttp1PoolConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SourceHttp1PoolConfig")
             .field("wait", &self.wait)
-            .field("mount_count", &self.mounts.len())
+            .field("mount_count", &self.mount_count())
             .finish_non_exhaustive()
     }
 }
 impl SourceHttp1PoolConfig {
     /// Entries must retain source insertion order; stable priority sort follows.
     pub fn new(wait: Duration, entries: Vec<(String, Option<String>)>) -> crate::Result<Self> {
+        Self::build(wait, entries, false)
+    }
+    /// Build a full immutable-SourceUrl profile; ordinary Request is refused.
+    /// Existing `new` retains its normalized ordinary-Request bridge behavior.
+    pub fn new_source(
+        wait: Duration,
+        entries: Vec<(String, Option<String>)>,
+    ) -> crate::Result<Self> {
+        Self::build(wait, entries, true)
+    }
+    fn build(
+        wait: Duration,
+        entries: Vec<(String, Option<String>)>,
+        source_owned: bool,
+    ) -> crate::Result<Self> {
         let mut result = Self {
             wait,
             routes: Vec::new(),
+            source_routes: Vec::new(),
+            source_owned,
             mounts: vec![None],
+            source_mounts: vec![None],
         };
         let mut unique: Vec<(String, Option<String>)> = Vec::new();
         for (key, value) in entries {
@@ -170,33 +280,72 @@ impl SourceHttp1PoolConfig {
             }
         }
         for (pattern, proxy) in unique {
-            let pattern = Pattern::parse(&pattern)?;
+            let legacy = if source_owned {
+                None
+            } else {
+                Some(LegacyPattern::parse(&pattern)?)
+            };
+            let source = if source_owned {
+                Some(SourcePattern::parse(&pattern)?)
+            } else {
+                None
+            };
             let id = if let Some(proxy) = proxy {
-                let matcher = crate::Proxy::all(&proxy)?.into_matcher();
-                let intercepted = matcher
-                    .intercept(&Uri::from_static("http://source-mount.invalid/"))
-                    .ok_or_else(|| crate::error::builder("source proxy did not resolve"))?;
-                if !matches!(intercepted.uri().scheme_str(), Some("http" | "https")) {
-                    return Err(crate::error::builder(
-                        "source bridge requires HTTP/HTTPS proxy",
-                    ));
+                if source_owned {
+                    let proxy = SourceProxy::parse(&proxy)?;
+                    let id = result.source_mounts.len();
+                    result.source_mounts.push(Some(proxy));
+                    id
+                } else {
+                    let matcher = crate::Proxy::all(&proxy)?.into_matcher();
+                    let intercepted = matcher
+                        .intercept(&Uri::from_static("http://source-mount.invalid/"))
+                        .ok_or_else(|| crate::error::builder("source proxy did not resolve"))?;
+                    if !matches!(intercepted.uri().scheme_str(), Some("http" | "https")) {
+                        return Err(crate::error::builder(
+                            "source bridge requires HTTP/HTTPS proxy",
+                        ));
+                    }
+                    let id = result.mounts.len();
+                    result.mounts.push(Some(intercepted));
+                    id
                 }
-                let id = result.mounts.len();
-                result.mounts.push(Some(intercepted));
-                id
             } else {
                 0
             };
-            result.routes.push((pattern, id));
+            if let Some(pattern) = legacy {
+                result.routes.push((pattern, id));
+            }
+            if let Some(pattern) = source {
+                result.source_routes.push((pattern, id));
+            }
         }
         result.routes.sort_by_key(|(pattern, _)| pattern.priority());
+        result
+            .source_routes
+            .sort_by_key(|(pattern, _)| pattern.priority());
         Ok(result)
+    }
+    fn mount_count(&self) -> usize {
+        if self.source_owned {
+            self.source_mounts.len()
+        } else {
+            self.mounts.len()
+        }
     }
     pub(crate) fn ledger(&self) -> hyper_util::client::legacy::pool::SourceHttp1PoolConfig {
         hyper_util::client::legacy::pool::SourceHttp1PoolConfig::new(
             self.wait,
-            NonZeroUsize::new(self.mounts.len()).unwrap(),
+            NonZeroUsize::new(self.mount_count()).unwrap(),
         )
+    }
+    fn select_source(&self, owner: &SourceUrl) -> crate::Result<usize> {
+        for (pattern, id) in &self.source_routes {
+            if pattern.matches_source(owner)? {
+                return Ok(*id);
+            }
+        }
+        Ok(0)
     }
     fn select(&self, uri: &Uri) -> usize {
         self.routes
@@ -207,6 +356,20 @@ impl SourceHttp1PoolConfig {
     /// Translate an already-resolved urllib proxy-info snapshot. This function
     /// performs no environment access, OS discovery, network activity or IO.
     pub fn from_proxy_info(wait: Duration, info: &BTreeMap<String, String>) -> crate::Result<Self> {
+        Self::proxy_info(wait, info, false)
+    }
+    /// Preserve the same environment emission order with full source URL patterns.
+    pub fn from_proxy_info_source(
+        wait: Duration,
+        info: &BTreeMap<String, String>,
+    ) -> crate::Result<Self> {
+        Self::proxy_info(wait, info, true)
+    }
+    fn proxy_info(
+        wait: Duration,
+        info: &BTreeMap<String, String>,
+        source_owned: bool,
+    ) -> crate::Result<Self> {
         let mut entries = Vec::new();
         for scheme in ["http", "https", "all"] {
             if let Some(value) = info.get(scheme).filter(|v| !v.is_empty()) {
@@ -231,7 +394,7 @@ impl SourceHttp1PoolConfig {
             .filter(|v| !v.is_empty())
         {
             if host == "*" {
-                return Self::new(wait, Vec::new());
+                return Self::build(wait, Vec::new(), source_owned);
             }
             let pattern = if host.contains("://") {
                 host.to_owned()
@@ -270,7 +433,7 @@ impl SourceHttp1PoolConfig {
                 entries.push((pattern, None));
             }
         }
-        Self::new(wait, entries)
+        Self::build(wait, entries, source_owned)
     }
 }
 /// CPython getproxies_environment's two passes, including CGI protection and
@@ -316,6 +479,23 @@ pub fn gateway_builder(
         .source_http1_pool(SourceHttp1PoolConfig::from_proxy_info(connect, proxy_info)?))
 }
 
+/// Explicit source-request transport primitive with application-owned redirects,
+/// retries and cookies. This helper does not adopt it in the gateway or SDK.
+pub fn source_request_builder(
+    connect: Duration,
+    proxy_info: &BTreeMap<String, String>,
+) -> crate::Result<crate::ClientBuilder> {
+    Ok(crate::Client::builder()
+        .http1_only()
+        .no_proxy()
+        .redirect(crate::redirect::Policy::none())
+        .retry(crate::retry::never())
+        .source_http1_connector_timeouts(connect, Duration::from_secs(300))
+        .source_http1_pool(SourceHttp1PoolConfig::from_proxy_info_source(
+            connect, proxy_info,
+        )?))
+}
+
 /// Construct the transport profile from one native process-environment snapshot.
 /// Empty snapshots invoke the platform-native urllib-compatible discovery path.
 pub fn gateway_builder_from_environment(connect: Duration) -> crate::Result<crate::ClientBuilder> {
@@ -353,8 +533,46 @@ fn prepare_proxy_authorization(
             req.headers_mut().append(PROXY_AUTHORIZATION, value);
         }
     } else if let (Some("http"), Some(value)) = (
-        req.uri().scheme_str(),
+        req.extensions()
+            .get::<Arc<SourceUrl>>()
+            .map(|owner| owner.scheme())
+            .or_else(|| req.uri().scheme_str()),
         proxy.and_then(|p| p.http_non_tunnel_basic_auth()),
+    ) {
+        req.headers_mut().insert(PROXY_AUTHORIZATION, value);
+    }
+}
+fn prepare_source_proxy_authorization(
+    req: &mut hyper::Request<crate::async_impl::body::Body>,
+    proxy: Option<&SourceProxy>,
+) {
+    let caller = if let Some(original) = req.extensions().get::<CallerProxyAuthorization>() {
+        original.0.clone()
+    } else {
+        let mut original = req
+            .headers()
+            .get_all(PROXY_AUTHORIZATION)
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>();
+        for value in &mut original {
+            value.set_sensitive(true);
+        }
+        req.extensions_mut()
+            .insert(CallerProxyAuthorization(original.clone()));
+        original
+    };
+    req.headers_mut().remove(PROXY_AUTHORIZATION);
+    if !caller.is_empty() {
+        for value in caller {
+            req.headers_mut().append(PROXY_AUTHORIZATION, value);
+        }
+    } else if let (Some("http"), Some(value)) = (
+        req.extensions()
+            .get::<Arc<SourceUrl>>()
+            .map(|owner| owner.scheme())
+            .or_else(|| req.uri().scheme_str()),
+        proxy.and_then(|p| p.auth.as_ref()),
     ) {
         req.headers_mut().insert(PROXY_AUTHORIZATION, value);
     }
@@ -377,16 +595,42 @@ impl Prepared {
             connector,
         })
     }
+    pub(crate) fn source_requests_enabled(&self) -> bool {
+        self.config.source_owned
+    }
+    pub(crate) fn validate_source_route(&self, owner: &SourceUrl) -> crate::Result<()> {
+        self.config.select_source(owner).map(|_| ())
+    }
     pub(crate) fn attempt(
         &self,
         req: &mut hyper::Request<crate::async_impl::body::Body>,
     ) -> Result<(hyper_util::client::legacy::pool::SourceMount, Connector), crate::Error> {
-        let id = self.config.select(req.uri());
-        let proxy = self.config.mounts[id].clone();
-        prepare_proxy_authorization(req, proxy.as_ref());
+        let source_owner = req.extensions().get::<Arc<SourceUrl>>().cloned();
+        if source_owner.is_some() != self.config.source_owned {
+            return Err(crate::error::builder(
+                "request identity does not match this source transport lane",
+            ));
+        }
+        let id = match &source_owner {
+            Some(owner) => self.config.select_source(owner)?,
+            None => self.config.select(req.uri()),
+        };
+        let identity = source_owner.map(|owner| hyper::ext::SourceRequestIdentity(owner));
+        if let Some(identity) = &identity {
+            req.extensions_mut().insert(identity.clone());
+        }
+        let (legacy, source) = if self.config.source_owned {
+            let proxy = self.config.source_mounts[id].clone();
+            prepare_source_proxy_authorization(req, proxy.as_deref());
+            (None, proxy)
+        } else {
+            let proxy = self.config.mounts[id].clone();
+            prepare_proxy_authorization(req, proxy.as_ref());
+            (proxy, None)
+        };
         let connector = self
             .connector
-            .source_pool_route(proxy)
+            .source_pool_route(legacy, identity, source)
             .map_err(crate::error::builder)?;
         let mount = self
             .control
@@ -419,8 +663,8 @@ fn resolve_proxy_info(
 mod tests {
     use super::*;
     #[test]
-    fn caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers(
-    ) {
+    fn caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers()
+     {
         let config = SourceHttp1PoolConfig::new(
             Duration::from_secs(1),
             vec![
@@ -602,5 +846,63 @@ mod tests {
         assert_eq!(map["i\u{307}"], "x");
         assert_eq!(map["ος"], "y");
         assert!(!map.contains_key("http"));
+    }
+}
+
+#[cfg(test)]
+mod source_identity_route_tests {
+    use super::*;
+    #[test]
+    fn source_pattern_matches_display_idna_and_original_integer_ports() {
+        let pattern = SourcePattern::parse("http://bücher.example:-1/ignored?ignored").unwrap();
+        let owner = SourceUrl::parse("http://xn--bcher-kva.example:-1/a").unwrap();
+        assert!(pattern.matches_source(&owner).unwrap());
+        assert!(
+            !pattern
+                .matches_source(&SourceUrl::parse("http://bücher.example:0/a").unwrap())
+                .unwrap()
+        );
+        let zero = SourcePattern::parse("http://bücher.example:0").unwrap();
+        assert!(
+            zero.matches_source(&SourceUrl::parse("http://bücher.example:0/a").unwrap())
+                .unwrap()
+        );
+        assert!(
+            !zero
+                .matches_source(&SourceUrl::parse("http://bücher.example/a").unwrap())
+                .unwrap()
+        );
+        assert_eq!(
+            pattern.priority().1,
+            std::cmp::Reverse("bücher.example".chars().count())
+        );
+    }
+    #[test]
+    fn source_routing_retains_lazy_host_failure_and_scheme_short_circuit() {
+        let invalid_ace = SourceUrl::parse("http://xn--.bad_label/a").unwrap();
+        assert!(
+            SourcePattern::parse("all://")
+                .unwrap()
+                .matches_source(&invalid_ace)
+                .unwrap()
+        );
+        assert!(
+            !SourcePattern::parse("https://example.test")
+                .unwrap()
+                .matches_source(&invalid_ace)
+                .unwrap()
+        );
+        assert!(
+            SourcePattern::parse("http://example.test")
+                .unwrap()
+                .matches_source(&invalid_ace)
+                .is_err()
+        );
+        let profile = SourceHttp1PoolConfig::new_source(
+            Duration::from_secs(1),
+            vec![("http://example.test".into(), None)],
+        )
+        .unwrap();
+        assert!(profile.select_source(&invalid_ace).is_err());
     }
 }

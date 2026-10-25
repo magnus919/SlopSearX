@@ -1539,3 +1539,117 @@ async fn source_connect(
         }
     })
 }
+
+#[cfg(feature = "ssx-http1-source-pool")]
+impl<R> HttpConnector<R> {
+    /// Clone the configured resolver for the additive source endpoint operation.
+    pub fn source_resolver(&self) -> R
+    where
+        R: Clone,
+    {
+        self.resolver.clone()
+    }
+    /// Dial original endpoint semantics under the caller's DNS/TCP phase.
+    /// This future performs DNS/TCP only. Retain `lookup.owner` outside this
+    /// future and always await its cancellation/retirement after success, error
+    /// or timeout, before using a returned socket. Cleanup is not lookup time.
+    pub fn source_call(
+        &self,
+        name: super::source_endpoint::SourceName,
+        lookup: super::source_endpoint::SourceResolving,
+    ) -> Pin<Box<dyn std::future::Future<Output = Result<TokioIo<TcpStream>, ConnectError>> + Send>>
+    {
+        use super::source_endpoint::SourceFamily;
+        let config = self.config.clone();
+        Box::pin(async move {
+            let owner = lookup.owner.clone();
+            let connection: Result<TcpStream, ConnectError> = async {
+                let resolution = lookup.future.await.map_err(ConnectError::dns)?;
+                if !Arc::ptr_eq(&owner, &resolution.resolver) {
+                    return Err(ConnectError::new(
+                        "source resolution scope mismatch",
+                        io::Error::from(io::ErrorKind::InvalidInput),
+                    ));
+                }
+                let mut ordered = Vec::new();
+                let (mut v6, mut v4) = (false, false);
+                for candidate in resolution.candidates {
+                    if candidate.family == SourceFamily::V6 && !v6 {
+                        v6 = true;
+                        ordered.insert(0, candidate);
+                    } else if candidate.family == SourceFamily::V4 && !v4 && v6 {
+                        v4 = true;
+                        ordered.insert(1, candidate);
+                    } else {
+                        ordered.push(candidate);
+                    }
+                }
+                source_connect_race(ordered, |candidate| {
+                    let resolver = owner.clone();
+                    let name = name.clone();
+                    let config = config.clone();
+                    async move {
+                        // asyncio's inner list is sequential; preserve final flow/scope.
+                        let addresses = resolver
+                            .resolve_candidate(name, candidate)
+                            .await
+                            .map_err(ConnectError::dns)?;
+                        let mut last = None;
+                        for address in addresses {
+                            if matches!(
+                                (config.local_address_ipv4, config.local_address_ipv6),
+                                (Some(_), None)
+                            ) && address.is_ipv6()
+                            {
+                                continue;
+                            }
+                            if matches!(
+                                (config.local_address_ipv4, config.local_address_ipv6),
+                                (None, Some(_))
+                            ) && address.is_ipv4()
+                            {
+                                continue;
+                            }
+                            let result = match connect(&address, &config, None) {
+                                Ok(connecting) => connecting.await,
+                                Err(error) => Err(error),
+                            };
+                            match result {
+                                Ok(socket) => return Ok(socket),
+                                Err(mut error) => {
+                                    error.addr = Some(address);
+                                    last = Some(error);
+                                }
+                            }
+                        }
+                        Err(last.unwrap_or_else(|| {
+                            ConnectError::new(
+                                "source connect returned no addresses",
+                                io::Error::from(io::ErrorKind::NotConnected),
+                            )
+                        }))
+                    }
+                })
+                .await
+                .map_err(|mut errors| {
+                    if errors.is_empty() {
+                        ConnectError::new(
+                            "source resolution returned no candidates",
+                            io::Error::from(io::ErrorKind::NotConnected),
+                        )
+                    } else {
+                        errors.remove(0)
+                    }
+                })
+            }
+            .await;
+            // Race return drops losing candidate futures. The caller retains
+            // owner outside its phase and awaits scoped retirement separately.
+            let socket = connection?;
+            if let Err(error) = socket.set_nodelay(config.nodelay) {
+                warn!("tcp set_nodelay error: {}", error);
+            }
+            Ok(TokioIo::new(socket))
+        })
+    }
+}

@@ -1049,12 +1049,14 @@ mod tests {
             })
             .unwrap();
         assert_eq!(authority.serialized(), "http://a%40b@other");
-        assert!(url("http://host")
-            .copy_with(SourceUrlChanges {
-                userinfo: Some("a@b"),
-                ..Default::default()
-            })
-            .is_err());
+        assert!(
+            url("http://host")
+                .copy_with(SourceUrlChanges {
+                    userinfo: Some("a@b"),
+                    ..Default::default()
+                })
+                .is_err()
+        );
         let raw = u
             .copy_with(SourceUrlChanges {
                 raw_path: Some("/p?"),
@@ -1063,12 +1065,13 @@ mod tests {
             .unwrap();
         assert_eq!(raw.path(), "/p");
         assert_eq!(raw.query_component(), Some(""));
-        assert!(u
-            .copy_with(SourceUrlChanges {
+        assert!(
+            u.copy_with(SourceUrlChanges {
                 path: Some("/p?q"),
                 ..Default::default()
             })
-            .is_err());
+            .is_err()
+        );
     }
     // httpcore2 URL.origin: truthy port OR default, not None-only default.
     #[test]
@@ -1360,5 +1363,57 @@ mod tests {
             url("file:///a/b").join("/c").unwrap().serialized(),
             "file:/c"
         );
+    }
+}
+
+impl hyper::ext::SourceIdentity for SourceUrl {
+    fn scheme(&self) -> &str {
+        self.scheme()
+    }
+    fn raw_host(&self) -> &str {
+        self.raw_host()
+    }
+    fn origin_port(&self) -> Option<&str> {
+        self.effective_origin_port()
+    }
+    fn explicit_port(&self) -> Option<&str> {
+        self.port()
+    }
+    fn authority(&self) -> String {
+        self.netloc()
+    }
+    fn origin_target(&self) -> String {
+        self.raw_path()
+    }
+}
+
+#[cfg(test)]
+mod source_wire_identity_tests {
+    use super::*;
+    use std::sync::Arc;
+    #[test]
+    fn ipv6_host_header_proxy_target_and_connect_port_have_distinct_source_forms() {
+        let owner = Arc::new(SourceUrl::parse("http://u:p@[2001:0DB8::1]:0/a?#fragment").unwrap());
+        let identity = hyper::ext::SourceRequestIdentity(owner.clone());
+        assert_eq!(identity.0.authority(), "[2001:0DB8::1]:0");
+        let wire = |form| {
+            hyper::ext::SourceRequestTarget {
+                identity: identity.clone(),
+                form,
+            }
+            .bytes()
+            .unwrap()
+        };
+        assert_eq!(wire(hyper::ext::SourceTargetForm::Origin), b"/a?");
+        assert_eq!(
+            wire(hyper::ext::SourceTargetForm::Absolute),
+            b"http://2001:0DB8::1:0/a?"
+        );
+        assert_eq!(
+            wire(hyper::ext::SourceTargetForm::Connect),
+            b"2001:0DB8::1:80"
+        );
+        let expected: Arc<dyn hyper::ext::SourceIdentity> = owner;
+        assert!(Arc::ptr_eq(&identity.0, &expected));
     }
 }

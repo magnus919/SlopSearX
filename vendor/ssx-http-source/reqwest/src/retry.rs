@@ -99,6 +99,10 @@ where
 // ===== impl Builder =====
 
 impl Builder {
+    #[cfg(feature = "ssx-http1-source-pool")]
+    pub(crate) fn is_never(&self) -> bool {
+        matches!(self.classifier, classify::Classifier::Never)
+    }
     /// Create a scoped retry policy.
     ///
     /// For a more convenient constructor, see [`for_host()`].

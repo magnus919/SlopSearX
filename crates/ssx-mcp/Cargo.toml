@@ -10,7 +10,8 @@ publish.workspace = true
 workspace = true
 
 [features]
-gateway-dns-fixtures = []
+gateway-source-endpoints = ["reqwest/ssx-http1-source-pool"]
+gateway-dns-fixtures = ["ssx-windows-owner/fixtures"]
 
 [dependencies]
 ssx-application.workspace = true
@@ -45,6 +46,7 @@ sha2.workspace = true
 rustls.workspace = true
 
 [target.'cfg(unix)'.dependencies]
+ssx-native-ip-text = { path = "../../vendor/ssx-native-ip-text", version = "=0.1.0" }
 nix = { version = "=0.31.3", default-features = false, features = ["fs", "poll", "event", "process", "signal"] }
 libc = "=0.2.190"
 dns-lookup = "=4.0.2"
@@ -56,3 +58,6 @@ tokio = { workspace = true, features = ["test-util"] }
 # Existing workspace TLS fixture stack; native qualification remains pending.
 tokio-rustls.workspace = true
 rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
+
+[target.'cfg(windows)'.dependencies]
+ssx-windows-owner = { path = "../../vendor/ssx-windows-owner", version = "=0.1.0" }

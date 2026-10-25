@@ -31,6 +31,13 @@ pub trait Resolve: Send + Sync {
     /// Explicitly specified port in the URL will override any port in the resolved `SocketAddr`s.
     /// Otherwise, port `0` will be replaced by the conventional port for the given scheme (e.g. 80 for http).
     fn resolve(&self, name: Name) -> Resolving;
+
+    #[cfg(feature = "ssx-http1-source-pool")]
+    /// Resolve a source endpoint with its original integer and lazy candidate ownership.
+    /// The default refuses; ordinary `resolve` behavior is unchanged.
+    fn resolve_source(&self, _name: SourceName) -> SourceResolving {
+        SourceResolving::unsupported()
+    }
 }
 
 /// A name that must be resolved to addresses.
@@ -146,6 +153,16 @@ impl DnsResolverWithOverrides {
 }
 
 impl Resolve for DnsResolverWithOverrides {
+    #[cfg(feature = "ssx-http1-source-pool")]
+    fn resolve_source(&self, name: SourceName) -> SourceResolving {
+        // DNS-only SocketAddr overrides cannot supply source integer/secondary
+        // lookup semantics. Refuse a selected override instead of silently
+        // bypassing it and reaching a real application/native resolver.
+        if self.overrides.contains_key(name.raw_host()) {
+            return SourceResolving::unsupported();
+        }
+        self.dns_resolver.resolve_source(name)
+    }
     fn resolve(&self, name: Name) -> Resolving {
         match self.overrides.get(name.as_str()) {
             Some(dest) => {
@@ -196,4 +213,17 @@ mod sealed {
     }
 
     impl std::error::Error for InvalidNameError {}
+}
+
+#[cfg(feature = "ssx-http1-source-pool")]
+pub use hyper_util::client::legacy::connect::source_endpoint::{
+    SourceCandidate, SourceCandidateResolver, SourceCandidateResolving, SourceFamily, SourceName,
+    SourceResolution, SourceResolutionFuture, SourceResolutionUnsupported, SourceResolving,
+    SourceRetiring,
+};
+#[cfg(feature = "ssx-http1-source-pool")]
+impl hyper_util::client::legacy::connect::source_endpoint::SourceEndpointResolver for DynResolver {
+    fn resolve_source(&self, name: SourceName) -> SourceResolving {
+        self.resolver.resolve_source(name)
+    }
 }

@@ -70,6 +70,7 @@ from = "capi/include/hyper.h"
 [features]
 ssx-send-operation-timeout = ["client", "http1", "tokio/time"]
 ssx-http1-source-read = ["ssx-send-operation-timeout"]
+ssx-http1-source-identity = ["ssx-http1-source-read"]
 capi = []
 client = [
     "dep:want",

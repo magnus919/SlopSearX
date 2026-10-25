@@ -197,9 +197,9 @@ pub(crate) mod service {
     use std::future::Future;
     use std::pin::Pin;
     use std::sync::Arc;
-    use std::task::ready;
     use std::task::Context;
     use std::task::Poll;
+    use std::task::ready;
     use tower::Service;
     use url::Url;
 
@@ -237,11 +237,14 @@ pub(crate) mod service {
         fn call(&mut self, mut req: Request<ReqBody>) -> Self::Future {
             let clone = self.inner.clone();
             let mut inner = std::mem::replace(&mut self.inner, clone);
-            let url = Url::parse(req.uri().to_string().as_str()).expect("invalid URL");
-            if let Some(cookie_store) = self.cookie_store.as_ref() {
+            let url = self
+                .cookie_store
+                .as_ref()
+                .map(|_| Url::parse(req.uri().to_string().as_str()).expect("invalid URL"));
+            if let (Some(cookie_store), Some(url)) = (self.cookie_store.as_ref(), url.as_ref()) {
                 if req.headers().get(crate::header::COOKIE).is_none() {
                     let headers = req.headers_mut();
-                    crate::util::add_cookie_header(headers, &**cookie_store, &url);
+                    crate::util::add_cookie_header(headers, &**cookie_store, url);
                 }
             }
 
@@ -265,7 +268,7 @@ pub(crate) mod service {
             #[pin]
             future: S::Future,
             cookie_store: Option<Arc<dyn cookie::CookieStore>>,
-            url: Url,
+            url: Option<Url>,
         }
     }
 
@@ -280,10 +283,11 @@ pub(crate) mod service {
             let this = self.project();
             let res = ready!(this.future.poll(cx)?);
 
-            if let Some(cookie_store) = this.cookie_store.as_ref() {
+            if let (Some(cookie_store), Some(url)) = (this.cookie_store.as_ref(), this.url.as_ref())
+            {
                 let mut cookies = cookie::extract_response_cookie_headers(res.headers()).peekable();
                 if cookies.peek().is_some() {
-                    cookie_store.set_cookies(&mut cookies, this.url);
+                    cookie_store.set_cookies(&mut cookies, url);
                 }
             }
             Poll::Ready(Ok(res))

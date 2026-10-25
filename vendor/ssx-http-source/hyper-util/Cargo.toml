@@ -46,7 +46,7 @@ rustdoc-args = [
 ]
 
 [features]
-ssx-http1-source-pool = ["ssx-http1-source-connect", "http1", "tokio"]
+ssx-http1-source-pool = ["ssx-http1-source-connect", "http1", "tokio", "hyper/ssx-http1-source-identity"]
 ssx-http1-source-connect = ["client-legacy"]
 __internal_happy_eyeballs_tests = []
 client = [

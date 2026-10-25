@@ -24,12 +24,12 @@ pub(super) fn source_address_order(addrs: impl IntoIterator<Item = SocketAddr>) 
 // Same existing socket constructor/connect future; only the opt-in scheduler
 // changes. No tasks are spawned: all attempts are owned by this future and its
 // FuturesUnordered, including ready-but-not-selected loser sockets.
-pub(super) async fn source_connect_race<T, E, F, Fut>(
-    addrs: Vec<SocketAddr>,
+pub(super) async fn source_connect_race<A, T, E, F, Fut>(
+    addrs: Vec<A>,
     mut dial: F,
 ) -> Result<T, Vec<E>>
 where
-    F: FnMut(SocketAddr) -> Fut,
+    F: FnMut(A) -> Fut,
     Fut: Future<Output = Result<T, E>>,
 {
     use futures_util::stream::{FuturesUnordered, StreamExt};

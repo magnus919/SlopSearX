@@ -90,6 +90,9 @@ impl InputOwner {
             .as_mut()
             .expect("gateway input reader owned until join")
     }
+    pub(crate) async fn close(&mut self) -> Result<()> {
+        self.shutdown()
+    }
     /// Synchronously joins the actual poll worker. It performs no blocking OS
     /// read/write: its wake descriptor remains ready through join completion.
     pub(crate) fn shutdown(&mut self) -> Result<()> {

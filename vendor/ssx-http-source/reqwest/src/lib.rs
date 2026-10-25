@@ -276,8 +276,8 @@ macro_rules! if_hyper {
     )*}
 }
 
-pub use http::header;
 pub use http::Method;
+pub use http::header;
 pub use http::{StatusCode, Version};
 pub use url::Url;
 
@@ -361,6 +361,8 @@ if_hyper! {
     pub use self::async_impl::{
         Body, Client, ClientBuilder, Request, RequestBuilder, Response, Upgraded,
     };
+    #[cfg(feature = "ssx-http1-source-pool")]
+    pub use self::async_impl::{SourceRequest, SourceRequestBuilder, SourceResponse};
     pub use self::proxy::{Proxy,NoProxy};
     #[cfg(feature = "__tls")]
     // Re-exports, to be removed in a future release

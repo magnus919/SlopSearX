@@ -26,7 +26,7 @@ use mime::Mime;
 
 /// A Response to a submitted `Request`.
 pub struct Response {
-    pub(super) res: hyper::Response<ResponseBody>,
+    pub(super) core: ResponseCore,
     // Boxed to save space (11 words to 1 word), and it's not accessed
     // frequently internally.
     url: Box<Url>,
@@ -39,14 +39,8 @@ impl Response {
         total_timeout: Option<Pin<Box<Sleep>>>,
         read_timeout: Option<Duration>,
     ) -> Response {
-        let (parts, body) = res.into_parts();
-        let res = hyper::Response::from_parts(
-            parts,
-            super::body::response(body, total_timeout, read_timeout),
-        );
-
         Response {
-            res,
+            core: ResponseCore::new(res, total_timeout, read_timeout),
             url: Box::new(url),
         }
     }
@@ -54,25 +48,25 @@ impl Response {
     /// Get the `StatusCode` of this `Response`.
     #[inline]
     pub fn status(&self) -> StatusCode {
-        self.res.status()
+        self.core.res.status()
     }
 
     /// Get the HTTP `Version` of this `Response`.
     #[inline]
     pub fn version(&self) -> Version {
-        self.res.version()
+        self.core.res.version()
     }
 
     /// Get the `Headers` of this `Response`.
     #[inline]
     pub fn headers(&self) -> &HeaderMap {
-        self.res.headers()
+        self.core.res.headers()
     }
 
     /// Get a mutable reference to the `Headers` of this `Response`.
     #[inline]
     pub fn headers_mut(&mut self) -> &mut HeaderMap {
-        self.res.headers_mut()
+        self.core.res.headers_mut()
     }
 
     /// Get the content length of the response, if it is known.
@@ -90,7 +84,7 @@ impl Response {
     pub fn content_length(&self) -> Option<u64> {
         use hyper::body::Body;
 
-        Body::size_hint(self.res.body()).exact()
+        Body::size_hint(self.core.res.body()).exact()
     }
 
     /// Retrieve the cookies contained in the response.
@@ -103,7 +97,7 @@ impl Response {
     #[cfg(feature = "cookies")]
     #[cfg_attr(docsrs, doc(cfg(feature = "cookies")))]
     pub fn cookies<'a>(&'a self) -> impl Iterator<Item = cookie::Cookie<'a>> + 'a {
-        cookie::extract_response_cookies(self.res.headers()).filter_map(Result::ok)
+        cookie::extract_response_cookies(self.core.res.headers()).filter_map(Result::ok)
     }
 
     /// Get the final `Url` of this `Response`.
@@ -114,7 +108,8 @@ impl Response {
 
     /// Get the remote address used to get this `Response`.
     pub fn remote_addr(&self) -> Option<SocketAddr> {
-        self.res
+        self.core
+            .res
             .extensions()
             .get::<HttpInfo>()
             .map(|info| info.remote_addr())
@@ -122,12 +117,12 @@ impl Response {
 
     /// Returns a reference to the associated extensions.
     pub fn extensions(&self) -> &http::Extensions {
-        self.res.extensions()
+        self.core.res.extensions()
     }
 
     /// Returns a mutable reference to the associated extensions.
     pub fn extensions_mut(&mut self) -> &mut http::Extensions {
-        self.res.extensions_mut()
+        self.core.res.extensions_mut()
     }
 
     // body methods
@@ -308,20 +303,7 @@ impl Response {
     /// # }
     /// ```
     pub async fn chunk(&mut self) -> crate::Result<Option<Bytes>> {
-        use http_body_util::BodyExt;
-
-        // loop to ignore unrecognized frames
-        loop {
-            if let Some(res) = self.res.body_mut().frame().await {
-                let frame = res.map_err(crate::error::decode)?;
-                if let Ok(buf) = frame.into_data() {
-                    return Ok(Some(buf));
-                }
-                // else continue
-            } else {
-                return Ok(None);
-            }
-        }
+        self.core.next_chunk().await
     }
 
     /// Convert the response into a `Stream` of `Bytes` from the body.
@@ -349,7 +331,7 @@ impl Response {
     #[cfg(feature = "stream")]
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     pub fn bytes_stream(self) -> impl futures_core::Stream<Item = crate::Result<Bytes>> {
-        http_body_util::BodyDataStream::new(self.res.into_body().map_err(crate::error::decode))
+        http_body_util::BodyDataStream::new(self.core.res.into_body().map_err(crate::error::decode))
     }
 
     // util methods
@@ -425,12 +407,12 @@ impl Response {
     // This method is just used by the blocking API.
     #[cfg(feature = "blocking")]
     pub(crate) fn body_mut(&mut self) -> &mut ResponseBody {
-        self.res.body_mut()
+        self.core.res.body_mut()
     }
     async fn do_bytes(self) -> crate::Result<(Bytes, Box<Url>)> {
         use http_body_util::BodyExt;
 
-        match BodyExt::collect(self.res.into_body()).await {
+        match BodyExt::collect(self.core.res.into_body()).await {
             Ok(buf) => Ok((buf.to_bytes(), self.url)),
             Err(err) => Err(crate::error::decode(err).with_url(*self.url)),
         }
@@ -450,7 +432,7 @@ impl fmt::Debug for Response {
 /// A `Response` can be piped as the `Body` of another request.
 impl From<Response> for Body {
     fn from(r: Response) -> Body {
-        Body::wrap(r.res.into_body())
+        Body::wrap(r.core.res.into_body())
     }
 }
 
@@ -469,7 +451,7 @@ impl<T: Into<Body>> From<http::Response<T>> for Response {
         let url = url.0;
         let res = hyper::Response::from_parts(parts, ResponseBody::new(body.map_err(Into::into)));
         Response {
-            res,
+            core: ResponseCore { res },
             url: Box::new(url),
         }
     }
@@ -479,7 +461,7 @@ impl<T: Into<Body>> From<http::Response<T>> for Response {
 // It's supposed to be the inverse of the conversion above.
 impl From<Response> for http::Response<Body> {
     fn from(r: Response) -> http::Response<Body> {
-        let (parts, body) = r.res.into_parts();
+        let (parts, body) = r.core.res.into_parts();
         let body = Body::wrap(body);
         http::Response::from_parts(parts, body)
     }
@@ -504,5 +486,102 @@ mod tests {
 
         assert_eq!(response.status(), 200);
         assert_eq!(*response.url(), url);
+    }
+}
+
+/// Shared body/timeout owner: it contains no default or invented URL.
+pub(super) struct ResponseCore {
+    pub(super) res: hyper::Response<ResponseBody>,
+}
+impl ResponseCore {
+    pub(super) fn new(
+        res: hyper::Response<ResponseBody>,
+        total_timeout: Option<Pin<Box<Sleep>>>,
+        read_timeout: Option<Duration>,
+    ) -> Self {
+        let (parts, body) = res.into_parts();
+        Self {
+            res: hyper::Response::from_parts(
+                parts,
+                super::body::response(body, total_timeout, read_timeout),
+            ),
+        }
+    }
+    async fn next_chunk(&mut self) -> crate::Result<Option<Bytes>> {
+        loop {
+            match self.res.body_mut().frame().await {
+                Some(Ok(frame)) => {
+                    if let Ok(bytes) = frame.into_data() {
+                        return Ok(Some(bytes));
+                    }
+                }
+                Some(Err(error)) => return Err(crate::error::decode(error)),
+                None => return Ok(None),
+            }
+        }
+    }
+}
+#[cfg(feature = "ssx-http1-source-pool")]
+/// Response retaining its actual source URL and the shared body/timeout owner.
+pub struct SourceResponse {
+    core: ResponseCore,
+    source_url: std::sync::Arc<crate::source_pool::SourceUrl>,
+}
+#[cfg(feature = "ssx-http1-source-pool")]
+impl SourceResponse {
+    pub(super) fn new(
+        res: hyper::Response<ResponseBody>,
+        source_url: std::sync::Arc<crate::source_pool::SourceUrl>,
+        total_timeout: Option<Pin<Box<Sleep>>>,
+        read_timeout: Option<Duration>,
+    ) -> Self {
+        Self {
+            core: ResponseCore::new(res, total_timeout, read_timeout),
+            source_url,
+        }
+    }
+    /// Borrow the immutable URL of this actual source operation.
+    pub fn source_url(&self) -> &std::sync::Arc<crate::source_pool::SourceUrl> {
+        &self.source_url
+    }
+    /// Get response status.
+    pub fn status(&self) -> StatusCode {
+        self.core.res.status()
+    }
+    /// Get negotiated HTTP version.
+    pub fn version(&self) -> Version {
+        self.core.res.version()
+    }
+    /// Borrow response headers.
+    pub fn headers(&self) -> &HeaderMap {
+        self.core.res.headers()
+    }
+    /// Get the known decoded body size hint.
+    pub fn content_length(&self) -> Option<u64> {
+        use hyper::body::Body;
+        self.core.res.body().size_hint().exact()
+    }
+    /// Read one body data chunk under the existing phase and cancellation owner.
+    pub async fn chunk(&mut self) -> crate::Result<Option<Bytes>> {
+        self.core.next_chunk().await
+    }
+    /// Collect the owned body under the existing phase timeout machinery.
+    pub async fn bytes(self) -> crate::Result<Bytes> {
+        self.core
+            .res
+            .into_body()
+            .collect()
+            .await
+            .map(|body| body.to_bytes())
+            .map_err(crate::error::decode)
+    }
+}
+#[cfg(feature = "ssx-http1-source-pool")]
+impl fmt::Debug for SourceResponse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SourceResponse")
+            .field("status", &self.status())
+            .field("source_url", &self.source_url)
+            .finish_non_exhaustive()
     }
 }

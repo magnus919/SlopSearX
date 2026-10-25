@@ -68,7 +68,7 @@ features = [
 ]
 
 [features]
-ssx-http1-source-pool = ["ssx-http1-source-connect", "hyper-util/ssx-http1-source-pool", "dep:regex", "dep:chrono", "dep:num-bigint", "dep:libc", "dep:ssx-source-codecs"]
+ssx-http1-source-pool = ["ssx-http1-source-connect", "hyper-util/ssx-http1-source-pool", "dep:regex", "dep:chrono", "dep:num-bigint", "dep:libc", "dep:ssx-source-codecs", "hyper/ssx-http1-source-identity"]
 ssx-http1-source-connect = ["ssx-http1-source-read", "hyper-util/ssx-http1-source-connect", "rustls"]
 ssx-send-operation-timeout = ["hyper/ssx-send-operation-timeout"]
 ssx-http1-source-read = ["ssx-send-operation-timeout", "hyper/ssx-http1-source-read"]
@@ -497,6 +497,7 @@ features = ["derive"]
 version = "1.0"
 features = [
     "macros",
+    "io-util",
     "rt-multi-thread",
 ]
 default-features = false

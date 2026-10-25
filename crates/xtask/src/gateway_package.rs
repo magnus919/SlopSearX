@@ -1,4 +1,5 @@
 //! Developer build/stage/exec path; installed users need no helper configuration.
+#[cfg(unix)]
 use std::os::unix::process::CommandExt;
 use std::{
     path::{Path, PathBuf},
@@ -21,7 +22,9 @@ fn build_layout(target: &Path, exe: &Path) -> Result<(bool, Option<String>), Str
         }
         _ => return Err("unsupported Cargo executable layout".into()),
     };
-    if role != "xtask" || !matches!(profile, "debug" | "release") {
+    if role != format!("xtask{}", std::env::consts::EXE_SUFFIX)
+        || !matches!(profile, "debug" | "release")
+    {
         return Err("expected Cargo xtask debug/release role".into());
     }
     Ok((profile == "release", triple))
@@ -114,6 +117,8 @@ fn package(root: &Path, distribution: bool) -> Result<PathBuf, String> {
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit());
+    #[cfg(windows)]
+    command.args(["--bin", "ssx-gateway-input"]);
     // Pin the metadata target root and selected executable target explicitly:
     // config/CARGO_BUILD_TARGET cannot append a second target directory.
     command.arg("--target-dir").arg(&target);
@@ -140,13 +145,23 @@ fn package(root: &Path, distribution: bool) -> Result<PathBuf, String> {
         .as_array()
         .ok_or("Cargo package identities absent")?;
     let mut outputs = Vec::new();
-    for (name, source) in [
+    let roles = vec![
         ("ssx-gateway", "crates/ssx-gateway/src/main.rs"),
         (
             "ssx-gateway-dns",
             "crates/ssx-gateway/src/bin/ssx-gateway-dns.rs",
         ),
-    ] {
+    ];
+    #[cfg(windows)]
+    let roles = {
+        let mut roles = roles;
+        roles.push((
+            "ssx-gateway-input",
+            "crates/ssx-gateway/src/bin/ssx-gateway-input.rs",
+        ));
+        roles
+    };
+    for (name, source) in roles {
         let manifest = root.join("crates/ssx-gateway/Cargo.toml");
         let ids: Vec<_> = packages
             .iter()
@@ -168,10 +183,18 @@ fn package(root: &Path, distribution: bool) -> Result<PathBuf, String> {
         }
         outputs.push(path);
     }
-    if outputs[0].parent() != outputs[1].parent()
-        || outputs[1]
-            .file_name()
-            .is_none_or(|n| n != "ssx-gateway-dns")
+    if outputs.iter().any(|p| p.parent() != outputs[0].parent())
+        || (cfg!(windows)
+            && outputs
+                .get(2)
+                .is_none_or(|p| p.file_name().is_none_or(|n| n != "ssx-gateway-input.exe")))
+        || outputs[1].file_name().is_none_or(|n| {
+            n != if cfg!(windows) {
+                "ssx-gateway-dns.exe"
+            } else {
+                "ssx-gateway-dns"
+            }
+        })
     {
         return Err("actual package artifacts not siblings".into());
     }
@@ -180,11 +203,17 @@ fn package(root: &Path, distribution: bool) -> Result<PathBuf, String> {
     } else {
         "gateway-packages"
     });
+    #[cfg(windows)]
+    ssx_mcp::gateway_client::resolver::install::prepare_output_root(&output_root)
+        .map_err(|_| "private Windows package root")?;
     match std::fs::create_dir(&output_root) {
         Ok(()) => {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&output_root, std::fs::Permissions::from_mode(0o700))
-                .map_err(|_| "private package root")?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&output_root, std::fs::Permissions::from_mode(0o700))
+                    .map_err(|_| "private package root")?;
+            }
         }
         Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
         Err(_) => return Err("private package root".into()),
@@ -193,10 +222,18 @@ fn package(root: &Path, distribution: bool) -> Result<PathBuf, String> {
         ssx_mcp::gateway_client::resolver::install::stage_distribution(
             &outputs[0],
             &outputs[1],
+            #[cfg(windows)]
+            &outputs[2],
             &output_root,
         )
     } else {
-        ssx_mcp::gateway_client::resolver::install::stage(&outputs[0], &outputs[1], &output_root)
+        ssx_mcp::gateway_client::resolver::install::stage(
+            &outputs[0],
+            &outputs[1],
+            #[cfg(windows)]
+            &outputs[2],
+            &output_root,
+        )
     })
     .map_err(|_| "gateway package staging/identity failed".into())
 }
@@ -236,9 +273,24 @@ pub fn cli(root: &Path, args: &[String]) -> bool {
     if rest.first().is_some_and(|a| a == "--") {
         rest = &rest[1..];
     }
-    let _error = Command::new(executable).args(rest).exec();
-    eprintln!("installed gateway execution failed");
-    std::process::exit(1)
+    #[cfg(unix)]
+    {
+        let _error = Command::new(executable).args(rest).exec();
+        eprintln!("installed gateway execution failed");
+        std::process::exit(1)
+    }
+    #[cfg(windows)]
+    {
+        // Windows has no exec replacement. This exact foreground child is
+        // synchronously waited; no detached supervisor is introduced.
+        let code = Command::new(executable)
+            .args(rest)
+            .status()
+            .ok()
+            .and_then(|s| s.code())
+            .unwrap_or(1);
+        std::process::exit(code)
+    }
 }
 
 #[cfg(test)]
@@ -251,13 +303,20 @@ mod tests {
         assert_eq!(
             build_layout(
                 root,
-                Path::new("/owned/target/aarch64-apple-darwin/debug/xtask")
+                &root.join(format!(
+                    "aarch64-apple-darwin/debug/xtask{}",
+                    std::env::consts::EXE_SUFFIX
+                ))
             )
             .unwrap(),
             (false, Some("aarch64-apple-darwin".into()))
         );
         assert_eq!(
-            build_layout(root, Path::new("/owned/target/release/xtask")).unwrap(),
+            build_layout(
+                root,
+                &root.join(format!("release/xtask{}", std::env::consts::EXE_SUFFIX))
+            )
+            .unwrap(),
             (true, None)
         );
         assert!(build_layout(root, Path::new("/other/debug/xtask")).is_err());

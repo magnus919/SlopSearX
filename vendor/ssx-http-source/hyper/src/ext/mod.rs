@@ -57,11 +57,11 @@ pub use h1_reason_phrase::ReasonPhrase;
 #[cfg(all(feature = "http1", feature = "client"))]
 mod informational;
 #[cfg(all(feature = "http1", feature = "client"))]
-pub use informational::on_informational;
-#[cfg(all(feature = "http1", feature = "client"))]
 pub(crate) use informational::OnInformational;
+#[cfg(all(feature = "http1", feature = "client"))]
+pub use informational::on_informational;
 #[cfg(all(feature = "http1", feature = "client", feature = "ffi"))]
-pub(crate) use informational::{on_informational_raw, OnInformationalCallback};
+pub(crate) use informational::{OnInformationalCallback, on_informational_raw};
 
 #[cfg(feature = "http2")]
 /// Extension type representing the `:protocol` pseudo-header in HTTP/2.
@@ -297,3 +297,10 @@ impl std::fmt::Debug for SourceConnectResponse {
             .finish_non_exhaustive()
     }
 }
+
+#[cfg(feature = "ssx-http1-source-identity")]
+mod source_identity;
+#[cfg(feature = "ssx-http1-source-identity")]
+pub use source_identity::{
+    SourceIdentity, SourceRequestIdentity, SourceRequestTarget, SourceTargetError, SourceTargetForm,
+};

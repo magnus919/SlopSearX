@@ -48,3 +48,27 @@ pub(super) async fn phase<T>(
     })
     .await
 }
+
+// Shared source DNS/TCP deadline; retirement is awaited outside this timer.
+#[cfg(feature = "ssx-http1-source-pool")]
+pub(super) async fn phase_until<T>(
+    at: tokio::time::Instant,
+    kind: SourceHttp1ConnectPhase,
+    future: impl Future<Output = Result<T, BoxError>>,
+) -> Result<T, BoxError> {
+    let mut future = Box::pin(future);
+    let mut deadline = Box::pin(tokio::time::sleep_until(at));
+    std::future::poll_fn(|cx| {
+        // A late IO wake must not rescue a phase whose own deadline passed.
+        if tokio::time::Instant::now() >= deadline.deadline()
+            || deadline.as_mut().poll(cx).is_ready()
+        {
+            return Poll::Ready(Err(Box::new(io::Error::new(
+                io::ErrorKind::TimedOut,
+                SourceHttp1ConnectTimedOut(kind),
+            )) as BoxError));
+        }
+        future.as_mut().poll(cx)
+    })
+    .await
+}

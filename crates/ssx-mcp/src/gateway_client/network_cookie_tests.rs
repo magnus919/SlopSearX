@@ -10,15 +10,45 @@ use tokio::{
 };
 
 struct LoopbackDns(AtomicUsize);
+struct LoopbackScope {
+    address: std::net::SocketAddr,
+}
+impl reqwest::dns::SourceCandidateResolver for LoopbackScope {
+    fn cancel_and_wait(&self) -> reqwest::dns::SourceRetiring {
+        Box::pin(async { Ok(()) })
+    }
+    fn resolve_candidate(
+        &self,
+        _: reqwest::dns::SourceName,
+        _: reqwest::dns::SourceCandidate,
+    ) -> reqwest::dns::SourceCandidateResolving {
+        let address = self.address;
+        Box::pin(async move { Ok(vec![address]) })
+    }
+}
 impl reqwest::dns::Resolve for LoopbackDns {
     fn resolve(&self, _: reqwest::dns::Name) -> reqwest::dns::Resolving {
+        panic!("Network must use the source endpoint callback, never DNS-only projection")
+    }
+    fn resolve_source(&self, name: reqwest::dns::SourceName) -> reqwest::dns::SourceResolving {
         self.0.fetch_add(1, Ordering::SeqCst);
-        Box::pin(async {
-            Ok(
-                Box::new(vec!["127.0.0.1:0".parse::<std::net::SocketAddr>().unwrap()].into_iter())
-                    as reqwest::dns::Addrs,
-            )
-        })
+        let port = name.origin_port().unwrap().parse::<u16>().unwrap();
+        let owner: Arc<dyn reqwest::dns::SourceCandidateResolver> = Arc::new(LoopbackScope {
+            address: std::net::SocketAddr::from(([127, 0, 0, 1], port)),
+        });
+        let resolver = owner.clone();
+        reqwest::dns::SourceResolving {
+            owner,
+            future: Box::pin(async move {
+                Ok(reqwest::dns::SourceResolution {
+                    resolver,
+                    candidates: vec![reqwest::dns::SourceCandidate {
+                        family: reqwest::dns::SourceFamily::V4,
+                        native_host_text: "127.0.0.1".into(),
+                    }],
+                })
+            }),
+        }
     }
 }
 fn network(config: SourceHttp1PoolConfig, cookies: Arc<dyn SourceCookieStore>) -> Arc<Network> {
@@ -30,7 +60,7 @@ fn network_with_dns(
     dns: Arc<LoopbackDns>,
 ) -> Arc<Network> {
     let connect = Duration::from_secs(2);
-    let client = reqwest::source_pool::gateway_builder(connect, &Default::default())
+    let client = reqwest::source_pool::source_request_builder(connect, &Default::default())
         .unwrap()
         .source_http1_pool(config)
         .dns_resolver(dns)
@@ -60,7 +90,7 @@ fn network_from_client(
 }
 fn direct(cookies: Arc<dyn SourceCookieStore>) -> Arc<Network> {
     network(
-        SourceHttp1PoolConfig::new(Duration::from_secs(2), Vec::new()).unwrap(),
+        SourceHttp1PoolConfig::new_source(Duration::from_secs(2), Vec::new()).unwrap(),
         cookies,
     )
 }
@@ -217,7 +247,7 @@ async fn two_real_proxy_routes_keep_caller_precedence_and_no_proxy_has_no_ambien
     let second = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let origin = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let origin_url = format!("http://{}/", origin.local_addr().unwrap());
-    let config = SourceHttp1PoolConfig::new(
+    let config = SourceHttp1PoolConfig::new_source(
         Duration::from_secs(2),
         vec![
             (
@@ -284,7 +314,7 @@ async fn environment_no_proxy_route_bypasses_configured_credentials_on_actual_wi
     let proxy = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let origin = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}/", origin.local_addr().unwrap());
-    let config = SourceHttp1PoolConfig::from_proxy_info(
+    let config = SourceHttp1PoolConfig::from_proxy_info_source(
         Duration::from_secs(2),
         &std::collections::BTreeMap::from([
             (
@@ -340,7 +370,7 @@ async fn queued_caller_cancellation_never_resolves_and_released_credit_uses_new_
     };
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let dns = Arc::new(LoopbackDns(AtomicUsize::new(0)));
-    let config = SourceHttp1PoolConfig::new(
+    let config = SourceHttp1PoolConfig::new_source(
         Duration::from_secs(5),
         vec![(
             "http://one.invalid".into(),
@@ -462,7 +492,7 @@ async fn queued_caller_cancellation_never_resolves_and_released_credit_uses_new_
 #[tokio::test]
 async fn connect_uses_selected_proxy_credentials_separately_from_origin_caller_header() {
     let proxy = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let config = SourceHttp1PoolConfig::new(
+    let config = SourceHttp1PoolConfig::new_source(
         Duration::from_secs(2),
         vec![(
             "https://one.invalid".into(),
@@ -591,7 +621,7 @@ async fn uppercase_configured_https_returns_secure_cookie_on_next_initial_reques
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let configured = format!("HTTPS://{}/mcp", listener.local_addr().unwrap());
     let connect = Duration::from_secs(2);
-    let client = reqwest::source_pool::gateway_builder(connect, &Default::default())
+    let client = reqwest::source_pool::source_request_builder(connect, &Default::default())
         .unwrap()
         .tls_certs_only([root])
         .dns_resolver(Arc::new(LoopbackDns(AtomicUsize::new(0))))
@@ -683,4 +713,358 @@ async fn zero_redirect_budget_still_prepares_same_origin_get_307_cookie() {
         std::task::Poll::Ready(())
     })
     .await;
+}
+
+#[tokio::test]
+async fn source_url_auth_flag_preserves_owner_and_explicit_auth_on_actual_wire() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let net = direct(Arc::new(SourceCookieJar::default()));
+    let owner = Arc::new(
+        SourceUrl::parse(&format!(
+            "HTTP://us%65r:p%2Bass@{}/a/../path?#fragment",
+            listener.local_addr().unwrap()
+        ))
+        .unwrap(),
+    );
+    let server = async {
+        let mut wires = Vec::new();
+        for _ in 0..5 {
+            let (mut stream, _) = listener.accept().await?;
+            wires.push(request(&mut stream).await?);
+            reply(&mut stream, "200 OK").await?;
+        }
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(wires)
+    };
+    let client = async {
+        for (enabled, explicit) in [
+            (false, None),
+            (true, None),
+            (false, Some(false)),
+            (true, Some(false)),
+            (false, Some(true)),
+        ] {
+            let mut builder = net
+                .client
+                .source_request(reqwest::Method::GET, owner.clone())
+                .url_auth(enabled);
+            if let Some(bearer) = explicit {
+                builder = if bearer {
+                    builder.bearer_auth("configured")
+                } else {
+                    builder.basic_auth("configured", Some("secret"))
+                };
+            }
+            // try_clone must preserve suppression as well as exact owner.
+            let response = builder.try_clone().unwrap().send().await?;
+            assert!(Arc::ptr_eq(response.source_url(), &owner));
+            assert_eq!(response.source_url().raw_userinfo(), "us%65r:p%2Bass");
+        }
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    };
+    let outcome = tokio::time::timeout(Duration::from_secs(10), async {
+        tokio::try_join!(server, client)
+    })
+    .await;
+    net.shutdown().await.unwrap();
+    let (wires, ()) = outcome.unwrap().unwrap();
+    assert!(
+        !wires[0].contains("authorization:"),
+        "disabled URL auth leaked userinfo Basic"
+    );
+    assert!(wires[1].contains("authorization: basic dxnlcjpwk2fzcw==\r\n"));
+    for wire in [&wires[2], &wires[3]] {
+        assert!(wire.contains("authorization: basic y29uzmlndxjlzdpzzwnyzxq=\r\n"));
+    }
+    assert!(wires[4].contains("authorization: bearer configured\r\n"));
+    for wire in wires {
+        assert!(wire.starts_with("get /path? http/1.1\r\n"));
+        assert!(!wire.contains("us%65r"));
+    }
+}
+#[tokio::test]
+async fn network_oauth_retains_userinfo_but_never_uses_url_basic_without_bearer() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let mut net = direct(Arc::new(SourceCookieJar::default()));
+    Arc::get_mut(&mut net).unwrap().oauth = true;
+    let url = format!("http://user:pass@{}/oauth", listener.local_addr().unwrap());
+    let server = async {
+        let (mut stream, _) = listener.accept().await?;
+        let wire = request(&mut stream).await?;
+        reply(&mut stream, "200 OK").await?;
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(wire)
+    };
+    let client = async {
+        let response = net
+            .send_once(reqwest::Method::GET, url, HeaderMap::new(), Vec::new())
+            .await?;
+        assert_eq!(response.source_url().raw_userinfo(), "user:pass");
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    };
+    let outcome = tokio::time::timeout(Duration::from_secs(10), async {
+        tokio::try_join!(server, client)
+    })
+    .await;
+    net.shutdown().await.unwrap();
+    let (wire, ()) = outcome.unwrap().unwrap();
+    assert!(
+        !wire.contains("authorization:"),
+        "OAuth empty bearer must suppress URL Basic without mutating owner"
+    );
+}
+
+#[test]
+fn httpx_redirect_origin_numeric_ipv6_scope_and_zero_are_distinct_from_transport_origin() {
+    let a = SourceUrl::parse("http://[2001:0DB8::1%eth0]/").unwrap();
+    let b = SourceUrl::parse("http://[2001:db8:0:0:0:0:0:1%eth0]/").unwrap();
+    let c = SourceUrl::parse("http://[2001:db8::1%eth1]/").unwrap();
+    assert!(source_origin(&a).unwrap() == source_origin(&b).unwrap());
+    assert!(source_origin(&a).unwrap() != source_origin(&c).unwrap());
+    let zero = SourceUrl::parse("http://a.test:0/").unwrap();
+    let default = SourceUrl::parse("http://a.test/").unwrap();
+    assert_eq!(zero.effective_origin_port(), Some("80"));
+    assert!(source_origin(&zero).unwrap() != source_origin(&default).unwrap());
+}
+struct ObserveNormalizedCookie(std::sync::Mutex<Vec<(String, String, String)>>);
+impl SourceCookieStore for ObserveNormalizedCookie {
+    fn has_cookies(&self) -> bool {
+        true
+    }
+    fn cookies(&self, view: &SourceCookieView) -> reqwest::Result<Option<HeaderValue>> {
+        self.0.lock().unwrap().push((
+            view.scheme().into(),
+            view.request_host()?,
+            view.request_path()?,
+        ));
+        Ok(None)
+    }
+    fn extract(&self, _: &SourceCookieView, _: &HeaderMap) -> reqwest::Result<()> {
+        Ok(())
+    }
+}
+#[tokio::test]
+async fn network_cookie_observation_uses_normalized_owner_before_userinfo_auth() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let jar = Arc::new(ObserveNormalizedCookie(Default::default()));
+    let net = direct(jar.clone());
+    let configured = format!(
+        "HTTP://us%65r:p%2Bass@{}/a/../path?#fragment",
+        listener.local_addr().unwrap()
+    );
+    let server = async {
+        let (mut stream, _) = listener.accept().await?;
+        let wire = request(&mut stream).await?;
+        reply(&mut stream, "200 OK").await?;
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(wire)
+    };
+    let client = async {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            reqwest::header::AUTHORIZATION,
+            HeaderValue::from_static("Bearer static-token"),
+        );
+        let response = net
+            .send_once(reqwest::Method::GET, configured, headers, Vec::new())
+            .await?;
+        assert_eq!(response.source_url().raw_userinfo(), "us%65r:p%2Bass");
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    };
+    let outcome = tokio::time::timeout(Duration::from_secs(10), async {
+        tokio::try_join!(server, client)
+    })
+    .await;
+    net.shutdown().await.unwrap();
+    let (wire, ()) = outcome.unwrap().unwrap();
+    assert!(wire.starts_with("get /path? http/1.1\r\n"));
+    assert!(
+        wire.contains("authorization: basic dxnlcjpwk2fzcw==\r\n"),
+        "configured URL Basic overrides static bearer on non-OAuth lane"
+    );
+    assert!(!wire.contains("static-token"));
+    assert_eq!(
+        *jar.0.lock().unwrap(),
+        vec![(
+            "http".into(),
+            "us%65r:p%2bass@127.0.0.1".into(),
+            "/path".into()
+        )]
+    );
+}
+
+#[tokio::test]
+async fn cleared_redirect_userinfo_keeps_actual_sent_basic_header_lineage() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let net = direct(Arc::new(SourceCookieJar::default()));
+    let server = async {
+        let mut wires = Vec::new();
+        for status in [
+            format!("307 Temporary Redirect\r\nLocation: http://{address}/next"),
+            "200 OK".into(),
+        ] {
+            let (mut stream, _) = listener.accept().await?;
+            wires.push(request(&mut stream).await?);
+            reply(&mut stream, &status).await?;
+        }
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(wires)
+    };
+    let client = async {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            reqwest::header::AUTHORIZATION,
+            HeaderValue::from_static("Bearer static-token"),
+        );
+        let response = net
+            .send(
+                reqwest::Method::GET,
+                format!("http://user:pass@{address}/start"),
+                headers,
+                Vec::new(),
+            )
+            .await?;
+        assert!(response.source_url().raw_userinfo().is_empty());
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    };
+    let outcome = tokio::time::timeout(Duration::from_secs(10), async {
+        tokio::try_join!(server, client)
+    })
+    .await;
+    net.shutdown().await.unwrap();
+    let (wires, ()) = outcome.unwrap().unwrap();
+    assert_eq!(wires.len(), 2);
+    for wire in wires {
+        assert!(wire.contains("authorization: basic dxnlcjpwyxnz\r\n"));
+        assert!(!wire.contains("static-token"));
+    }
+}
+
+#[test]
+fn initial_prepare_host_lazy_boundaries_and_vec_body_defaults_are_source_exact() {
+    use reqwest::header::{CONTENT_LENGTH, HOST, TRANSFER_ENCODING};
+    let ace = SourceUrl::parse("http://xn--.bad_label/").unwrap();
+    let scope = SourceUrl::parse("http://[::1%é]/").unwrap();
+    for owner in [&ace, &scope] {
+        assert!(
+            prepare_initial_headers(&reqwest::Method::GET, owner, &mut HeaderMap::new(), b"")
+                .is_err()
+        );
+        let mut headers = HeaderMap::new();
+        headers.insert(HOST, HeaderValue::from_static("explicit.test"));
+        prepare_initial_headers(&reqwest::Method::GET, owner, &mut headers, b"").unwrap();
+        assert_eq!(
+            headers[HOST], "explicit.test",
+            "explicit Host bypasses initial lazy display/netloc"
+        );
+    }
+    let owner = SourceUrl::parse("http://a.test/").unwrap();
+    for method in ["GET", "POST", "PUT", "PATCH", "QUERY", "DELETE"] {
+        for body in [b"".as_slice(), b"abc".as_slice()] {
+            let method = reqwest::Method::from_bytes(method.as_bytes()).unwrap();
+            let mut headers = HeaderMap::new();
+            prepare_initial_headers(&method, &owner, &mut headers, body).unwrap();
+            assert_eq!(headers[HOST], "a.test");
+            let expected = if !body.is_empty() {
+                Some("3")
+            } else if matches!(method.as_str(), "POST" | "PUT" | "PATCH" | "QUERY") {
+                Some("0")
+            } else {
+                None
+            };
+            assert_eq!(
+                headers.get(CONTENT_LENGTH).map(|v| v.to_str().unwrap()),
+                expected
+            );
+        }
+    }
+    let mut headers = HeaderMap::new();
+    headers.insert(TRANSFER_ENCODING, HeaderValue::from_static("chunked"));
+    prepare_initial_headers(&reqwest::Method::POST, &owner, &mut headers, b"abc").unwrap();
+    assert!(
+        !headers.contains_key(CONTENT_LENGTH),
+        "explicit TE suppresses auto content length"
+    );
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_LENGTH, HeaderValue::from_static("7"));
+    prepare_initial_headers(&reqwest::Method::POST, &owner, &mut headers, b"abc").unwrap();
+    assert_eq!(
+        headers[CONTENT_LENGTH], "7",
+        "explicit length is not replaced"
+    );
+}
+#[tokio::test]
+async fn initial_lazy_host_failure_precedes_dns_or_socket_admission() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let dns = Arc::new(LoopbackDns(AtomicUsize::new(0)));
+    let net = network_with_dns(
+        SourceHttp1PoolConfig::new_source(Duration::from_secs(2), Vec::new()).unwrap(),
+        Arc::new(SourceCookieJar::default()),
+        dns.clone(),
+    );
+    for url in [
+        format!("http://xn--.bad_label:{port}/"),
+        format!("http://[::1%é]:{port}/"),
+    ] {
+        assert!(
+            net.send_once(reqwest::Method::GET, url, HeaderMap::new(), Vec::new())
+                .await
+                .is_err()
+        );
+    }
+    assert_eq!(
+        dns.0.load(Ordering::SeqCst),
+        0,
+        "initial lazy failure dispatched resolver"
+    );
+    std::future::poll_fn(|cx| {
+        assert!(
+            listener.poll_accept(cx).is_pending(),
+            "initial failure opened socket"
+        );
+        std::task::Poll::Ready(())
+    })
+    .await;
+    net.shutdown().await.unwrap();
+}
+#[tokio::test]
+async fn initial_recorded_host_survives_same_origin_redirect_stream_lineage() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let net = direct(Arc::new(SourceCookieJar::default()));
+    let server = async {
+        let mut wires = Vec::new();
+        for status in ["307 Temporary Redirect\r\nLocation: /next", "200 OK"] {
+            let (mut stream, _) = listener.accept().await?;
+            wires.push(request(&mut stream).await?);
+            reply(&mut stream, status).await?;
+        }
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(wires)
+    };
+    let client = async {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            reqwest::header::HOST,
+            HeaderValue::from_static("explicit.test:7"),
+        );
+        net.send(
+            reqwest::Method::GET,
+            format!("http://{address}/start"),
+            headers,
+            Vec::new(),
+        )
+        .await?;
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    };
+    let outcome = tokio::time::timeout(Duration::from_secs(10), async {
+        tokio::try_join!(server, client)
+    })
+    .await;
+    net.shutdown().await.unwrap();
+    let (wires, ()) = outcome.unwrap().unwrap();
+    assert_eq!(wires.len(), 2);
+    for wire in wires {
+        assert!(
+            wire.contains("host: explicit.test:7\r\n"),
+            "redirect overwrote recorded sent Host"
+        );
+    }
 }

@@ -21,6 +21,7 @@ const FILE_LIMIT: u64 = 512 * 1024 * 1024;
 #[serde(deny_unknown_fields)]
 pub struct InstallRecord {
     pub schema: u32,
+    pub resolver_protocol: u32,
     pub package: String,
     pub version: String,
     pub os: String,
@@ -123,7 +124,8 @@ fn directory(path: &Path, uid: u32) -> io::Result<()> {
 impl InstallRecord {
     fn shape(&self) -> io::Result<()> {
         require(
-            self.schema == 1
+            self.schema == 2
+                && self.resolver_protocol == 2
                 && self.package == PACKAGE
                 && self.version == env!("CARGO_PKG_VERSION")
                 && self.os == std::env::consts::OS
@@ -197,7 +199,8 @@ pub fn stage(gateway: &Path, helper: &Path, output_root: &Path) -> io::Result<Pa
     let (gateway_bytes, gateway_digest) = hash(gateway, None, true, false)?;
     let (helper_bytes, helper_digest) = hash(helper, None, true, false)?;
     let record = InstallRecord {
-        schema: 1,
+        schema: 2,
+        resolver_protocol: 2,
         package: PACKAGE.into(),
         version: env!("CARGO_PKG_VERSION").into(),
         os: std::env::consts::OS.into(),
@@ -453,5 +456,26 @@ mod tests {
             v["gateway_sha256"] = serde_json::Value::String("0".repeat(64))
         });
         assert!(stage(&g, &h, &out).is_err());
+    }
+    #[test]
+    fn legacy_schema_or_missing_mismatched_protocol_cannot_admit_helper() {
+        for value in [None, Some(1u32), Some(3u32)] {
+            let (g, h, out) = inputs();
+            let installed = stage(&g, &h, &out).unwrap();
+            edit(&installed, |v| {
+                if let Some(value) = value {
+                    v["resolver_protocol"] = serde_json::json!(value);
+                } else {
+                    v.as_object_mut().unwrap().remove("resolver_protocol");
+                }
+            });
+            assert!(discover(&installed).is_err());
+        }
+        let (g, h, out) = inputs();
+        let installed = stage(&g, &h, &out).unwrap();
+        edit(&installed, |v| {
+            v["schema"] = serde_json::json!(1);
+        });
+        assert!(discover(&installed).is_err());
     }
 }

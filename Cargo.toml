@@ -1,6 +1,6 @@
 [workspace]
 members = ["crates/*"]
-exclude = ["vendor/expat", "vendor/libxml", "vendor/ssx-http-source/httparse", "vendor/ssx-http-source/hyper", "vendor/ssx-http-source/hyper-util", "vendor/ssx-http-source/reqwest", "vendor/ssx-sdk-auth/rmcp"]
+exclude = ["vendor/expat", "vendor/libxml", "vendor/ssx-http-source/httparse", "vendor/ssx-http-source/hyper", "vendor/ssx-http-source/hyper-util", "vendor/ssx-http-source/reqwest", "vendor/ssx-sdk-auth/rmcp", "vendor/ssx-windows-owner", "vendor/ssx-native-ip-text"]
 resolver = "3"
 
 [workspace.package]

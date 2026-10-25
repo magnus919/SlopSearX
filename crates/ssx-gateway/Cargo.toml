@@ -10,6 +10,7 @@ publish.workspace = true
 workspace = true
 
 [features]
+source-endpoint-test-fixtures = ["dns-test-fixtures", "ssx-mcp/gateway-source-endpoints"]
 dns-test-fixtures = ["ssx-mcp/gateway-dns-fixtures"]
 
 [[bin]]
@@ -21,7 +22,7 @@ required-features = ["dns-test-fixtures"]
 ssx-wire.workspace = true
 rmcp.workspace = true
 clap.workspace = true
-ssx-mcp.workspace = true
+ssx-mcp = { workspace = true, features = ["gateway-source-endpoints"] }
 tokio.workspace = true
 tokio-util = "=0.7.20"
 

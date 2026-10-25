@@ -1,0 +1,13 @@
+[package]
+name = "ssx-native-ip-text"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+license = "MIT"
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[target.'cfg(unix)'.dependencies]
+libc = "=0.2.190"

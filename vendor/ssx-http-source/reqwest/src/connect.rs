@@ -1,8 +1,8 @@
+use http::Uri;
 #[cfg(feature = "__tls")]
 use http::header::HeaderValue;
 #[cfg(feature = "__tls")]
 use http::uri::Scheme;
-use http::Uri;
 use hyper::rt::{Read, ReadBufCursor, Write};
 use hyper_util::client::legacy::connect::{Connected, Connection};
 #[cfg(any(feature = "socks", feature = "__tls", unix, target_os = "windows"))]
@@ -11,7 +11,7 @@ use hyper_util::rt::TokioIo;
 use native_tls_crate::{TlsConnector, TlsConnectorBuilder};
 use pin_project_lite::pin_project;
 use tower::util::{BoxCloneSyncServiceLayer, MapRequestLayer};
-use tower::{timeout::TimeoutLayer, util::BoxCloneSyncService, ServiceBuilder};
+use tower::{ServiceBuilder, timeout::TimeoutLayer, util::BoxCloneSyncService};
 use tower_service::Service;
 
 use std::future::Future;
@@ -27,7 +27,7 @@ use self::native_tls_conn::NativeTlsConn;
 #[cfg(feature = "__rustls")]
 use self::rustls_tls_conn::RustlsTlsConn;
 use crate::dns::DynResolver;
-use crate::error::{cast_to_internal_error, BoxError};
+use crate::error::{BoxError, cast_to_internal_error};
 use crate::proxy::{Intercepted, Matcher as ProxyMatcher};
 use sealed::{Conn, Unnameable};
 
@@ -47,9 +47,20 @@ pub(crate) enum Connector {
 
 #[cfg(feature = "ssx-http1-source-pool")]
 impl Connector {
-    pub(crate) fn source_pool_route(&self, proxy: Option<Intercepted>) -> Result<Self,BoxError> {
+    pub(crate) fn source_pool_route(
+        &self,
+        proxy: Option<Intercepted>,
+        identity: Option<hyper::ext::SourceRequestIdentity>,
+        source_proxy: Option<Arc<crate::source_pool::SourceProxy>>,
+    ) -> Result<Self, BoxError> {
         match self {
-            Self::Simple(service) if service.source_profile.is_some() => {let mut service=service.clone();service.source_pool_proxy=Some(proxy);Ok(Self::Simple(service))},
+            Self::Simple(service) if service.source_profile.is_some() => {
+                let mut service = service.clone();
+                service.source_pool_proxy = Some(proxy);
+                service.source_identity = identity;
+                service.source_pool_source_proxy = source_proxy;
+                Ok(Self::Simple(service))
+            }
             _ => Err("source pool route requires unlayered source connector".into()),
         }
     }
@@ -119,6 +130,10 @@ where {
             source_profile: self.source_profile,
             #[cfg(feature = "ssx-http1-source-pool")]
             source_pool_proxy: None,
+            #[cfg(feature = "ssx-http1-source-pool")]
+            source_identity: None,
+            #[cfg(feature = "ssx-http1-source-pool")]
+            source_pool_source_proxy: None,
             #[cfg(feature = "socks")]
             resolver: self.resolver.unwrap_or_else(DynResolver::gai),
             #[cfg(unix)]
@@ -534,6 +549,10 @@ pub(crate) struct ConnectorService {
     simple_timeout: Option<Duration>,
     #[cfg(feature = "ssx-http1-source-pool")]
     source_pool_proxy: Option<Option<Intercepted>>,
+    #[cfg(feature = "ssx-http1-source-pool")]
+    source_identity: Option<hyper::ext::SourceRequestIdentity>,
+    #[cfg(feature = "ssx-http1-source-pool")]
+    source_pool_source_proxy: Option<Arc<crate::source_pool::SourceProxy>>,
     #[cfg(feature = "ssx-http1-source-connect")]
     source_profile: Option<source_http1::Profile>,
     #[cfg(feature = "__tls")]
@@ -832,7 +851,7 @@ impl ConnectorService {
         #[cfg(feature = "socks")]
         match proxy.uri().scheme_str().ok_or("proxy scheme expected")? {
             "socks4" | "socks4a" | "socks5" | "socks5h" => {
-                return self.connect_socks(dst, proxy).await
+                return self.connect_socks(dst, proxy).await;
             }
             _ => (),
         }
@@ -1928,8 +1947,8 @@ mod rustls_tls_conn {
 mod socks {
     use tower_service::Service;
 
-    use http::uri::Scheme;
     use http::Uri;
+    use http::uri::Scheme;
     use hyper_util::client::legacy::connect::proxy::{SocksV4, SocksV5};
     use tokio::net::TcpStream;
 

@@ -11,7 +11,7 @@ use crate::header::{AUTHORIZATION, COOKIE, PROXY_AUTHORIZATION, REFERER, WWW_AUT
 use http::{HeaderMap, HeaderValue};
 use hyper::StatusCode;
 
-use crate::{async_impl, Url};
+use crate::{Url, async_impl};
 use tower_http::follow_redirect::policy::{
     Action as TowerAction, Attempt as TowerAttempt, Policy as TowerPolicy,
 };
@@ -152,6 +152,10 @@ impl Policy {
         .inner
     }
 
+    #[cfg(feature = "ssx-http1-source-pool")]
+    pub(crate) fn is_none(&self) -> bool {
+        matches!(self.inner, PolicyKind::None)
+    }
     pub(crate) fn is_default(&self) -> bool {
         matches!(self.inner, PolicyKind::Limit(10))
     }
@@ -313,6 +317,10 @@ fn make_referer(next: &Url, previous: &Url) -> Option<HeaderValue> {
 
 impl TowerPolicy<async_impl::body::Body, crate::Error> for TowerRedirectPolicy {
     fn redirect(&mut self, attempt: &TowerAttempt<'_>) -> Result<TowerAction, crate::Error> {
+        #[cfg(feature = "ssx-http1-source-pool")]
+        if self.policy.is_none() {
+            return Ok(TowerAction::Stop);
+        }
         let previous_url =
             Url::parse(&attempt.previous().to_string()).expect("Previous URL must be valid");
 
@@ -444,7 +452,7 @@ fn test_redirect_policy_custom() {
 
 #[test]
 fn test_remove_sensitive_headers() {
-    use hyper::header::{HeaderValue, ACCEPT, AUTHORIZATION, COOKIE};
+    use hyper::header::{ACCEPT, AUTHORIZATION, COOKIE, HeaderValue};
 
     let mut headers = HeaderMap::new();
     headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
@@ -468,7 +476,7 @@ fn test_remove_sensitive_headers() {
 
 #[test]
 fn test_remove_sensitive_headers_on_scheme_downgrade_same_host_port() {
-    use hyper::header::{HeaderValue, ACCEPT, AUTHORIZATION, COOKIE};
+    use hyper::header::{ACCEPT, AUTHORIZATION, COOKIE, HeaderValue};
 
     let mut headers = HeaderMap::new();
     headers.insert(ACCEPT, HeaderValue::from_static("*/*"));

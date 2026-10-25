@@ -2804,7 +2804,9 @@ dependencies = [
  "ssx-domain",
  "ssx-infra",
  "ssx-json",
+ "ssx-native-ip-text",
  "ssx-registry",
+ "ssx-windows-owner",
  "ssx-wire",
  "subtle",
  "tokio",
@@ -2814,6 +2816,13 @@ dependencies = [
  "unicode-normalization",
  "url",
  "uuid",
+]
+
+[[package]]
+name = "ssx-native-ip-text"
+version = "0.1.0"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -2867,6 +2876,15 @@ name = "ssx-source-xml"
 version = "0.1.0"
 dependencies = [
  "sha2 0.11.1",
+]
+
+[[package]]
+name = "ssx-windows-owner"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.11.1",
+ "tokio",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

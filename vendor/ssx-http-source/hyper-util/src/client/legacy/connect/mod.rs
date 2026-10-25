@@ -441,3 +441,6 @@ mod tests {
         assert_eq!(ex2.get::<Ex2>(), Some(&Ex2("hiccup")));
     }
 }
+
+#[cfg(feature = "ssx-http1-source-pool")]
+pub mod source_endpoint;

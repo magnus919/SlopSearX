@@ -1,9 +1,21 @@
 //! Gateway-owned native DNS. Ordinary Reqwest clients keep their resolver.
 #![forbid(unsafe_code)]
 mod helper;
+#[cfg(unix)]
 pub mod install;
+#[cfg(windows)]
+#[path = "install_windows.rs"]
+pub mod install;
+#[cfg(unix)]
+#[path = "unix_process.rs"]
+mod process;
+#[cfg(windows)]
+#[path = "windows_process.rs"]
+mod process;
 mod protocol;
 mod runtime;
+#[cfg(feature = "gateway-source-endpoints")]
+mod source_adapter;
 pub use protocol::{SourceResolveError, SourceResolveStage};
 pub use runtime::{SourceCloseError, SourceResolverHelper, SourceRuntime};
 use std::{sync::Arc, time::Duration};
@@ -41,6 +53,11 @@ impl GatewayResolver {
     }
 }
 impl reqwest::dns::Resolve for GatewayResolver {
+    #[cfg(feature = "gateway-source-endpoints")]
+    fn resolve_source(&self, name: reqwest::dns::SourceName) -> reqwest::dns::SourceResolving {
+        source_adapter::resolve(self.runtime.clone(), name)
+    }
+
     fn resolve(&self, name: reqwest::dns::Name) -> reqwest::dns::Resolving {
         let runtime = self.runtime.clone();
         let host = name.as_str().to_owned();
@@ -50,4 +67,19 @@ impl reqwest::dns::Resolve for GatewayResolver {
             Ok(Box::new(addresses.into_iter()) as reqwest::dns::Addrs)
         })
     }
+}
+
+#[cfg(all(windows, feature = "gateway-dns-fixtures"))]
+mod windows_fixture;
+
+#[cfg(all(windows, feature = "gateway-dns-fixtures"))]
+#[doc(hidden)]
+pub use super::stdio_input_windows::{
+    WindowsInputControl, fixture_control as windows_input_fixture_control,
+};
+
+#[cfg(all(feature = "gateway-source-endpoints", feature = "gateway-dns-fixtures"))]
+#[doc(hidden)]
+pub async fn source_scope_fixture_controls(runtime: SourceRuntime) -> crate::Result<()> {
+    runtime::fixture_controls(runtime).await
 }

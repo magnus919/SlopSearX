@@ -384,6 +384,8 @@ impl Process {
         let installed = ssx_mcp::gateway_client::resolver::install::stage_cargo_gateway(
             std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway")),
             std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns")),
+            #[cfg(windows)]
+            std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-input")),
         )
         .expect("preregistered native gateway package fixture");
         let mut command = tokio::process::Command::new(installed);

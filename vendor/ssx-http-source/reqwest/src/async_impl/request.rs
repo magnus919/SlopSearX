@@ -20,7 +20,7 @@ use crate::header::CONTENT_LENGTH;
 use crate::header::CONTENT_TYPE;
 use crate::header::{HeaderMap, HeaderName, HeaderValue};
 use crate::{Method, Url};
-use http::{request::Parts, Extensions, Request as HttpRequest, Version};
+use http::{Extensions, Request as HttpRequest, Version, request::Parts};
 
 /// A request which can be executed with `Client::execute()`.
 pub struct Request {
@@ -1177,4 +1177,171 @@ mod tests {
         assert!(r.json(&json_data).unwrap_err().is_serialization());
     }
     */
+}
+
+#[cfg(feature = "ssx-http1-source-pool")]
+/// Request whose complete URL is owned independently of ordinary `Url`.
+pub struct SourceRequest {
+    pub(super) method: Method,
+    pub(super) source_url: std::sync::Arc<crate::source_pool::SourceUrl>,
+    pub(super) headers: HeaderMap,
+    pub(super) body: Option<Body>,
+    pub(super) version: Version,
+    pub(super) extensions: Extensions,
+}
+#[cfg(feature = "ssx-http1-source-pool")]
+#[derive(Clone)]
+pub(super) struct SourceExplicitAuth(pub HeaderValue);
+#[cfg(feature = "ssx-http1-source-pool")]
+#[derive(Clone)]
+pub(super) struct SourceUrlAuth(pub bool);
+#[cfg(feature = "ssx-http1-source-pool")]
+impl SourceRequest {
+    /// Construct a request while retaining the exact supplied Arc allocation.
+    pub fn new(
+        method: Method,
+        source_url: impl Into<std::sync::Arc<crate::source_pool::SourceUrl>>,
+    ) -> Self {
+        Self {
+            method,
+            source_url: source_url.into(),
+            headers: HeaderMap::new(),
+            body: None,
+            version: Version::HTTP_11,
+            extensions: Extensions::new(),
+        }
+    }
+    /// Borrow the complete immutable source URL owner.
+    pub fn source_url(&self) -> &std::sync::Arc<crate::source_pool::SourceUrl> {
+        &self.source_url
+    }
+    /// Mutate explicit request headers; header values never select a route.
+    pub fn headers_mut(&mut self) -> &mut HeaderMap {
+        &mut self.headers
+    }
+    /// Mutate the owned request body.
+    pub fn body_mut(&mut self) -> &mut Option<Body> {
+        &mut self.body
+    }
+    /// Reusable Bytes are cloned; a stream is never buffered or read to replay it.
+    /// Clone only a replayable body, preserving the same source URL allocation.
+    pub fn try_clone(&self) -> Option<Self> {
+        Some(Self {
+            method: self.method.clone(),
+            source_url: self.source_url.clone(),
+            headers: self.headers.clone(),
+            body: match &self.body {
+                Some(body) => Some(body.try_clone()?),
+                None => None,
+            },
+            version: self.version,
+            extensions: self.extensions.clone(),
+        })
+    }
+}
+#[cfg(feature = "ssx-http1-source-pool")]
+impl fmt::Debug for SourceRequest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SourceRequest")
+            .field("method", &self.method)
+            .field("source_url", &self.source_url)
+            .finish_non_exhaustive()
+    }
+}
+#[cfg(feature = "ssx-http1-source-pool")]
+#[must_use = "SourceRequestBuilder does nothing until send"]
+/// Builder for an explicit source HTTP/1 request; automatic redirect/cookie ownership is not inferred.
+pub struct SourceRequestBuilder {
+    pub(super) client: Client,
+    pub(super) request: crate::Result<SourceRequest>,
+}
+#[cfg(feature = "ssx-http1-source-pool")]
+impl SourceRequestBuilder {
+    /// Merge explicit headers without changing source identity.
+    pub fn headers(mut self, headers: HeaderMap) -> Self {
+        if let Ok(request) = &mut self.request {
+            crate::util::replace_headers(&mut request.headers, headers);
+        }
+        self
+    }
+    /// Set the owned body without buffering streams.
+    pub fn body(mut self, body: impl Into<Body>) -> Self {
+        if let Ok(request) = &mut self.request {
+            request.body = Some(body.into());
+        }
+        self
+    }
+    /// Enable URL-userinfo Basic authentication fallback for this source request.
+    /// Defaults to true. Explicit Basic/Bearer authentication still wins either way;
+    /// disabling this never changes the retained source URL or ordinary requests.
+    pub fn url_auth(mut self, enabled: bool) -> Self {
+        if let Ok(request) = &mut self.request {
+            request.extensions.insert(SourceUrlAuth(enabled));
+        }
+        self
+    }
+    /// Set configured Basic authentication, taking precedence over URL userinfo.
+    pub fn basic_auth<U: fmt::Display, P: fmt::Display>(
+        mut self,
+        username: U,
+        password: Option<P>,
+    ) -> Self {
+        if let Ok(request) = &mut self.request {
+            request
+                .extensions
+                .insert(SourceExplicitAuth(crate::util::basic_auth(
+                    username, password,
+                )));
+        }
+        self
+    }
+    /// Set configured Bearer authentication, taking precedence over URL userinfo.
+    pub fn bearer_auth(mut self, token: impl fmt::Display) -> Self {
+        match HeaderValue::from_str(&format!("Bearer {token}")) {
+            Ok(mut value) => {
+                value.set_sensitive(true);
+                if let Ok(request) = &mut self.request {
+                    request.extensions.insert(SourceExplicitAuth(value));
+                }
+            }
+            Err(error) => self.request = Err(crate::error::builder(error)),
+        }
+        self
+    }
+    /// Set phase budgets; the explicit client profile remains authoritative.
+    pub fn source_http1_timeouts(mut self, write: Duration, read: Duration) -> Self {
+        if let Ok(request) = &mut self.request {
+            request
+                .extensions
+                .insert(hyper::ext::SendOperationTimeout(write));
+            request
+                .extensions
+                .insert(hyper::ext::SourceHttp1ReadTimeout(read));
+        }
+        self
+    }
+    /// Consume the builder into its owned source request.
+    pub fn build(self) -> crate::Result<SourceRequest> {
+        self.request
+    }
+    /// Clone only a replayable body, preserving the same source URL allocation.
+    pub fn try_clone(&self) -> Option<Self> {
+        Some(Self {
+            client: self.client.clone(),
+            request: Ok(self.request.as_ref().ok()?.try_clone()?),
+        })
+    }
+    /// Send using the explicit source profile and retain body/timeout cancellation ownership.
+    pub async fn send(self) -> crate::Result<super::response::SourceResponse> {
+        self.client.execute_source_request(self.request?).await
+    }
+}
+
+#[cfg(feature = "ssx-http1-source-pool")]
+impl fmt::Debug for SourceRequestBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SourceRequestBuilder")
+            .field("request", &self.request)
+            .finish_non_exhaustive()
+    }
 }

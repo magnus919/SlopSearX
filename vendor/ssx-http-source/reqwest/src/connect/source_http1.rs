@@ -97,6 +97,15 @@ async fn start_tls(
         .strip_prefix('[')
         .and_then(|v| v.strip_suffix(']'))
         .unwrap_or(host);
+    start_tls_host(io, host, config, profile, kind).await
+}
+async fn start_tls_host(
+    io: SourceIo,
+    host: &str,
+    config: Arc<rustls::ClientConfig>,
+    profile: Profile,
+    kind: SourceHttp1ConnectPhase,
+) -> Result<SourceIo, BoxError> {
     let server_name = rustls_pki_types::ServerName::try_from(host.to_owned())?;
     let http_info = io.http_info.clone();
     let stream = phase(profile.connect, kind, async move {
@@ -262,6 +271,10 @@ pub(super) async fn connect(
     dst: Uri,
     profile: Profile,
 ) -> Result<Conn, BoxError> {
+    #[cfg(feature = "ssx-http1-source-pool")]
+    if let Some(identity) = service.source_identity.clone() {
+        return connect_source(service, profile, identity).await;
+    }
     let (mut http, tls, tls_proxy) = match &service.inner {
         Inner::RustlsTls {
             http,
@@ -272,7 +285,10 @@ pub(super) async fn connect(
         _ => return Err("source HTTP/1 connector requires Rustls".into()),
     };
     #[cfg(feature = "ssx-http1-source-pool")]
-    let proxy = match &service.source_pool_proxy {Some(selected)=>selected.clone(),None=>service.proxies.iter().find_map(|p|p.intercept(&dst))};
+    let proxy = match &service.source_pool_proxy {
+        Some(selected) => selected.clone(),
+        None => service.proxies.iter().find_map(|p| p.intercept(&dst)),
+    };
     #[cfg(not(feature = "ssx-http1-source-pool"))]
     let proxy = service.proxies.iter().find_map(|p| p.intercept(&dst));
     let dial_dst = proxy
@@ -318,4 +334,149 @@ pub(super) async fn connect(
         is_proxy,
         tls_info: service.tls_info,
     })
+}
+
+#[cfg(feature = "ssx-http1-source-pool")]
+async fn connect_source(
+    service: ConnectorService,
+    profile: Profile,
+    identity: hyper::ext::SourceRequestIdentity,
+) -> Result<Conn, BoxError> {
+    let (http, tls, tls_proxy) = match &service.inner {
+        Inner::RustlsTls {
+            http,
+            tls,
+            tls_proxy,
+        } => (http.clone(), tls.clone(), tls_proxy.clone()),
+        #[allow(unreachable_patterns)]
+        _ => return Err("source HTTP/1 connector requires Rustls".into()),
+    };
+    let proxy = service.source_pool_source_proxy.clone();
+    let endpoint = proxy
+        .as_ref()
+        .map(|proxy| hyper::ext::SourceRequestIdentity(proxy.owner.clone()))
+        .unwrap_or_else(|| identity.clone());
+    let resolver = http.source_resolver();
+    let deadline = tokio::time::Instant::now()
+        .checked_add(profile.connect)
+        .ok_or("source connect deadline overflow")?;
+    let name =
+        hyper_util::client::legacy::connect::source_endpoint::SourceName::new(endpoint, deadline);
+    let lookup = hyper_util::client::legacy::connect::source_endpoint::SourceEndpointResolver::resolve_source(&resolver, name.clone());
+    let owner = lookup.owner.clone();
+    let result = source_phase::phase_until(deadline, SourceHttp1ConnectPhase::DnsTcp, async {
+        http.source_call(name, lookup).await.map_err(Into::into)
+    })
+    .await;
+    // Keep native supervisor custody outside the phase: even first-GAI timeout
+    // must await bounded scoped retirement before exposing a normal async result.
+    owner.cancel_and_wait().await?;
+    let io = result?;
+    let mut extras = http::Extensions::new();
+    io.connected().get_extras(&mut extras);
+    let mut io = SourceIo::new(io, extras.get::<HttpInfo>().cloned(), None);
+    if let Some(proxy) = &proxy {
+        if proxy.owner.scheme() == "https" {
+            io = start_tls_host(
+                io,
+                proxy.owner.raw_host(),
+                tls_proxy,
+                profile,
+                SourceHttp1ConnectPhase::ProxyTls,
+            )
+            .await?;
+        }
+    } else if identity.0.scheme() == "https" {
+        io = start_tls_host(
+            io,
+            identity.0.raw_host(),
+            tls.clone(),
+            profile,
+            SourceHttp1ConnectPhase::OriginTls,
+        )
+        .await?;
+    }
+    let mut is_proxy = proxy.is_some();
+    if let Some(proxy) = proxy {
+        if identity.0.scheme() == "https" {
+            io = source_tunnel(io, &identity, &proxy, profile).await?;
+            io = start_tls_host(
+                io,
+                identity.0.raw_host(),
+                tls,
+                profile,
+                SourceHttp1ConnectPhase::OriginTls,
+            )
+            .await?;
+            is_proxy = false;
+        }
+    }
+    Ok(Conn {
+        inner: service.verbose.wrap(io),
+        is_proxy,
+        tls_info: service.tls_info,
+    })
+}
+
+#[cfg(feature = "ssx-http1-source-pool")]
+async fn source_tunnel(
+    io: SourceIo,
+    identity: &hyper::ext::SourceRequestIdentity,
+    proxy: &crate::source_pool::SourceProxy,
+    profile: Profile,
+) -> Result<SourceIo, BoxError> {
+    let source_target = hyper::ext::SourceRequestTarget {
+        identity: identity.clone(),
+        form: hyper::ext::SourceTargetForm::Connect,
+    };
+    let target = String::from_utf8(source_target.bytes()?)?;
+    let mut builder = hyper::client::conn::http1::Builder::new();
+    builder.source_connect_response();
+    builder.title_case_headers(true);
+    let http_info = io.http_info.clone();
+    let (mut sender, connection) = builder.handshake::<_, crate::async_impl::Body>(io).await?;
+    let mut driver = Some(Box::pin(connection.with_upgrades()));
+    let mut request = hyper::Request::builder()
+        .method(http::Method::CONNECT)
+        .uri(identity.0.origin_target())
+        .header(http::header::HOST, target.as_str())
+        .header(http::header::ACCEPT, "*/*")
+        .body(crate::async_impl::Body::empty())?;
+    request.extensions_mut().insert(source_target);
+    if let Some(auth) = &proxy.auth {
+        request
+            .headers_mut()
+            .insert(http::header::PROXY_AUTHORIZATION, auth.clone());
+    }
+    request
+        .extensions_mut()
+        .insert(hyper::ext::SendOperationTimeout(profile.connect));
+    request
+        .extensions_mut()
+        .insert(hyper::ext::SourceHttp1ReadTimeout(profile.read));
+    let mut response_future = Box::pin(sender.send_request(request));
+    let mut response = drive(response_future.as_mut(), &mut driver).await?;
+    if !response.status().is_success() {
+        let raw_reason = response
+            .extensions()
+            .get::<hyper::ext::SourceConnectResponse>()
+            .map_or(&[][..], hyper::ext::SourceConnectResponse::reason);
+        let reason: String = raw_reason
+            .iter()
+            .copied()
+            .filter(u8::is_ascii)
+            .map(char::from)
+            .collect();
+        return Err(Box::new(SourceHttp1ProxyRefused {
+            status: response.status().as_u16(),
+            reason,
+        }));
+    }
+    let mut upgrade = Box::pin(hyper::upgrade::on(&mut response));
+    drop(response);
+    let upgraded = drive(upgrade.as_mut(), &mut driver).await?;
+    // The public Upgraded itself retains unread bytes. Do not peel/drop that buffer.
+    drop(driver);
+    drop(sender);
+    Ok(SourceIo::new(upgraded, http_info, None))
 }
