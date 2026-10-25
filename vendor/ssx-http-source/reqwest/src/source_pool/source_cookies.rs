@@ -3,6 +3,7 @@
 //! a separate unfinished contract. Cookie observation never normalizes a host.
 use crate::header::{HeaderMap, HeaderValue};
 #[derive(Clone)]
+/// Request URL and header observations used by the pinned cookie policy.
 pub struct SourceCookieView {
     scheme: String,
     authority: String,
@@ -42,9 +43,11 @@ impl SourceCookieView {
     pub(super) fn has_cookie_header(&self) -> bool {
         self.headers.contains_key(http::header::COOKIE)
     }
+    /// Return the ASCII-lowercased scheme.
     pub fn scheme(&self) -> &str {
         &self.scheme
     }
+    /// Return the lowercased request-host observation.
     pub fn request_host(&self) -> crate::Result<String> {
         let host = if self.authority.is_empty() {
             let utf8 = self
@@ -68,6 +71,7 @@ impl SourceCookieView {
         };
         Ok(super::source_lower(cut_decimal_port(&host)))
     }
+    /// Return the request host, adding `.local` when it contains no dot.
     pub fn effective_host(&self) -> crate::Result<String> {
         let host = self.request_host()?;
         Ok(if host.contains('.') {
@@ -76,6 +80,7 @@ impl SourceCookieView {
             format!("{host}.local")
         })
     }
+    /// Return the escaped, slash-prefixed request path.
     pub fn request_path(&self) -> crate::Result<String> {
         let mut p = escape_path(&self.path);
         if !p.starts_with('/') {
@@ -83,6 +88,8 @@ impl SourceCookieView {
         }
         Ok(p)
     }
+    /// Return the source-valid port observation, defaulting to `80` when absent.
+    /// Return `None` when the observed port is invalid.
     pub fn request_port(&self) -> Option<String> {
         let bytes = self.authority.as_bytes();
         let mut out = Vec::new();
