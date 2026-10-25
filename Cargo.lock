@@ -2118,6 +2118,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
+ "ssx-source-codecs",
  "sync_wrapper",
  "tokio",
  "tokio-rustls",
@@ -2856,6 +2857,7 @@ name = "ssx-source-codecs"
 version = "0.1.0"
 dependencies = [
  "flate2",
+ "idna",
  "serde_json",
  "ssx-owned-budget",
 ]

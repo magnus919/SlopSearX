@@ -1,0 +1,35 @@
+"""Derive ONLY CPython16 urlsplit's NFKC-delimiter hazard set from pinned data.
+No unicodedata/idna/HTTPX imports or normalization/oracle execution.
+"""
+from pathlib import Path
+import hashlib,re,json,argparse
+HERE=Path(__file__).resolve().parent
+UCD=HERE.parent/'idna/inputs/UnicodeData-16.0.0.txt'
+OUT=HERE.parent.parent/'src/python_url_join_data.rs'
+COMPOSE=HERE.parent.parent/'src/idna2008_data.rs'
+args=argparse.ArgumentParser(description=__doc__);args.add_argument('--unicode-data',type=Path,default=UCD);args.add_argument('--compositions',type=Path,default=COMPOSE);args.add_argument('--output',type=Path,default=OUT);a=args.parse_args();UCD,COMPOSE,OUT=a.unicode_data,a.compositions,a.output
+EXPECTED='ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f'
+raw=UCD.read_bytes()
+if hashlib.sha256(raw).hexdigest()!=EXPECTED:raise RuntimeError('exactUnicode16input')
+decomp={}
+for line in raw.decode().splitlines():
+ fields=line.split(';');seq=fields[5].split()
+ if seq and seq[0].startswith('<'):seq=seq[1:]
+ if seq:decomp[int(fields[0],16)]=tuple(int(x,16)for x in seq)
+guards={ord(c)for c in '/?#@:'};memo={}
+def expansion(cp,stack=()):
+ if cp in memo:return memo[cp]
+ if cp in stack:raise RuntimeError('decompositioncycle')
+ out=tuple(c for child in decomp.get(cp,(cp,))for c in (expansion(child,(*stack,cp))if child!=cp else(child,)))
+ memo[cp]=out;return out
+hazards=sorted(cp for cp in decomp if guards.intersection(expansion(cp)))
+# Reordering cannot remove codepoints. Neither canonical composition nor Hangul
+# can remove/create an ASCII guard: check actual pinned composition operands/result.
+composition_raw=COMPOSE.read_bytes()
+if hashlib.sha256(composition_raw).hexdigest()!='bb9d2bb19b3bb517d04c9e94b323545fd7d27c16e8955686daabc4ffa7021c75':raise RuntimeError('exactUnicode16compositioninput')
+text=composition_raw.decode().split('pub const COMPOSITIONS:',1)[1]
+rows=re.findall(r'first: (0x[0-9A-F]+),\s*second: (0x[0-9A-F]+),\s*result: (0x[0-9A-F]+)',text)
+if not rows or any(guards.intersection(int(v,16)for v in row)for row in rows):raise RuntimeError('compositionproof')
+if any(0x1100<=cp<=0x11ff or 0xac00<=cp<=0xd7a3 for cp in guards):raise RuntimeError('Hangulproof')
+OUT.write_text('// Generated from UnicodeData16; CPython URL netloc NFKC guard ONLY.\n// '+EXPECTED+'\npub const HAZARDS: &[u32] = &[\n'+''.join('    '+', '.join(f'0x{cp:X}'for cp in hazards[i:i+12])+',\n'for i in range(0,len(hazards),12))+'];\n')
+print(json.dumps({'UnicodeData_sha256':EXPECTED,'compat_recursive_hazards':hazards,'canonical_compositions_checked':len(rows),'ASCII_guards_cannot_compose_away_or_arise':True,'no_normalization_or_oracle_execution':True}))

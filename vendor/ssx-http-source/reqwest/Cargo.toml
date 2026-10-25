@@ -68,7 +68,7 @@ features = [
 ]
 
 [features]
-ssx-http1-source-pool = ["ssx-http1-source-connect", "hyper-util/ssx-http1-source-pool", "dep:regex", "dep:chrono", "dep:num-bigint", "dep:libc"]
+ssx-http1-source-pool = ["ssx-http1-source-connect", "hyper-util/ssx-http1-source-pool", "dep:regex", "dep:chrono", "dep:num-bigint", "dep:libc", "dep:ssx-source-codecs"]
 ssx-http1-source-connect = ["ssx-http1-source-read", "hyper-util/ssx-http1-source-connect", "rustls"]
 ssx-send-operation-timeout = ["hyper/ssx-send-operation-timeout"]
 ssx-http1-source-read = ["ssx-send-operation-timeout", "hyper/ssx-http1-source-read"]
@@ -528,3 +528,8 @@ optional = true
 [dependencies.libc]
 version = "=0.2.190"
 optional = true
+
+[dependencies.ssx-source-codecs]
+path = "../../../crates/ssx-source-codecs"
+optional = true
+features = ["source-idna2008"]

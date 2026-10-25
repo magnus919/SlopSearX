@@ -7,8 +7,12 @@ license = "MIT AND PSF-2.0 AND Unicode-3.0 AND BSD-3-Clause"
 publish = false
 [lints]
 workspace = true
+[features]
+source-idna2008 = ["dep:idna"]
+
 [dependencies]
 ssx-owned-budget.workspace = true
+idna = { version = "=1.1.0", default-features = false, features = ["alloc", "compiled_data"], optional = true }
 [dev-dependencies]
 flate2.workspace = true
 serde_json.workspace = true

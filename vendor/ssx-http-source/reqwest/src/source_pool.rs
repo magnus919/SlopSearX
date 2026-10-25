@@ -1,6 +1,10 @@
 //! Explicit finite HTTPX transport mounts over the qualified source HTTP/1 pool.
 //! Routing is selected at the innermost Reqwest service on every actual attempt.
 mod environment;
+mod source_url;
+pub use source_url::{
+    SourceUrl, SourceUrlChanges, SourceUrlError, SourceUrlErrorKind, SourceUrlOrigin,
+};
 mod source_cookie_clock;
 mod source_cookie_date;
 mod source_cookie_headers;
