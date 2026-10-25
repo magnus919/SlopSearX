@@ -574,7 +574,7 @@ fn prepare_source_proxy_authorization(
             .or_else(|| req.uri().scheme_str()),
         proxy.and_then(|p| p.auth.as_ref()),
     ) {
-        req.headers_mut().insert(PROXY_AUTHORIZATION, value);
+        req.headers_mut().insert(PROXY_AUTHORIZATION, value.clone());
     }
 }
 
