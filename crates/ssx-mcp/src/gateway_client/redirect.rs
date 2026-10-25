@@ -414,6 +414,17 @@ mod source_owner_tests {
             reqwest::header::LOCATION,
             reqwest::header::HeaderValue::from_static("http://[invalid/"),
         );
+        // The pinned HTTPX authority regex quotes an unclosed bracket as a
+        // regular ASCII host; only a closed bracket selects IPv6 validation.
+        assert!(
+            source_location_url(&current, reqwest::StatusCode::FOUND, &headers)
+                .unwrap()
+                .is_some()
+        );
+        headers.insert(
+            reqwest::header::LOCATION,
+            reqwest::header::HeaderValue::from_static("http://[invalid]/"),
+        );
         assert!(source_location_url(&current, reqwest::StatusCode::FOUND, &headers).is_err());
         assert!(
             source_location_url(&current, reqwest::StatusCode::OK, &headers)
