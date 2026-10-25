@@ -59,6 +59,13 @@ pub struct Fixture {
 }
 impl Fixture {
     pub fn new(url: &str, source_url: &str) -> Self {
+        Self::with_metrics(url, source_url, Arc::new(NoopSink))
+    }
+    pub fn with_metrics(
+        url: &str,
+        source_url: &str,
+        metrics: Arc<dyn ssx_application::Metrics>,
+    ) -> Self {
         let backend = Arc::new(Valkey::new(url, Duration::from_secs(2)).unwrap());
         let clock: Arc<dyn SearchClock> = Arc::new(SystemSearchClock);
         let mut search_policy = SearchPolicy::default();
@@ -136,7 +143,7 @@ impl Fixture {
                 suggestions: None,
                 jev: None,
                 routing_cache: None,
-                metrics: Arc::new(NoopSink),
+                metrics: metrics.clone(),
                 supervisor: Arc::new(NoopSink),
                 audit: Arc::new(NoopSink),
                 cooldowns: None,
@@ -160,7 +167,8 @@ impl Fixture {
         );
         let state = SearchState::new(service.clone(), snapshots, Arc::new(Discovery), 50).unwrap();
         let factory =
-            EvidenceFactory::new(state, backend.clone(), authority.clone(), clock).unwrap();
+            EvidenceFactory::new(state, backend.clone(), authority.clone(), clock, metrics)
+                .unwrap();
         Self {
             factory,
             service,

@@ -66,6 +66,9 @@ pub enum CacheObservation {
     Negative,
 }
 pub trait Metrics: Send + Sync {
+    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}
+    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}
+    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}
     fn cache_lookup(&self, _: CacheObservation) {}
     fn increment(&self, name: &'static str);
     fn engine_outcome(&self, _: &str, _: &AdapterResponse, _: health::OutcomeOrigin) {}

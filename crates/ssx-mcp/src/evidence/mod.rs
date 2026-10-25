@@ -34,6 +34,7 @@ pub struct EvidenceInputs {
     pub snapshots: SnapshotService,
     pub authority: Arc<dyn EvidenceAuthority>,
     pub clock: Arc<dyn SearchClock>,
+    pub metrics: Arc<dyn ssx_application::Metrics>,
 }
 pub struct EvidenceAccess {
     pub authority: Arc<dyn EvidenceAuthority>,
@@ -206,6 +207,7 @@ impl EvidenceRuntime {
             clock,
             lineage.clone(),
             sources,
+            inputs.metrics,
         );
         Self { service, lineage }
     }

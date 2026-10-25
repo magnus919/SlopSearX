@@ -16,7 +16,7 @@ pub struct EvidenceFactory {
 }
 impl EvidenceFactory {
     /// All inputs are trusted owner capabilities, never request/config objects.
-    /// The caller supplies its SAME backend, clock and effective-policy source.
+    /// The caller supplies its SAME backend, clock, metrics and effective-policy source.
     /// Both surfaces borrow the exact SearchState snapshot service. This creates
     /// no new SearchService, Valkey connection, scheduler or lifecycle owner.
     pub fn new(
@@ -24,12 +24,14 @@ impl EvidenceFactory {
         backend: Arc<Valkey>,
         authority: Arc<dyn EvidenceAuthority>,
         clock: Arc<dyn SearchClock>,
+        metrics: Arc<dyn ssx_application::Metrics>,
     ) -> Result<Self, &'static str> {
         let evidence = Arc::new(EvidenceRuntime::new(EvidenceInputs {
             backend,
             snapshots: state.snapshots.clone(),
             authority,
             clock,
+            metrics,
         }));
         Ok(Self {
             surface: SearchSurface::new(state).with_evidence(evidence)?,

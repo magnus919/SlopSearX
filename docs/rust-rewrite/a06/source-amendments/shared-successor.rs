@@ -589,6 +589,13 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     } else {
         raw
     };
+    let raw = if row["path"] == "crates/ssx-application/src/lib.rs"
+        && row["sha256"] == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4"
+    {
+        metrics_predecessor(text(row, "path")?, text(row, "sha256")?, &raw)?
+    } else {
+        raw
+    };
     // D's original inverse remains unchanged after the physical joint proof.
     let raw = if row["path"] == "crates/xtask/src/main.rs"
         && row["sha256"] == w07_main_successor::PRIOR_SHA
@@ -1868,4 +1875,37 @@ pub(crate) fn generation_control_operand(
     supplied_current: &[u8],
 ) -> Result<Vec<u8>, String> {
     post_a06_generation::control_operand(root, path, expected, supplied_current)
+}
+
+/// Only the reviewed Metrics insertion is removed for existing historical callers.
+/// The full physical afterimage is required; old bytes alone are never current proof.
+pub(crate) fn metrics_predecessor(
+    path: &str,
+    expected: &str,
+    actual: &[u8],
+) -> Result<Vec<u8>, String> {
+    need(
+        path == "crates/ssx-application/src/lib.rs"
+            && expected == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4",
+        "W07 Metrics caller tuple differs",
+    )?;
+    need(
+        actual.len() == 6100
+            && digest(actual) == "1c979b776d4f3952316b6b262813784a851d6b841f2d9d95f079e76e038d5a84",
+        "W07 Metrics physical afterimage differs",
+    )?;
+    let at = 2805;
+    let insertion: &[u8] = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n";
+    let end = at + insertion.len();
+    need(
+        actual.get(at..end) == Some(insertion),
+        "W07 Metrics exact insertion span differs",
+    )?;
+    let mut predecessor = actual[..at].to_vec();
+    predecessor.extend_from_slice(&actual[end..]);
+    need(
+        predecessor.len() == 5893 && digest(&predecessor) == expected,
+        "W07 Metrics unrelated predecessor bytes changed",
+    )?;
+    Ok(predecessor)
 }

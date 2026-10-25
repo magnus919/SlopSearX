@@ -314,6 +314,19 @@ impl Drop for Span {
     }
 }
 impl Metrics for Telemetry {
+    fn workflow_accepted(&self, workflow: &'static str, mode: &'static str) {
+        let _ = self.metrics.workflow_accepted(workflow, mode);
+    }
+    fn workflow_rejected(&self, workflow: &'static str, reason: &'static str) {
+        let _ = self.metrics.update(
+            "slopsearx_workflow_rejections_total",
+            &[("workflow", workflow), ("reason", reason)],
+            1.,
+        );
+    }
+    fn workflow_terminal(&self, workflow: &'static str, outcome: &'static str) {
+        let _ = self.metrics.workflow_terminal(workflow, outcome, None);
+    }
     fn cache_lookup(&self, observation: ssx_application::CacheObservation) {
         let kind = match observation {
             ssx_application::CacheObservation::Miss => "miss",

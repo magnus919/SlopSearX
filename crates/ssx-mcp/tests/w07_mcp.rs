@@ -213,6 +213,201 @@ async fn authenticated_http_four_tools_replay_lineage_tenant_grants_and_no_sourc
     Ok(())
 }
 
+#[tokio::test]
+async fn authenticated_receipts_emit_source_workflow_counters_on_the_shared_collector() -> Result<()>
+{
+    let server = server();
+    let telemetry = ssx_infra::observability::Telemetry::new(
+        ssx_infra::observability::Options {
+            audit: false,
+            ..Default::default()
+        },
+        None,
+        vec!["wikipedia".into()],
+        vec!["general".into()],
+    )?;
+    let fixture = Fixture::with_metrics(
+        server.url(),
+        "https://source.invalid/metrics-only",
+        telemetry.clone(),
+    );
+    let stop = CancellationToken::new();
+    let auth = NetworkAuth::Static(ssx_domain::oauth::Secret::new("w07-metrics-token".into())?);
+    let host = Host::start(fixture.factory.http(auth, stop.clone()), stop).await?;
+    let endpoint = format!("http://{}/mcp", host.address);
+    let outcome: Result<()> = async {
+        let client = reqwest::Client::builder().no_proxy()
+            .default_headers(reqwest::header::HeaderMap::from_iter([(
+                reqwest::header::AUTHORIZATION,
+                reqwest::header::HeaderValue::from_static("Bearer w07-metrics-token"),
+            )])).build()?;
+        let search = call(&client, &endpoint, "slopsearx_search",
+            json!({"query":"metrics source","include":["results"]})).await?;
+        let id = search["results"][0]["result_id"].as_str().ok_or("metric source result missing")?;
+        need(telemetry.metrics.render().lines().any(|line|
+            line == "slopsearx_engine_queries_total{engine=\"wikipedia\"} 1"),
+            "search and evidence did not borrow the same real collector")?;
+        let snapshot_before: std::collections::BTreeMap<_, _> = retained_bytes(&server)?.into_iter()
+            .filter(|(key,_)| key.contains(":snapshot:")).collect();
+        need(snapshot_before.len() == 1, "one retained source snapshot expected")?;
+        let success = json!({"result_id":id,"retriever":"private-metric-reader","idempotency_key":"metric-success","status":"succeeded","captured_at":"2026-09-11T04:00:00Z","capture_ref":"capture://private-metric","final_url":"https://captured.example/final","content_sha256":"A".repeat(64),"passage_refs":[{"ref":"passage-1","label":"supporting text"}]});
+        let success_receipt = call(&client, &endpoint, TOOL_NAMES[0], success.clone()).await?;
+        need(success_receipt["state"] == "created", "success receipt not created")?;
+        need(success_receipt["receipt"]["observation"] == json!({
+            "status":"succeeded","captured_at":"2026-09-11T04:00:00Z",
+            "final_url":"https://captured.example/final",
+            "content_hash":{"algorithm":"sha256","value":"a".repeat(64)},
+            "capture_ref":"capture://private-metric","failure":null,
+            "passage_refs":[{"ref":"passage-1","label":"supporting text"}]
+        }), "success normalization differs from original expected fields")?;
+        let failed = json!({"result_id":id,"retriever":"private-metric-reader","idempotency_key":"metric-failed","status":"failed","failure_code":"blocked","failure_message":"javascript:alert(1) is inert text"});
+        let failed_receipt = call(&client, &endpoint, TOOL_NAMES[0], failed.clone()).await?;
+        need(failed_receipt["state"] == "created", "failed observation not persisted")?;
+        need(failed_receipt["receipt"]["observation"] == json!({
+            "status":"failed","captured_at":null,"final_url":null,"content_hash":null,
+            "capture_ref":null,"passage_refs":[],
+            "failure":{"code":"blocked","message":"javascript:alert(1) is inert text"}
+        }), "failed observation lost original inert fields")?;
+        let page = call(&client, &endpoint, TOOL_NAMES[1], json!({"result_id":id,"limit":1})).await?;
+        need(page["total"] == 2 && page["returned"] == 1 && page["has_more"] == true,
+            "mixed receipt page did not retain total and presentation bound")?;
+        let manifest = call(&client, &endpoint, TOOL_NAMES[2], json!({"result_ids":[id]})).await?;
+        let receipts = manifest["items"][0]["receipts"].as_array().ok_or("manifest receipts missing")?;
+        let actual_ids: std::collections::BTreeSet<_> = receipts.iter().map(|r| r["receipt_id"].as_str().unwrap()).collect();
+        let expected_ids = std::collections::BTreeSet::from([
+            success_receipt["receipt"]["receipt_id"].as_str().unwrap(),
+            failed_receipt["receipt"]["receipt_id"].as_str().unwrap(),
+        ]);
+        need(actual_ids == expected_ids && receipts.len() == 2, "manifest lost mixed receipt identity")?;
+        need(receipts.iter().map(|r| r["observation"]["status"].as_str().unwrap()).collect::<std::collections::BTreeSet<_>>()
+            == std::collections::BTreeSet::from(["failed","succeeded"]), "manifest lost failed status")?;
+        need(manifest["observations_verified"] == false && receipts.iter().all(|r|
+            r["observations_verified"] == false && r["discovery"]["result_id"] == id && r["discovery"]["verified"] == false),
+            "manifest changed discovery attribution or verification")?;
+        let snapshot_id = id.rsplit_once(':').ok_or("result snapshot component")?.0;
+        let snapshot_root = ssx_domain::ArtifactRef::new(ssx_domain::ArtifactKind::Snapshot,snapshot_id).unwrap().to_value();
+        let root_graph = call(&client, &endpoint, TOOL_NAMES[3], json!({"artifact":snapshot_root,"max_depth":1})).await?;
+        need(root_graph["root"] == snapshot_root && root_graph["nodes"][0]["artifact"] == snapshot_root,
+            "attached lineage did not retain snapshot root")?;
+        let root_manifest = call(&client, &endpoint, TOOL_NAMES[2], json!({"artifacts":[snapshot_root]})).await?;
+        need(root_manifest["lineage_cuts"][0]["root"] == snapshot_root && root_manifest["items"].as_array().is_some_and(|items|
+            items.len() == 1 && items[0]["result_id"] == id),
+            "attached manifest root walk lost selected result identity")?;
+        let result_artifact = ssx_domain::ArtifactRef::new(ssx_domain::ArtifactKind::Result,id).unwrap().to_value();
+        need(success_receipt["receipt"]["lineage"].as_array().ok_or("receipt lineage")?.iter().any(|e|
+            e["from"] == success_receipt["receipt"]["artifact"] && e["relation"] == "retrieval_of" && e["to"] == result_artifact),
+            "receipt retrieval_of relationship missing")?;
+        need(manifest["lineage"].as_array().ok_or("manifest lineage")?.iter().any(|e|
+            e["from"] == manifest["artifact"] && e["relation"] == "contains" && e["to"] == result_artifact),
+            "manifest contains relationship missing")?;
+        let graph = call(&client, &endpoint, TOOL_NAMES[3], json!({
+            "artifact":success_receipt["receipt"]["artifact"],"direction":"outgoing","max_depth":1
+        })).await?;
+        need(graph["nodes"][0]["artifact"]["kind"] == "retrieval_receipt" && graph["nodes"][1]["artifact"] == result_artifact,
+            "outgoing receipt graph lost root/result order")?;
+        need(call(&client, &endpoint, TOOL_NAMES[2], json!({"result_ids":[id,id]})).await?["error"]["code"] == "invalid_input",
+            "duplicate manifest IDs were not refused")?;
+        let partial = call(&client, &endpoint, TOOL_NAMES[2], json!({"result_ids":[id,"unknown"]})).await?;
+        need(partial["items"][1]["result_id"] == "unknown" && partial["items"][1]["error"]["code"] == "invalid_result_id",
+            "per-item manifest error lost literal requested identity")?;
+        for changes in [
+            json!({"status":"succeeded","failure_code":"bad"}),
+            json!({"status":"failed","failure_code":null}),
+            json!({"status":"succeeded","captured_at":"nope"}),
+            json!({"status":"succeeded","content_sha256":"bad"}),
+            json!({"status":"succeeded","passage_refs":[{"ref":"x","extra":"no"}]}),
+        ] {
+            let before = retained_bytes(&server)?;
+            let mut invalid = success.clone();
+            for (key,value) in changes.as_object().unwrap() { invalid[key] = value.clone(); }
+            need(call(&client, &endpoint, TOOL_NAMES[0], invalid).await?["error"]["code"] == "invalid_input",
+                "original malformed semantic input was not refused")?;
+            assert_retained_unchanged(&before, &retained_bytes(&server)?)?;
+            need(fixture.dispatches.load(Ordering::SeqCst) == 1, "invalid receipt dispatched engine")?;
+        }
+        let receipt_series = |rendered: String| -> Vec<String> {
+            rendered.lines().filter(|line| !line.starts_with('#') && line.contains("workflow=\"retrieval_receipt\""))
+                .map(str::to_owned).collect()
+        };
+        let before_replay = receipt_series(telemetry.metrics.render());
+        need(call(&client, &endpoint, TOOL_NAMES[0], failed.clone()).await?["state"] == "replayed",
+            "retained replay not returned")?;
+        need(receipt_series(telemetry.metrics.render()) == before_replay,
+            "early retained replay emitted another accepted or terminal event")?;
+        let mut conflict = failed;
+        conflict["failure_code"] = json!("different");
+        need(call(&client, &endpoint, TOOL_NAMES[0], conflict).await?["error"]["code"] == "idempotency_conflict",
+            "changed receipt did not conflict")?;
+        let snapshot_after = retained_bytes(&server)?.into_iter()
+            .filter(|(key,_)| snapshot_before.contains_key(key)).collect();
+        assert_retained_unchanged(&snapshot_before, &snapshot_after)?;
+        for n in 0..18 {
+            let value = call(&client, &endpoint, TOOL_NAMES[0],
+                json!({"result_id":id,"retriever":"private-metric-reader","idempotency_key":format!("metric-fill-{n}"),"status":"failed","failure_code":"blocked"})).await?;
+            need(value["state"] == "created", "receipt capacity setup was not persisted")?;
+        }
+        need(call(&client, &endpoint, TOOL_NAMES[0],
+            json!({"result_id":id,"retriever":"private-metric-reader","idempotency_key":"metric-over-capacity","status":"failed","failure_code":"blocked"})).await?["error"]["code"] == "resource_limit",
+            "receipt capacity refusal missing")?;
+        let retained = call(&client, &endpoint, TOOL_NAMES[1], json!({"result_id":id})).await?;
+        need(retained["total"] == 20, "metrics fixture did not retain exactly20 receipts")?;
+        let rendered = telemetry.metrics.render();
+        let actual: std::collections::BTreeSet<_> = rendered.lines()
+            .filter(|line| !line.starts_with('#') && line.contains("workflow=\"retrieval_receipt\""))
+            .collect();
+        let expected = std::collections::BTreeSet::from([
+            "slopsearx_workflow_accepted_total{mode=\"immediate\",workflow=\"retrieval_receipt\"} 20",
+            "slopsearx_workflow_rejections_total{reason=\"capacity\",workflow=\"retrieval_receipt\"} 1",
+            "slopsearx_workflow_rejections_total{reason=\"idempotency\",workflow=\"retrieval_receipt\"} 1",
+            "slopsearx_workflow_terminal_total{outcome=\"failed\",workflow=\"retrieval_receipt\"} 19",
+            "slopsearx_workflow_terminal_total{outcome=\"succeeded\",workflow=\"retrieval_receipt\"} 1",
+        ]);
+        need(actual == expected, "actual shared workflow counter values/labels differ")?;
+        need(!rendered.contains(id) && !rendered.contains("private-metric-reader")
+            && !rendered.contains("capture://private-metric") && !rendered.contains("w07-metrics-token"),
+            "caller receipt or credential data entered metric labels")?;
+        need(fixture.dispatches.load(Ordering::SeqCst) == 1, "receipt telemetry dispatched search")?;
+        Ok(())
+    }.await;
+    let transport_closed = host.shutdown().await;
+    fixture.service.shutdown().await;
+    telemetry.shutdown().await;
+    outcome?;
+    transport_closed?;
+    Ok(())
+}
+
+fn retained_bytes(
+    server: &private_valkey::Server,
+) -> Result<std::collections::BTreeMap<String, (Vec<u8>, i64)>> {
+    let mut conn = server.connection();
+    let keys: Vec<String> = redis::cmd("KEYS").arg("*").query(&mut conn)?;
+    keys.into_iter()
+        .map(|key| {
+            let bytes: Vec<u8> = redis::cmd("DUMP").arg(&key).query(&mut conn)?;
+            let ttl: i64 = redis::cmd("PTTL").arg(&key).query(&mut conn)?;
+            Ok((key, (bytes, ttl)))
+        })
+        .collect()
+}
+fn assert_retained_unchanged(
+    before: &std::collections::BTreeMap<String, (Vec<u8>, i64)>,
+    after: &std::collections::BTreeMap<String, (Vec<u8>, i64)>,
+) -> Result<()> {
+    need(
+        before.keys().eq(after.keys()),
+        "readonly/refused operation changed owned keys",
+    )?;
+    for (key, (bytes, ttl)) in before {
+        let (actual, remaining) = &after[key];
+        need(
+            actual == bytes && *remaining <= *ttl && (*ttl < 0 || *remaining > 0),
+            "readonly/refused operation mutated bytes or renewed retention",
+        )?;
+    }
+    Ok(())
+}
+
 struct SuspendedRead {
     entered: tokio::sync::Notify,
     cancelled: tokio::sync::Notify,
@@ -341,6 +536,7 @@ async fn handler_cancellation_signals_and_drains_existing_receipt_operation_befo
             }),
             lineage.clone(),
             Arc::new(UnusedSource),
+            Arc::new(ssx_application::NoopSink),
         ),
         lineage,
     });

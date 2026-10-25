@@ -169,6 +169,7 @@ async fn real_snapshot_receipt_replay_conflict_tenant_and_projected_entity_graph
         snapshots: snapshots.clone(),
         authority: owner.authority(),
         clock: Arc::new(Captured(AtomicUsize::new(0))),
+        metrics: Arc::new(ssx_application::NoopSink),
     });
     let cancel = Cancellation::default();
     let first = graph
@@ -311,6 +312,403 @@ async fn full_and_f13_projected_entity_ports_match_every_frozen_corpus_case() {
     );
     drop(snapshots);
     backend.close().await;
+    drop(backend);
+    drop(server);
+}
+
+struct LogicalClock(std::sync::atomic::AtomicU64);
+impl SearchClock for LogicalClock {
+    fn capture(&self) -> (WallClockTimestamp, String) {
+        (
+            ssx_application::snapshot::SnapshotClock::now(self),
+            "1970-01-01".into(),
+        )
+    }
+}
+impl ssx_application::snapshot::SnapshotClock for LogicalClock {
+    fn now(&self) -> WallClockTimestamp {
+        WallClockTimestamp::new(self.0.load(Ordering::SeqCst) as f64).unwrap()
+    }
+}
+fn stored_snapshot(server: &private_valkey::Server, tenant: &TenantId, id: &str) -> (Vec<u8>, i64) {
+    let mut conn = server.connection();
+    let key = ssx_infra::valkey::keys::snapshot(tenant, id);
+    (
+        redis::cmd("DUMP").arg(&key).query(&mut conn).unwrap(),
+        redis::cmd("PTTL").arg(&key).query(&mut conn).unwrap(),
+    )
+}
+fn unchanged_snapshot(before: &(Vec<u8>, i64), after: &(Vec<u8>, i64)) {
+    assert_eq!(before.0, after.0);
+    assert!(
+        after.1 > 0 && after.1 <= before.1,
+        "snapshot retention was renewed"
+    );
+}
+#[tokio::test]
+async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_contracts() {
+    use ssx_application::{
+        lineage::{self, Direction, Request},
+        receipts::service::ManifestDraft,
+    };
+    use ssx_json::{Value, json};
+    let server = server();
+    let backend = Arc::new(Valkey::new(server.url(), Duration::from_secs(2)).unwrap());
+    let mut current = state();
+    current.search.policy.grants.insert("research".into());
+    current.search.catalog = CatalogSnapshot::new(vec![ssx_application::scope::EngineCapability {
+        name: "wikipedia".into(),
+        enabled: true,
+        active: true,
+        available: true,
+        categories: vec!["general".into()],
+        media_types: vec![],
+        auth_ready: true,
+        circuit_open: false,
+        cost_class: "free".into(),
+        health_status: "unknown".into(),
+        health_stale: false,
+        enforced_filters: BTreeMap::new(),
+    }])
+    .unwrap();
+    let owner = EvidenceOwner::new(current, backend.clone()).unwrap();
+    owner.establish_readiness().await.unwrap();
+    let tenant = TenantId::new("source-contract").unwrap();
+    let clock = Arc::new(LogicalClock(std::sync::atomic::AtomicU64::new(1000)));
+    let repository = Arc::new(ValkeySnapshots::new(backend.clone()));
+    let parent = ArtifactRef::new(
+        ArtifactKind::ResearchAttempt,
+        ssx_domain::canonical::composite_artifact_id(&["parent-job", "attempt-1"]).unwrap(),
+    )
+    .unwrap();
+    let root = ArtifactRef::new(ArtifactKind::Snapshot, "source-contract").unwrap();
+    let parent_edge =
+        json!({"from":root.to_value(),"relation":"derived_from","to":parent.to_value()});
+    let snapshot = SearchSnapshot::new(
+        SnapshotId::new("source-contract").unwrap(),
+        "q".into(),
+        QueryId::new("source-query").unwrap(),
+        vec![
+            SearchResult {
+                title: "one".into(),
+                url: "https://example.test/one".into(),
+                ..Default::default()
+            },
+            SearchResult {
+                title: "two".into(),
+                url: "https://example.test/two".into(),
+                ..Default::default()
+            },
+        ],
+        ssx_domain::ScopeDecision {
+            selected_engines: vec!["wikipedia".into()],
+            ..Default::default()
+        },
+        tenant.clone(),
+        WallClockTimestamp::new(1000.).unwrap(),
+        Some(WallClockExpiry::new(1010.).unwrap()),
+    )
+    .unwrap()
+    .with_lineage(
+        "tier_then_cross_engine_presence".into(),
+        vec![parent_edge.clone()],
+        true,
+    );
+    repository
+        .create(&snapshot, NonZeroU64::new(3600).unwrap())
+        .await
+        .unwrap();
+    let snapshots = SnapshotService::new(
+        repository,
+        clock.clone(),
+        Arc::new(RandomSnapshotIds),
+        tenant.clone(),
+        SnapshotTtl::new(3600).unwrap(),
+    );
+    let second = SnapshotService::new(
+        Arc::new(ValkeySnapshots::new(backend.clone())),
+        clock.clone(),
+        Arc::new(RandomSnapshotIds),
+        tenant.clone(),
+        SnapshotTtl::new(3600).unwrap(),
+    );
+    let job = ssx_domain::research::ResearchJob::from_payload(json!({
+        "job_id":"parent-job","tenant":tenant.as_str(),"question":"q","strategy":"broad",
+        "state":"succeeded","created_at":1000,"deadline":2000,
+        "queries":[{"index":0,"query":"q","intent":"general","engines":["wikipedia"],
+            "state":"done","cursor":"source-contract","result_count":2,
+            "attempts":[{"attempt_id":"attempt-1","state":"done","attempted_at":1000,
+                "finished_at":1001,"cursor":"source-contract","result_count":2}]}]
+    }))
+    .unwrap();
+    let job_root = ArtifactRef::new(ArtifactKind::ResearchJob, "parent-job").unwrap();
+    let summary = ssx_infra::research_planning::job_summary(&job);
+    assert_eq!(summary["artifact"], job_root.to_value());
+    assert_eq!(
+        summary["queries"][0]["attempts"][0]["artifact"],
+        parent.to_value()
+    );
+    assert_eq!(
+        summary["queries"][0]["attempts"][0]["snapshot_artifact"],
+        root.to_value()
+    );
+    let job_key = ssx_infra::valkey::keys::research("job", &tenant, "parent-job").unwrap();
+    let mut conn = server.connection();
+    let _: () = redis::cmd("SET")
+        .arg(&job_key)
+        .arg(ssx_json::to_vec(&job.to_payload().unwrap()).unwrap())
+        .arg("PX")
+        .arg(3_600_000)
+        .query(&mut conn)
+        .unwrap();
+    let job_before: (Vec<u8>, i64) = (
+        redis::cmd("DUMP").arg(&job_key).query(&mut conn).unwrap(),
+        redis::cmd("PTTL").arg(&job_key).query(&mut conn).unwrap(),
+    );
+    let before = stored_snapshot(&server, &tenant, root.id());
+    let independent = match second.read(snapshot.id()).await {
+        ssx_application::snapshot::SnapshotLookup::Found(s) => s,
+        _ => panic!("second snapshot reader lost retained source"),
+    };
+    assert_eq!(independent.lineage(), std::slice::from_ref(&parent_edge));
+    unchanged_snapshot(&before, &stored_snapshot(&server, &tenant, root.id()));
+    let runtime = EvidenceRuntime::new(EvidenceInputs {
+        backend: backend.clone(),
+        snapshots: snapshots.clone(),
+        authority: owner.authority(),
+        clock: clock.clone(),
+        metrics: Arc::new(ssx_application::NoopSink),
+    });
+    let cancel = Cancellation::default();
+    let job_graph = lineage::traverse(
+        runtime.lineage.as_ref(),
+        &tenant,
+        Request {
+            root: job_root.clone(),
+            direction: Direction::Incoming,
+            max_depth: 2,
+            max_nodes: 100,
+        },
+        &cancel,
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        job_graph
+            .nodes
+            .iter()
+            .map(|n| (&n.artifact, n.status))
+            .collect::<Vec<_>>(),
+        vec![
+            (&job_root, lineage::Status::Live),
+            (&parent, lineage::Status::Live),
+            (&root, lineage::Status::Live)
+        ]
+    );
+    assert_eq!(
+        job_graph
+            .edges
+            .iter()
+            .map(|e| e.to_value())
+            .collect::<Vec<_>>(),
+        vec![
+            json!({"from":parent.to_value(),"relation":"derived_from","to":job_root.to_value()}),
+            parent_edge.clone(),
+        ]
+    );
+    let job_after: (Vec<u8>, i64) = (
+        redis::cmd("DUMP").arg(&job_key).query(&mut conn).unwrap(),
+        redis::cmd("PTTL").arg(&job_key).query(&mut conn).unwrap(),
+    );
+    unchanged_snapshot(&job_before, &job_after);
+    let cut = lineage::traverse(
+        runtime.lineage.as_ref(),
+        &tenant,
+        Request {
+            root: root.clone(),
+            direction: Direction::Incoming,
+            max_depth: 1,
+            max_nodes: 2,
+        },
+        &cancel,
+    )
+    .await
+    .unwrap();
+    let result0 = ArtifactRef::new(ArtifactKind::Result, "source-contract:0").unwrap();
+    let result1 = ArtifactRef::new(ArtifactKind::Result, "source-contract:1").unwrap();
+    assert_eq!(
+        cut.nodes.iter().map(|n| &n.artifact).collect::<Vec<_>>(),
+        vec![&root, &result0]
+    );
+    assert!(cut.truncated);
+    assert_eq!(
+        cut.edges.iter().map(|e| e.to_value()).collect::<Vec<_>>(),
+        vec![json!({"from":result0.to_value(),"relation":"derived_from","to":root.to_value()})]
+    );
+    assert!(
+        cut.edges
+            .iter()
+            .all(|e| cut.nodes.iter().any(|n| n.artifact == e.from)
+                && cut.nodes.iter().any(|n| n.artifact == e.to))
+    );
+    let foreign = lineage::traverse(
+        runtime.lineage.as_ref(),
+        &TenantId::new("foreign").unwrap(),
+        Request {
+            root: root.clone(),
+            direction: Direction::Both,
+            max_depth: 2,
+            max_nodes: 100,
+        },
+        &cancel,
+    )
+    .await
+    .unwrap();
+    assert_eq!(foreign.nodes.len(), 1);
+    assert_eq!(
+        foreign.nodes[0].to_value(),
+        json!({"artifact":root.to_value(),"status":"missing","created_at":null,"expires_at":null})
+    );
+    assert!(foreign.edges.is_empty());
+    let manifest = runtime
+        .service
+        .manifest_draft(
+            &tenant,
+            ManifestDraft {
+                result_ids: Some(vec![result0.id().into()]),
+                artifacts: Some(vec![Ok(root.clone())]),
+                source: None,
+                max_depth: 2,
+                max_nodes: 100,
+            },
+            &cancel,
+        )
+        .await
+        .unwrap();
+    assert_eq!(manifest["lineage_cuts"][0]["root"], root.to_value());
+    assert_eq!(
+        manifest["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v["result_id"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec![result0.id(), result1.id()]
+    );
+    unchanged_snapshot(&before, &stored_snapshot(&server, &tenant, root.id()));
+    let first = runtime
+        .service
+        .submit(&tenant, result0.id(), observation("expiry-once"), &cancel)
+        .await
+        .unwrap();
+    assert_eq!(first["state"], "created");
+    clock.0.store(1011, Ordering::SeqCst);
+    let replay = runtime
+        .service
+        .submit(&tenant, result0.id(), observation("expiry-once"), &cancel)
+        .await
+        .unwrap();
+    assert_eq!(replay["state"], "replayed");
+    assert_eq!(replay["receipt"], first["receipt"]);
+    let new_receipt = runtime
+        .service
+        .submit(&tenant, result0.id(), observation("expiry-new"), &cancel)
+        .await
+        .unwrap();
+    assert_eq!(
+        new_receipt["error"],
+        json!({"code":"expired_handle","message":"originating snapshot has expired","expires_at":1010.})
+    );
+    let read = runtime
+        .service
+        .read(&tenant, result0.id(), 20, &cancel)
+        .await
+        .unwrap();
+    assert_eq!(read["source_snapshot_status"], "expired");
+    assert_eq!(
+        read["receipts"][0]["receipt_id"],
+        first["receipt"]["receipt_id"]
+    );
+    assert_eq!(
+        read["receipts"][0]["discovery"],
+        first["receipt"]["discovery"]
+    );
+    unchanged_snapshot(&before, &stored_snapshot(&server, &tenant, root.id()));
+    // Separate owned fixtures: malformed persisted edge and missing legacy lineage.
+    for (id, legacy) in [("corrupt-contract", false), ("legacy-contract", true)] {
+        let seeded = SearchSnapshot::new(
+            SnapshotId::new(id).unwrap(),
+            "q".into(),
+            QueryId::new("seed-query").unwrap(),
+            vec![],
+            ssx_domain::ScopeDecision {
+                selected_engines: vec!["wikipedia".into()],
+                ..Default::default()
+            },
+            tenant.clone(),
+            WallClockTimestamp::new(1000.).unwrap(),
+            Some(WallClockExpiry::new(2000.).unwrap()),
+        )
+        .unwrap();
+        let mut raw = ssx_domain::storage::snapshot::encode(&seeded).unwrap();
+        let seeded_root = ArtifactRef::new(ArtifactKind::Snapshot, id).unwrap();
+        let edge =
+            json!({"from":seeded_root.to_value(),"relation":"derived_from","to":parent.to_value()});
+        if legacy {
+            raw.as_object_mut().unwrap().remove("lineage");
+        } else {
+            raw["lineage"] = json!([{"from":{"kind":"bogus","id":"x"},"relation":"derived_from","to":parent.to_value()},edge]);
+        }
+        let key = ssx_infra::valkey::keys::snapshot(&tenant, id);
+        let mut conn = server.connection();
+        let _: () = redis::cmd("SET")
+            .arg(&key)
+            .arg(ssx_json::to_vec(&raw).unwrap())
+            .arg("PX")
+            .arg(3_600_000)
+            .query(&mut conn)
+            .unwrap();
+        let fence = stored_snapshot(&server, &tenant, id);
+        let request = || Request {
+            root: seeded_root.clone(),
+            direction: Direction::Outgoing,
+            max_depth: if legacy { 0 } else { 1 },
+            max_nodes: 100,
+        };
+        let a = lineage::traverse(runtime.lineage.as_ref(), &tenant, request(), &cancel)
+            .await
+            .unwrap();
+        let b = lineage::traverse(runtime.lineage.as_ref(), &tenant, request(), &cancel)
+            .await
+            .unwrap();
+        assert_eq!(a, b);
+        if legacy {
+            assert_eq!(
+                a.nodes[0].to_value()["details"]["lineage_status"],
+                "lineage_unavailable"
+            );
+        } else {
+            assert_eq!(
+                a.edges.iter().map(|e| e.to_value()).collect::<Vec<_>>(),
+                vec![edge]
+            );
+            assert!(a.nodes.iter().all(|n| {
+                n.artifact
+                    .to_value()
+                    .get("kind")
+                    .and_then(Value::as_str)
+                    .is_some()
+            }));
+        }
+        unchanged_snapshot(&fence, &stored_snapshot(&server, &tenant, id));
+    }
+    owner.stop_admission();
+    drop(runtime);
+    drop(independent);
+    drop(second);
+    drop(snapshots);
+    backend.close().await;
+    drop(owner);
     drop(backend);
     drop(server);
 }

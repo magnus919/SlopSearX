@@ -14,8 +14,11 @@ use crate::a13::a06_source_successor::{
     w07_test_dependency as test_dependency_successor,
 };
 use main_successor::{PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main};
-const REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
-const REGISTRY_SHA: &str = "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
+const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
+const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
+const ORIGINAL_REGISTRY_SHA: &str =
+    "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
+const REGISTRY_SHA: &str = "5090a4deb27fd281d43df64066ab5581d20e078b05d341211a1489db46b9a94a";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -186,9 +189,124 @@ fn reference(root: &Path, binding: &Reference, packaging: &str) -> Result<Value>
     }
     Ok(packet)
 }
+fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
+    let mut expected = original.clone();
+    expected["suites"][0]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"receipts::service::service_contract_tests::receipt_telemetry_preserves_source_branch_order_and_terminal_status\", \"receipts::service::service_contract_tests::receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion\"]").map_err(|e|e.to_string())?);
+    expected["suites"][1]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"lineage::source_cycle_contract::original_cycle_duplicate_edges_and_expired_nodes_are_exact_and_deterministic\"]").map_err(|e|e.to_string())?);
+    expected["suites"][6]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_contracts\"]").map_err(|e|e.to_string())?);
+    expected["suites"][7]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"authenticated_receipts_emit_source_workflow_counters_on_the_shared_collector\"]").map_err(|e|e.to_string())?);
+    expected["suites"][11]["tests"]
+        .as_array_mut()
+        .ok_or("W07 original suite identity missing")?
+        .extend(
+            serde_json::from_str::<Vec<Value>>(
+                "[\"w07::tests::metrics_successor_requires_exact_afterimage_and_inverse\"]",
+            )
+            .map_err(|e| e.to_string())?,
+        );
+    if expected["sources"]["crates/ssx-application/src/lineage.rs"]
+        != "f087610a7dce527e6f86a44e64c91815041e2af91fa93656a8321efa1cb29762"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-application/src/lineage.rs"] =
+        Value::String("61ab285842203a4fd10f083c65fca788a7e5dc0a10c6c2064da69657ee8c5d07".into());
+    if expected["sources"]["crates/ssx-application/src/receipts/service.rs"]
+        != "c67ed8a85bf2893642e3d7c3633ba8fe75b3c57c4800627d9a5885bd5b8265a4"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-application/src/receipts/service.rs"] =
+        Value::String("b2ab0d86f190ae85ae8d2b47b7f930ace5cd7650a9873c3cff6fc4422ba5141d".into());
+    if expected["sources"]["crates/ssx-mcp/src/evidence/factory.rs"]
+        != "3c77f1a7a3b470f72e324f33fbbf006ff256c6a707f2d9415119f520edad8b96"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/src/evidence/factory.rs"] =
+        Value::String("f409c156d5a9ab76afb57f584f94c5d7eabdf47149a6a93b6474c81bf956a384".into());
+    if expected["sources"]["crates/ssx-mcp/src/evidence/mod.rs"]
+        != "31ca14935818a50fa3a59f8561c9e9b71caa512f165cdd7a7ab5b52c465064e6"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/src/evidence/mod.rs"] =
+        Value::String("2481244dc37c4518554a76672df7eb8a45c963bd59419a4c3c5574f2b1cb35eb".into());
+    if expected["sources"]["crates/ssx-mcp/src/evidence/tools/tests.rs"]
+        != "e59db600245871647443c6af8995e80a0f947705224e56e2278ad435384bc98e"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/src/evidence/tools/tests.rs"] =
+        Value::String("04ebdd2551b9644122357514eba5e438525441a2f3c30d9a74cadf6d88ac37bb".into());
+    if expected["sources"]["crates/ssx-mcp/tests/w07_composition.rs"]
+        != "d44e46295e812839e0fd43571c29942df47e16fd51513a8c496f8993faa32064"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/tests/w07_composition.rs"] =
+        Value::String("d9fc3328472f8fde9804d49d369dcc0686e9a524c0c128de3d751a12bbd8127b".into());
+    if expected["sources"]["crates/ssx-mcp/tests/w07_mcp.rs"]
+        != "9c234756fac4aefaffe9bcee8325f8ff6d1d8e2e23949b7ca870395ccaca622e"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/tests/w07_mcp.rs"] =
+        Value::String("248ee74f84deba26519770c2cdd5384da2dbf5a35d8020dbe4f41b27f4301c38".into());
+    if expected["sources"]["crates/ssx-mcp/tests/w07_support/mcp.rs"]
+        != "244e3509015eb7394b9fb2fc682b9cd8240c6fddb0b2a2b422ae5fa715608c2c"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/tests/w07_support/mcp.rs"] =
+        Value::String("e0b6368a32e9e1c2070e5944b022d55b37b12304e373eea52051170ba5680545".into());
+    if expected["sources"]["docs/rust-rewrite/a06/source-amendments/shared-successor.rs"]
+        != "c0da01213b78ba25e928e6682c510ac8daea5458bedf68bb376d570501bb320e"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["docs/rust-rewrite/a06/source-amendments/shared-successor.rs"] =
+        Value::String("f248a1bb993975ca268a2bfbd1fb52bbd815651a852f4045f648fb8151277045".into());
+    if expected["sources"]
+        .get("crates/ssx-application/src/lib.rs")
+        .is_some()
+    {
+        return Err("W07 new causal source was already present".into());
+    }
+    expected["sources"]["crates/ssx-application/src/lib.rs"] =
+        Value::String("1c979b776d4f3952316b6b262813784a851d6b841f2d9d95f079e76e038d5a84".into());
+    if expected["sources"]
+        .get("crates/ssx-infra/src/observability/mod.rs")
+        .is_some()
+    {
+        return Err("W07 new causal source was already present".into());
+    }
+    expected["sources"]["crates/ssx-infra/src/observability/mod.rs"] =
+        Value::String("39dcefcdb94bb441fde39263365d25758c6262cca0bb2b4d0078be05f3ca87f9".into());
+    if expected["sources"]
+        .get("crates/ssx-infra/src/observability/metrics.rs")
+        .is_some()
+    {
+        return Err("W07 new causal source was already present".into());
+    }
+    expected["sources"]["crates/ssx-infra/src/observability/metrics.rs"] =
+        Value::String("cccca54dc139061f691d183c0b073cb479229be0c5c3990752686ce3457bc460".into());
+    if expected != *current {
+        return Err(
+            "W07 completion inventory differs from the exact additive source/test delta".into(),
+        );
+    }
+    Ok(())
+}
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     test_dependency_successor::controls(root)?;
+    // Frozen original inventory and all measured wire observations remain intact.
+    let original = frozen(root, ORIGINAL_REGISTRY, ORIGINAL_REGISTRY_SHA)?;
     let registry = frozen(root, REGISTRY, REGISTRY_SHA)?;
+    preserve_registry(
+        &serde_json::from_slice(&original).map_err(|e| e.to_string())?,
+        &serde_json::from_slice(&registry).map_err(|e| e.to_string())?,
+    )?;
     let qualification: Qualification =
         serde_json::from_slice(&registry).map_err(|e| e.to_string())?;
     if qualification.schema_version != 1
@@ -415,6 +533,107 @@ mod tests {
             format!("mod w07;\n{}", text.replace("mod w07;\n", "")),
         ] {
             assert!(reconstruct_main(bad.as_bytes()).is_err());
+        }
+    }
+    #[test]
+    fn metrics_successor_requires_exact_afterimage_and_inverse() {
+        use crate::a13::a06_source_successor::metrics_predecessor;
+        let path = "crates/ssx-application/src/lib.rs";
+        let expected = "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4";
+        let actual = include_bytes!("../../ssx-application/src/lib.rs");
+        let predecessor = metrics_predecessor(path, expected, actual).unwrap();
+        assert_eq!(sha(&predecessor), expected);
+        assert_eq!(predecessor.len(), 5893);
+        assert!(metrics_predecessor(path, expected, &predecessor).is_err());
+        assert!(metrics_predecessor("unlisted.rs", expected, actual).is_err());
+        assert!(metrics_predecessor(path, &"0".repeat(64), actual).is_err());
+        let at = 2805;
+        let insertion = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n";
+        let mut duplicate = actual.to_vec();
+        duplicate.splice(at..at, insertion.iter().copied());
+        let mut altered = actual.to_vec();
+        altered[at] ^= 1;
+        let mut unrelated = actual.to_vec();
+        unrelated[0] ^= 1;
+        let mut moved = actual.to_vec();
+        moved.drain(at..at + insertion.len());
+        moved.splice(0..0, insertion.iter().copied());
+        let mut extra = actual.to_vec();
+        extra.push(b' ');
+        for bad in [duplicate, altered, unrelated, moved, extra] {
+            assert!(metrics_predecessor(path, expected, &bad).is_err());
+        }
+        // Assert the successor preserves every original identity and oracle.
+        let original: Value = serde_json::from_slice(include_bytes!(
+            "../../../docs/rust-rewrite/w07/qualification.json"
+        ))
+        .unwrap();
+        let current: Value = serde_json::from_slice(include_bytes!(
+            "../../../docs/rust-rewrite/w07/qualification-completion-v1.json"
+        ))
+        .unwrap();
+        preserve_registry(&original, &current).unwrap();
+        let mut removed = current.clone();
+        removed["suites"][0]["tests"]
+            .as_array_mut()
+            .unwrap()
+            .remove(0);
+        let mut unknown = current.clone();
+        unknown["sources"]["unlisted.rs"] = Value::String("0".repeat(64));
+        let mut changed = current.clone();
+        changed["wire_reference"]["sha256"] = Value::String("0".repeat(64));
+        let mut weakened = current.clone();
+        weakened["sources"]["crates/ssx-infra/src/observability/mod.rs"] =
+            Value::String("0".repeat(64));
+        let mut removed_metrics = current.clone();
+        removed_metrics["sources"]
+            .as_object_mut()
+            .unwrap()
+            .remove("crates/ssx-infra/src/observability/metrics.rs");
+        let mut weakened_metrics = current.clone();
+        weakened_metrics["sources"]["crates/ssx-infra/src/observability/metrics.rs"] =
+            Value::String("0".repeat(64));
+        for bad in [
+            removed,
+            unknown,
+            changed,
+            weakened,
+            removed_metrics,
+            weakened_metrics,
+        ] {
+            assert!(preserve_registry(&original, &bad).is_err());
+        }
+        for field in [
+            "schema_version",
+            "plan_id",
+            "scope",
+            "wire_reference",
+            "packaging_reference",
+        ] {
+            assert_eq!(original[field], current[field]);
+        }
+        for old in original["suites"].as_array().unwrap() {
+            let matches: Vec<_> = current["suites"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|s| {
+                    s["package"] == old["package"]
+                        && s["target"] == old["target"]
+                        && s["filter"] == old["filter"]
+                })
+                .collect();
+            assert_eq!(matches.len(), 1);
+            let expected = old["tests"].as_array().unwrap();
+            let live = matches[0]["tests"].as_array().unwrap();
+            assert!(live.starts_with(expected));
+            assert_eq!(
+                live.iter()
+                    .map(|v| v.as_str().unwrap())
+                    .collect::<BTreeSet<_>>()
+                    .len(),
+                live.len()
+            );
         }
     }
 }

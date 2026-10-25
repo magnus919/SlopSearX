@@ -160,6 +160,7 @@ fn runtime() -> (EvidenceRuntime, Arc<Repository>, Arc<AccessPort>) {
                 Arc::new(ClockPort),
                 lineage.clone(),
                 Arc::new(Sources),
+                Arc::new(ssx_application::NoopSink),
             ),
             lineage,
         },
@@ -317,13 +318,47 @@ async fn semantic_errors_keep_source_order_defaults_and_field_attribution() {
     assert_eq!(graph["direction"], "both");
     assert_eq!(graph["max_depth"], 2);
     assert_eq!(graph["max_nodes"], 100);
-    for (error, code) in [
-        (Failure::Malformed, "store_corrupt"),
-        (Failure::Unavailable, "store_unavailable"),
-        (Failure::CompletionUnknown, "completion_unknown"),
-        (Failure::ScriptErrorMayHaveWritten, "completion_unknown"),
+    for (variant, code, message) in [
+        (
+            Failure::Malformed,
+            "store_corrupt",
+            "retained receipt state is malformed",
+        ),
+        (
+            Failure::Closed,
+            "store_unavailable",
+            "receipt store is unavailable",
+        ),
+        (
+            Failure::Unavailable,
+            "store_unavailable",
+            "receipt store is unavailable",
+        ),
+        (
+            Failure::InvalidInput,
+            "invalid_input",
+            "receipt store rejected the input",
+        ),
+        (
+            Failure::Collision,
+            "store_unavailable",
+            "receipt identity collision",
+        ),
+        (
+            Failure::CompletionUnknown,
+            "completion_unknown",
+            "receipt persistence completion is unknown; replay the same idempotency key",
+        ),
+        (
+            Failure::ScriptErrorMayHaveWritten,
+            "completion_unknown",
+            "receipt persistence completion is unknown; replay the same idempotency key",
+        ),
     ] {
-        assert_eq!(failure(error).unwrap()["error"]["code"], code);
+        assert_eq!(
+            failure(variant).unwrap(),
+            json!({"error":{"code":code,"message":message}})
+        );
     }
     assert!(failure(Failure::Cancelled).is_err());
 }
