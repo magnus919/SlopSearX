@@ -655,7 +655,7 @@ async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_cont
         let edge =
             json!({"from":seeded_root.to_value(),"relation":"derived_from","to":parent.to_value()});
         if legacy {
-            raw.as_object_mut().unwrap().remove("lineage");
+            raw.as_object_mut().unwrap().swap_remove("lineage");
         } else {
             raw["lineage"] = json!([{"from":{"kind":"bogus","id":"x"},"relation":"derived_from","to":parent.to_value()},edge]);
         }

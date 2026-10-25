@@ -354,7 +354,7 @@ async fn authenticated_receipts_emit_source_workflow_counters_on_the_shared_coll
         ] {
             let before = retained_bytes(&server)?;
             let mut invalid = success.clone();
-            for (key,value) in changes.as_object().unwrap() { invalid[key] = value.clone(); }
+            for (key,value) in changes.as_object().unwrap() { invalid[key.as_str()] = value.clone(); }
             need(call(&client, &endpoint, TOOL_NAMES[0], invalid).await?["error"]["code"] == "invalid_input",
                 "original malformed semantic input was not refused")?;
             assert_retained_unchanged(&before, &retained_bytes(&server)?)?;
