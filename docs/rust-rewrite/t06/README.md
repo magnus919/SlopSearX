@@ -99,6 +99,14 @@ The three source-declared tests require these assertions before completion:
 - Actual successful empty upstream JSON stays empty success, while actual
   HTTP500 stays `all_engines_failed` with the OpenAlex error outcome.
 
+For an explicitly requested inactive OpenAlex adapter, the existing shared
+native MCP policy returns `invalid_scope` on `engines` before date-scope
+resolution. F09 already asserts this fail-closed active-engine ordering; this
+test keeps its zero-admission, zero-I/O and zero-state assertions. Python's
+configured-enabled/missing-adapter path instead reaches its later date-scope
+check and returns `invalid_input`. This records the existing surface difference,
+not whole-#984 parity or a change to policy precedence.
+
 The existing T06 gate runs this separate three-name target in addition to every
 original source binding, fixture and transport test. Frozen JSON, historic test
 identities and policy defaults are unchanged. Portal impact: these are additive

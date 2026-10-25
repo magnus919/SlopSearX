@@ -712,7 +712,7 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
     for (mode, label, changes, code) in [
         (Mode::NoScienceGrant, "grant", json!({}), "tool_disabled"),
         (Mode::Unaudited, "unaudited", json!({}), "invalid_input"),
-        (Mode::Unavailable, "unavailable", json!({}), "invalid_input"),
+        (Mode::Unavailable, "unavailable", json!({}), "invalid_scope"),
         (
             Mode::Audited,
             "invalid_leap",
@@ -791,6 +791,18 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
         }
         let result = call(&client, request).await;
         assert_eq!(result["error"]["code"], code, "{label}: {result}");
+        if label == "unavailable" {
+            // Existing shared MCP/F09 policy rejects explicit inactive engines
+            // before publication-date scope resolution can acquire anything.
+            assert_eq!(
+                result,
+                json!({"error":{
+                    "code":"invalid_scope","field":"engines",
+                    "message":"unknown or inactive engines: openalex (inactive)",
+                    "valid_alternatives":[]
+                }})
+            );
+        }
         let field = match label {
             "grant" => None,
             "invalid_leap" | "empty" | "reversed" => Some("date_from"),
