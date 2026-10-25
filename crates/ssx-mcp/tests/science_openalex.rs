@@ -26,8 +26,10 @@ use ssx_application::{
 use ssx_domain::{PublicationDateProof, TenantId, storage};
 use ssx_infra::{
     adapters::{
+        BraveConfig, BroadApiConfig,
         arxiv_expat::AtomPool,
         openalex_runtime::{self, OpenAlexConfig},
+        register_broad_api,
     },
     http::{AdapterHttp, Options},
     search::{
@@ -83,9 +85,14 @@ struct Counts {
 impl SearchAdmission for Counts {
     fn admit<'a>(&'a self, name: &'static str) -> PortFuture<'a, AdmissionDecision> {
         Box::pin(async move {
-            assert_eq!(name, "openalex");
             self.adapter.fetch_add(1, Ordering::SeqCst);
-            AdmissionDecision::Allowed
+            match name {
+                "openalex" => AdmissionDecision::Allowed,
+                // A policy regression is counted, then denied before Brave can
+                // create an HTTP session or observe proxy/environment settings.
+                "brave" => AdmissionDecision::Denied,
+                _ => panic!("unexpected science fixture adapter: {name}"),
+            }
         })
     }
 }
@@ -200,6 +207,7 @@ impl Upstream {
 #[derive(Clone, Copy)]
 enum Mode {
     Audited,
+    BroadAvailable,
     NoScienceGrant,
     Unaudited,
     Unavailable,
@@ -244,6 +252,42 @@ impl Fixture {
         )
         .unwrap();
         let engine: Arc<dyn SearchEngine> = Arc::from(registry.instantiate("openalex").unwrap());
+        let mut engines = BTreeMap::from([(
+            "openalex".into(),
+            EngineBinding {
+                engine,
+                generation: "science-real-openalex-v1".into(),
+                timeout: Duration::from_secs(3),
+                scrape: false,
+            },
+        )]);
+        if matches!(mode, Mode::BroadAvailable) {
+            register_broad_api(
+                &mut registry,
+                http.clone(),
+                counts.clone(),
+                BroadApiConfig {
+                    brave: BraveConfig {
+                        base_url: upstream.base.clone(),
+                        api_key: "synthetic-science-brave-key".into(),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            assert!(registry.is_available("brave"));
+            let engine: Arc<dyn SearchEngine> = Arc::from(registry.instantiate("brave").unwrap());
+            engines.insert(
+                "brave".into(),
+                EngineBinding {
+                    engine,
+                    generation: "science-real-brave-denied-v1".into(),
+                    timeout: Duration::from_secs(3),
+                    scrape: false,
+                },
+            );
+        }
         let mut capabilities = Vec::new();
         for name in ["openalex", "brave", "hibp"] {
             let d = registry.descriptor(name).unwrap();
@@ -294,15 +338,7 @@ impl Fixture {
                         ..Default::default()
                     },
                 },
-                engines: BTreeMap::from([(
-                    "openalex".into(),
-                    EngineBinding {
-                        engine,
-                        generation: "science-real-openalex-v1".into(),
-                        timeout: Duration::from_secs(3),
-                        scrape: false,
-                    },
-                )]),
+                engines,
                 routing_identity: RoutingIdentity {
                     catalog: None,
                     sensitive: policy.sensitive_engines.clone(),
@@ -742,13 +778,13 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
             "unexpected_keyword_argument",
         ),
         (
-            Mode::Audited,
+            Mode::BroadAvailable,
             "mixed",
             json!({"engines":["openalex","brave"]}),
             "invalid_input",
         ),
         (
-            Mode::Audited,
+            Mode::BroadAvailable,
             "unsupported",
             json!({"engines":["brave"]}),
             "invalid_input",
@@ -857,6 +893,16 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
                                 "valid_alternatives":[]
                             }}),
                         "inactive OpenAlex must preserve the exact shared policy envelope",
+                    );
+                }
+                if matches!(label, "mixed" | "unsupported") {
+                    check(
+                        result
+                            == json!({"error":{
+                                "code":"invalid_input","field":"engines",
+                                "message":"absolute dates require explicit engines=['openalex']"
+                            }}),
+                        "eligible broad-engine date scope must reach the explicit OpenAlex date gate",
                     );
                 }
                 let field = match label {

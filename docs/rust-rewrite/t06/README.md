@@ -121,6 +121,18 @@ requests and shared keys. Case-labelled full-envelope diagnostics aggregate
 contract mismatches after each fixture is closed; successful calls retain the
 original strict helper. This changes tests and documentation only.
 
+Only the mixed OpenAlex/Brave and unsupported Brave date-scope cases register
+and instantiate the existing real Brave adapter, add its actual engine binding,
+and derive its eligibility from that registry. A synthetic fixture key and the
+owned loopback base keep configuration local. This lets those cases reach the
+explicit-OpenAlex date gate rather than an earlier inactive-engine refusal.
+Their exact expected envelope remains `invalid_input` on `engines` with
+`absolute dates require explicit engines=['openalex']`. Other fixture modes,
+including positive OpenAlex calls, do not register Brave. If a regression
+attempts Brave dispatch, the existing admission counter increments and denies
+it before the adapter creates an HTTP session; the zero-acquisition assertion
+then fails. All twelve authentication, I/O, upstream and state guards remain.
+
 The existing T06 gate runs this separate three-name target in addition to every
 original source binding, fixture and transport test. Frozen JSON, historic test
 identities and policy defaults are unchanged. Portal impact: these are additive
