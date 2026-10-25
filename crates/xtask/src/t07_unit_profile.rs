@@ -10,8 +10,8 @@ use std::{
     process::{Child, Command, Stdio},
     time::{Duration, Instant},
 };
-const DECLARATION: &str = "docs/rust-rewrite/t07/unit-profile/declaration.json";
-const DECLARATION_SHA: &str = "3f4b9c7b9bc1dc6aaa1b4d34a451f7bffb9446055fdf9f7ce36896a0bdc85118";
+const DECLARATION: &str = "docs/rust-rewrite/t07/unit-profile/current-declaration.json";
+const DECLARATION_SHA: &str = "8aff81c5463cd7d51724e978d4841c7a579de60e44513e026bad14701946058a";
 fn digest(raw: &[u8]) -> String {
     Sha256::digest(raw)
         .iter()
@@ -98,13 +98,34 @@ fn document(raw: &[u8]) -> Result<Value> {
             && doc["kind"] == "T07_GENUINE_REQWEST_UNIT_PROFILE_V1"
             && doc["requested_features"] == json!(["ssx-http1-source-pool"])
             && doc["default_features"] == true
-            && rows(&doc, "metadata_dependency_declarations")?.len() == 66
+            && rows(&doc, "metadata_dependency_declarations")?.len() == 67
             && rows(&doc, "targets")?.len() == 1,
         "unit profile closed request",
     )?;
     Ok(doc)
 }
 fn source(root: &Path, doc: &Value) -> Result<()> {
+    checked(root, &doc["historical_declaration"])?;
+    for input in rows(doc, "workspace_source_roots")? {
+        let mut actual = BTreeSet::new();
+        members(
+            root,
+            &root.join(relative(text(input, "root")?)?),
+            &mut actual,
+        )?;
+        let mut expected = BTreeSet::new();
+        for row in rows(input, "files")? {
+            need(
+                expected.insert(text(row, "path")?.to_owned()),
+                "unit duplicate workspace input",
+            )?;
+            checked(root, row)?;
+        }
+        need(
+            actual == expected,
+            "unit complete original-root workspace input closure",
+        )?;
+    }
     need(
         doc["original_manifest_declarations"]["package"]["name"] == "reqwest"
             && doc["original_manifest_declarations"]["package"]["version"] == "0.13.5",
@@ -148,6 +169,21 @@ fn toml_path(path: &Path) -> Result<String> {
 fn manifest(root: &Path, package: &Path, doc: &Value) -> Result<Vec<u8>> {
     let mut raw = fs::read(root.join(text(doc, "package_root")?).join("Cargo.toml"))
         .map_err(|e| e.to_string())?;
+    // The only path-bearing declaration added by the current source. Preserve
+    // the entire genuine manifest, including every original dev/default feature.
+    let raw_text = std::str::from_utf8(&raw).map_err(|e| e.to_string())?;
+    let from = "path = \"../../../crates/ssx-source-codecs\"";
+    need(
+        raw_text.matches(from).count() == 1,
+        "unit exact sole codec path rewrite",
+    )?;
+    let original = root
+        .join("crates/ssx-source-codecs")
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    raw = raw_text
+        .replacen(from, &format!("path = {}", toml_path(&original)?), 1)
+        .into_bytes();
     let mut suffix = "\n[workspace]\nresolver = \"3\"\n\n[patch.crates-io]\n".to_owned();
     for fork in rows(doc, "forks")? {
         let name = text(fork, "name")?;
@@ -489,7 +525,7 @@ impl Profile {
                 "xtask",
                 "--all-targets",
                 "--features",
-                "ssx-gateway/dns-test-fixtures",
+                "ssx-gateway/source-endpoint-test-fixtures",
                 "--message-format=json",
             ]
             .map(str::to_owned),
@@ -517,12 +553,29 @@ impl Profile {
         let packages = rows(&value, "packages")?;
         need(packages.len() == 1, "unit genuine root inventory")?;
         let package = &packages[0];
+        let mut dependencies = self.doc["metadata_dependency_declarations"].clone();
+        let codec = dependencies
+            .as_array_mut()
+            .ok_or("unit dependency declarations")?
+            .iter_mut()
+            .find(|d| d["name"] == "ssx-source-codecs")
+            .ok_or("unit codec declaration")?;
+        need(
+            codec["path"] == "@SOURCE_ROOT@/crates/ssx-source-codecs",
+            "unit codec path marker",
+        )?;
+        codec["path"] = json!(
+            self.root
+                .join("crates/ssx-source-codecs")
+                .canonicalize()
+                .map_err(|e| e.to_string())?
+        );
         let mut expected = self.doc["targets"].clone();
         expected[0]["src_path"] = json!(self.package.join("src/lib.rs"));
         need(
             package["name"] == "reqwest"
                 && package["version"] == "0.13.5"
-                && package["dependencies"] == self.doc["metadata_dependency_declarations"]
+                && package["dependencies"] == dependencies
                 && package["features"] == self.doc["metadata_feature_declarations"]
                 && package["targets"] == expected,
             "unit genuine declarations/features/complete targets",
@@ -983,7 +1036,8 @@ mod tests {
     use super::*;
     #[test]
     fn declaration_rejects_rehashed_changed_inputs() {
-        let raw = include_bytes!("../../../docs/rust-rewrite/t07/unit-profile/declaration.json");
+        let raw =
+            include_bytes!("../../../docs/rust-rewrite/t07/unit-profile/current-declaration.json");
         assert!(document(raw).is_ok());
         let mut changed = raw.to_vec();
         changed.push(0);
@@ -1126,7 +1180,7 @@ mod tests {
             .write_all(b"12345")
             .unwrap();
         let doc = document(include_bytes!(
-            "../../../docs/rust-rewrite/t07/unit-profile/declaration.json"
+            "../../../docs/rust-rewrite/t07/unit-profile/current-declaration.json"
         ))
         .unwrap();
         assert_eq!(

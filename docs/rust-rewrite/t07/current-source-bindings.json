@@ -1,0 +1,2603 @@
+{
+  "schema_version": 1,
+  "oracle_execution": "none; source-derived contracts plus retained component captures",
+  "files": [
+    {
+      "path": ".github/workflows/rust.yml",
+      "sha256": "fbeee989e48c81d2c7c11964995712a6583eb237d59844a0a1f34b5a6876d139"
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "sha256": "ea4cc40b3aed49442d4cdc110420b29c997031101752e33280ea900780d4feb1"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "6584af55227b6aadd145954afe63416e3cbc0260e4e638c6822e0624f9e09099"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "483e31936a032f45588779d8bcfc3cee03792c6332700b017d1b0b28aeec0309"
+    },
+    {
+      "path": "crates/ssx-gateway/Cargo.toml",
+      "sha256": "30eb0b8ca15bedd39e730b41c476cd2daef1d5180669a2786df59e97ebb7d78a"
+    },
+    {
+      "path": "crates/ssx-gateway/src/bin/ssx-gateway-dns-fixture.rs",
+      "sha256": "7d8def3ec002a93ff872ea950cbbf579849b4b52eeaa762ee20696ba34108392"
+    },
+    {
+      "path": "crates/ssx-gateway/src/bin/ssx-gateway-dns.rs",
+      "sha256": "32463bc4db82e049835dcd4e76c168d95b586a5382575550c171c9564085c5f9"
+    },
+    {
+      "path": "crates/ssx-gateway/src/main.rs",
+      "sha256": "e8a9942798b697f85bda53349c36fa1373fc9318d21f380705b331abe6650d3c"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
+      "sha256": "b655f5c6e17da19011fba8121f5d3ce61e8336c34358e8db5fb820f20c35b58e"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/t07_runtime.rs",
+      "sha256": "91f72b00835af1fb36605f8d6577de156b691a2d68a8dacfd90311655e7b683e"
+    },
+    {
+      "path": "crates/ssx-mcp/Cargo.toml",
+      "sha256": "e2aa8b51cf07667ad76fa204d2defbc8903d8b5f05d8458b303eafd29d2c7bd2"
+    },
+    {
+      "path": "crates/ssx-mcp/src/bin/mcp-qualification.rs",
+      "sha256": "7a3cac8f5fbb37914f1de974b2eaa039ba4f3b64f9c793b2c588ac52b99e95c8"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/arguments.rs",
+      "sha256": "7d355b018a6621ab2e2dc61201026306a5f808ed9b07ab476933a7eb27d49b7a"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/browser.rs",
+      "sha256": "7b848088406e81c437ed738bfc643bc48e2371620c3b80eefe1a7cdeb5454fb6"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/callback.rs",
+      "sha256": "92c1adb91b6c773ece4f4330fd3ed9a5efd5856b639f26840aa000781509d194"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/client_model.rs",
+      "sha256": "f6c6dfe3abf4ebaa76f552aa04fdaac64db72636ab6c4bc5805b9e0b830e0180"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/io_owner.rs",
+      "sha256": "935f18b2df64ce05ef807ea51a7432fc36920eac6721b1dad11993e4191ef9e6"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/mod.rs",
+      "sha256": "1bbd4cc3acb18dc74f12c944eeb3d705baf6fea31596737742d256e585cf67f9"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/network.rs",
+      "sha256": "58c8a97919946b414762befecbbdf2b1e7faeaada32e13126e0908881c0cecb9"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/network_cookie_tests.rs",
+      "sha256": "d5ad13a309de8563695fe993b0017656badf2c2cd9a623488a5c2f6a23d2189c"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/oauth.rs",
+      "sha256": "41b6898ebac03e9419040ca0052679435e46aadc9001b14244eaf4e912394dd0"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/oauth_policy.rs",
+      "sha256": "98142e664add15aff824c8f87e7aed512a5db47869de93cb86985278ac12a834"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/redirect.rs",
+      "sha256": "64509571421b5ac0b27903144d4103c6888e14d164afacf3ff01e5538f4d7bfe"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/helper.rs",
+      "sha256": "e0390cd9c2d892c9f66b793b754bbaca1079786263728e028b162b8fcbbd96a1"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/install.rs",
+      "sha256": "909a4036bcba3746b72ed5b9f878c48adfde80a5efb532c10b3a9c3fa0ee83e9"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/mod.rs",
+      "sha256": "73192b81c1a33b36a296bd221805229b436c2d23df3088e14d23a034ae0bb864"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/protocol.rs",
+      "sha256": "eea534a719c2d727051992da57bfd80245f7605316b0bc532977bb9054d7948e"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/runtime.rs",
+      "sha256": "33c6d40553c6ed9ee0d2a003e8cbccef5a4d639c38639be2c38f3797192eb546"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/runtime.rs",
+      "sha256": "b31a539b031fcf57790e43b7deef27e0b8599b964882183ad7a4156107a324d7"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/settings.rs",
+      "sha256": "5ec56ce100dd0b1930aadce21e1781f7883b1cddd26836bc879a790d278933b8"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/source_projection.rs",
+      "sha256": "931da9c052a4be3b57b97aedcbc595d57d6d80be70c30c05f1d87b28f000a8ef"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/stdio_input.rs",
+      "sha256": "660688af9177a2a0090c3195dea79e5b726314c6045578ea2ed3d65348b4b7ec"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/title.rs",
+      "sha256": "4de880da098fe675030cd65a7f8d1b39129b028d3f79b2d9c55edd0c92f77812"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/title_data.rs",
+      "sha256": "b1870629822ee9f333813f542639588fcb4fcb68df659816155380233556c2bf"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/token_json.rs",
+      "sha256": "bd09361dea32c890d623eddb095ed0b935cfec157e5540a386aa4c87324875f0"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/token_model.rs",
+      "sha256": "b311105a6f2ded00c21e13be25fcd316737ac7f49422e8edd16cc83922e4dab4"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/token_storage.rs",
+      "sha256": "3b7b09d667d48a09fba1e9a29161dc10164e48210aa1413c905ea7c61f0bd3d1"
+    },
+    {
+      "path": "crates/ssx-mcp/src/harness.rs",
+      "sha256": "33eae22bb55acfff99b3b3cd2afd9f659e36535761460debcdb5501830bdbd91"
+    },
+    {
+      "path": "crates/ssx-mcp/src/lib.rs",
+      "sha256": "def66a2351de1e2930df67501eee89e040bb174a352218a4393aad0081048055"
+    },
+    {
+      "path": "crates/ssx-mcp/src/opaque.rs",
+      "sha256": "3fe5f2d3f32ea3de1a5da9479631bd5eff4a5253931ca0d764814a80e4628f64"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/entities.rs",
+      "sha256": "520ce3b59dede438386d4084442b8bddbb751a8e814aae7a341a83f4d3bf92e4"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/mod.rs",
+      "sha256": "973f4247cb6a72de683d9cd9b50dd22786bbc109c0177fc244da967e852f4790"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/resources.rs",
+      "sha256": "ecc0dc70744c55a88c350880e8ecba3a7e541706512bddea7baef24bcaad1e27"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/results.rs",
+      "sha256": "31229ef5fffa1bf29d421b2485c22ac4146ccb20669e91de812d18d13e65e99a"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/runtime_discovery.rs",
+      "sha256": "4baccd65b7acc2d6fde77c1745c09b37a3fc061a1aff117241dbf2368b4faf74"
+    },
+    {
+      "path": "crates/ssx-mcp/src/search_surface/validation.rs",
+      "sha256": "25f64af70605e7b9623f1e84e2b3f2f7222f7602ae3296c5546d2e879803fa95"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/qualification.rs",
+      "sha256": "1c7612c711a3ae96d66228b9316609d3f68d2a3cf51f8ee6280b7605f02786b8"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_source_bindings.rs",
+      "sha256": "8a006eaeade474912420dd94518a33e4f219896a11ff62a860a224037ea47e94"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_support/deadline_clock.rs",
+      "sha256": "14dfffd020f54430944c9d37ce6e400b282f3b805f7db2ad2778a89dab7ad626"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_support/fixture.rs",
+      "sha256": "9b8af82a297b4a347d2c2c320ca2a05c54048c4430739b909b6bc47b5f22a3ab"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_support/server.rs",
+      "sha256": "8484b90d50c711f81cb5852054b40d16338d2e2b8d4cf27838ed5a47fd9a2205"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_transport.rs",
+      "sha256": "264983f5bffaba8116c7b92be99c33baa73423d99b118cc181c9729092bd4ceb"
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t07_streaming_seam.rs",
+      "sha256": "1c7585183819284c62eae327906e50ec02ae910503819e6c4c6b649153669c31"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/SpecialCasing-16.0.0.txt",
+      "sha256": "8d5de354eef79f2395a54c9c7dcebbaf3d30fc962d0f85611ea97aa973a0c451"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/UnicodeData-16.0.0.txt",
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f"
+    },
+    {
+      "path": "crates/xtask/src/gateway_package.rs",
+      "sha256": "a71750ad305fdc74da38dcedd5112fc63dc9fee8a8a8961c92796083ba8347a7"
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "272553def5ba145a76aa2908eb68f3a0d8f5464363927201f461bd647a7c53ce"
+    },
+    {
+      "path": "crates/xtask/src/t01.rs",
+      "sha256": "12e8cdab4eafce5f419d6a6c4527ad67230d6473c96532b6f42c4fbd5a823ce3"
+    },
+    {
+      "path": "crates/xtask/src/t07_unit_profile.rs",
+      "sha256": "11a682e8bb16733c14841d5dd97f8ef8e1e7055ae90d2c870e289da953f01321"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "sha256": "1750fa63e09b2369724a47ed8a4a811c1905d20e8113a68290a7a9e02380896a"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/coverage.json",
+      "sha256": "38754e14b0b5020a98b80306c4607f218b68c91f81cb2e8245f9a40acbf3e714"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source.json",
+      "sha256": "acb320cc5134d94849909a5eaeb2f76c880391b9d2cc49aee53135d7a3484f83"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/COMPOSED_SOURCE_V4.md",
+      "sha256": "61a7224af9a9e9afb25525ed523d8b9996173822bef19c34f845847271bc39cd"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/COMPOSED_SOURCE_V5.md",
+      "sha256": "6fe0a48d65f7b85db2c44abe930ed82ff6ba5dea15a05cd31ca4dd00d1d357c0"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/COMPOSED_SOURCE_V6.md",
+      "sha256": "e34dd39b399a4796d3b3260b489481e1b22cb063b4c16369c20aec468a0ccccb"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/COMPOSED_SOURCE_V7.md",
+      "sha256": "e3c6ef2ea94e4136c18c83f88186005c21a734fef6a5194a19408ccc45e6ea66"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/CURRENT_SOURCE.md",
+      "sha256": "d787e2e728565b026d5eff7e0684809ecdbde6063740b653f214201663a27e29"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/OAUTH_REVIEW_V3.md",
+      "sha256": "fae3f6d48d385b9aa7e308ae1d03cac0769512c26df26e14763de16e4b51a6c0"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/SOURCE_COMPOSITION_V4.json",
+      "sha256": "c270368674e924f949183837dc7cf4ec15e1050d4d70b2f5b1b2ee16201ec9a7"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/SOURCE_COMPOSITION_V5.json",
+      "sha256": "b3952eaeeb34f0c245438e5ca2a387b001aa43d99e32aceb22726d15bf9cc657"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/SOURCE_COMPOSITION_V6.json",
+      "sha256": "9454efde75b4df603b593396c30adec1292b240ff1b66da1ccff52059115b792"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/SOURCE_COMPOSITION_V7.json",
+      "sha256": "361f3cf8d3ce0ad442ff4d6eaa6eafb5625b8890d787f7cb3ff86371e89f48c9"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/client-urls-source.json",
+      "sha256": "b708c6c60ff942bdb8beef1c2a671bcff2309f6f3d073cefbd7d4aa4190b5aa7"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-51fda0f7/Cargo.lock",
+      "sha256": "92ee06e2da26d90c014ffabe812d52af88b084b0edfc4b362c9c33716e0ecd7d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-51fda0f7/Cargo.toml",
+      "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor-v1.json",
+      "sha256": "f106ec3a76a2c84a31bdfa85330a9538e7a03bd2ce1d69c68f3c27ef4f5cdbec"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/a06-shared-material-successor.rs",
+      "sha256": "da0f538101f6f687ab1051a699eec64a4aac687b8b6586ee77f0a2b7e77e7743"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-cookie-proxy-lock-successor-v1.json",
+      "sha256": "5f263afdf0766e00208850fe94d999654ce02a7288d76c3d2da822fe1aeb1f80"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-cookie-proxy-lock-successor.rs",
+      "sha256": "60d55a40ac4ea3e95b35e57de53980a41c300b072b83b6fd7669fc8935d43f38"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-cookie-proxy-predecessor-v1/Cargo.lock",
+      "sha256": "ebbcd0e37416ef61cb75415b56136603ba6ef5ce506ba2fceb07c1cd97bc75c8"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-dns-lock-successor-v1.json",
+      "sha256": "0ec1e1848d6e770cd54d9e9a49f86699eb5afe54deb7f011232c3b2c3f469833"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-dns-lock-successor.rs",
+      "sha256": "df1e45fd960b68498586ed7a1174b59e993faae802a2b812f1d6ff2c2c70e52f"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-dns-predecessor-v1/Cargo.lock",
+      "sha256": "11648293ca5a59db342512fc32659931b9fc8de281703adf705e5f1018e566f1"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/.github/workflows/rust.yml",
+      "sha256": "0d5ce62777aa3751da3d9404d4a49b829f7200374fc263dbe5257035e941b215"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/.pre-commit-config.yaml",
+      "sha256": "f29df73b2881ac5f8df1c94f15f02ba0da1dae114c3900e2a8840485fa0f66a1"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-predecessor-v1/crates/xtask/src/main.rs",
+      "sha256": "cf29f49aa50f10c39aba47e6eadb3020602821a7ef1055ce709cca644e43023d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor-v1.json",
+      "sha256": "4fabaf5668fbe765a315e1399d54138db4d51e0342fc16331e0e791cdc6cacf2"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor.rs",
+      "sha256": "30a6853ada8efc947ea9290e9bc8c4a211ffb7304ec558450b8282bb5ab6e865"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-predecessor-v1/main.rs",
+      "sha256": "e695b32f8617ff35ca939b4e8f8f00831ca3465319ba3961680574db1da8a1f2"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-successor-v1.json",
+      "sha256": "30f1769633cbdf282d01ea74fab690d0071d00f0c028c16e4b501b6448b1c1e6"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-successor.rs",
+      "sha256": "0c255f7d1c6acb421d919ccf23af18ad5d9feffc74881f0e99c70457284a1195"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-predecessor-v1/opaque.rs",
+      "sha256": "c89e508d9d4d2c86f6d0f0f8cbf8f35690e83e63da94a4ca342c28da60526d41"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-successor-v1.json",
+      "sha256": "924bd720bf302560345ca264629e3aa4ce80b52df89897e9164b4cc5bc33f1c1"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-successor.rs",
+      "sha256": "f21de15f39e5b7cbbd21a4c02101f80834ca2d4126bb3111f0eef1d52d800283"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-LICENSE.txt",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-cookiejar.py.txt",
+      "sha256": "33cdcee4ec52171e50cd079da77923d1d0f6e523cefa39f296a8e1ec1b1acb64"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-unicodectype.c.txt",
+      "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-unicodetype_db.h.txt",
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/PROVENANCE.json",
+      "sha256": "aec1d26a6cc37e97a5359e54e259d076fb7fa75c243e2fb7e1e7c9e90ba02a84"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp-4.0.11.dist-info__LICENSE.txt",
+      "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__exceptions.py.txt",
+      "sha256": "35e32b47b4ba2b9c3886d96642eb33784cc860003d959f08152d04bfd6206609"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__prompts__function_prompt.py.txt",
+      "sha256": "df1b67255d18790eeb849ac8d9fd4ff734dbf6163198342309c2c796a7406734"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__server__mixins__mcp_operations.py.txt",
+      "sha256": "87b728bd4bbc01422ac6fd4ec5889a224393f85729681c5262a559e2b7fc507b"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__server__server.py.txt",
+      "sha256": "236acfb96101b119ded10d4ff0f1c12f7a813b43e06d19ea894c96a9a13deb70"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__tools__base.py.txt",
+      "sha256": "d0b38a083950e46231b46e80cc337aa0b14eb9d9dfa5d3d7308a174f06f0676a"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__tools__function_parsing.py.txt",
+      "sha256": "286b8b9379e3359d40c37b0ccbf4190e979c2c68532cf884dacc70d4fa1f7ada"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__tools__function_tool.py.txt",
+      "sha256": "829b1d227606a1eab2475723efa8d33aaa2c820b5efd2c1a019e5e5457d0133c"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/fastmcp__utilities__components.py.txt",
+      "sha256": "187def5e5ac449212f58bc23a3d2b5fb1c3ac5f4f31f625ed1f42c91b548b529"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpcore2___async__http_proxy.py.txt",
+      "sha256": "ba374f61bcef34f33cbe9c51d4dd98a133b053d84f4a034b7550be6fee1ab412"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpx2-2.13.1.dist-info__LICENSE.md.txt",
+      "sha256": "7e7d6dbaf7fe160d39fd6e84fd02c33cab96bcbea34d36998d545bceb4a19c30"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpx2___auth.py.txt",
+      "sha256": "a81359e88fc3ad63cb2d945ad28653e9c0f734fe4dac6e9fe8a44451d84aba0a"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpx2___client.py.txt",
+      "sha256": "fa3948aa66a9efd5edf097c6d13d927612c617328b43ceefc4bdd5e350aaa93b"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpx2___content.py.txt",
+      "sha256": "b0da7d2156a2d758173bfe0fe5491af17aab4ff03c01be71920465283e31798d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpx2___urls.py.txt",
+      "sha256": "b76c19382b96b663fcbc79f0ab684b84b67f836637e8add2329534bbfdc9f026"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp-2.3.0.dist-info__LICENSE.txt",
+      "sha256": "5e13dbbc1d120fc2a03cecde7c91424ae2d7de11b63d58ded2f4431e261ee50d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp__client__auth__oauth2.py.txt",
+      "sha256": "df8701d8d1eb952003b0c2aef2aad4d6a6213d8e3f2699da00f929537eb6a645"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp__client__auth__utils.py.txt",
+      "sha256": "e41cc477b2a597e3f7268ad74ca3b6eb3f500c1def3e74d4b6997f0603507d5d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp__shared___httpx_utils.py.txt",
+      "sha256": "f758208d93eb85d6061650d3257f2fc072fae1d04f871257e9cc4464d33b3e1c"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp__shared__auth_utils.py.txt",
+      "sha256": "697d65d52de90e513ff6bd05bf6e48efa86e269d70a81db989444e6f6e71bae7"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp_types-2.3.0.dist-info__LICENSE.txt",
+      "sha256": "5e13dbbc1d120fc2a03cecde7c91424ae2d7de11b63d58ded2f4431e261ee50d"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp_types___wire_base.py.txt",
+      "sha256": "5dccb64385fc5083cb2bcca72bbf746b41ef2395d591f4784eea9d54385533b6"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/mcp_types__version.py.txt",
+      "sha256": "e244c0bb0dda774b50af4a2f1a2145be6511794fdfd63e6a6c7afe60ee62e51e"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/token-model-source.json",
+      "sha256": "13d503fbff522b6208b521e926f136e74a46991514569365aab0b15d8d74ba39"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/Cargo.lock",
+      "sha256": "772da776c5233912b2d921b3f3fed2cb42901d7ecd32dac184329795c6f1c805"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/README.md",
+      "sha256": "fd575ae9d4d489ad3492d022342edbb921cdd261ed6d79404761081027c0ad04"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/counterfactuals.json",
+      "sha256": "c8589e08244d36859cf8b9276c8fa66d935ad176b172b14d91aa6733f4e580c1"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/declaration.json",
+      "sha256": "3f4b9c7b9bc1dc6aaa1b4d34a451f7bffb9446055fdf9f7ce36896a0bdc85118"
+    },
+    {
+      "path": "slopsearx/mcp/gateway.py",
+      "sha256": "2b3744b02518797e8529cbd467d4f295f6aa2c780513700e71b8b5005b47fb0f"
+    },
+    {
+      "path": "slopsearx/mcp/oauth_client.py",
+      "sha256": "9f454a0216c4695900d4330f13d77a0e9c72281eacf872e7b54eeb85ebbe31af"
+    },
+    {
+      "path": "vendor/ssx-http-source/NOTICE.md",
+      "sha256": "4865f8079210b85b08922e802eb40d097f7ba5ad12cae2952a0b3bd562c93d95"
+    },
+    {
+      "path": "vendor/ssx-http-source/PROVENANCE.json",
+      "sha256": "ff631b467b301a20f49d84815f44727f364ee747f0d06ab7e34adf3b643e6987"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/.cargo_vcs_info.json",
+      "sha256": "304c6a5cc4e924fef4ca4629de055fdf731825833e6a0764aa03e4581580297c"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/.github/FUNDING.yml",
+      "sha256": "e65635279e36972a4cecce26f3bb8115c09fd6d5d3e3e79d11a973877d4600a8"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/.github/workflows/ci.yml",
+      "sha256": "1045b35d3703f490e153c9a8513acf22496d5a3b0659fee70784c3cf425cb0f5"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/.github/workflows/cibench.yml",
+      "sha256": "3b09cf335f208b52d97ccb9a1ca803cece87c80a9b859b8236b9f4e25ab75456"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/.github/workflows/cifuzz.yml",
+      "sha256": "7814b157965db6452cba4ff3ebe30555c002daaff4baf46a985fa232cb768def"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/.gitignore",
+      "sha256": "f9b1ca6ae27d1c18215265024629a8960c31379f206d9ed20f64e0b2dcf79805"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/Cargo.lock",
+      "sha256": "ec51aecd295189c21ca216e1bb6e1f04e9f45d7dfc62da5c00480aebbf87a515"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/Cargo.toml",
+      "sha256": "067da5f6334526ce5f080909e5c271dd0968ab4198a65eea51d93b242febb48a"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/Cargo.toml.orig",
+      "sha256": "3a0da8a3d1c3ab896e16182c9a876b4ad4c265faa3042cde693621ea95c94060"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/LICENSE-MIT",
+      "sha256": "391a5396cec6230bfabd4ef4eb2350eb895bc5efce377a2218f5702ed020d3e3"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/README.md",
+      "sha256": "eb23916ad2e4e904ee31e2af02e71ffd8f2d0c97f9e529f3e02f300a120e2c8b"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/benches/parse.rs",
+      "sha256": "1c76d3831410e0c2da0cbbee43431c2d28e2f1969664dea2a6a0e81f0a1c88be"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/build.rs",
+      "sha256": "eba8e341d746a6cf54249c62afe9eb237e7c21fcf9937223e894549e3a34d489"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/clippy.toml",
+      "sha256": "fd62dce2727b03fd4a8f6f3241e9da1e24ac2ff053d3986b0576c140823ec1ea"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/iter.rs",
+      "sha256": "630132d2d6fafa80c126b7b20b097c5ac7215575f7b61c8f8d7101b58ca57d0a"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/lib.rs",
+      "sha256": "4c51f5ec314715bfe33d5cd11d110f8eea59540418559ea7ea00b3945c01c155"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/macros.rs",
+      "sha256": "4e152282a120ec322f0873c65d2c334d7161f0085e91c52d45793c87f83e3e5c"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/simd/avx2.rs",
+      "sha256": "ce35db9ab9783880f44786a9d65727b0c5862a957d845e9f3d8a358b3ca4b01a"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/simd/mod.rs",
+      "sha256": "4fe941717937542c4c88eb95ffefb26db8492e4b5a1d46696fce0b5329702a21"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/simd/neon.rs",
+      "sha256": "fed66a5d37873dbf901ad2b69e9d08711c570a4a5fc958e13539808501ec9ac3"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/simd/runtime.rs",
+      "sha256": "fec921120b04042d9c3dbc78ced3477e112f16e4d06be68ac8d50ddce54b8da7"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/simd/sse42.rs",
+      "sha256": "04c1c6f29375eb87d0e7712deadd9ba3c94d20525b67ff869a266cc6b75cedf6"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/src/simd/swar.rs",
+      "sha256": "24d15cfaa7b1ac8f2a5ff74a590eb0e9f0c87de6058c2c65919e33f9f1923080"
+    },
+    {
+      "path": "vendor/ssx-http-source/httparse/tests/uri.rs",
+      "sha256": "62664aa2db82b2b24174ef74b7b00b675806608bfcb64763f97b639b62dd3701"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/.cargo_vcs_info.json",
+      "sha256": "f94d31dc5ef0005a0f13752db671f6181a11f55cf4dc13b0ffa907df7b5ea07e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/.github/workflows/CI.yml",
+      "sha256": "7ad54078dafa6954c6281104d024013b70d6507f652b6cba6321fe3d16a395dd"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/.github/workflows/rustdoc-preview.yml",
+      "sha256": "41594e2b05d382d726793d81a4c9a391807d85cd425f234b994545e02aea44ba"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/.gitignore",
+      "sha256": "b95521619d6ecdf500cd0e035fd4ddd9716147916ddd2ebf17f43213f357869d"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/CHANGELOG.md",
+      "sha256": "9f90c6c77ac3a8a32612779fd7bd07e064ec918db13e1b19d6521baf74c68ed1"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/Cargo.lock",
+      "sha256": "63eec12a60cf824c88c06c001dcfc4f211f3161599c9f8ebc2aa5d4ea7278311"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/Cargo.toml",
+      "sha256": "12a25f77c65175f13448f4098877bb270de2f1221fd51fa0ad1a28da00ed39b9"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/Cargo.toml.orig",
+      "sha256": "ecdace19ddd41ff8f9d3c2b87d4cdc3daa1c5820d64a268817f6431ab1ba856c"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/LICENSE",
+      "sha256": "9e0a97848ea543aef745c98e84fde696a9a3e0735538f6daefdd3cb1942effc1"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/README.md",
+      "sha256": "b47cc5fcb41e5d802bd175f0014f5636eefb897419720ab125b446e0b7f6f666"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/examples/client.rs",
+      "sha256": "819859e84a75857828bfd47d6e653466ddd09e8de1ef36cc9367c2cb3307db12"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/examples/client_tracing.rs",
+      "sha256": "0c3c23752c34f9013204cb20a4ca62aefe8534cb971bfd28f11abd09837222ed"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/examples/server.rs",
+      "sha256": "040af5e11a3e1defca81160b28088d4ac6da94d53e7b3ef0171ca9f4104a7140"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/examples/server_graceful.rs",
+      "sha256": "e4d65a46c7d2f44266b5c540596da1e753eeb74c580c9265296352d6e8bde83c"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/client.rs",
+      "sha256": "31ba4abfd787039f2f016ec375c42e4f852d13ecd2bc0da265af2f2d7a3cb512"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/capture.rs",
+      "sha256": "e11c194268e124d617d7a174a28cfec35e7cc1573fed87eb5f14974a00e471aa"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/dns.rs",
+      "sha256": "3a4225a352ecc10c5724793697d967a58a5a6ac1e8f908eb4c0248e8e7d36657"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/http.rs",
+      "sha256": "1792585638e01d1db9ba63fc461f5bac37f6c624009689a70e99df0368d4e4ba"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/mod.rs",
+      "sha256": "6fceb8d3e6a56cacb22a4bd210518e0f7af0ce2986e089c1f2fa8c53460e2e1e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/mod.rs",
+      "sha256": "2dc7d98c83f3303d9f275fe3517a251ed7b0bc78ff101ab8f641158ee6c98abf"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/mod.rs",
+      "sha256": "0f25e92ac7a75b91e8b7bfa68a82853fc5c14ea4b5e46fe0c02c097e77bff578"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v4/errors.rs",
+      "sha256": "ae6df7f24ea4c81aaa955255ed61885f1fd5ffde597a050f6b08218f7c5ee134"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v4/messages.rs",
+      "sha256": "ff040b850a27a7aefcd2cdd4ce6d859847a6f6772fccab099e5a10704915bad1"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v4/mod.rs",
+      "sha256": "ffdf22b52c8be73999af7695552ea9cfa74372f193cecd5856c43712c62b156f"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v5/errors.rs",
+      "sha256": "e28013c08b05fc5743d9a475d4ab89bd563d22f0b2009b504f19b4974fde8880"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v5/messages.rs",
+      "sha256": "c4f5165d42e951f447eb04a48253b61cc082375cf34a971d0f7633770c0e5e83"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/socks/v5/mod.rs",
+      "sha256": "29bb17833d3167c80526553d13dce01406230e318e780b00385de39c2bd157f5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/proxy/tunnel.rs",
+      "sha256": "e584da5d3d91c65740a719a3a60d36d520e93e3a99289f0d80e04e2dff0383bb"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_schedule.rs",
+      "sha256": "5af111babc91285646a4137e4f8be683eae261a1cb68157005a018051d1d3b7a"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/mod.rs",
+      "sha256": "a893df119a025ce5e8226868f76130b50b15dd0a4c8ae007556b14f29cd3520a"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool.rs",
+      "sha256": "2628c26ac14dc48678f3cded2be7f5fd23e7c3304d5eeb99ca9a488e5bc2792e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source.rs",
+      "sha256": "c611472be412f65842ed26845f9eac10b6277a3fbd56969e306eb4550545ad61"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime.rs",
+      "sha256": "679aa6127535d1880e2cf470c67777919d4c6ab47406e14510c25eb41a28ff3d"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime/io.rs",
+      "sha256": "ef8fb8ff7d89f00fd7ef74a16322b38c9481d115e24f606d5097745dddf259ab"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/mod.rs",
+      "sha256": "f55757c447232eb50e0684386bed2952c7805ca0a652d44b57151f9c23262658"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/pool/cache.rs",
+      "sha256": "e3a2ef6305d6cbb0ab3832c113a7201a8f949139aa6f977074768b7ffc66c343"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/pool/map.rs",
+      "sha256": "80ac0d584b047a14503826a5e62a0c58b07a121658c55640eaf861eee02ebd97"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/pool/mod.rs",
+      "sha256": "cedd0f9c035af53e1e41d5b09a811283b81aed573fb42fe6969ac123077283d6"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/pool/negotiate.rs",
+      "sha256": "ac747a3e229ed246641d66dfd32d93bc41bba1f16d85e54504c871da41399524"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/pool/singleton.rs",
+      "sha256": "014231ef327f47497d27654363c9949e05d582d50cb9a24000516a015e71a070"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/proxy/matcher.rs",
+      "sha256": "c2478808ea3894a8344020386b3cfa377c82637c7e66220097371051d394c329"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/proxy/mod.rs",
+      "sha256": "1a6b7fdc17aa57aa356a5b8cd44c8a8401aa0a87258334ff8da62444a1b0885a"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/common/exec.rs",
+      "sha256": "7503861e9c5aa6c33c682bb9a0d9dc3a0e93a17b9f5402711f63d38069e34a29"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/common/lazy.rs",
+      "sha256": "f0c1fc4f5e6c0df3786f872f9915e399ca5a80b8f9fa5ad9d4898b943fbacb42"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/common/mod.rs",
+      "sha256": "fd19cd60e4aeeb12a67e0719f268904485040cbc435dd80f4d9338acf5bb2200"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/common/rewind.rs",
+      "sha256": "333cfde1eefa3419de76ff65367d30a48e03560cc18f4b5770d883b98e7ac864"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/common/sync.rs",
+      "sha256": "047d79590bbbf59aae35664b1b38f4d0e6478aa10116ab33a9f231e59b3fa32d"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/common/timer.rs",
+      "sha256": "8ee2b70568c2a87e1cd9e84084b11255deb995a3cc720723a787ee411a3a79f8"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/lib.rs",
+      "sha256": "a12123fb8ad0bcc12480a567099aa9836f2ca6c7c80eaacccfc738a557e9f731"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/rt/io.rs",
+      "sha256": "97ac2c2bdd00347d772c4d6b2cd733dd78a646d7c0c60af4294ecbeb1a489887"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/rt/mod.rs",
+      "sha256": "5726ebeb27da45b437aa65782915d1b335baf7ec6c2f3abb3a5f2dac24778514"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio.rs",
+      "sha256": "143023606be7994c8ecbf538eb5816cbedd62172cb3fbb5f981ea411a1581d28"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio/with_hyper_io.rs",
+      "sha256": "67b91e27248354ae138507a78dd62bbbe845ef16bcf6f59e00923c5877541f7e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio/with_tokio_io.rs",
+      "sha256": "70f30a1475ed64047800da86b4e24a4a74e340be5046bc043f2b0b1ac8000fa5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/rt/tracing.rs",
+      "sha256": "5fb8be1bc1aec598707a73f949f28464c3e8da98f05cc5b4dee950b0070f6876"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/server/conn/auto/mod.rs",
+      "sha256": "0f28859d1e7f2b6dd9bb255a07cd6e11d5acc0caf87159ea9217ae5e1b3d67d0"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/server/conn/auto/upgrade.rs",
+      "sha256": "293d823c1fb34d4bb505f835b8b26255a7bafc10c56bc9235c3cb151ebb1e72c"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/server/conn/mod.rs",
+      "sha256": "f192ca3fb030351ad22dba11f58edf02503598e3f9c18652a445f3973d16b723"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/server/graceful.rs",
+      "sha256": "39d6fc356a4112125ae61e1a083e0875a486ffc55904aa4697165b80df957e45"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/server/mod.rs",
+      "sha256": "c30d25551b75ec6c2915ba9da0a5638488c2760a27c589c02415dec1441fb746"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/service/glue.rs",
+      "sha256": "e79b4226013d4b3eaaadaa72b2dc7dc264cd8f5b2267d907a19f4f0e1c1538f0"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/service/mod.rs",
+      "sha256": "e70a66aa974af3500cd0ab1e68397079f8b271af69276b6df90216df18420e0c"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/service/oneshot.rs",
+      "sha256": "55c2384ab2f5490faaf5f839cbd8abc8e3fd7bb24c870e7bd90ac760c6900f21"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/tests/legacy_client.rs",
+      "sha256": "58f889ce2f6fc51cfb02c6b7a08f80d8f059e85ba98275ec3353af460622fdb6"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/tests/proxy.rs",
+      "sha256": "d923304bb47e55a9653b45c2b186a3b845c01c14bf7775788152abd6e9126d35"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/tests/test_utils/mod.rs",
+      "sha256": "9f922de06ad05d8c88e31d08850b4d48e751726c503cb3fc661c69431bb428d1"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/.cargo_vcs_info.json",
+      "sha256": "ce2a9a274c279810c04796e650842b1db82faac0a8da8a59a5f2cd536774f256"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/Cargo.lock",
+      "sha256": "eccfa5f4325ec5623d82c7ef8a1b598a647a885f0048962ed1b558bf7547d023"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/Cargo.toml",
+      "sha256": "860e543c05cd8633f0d82b14f9aa8603ed1a48e93bbdc8c517a238440b51d73e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/Cargo.toml.orig",
+      "sha256": "b8f4b122b2720d5f8d51dde90ed38d731e63ab532a7cc6f4b00095404be1afa6"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/LICENSE",
+      "sha256": "2d01890414494742ba4a509fcec8efa40f6d8be22cbd72be7cff08d6fda4ec89"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/README.md",
+      "sha256": "9f8d9269b8bfb0cfb17d119c65cebcc33f67310bcec7fbf06b8527def78c1502"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/SSX-PATCH.md",
+      "sha256": "270a6696f85b33d647d7e8511070567a9952cefa4d66a8a7cfa69b2c95a944dd"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/body/chan.rs",
+      "sha256": "ae030d3294c4608571b22e24a219684aa289f4980d2f7dad054a306fb3779ad9"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/body/incoming.rs",
+      "sha256": "beda2a554f36c93036ebba3cf687aea4cab79c291213192df488c016402f2b5b"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/body/length.rs",
+      "sha256": "81a1ec988bc76df77a65a6a34d47c6935eb3f72f242bdc6f0c141e02e9a6f498"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/body/mod.rs",
+      "sha256": "5296424f2f8148925c8cf18992e4d59b827b9fa84eb8b3a8dad040c532ce04ef"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/cfg.rs",
+      "sha256": "de5fee5bba45a982c10e8f09fc24677be5494bf6da0b39a3a132f0f6eb3fe41e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/client/conn/http1.rs",
+      "sha256": "b463ecca328eb6968391ddd2826d420c7ad6272c084438300b809727fc2bad07"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/client/conn/http2.rs",
+      "sha256": "0ec553b8106fbc1eec7ed2b84ce4f37128512e4bbbf73096b822c2c1a8bbfcb5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/client/conn/mod.rs",
+      "sha256": "9a3a11f287ac5f8a2eb2f27af4d66cf201f92dc580f773f9cb5495f32756ee28"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/client/dispatch.rs",
+      "sha256": "cce049418dcd9e1700b87701d6e78a4a021ba0e9912e9b669fec3d3f037d4e29"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/client/mod.rs",
+      "sha256": "6bab8369943bad42c3258eff7631efc757fa6db8c56bf4271dc48f1c45b243a5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/client/tests.rs",
+      "sha256": "de0001609ef0b82d34d6e152b20d19f0b2f79ab6708bc4b3748a40acd3325238"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/buf.rs",
+      "sha256": "5fc624b4bebfada06c394babe3e654346f51cf48b9465a12e4d21e3e783284c1"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/date.rs",
+      "sha256": "6b48438b51d0cccb110112acb0eb5cbd87f5ad8089bf5301c633548e801baae9"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/either.rs",
+      "sha256": "cf162a4087419ea3d83514177da81813e301736bbe5399b58f39c96f214c6429"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/future.rs",
+      "sha256": "dbeb3a936470ad0fc320780654c6437b9e94c17795ad33a5999879cf8bbe9002"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/io/compat.rs",
+      "sha256": "cf65d083ca6d83cd627cf787dd12c0223714305adfeb3f2ec9277c62d5a0ced1"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/io/mod.rs",
+      "sha256": "1f9002411f8a74be746e86d7a6afa5a7c3bdfe7c75943bed5ac752b802b1594d"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/io/rewind.rs",
+      "sha256": "b31df6879e14b2d6fb0d07eb5a43033eed9592f68770863bde4303597d958122"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/lock.rs",
+      "sha256": "7af9938238eb1fc1176d0f97a04f8a286d632cd9283b0afcf1f075ecd6bbe25f"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/mod.rs",
+      "sha256": "c0a7b8316329e37b6e5776fe585adb9ef482e889de5d61634dac686a69b480bf"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/task.rs",
+      "sha256": "a85877dfc0d233dacf6df0568d135ee7b0abb1f54873cc237bbdf4e14240edf5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/common/time.rs",
+      "sha256": "348a438955d3984b0244090bd8f37c10e6626ecc675bdc08f964b5217b1f9ef1"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/error.rs",
+      "sha256": "22b72baf2c46ced7768006271d3752efc2f78cf848ef138540db6adbdf63ea10"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ext/h1_reason_phrase.rs",
+      "sha256": "14ce65c6ab3d8f5437ccbf7296e02d7a57f25e82d6146ae4b220efe289f2ceeb"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ext/informational.rs",
+      "sha256": "1e5618061f60f55beacc7790f7b817be3dd1997ed1356668161802a6bfd73bc0"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ext/mod.rs",
+      "sha256": "7b11e6cb6200b867bc034ca0829058588430f8622eebf591bf41043678fd27a7"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ext/send_operation.rs",
+      "sha256": "26676183dde5bba0773b2f0b4904a64fbb1f0c7d5b7ec8b3b4c9242b8e2cad44"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ext/source_read.rs",
+      "sha256": "2ff4650ac2a52f6b50a5fe067a6ca44b6d9b2b94197893b2cf90571a09546868"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/body.rs",
+      "sha256": "614955cfca938025a7b471d9bc91004edfd1ff028b66553ce757b5b0ec040dce"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/client.rs",
+      "sha256": "7da8af38624d2059e6a7f03eeaeeff44bb6424fb580ad41a361663c9342ce5bf"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/error.rs",
+      "sha256": "dd269cd749cfe2679ba499e9dc0832469cbf4f8101157fd88d00c0fb526868d8"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/http_types.rs",
+      "sha256": "e2bb6c4dcccc79c41bb66a25114cd11e73e9baf15dbc0961f94d2ac1bcf8cabc"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/io.rs",
+      "sha256": "1d70f9ffca6dfb6131f83c75e7b5e3631dd1a25f1854032a40891622b016ac25"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/macros.rs",
+      "sha256": "6bb6f08224be10c40d98434e2130dea3c9ca3c40b9d11b18f43619624148f080"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/mod.rs",
+      "sha256": "80639b0ff428ff21ebf1e87c7800558002efc5f51424fe21fba6bf57ca8818e6"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ffi/task.rs",
+      "sha256": "3d81ac2f00965c7dd24c265ca733776abe5d3ec404dace230d70d204bcb624c5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/headers.rs",
+      "sha256": "c8acc76bb2a2aac07896df1e356d84b7c1d9d718594cf950277b3b5ffbe98fae"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/lib.rs",
+      "sha256": "d2db6fe1da5f09a8062a8fb4f44fac931a17220f5c18603ff455846706b3d243"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/mock.rs",
+      "sha256": "7c77d16f952bda6ce51995548b1a1b8652739fca70115df96598440a524d86d4"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h1/conn.rs",
+      "sha256": "6494033e2abb052b5be4dcef0f61bcd65339360696933f9aa43f09ea8b99e64c"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h1/decode.rs",
+      "sha256": "5fc4f3a580cdeef18ad986fac7d63099637d0482acfd54f78d7ec08de40b295a"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h1/dispatch.rs",
+      "sha256": "e0416c9983bc27d4468f103d730479efbae62b335aee0543642787e991d29872"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h1/encode.rs",
+      "sha256": "eec0acd88ff2a10b3d981417b2c6daf2aef7828a9197d1b16e632a21059bf136"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h1/io.rs",
+      "sha256": "e55359959393afc7a96d1961aae2e362657c67d250f79e2e7bcb13a307c4dd0e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h1/mod.rs",
+      "sha256": "f35f0b8ed6ee959694b8776acc0d7d754b0e4718a755b2b20d1fb8c8828dbeae"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h1/role.rs",
+      "sha256": "99d47d23c90ee3bba00e4af1133d4dd1991a9785c59f34f6f9e9128304f022e5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h2/client.rs",
+      "sha256": "56d715d09cdeddb91606dd0a9cfaa3de360ef31c07179ab9df6d24d9da0868af"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h2/mod.rs",
+      "sha256": "8f10d6023aa310984b7e9450e9fe9db2dde3a5c34ad6f78c6a16210ad868258a"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h2/ping.rs",
+      "sha256": "44cdfcd5ecef5fc7d5ee42e87ba4be6a1f02ba13c6bb813d0a37cb6c9162293c"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h2/server.rs",
+      "sha256": "4a31750ff85d513011234d497cd00114a6b8ebb83e7c416cdfbace185e9fb47f"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/h2/upgrade.rs",
+      "sha256": "ce6bdec717c291a4ecbbc2354d3e1170875d05661946dd1ab9d2af2e58ccb376"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/proto/mod.rs",
+      "sha256": "7a1ac66edcc24b364eae3581abf151459a5259b4c521561aa7203c9ca4473da4"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/rt/bounds.rs",
+      "sha256": "bc1d1865d67672625afcfef4ef495c249f94b73c9cd6910662d3aed2e73d0f32"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/rt/io.rs",
+      "sha256": "97231117887089e0a9fcd165b14f839c9abb6e3fc75dee5c02cb76604ae9730e"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/rt/mod.rs",
+      "sha256": "4bdc9348a48e924b262c965265863a7ff465881f91c393b019120854241cd386"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/rt/timer.rs",
+      "sha256": "9f377be659ac9f60a5de4716d17bea6dd6f1af1f5693166db4d2bbb3b8b2c4f6"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/server/conn/http1.rs",
+      "sha256": "6f84d0e780f49dc8745b9e54125edf1360b1ec54cada21c0a238e5098decf162"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/server/conn/http2.rs",
+      "sha256": "625bc621eab3dd7110574a8e5e0bc9bfe931556d062cfea8cef104c708802ea5"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/server/conn/mod.rs",
+      "sha256": "b2393dc0d68c09b560f7c9bcc61ed3bf99fce4d746eda9e1ad158891ee56f2be"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/server/mod.rs",
+      "sha256": "192142f7d2f2da63699abeaca0bbfedc06bd1714531da2e53795828da5e946f3"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/service/http.rs",
+      "sha256": "74b6a556f77bcbf6d2a17e8be3d619c54cc2e73f04bcb66666169d3f40c78a11"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/service/mod.rs",
+      "sha256": "91711508cdef3879404859238f5978eb3e066dcdae1c2c06c8bfd84787103053"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/service/service.rs",
+      "sha256": "e08f14d369311406bf34159f4e831d1dadd5be83bc78a21fb3dad78031017df6"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/service/util.rs",
+      "sha256": "a35d37abcd2fcf5c3c6a0c0241a9a9361922fe0da989f3314ab0b490db6b2b0b"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/trace.rs",
+      "sha256": "a766c472433c7569440862e978eceeea78220af170220e9fdc90b71bab731344"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/upgrade.rs",
+      "sha256": "a9406f2cf45bb2f3574371a60cab20a60733f36fee65828c4f395f1fcf31e520"
+    },
+    {
+      "path": "vendor/ssx-http-source/patches/hyper.patch",
+      "sha256": "e5f0c538bbef71a08cb56048e0a138a2278155ee5b7197b22c438b2620fb8750"
+    },
+    {
+      "path": "vendor/ssx-http-source/patches/reqwest.patch",
+      "sha256": "02b0281af77f932c9f03ce9ed49f94e9ed5b467a237ce5c4de82e8c5518e2e99"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/.cargo_vcs_info.json",
+      "sha256": "dbafdf8a7d169124d6e1a995ad00745d0e78324d96ecee0472333a6956d61fa9"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/Cargo.lock",
+      "sha256": "ad5f07a0e11fec6daa3f13ff3573b09d6336ac2ca744073353bcaf51b04ad04a"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
+      "sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/Cargo.toml.orig",
+      "sha256": "5ab1bc6ce8c058d20620f65c9241445f24c5c1d8cb46246c8908499986b49d1c"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/LICENSE-APACHE",
+      "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/LICENSE-MIT",
+      "sha256": "dd87e27dfbaa888cb77ea34592648a7743636b8dce07e49543bddda0fcfc73bc"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/README.md",
+      "sha256": "d353552b3feae9e57c7a8ce10be9b6d22bd6df5268602cd2e01f21c345a8cd5c"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/SSX-PATCH.md",
+      "sha256": "b846808d15048cf92137b06aa354a3071e95c83a9021009fe4038ed8f0a6e38e"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/body.rs",
+      "sha256": "5f817e5c8713fc08aa410057540c6ffa37a1595340bddd2c2f39479b5c0103e9"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/client.rs",
+      "sha256": "b1e97d48e925a46517a2b88c96b7491a5ea669c853bbff18aac394c98e324530"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/connect.rs",
+      "sha256": "709f7c95884ac1ac4d6759d2cacaa7140c3f289a80fa4387de375f040166ee02"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/dns.rs",
+      "sha256": "0b0876288eeba6c39331b3bd6b8b01cd4ab01e0362a1e859d961fcc5d520b43a"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/mod.rs",
+      "sha256": "3d7a499aec889845749098bf620dbd8c7e5338b5104a28dd12d3c8162532cab5"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/h3_client/pool.rs",
+      "sha256": "fbba471dd143a347971df9f5862467317ae690ecc1ec5787340bd9117bed46c2"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/mod.rs",
+      "sha256": "a6f6dac9ddb6ad9cd406290e5a441d5cccf62e1e5cca78ef20033ac18cc10a37"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/multipart.rs",
+      "sha256": "fa28f3689c3975cad971f902c368b89485317be28aaca0ea4de67ca71413f093"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/request.rs",
+      "sha256": "f5d54ce05c7b9e67536b5b44f210f0c4790adcd7e4b560b30b975aa9d04723b9"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/response.rs",
+      "sha256": "349e3f3890472a3361040778a5ea71199fa88446a9a6e8900cb6e04d28c93226"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/async_impl/upgrade.rs",
+      "sha256": "fae5a2cfcf92962613efa939301cafd44c8e47066c69dc652f7eed7626147a43"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/blocking/body.rs",
+      "sha256": "578d58f3c661a4c43b771e982bac1dd08a6fedaf98f8baacd096fbe0cad63f7a"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/blocking/client.rs",
+      "sha256": "c451ef06fe74bd4dce581ea0d2514c6944e6d72ff97703b1e5d133bf7a3d8c25"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/blocking/mod.rs",
+      "sha256": "0f6e73f94fc6088261fc93b3b95fa99b6293fdd482103dcc08f2bf8c5ca44f4f"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/blocking/multipart.rs",
+      "sha256": "9b023b57b7f075d9d2ccd48c530cb29344f45f0ce4868f7dcc8ce9d093f6b312"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/blocking/request.rs",
+      "sha256": "1d0646f1a7f8578de096ea57be8920286ec1390849cad04cfe1f0ff33f676726"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/blocking/response.rs",
+      "sha256": "0ef0d5bfed59109238316f0f6dddf44dcfe68843f4491c59d24fab166cd766f4"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/blocking/wait.rs",
+      "sha256": "2146c76d4c930aee3f18a03d7a030921cf5dd86e4b29582908b4a44be6e2166f"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/config.rs",
+      "sha256": "21d3c917c317e2c56ddc227897f88ee0506b11fdc83d1efdad22d4a9c4796eed"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/connect.rs",
+      "sha256": "45b6d1365c28df984a770be2b5c48730557cb44af8c45e32c29d546519587bc5"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/connect/source_http1.rs",
+      "sha256": "04f3b3d0c39085b999dad12da6f554702ffa178fd89a3d792538a4ff9e361f58"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/connect/source_phase.rs",
+      "sha256": "42c5a06be75c81e03b83d80953a7560a3b1737488ef63cb0cd2e9bf0877678f8"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/cookie.rs",
+      "sha256": "05b50f0721d98b237607529f91330c4405eda3b92931ead1ead92645b6fb2099"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/dns/gai.rs",
+      "sha256": "d078d9982d7e5e9e977e90ded62080fc3ac0b124753de508147f15ff8818aff8"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/dns/hickory.rs",
+      "sha256": "8807276a535b1029ebf95432f885ae8434cca46d8f20c6f9a532bed78e786e41"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/dns/mod.rs",
+      "sha256": "4eb01dfa6fc76e08ba7501b7948d8043a12d8406045de828b89d0e8cdfb4f874"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/dns/resolve.rs",
+      "sha256": "ca68b4326c3da2ee6b1b29036e620b1445c4bb2a1936911f5dc635afa534850f"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/error.rs",
+      "sha256": "b7aa133184a6519cd71d6f28fe2424f2db55ea4b9bef3a17b5df2d8be176a0d5"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/into_url.rs",
+      "sha256": "761e9d0e04f652b201317d746cbe2a538de0604240914913fbe968114d88893d"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/lib.rs",
+      "sha256": "0c70868362dc2b6b8353864fbf0b3ae7aaca53cea4ccff4597a3d2336c8e0477"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/proxy.rs",
+      "sha256": "f48c0ec2ce2204850f8776e7bc9a9fcd2ee77923d69991704e384db5488a8e1f"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/redirect.rs",
+      "sha256": "d563f08610c54af22e7848c4c9fe58b08fdd3e242c48fbc3dbe4cabcba6577f9"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/response.rs",
+      "sha256": "12cf82de2499a426686ed4f3719cce73e269b7b9ddc9c88458e7378beb2c58a8"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/retry.rs",
+      "sha256": "d637969c7b4920bd388e32d1bf3182267df57d3ae35ffa3894df5da744d4ac8b"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+      "sha256": "ef614c4e0f5edd9511aae96399787435545639549ab3e0da2bf05a0d88b126fa"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/environment.rs",
+      "sha256": "254dcdba0a70a0bc3dcb77b67450ad4496084369ab9c2d4c53ade978255ff299"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/os_proxy.rs",
+      "sha256": "99888949d5e5cc26d23169941649022e107b36d36a7758266fb1aa5d52a5eec8"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/platform_api.rs",
+      "sha256": "3740dbda09b8b1dcf56a8cd60bbf8578b3cf0aaf7df6c81a5e7afb4836882348"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/printable_data.rs",
+      "sha256": "e31cfbdbdfe9fa96d5f97580b90801acd76aad0bb4941959f827980ad6f3c9d1"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Include__cpython__unicodeobject.h.txt",
+      "sha256": "a3f5e7c3f6795fb1f0794fd4e41df2fc823c1a7844e82fe96ccc42c94f63146b"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Include__patchlevel.h.txt",
+      "sha256": "16a8955952cbaefd16f85909b73a0a6c182ec813f9544a12c28897c95b8d3f22"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/LICENSE.txt",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Modules___sre__sre.c.txt",
+      "sha256": "6d847eb25d5c50e3b33dcb2e39accd9c73f619c2d211a34ed32bb93e9c7299a8"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Modules__unicodedata_db.h.txt",
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Objects__unicodectype.c.txt",
+      "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Objects__unicodeobject.c.txt",
+      "sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/Objects__unicodetype_db.h.txt",
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python_text.rs",
+      "sha256": "25d0676eb1b1f704a9d537b7d4e00f71109a39371ad37e2b5ed9d25ba9550ab6"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/python_text_data.rs",
+      "sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_clock.rs",
+      "sha256": "dfd960fe5d590ddb9278312a27b697c5cd5a7f83055c43f58e0e5648efe1ee58"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_date.rs",
+      "sha256": "ed578904597951e8f3b66a848c7870bb5146dc1fce56cf6ba7e770a3d2cf7031"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_headers.rs",
+      "sha256": "5d58b3df98723667456df2b18c187e14a851f38099cdae01842c8d15295ae1dd"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookie_jar.rs",
+      "sha256": "3637b7502ec0d864e674f4946904f7ad473fbaf565f9d5ecbbabd1cb77f76677"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
+      "sha256": "e47b5da392bc7d1ece44570a4895230b422054598a18beb7f4937ac5c1b4f51b"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_text.rs",
+      "sha256": "0483e5528ac2eb2c6ae18f3a6193f75428c6dd8155bc00aea86405ee023b475e"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/tls.rs",
+      "sha256": "a32a7a2cb98994af681c1258315512c379988ff3fe500eb6e51a1a33fc4d6a6d"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/util.rs",
+      "sha256": "427379213bb803187023327eba8d15aed7ac9d42a0a9e874966fd0278eb948a8"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/wasm/body.rs",
+      "sha256": "81eea1079d4bee8e23e9be0b7488a07373a23c8eddf5c05aa9ec2b83810f9061"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/wasm/client.rs",
+      "sha256": "3f88f32bb51051d54d5dd9fb9256063da8cc762aeaa1d8b03d3fda88fae6969e"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/wasm/mod.rs",
+      "sha256": "79c7aeac9b9d271e4cfe931b39314aef3a7ad78184a84424306e772652535e0b"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/wasm/multipart.rs",
+      "sha256": "4a347e2beedc2686d5d3818e205715cc6abe7ca678e26bf89de89a2ecb548f40"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/wasm/request.rs",
+      "sha256": "51f71c622a95f78c0d2251353bca0ac428caf8ee7ea34c1285e4d50fee515aa6"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/wasm/response.rs",
+      "sha256": "c7931612eb1c370345e938c8ce8a1f600f42b479ae81441f20d8832948cdd7c6"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-cookie-proxy-amendment-v1.json",
+      "sha256": "5295d49c134405bb2f9465654ea56ca5661d6e60851383369f33fd08b48e0345"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/NOTICE.md",
+      "sha256": "c70b0479ea5a35f0b71bcdb83fa681ee2f3598e892b604054edf4b9cf8a7843d"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/PROVENANCE.json",
+      "sha256": "b775068938da4749437686ad1061e5071dc1010b0b1de0319a5ca95f94a2f1fd"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/patches/rmcp-native-dev-fixtures.patch",
+      "sha256": "df1f5f8d2ce2ec3f51dca942fece1400a8fa860ed3933af70ac4df5df4a7f3ee"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/patches/rmcp-source-policy.patch",
+      "sha256": "e67e3f5ff3ef107bc1ba9d77d1b4fc0767da15185628476bfa22ca8e20c6e17e"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/patches/rmcp.patch",
+      "sha256": "a978c006227dc9b561b5d7867740588b280edc483647145fce0c546b300bfaff"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/.cargo_vcs_info.json",
+      "sha256": "2e9efd3603fafd7a4125ebac74cc3fb9629645f8731d9ba3d3af32d00733f523"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/CHANGELOG.md",
+      "sha256": "2fdf8da6bf3052c375b3b0cc5613014a888a4237ce9d737387e7eaf37d9684ca"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/Cargo.lock",
+      "sha256": "658d9f9b421b359c234f44a071de8dd0cc7c25a5855759c23c2b3f4d04bafbe7"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml",
+      "sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml.orig",
+      "sha256": "6bd53bfd3ef16ad9485ca35cd5bb27da3275df911eed3f84b2480cb1ebe7e46c"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/LICENSE-APACHE",
+      "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/README.md",
+      "sha256": "e2bed55087789ee5f9195ef39eb17c9ba2430a20806e89f3cd1b070a4364812b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/SSX-PATCH.md",
+      "sha256": "2f7941f342e474094c9c5a1e41c0bd7911ce6dfb55d17e81d4a8cde733bed726"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/build.rs",
+      "sha256": "31b905abf91292bab290271e993e347e06a1944e6305f742f69dbd01e6b89349"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/error.rs",
+      "sha256": "240e197f7a463e848202cc4883ec033c94a20a47d86201b28c9dc80a4d25818a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler.rs",
+      "sha256": "dc1087d79c9566009906a26162321096ab77aea17499dfabcbb49964aba5b9ed"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/client.rs",
+      "sha256": "30fa690622fc9e96274471fce8c210eb12daac81d44ee0d45737c90df061de7f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/client/progress.rs",
+      "sha256": "d190d05e4b22ad49be7820594b0463272de031f5b97084b5c50c0a157758443e"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server.rs",
+      "sha256": "f5f48bc77c329c01505c26f59ca93cfc16e1be558b219459ffc950c238bde22b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/common.rs",
+      "sha256": "0b7b2b8511891dee305245459eedfd7cb4bdef8f0b2cd6c3806144e53282cd2f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/prompt.rs",
+      "sha256": "5d9ba6444c1b92da54c106f62dd4734ace3e1ff3ad331207c818ba3446d489ee"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/resource.rs",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router.rs",
+      "sha256": "d3d3c473bfcac764461f410a989c1b41b465048d29b790d169bf35aab7a8cb23"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/prompt.rs",
+      "sha256": "2245cac16b4d82c89363589f876681e1911e5cf70170c42ed3cddbdfe0f03eed"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/tool.rs",
+      "sha256": "aeeaaf8a6032c457833fca1d25367201349354f0a7e28a460db3fed077f4a8a6"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/tool/tool_traits.rs",
+      "sha256": "4fca15a89dac8627c79488d7d2ed53df84d730a0e2b977a00781d6b35fab0044"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/tool.rs",
+      "sha256": "8249f076e95dec0c29e3a4ed244afdd246839259beb39284c45ca4136c2a7457"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/tool_name_validation.rs",
+      "sha256": "1ada28573a196eb2745a24d98fcccff7b4553deae898f4840fdd0fd5cd215897"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper.rs",
+      "sha256": "e594439b9d2c2df8911fb16c93290c55f717db83d74098b9d68817da44f9befe"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper/json.rs",
+      "sha256": "571fa0e222aae051add1aa9ef1c77130a3cb55950e7884a55cb3889e2b6195c3"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper/parameters.rs",
+      "sha256": "4b2ba0e54cd347a38978bfa6c8fa1e2dec81ff478937b2c4c8601535549a9d4f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/lib.rs",
+      "sha256": "075c3bf5ccd74441c182da6cd3cf44943d7a5cb6009c1b5e30dc63fee44e4846"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model.rs",
+      "sha256": "b0e808e9f325235e3a19ba1a8b95feec5226b57bf243d02d3dcce81f4c3df63a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/annotated.rs",
+      "sha256": "b84a728bcfa14ce969d9407c3833050b4c6a5a5165bafdd69741a1ec51652e6a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/capabilities.rs",
+      "sha256": "078db0cf7e7a9569203897cb1ed671ba789c99fec631b3f16e8a0d1fc10bc1c9"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/content.rs",
+      "sha256": "dee55056d587a4c4ee56114526167bb8cc7af8eebb4fc621465913330fe622b4"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/elicitation_schema.rs",
+      "sha256": "3921e0ebbad32b0df6fe4c788f35914e786ce4356a79c471825d20f72a8e37cf"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/extension.rs",
+      "sha256": "64eec582535739e33ed6c7ecf8aeccc9a8c1558d1457acc8437f4e3304c72ac2"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/meta.rs",
+      "sha256": "2a6081a34f31486f227522d6f9d6efc334b5ee62ed371104db66c1e020ed8dcc"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/mrtr.rs",
+      "sha256": "462fc966dd35ce4a1deba3812fca4b2a2a7e614e50617acde0ab98c665d5612a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/prompt.rs",
+      "sha256": "8e8f682dd127fc764d2ebd2b0eee7f7e79528202c4851eed1f2ebe11577178b7"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/request_state.rs",
+      "sha256": "41e69cad94869be4b93120f3cd39a10fad4a3730585240b712c2ada1b311b416"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/resource.rs",
+      "sha256": "474ec6cb64f5e60711ebfd80269dcc604978daa6030dd08d20eb7b3aeef5789b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/serde_impl.rs",
+      "sha256": "14e5683f5a4b180a7b326953206d1205ebd1f17acb6aaceb0cd8d0bef6a701e0"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/task.rs",
+      "sha256": "28f5f256ce73d733d7536d20abe900e3b0f6533425b23e9ee797c10e08f66858"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/model/tool.rs",
+      "sha256": "5251faf9065961e2a8521ef5e91eb8466885c609e1c5d2ea716604b51392f47e"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/service.rs",
+      "sha256": "d4a625e7e49009b2ce25b4498ddef88ef6242915b7aa2e53826da4e9b531d473"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/service/client.rs",
+      "sha256": "a122773fd2aa273e7707c3b083ce78094acae1c19fd80f319ce4bebc8d4f0814"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/service/client/cache.rs",
+      "sha256": "f036c13be5dd5058867e9cc1b8d0764fa179f6b39978da650d91627785db81e6"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/service/server.rs",
+      "sha256": "8637e3d780d7b2a6708871998e0fcc7ff416bbb615df9ff4199e953562c0d794"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/service/tower.rs",
+      "sha256": "4b1971d7ab78ea57ef32380120ed8c74865632e034e51ab7d46448adafef8d29"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/task_manager.rs",
+      "sha256": "814e43d227380982cf076005047141991f08931a1f2226f0eee72390fd9f2529"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport.rs",
+      "sha256": "94cbb9c311f7c4e4dd61e231e3574e2e581941a4b355afb2e2be4396e0e25d31"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/async_rw.rs",
+      "sha256": "b4234e7d5df9f80cdcc67755f64c72e4fe7909749754ff569e518e6ebcb7d846"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth.rs",
+      "sha256": "80e2e7d6ec5626cba8441518af7f9c4b73a79540db9b129c712dbf47e186656d"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/enterprise.rs",
+      "sha256": "e685c7bd4c5087a14b834805c1afd595a7d9d2c40a8507111750466836bab5c2"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/enterprise_tests.rs",
+      "sha256": "77aa0d65839d5e4e41c0e0fab1aed5ff2e6e97558236146d28c1a3fc02a9d7da"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/child_process.rs",
+      "sha256": "8612b2607643c89d1bfcabf222070b5f9355df788aabd0cb9d331d764263810e"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common.rs",
+      "sha256": "8a4a32f5e206f276754170232224ac9697de6a53240a7482d2a98b53380ec908"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/auth.rs",
+      "sha256": "7e0e1e85ec7f8836dd2295c7608eb8e2cf05e5b72306277dfe2598fa538e9ea4"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/auth/streamable_http_client.rs",
+      "sha256": "7746ca9648b04514b96a9b1e8c1e481a914adc3d8db23b6dee647f5eb156ad89"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/client_side_sse.rs",
+      "sha256": "c09cfc644ba4fcec523d255dd014452755e0da3dc1af1bdb83e6122aa59a5544"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/http_header.rs",
+      "sha256": "910010a61f31a5fbd39f583638fc69132d29da757c4336081569dc09a9a93c38"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/mcp_headers.rs",
+      "sha256": "dcf23cff04bb514dbca9a1b9a3931fbd240dd356403ecba7b46449d3f4c3de59"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/reqwest.rs",
+      "sha256": "469486be9b576c6a1ff6a40121dd948e7b46d1de82ad5322a6438cb1567099e3"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/reqwest/streamable_http_client.rs",
+      "sha256": "b713b293a5b7f64a8ac625b40863cb7019167a55d6ec80c999e447fa797aec03"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/server_side_http.rs",
+      "sha256": "c4f82b5a6c36b8e48d8124741c5aaa0764b8e27afb16ee022f19af987505a376"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/unix_socket.rs",
+      "sha256": "40166733db6aa4ceb12a4a09681333aabad05e56c1e0839f4798cfed552500ec"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/io.rs",
+      "sha256": "86cbe078a7c03964340570d8940ca6a3276cf7c8056dbd4d64a9f654a7fa077f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/sink_stream.rs",
+      "sha256": "9fad3dad1a6adbbc231b52929f3360bbd876fcd167cd8284b06b67dcd882935b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_client.rs",
+      "sha256": "72a36d33f4906ba9c50f99ce2cd8252fad193e7efb65d24b411c873fdfa6df39"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server.rs",
+      "sha256": "d6f452846ef27b422c2572e1b9e8b9955f95a57d0587e1185612a147275ede66"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session.rs",
+      "sha256": "aa3f798d4c6eecc6682134f43438adcc5d4ff1640a202109843d48d276b5fc30"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session/local.rs",
+      "sha256": "bafdbe6ad4bc4a272cb95a84d3324962d5c1be51f5bec5fb081b56568ca838c7"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session/never.rs",
+      "sha256": "5a490461b6f7f84bfb02b7e7aa0b69861527996e1f8d786744cf07beb4400174"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session/store.rs",
+      "sha256": "7b7efb9f014464a060fa52fb6cdc4cf4acc734035f51048c5c39a4e5d15a01ae"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/tower.rs",
+      "sha256": "281352686d04c7a45dd010b2ee158737cad1272e0e3b667e255baab48a6a5147"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/worker.rs",
+      "sha256": "efc23380046726fb20daea8ad868ca38825155f9b6ddb1ec3fe51644632aac76"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/src/transport/ws.rs",
+      "sha256": "57025a04e15634a80dc4e8247601b62014ce835568b049f3ea433164bdd7811b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/common/calculator.rs",
+      "sha256": "aace1a629823077eccfd2fc22da9c02c03929e0724df55c9b2270f0fd00efd8d"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/common/handlers.rs",
+      "sha256": "1d239d8b79d6943b42389b4aab8dc969c941772490b500dff1a2f57c9d70bd97"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/common/mod.rs",
+      "sha256": "97f837d42a2c8133d5cff7d58910a67cef0a67798a728d23097f0d60e455f961"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_auth_error_classification.rs",
+      "sha256": "1452cd4bcaedf1d484e5799a889b0df3a373b17b7b712fd8b6f5a97b93b028a6"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_cache_hints.rs",
+      "sha256": "b99a0f230ee39a805f569382760b81dbd99210ed7e631efbe9f32edc9f3cb20c"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_cancelled_response.rs",
+      "sha256": "bab73041c697003d3b67efcf824846af9b236e2dec702399c3f630561510f57a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_client_credentials.rs",
+      "sha256": "fb4d715db23df97b270f81065c703ab911e473d392f3991a4acdeb6f09f039bf"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_client_initialization.rs",
+      "sha256": "70232ea02e09be3fa927ff91a9e2e0ff458ebc1f688e550309f70b5645a0c13a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_client_lifecycle_modes.rs",
+      "sha256": "2f1dee429d583750d69aba41baed7ceded9eeed0fcea6b1c8c36857cc949e154"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_close_connection.rs",
+      "sha256": "918772f5ceb6b3a8fa2a801b85ec94d0937e74db527397c0534b0e227c1e8489"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_completion.rs",
+      "sha256": "38eaa4c98ed94895b406be681d13a215976f0916bd96d230920816bd802200fa"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_complex_schema.rs",
+      "sha256": "1b5821bcb3efd7e101c5f27a7fb7fc98d964c9e7e57527ed021c872b2e2fd546"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_custom_headers.rs",
+      "sha256": "eb4b1dd8b438e3ae6499951eb8c3d86dd6d4eeb703dcfb485105dfa7199f99f0"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_custom_request.rs",
+      "sha256": "b73911b23eefb352a07baa5a4294b64f25a08b53525b31b6929dd10fa4db83e6"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_deserialization.rs",
+      "sha256": "77667c484fb67477b1e11017bd07ddf364b84a475177b3c0fe763ee68186f4d1"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_deserialization/tool_list_result.json",
+      "sha256": "6bf673681ba3b6a30380f067076b0bbaa7c63950ecc5f77725ae0b8383baaa9d"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_discover_http_client_startup.rs",
+      "sha256": "8e2fd7e966468e38b43ce5cc30ba3e5976190668cb4c3381b660b3fa277e7013"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_elicitation.rs",
+      "sha256": "f0f8f7331694c5938d4715e3a61f0dc13d3791b09d92bff4aa3b37b9ff7c4cc4"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_embedded_resource_meta.rs",
+      "sha256": "265b8264a19853974aeadddb5512515e2d08574a41f0bc582dd1734f25a0c90d"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_handler_cache_hints.rs",
+      "sha256": "54919099a973fb82794de5d4161369483b0407121b19d1ff8a13ff71df5c1a60"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_handler_wrappers.rs",
+      "sha256": "b0d24d7343fd9139110693b159a9a82ba8bb2ad9ca82bcbb08565a1c46fe2392"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_inflight_response_drain.rs",
+      "sha256": "f7a096bb9849de653bcb7b04967109729dff3921b7a48194449ffb62d4ffc685"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_json_schema_detection.rs",
+      "sha256": "5b5ac0b409b70385c2b43ddadf0f59a987279af59c088d72d5597df5e6b2d1d4"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_list_tools_result.rs",
+      "sha256": "088927eb3946af919a62059cd92ecc3913537a0f302ec7124839dde7f8759f73"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_list_tools_result/list_tools_result.json",
+      "sha256": "81a34ef905aad85620b72a4d03898ebb538abf6ec4e875a17b3ed88f93d33e73"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_live_oauth_refresh.rs",
+      "sha256": "d49fad3d673eee10b95e7297ec26462a1430cb43c1905e11817fd6b5818c42d7"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_local_client_handler.rs",
+      "sha256": "454203858af20d8c88ee19c15d5fa5b17de8861c817d26c274b5a915d5ac5cc5"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_logging.rs",
+      "sha256": "8f43e9dd84d82bf4e4afff19090cab52a9ca5afb44be0b492e2e0c00bab50752"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_protocol.rs",
+      "sha256": "fa4cef7f65e0ef15f1bab4ea54a965d7e220b0c770ffbce3adca5af100f7506a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema.rs",
+      "sha256": "ef4ee3f9658cbc9878e753bcae5a71433dfa97c4dbf34f0ed6f1a9cf02e913eb"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema.json",
+      "sha256": "1d06e528a1858d16b071b32e1759730f455a7229a033682e7d19b71095c87842"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema_current.json",
+      "sha256": "1d06e528a1858d16b071b32e1759730f455a7229a033682e7d19b71095c87842"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema.json",
+      "sha256": "6a3a7a38e2cbc456e7aa8bc4d2bfeccffa26075d5ec3e3e69e2b7c49cfcdb7cf"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema_current.json",
+      "sha256": "afd49ef61c84f2df8c7167a848653004ac054905115fc60dc1cc096cf2059255"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_meta_helpers.rs",
+      "sha256": "43fef280b3ead4f122941834dee0fe98558e825ed0aa5754caab7b43b146167e"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_mrtr_behavior.rs",
+      "sha256": "e9600e04afe44d76ee4a137e050701296e35dc8aa86eaa8252a74225399b5774"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_notification.rs",
+      "sha256": "2c14dfc30d7180e679ba1459c103dfd007219feb56de1fee0ed38d45c602c7b3"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_progress_subscriber.rs",
+      "sha256": "ba58bc722306c64fdacf0671c809fdfa0e21df24bddd057dc5568caad0b03658"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_handler.rs",
+      "sha256": "7ec4d994751af16f35a249c709227ed0eecde208ab044221c598e9200b58461f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_macro_annotations.rs",
+      "sha256": "69cc34d9ddfff68d6ef146ef1859d49b3664e8dd10be5d83f62412249f9b2509"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_macros.rs",
+      "sha256": "dfa6c0730a579cbebb3bbd9f6bd394345c9a0383627f48cd2096b9a40273df1c"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_prompt_routers.rs",
+      "sha256": "e4ef7cc429b5e627b8f520a072fd7ee4393eda0c88354e081912047b56c670c9"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_protocol_version_negotiation.rs",
+      "sha256": "4d24f4b94249269e0640e3fcf99f74c6f5badc3ca3e8420615320f1ab8ab0dad"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_request_timeout_progress.rs",
+      "sha256": "7acf4a130cdc5d1ce1b19060d000264d339cb1cc78dd9a97d4f95bc5facc012f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_resource_link.rs",
+      "sha256": "d330fac925145bbc48b20eb1c143e19c21e93f6975a9a72c4f3af67fac88385f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_resource_link_integration.rs",
+      "sha256": "d30c81437c8d0c49b5eea0233cce99a7e07c5cc64f912913a8264f34f0b9a3ba"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_resource_not_found_version.rs",
+      "sha256": "6c367a131d799c078cb9e4b78b493bbf93864aa119cc875748cd46960e822cb3"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_result_type_version.rs",
+      "sha256": "334cd4f90b7830b914f8404450cdbf0298a35409900096379dc611cc4dbfde87"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_result_type_wire.rs",
+      "sha256": "19287f62f8010615e849208bc87df5195be5e9ecce274a21f1e312f8dbcf7397"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sampling.rs",
+      "sha256": "ec0f58b75c12164d3c27875d95529868ebb513db1c070d0b097ed7d952d4490f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sep_2260_request_association.rs",
+      "sha256": "0c31fdaf8a180a0c8c467b372d5bb9ce2e06e270d56370bf92ed5e5e726f8325"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sep_2260_stream_enforcement.rs",
+      "sha256": "542fa4eba005f450533ffff95ca628b797d678a9e6d1094af7d5128478043108"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sep_2260_stream_routing.rs",
+      "sha256": "259ca04eaba0b7d5b65093b21bde45f2eb76cb116cca83c56f75e2afcd4f7efe"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_discover.rs",
+      "sha256": "c1c708c63bcaae0bc13ec4d2a262e099fe60666546f83ac149451a39d980ae9d"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_discover_client.rs",
+      "sha256": "8fc7a835b2efb18d449d61432ee32d5e576bf9398b79f739fbd0f656ea4e2f0f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_discover_http.rs",
+      "sha256": "d502f8544a64046a0500ee75dfc7716e49c8067953bcfb74e41d9bd4813d6885"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_server_initialization.rs",
+      "sha256": "209d38474ed722faec2b9f020b982831fb9914ae6f63e22708349b42c1ac076f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_sse_concurrent_streams.rs",
+      "sha256": "58b601f3016724b7115a3394b1632c885bc77a1babd3e83995197cf13814be59"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_stateless_protocol_version.rs",
+      "sha256": "5a0065588dbc694070adc520d8b18e537559d3341dfbfe87307ff9fe41ce5900"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_stateless_server_requests.rs",
+      "sha256": "e2c14cb113d413e9537c5cac003c37f7f93de09da37359dcacedc183211908f0"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_stdio_response_concurrency.rs",
+      "sha256": "5e12b8545f7578de08bbbc8cc30392b11a72354f75ca4160113b198eb90e6f84"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_4xx_error_body.rs",
+      "sha256": "f1e24dff597517a6fa5cfb8c7781f7eab52e53c9c23ec1b0465c87ff12929d00"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_client_concurrency.rs",
+      "sha256": "53d57ab89ae6ba9b6a6dfd80cb38f36c83469d9fcd5f8a25f8b709c7c7d119e2"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_connection_reuse.rs",
+      "sha256": "0410d0ab5196237278b8d99d19ad38d6e9dc3d470f52076ffaf9df63d0403e2d"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_disconnect_cancel.rs",
+      "sha256": "f5ffdbf1dea1db30815264513343e013db6a59248afdd5eb1415dc9f07ea05dc"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_empty_2xx_notification.rs",
+      "sha256": "59987f6b8363cb129befba1deee14308e8205c54277e04019e1afe5af66da4e4"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_event_store.rs",
+      "sha256": "f6ee60c53250cd2effb203d3b8f06b306208bde0b1defcc2fdf8930f92fced1f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_get_stream_auth_challenge.rs",
+      "sha256": "cec190a65f9eaded2b89b9494c12579b98fbcb7f96e21b2b79252715b30ab5b9"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_idle_timeout_log.rs",
+      "sha256": "82bd0d078b4afbea692862425dc079225e66acac2448264b3c1986150f624a87"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_init_timeout.rs",
+      "sha256": "03176347e944966884d95fce35173d1e8d29caedf032b5afd56436e1599c4f69"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_json_response.rs",
+      "sha256": "13759c9e756683c225f78174cb489263d06c1a93fc90afe74e4adbde6ad126e0"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_malformed_json_request.rs",
+      "sha256": "d90eade7c85c91fe5f5dc43acc206d657cb53bdf619b675c7ca8e78a874a2e2c"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_priming.rs",
+      "sha256": "440032ca72227782a2195104e3e3a933fe38ec29b4055053ddc030115020a78b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_protocol_version.rs",
+      "sha256": "ddb5614a88bbb60259b194ce0cc6b33a67a168291d8531d90128aed3310d5502"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_session_store.rs",
+      "sha256": "3701b4a7002e33bc8fbfe9e10235839a10e29e03a0778e8e8497ed6c5c684550"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_stale_session.rs",
+      "sha256": "45ab819e2f3358121c941a125fae46e222afd13f164ebd2c8d624a72db01ee6f"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_streamable_http_standard_headers.rs",
+      "sha256": "7f2f762f1f5c98b306a98423cf1ec222e7724789ef85a99ec2bf58ad21c5ef52"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_structured_output.rs",
+      "sha256": "3fe39efa9f323c666e1ab3a4d2f90b5409afd3909853c7c4513767cd1d3f7839"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_subscriptions.rs",
+      "sha256": "1d042a1cc430463001eff79505fa2127be7709bf19df785676537e32d56b2750"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_subscriptions_model.rs",
+      "sha256": "7d0eeb30505e5945e40c74760f4fad62c0020096ce36e85a3f3815a295266667"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_subscriptions_streamable_http.rs",
+      "sha256": "45bd32989426f22d63a2c4b255ec071af4167e381442f3b2a1cb32c92d7e1445"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_task.rs",
+      "sha256": "e2fdacfb98888011a5d5b92b83d59215011872bbb1877cc2667ccf150d888981"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_builder_methods.rs",
+      "sha256": "5b589a8dd7d66a9ad00986971949073b52dba3f2e518964ca3135ab9d48792f6"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_disable_notification.rs",
+      "sha256": "2226c2c83cf2a4cb1390a090f6231b9647ab462085e5606d37fdd8dce410e8d1"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_handler.rs",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_macro_annotations.rs",
+      "sha256": "e836db7da11d30b8542f7dd64ed04f6f8202e7362d9a7d80c03d30185e373ee8"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_macros.rs",
+      "sha256": "a63c9a95b8b758c21f6ca4f56c0a9fe55dd9d805c772d0b5a068f47babdb66d2"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_result_meta.rs",
+      "sha256": "1817c57fa58bf3b09594e4c632ddc45952e9d754e5096f322000e1d514b509a7"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_tool_routers.rs",
+      "sha256": "ddcc2622ca111f67efb2f3aa39f7f4852fa5e22aef0ac85016959cd2fcc17861"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_trace_context.rs",
+      "sha256": "a6a10a08242b859d4640ff84a0ca27ac2f8136f57d94ad8dae51febc19dd2df7"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_unix_socket_transport.rs",
+      "sha256": "d36ad39811a7fe9970282d088c431676408a3fb2961810bf7d1834d116961b25"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js.rs",
+      "sha256": "8ea7e3db85b9c5ca15247eadf4d222d3ed0d06b554095a91c4a79f63f6e61419"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/.gitignore",
+      "sha256": "5ffdbe92c121baedcd42f33b4e66e15026dc06fd48932478c48aca34474aa368"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/client.js",
+      "sha256": "1f1b26431e26706dc2d380f9fc3475bc78ada1c0c0ebe7302c1c59267a64b123"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/package.json",
+      "sha256": "5ae5c2acca557c0150ee0111f87fd3ad71f68e6b94e4d5dd5261f4acc3c869cb"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/server.js",
+      "sha256": "760f0721c1b9f44272cc3416a71172a9163044c12d2b58310c72d3286081df81"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/streamable_client.js",
+      "sha256": "af4ccaf89ec0b34cda1b2af71edf9acd04924410a4ed4f579a0ccbd1360ec18a"
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/streamable_server.js",
+      "sha256": "01074613ae942d99028c3f31b1ff35e64817c6de30ab8beabeb3823cb97e7498"
+    },
+    {
+      "path": "crates/ssx-gateway/src/bin/ssx-gateway-input.rs",
+      "sha256": "6bd1319ba6d1afa7cb46e0ef8f229a469db0915e37be8c7e4446f1983744a9e7"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/t07_source_stages.rs",
+      "sha256": "cfd4d7beac0f3f75f57383c3691dafcdfda427e0cc2f914eebf9d7041b95f813"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/t07_windows_owner.rs",
+      "sha256": "9517f7df64b75c9def5433764ed34b1f2fb8af12011dc689f13bb68699d390e8"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/install_windows.rs",
+      "sha256": "4280a3851005c1adfb35bd4daf4768dfe4ea161135b58fbcfd52a0605afd0807"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/source_adapter.rs",
+      "sha256": "c1530e09292d8aff284ac0022a1fc02ce8bd94f30c6b961adc0050b27653ee26"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/unix_process.rs",
+      "sha256": "5cd0066f2831aefbeaefd5bae733c140a6e080fd651a17a6930f1404894b9a72"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/windows_fixture.rs",
+      "sha256": "2aa65da1aad722410fa51af58de3800d1af03cd64049db3b8e3ebaf8f258be99"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/windows_process.rs",
+      "sha256": "a3855d7beaa567ab076abd3132a573ae95629024c39d578778c0fbc437e5eb81"
+    },
+    {
+      "path": "crates/ssx-mcp/src/gateway_client/stdio_input_windows.rs",
+      "sha256": "d528b44ce8007288171a6b1ae31a474a8aa80753583a21f93bc4827370fcca97"
+    },
+    {
+      "path": "crates/ssx-source-codecs/Cargo.toml",
+      "sha256": "20cde50cad0faf1b736864eb3d48f7cd4c39e3ecb37cafaca26d0f2d9f56acd8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/generate.py.txt",
+      "sha256": "d207558acc03eafbc185bbbb779c4b7d8c1ca05299f9fe547122ac8cdf0b3402"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/generate_url_join_guard.py.txt",
+      "sha256": "71a3ffb100148c77f4c7a193a5227a653b66b157fdd40eb861bf3fc0466e06fe"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/input-pins.json",
+      "sha256": "7a5a777d6338d8e946a269cc9a0f9d84d9852b9f1f8f35cf7a509b96417e6474"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/CPython-LICENSE",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/CPython16-whitespace.c.txt",
+      "sha256": "fd28ffedfb575fd32b6e82ce1ad8f7f888d50c345f64eaca9567ceabd35fabd2"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/HTTPX2-LICENSE.md",
+      "sha256": "7e7d6dbaf7fe160d39fd6e84fd02c33cab96bcbea34d36998d545bceb4a19c30"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/IDNA-LICENSE.md",
+      "sha256": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/Include__patchlevel.h.txt",
+      "sha256": "16a8955952cbaefd16f85909b73a0a6c182ec813f9544a12c28897c95b8d3f22"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/Objects__unicodetype_db.h.txt",
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/httpx2_config.py.txt",
+      "sha256": "0b53f754f1bb708f2ea485bccbb4ab1ffa07259cf8c008a42d8959b9cb1e3db0"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/httpx2_urlparse.py.txt",
+      "sha256": "5fefeb2c3b02f5030819cd455ebf435514d8b0b2c1fd239d6823ad176f834480"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/httpx2_utils.py.txt",
+      "sha256": "0635f199e60ef66b503ef084048a258dba72e0633c3a2d11099b9944220a4119"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/idna_core.py.txt",
+      "sha256": "49f3abd713b73e8134443631edb31c8809e38b28c93db3f0ffddc007921460ec"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/idna_package_data.py.txt",
+      "sha256": "4de23de04a8014015a5df049c2c38f50c2e7dbdebdba2acf6be0da79a71e0325"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/idnadata.py.txt",
+      "sha256": "01ffa6a3c5819a48402ba4f25ca3901fcf0e5f49903432ad74bed45ad429a699"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/pycore_long.h",
+      "sha256": "2705119761c8a877f277fe34773a1117d6b4c0cd4b39c7823a019f3ba44c6f0f"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/unicodedata.c",
+      "sha256": "d69558ad96a38932da9e9d596bea8cd91d54d9801e56f2cea77a6ecfccb47a6c"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/unicodedata_db.h",
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/unicodename_db.h",
+      "sha256": "b756b8c66e7b73d4e177fa75e88c466322b158c1cbef276d5a4b5dea865c72b5"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/idna2008.rs",
+      "sha256": "16e4fdd605b13e0bf39de9d4fbe6d18d0eab29b1e7013ba39a7c80a08837e482"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/idna2008_data.rs",
+      "sha256": "bb9d2bb19b3bb517d04c9e94b323545fd7d27c16e8955686daabc4ffa7021c75"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/lib.rs",
+      "sha256": "46f4a1e57aa359424839c34a3d6655341a6c7ed7a18d9c93099d5804f24e08a0"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/python_text.rs",
+      "sha256": "882afa5eaed56da4f3904276e1d1462b1ae05a3f7de58e9e4e7eaa831ebe04ad"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/python_text_data.rs",
+      "sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/python_url_join_data.rs",
+      "sha256": "06cf82d4e034e3103cb32d18164ff1e966730e25dc624c2dfe04b9032b5d9d9a"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source_bindings.json",
+      "sha256": "2fc8288b767225e1ea08a0bbc399e946ec8a38d8fc21fe27d4357df8fe18ba0e"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/current-Cargo.lock",
+      "sha256": "667178aeb9a969b417881e636342506f2bb83d7ff650be5914e547561570ace6"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/unit-profile/current-declaration.json",
+      "sha256": "8aff81c5463cd7d51724e978d4841c7a579de60e44513e026bad14701946058a"
+    },
+    {
+      "path": "vendor/ssx-http-source/current-stack-amendment-v1.json",
+      "sha256": "88ae25e149a121a701be53a85d31d5d6d4ec70e9401b0e4fd26bf2e6b3b4a43c"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_endpoint.rs",
+      "sha256": "2c998cc3f36368bf9c1116156a8d5bd36f14bd502abc41cb855be69cd5527989"
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper/src/ext/source_identity.rs",
+      "sha256": "8963e5cee14d36d542d099ca0e6e78298b3dae51cd0c27de25fb5d7ca5cfc533"
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs",
+      "sha256": "84184d6b58c263da66d5c14384dc2af4ad350ea2d144bc10c060675c79b7ab3e"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-request-transport-amendment-v1.json",
+      "sha256": "7cf0b6610f50a943de9387399e12b0a36d746c3f4e26cc1f795f1758c6b5a95c"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-url-core-amendment-v1.json",
+      "sha256": "32beecd2d443e0a71e90b03216ab832a5e8a518c878028b340ee31b41c7d0ec0"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-url-core-primary-v1.json",
+      "sha256": "40fc006866e9799f32154f17ef9f5639f3681a212c9e16d9b9d01e25df957401"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-url-primary/urllib_parse3147.py.txt",
+      "sha256": "484b633b81d024da52649c7ff775c81b338de9f60585c94e5adfe335a27d9509"
+    },
+    {
+      "path": "vendor/ssx-native-ip-text/Cargo.toml",
+      "sha256": "2f39d7de0c2d4b716843af7d90ec9f6607c3c9bf2111ebedb428f57fd8203329"
+    },
+    {
+      "path": "vendor/ssx-native-ip-text/SAFETY.md",
+      "sha256": "f4648af710b15d9886d7c41ecd7cd837908a8b9e1b31acd28262a1804f88721c"
+    },
+    {
+      "path": "vendor/ssx-native-ip-text/src/lib.rs",
+      "sha256": "9ee04cf3eddce9c5ebc7970359ff9bc2304f39359ad0f5a3a1556fccb261365a"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/Cargo.toml",
+      "sha256": "d073cd7e6cb384adeb5f175694029548d09ba0d37a04475534586ec9c9a7aa5c"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/SAFETY.md",
+      "sha256": "c30373f484c68873a777e4889af40391074579b5afb78be8f3599e31f0dc9aa1"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/src/dns.rs",
+      "sha256": "22b9c9444e6f6c7bcda73b8c019da2cc2a08992a325f94f67357008605f93c6d"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/src/lib.rs",
+      "sha256": "bacf9b6b91711e680b50ce0aecced37667abd5f67841e1913bc56b29f36f6ed5"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/src/process.rs",
+      "sha256": "078d5db40d029e61683389356b7432dbd7ebbacb399f0bba7fbcafc4d60363df"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/src/trust.rs",
+      "sha256": "90ae4678b235f263febcc1c1da97a9b0a8616aa6d12b58165506391bc2e35c35"
+    }
+  ],
+  "library_tests": [
+    "gateway_client::arguments::encoding_tests::source_outgoing_utf8_rejects_unpaired_surrogates_but_keeps_pairs_and_literal_backslashes",
+    "gateway_client::arguments::raw_tests::shallow_signature_keeps_deep_unknown_nested_arguments_and_defaults_raw",
+    "gateway_client::arguments::tests::first_recognized_union_annotation_wins_and_nested_schema_is_discovery_only",
+    "gateway_client::arguments::tests::generated_lax_primitives_preserve_integer_width_and_number_float_type",
+    "gateway_client::arguments::tests::generated_signature_defaults_are_unvalidated_and_unknown_keywords_fail",
+    "gateway_client::callback::tests::actual_callback_deadline_joins_and_releases_listener",
+    "gateway_client::callback::tests::actual_loopback_callback_preserves_last_parameters_missing_empty_and_shutdown",
+    "gateway_client::callback::tests::zero_timeout_rejects_received_and_unreceived_positive_wait_repeats",
+    "gateway_client::client_model::tests::original_twenty_one_client_model_outcomes",
+    "gateway_client::client_model::tests::pinned_client_url_model_controls",
+    "gateway_client::io_owner::tests::cancelled_waiter_retains_actual_job_until_shutdown_join",
+    "gateway_client::io_owner::tests::deadline_queue_and_owner_close_do_not_start_second_worker",
+    "gateway_client::network::cookie_wire_tests::connect_uses_selected_proxy_credentials_separately_from_origin_caller_header",
+    "gateway_client::network::cookie_wire_tests::environment_no_proxy_route_bypasses_configured_credentials_on_actual_wire",
+    "gateway_client::network::cookie_wire_tests::oauth_built_request_does_not_merge_client_cookie_but_redirect_uses_shared_jar",
+    "gateway_client::network::cookie_wire_tests::queued_caller_cancellation_never_resolves_and_released_credit_uses_new_caller",
+    "gateway_client::network::cookie_wire_tests::response_cookie_redirect_selection_replaces_caller_and_persists_deletion",
+    "gateway_client::network::cookie_wire_tests::two_real_proxy_routes_keep_caller_precedence_and_no_proxy_has_no_ambient_credentials",
+    "gateway_client::network::cookie_wire_tests::unfollowed_redirect_prepares_cookie_before_origin_method_and_budget_gates",
+    "gateway_client::network::cookie_wire_tests::uppercase_configured_https_returns_secure_cookie_on_next_initial_request",
+    "gateway_client::network::cookie_wire_tests::zero_redirect_budget_still_prepares_same_origin_get_307_cookie",
+    "gateway_client::oauth::registration_review_controls::wire_issuer_is_discarded_before_model_validation_for_any_json_type",
+    "gateway_client::oauth::tests::cached_source_expiry_is_not_an_sdk_u64_schema",
+    "gateway_client::oauth::tests::source_received_expiry_preserves_signed_and_float_overflow_outcomes",
+    "gateway_client::oauth_policy::protocol_tests::resource_parameter_depends_on_prm_or_protocol_and_interactive_url_resource_keeps_userinfo_query",
+    "gateway_client::oauth_policy::review_controls::discovered_metadata_missing_registration_endpoint_uses_resource_origin_with_honest_binding",
+    "gateway_client::oauth_policy::review_controls::refresh_form_omits_scope_without_changing_authorization_code_form",
+    "gateway_client::oauth_policy::tests::minted_method_controls_secret_and_basic_uses_percent20",
+    "gateway_client::oauth_policy::tests::source_issuer_root_equivalence_does_not_make_url_client_ids_portable",
+    "gateway_client::oauth_policy::tests::source_resource_keeps_query_and_explicit_port_distinction",
+    "gateway_client::oauth_policy::tests::source_scope_priority_and_stepup_union_keep_granted_scope",
+    "gateway_client::redirect::tests::source_redirects_keep_method_origin_and_userinfo",
+    "gateway_client::redirect::tests::source_static_url_basic_overrides_bearer_but_oauth_does_not_use_url_basic",
+    "gateway_client::resolver::install::tests::changed_gateway_or_helper_bytes_cannot_reuse_record_identity",
+    "gateway_client::resolver::install::tests::duplicate_unknown_record_fields_and_bad_shape_are_rejected",
+    "gateway_client::resolver::install::tests::installed_symlinks_hardlinks_and_writable_package_entries_are_rejected",
+    "gateway_client::resolver::install::tests::missing_wrong_role_or_changed_record_fails_before_any_helper_spawn",
+    "gateway_client::resolver::install::tests::normal_cargo_input_hardlinks_are_copied_to_single_link_private_outputs",
+    "gateway_client::resolver::install::tests::repeated_staging_reuses_only_exact_matching_complete_package",
+    "gateway_client::resolver::install::tests::staged_record_discovers_helper_without_runtime_user_configuration",
+    "gateway_client::resolver::protocol::tests::response_rejects_trailing_truncated_or_hostile_count",
+    "gateway_client::resolver::protocol::tests::sockaddr_response_preserves_sequence_scope_flow_and_returned_port",
+    "gateway_client::resolver::protocol::tests::socket_conversion_order_is_distinct",
+    "gateway_client::resolver::runtime::tests::anyio_scoped_literal_compression_keeps_source_scope",
+    "gateway_client::settings::tests::blank_token_override_and_raw_token_path",
+    "gateway_client::settings::tests::boolean_environment_and_mutual_exclusion",
+    "gateway_client::settings::tests::cli_overrides_environment_without_reading_engine_keys",
+    "gateway_client::settings::tests::default_path_hashes_exact_url_and_preserves_empty_xdg",
+    "gateway_client::settings::tests::source_integer_forms_preserve_unicode_separators_magnitude_and_eager_env_failure",
+    "gateway_client::source_projection::framework_error_tests::remote_client_capability_error_stays_protocol_error_and_other_tool_errors_are_results",
+    "gateway_client::source_projection::legacy_controls::legacy_json_retains_deep_values_and_duplicate_last_value",
+    "gateway_client::source_projection::legacy_controls::nonfinite_legacy_scalar_is_text_null_not_empty_content",
+    "gateway_client::source_projection::metadata_tests::original_doc_cleaning_and_generated_signature_failures_are_not_silently_reexposed",
+    "gateway_client::source_projection::packaging_tests::source_nonobject_packaging_distinguishes_null_string_array_and_numbers",
+    "gateway_client::source_projection::tests::fixed_projection_does_not_expose_remote_extras",
+    "gateway_client::source_projection::tests::legacy_json_preserves_large_numbers_and_plain_fallback",
+    "gateway_client::source_projection::tests::source_extraction_error_precedes_structured_and_empty_is_retained",
+    "gateway_client::stdio_input::tests::cancellation_joins_idle_worker_without_input_eof",
+    "gateway_client::stdio_input::tests::cancellation_joins_worker_under_output_backpressure",
+    "gateway_client::stdio_input::tests::eof_preserves_all_bytes_and_joins_worker",
+    "gateway_client::title::identifier_tests::original_generated_signature_accepts_unicode16_identifiers_but_not_keywords_or_schema_hyphens",
+    "gateway_client::title::tests::source_unicode_title_expansions_digraphs_sigma_and_combining_boundaries",
+    "gateway_client::token_json::tests::empty_array_and_long_scalar_work_cooperate_before_completion",
+    "gateway_client::token_json::tests::exact_input_integer_and_depth_resource_boundaries",
+    "gateway_client::token_json::tests::exact_python_ascii_nan_bigint_and_surrogate_spelling",
+    "gateway_client::token_json::tests::expired_deadline_and_byte_depth_bound_refuse_without_normalizing",
+    "gateway_client::token_model::tests::original_twenty_one_token_model_outcomes_preserve_surrogates_and_coercion",
+    "gateway_client::token_storage::actual_model_getters::original_model_controls_through_actual_file_storage_and_both_getters",
+    "gateway_client::token_storage::source_document_controls::original_twenty_one_model_documents_are_lossless_storage_inputs",
+    "gateway_client::token_storage::tests::actual_private_roundtrip_unknowns_and_old_open_reader",
+    "gateway_client::token_storage::tests::cancelled_actual_write_retains_worker_and_has_explicit_completion",
+    "gateway_client::token_storage::tests::concurrent_atomic_writers_and_continuous_reader_have_no_partial_publication",
+    "gateway_client::token_storage::tests::failed_encode_and_failed_rename_preserve_original_and_cleanup",
+    "gateway_client::token_storage::tests::special_files_are_rejected_without_waiting_for_fifo_writer",
+    "gateway_client::token_storage::tests::text_decode_and_caught_json_errors_remain_distinct",
+    "gateway_client::network::cookie_wire_tests::cleared_redirect_userinfo_keeps_actual_sent_basic_header_lineage",
+    "gateway_client::network::cookie_wire_tests::httpx_redirect_origin_numeric_ipv6_scope_and_zero_are_distinct_from_transport_origin",
+    "gateway_client::network::cookie_wire_tests::initial_lazy_host_failure_precedes_dns_or_socket_admission",
+    "gateway_client::network::cookie_wire_tests::initial_prepare_host_lazy_boundaries_and_vec_body_defaults_are_source_exact",
+    "gateway_client::network::cookie_wire_tests::initial_recorded_host_survives_same_origin_redirect_stream_lineage",
+    "gateway_client::network::cookie_wire_tests::network_cookie_observation_uses_normalized_owner_before_userinfo_auth",
+    "gateway_client::network::cookie_wire_tests::network_oauth_retains_userinfo_but_never_uses_url_basic_without_bearer",
+    "gateway_client::network::cookie_wire_tests::source_url_auth_flag_preserves_owner_and_explicit_auth_on_actual_wire",
+    "gateway_client::redirect::source_owner_tests::source_redirect_header_encoding_is_collection_wide_and_duplicates_join",
+    "gateway_client::redirect::source_owner_tests::source_redirect_invalid_location_propagates_but_nonredirect_ignores_it",
+    "gateway_client::redirect::source_owner_tests::source_redirect_method_gate_uses_actual_rewrite_rules",
+    "gateway_client::redirect::source_owner_tests::source_redirect_preserves_empty_query_and_inherits_truthy_fragment",
+    "gateway_client::redirect::source_owner_tests::source_redirect_scheme_without_host_uses_display_host",
+    "gateway_client::redirect::source_owner_tests::source_redirect_userinfo_compares_raw_bytes_and_allows_clear",
+    "gateway_client::redirect::source_owner_tests::source_redirect_uses_source_ports_and_default_upgrade",
+    "gateway_client::resolver::install::tests::legacy_schema_or_missing_mismatched_protocol_cannot_admit_helper",
+    "gateway_client::resolver::protocol::tests::first_scope_text_and_secondary_native_sockaddr_are_distinct",
+    "gateway_client::resolver::protocol::tests::real_zero_is_not_dns_only_and_v1_or_cross_kind_is_rejected",
+    "gateway_client::resolver::protocol::tests::request_kind_and_error_phase_are_closed",
+    "gateway_client::resolver::runtime::tests::literal_compressed_text_has_its_own_mapped_and_compatible_branches"
+  ],
+  "seam_tests": [
+    "correlated_sse_completes_before_eof_and_releases_actual_body_lease",
+    "dropped_unbounded_initialize_retains_session_for_delete_and_disables_readiness",
+    "failed_discovery_keeps_cleanup_owner_and_zero_budget_dispatches_nothing",
+    "session_delete_grace_expires_at_sdk_budget_drops_waiter_and_retains_retry_identity"
+  ],
+  "process_tests": [
+    "actual_native_oauth_non200_refresh_falls_back_to_authorization_without_second_registration",
+    "actual_native_oauth_process_challenge_registration_pkce_callback_secure_persistence_and_cleanup",
+    "actual_native_oauth_status_matrix_preserves_registration_code_200_201_and_rejects_202_without_token_persistence",
+    "actual_native_sigterm_during_initialization_joins_http_owner",
+    "actual_native_startup_failure_redacts_configuration_and_never_publishes",
+    "actual_native_static_process_preserves_signature_schema_projection_error_channels_and_eof_cleanup",
+    "actual_native_static_userinfo_basic_precedes_bearer_and_fragment_never_reaches_http",
+    "actual_native_stdio_eof_cancels_inflight_rpc_before_owned_shutdown",
+    "actual_native_two_instances_keep_remote_sessions_and_catalogs_independent",
+    "actual_native_current_t06_eleven_tool_catalog_and_discovery_match_direct_http",
+    "actual_native_oauth_denied_delete_on_eof_and_sigterm_never_reauthorizes_or_refreshes_and_retires_owners",
+    "actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners"
+  ],
+  "stdio_owner_tests": [
+    "opaque::tests::owned_stdio_outer_abort_drops_held_sdk_initialization",
+    "opaque::tests::owned_stdio_eof_drops_held_sdk_initialization",
+    "opaque::tests::owned_stdio_explicit_cancel_drops_held_sdk_initialization",
+    "opaque::tests::owned_stdio_normal_eof_and_running_service_cancel_join",
+    "opaque::tests::owned_stdio_initialized_outer_abort_releases_idle_sdk_owner",
+    "opaque::tests::owned_stdio_pre_cancel_does_not_dispatch_initialize"
+  ],
+  "excluded_generated_members": [
+    "vendor/ssx-http-source/httparse/.cargo-ok",
+    "vendor/ssx-http-source/hyper-util/.cargo-ok",
+    "vendor/ssx-http-source/hyper/.cargo-ok",
+    "vendor/ssx-http-source/reqwest/.cargo-ok",
+    "vendor/ssx-sdk-auth/rmcp/.cargo-ok"
+  ],
+  "dns_owner_tests": [
+    "request_abort_cancels_held_helper_and_close_reaps_group",
+    "outer_request_owner_abort_retains_independent_runtime_close_obligation",
+    "prespawn_admission_and_close_do_not_leave_untracked_child",
+    "concurrent_registration_close_and_close_callers_are_owned",
+    "close_future_abort_keeps_join_registry_for_next_close",
+    "helper_crash_malformed_oversize_and_timeout_all_retire",
+    "multiple_held_lookups_shutdown_cancels_and_reaps_every_row",
+    "numeric_skips_helper_but_hostname_lookup_precedes_original_port_failure",
+    "scoped_ipv6_retains_returned_ports_flow_scope_and_sequence",
+    "native_artifact_identity_is_explicit_and_digest_checked",
+    "pipe_eof_before_normal_exit_preserves_original_success",
+    "pipe_eof_while_leader_lives_obeys_lookup_budget_then_retires",
+    "pipe_conversion_failure_keeps_exact_spawned_child_until_reaped",
+    "repeated_close_after_retirement_keeps_group_absence_and_closed_admission",
+    "reqwest_hook_preserves_native_sockaddr_sequence_scope_flow_and_ports",
+    "dropping_reqwest_lookup_cancels_original_child_and_explicit_close_joins",
+    "actual_gateway_cancelled_held_dns_retires_child_before_next_rpc_and_eof",
+    "actual_gateway_eof_cancels_held_dns_and_joins_original_child",
+    "actual_gateway_sigterm_cancels_held_dns_with_parent_stdin_open",
+    "actual_gateway_eof_bounds_session_delete_held_fresh_dns_and_joins_original_child",
+    "actual_gateway_sigterm_bounds_session_delete_held_fresh_dns_with_stdin_open"
+  ],
+  "source_pool_unit_tests": [
+    "source_pool::source_cookie_clock::tests::source_local_year_uses_checked_platform_result_without_utc_fallback",
+    "source_pool::source_cookie_clock::tests::source_wall_seconds_keep_integral_and_negative_nanosecond_branches",
+    "source_pool::source_cookie_date::tests::loose_numeric_month_preserves_python_decimal_underscores",
+    "source_pool::source_cookie_date::tests::source_cookie_date_language_window_and_calendar_arithmetic",
+    "source_pool::source_cookie_headers::tests::source_cookie_date_failure_aborts_ns_batch_before_cookie_construction",
+    "source_pool::source_cookie_headers::tests::source_cookie_header_split_preserves_ns_comma_and_rfc_quoted_pairs",
+    "source_pool::source_cookie_jar::tests::finite_integer_float_roundtrip_and_duplicate_max_age_semantics",
+    "source_pool::source_cookie_jar::tests::later_normalization_type_error_prevents_earlier_expiry_deletion",
+    "source_pool::source_cookie_jar::tests::max_age_overflow_drops_batch_but_prior_deletion_survives_and_digit_refusal_is_per_cookie",
+    "source_pool::source_cookie_jar::tests::raw_percent_cookie_domain_does_not_leak_to_normalized_host",
+    "source_pool::source_cookie_jar::tests::secure_port_and_caller_cookie_rules_keep_source_views",
+    "source_pool::source_cookie_jar::tests::set_cookie2_only_is_ignored_but_ns_presence_reaches_default_version_zero",
+    "source_pool::source_cookie_jar::tests::source_cookie_order_overwrite_and_rfc2109_default_path_are_observable",
+    "source_pool::source_cookie_jar::tests::underscored_numeric_month_expiry_is_not_silently_session_cookie",
+    "source_pool::source_cookie_jar::tests::valueless_max_age_rejects_whole_batch_before_any_cookie_construction",
+    "source_pool::source_cookies::scheme_controls::cookie_scheme_is_ascii_lowercase_without_normalizing_authority",
+    "source_pool::source_cookies::tests::cookie_integer_language_uses_frozen_decimal_digits_and_underscores",
+    "source_pool::source_cookies::tests::cookie_observations_preserve_raw_userinfo_path_port_and_local_host",
+    "source_pool::tests::caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers"
+  ],
+  "source_stage_tests": [
+    "source_endpoint_stages_and_cancelled_preparation_join_original_scope"
+  ],
+  "current_successor": {
+    "historical_bindings": {
+      "path": "docs/rust-rewrite/t07/source_bindings.json",
+      "sha256": "2fc8288b767225e1ea08a0bbc399e946ec8a38d8fc21fe27d4357df8fe18ba0e",
+      "rows": 546
+    },
+    "causal_source_baseline": "0af1eb85866240cf84bcb904fdcba3ffcb41cab1",
+    "unit_profile": "docs/rust-rewrite/t07/unit-profile/current-declaration.json",
+    "provenance": "vendor/ssx-http-source/current-stack-amendment-v1.json",
+    "native_gateway_client_inventory": "actual126-MCP-lib inventory from direct native current-source run;95 gateway_client IDs; unchanged names on test-only successor",
+    "source_stage_inventory": "actual source-endpoint-test-fixtures compiled list1 and runtime1pass",
+    "source_pool_unit19_unchanged": "existing18cookie+1caller controls retained; prior standalone codec/SourceURL components are separate evidence",
+    "no_history_repin": true
+  }
+}

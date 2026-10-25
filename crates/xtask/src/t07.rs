@@ -3,7 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
-const BINDINGS: &str = "2fc8288b767225e1ea08a0bbc399e946ec8a38d8fc21fe27d4357df8fe18ba0e";
+const BINDINGS: &str = "d35d65b6eb37ed92c1dc832f4df2fa989f7d398ac95a90235eb3a1ba5d69028c";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -39,6 +39,12 @@ fn suite(
     }
     if target == "t07_dns_owner" {
         args.extend(["--features", "dns-test-fixtures"]);
+    }
+    if target == "t07_source_stages" {
+        args.extend(["--features", "source-endpoint-test-fixtures"]);
+    }
+    if package == "ssx-mcp" && target == "--lib" {
+        args.extend(["--features", "gateway-source-endpoints"]);
     }
     if let Some(filter) = filter {
         args.push(filter)
@@ -105,7 +111,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         return Err("T07 private install fixture root invalid".into());
     }
     let value = validate(
-        &fs::read(root.join("docs/rust-rewrite/t07/source_bindings.json"))
+        &fs::read(root.join("docs/rust-rewrite/t07/current-source-bindings.json"))
             .map_err(|e| e.to_string())?,
     )?;
     let mut seen = BTreeSet::new();
@@ -223,6 +229,16 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .ok_or("T07 DNS owner inventory absent")?,
         records,
     )?;
+    suite(
+        root,
+        "ssx-gateway",
+        "t07_source_stages",
+        None,
+        value["source_stage_tests"]
+            .as_array()
+            .ok_or("T07 source stage inventory absent")?,
+        records,
+    )?;
     unit.tests(
         value["source_pool_unit_tests"]
             .as_array()
@@ -239,7 +255,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         + count("seam_tests")?
         + count("process_tests")?
         + count("dns_owner_tests")?
-        + count("source_pool_unit_tests")?;
+        + count("source_pool_unit_tests")?
+        + count("source_stage_tests")?;
     let stdio_owner_controls = count("stdio_owner_tests")?;
     records.push(json!({"contract":"native_gateway_source_bound","source_files":seen.len(),"focused_native_cases":focused_native_cases,"stdio_owner_controls":stdio_owner_controls,"dns_owner_controls":count("dns_owner_tests")?,"focused_native_selectors_total":focused_native_cases+stdio_owner_controls,"python_executed":false,"provider_calls":0,"full_transport_component_acceptance":"independent R1/R2/profile/SDK source-bound receipts and inherited T01/T05/T06/F08 remain required"}));
     Ok(())
@@ -249,7 +266,7 @@ mod tests {
     use super::*;
     #[test]
     fn reviewed_t07_binding_rejects_single_byte_mutation_and_missing_inventory() {
-        let raw = include_bytes!("../../../docs/rust-rewrite/t07/source_bindings.json");
+        let raw = include_bytes!("../../../docs/rust-rewrite/t07/current-source-bindings.json");
         assert!(validate(raw).is_ok());
         let mut changed = raw.to_vec();
         changed[0] ^= 1;
