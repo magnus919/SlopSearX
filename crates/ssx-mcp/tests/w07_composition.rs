@@ -371,6 +371,7 @@ async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_cont
         enforced_filters: BTreeMap::new(),
     }])
     .unwrap();
+    current.auth_configured.insert("wikipedia".into(), false);
     let owner = EvidenceOwner::new(current, backend.clone()).unwrap();
     owner.establish_readiness().await.unwrap();
     let tenant = TenantId::new("source-contract").unwrap();
