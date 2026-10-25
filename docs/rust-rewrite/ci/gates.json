@@ -2224,7 +2224,13 @@
             },
             {
               "name": "Typed records and stable serialization evidence",
-              "run": "cargo xtask check F05 --output target/rust-evidence/F05.json"
+              "env": {
+                "SLOPSEARX_TEST_TEMP_ROOT": "${{ runner.temp }}/t02-sockets-f05",
+                "TMPDIR": "${{ runner.temp }}/t02-sockets-f05",
+                "TMP": "${{ runner.temp }}/t02-sockets-f05",
+                "TEMP": "${{ runner.temp }}/t02-sockets-f05"
+              },
+              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo xtask check F05 --output target/rust-evidence/F05.json\n"
             },
             {
               "name": "Layered configuration and engine registry evidence",
