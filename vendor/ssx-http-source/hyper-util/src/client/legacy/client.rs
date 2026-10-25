@@ -1187,7 +1187,7 @@ fn domain_as_uri(key: PoolKey) -> Result<Uri, Error> {
             owner
                 .0
                 .origin_target()
-                .parse()
+                .parse::<Uri>()
                 .map_err(|error| e!(Connect, error))
         }
     }
