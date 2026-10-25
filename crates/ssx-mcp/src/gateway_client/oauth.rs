@@ -228,7 +228,13 @@ impl OAuthHttpClient for Http {
             }
             let mut response = self
                 .network
-                .send_built_request(method, url.to_string(), headers, body, max_redirects)
+                .send_built_request(
+                    method.clone(),
+                    url.to_string(),
+                    headers,
+                    body,
+                    max_redirects,
+                )
                 .await?;
             let status = response.status();
             let headers = response.headers().clone();
