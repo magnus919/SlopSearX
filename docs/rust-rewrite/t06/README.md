@@ -92,8 +92,9 @@ The three source-declared tests require these assertions before completion:
   Missing or mismatched stored proof requires actual OpenAlex reacquisition and
   typed proof/publication-day readback. Structured output must equal tool text.
 - Missing/wrong bearer tokens and denied grants, unaudited/unavailable sources,
-  invalid/reversed bounds, relative dates, mixed/unsupported/sensitive scope and
-  strict SafeSearch never reach adapter admission, client quota or cache I/O;
+  invalid/reversed bounds and mixed/unsupported/sensitive scope never reach
+  adapter admission, client quota or cache I/O. The undeclared `time_range`
+  and `safesearch` arguments are refused at the MCP validation layer;
   no upstream request or shared record is created. The science grant does not
   confer sensitive-engine access.
 - Actual successful empty upstream JSON stays empty success, while actual
@@ -106,6 +107,19 @@ test keeps its zero-admission, zero-I/O and zero-state assertions. Python's
 configured-enabled/missing-adapter path instead reaches its later date-scope
 check and returns `invalid_input`. This records the existing surface difference,
 not whole-#984 parity or a change to policy precedence.
+
+Science's existing six-parameter API is `query`, `source_types`, `date_from`,
+`date_to`, `engines`, and `max_results`. The frozen T06 descriptor and Python
+signature do not declare `time_range` or `safesearch`. Their two negative calls
+must therefore return `isError=true`, one exact FastMCP validation text block
+(`unexpected_keyword_argument`, with the actual field/value), and no
+`structuredContent`. They do not exercise application relative-date or strict
+SafeSearch policy. The other ten cases retain `isError=false`, equal structured
+content and JSON tool text, and exact expected error codes/fields. All twelve
+retain both bearer-token refusals and zero admission, quota, cache I/O, upstream
+requests and shared keys. Case-labelled full-envelope diagnostics aggregate
+contract mismatches after each fixture is closed; successful calls retain the
+original strict helper. This changes tests and documentation only.
 
 The existing T06 gate runs this separate three-name target in addition to every
 original source binding, fixture and transport test. Frozen JSON, historic test

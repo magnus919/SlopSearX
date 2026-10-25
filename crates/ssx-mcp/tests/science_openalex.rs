@@ -98,11 +98,13 @@ impl ClientAdmission for Counts {
     }
 }
 impl Counts {
-    fn assert_untouched(&self) {
-        assert_eq!(self.adapter.load(Ordering::SeqCst), 0);
-        assert_eq!(self.client.load(Ordering::SeqCst), 0);
-        assert_eq!(self.reads.load(Ordering::SeqCst), 0);
-        assert_eq!(self.writes.load(Ordering::SeqCst), 0);
+    fn observations(&self) -> [usize; 4] {
+        [
+            self.adapter.load(Ordering::SeqCst),
+            self.client.load(Ordering::SeqCst),
+            self.reads.load(Ordering::SeqCst),
+            self.writes.load(Ordering::SeqCst),
+        ]
     }
 }
 struct ObservedCache {
@@ -709,6 +711,7 @@ async fn authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cac
 
 #[tokio::test]
 async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
+    let mut failures = Vec::new();
     for (mode, label, changes, code) in [
         (Mode::NoScienceGrant, "grant", json!({}), "tool_disabled"),
         (Mode::Unaudited, "unaudited", json!({}), "invalid_input"),
@@ -736,7 +739,7 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
             Mode::Audited,
             "relative",
             json!({"time_range":"week"}),
-            "invalid_input",
+            "unexpected_keyword_argument",
         ),
         (
             Mode::Audited,
@@ -760,7 +763,7 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
             Mode::Audited,
             "safe",
             json!({"safesearch":"strict"}),
-            "safesearch_unenforced",
+            "unexpected_keyword_argument",
         ),
     ] {
         let fixture = Fixture::new(mode, 200, equal_body(), None).await;
@@ -770,15 +773,18 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
             .timeout(Duration::from_secs(10))
             .build()
             .unwrap();
+        let mut case_errors = Vec::new();
         for token in [None, Some("wrong-token")] {
             let mut request = raw.post(&url).json(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":TOOL,"arguments":args()}}));
             if let Some(token) = token {
                 request = request.bearer_auth(token);
             }
-            assert_eq!(
-                request.send().await.unwrap().status(),
-                reqwest::StatusCode::UNAUTHORIZED
-            );
+            let status = request.send().await.unwrap().status();
+            if status != reqwest::StatusCode::UNAUTHORIZED {
+                case_errors.push(format!(
+                    "auth token {token:?}: expected401, actual {status}"
+                ));
+            }
         }
         let client = fixture.connect().await;
         let mut request = args();
@@ -789,41 +795,108 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
         if label == "implicit" {
             request.as_object_mut().unwrap().remove("engines");
         }
-        let result = call(&client, request).await;
-        assert_eq!(result["error"]["code"], code, "{label}: {result}");
-        if label == "unavailable" {
-            // Existing shared MCP/F09 policy rejects explicit inactive engines
-            // before publication-date scope resolution can acquire anything.
-            assert_eq!(
-                result,
-                json!({"error":{
-                    "code":"invalid_scope","field":"engines",
-                    "message":"unknown or inactive engines: openalex (inactive)",
-                    "valid_alternatives":[]
-                }})
-            );
-        }
-        let field = match label {
-            "grant" => None,
-            "invalid_leap" | "empty" | "reversed" => Some("date_from"),
-            "relative" => Some("time_range"),
-            "safe" => Some("safesearch"),
-            _ => Some("engines"),
+        // FastMCP validates declared arguments before the tool body. Science
+        // has no time_range or safesearch parameter: these two are tool errors,
+        // while the ten policy/date denials are structured successful results.
+        let response = client
+            .call_tool(
+                CallToolRequestParams::new(TOOL.to_owned())
+                    .with_arguments(request.as_object().unwrap().clone()),
+            )
+            .await
+            .unwrap_or_else(|error| {
+                panic!("{label}: request={request}; MCP call failed: {error:?}")
+            });
+        let envelope = serde_json::to_value(response).unwrap();
+        let text = envelope["content"][0]["text"].as_str();
+        let mut check = |condition: bool, detail: &str| {
+            if !condition {
+                case_errors.push(detail.to_owned());
+            }
         };
-        assert_eq!(
-            result["error"].get("field").and_then(Value::as_str),
-            field,
-            "{label}: {result}"
+        if let Some((field, input)) = match label {
+            "relative" => Some(("time_range", "week")),
+            "safe" => Some(("safesearch", "strict")),
+            _ => None,
+        } {
+            let expected = format!(
+                "1 validation error for call[{TOOL}]\n{field}\n  Unexpected keyword argument [type={code}, input_value='{input}', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/{code}"
+            );
+            check(
+                envelope["isError"] == true,
+                "schema refusal must set isError=true",
+            );
+            check(
+                envelope.get("structuredContent").is_none(),
+                "schema refusal must not have structuredContent",
+            );
+            check(
+                envelope["content"] == json!([{"type":"text","text":expected}]),
+                "schema refusal must contain exactly the original FastMCP validation text",
+            );
+        } else {
+            check(
+                envelope["isError"] == false,
+                "policy denial must set isError=false",
+            );
+            let result = text.and_then(|text| serde_json::from_str::<Value>(text).ok());
+            check(result.is_some(), "policy tool text must be JSON");
+            if let Some(result) = result {
+                check(
+                    envelope.get("structuredContent") == Some(&result),
+                    "policy structuredContent must equal tool text",
+                );
+                check(result["error"]["code"] == code, "policy error code differs");
+                if label == "unavailable" {
+                    // Existing shared MCP/F09 explicit inactive-engine ordering.
+                    check(
+                        result
+                            == json!({"error":{
+                                "code":"invalid_scope","field":"engines",
+                                "message":"unknown or inactive engines: openalex (inactive)",
+                                "valid_alternatives":[]
+                            }}),
+                        "inactive OpenAlex must preserve the exact shared policy envelope",
+                    );
+                }
+                let field = match label {
+                    "grant" => None,
+                    "invalid_leap" | "empty" | "reversed" => Some("date_from"),
+                    _ => Some("engines"),
+                };
+                check(
+                    result["error"].get("field").and_then(Value::as_str) == field,
+                    "policy error field differs",
+                );
+            }
+        }
+        let observed = fixture.counts.observations();
+        check(
+            observed == [0; 4],
+            &format!("adapter/client/cache reads/writes must remainzero: {observed:?}"),
         );
-        fixture.counts.assert_untouched();
-        assert!(fixture.upstream.lines().is_empty(), "{label}");
-        assert!(
+        check(
+            fixture.upstream.lines().is_empty(),
+            "denied call reached actual OpenAlex HTTP",
+        );
+        check(
             fixture.keys("*").await.is_empty(),
-            "{label}: rejected MCP call wrote shared state"
+            "denied MCP call wrote shared state",
         );
+        if !case_errors.is_empty() {
+            failures.push(format!(
+                "{label}: request={request}; envelope={envelope}; {}",
+                case_errors.join("; ")
+            ));
+        }
         client.cancel().await.unwrap();
         fixture.close().await;
     }
+    assert!(
+        failures.is_empty(),
+        "science denial contract mismatches:\n{}",
+        failures.join("\n")
+    );
 }
 
 #[tokio::test]
