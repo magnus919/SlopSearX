@@ -555,7 +555,15 @@ jobs:
         run: cargo xtask check T01 --output target/rust-evidence/T01.json
 
       - name: Typed records and stable serialization evidence
-        run: cargo xtask check F05 --output target/rust-evidence/F05.json
+        env:
+          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-f05
+          TMPDIR: ${{ runner.temp }}/t02-sockets-f05
+          TMP: ${{ runner.temp }}/t02-sockets-f05
+          TEMP: ${{ runner.temp }}/t02-sockets-f05
+        run: |
+          mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
+          trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT" 2>/dev/null || true' EXIT
+          cargo xtask check F05 --output target/rust-evidence/F05.json
 
       - name: Layered configuration and engine registry evidence
         run: cargo xtask check F06 --output target/rust-evidence/F06.json

@@ -172,6 +172,85 @@ fn caller(
         "T02 exact current-generation caller",
     )
 }
+// The one V6 operand omitted from the sealed 77-caller generation matrix.
+// Keep that matrix and the original V6 verifier byte-exact.
+fn deadline_current(
+    root: &Path,
+    container: &str,
+    hash: &str,
+    source: &str,
+    expected: &str,
+    bytes: Option<usize>,
+) -> Option<Result<(), String>> {
+    const CONTAINER: &str = "docs/rust-rewrite/a13/qualification-v1.json";
+    const SOURCE: &str = "crates/ssx-infra/src/search_deadline_drain_tests.rs";
+    const OLD: &str = "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e";
+    const CURRENT: &str = "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e";
+    if container != CONTAINER || source != SOURCE || hash != CURRENT {
+        return None;
+    }
+    Some((|| {
+        super::need(
+            expected == "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d"
+                && bytes == Some(14360),
+            "A13 deadline current caller tuple differs",
+        )?;
+        // Reuse the sealed actual-generation proof to recover only its predecessor.
+        let prior = caller_material(root, container, OLD)?;
+        let pin: Value = serde_json::from_slice(&prior).map_err(|e| e.to_string())?;
+        super::need(
+            pin["sources"][85] == json!({"path":source,"sha256":expected,"bytes":14360}),
+            "A13 deadline historical caller pointer differs",
+        )?;
+        // This original shared route proves the frozen predecessor closure,
+        // including all V2..V6 manifests and the actual current lock transition.
+        super::try_verify(
+            root,
+            container,
+            OLD,
+            "Cargo.lock",
+            "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860",
+            Some(87421),
+        )
+        .ok_or("A13 deadline predecessor closure route absent")??;
+        let raw = super::read_exact(
+            root,
+            &json!({
+            "path":"docs/rust-rewrite/a13/source-amendments/a13-current-source-amendment-v6.json",
+            "sha256":"69abef686c432ca207a5a3905bc5d3829763d879e227dbebeaf9f01fc27b79e5",
+            "bytes":18205,"mode":"0644"}),
+        )?;
+        let manifest: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+        super::super::super::validate_scope(&manifest)?;
+        super::super::super::verify_additional_source_file(root, &manifest)?;
+        let amendment = manifest["amendments"]
+            .as_array()
+            .ok_or("A13 V6 amendments absent")?
+            .iter()
+            .find(|a| a["source_path"] == source)
+            .ok_or("A13 deadline V6 source absent")?;
+        let current_path = root.join(source);
+        let current = std::fs::read(&current_path).map_err(|e| e.to_string())?;
+        let archive_path = root.join(super::text(&amendment["archive"], "path")?);
+        let archive = std::fs::read(&archive_path).map_err(|e| e.to_string())?;
+        // Original V6 checks still own both exact source operands and their modes.
+        super::super::super::verify_payload(super::super::super::PinCheck {
+            amendment,
+            container_path: container,
+            container_sha: OLD,
+            container_bytes: &prior,
+            source_path: source,
+            historical_sha: expected,
+            historical_bytes: bytes,
+            current_bytes: &current,
+            archive_bytes: &archive,
+            current_mode: &super::permissions(&current_path)?,
+            archive_mode: &super::permissions(&archive_path)?,
+        })?;
+        super::super::super::verify_previous_successor(root, amendment, None)
+    })())
+}
+
 pub(super) fn try_current(
     root: &Path,
     container: &str,
@@ -180,6 +259,9 @@ pub(super) fn try_current(
     expected: &str,
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
+    if let Some(result) = deadline_current(root, container, hash, source, expected, bytes) {
+        return Some(result);
+    }
     // Historical routes remain unchanged. Current generations have their own finite matrix.
     if ![
         "docs/rust-rewrite/a09/coverage.json",
@@ -313,6 +395,45 @@ pub(super) fn scoped(root: &Path, row: &Value, historical: &[u8]) -> Result<Valu
 }
 #[cfg(test)]
 pub(super) fn controls(root: &Path) -> Result<(), String> {
+    let c = "docs/rust-rewrite/a13/qualification-v1.json";
+    let s = "crates/ssx-infra/src/search_deadline_drain_tests.rs";
+    let h = "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e";
+    let e = "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d";
+    deadline_current(root, c, h, s, e, Some(14360)).ok_or("deadline positive absent")??;
+    for (digest, len) in [("wrong", Some(14360)), (e, None), (e, Some(14361))] {
+        super::need(
+            deadline_current(root, c, h, s, digest, len).is_some_and(|r| r.is_err())
+                && super::super::verify_current(root, c, h, s, digest, len).is_err(),
+            "deadline altered source operand accepted",
+        )?;
+    }
+    // Unlisted caller hashes must preserve the original fallback's complete Result,
+    // including its error string; this is the frozen routing-equivalence contract.
+    for hash in [
+        "wrong",
+        "mutated-container-hash",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+    ] {
+        super::need(
+            deadline_current(root, c, hash, s, e, Some(14360)).is_none(),
+            "deadline unlisted or historical caller intercepted",
+        )?;
+        let current = super::super::verify_current(root, c, hash, s, e, Some(14360));
+        let original = super::super::super::verify(root, c, hash, s, e, Some(14360));
+        super::need(
+            current.is_err() && current == original,
+            "deadline original fallback result changed",
+        )?;
+    }
+    for (container, source) in [("unknown", s), (c, "unknown")] {
+        super::need(
+            deadline_current(root, container, h, source, e, Some(14360)).is_none()
+                && super::super::verify_current(root, container, h, source, e, Some(14360))
+                    .is_err(),
+            "deadline unlisted path intercepted or accepted",
+        )?;
+    }
     let doc = load(root)?;
     for row in doc["rows"].as_array().ok_or("T02 rows absent")? {
         let (prior, current) = verify(root, row)?;

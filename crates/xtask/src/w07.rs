@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "5090a4deb27fd281d43df64066ab5581d20e078b05d341211a1489db46b9a94a";
+const REGISTRY_SHA: &str = "f69e8c33053cc1c70acbc0fd9b64dfc8d6b0f7d5800ca36e0c44c4de5b42c8a0";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -267,6 +267,15 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     }
     expected["sources"]["docs/rust-rewrite/a06/source-amendments/shared-successor.rs"] =
         Value::String("f248a1bb993975ca268a2bfbd1fb52bbd815651a852f4045f648fb8151277045".into());
+    // Normal W07/CI join: preserve the original pin and admit only the reviewed
+    // merged whole-file operand, including W07's existing joint module import.
+    if expected["sources"]["docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs"]
+        != "92ee65c35762283c69445cae87ea7d901e036078de6638d10ec0015906373109"
+    {
+        return Err("W07 original post-generation source pin changed".into());
+    }
+    expected["sources"]["docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs"] =
+        Value::String("6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c".into());
     if expected["sources"]
         .get("crates/ssx-application/src/lib.rs")
         .is_some()
@@ -593,6 +602,14 @@ mod tests {
         let mut weakened_metrics = current.clone();
         weakened_metrics["sources"]["crates/ssx-infra/src/observability/metrics.rs"] =
             Value::String("0".repeat(64));
+        let mut removed_post_generation = current.clone();
+        removed_post_generation["sources"]
+            .as_object_mut()
+            .unwrap()
+            .remove("docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs");
+        let mut weakened_post_generation = current.clone();
+        weakened_post_generation["sources"]["docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs"] =
+            Value::String("0".repeat(64));
         for bad in [
             removed,
             unknown,
@@ -600,6 +617,8 @@ mod tests {
             weakened,
             removed_metrics,
             weakened_metrics,
+            removed_post_generation,
+            weakened_post_generation,
         ] {
             assert!(preserve_registry(&original, &bad).is_err());
         }
