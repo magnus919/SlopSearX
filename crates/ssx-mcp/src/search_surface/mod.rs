@@ -269,13 +269,7 @@ impl SearchSurface {
                     ));
                 };
                 let cancel = ssx_application::receipts::Cancellation::default();
-                let task = crate::evidence::tools::execute(
-                    evidence,
-                    name,
-                    args.values(),
-                    &tenant,
-                    &cancel,
-                );
+                let task = crate::evidence::tools::execute(evidence, name, &args, &tenant, &cancel);
                 tokio::pin!(task);
                 tokio::select! {
                     biased;

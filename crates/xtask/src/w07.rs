@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "f69e8c33053cc1c70acbc0fd9b64dfc8d6b0f7d5800ca36e0c44c4de5b42c8a0";
+const REGISTRY_SHA: &str = "e8629c441cb27d5d7c08631eea9ec42ff7c2b233a4ea478a4bc9a3f6ebfb930e";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -204,6 +204,10 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
             )
             .map_err(|e| e.to_string())?,
         );
+    expected["suites"][10]["tests"]
+        .as_array_mut()
+        .ok_or("W07 original evidence-tools suite identity missing")?
+        .push(Value::String("evidence::tools::tests::raw_any_artifacts_preserve_source_semantic_precedence_without_storage".into()));
     if expected["sources"]["crates/ssx-application/src/lineage.rs"]
         != "f087610a7dce527e6f86a44e64c91815041e2af91fa93656a8321efa1cb29762"
     {
@@ -238,7 +242,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 original whole-file source pin changed".into());
     }
     expected["sources"]["crates/ssx-mcp/src/evidence/tools/tests.rs"] =
-        Value::String("04ebdd2551b9644122357514eba5e438525441a2f3c30d9a74cadf6d88ac37bb".into());
+        Value::String("01bb4fbbdc3ee06f777cb2232a608b85799c8da4b700c0faf6d5e4d250e47760".into());
     if expected["sources"]["crates/ssx-mcp/tests/w07_composition.rs"]
         != "d44e46295e812839e0fd43571c29942df47e16fd51513a8c496f8993faa32064"
     {
@@ -252,7 +256,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 original whole-file source pin changed".into());
     }
     expected["sources"]["crates/ssx-mcp/tests/w07_mcp.rs"] =
-        Value::String("248ee74f84deba26519770c2cdd5384da2dbf5a35d8020dbe4f41b27f4301c38".into());
+        Value::String("c9b6d96511b9dd5409217f1f6dfc2592a249c0082dc5f2f91c01cd3b60f9dc1f".into());
     if expected["sources"]["crates/ssx-mcp/tests/w07_support/mcp.rs"]
         != "244e3509015eb7394b9fb2fc682b9cd8240c6fddb0b2a2b422ae5fa715608c2c"
     {
@@ -276,6 +280,27 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     }
     expected["sources"]["docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs"] =
         Value::String("6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c".into());
+    if expected["sources"]["crates/ssx-mcp/src/search_surface/validation.rs"]
+        != "7df42259622e459f1efa28257a6898dbf794f6cc360686be9cb10a25ec40ab0b"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/src/search_surface/validation.rs"] =
+        Value::String("4163a01d3c879132e60e611f4085cd493f3310a5341bbff54fee86d90fb1af36".into());
+    if expected["sources"]["crates/ssx-mcp/src/evidence/tools.rs"]
+        != "c4504b7dffbaf11420350bce226c9e18559ea382316f57fc55a7469f4c12943f"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/src/evidence/tools.rs"] =
+        Value::String("705362f0e083cf1a65b5b1149430231b7f0329517e53311317bc2ff91432f9b9".into());
+    if expected["sources"]["crates/ssx-mcp/src/search_surface/mod.rs"]
+        != "db27a4c64584f32eeabfecb7953148bbe7666f90568a3fb00ba9f3cdec4cb091"
+    {
+        return Err("W07 original whole-file source pin changed".into());
+    }
+    expected["sources"]["crates/ssx-mcp/src/search_surface/mod.rs"] =
+        Value::String("1de423862041d7988ce020f801af73abd25db3f9dcdae83a3e362db58428496f".into());
     if expected["sources"]
         .get("crates/ssx-application/src/lib.rs")
         .is_some()
@@ -621,6 +646,21 @@ mod tests {
             weakened_post_generation,
         ] {
             assert!(preserve_registry(&original, &bad).is_err());
+        }
+        // Every changed raw-artifact implementation pin remains mandatory and exact.
+        for source in [
+            "crates/ssx-mcp/src/search_surface/validation.rs",
+            "crates/ssx-mcp/src/evidence/tools.rs",
+            "crates/ssx-mcp/src/search_surface/mod.rs",
+            "crates/ssx-mcp/src/evidence/tools/tests.rs",
+            "crates/ssx-mcp/tests/w07_mcp.rs",
+        ] {
+            let mut missing = current.clone();
+            missing["sources"].as_object_mut().unwrap().remove(source);
+            assert!(preserve_registry(&original, &missing).is_err());
+            let mut changed = current.clone();
+            changed["sources"][source] = Value::String("0".repeat(64));
+            assert!(preserve_registry(&original, &changed).is_err());
         }
         for field in [
             "schema_version",

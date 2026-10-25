@@ -100,10 +100,11 @@ fn lineage_failure(failure: lineage::Failure) -> Result<Value, ErrorData> {
 pub(crate) async fn execute(
     runtime: &EvidenceRuntime,
     name: &str,
-    values: &Map<String, Value>,
+    arguments: &crate::search_surface::validation::Arguments,
     tenant: &TenantId,
     cancel: &Cancellation,
 ) -> Result<Value, ErrorData> {
+    let values = arguments.values();
     let result_id = string(values, "result_id");
     let result = match name {
         "slopsearx_submit_retrieval_receipt" => {
@@ -135,7 +136,6 @@ pub(crate) async fn execute(
                 .await
         }
         "slopsearx_export_research_manifest" => {
-            let parse = |v: &Value| lineage::input::artifact(v).map_err(|e| e.0.to_owned());
             runtime
                 .service
                 .manifest_draft(
@@ -146,25 +146,21 @@ pub(crate) async fn execute(
                                 .map(|v| v.as_str().expect("validated result ID").into())
                                 .collect()
                         }),
-                        artifacts: values
-                            .get("artifacts")
-                            .and_then(Value::as_array)
-                            .map(|a| a.iter().map(parse).collect()),
+                        artifacts: arguments.artifacts(),
                         max_depth: bound(values, "max_depth", 2),
                         max_nodes: bound(values, "max_nodes", 100),
-                        source: values.get("source").filter(|v| !v.is_null()).map(parse),
+                        source: arguments.artifact("source"),
                     },
                     cancel,
                 )
                 .await
         }
         "slopsearx_get_artifact_lineage" => {
-            let root =
-                match lineage::input::artifact(values.get("artifact").expect("validated artifact"))
-                {
-                    Ok(root) => root,
-                    Err(e) => return Ok(semantic_error(e.0, "artifact")),
-                };
+            let root = match arguments.artifact("artifact") {
+                Some(Ok(root)) => root,
+                Some(Err(message)) => return Ok(semantic_error(&message, "artifact")),
+                None => return Err(ErrorData::invalid_params("artifact is required", None)),
+            };
             let direction = match Direction::parse(
                 values
                     .get("direction")

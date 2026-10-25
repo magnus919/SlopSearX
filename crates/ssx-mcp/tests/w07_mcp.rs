@@ -51,14 +51,20 @@ fn evidence_catalog_matches_source(catalog: &Value) -> Result<()> {
     )
 }
 async fn rpc(client: &reqwest::Client, url: &str, method: &str, params: Value) -> Result<Value> {
+    rpc_body(
+        client,
+        url,
+        ssx_json::to_string(&json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}))?,
+    )
+    .await
+}
+async fn rpc_body(client: &reqwest::Client, url: &str, body: String) -> Result<Value> {
     let response = client
         .post(url)
         .header("content-type", "application/json")
         .header("accept", "application/json,text/event-stream")
         .header("mcp-protocol-version", "2025-11-25")
-        .body(ssx_json::to_string(
-            &json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}),
-        )?)
+        .body(body)
         .send()
         .await?;
     assert_eq!(response.status(), 200);
@@ -66,6 +72,19 @@ async fn rpc(client: &reqwest::Client, url: &str, method: &str, params: Value) -
     let envelope: Value = ssx_json::from_str(&raw)?;
     assert!(envelope.get("error").is_none(), "{envelope}");
     Ok(envelope["result"].clone())
+}
+async fn call_raw(client: &reqwest::Client, url: &str, name: &str, args: &str) -> Result<Value> {
+    let name = ssx_json::to_string(name)?;
+    let body = format!(
+        r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":{name},"arguments":{args}}}}}"#
+    );
+    let result = rpc_body(client, url, body).await?;
+    assert_eq!(result["isError"], false, "{result}");
+    Ok(ssx_json::from_str(
+        result["content"][0]["text"]
+            .as_str()
+            .ok_or("native text missing")?,
+    )?)
 }
 async fn call(client: &reqwest::Client, url: &str, name: &str, args: Value) -> Result<Value> {
     let result = rpc(
@@ -250,6 +269,22 @@ async fn authenticated_receipts_emit_source_workflow_counters_on_the_shared_coll
         let snapshot_before: std::collections::BTreeMap<_, _> = retained_bytes(&server)?.into_iter()
             .filter(|(key,_)| key.contains(":snapshot:")).collect();
         need(snapshot_before.len() == 1, "one retained source snapshot expected")?;
+        // Raw token cases share this authenticated fixture and dispatch no engine.
+        let raw_before=retained_bytes(&server)?;
+        for (tool,raw,expected) in [
+            (TOOL_NAMES[3],r#"{"artifact":{"version":1e999}}"#,json!({"error":{"code":"invalid_input","message":"artifact must contain exactly contract, version, kind, and id","field":"artifact"}})),
+            (TOOL_NAMES[3],r#"{"artifact":{"contract":"slopsearx.artifact_ref","version":1e999,"kind":"snapshot","id":"s"}}"#,json!({"error":{"code":"invalid_input","message":"unsupported artifact reference contract or version","field":"artifact"}})),
+            (TOOL_NAMES[2],r#"{"source":{"version":1e999},"result_ids":[]}"#,json!({"error":{"code":"input_conflict","message":"source cannot be combined with result_ids or artifacts"}})),
+            (TOOL_NAMES[2],r#"{"artifacts":[{"extra":{"nested":[1e999]}}],"max_depth":6}"#,json!({"error":{"code":"invalid_input","message":"max_depth must be an integer from 0 to 5"}})),
+        ] {
+            need(call_raw(&client,&endpoint,tool,raw).await?==expected,"raw Any changed semantic error ordering")?;
+        }
+        fixture.authority.0.write().unwrap().search.policy.grants.remove("retrieval_receipts");
+        let disabled=call_raw(&client,&endpoint,TOOL_NAMES[2],r#"{"source":{"version":1e999},"result_ids":[]}"#).await?;
+        fixture.authority.0.write().unwrap().search.policy.grants.insert("retrieval_receipts".into());
+        need(disabled==json!({"error":{"code":"tool_disabled","message":"retrieval receipts require MCP_GRANT_RETRIEVAL_RECEIPTS=1"}}),"grant no longer precedes raw Any semantic error")?;
+        assert_retained_unchanged(&raw_before,&retained_bytes(&server)?)?;
+        need(fixture.dispatches.load(Ordering::SeqCst)==1,"raw artifact input dispatched engine")?;
         let success = json!({"result_id":id,"retriever":"private-metric-reader","idempotency_key":"metric-success","status":"succeeded","captured_at":"2026-09-11T04:00:00Z","capture_ref":"capture://private-metric","final_url":"https://captured.example/final","content_sha256":"A".repeat(64),"passage_refs":[{"ref":"passage-1","label":"supporting text"}]});
         let success_receipt = call(&client, &endpoint, TOOL_NAMES[0], success.clone()).await?;
         need(success_receipt["state"] == "created", "success receipt not created")?;

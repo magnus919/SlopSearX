@@ -170,7 +170,8 @@
       "tests": [
         "evidence::tools::tests::function_boundary_preserves_strict_bounds_nested_types_and_semantic_artifacts",
         "evidence::tools::tests::handlers_reuse_application_replay_conflict_tenant_grant_and_manifest_contracts",
-        "evidence::tools::tests::semantic_errors_keep_source_order_defaults_and_field_attribution"
+        "evidence::tools::tests::semantic_errors_keep_source_order_defaults_and_field_attribution",
+        "evidence::tools::tests::raw_any_artifacts_preserve_source_semantic_precedence_without_storage"
       ]
     },
     {
@@ -239,12 +240,12 @@
     "crates/ssx-mcp/src/evidence/authority.rs": "b5e42c7b6116e924a2b0650f9d0e7ac371900307c399aa34dea605739edd63b7",
     "crates/ssx-mcp/src/evidence/factory.rs": "f409c156d5a9ab76afb57f584f94c5d7eabdf47149a6a93b6474c81bf956a384",
     "crates/ssx-mcp/src/evidence/mod.rs": "2481244dc37c4518554a76672df7eb8a45c963bd59419a4c3c5574f2b1cb35eb",
-    "crates/ssx-mcp/src/evidence/tools/tests.rs": "04ebdd2551b9644122357514eba5e438525441a2f3c30d9a74cadf6d88ac37bb",
-    "crates/ssx-mcp/src/evidence/tools.rs": "c4504b7dffbaf11420350bce226c9e18559ea382316f57fc55a7469f4c12943f",
-    "crates/ssx-mcp/src/search_surface/mod.rs": "db27a4c64584f32eeabfecb7953148bbe7666f90568a3fb00ba9f3cdec4cb091",
-    "crates/ssx-mcp/src/search_surface/validation.rs": "7df42259622e459f1efa28257a6898dbf794f6cc360686be9cb10a25ec40ab0b",
+    "crates/ssx-mcp/src/evidence/tools/tests.rs": "01bb4fbbdc3ee06f777cb2232a608b85799c8da4b700c0faf6d5e4d250e47760",
+    "crates/ssx-mcp/src/evidence/tools.rs": "705362f0e083cf1a65b5b1149430231b7f0329517e53311317bc2ff91432f9b9",
+    "crates/ssx-mcp/src/search_surface/mod.rs": "1de423862041d7988ce020f801af73abd25db3f9dcdae83a3e362db58428496f",
+    "crates/ssx-mcp/src/search_surface/validation.rs": "4163a01d3c879132e60e611f4085cd493f3310a5341bbff54fee86d90fb1af36",
     "crates/ssx-mcp/tests/w07_composition.rs": "d9fc3328472f8fde9804d49d369dcc0686e9a524c0c128de3d751a12bbd8127b",
-    "crates/ssx-mcp/tests/w07_mcp.rs": "248ee74f84deba26519770c2cdd5384da2dbf5a35d8020dbe4f41b27f4301c38",
+    "crates/ssx-mcp/tests/w07_mcp.rs": "c9b6d96511b9dd5409217f1f6dfc2592a249c0082dc5f2f91c01cd3b60f9dc1f",
     "crates/ssx-mcp/tests/w07_support/mcp.rs": "e0b6368a32e9e1c2070e5944b022d55b37b12304e373eea52051170ba5680545",
     "crates/ssx-mcp/tests/w07_support/observer.rs": "266902a7dd9d3589a39a08174b6859b9f5dbebb0ca0aa3127e7617393776cc89",
     "crates/xtask/fixtures/w11/corpus.json": "a72814e0071a806421b188e73451c91034164438b7942a3055496be4f6562726",
