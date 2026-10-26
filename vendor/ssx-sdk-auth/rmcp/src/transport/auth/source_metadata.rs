@@ -92,10 +92,66 @@ impl SourceEndpoint {
         self.origin
     }
 }
+/// A source model validation failure, distinct from transport, deadline,
+/// resource, expiry-conversion and persistence failures. Only refresh may
+/// consume this marker as source reauthorization fallback.
+#[derive(Debug)]
+pub struct SourceOAuthModelInvalid;
+impl std::fmt::Display for SourceOAuthModelInvalid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("invalid source OAuth response model")
+    }
+}
+impl std::error::Error for SourceOAuthModelInvalid {}
+/// Exact source request purpose; adapters select the existing model codec by
+/// this value, never by guessing body keys, method, or endpoint spelling.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SourceOAuthPurpose {
+    /// PRM/ASM GET, whose whole-document model validation follows transport.
+    Discovery,
+    /// Dynamic registration; discard wire issuer before client-model validation.
+    Registration,
+    /// Authorization-code token exchange, accepting source HTTP 200 or 201.
+    CodeExchange,
+    /// Refresh token exchange, accepting source HTTP 200 only. The project
+    /// model adapter carries omitted/null scope from the prior raw token before
+    /// returning the SDK-compatible DTO; missing refresh_token is retained here.
+    Refresh,
+}
+/// Missing-ASM endpoint to derive using the source's raw resource-origin helper.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SourceOAuthEndpointKind {
+    /// Source origin joined with /authorize.
+    Authorization,
+    /// Source origin joined with /token.
+    Token,
+    /// Source origin joined with /register, including absent ASM registration.
+    Registration,
+}
+/// Input to the finite injected raw endpoint derivation operation.
+#[derive(Clone)]
+pub struct SourceOAuthEndpointRequest {
+    /// Original immutable resource base, not a normalized authorization URL.
+    pub base: Arc<str>,
+    /// Exact fallback purpose, selected before transport.
+    pub kind: SourceOAuthEndpointKind,
+}
+impl std::fmt::Debug for SourceOAuthEndpointRequest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SourceOAuthEndpointRequest")
+            .field("kind", &self.kind)
+            .finish_non_exhaustive()
+    }
+}
+/// Result of deriving a missing endpoint; no default URI is constructed.
+pub type SourceOAuthEndpointFuture<'a> =
+    Pin<Box<dyn Future<Output = Result<SourceEndpoint, OAuthHttpClientError>> + Send + 'a>>;
 /// Buffered source operation, with no mandatory typed URI or placeholder URL.
 /// Body replay is explicit: clones retain the same endpoint and buffered bytes.
 #[derive(Clone)]
 pub struct SourceOAuthHttpRequest {
+    /// Explicit codec and status-policy purpose.
+    pub purpose: SourceOAuthPurpose,
     /// Actual method selected by source preparation.
     pub method: oauth2::http::Method,
     /// Original raw or validated-model endpoint owner.
@@ -112,6 +168,7 @@ pub struct SourceOAuthHttpRequest {
 impl std::fmt::Debug for SourceOAuthHttpRequest {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SourceOAuthHttpRequest")
+            .field("purpose", &self.purpose)
             .field("method", &self.method)
             .field("endpoint", &self.endpoint)
             .finish_non_exhaustive()
@@ -121,6 +178,7 @@ impl SourceOAuthHttpRequest {
     /// Build an explicit source discovery GET without constructing an http::Uri.
     pub fn discovery(endpoint: SourceEndpoint) -> Self {
         Self {
+            purpose: SourceOAuthPurpose::Discovery,
             method: oauth2::http::Method::GET,
             endpoint,
             headers: Default::default(),

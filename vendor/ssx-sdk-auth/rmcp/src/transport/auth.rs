@@ -147,6 +147,18 @@ pub trait OAuthHttpClient: Send + Sync {
         })
     }
 
+    /// Derive a missing source OAuth endpoint from the raw resource-server origin.
+    /// The source uses raw urllib urlparse/urljoin here, not SDK Url or http::Uri.
+    #[cfg(feature = "ssx-source-metadata")]
+    fn source_oauth_endpoint(
+        &self,
+        _request: source_metadata::SourceOAuthEndpointRequest,
+    ) -> source_metadata::SourceOAuthEndpointFuture<'_> {
+        Box::pin(async {
+            Err(Box::new(source_metadata::SourceOperationUnsupported) as OAuthHttpClientError)
+        })
+    }
+
     /// Validate one complete PRM/ASM document before source semantic policy.
     /// An injected project adapter can call SourceMetadataProjection::parse;
     /// None means only model-invalid, while transport/operational errors escape.
@@ -379,6 +391,18 @@ pub trait CredentialStore: Send + Sync {
     /// The default leaves credentials unchanged. Callback errors are logged, and the
     /// manager still returns [`AuthError::TokenRefreshRejected`] so callers can reauthorize.
     async fn on_refresh_token_rejected(
+        &self,
+        _credentials: &StoredCredentials,
+    ) -> Result<(), AuthError> {
+        Ok(())
+    }
+
+    /// Retire the attempted source token after any non200 refresh or source
+    /// model-invalid response. This is distinct from definitive invalid_grant.
+    /// The existing refresh guard remains held; implementations must not reacquire
+    /// it or discard newer credentials. The default leaves persistence unchanged.
+    #[cfg(feature = "ssx-source-metadata")]
+    async fn on_source_refresh_fallback(
         &self,
         _credentials: &StoredCredentials,
     ) -> Result<(), AuthError> {
@@ -1217,6 +1241,8 @@ pub struct AuthorizationManager {
     base_url: ManagerBase,
     #[cfg(feature = "ssx-source-metadata")]
     source_metadata_state: source_metadata::SourceMetadataState,
+    #[cfg(feature = "ssx-source-metadata")]
+    source_client: Option<source_manager::SourceClient>,
     current_scopes: RwLock<Vec<String>>,
     scope_upgrade_attempts: RwLock<u32>,
     scope_upgrade_config: ScopeUpgradeConfig,
@@ -1506,6 +1532,8 @@ impl AuthorizationManager {
             base_url,
             #[cfg(feature = "ssx-source-metadata")]
             source_metadata_state: source_metadata::SourceMetadataState::default(),
+            #[cfg(feature = "ssx-source-metadata")]
+            source_client: None,
             current_scopes: RwLock::new(Vec::new()),
             scope_upgrade_attempts: RwLock::new(0),
             scope_upgrade_config: ScopeUpgradeConfig::default(),
@@ -1980,6 +2008,10 @@ impl AuthorizationManager {
 
     /// generate authorization url
     pub async fn get_authorization_url(&self, scopes: &[&str]) -> Result<String, AuthError> {
+        #[cfg(feature = "ssx-source-metadata")]
+        if self.source_base().is_some() {
+            return self.source_authorization_url(scopes).await;
+        }
         let oauth_client = self
             .oauth_client
             .as_ref()
@@ -2248,6 +2280,12 @@ impl AuthorizationManager {
         csrf_token: &str,
         received_issuer: Option<&str>,
     ) -> Result<OAuthTokenResponse, AuthError> {
+        #[cfg(feature = "ssx-source-metadata")]
+        if self.source_base().is_some() {
+            return self
+                .source_exchange_code(code, csrf_token, received_issuer)
+                .await;
+        }
         debug!("start exchange code for token");
         let oauth_client = self
             .oauth_client
@@ -2404,6 +2442,10 @@ impl AuthorizationManager {
 
     /// refresh access token
     pub async fn refresh_token(&self) -> Result<OAuthTokenResponse, AuthError> {
+        #[cfg(feature = "ssx-source-metadata")]
+        if self.source_base().is_some() {
+            return self.source_refresh_token().await;
+        }
         let oauth_client = self
             .oauth_client
             .as_ref()
