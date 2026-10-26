@@ -1329,7 +1329,7 @@ mod source_gate_tests {
     use rmcp::transport::auth::source_metadata::{
         SourceMetadataGate, SourceMetadataKind, SourceMetadataProjection,
     };
-    use std::{future::Future, task::Poll};
+    use std::task::Poll;
 
     fn prm(resource: &str) -> SourceMetadataProjection {
         SourceMetadataProjection::parse(
@@ -1445,6 +1445,7 @@ mod source_token_error_tests {
 #[cfg(all(test, feature = "gateway-source-endpoints"))]
 mod source_scope_roundtrip_tests {
     use super::*;
+    use rmcp::transport::auth::source_metadata::SourceOAuthModelInvalid;
     #[tokio::test]
     async fn source_http_huge_known_expiry_is_valid_model_then_operational_overflow() {
         let deadline = Instant::now() + Duration::from_secs(10);
