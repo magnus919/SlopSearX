@@ -30,3 +30,5 @@ pub(crate) mod stdio_input_windows;
 
 #[cfg(any(unix, windows))]
 pub mod resolver;
+
+pub(crate) mod source_discovery;

@@ -559,6 +559,181 @@ fn join_unsplit(
     out
 }
 
+/// Raw urllib.parse.urlparse observations only; not a transport-authorized URL.
+#[derive(Clone, PartialEq, Eq)]
+pub struct RawSourceUrlParts {
+    scheme: String,
+    netloc: String,
+    path: String,
+    query: Option<String>,
+    fragment: Option<String>,
+}
+impl std::fmt::Debug for RawSourceUrlParts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("RawSourceUrlParts(<raw observations>)")
+    }
+}
+impl RawSourceUrlParts {
+    /// Lowercased recognized scheme from raw urlparse.
+    pub fn scheme(&self) -> &str {
+        &self.scheme
+    }
+    /// Untouched authority spelling, including userinfo and arbitrary port text.
+    pub fn netloc(&self) -> &str {
+        &self.netloc
+    }
+    /// Raw path; urlparse strips scheme-dependent final params, urlsplit retains them.
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    /// Raw query, preserving its explicit empty delimiter observation.
+    pub fn query(&self) -> Option<&str> {
+        self.query.as_deref()
+    }
+    /// Raw fragment, preserving its explicit empty delimiter observation.
+    pub fn fragment(&self) -> Option<&str> {
+        self.fragment.as_deref()
+    }
+}
+const RAW_USES_PARAMS: &[&str] = &[
+    "", "ftp", "hdl", "prospero", "http", "imap", "https", "shttp", "rtsp", "rtsps", "rtspu",
+    "sip", "sips", "mms", "sftp", "tel",
+];
+/// Observe original text with pinned urllib.parse.urlparse, not SourceUrl::parse.
+/// Reuses the same exact private _urlsplit brackets/NFKC/C0 handling as raw join.
+pub fn source_raw_urlparse(text: &str) -> Result<RawSourceUrlParts, SourceUrlError> {
+    let mut parts = source_raw_urlsplit(text)?;
+    if RAW_USES_PARAMS.contains(&parts.scheme.as_str()) {
+        let start = parts.path.rfind('/').unwrap_or(0);
+        if let Some(offset) = parts.path[start..].find(';') {
+            parts.path.truncate(start + offset);
+        }
+    }
+    Ok(parts)
+}
+/// Raw urllib.parse.urlsplit observations without urlparse's params removal.
+/// This never normalizes through HTTPX or grants endpoint/model authority.
+pub fn source_raw_urlsplit(text: &str) -> Result<RawSourceUrlParts, SourceUrlError> {
+    let parts = join_split(text)?;
+    Ok(RawSourceUrlParts {
+        scheme: parts.scheme.unwrap_or_default(),
+        netloc: parts.netloc.unwrap_or_default(),
+        path: parts.path,
+        query: parts.query,
+        fragment: parts.fragment,
+    })
+}
+/// Public urllib.parse.urlunsplit: empty query/fragment delimiters collapse.
+/// Empty authority presence follows the pinned scheme table, unlike _urlunsplit.
+pub fn source_raw_urlunsplit(
+    scheme: &str,
+    netloc: &str,
+    path: &str,
+    query: Option<&str>,
+    fragment: Option<&str>,
+) -> String {
+    let authority = if !netloc.is_empty()
+        || (!scheme.is_empty()
+            && JOIN_USES_NETLOC.contains(&scheme)
+            && (path.is_empty() || path.starts_with('/')))
+    {
+        Some(netloc)
+    } else {
+        None
+    };
+    join_unsplit(
+        Some(scheme),
+        authority,
+        path,
+        query.filter(|q| !q.is_empty()),
+        fragment.filter(|f| !f.is_empty()),
+    )
+}
+/// Raw urllib.parse.urljoin over original strings, not HTTPX normalization.
+/// The returned text grants no routing, validation or model authority.
+pub fn source_raw_urljoin(base: &str, reference: &str) -> Result<String, SourceUrlError> {
+    let base = base.to_owned();
+    let target = reference.to_owned();
+    // CPython returns original text before splitting if either operand is empty.
+    let joined = if base.is_empty() {
+        target
+    } else if target.is_empty() {
+        base
+    } else {
+        let b = join_split(&base)?;
+        let r = join_split(&target)?;
+        let scheme = r.scheme.as_deref().or(b.scheme.as_deref());
+        if scheme != b.scheme.as_deref() || scheme.is_some_and(|s| !JOIN_USES_RELATIVE.contains(&s))
+        {
+            target
+        } else {
+            let mut netloc = r.netloc.clone();
+            if scheme.is_none() || scheme.is_some_and(|s| JOIN_USES_NETLOC.contains(&s)) {
+                if netloc.as_ref().is_some_and(|n| !n.is_empty()) {
+                    let text = join_unsplit(
+                        scheme,
+                        netloc.as_deref(),
+                        &r.path,
+                        r.query.as_deref(),
+                        r.fragment.as_deref(),
+                    );
+                    return Ok(text);
+                }
+                netloc = b.netloc.clone();
+            }
+            let mut path = r.path.clone();
+            let mut query = r.query.as_deref();
+            let mut fragment = r.fragment.as_deref();
+            if path.is_empty() {
+                path = b.path.clone();
+                if query.is_none() {
+                    query = b.query.as_deref();
+                    if fragment.is_none() {
+                        fragment = b.fragment.as_deref();
+                    }
+                }
+            } else {
+                let mut base_parts: Vec<_> = b.path.split('/').collect();
+                if base_parts.last() != Some(&"") {
+                    base_parts.pop();
+                }
+                let segments = if path.starts_with('/') {
+                    path.split('/').collect::<Vec<_>>()
+                } else {
+                    base_parts.extend(path.split('/'));
+                    let len = base_parts.len();
+                    base_parts
+                        .into_iter()
+                        .enumerate()
+                        .filter(|(i, v)| *i == 0 || *i + 1 == len || !v.is_empty())
+                        .map(|(_, v)| v)
+                        .collect()
+                };
+                let trailing = segments.last().is_some_and(|s| matches!(*s, "." | ".."));
+                let mut resolved = Vec::new();
+                for seg in segments {
+                    match seg {
+                        ".." => {
+                            resolved.pop();
+                        }
+                        "." => {}
+                        _ => resolved.push(seg),
+                    }
+                }
+                if trailing {
+                    resolved.push("");
+                }
+                path = resolved.join("/");
+                if path.is_empty() {
+                    path = "/".into();
+                }
+            }
+            join_unsplit(scheme, netloc.as_deref(), &path, query, fragment)
+        }
+    };
+    Ok(joined)
+}
+
 impl SourceUrl {
     /// Parse exact HTTPX2 string input, preserving original text separately.
     pub fn parse(text: &str) -> Result<Self, SourceUrlError> {
@@ -840,89 +1015,7 @@ impl SourceUrl {
     /// JoinBracket/JoinNetloc represent source ValueError, not constructor InvalidURL.
     pub fn join(&self, reference: &str) -> Result<Self, SourceUrlError> {
         let reference = Self::parse(reference)?;
-        let base = self.serialized();
-        let target = reference.serialized();
-        // CPython returns before _urlsplit when EITHER operand is empty.
-        // HTTPX still performs the final URL construction on that returned text.
-        let joined = if base.is_empty() {
-            target
-        } else if target.is_empty() {
-            base
-        } else {
-            let b = join_split(&base)?;
-            let r = join_split(&target)?;
-            let scheme = r.scheme.as_deref().or(b.scheme.as_deref());
-            if scheme != b.scheme.as_deref()
-                || scheme.is_some_and(|s| !JOIN_USES_RELATIVE.contains(&s))
-            {
-                target
-            } else {
-                let mut netloc = r.netloc.clone();
-                if scheme.is_none() || scheme.is_some_and(|s| JOIN_USES_NETLOC.contains(&s)) {
-                    if netloc.as_ref().is_some_and(|n| !n.is_empty()) {
-                        let text = join_unsplit(
-                            scheme,
-                            netloc.as_deref(),
-                            &r.path,
-                            r.query.as_deref(),
-                            r.fragment.as_deref(),
-                        );
-                        let mut result = Self::parse(&text)?;
-                        result.origin = SourceUrlOrigin::Join;
-                        return Ok(result);
-                    }
-                    netloc = b.netloc.clone();
-                }
-                let mut path = r.path.clone();
-                let mut query = r.query.as_deref();
-                let mut fragment = r.fragment.as_deref();
-                if path.is_empty() {
-                    path = b.path.clone();
-                    if query.is_none() {
-                        query = b.query.as_deref();
-                        if fragment.is_none() {
-                            fragment = b.fragment.as_deref();
-                        }
-                    }
-                } else {
-                    let mut base_parts: Vec<_> = b.path.split('/').collect();
-                    if base_parts.last() != Some(&"") {
-                        base_parts.pop();
-                    }
-                    let segments = if path.starts_with('/') {
-                        path.split('/').collect::<Vec<_>>()
-                    } else {
-                        base_parts.extend(path.split('/'));
-                        let len = base_parts.len();
-                        base_parts
-                            .into_iter()
-                            .enumerate()
-                            .filter(|(i, v)| *i == 0 || *i + 1 == len || !v.is_empty())
-                            .map(|(_, v)| v)
-                            .collect()
-                    };
-                    let trailing = segments.last().is_some_and(|s| matches!(*s, "." | ".."));
-                    let mut resolved = Vec::new();
-                    for seg in segments {
-                        match seg {
-                            ".." => {
-                                resolved.pop();
-                            }
-                            "." => {}
-                            _ => resolved.push(seg),
-                        }
-                    }
-                    if trailing {
-                        resolved.push("");
-                    }
-                    path = resolved.join("/");
-                    if path.is_empty() {
-                        path = "/".into();
-                    }
-                }
-                join_unsplit(scheme, netloc.as_deref(), &path, query, fragment)
-            }
-        };
+        let joined = source_raw_urljoin(&self.serialized(), &reference.serialized())?;
         let mut result = Self::parse(&joined)?;
         result.origin = SourceUrlOrigin::Join;
         Ok(result)
@@ -1415,5 +1508,62 @@ mod source_wire_identity_tests {
         );
         let expected: Arc<dyn hyper::ext::SourceIdentity> = owner;
         assert!(Arc::ptr_eq(&identity.0, &expected));
+    }
+}
+
+#[cfg(test)]
+mod raw_reference_tests {
+    use super::*;
+    #[test]
+    fn raw_parse_preserves_case_userinfo_and_only_strips_final_params_for_table_schemes() {
+        let parts = source_raw_urlparse(" \0HTTP://User:Pass@EXAMPLE:80/a;b/c;d?q?#f").unwrap();
+        assert_eq!(parts.scheme(), "http");
+        assert_eq!(parts.netloc(), "User:Pass@EXAMPLE:80");
+        assert_eq!(parts.path(), "/a;b/c");
+        assert_eq!(parts.query(), Some("q?"));
+        assert_eq!(parts.fragment(), Some("f"));
+        assert_eq!(
+            source_raw_urlparse("custom://Host/a;b").unwrap().path(),
+            "/a;b"
+        );
+        assert_eq!(
+            source_raw_urlsplit("http://Host/a;b?").unwrap().path(),
+            "/a;b"
+        );
+    }
+    #[test]
+    fn raw_join_preserves_early_returns_empty_delimiters_and_unknown_scheme_rules() {
+        assert_eq!(
+            source_raw_urljoin("http://Case/p?old#f", "?").unwrap(),
+            "http://Case/p?"
+        );
+        assert_eq!(source_raw_urljoin("\0RAW?", "").unwrap(), "\0RAW?");
+        assert_eq!(source_raw_urljoin("", "\0RAW?").unwrap(), "\0RAW?");
+        assert_eq!(
+            source_raw_urljoin("custom://Host/a", "/next").unwrap(),
+            "/next"
+        );
+        assert!(source_raw_urlparse("http://[::1").is_err());
+        assert!(source_raw_urlparse("http://exa／mple/").is_err());
+        assert!(SourceUrl::parse("\0http://Host/").is_err());
+        assert_eq!(
+            source_raw_urlparse("\0http://Host/").unwrap().netloc(),
+            "Host"
+        );
+    }
+    #[test]
+    fn public_unsplit_empty_delimiters_are_distinct_from_private_join() {
+        assert_eq!(
+            source_raw_urlunsplit("http", "", "/p", Some(""), Some("")),
+            "http:///p"
+        );
+        assert_eq!(
+            source_raw_urlunsplit("custom", "", "/p", Some("q"), None),
+            "custom:/p?q"
+        );
+        assert_eq!(
+            source_raw_urljoin("http:///p?", "#").unwrap(),
+            "http:///p?#"
+        );
     }
 }

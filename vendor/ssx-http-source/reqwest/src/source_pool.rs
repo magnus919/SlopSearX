@@ -3,7 +3,9 @@
 mod environment;
 mod source_url;
 pub use source_url::{
-    SourceUrl, SourceUrlChanges, SourceUrlError, SourceUrlErrorKind, SourceUrlOrigin,
+    RawSourceUrlParts, SourceUrl, SourceUrlChanges, SourceUrlError, SourceUrlErrorKind,
+    SourceUrlOrigin, source_raw_urljoin, source_raw_urlparse, source_raw_urlsplit,
+    source_raw_urlunsplit,
 };
 mod source_cookie_clock;
 mod source_cookie_date;
@@ -905,4 +907,10 @@ mod source_identity_route_tests {
         .unwrap();
         assert!(profile.select_source(&invalid_ace).is_err());
     }
+}
+
+/// Exact existing Python-Unicode16 lowercase projection for raw source observations.
+/// It does not parse, normalize, validate or grant URL authority.
+pub fn source_raw_lowercase(text: &str) -> String {
+    source_lower(text)
 }
