@@ -494,7 +494,7 @@ pub(super) fn controls(root: &Path) -> Result<()> {
 // may project their exactly proved e127 preimage into the historical checks.
 const PAGE_BASE: &str = "e12744511013bd05370173e777daaef471bf9527";
 const PAGE_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/lossless-page-1049-v1.json";
-const PAGE_CAPSULE_SHA: &str = "4f81dcedca271555031673a08b9d124828de92dceb300b11bf701b8b0001a065";
+const PAGE_CAPSULE_SHA: &str = "dfd7494b0ee42ac6a9ca702020640aaf65454b6a57f99991ae761c571dd96fcf";
 const PAGE_INTERSECTIONS: [&str; 5] = [
     "crates/ssx-http/src/html.rs",
     "crates/ssx-http/src/native.rs",

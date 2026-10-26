@@ -52,7 +52,16 @@ close #984. T03 owns full browser/visual fidelity and its two mapped journeys.
 The frozen 421-row native inventory keeps its historical three 400/no-dispatch
 records. The current qualification layer retires those deviations by requiring
 exactly the original source-backed 200/one-dispatch observations for those three
-IDs and source hashes; the other 418 rows remain unchanged.
+IDs and source hashes; the other 418 rows remain unchanged. The current layer also
+adds five real HTTP controls for fraction/exponent rejection, both last-duplicate
+branches and strict SafeSearch policy rejection, with exact dispatch counts.
+Together with the page HTML witness, these make 427 current records and 11 HTTP
+tests; the original 270 captures and 421 native inventory rows are unchanged. The actual
+`lossless_page_integer_grammar_last_duplicate_and_strict_safesearch_reach_http`
+test owns `current_strict_safesearch_policy`: integer 2 must return 400 with
+`error=invalid_filter`, `field=safesearch` and no dispatch. The frozen strict-test
+mapping to the range-invalid value 3 remains historical and does not prove this
+policy path.
 
 `crates/ssx-http/Dockerfile.t02` and the dedicated image workflow qualify the same
 offline native router/service fixture with an independent compiled Rust client.

@@ -296,6 +296,8 @@ fn current_records(frozen: &[Value]) -> Result<Vec<Value>> {
     }
     Ok(current)
 }
+const PAGE_PROTOCOL_TEST: &str =
+    "lossless_page_integer_grammar_last_duplicate_and_strict_safesearch_reach_http";
 const PAGE_HTML_TEST: &str =
     "lossless_large_page_html_links_preserve_filters_and_exact_decimal_neighbors";
 const YAML_SCALAR_TEST: &str = "successful_yaml_break_scalars_match_pinned_emitter_on_actual_http";
@@ -323,7 +325,11 @@ fn current_tests(frozen: &Value, family: &str) -> Result<Value> {
             expected
                 .as_array_mut()
                 .ok_or("HTTP test inventory missing")?
-                .extend([json!(YAML_SCALAR_TEST), json!(PAGE_HTML_TEST)]);
+                .extend([
+                    json!(YAML_SCALAR_TEST),
+                    json!(PAGE_HTML_TEST),
+                    json!(PAGE_PROTOCOL_TEST),
+                ]);
         }
         "formatter" | "library" => {}
         _ => return Err("unknown T02 native test family".into()),
@@ -745,6 +751,16 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
     }
     let mut current_expected = current_records(expected)?;
     current_expected.push(json!({"kind":"html","id":"lossless-pages","source_record_sha256":null}));
+    for (id, status, calls) in [
+        ("current_page_fraction", 400, 0),
+        ("current_page_exponent", 400, 0),
+        ("current_page_duplicate_valid_last", 200, 1),
+        ("current_page_duplicate_invalid_last", 400, 0),
+        ("current_strict_safesearch_policy", 400, 0),
+    ] {
+        current_expected.push(json!({"kind":"http","id":id,"source_record_sha256":null,"status":status,"engine_call_delta":calls}));
+    }
+
     verify_records(&completed, &current_expected, true)?;
     commands.push(json!({"T02_actual_wire_receipts":archive_wire_records(&completed)?}));
     // Actually omit one pinned source case in a fresh server run. The test must fail and clean up.
@@ -780,6 +796,7 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
     let negative_rows = completions(&stdout)?;
     let wanted = current_expected
         .iter()
+        .take(expected.len())
         .filter(|r| r["kind"] == "http" && r["id"] != skipped)
         .cloned()
         .collect::<Vec<_>>();
@@ -845,11 +862,11 @@ mod tests {
             missing_actual.remove(index);
             assert!(verify_records(&missing_actual, &restored, false).is_err());
         }
-        // Current discovery retains the frozen eight, the reviewed YAML test, and the additive lossless-page control.
+        // Current discovery retains the frozen eight, the reviewed YAML test, and both additive lossless-page controls.
         let frozen = json!(FROZEN_HTTP_TESTS);
         let current = current_tests(&frozen, "http").unwrap();
         let names = current.as_array().unwrap();
-        assert_eq!(names.len(), 10);
+        assert_eq!(names.len(), 11);
         let output = names
             .iter()
             .map(|n| format!("test {} ... ok\n", n.as_str().unwrap()))

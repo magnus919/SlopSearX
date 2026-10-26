@@ -1914,3 +1914,109 @@ async fn lossless_large_page_html_links_preserve_filters_and_exact_decimal_neigh
     .unwrap();
     bind_receipt("html", "lossless-pages", &receipt, None);
 }
+
+// Source int() grammar rejects non-integer lexical forms, query parameters use
+// the last duplicate, and tests/test_server.py::test_strict_safesearch_is_rejected_before_dispatch
+// requires the admitted integer 2 to reach the shared fail-closed policy gate.
+#[tokio::test]
+async fn lossless_page_integer_grammar_last_duplicate_and_strict_safesearch_reach_http() {
+    let _process_test_guard = PROCESS_TEST_LOCK.lock().await;
+    let out = directory("lossless-page-protocol");
+    let (mut process, base, _) = start(&out, "darker");
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .unwrap();
+    let cases = [
+        ("current_page_fraction", "pageno=1.0", 400, 0),
+        ("current_page_exponent", "pageno=1e0", 400, 0),
+        (
+            "current_page_duplicate_valid_last",
+            "pageno=1.0&pageno=18446744073709551616",
+            200,
+            1,
+        ),
+        (
+            "current_page_duplicate_invalid_last",
+            "pageno=18446744073709551616&pageno=1e0",
+            400,
+            0,
+        ),
+        (
+            "current_strict_safesearch_policy",
+            "pageno=1&safesearch=2",
+            400,
+            0,
+        ),
+    ];
+    let observations = async {
+        let mut records = Vec::new();
+        for (id, query, _, _) in cases {
+            let before = fs::read_to_string(out.join("engine-calls.jsonl"))
+                .unwrap()
+                .lines()
+                .count();
+            let response = client
+                .get(format!("{base}/search?q=contract&format=json&{query}"))
+                .send()
+                .await?;
+            let status = response.status().as_u16();
+            let headers = response
+                .headers()
+                .iter()
+                .map(|(k, v)| (k.as_str().to_owned(), json!(v.to_str().unwrap())))
+                .collect::<ssx_json::Map<_, _>>();
+            let body = response.text().await?;
+            let calls = fs::read_to_string(out.join("engine-calls.jsonl"))
+                .unwrap()
+                .lines()
+                .skip(before)
+                .map(|line| ssx_json::from_str::<Value>(line).unwrap())
+                .collect::<Vec<_>>();
+            records.push((id, status, headers, body, calls));
+        }
+        Ok::<_, reqwest::Error>(records)
+    }
+    .await;
+    let clean = stop(&mut process).await;
+    assert!(
+        clean,
+        "source-derived HTTP controls must join their real server"
+    );
+    let observations = observations.unwrap();
+    assert_eq!(observations.len(), cases.len());
+    for ((id, status, headers, body, calls), (expected_id, _, expected_status, expected_calls)) in
+        observations.into_iter().zip(cases)
+    {
+        assert_eq!(id, expected_id);
+        assert_eq!(status, expected_status, "{id}: {body}");
+        assert_eq!(
+            calls.len(),
+            expected_calls,
+            "{id}: dispatch must follow the selected last value and policy"
+        );
+        assert!(
+            headers["content-type"]
+                .as_str()
+                .unwrap()
+                .contains("application/json")
+        );
+        let parsed: Value = ssx_json::from_str(&body).unwrap();
+        if id == "current_page_duplicate_valid_last" {
+            assert!(!parsed["results"].as_array().unwrap().is_empty());
+            assert_eq!(calls[0]["pageno"].to_string(), "18446744073709551616");
+        } else if id == "current_strict_safesearch_policy" {
+            assert_eq!(parsed["error"], "invalid_filter");
+            assert_eq!(parsed["field"], "safesearch");
+        } else {
+            assert_eq!(
+                parsed,
+                json!({"error":"invalid_filter","message":"Invalid search parameter."})
+            );
+        }
+        let receipt = out.join(format!("{id}.json"));
+        fs::write(&receipt, json!({"id":id,"status":status,"headers":headers,"body":body,"engine_call_delta":calls.len(),"adapter_page_text":calls.first().map(|r|r["pageno"].to_string()),"differences":[],"child_exit_success":clean}).to_string()).unwrap();
+        bind_receipt("http", id, &receipt, None);
+    }
+}
