@@ -1458,9 +1458,21 @@ mod source_scope_roundtrip_tests {
             .await
             .unwrap_err();
         assert!(token_input_json_error(error, true).is::<SourceOAuthModelInvalid>());
+        // Core2.46.4 uses the same Jiter0.14 parser: its4300-digit
+        // admission error is model-invalid, unlike finite expiry overflow.
+        for field in ["expires_in", "ignored"] {
+            let rejected = format!(
+                r#"{{"access_token":"ok","token_type":"Bearer","{field}":{}}}"#,
+                "9".repeat(5000)
+            );
+            let error = super::super::token_json::parse_http(rejected.as_bytes(), deadline)
+                .await
+                .unwrap_err();
+            assert!(token_input_json_error(error, true).is::<SourceOAuthModelInvalid>());
+        }
         let raw = format!(
             r#"{{"access_token":"ok","token_type":"Bearer","expires_in":{}}}"#,
-            "9".repeat(5000)
+            "9".repeat(4000)
         );
         let parsed = super::super::token_json::parse_http(raw.as_bytes(), deadline)
             .await
@@ -1474,7 +1486,7 @@ mod source_scope_roundtrip_tests {
             .unwrap();
         match reparsed.get("expires_in").unwrap() {
             ssx_infra::adapters::source_json::Value::Number(number) => {
-                assert_eq!(number.integer_text().unwrap().len(), 5000)
+                assert_eq!(number.integer_text().unwrap().len(), 4000)
             }
             _ => panic!("known HTTP integer was not retained"),
         }
@@ -1627,7 +1639,7 @@ mod source_oauth_wire_store_tests {
                 1 => ("200 OK", format!(r#"{{"issuer":"http://auth.fixture:{port}/issuer","authorization_endpoint":"http://AUTH.fixture:{port}/authorize?original=~*#fragment","token_endpoint":"http://AUTH.fixture:{port}/token?raw=~*","registration_endpoint":"http://AUTH.fixture:{port}/register?raw=~*","scopes_supported":["offline_access"]}}"#)),
                 // Non-string wire issuer MUST be discarded before model parsing.
                 2 => ("201 Created", r#"{"client_id":"client ~*","client_secret":"s+e cret*~","token_endpoint_auth_method":"client_secret_basic","issuer":{"untrusted":true},"ignored":NaN,"jwks":NaN}"#.into()),
-                3 => ("201 Created", format!(r#"{{"access_token":"code-token","token_type":"bearer","refresh_token":"refresh ~*+","expires_in":-1,"ignored":{}}}"#, "9".repeat(5000))),
+                3 => ("201 Created", format!(r#"{{"access_token":"code-token","token_type":"bearer","refresh_token":"refresh ~*+","expires_in":-1,"ignored":{}}}"#, "9".repeat(4000))),
                 4 => ("200 OK", r#"{"access_token":"refresh-token","token_type":"bearer","expires_in":-1}"#.into()),
                 5 => ("201 Created", r#"{"access_token":"must-not-commit","token_type":"bearer"}"#.into()),
                 _ => ("500 Unexpected", "{}".into()),

@@ -306,8 +306,8 @@ mod tests {
 
 /// Source HTTP JSON boundary: Core/Jiter grammar validates the ENTIRE document,
 /// including ignored fields, before existing model validators consume SourceIR.
-/// File parse remains separate: no surrogate acceptance or4300-digit cap leaks
-/// into HTTP. One MiB/depth/deadline are explicit native resource limits.
+/// File parse remains separate: HTTP rejects surrogate escapes and uses
+/// Jiter's own4300-digit/recursion admission. One MiB/deadline are native limits.
 #[cfg(feature = "gateway-source-endpoints")]
 pub(super) async fn parse_http(bytes: &[u8], deadline: Instant) -> Result<Value, JsonError> {
     use jiter::{JsonValue, PartialMode};
@@ -476,7 +476,19 @@ mod source_http_tests {
             );
         }
         drop(projection);
-        let huge = "9".repeat(5000);
+        // Both ignored and known excessive integers fail whole-document
+        // Jiter admission before model projection, just as pinned Core does.
+        for field in ["expires_in", "extra"] {
+            let rejected = format!(
+                r#"{{"access_token":"ok","token_type":"Bearer","{field}":{}}}"#,
+                "9".repeat(5000)
+            );
+            assert_eq!(
+                parse_http(rejected.as_bytes(), deadline).await,
+                Err(JsonError::Malformed)
+            );
+        }
+        let huge = "9".repeat(4000);
         let deep = format!("{}0{}", "[".repeat(150), "]".repeat(150));
         let deep_token = format!(r#"{{"access_token":"ok","ignored":{deep}}}"#);
         let parsed = parse_http(deep_token.as_bytes(), deadline).await.unwrap();
