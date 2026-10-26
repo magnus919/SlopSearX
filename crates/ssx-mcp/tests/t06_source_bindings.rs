@@ -3,11 +3,14 @@ use sha2::{Digest, Sha256};
 use std::path::Path;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 mod lock_amendment;
+#[path = "../../../docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"]
+mod native_search;
 #[path = "../../../docs/rust-rewrite/t07/source-amendments/t06-opaque-successor.rs"]
 mod t07_opaque_successor;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    native_search::controls(&root).unwrap();
     let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
     assert_eq!(
         Sha256::digest(raw)
@@ -105,6 +108,16 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
             t07_opaque_successor::prove(&root, row, &std::fs::read(root.join(name)).unwrap())
                 .unwrap();
             t07_opaque_successor::controls(&root).unwrap();
+            continue;
+        }
+        if name == native_search::SOURCE {
+            native_search::verify(
+                &root,
+                name,
+                row["sha256"].as_str().unwrap(),
+                &std::fs::read(root.join(name)).unwrap(),
+            )
+            .unwrap();
             continue;
         }
         let expected = if row["file"] == storage["file"] {

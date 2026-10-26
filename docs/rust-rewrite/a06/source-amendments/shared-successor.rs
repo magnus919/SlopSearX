@@ -4,6 +4,9 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 #[path = "a13-header-layout-successor.rs"]
 mod a13_header_layout_successor;
+#[path = "post-a06-generation.rs"]
+mod post_a06_generation;
+pub(crate) use post_a06_generation::native_search;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
 #[path = "../../t07/source-amendments/a06-shared-material-successor.rs"]
@@ -15,8 +18,10 @@ const MANIFEST_SHA: &str = "864e6158d6d51cb13793ed4abed3df577c795c1ffb08940eb730
 const BASELINE: &str = "d5615ace90b827f31789ccf04c72aaad4516e8f7";
 #[path = "a13-json-inventory-successor.rs"]
 mod a13_json_inventory_successor;
-#[path = "a13-marker-successor.rs"]
+#[path = "a13-marker-successor-v2.rs"]
 mod a13_marker_successor;
+#[path = "a13-qualification-successor.rs"]
+mod a13_qualification_successor;
 const A13: &str = "crates/xtask/src/a13.rs";
 const SHA_PAIRS: &[(&str, &str)] = &[
     ("docs/rust-rewrite/a09/coverage.json", "Cargo.lock"),
@@ -302,6 +307,255 @@ fn material(row: &Value, raw: &[u8], mode: &str) -> Result<(), String> {
     )
 }
 fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if let Some(prior) = post_a06_generation::historical(root, row)? {
+        return Ok(prior);
+    }
+    read_exact(root, row)
+}
+// Default-pool fixture isolation only. These exact afterimages preserve every
+// original assertion; historical oracles/capsules keep their original hashes.
+struct DefaultCaFixture {
+    path: &'static str,
+    before_sha: &'static str,
+    before_len: usize,
+    current_sha: &'static str,
+    current_len: usize,
+    insertions: &'static [(usize, &'static [u8])],
+}
+const DEFAULT_CA_FIXTURES: &[DefaultCaFixture] = &[
+    DefaultCaFixture {
+        path: "crates/ssx-infra/tests/a08_factories.rs",
+        before_sha: "329ff395b82e91eed0a0ab384367bbb745e1011812584391ce03f44210c24a92", before_len: 28889,
+        current_sha: "c0978ad1eb426b73043d82ec9691e06f12bd636829d1adbe9275953708185259", current_len: 29122,
+        insertions: &[
+            (0, b"#[path = \"support/default_ca_environment.rs\"]\nmod default_ca_environment;\n"),
+            (14396, b"    if default_ca_environment::default_ca_test_environment(\n        \"all_four_real_network_timers_match_actual_source_loopback\",\n    ) {\n        return;\n    }\n"),
+        ],
+    },
+    DefaultCaFixture {
+        path: "crates/ssx-infra/tests/a09_factories.rs",
+        before_sha: "09212420429e4017cac93d8918427b0f50bea11304e5f9113d48dce2d8f9e79d", before_len: 36934,
+        current_sha: "a23c6ac515cd06ca31147041d8b49e9bc0f0ca41686c0385033e1d58d6b66df7", current_len: 37495,
+        insertions: &[
+            (79, b"#[path = \"support/default_ca_environment.rs\"]\nmod default_ca_environment;\n"),
+            (21076, b"    if default_ca_environment::default_ca_test_environment(\n        \"five_real_timeout_and_expired_context_cleanup\",\n    ) {\n        return;\n    }\n"),
+            (23458, b"    if default_ca_environment::default_ca_test_environment(\n        \"archive_real_cdx_timer_one_fallback_and_aggregate_context\",\n    ) {\n        return;\n    }\n"),
+            (30830, b"    if default_ca_environment::default_ca_test_environment(\n        \"actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct\",\n    ) {\n        return;\n    }\n"),
+        ],
+    },
+    DefaultCaFixture {
+        path: "crates/ssx-infra/tests/support/default_ca_environment.rs",
+        before_sha: "00aee0178f3f111449e5a6e99f495538a1eafa29ec95ced7d8343a3a8ee1108c", before_len: 959,
+        current_sha: "78a715a6f8323551c993e0f79c3bde8174116a568cd312fa3ea2b2c8adb01b54", current_len: 1039,
+        insertions: &[
+            (948, b"    std::io::Write::write_all(&mut std::io::stdout(), &output.stdout).unwrap();\n"),
+        ],
+    },
+];
+fn default_ca_fixture_inverse(
+    row: &DefaultCaFixture,
+    physical: &[u8],
+    mode: &str,
+    insertions: &[(usize, &[u8])],
+) -> Result<Vec<u8>, String> {
+    need(
+        mode == "0644" && physical.len() == row.current_len && digest(physical) == row.current_sha,
+        "default-CA fixture actual current identity differs",
+    )?;
+    let mut prior = Vec::new();
+    let mut cursor = 0;
+    for &(at, inserted) in insertions {
+        need(
+            !inserted.is_empty() && at >= cursor && at <= physical.len(),
+            "default-CA fixture insertion order differs",
+        )?;
+        let end = at
+            .checked_add(inserted.len())
+            .ok_or("default-CA fixture span overflow")?;
+        need(
+            physical.get(at..end) == Some(inserted),
+            "default-CA fixture exact insertion differs",
+        )?;
+        prior.extend_from_slice(&physical[cursor..at]);
+        cursor = end;
+    }
+    prior.extend_from_slice(&physical[cursor..]);
+    need(
+        prior.len() == row.before_len && digest(&prior) == row.before_sha,
+        "default-CA fixture insertion inverse differs",
+    )?;
+    Ok(prior)
+}
+/// Only these exact old tuples select the new physical three-file frame. Every
+/// selected call authenticates all three physical regular0644 afterimages first.
+/// A caller cannot supply historical bytes as actual current or mix helper bodies.
+pub(crate) fn default_ca_fixture_operand(
+    root: &Path,
+    path: &str,
+    expected: &str,
+    expected_bytes: Option<usize>,
+) -> Option<Result<Vec<u8>, String>> {
+    let row = DEFAULT_CA_FIXTURES.iter().find(|r| r.path == path)?;
+    Some((|| {
+        need(
+            expected == row.before_sha && expected_bytes.is_none_or(|n| n == row.before_len),
+            "default-CA fixture caller tuple differs",
+        )?;
+        let mut selected = None;
+        for physical_row in DEFAULT_CA_FIXTURES {
+            let file = root.join(physical_row.path);
+            let metadata = fs::symlink_metadata(&file).map_err(|e| e.to_string())?;
+            need(
+                metadata.is_file() && !metadata.file_type().is_symlink(),
+                "default-CA fixture source must be regular, not symlink",
+            )?;
+            let bytes = fs::read(&file).map_err(|e| e.to_string())?;
+            let mode = permissions(&file)?;
+            need(
+                mode == "0644"
+                    && bytes.len() == physical_row.current_len
+                    && digest(&bytes) == physical_row.current_sha,
+                "default-CA fixture physical frame differs",
+            )?;
+            if physical_row.path == path {
+                selected = Some((bytes, mode));
+            }
+        }
+        let (physical, mode) = selected.ok_or("default-CA fixture actual source missing")?;
+        default_ca_fixture_inverse(row, &physical, &mode, row.insertions)
+    })())
+}
+#[cfg(test)]
+fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
+    for row in DEFAULT_CA_FIXTURES {
+        let old = default_ca_fixture_operand(root, row.path, row.before_sha, Some(row.before_len))
+            .ok_or("default-CA fixture positive not selected")??;
+        let actual = fs::read(root.join(row.path)).map_err(|e| e.to_string())?;
+        let claim = json!({"path":row.path,"sha256":row.before_sha,
+            "bytes":row.before_len,"mode":"0644"});
+        need(
+            read_exact(root, &claim)? == old,
+            "default-CA read_exact complete caller row positive differs",
+        )?;
+        for mutation in [
+            "missing-bytes",
+            "wrong-bytes",
+            "noninteger-bytes",
+            "missing-mode",
+            "wrong-mode",
+            "nonstring-mode",
+        ] {
+            let mut invalid = claim.clone();
+            match mutation {
+                "missing-bytes" => {
+                    invalid
+                        .as_object_mut()
+                        .ok_or("default-CA row absent")?
+                        .remove("bytes");
+                }
+                "wrong-bytes" => {
+                    invalid["bytes"] = json!(0);
+                }
+                "noninteger-bytes" => {
+                    invalid["bytes"] = json!("959");
+                }
+                "missing-mode" => {
+                    invalid
+                        .as_object_mut()
+                        .ok_or("default-CA row absent")?
+                        .remove("mode");
+                }
+                "wrong-mode" => {
+                    invalid["mode"] = json!("0755");
+                }
+                _ => {
+                    invalid["mode"] = json!(420);
+                }
+            }
+            need(
+                read_exact(root, &invalid).is_err(),
+                "default-CA read_exact incomplete caller row accepted",
+            )?;
+        }
+
+        need(
+            old.len() == row.before_len && digest(&old) == row.before_sha,
+            "default-CA fixture parent positive differs",
+        )?;
+        need(
+            default_ca_fixture_inverse(row, &old, "0644", row.insertions).is_err(),
+            "default-CA fixture historical accepted as current",
+        )?;
+        for mode in ["0600", "0755", "4644"] {
+            need(
+                default_ca_fixture_inverse(row, &actual, mode, row.insertions).is_err(),
+                "default-CA fixture changed mode accepted",
+            )?;
+        }
+        let mut altered = actual.clone();
+        altered.push(0);
+        need(
+            default_ca_fixture_inverse(row, &altered, "0644", row.insertions).is_err(),
+            "default-CA fixture unlisted physical edit accepted",
+        )?;
+        // Mutate the relation while holding authenticated physical bytes fixed.
+        // Omitted/duplicated/moved inverse insertions must never reconstruct parent.
+        for index in 0..row.insertions.len() {
+            let mut missing = row.insertions.to_vec();
+            missing.remove(index);
+            let mut duplicate = row.insertions.to_vec();
+            duplicate.insert(index, row.insertions[index]);
+            let mut moved = row.insertions.to_vec();
+            moved[index].0 += 1;
+            for edits in [missing, duplicate, moved] {
+                need(
+                    default_ca_fixture_inverse(row, &actual, "0644", &edits).is_err(),
+                    "default-CA fixture altered inverse relation accepted",
+                )?;
+            }
+        }
+        need(
+            default_ca_fixture_operand(root, row.path, "wrong", None)
+                .ok_or("default-CA wrong tuple lost closed selection")?
+                .is_err(),
+            "default-CA fixture wrong caller accepted",
+        )?;
+        need(
+            default_ca_fixture_operand(root, row.path, row.before_sha, Some(0))
+                .ok_or("default-CA wrong size lost closed selection")?
+                .is_err(),
+            "default-CA fixture wrong caller length accepted",
+        )?;
+        need(
+            default_ca_fixture_operand(
+                Path::new("/missing-default-ca-fixture-control"),
+                row.path,
+                row.before_sha,
+                None,
+            )
+            .ok_or("default-CA missing source not selected")?
+            .is_err(),
+            "default-CA fixture missing physical source accepted",
+        )?;
+    }
+    need(
+        default_ca_fixture_operand(root, "unlisted.rs", "wrong", None).is_none(),
+        "default-CA fixture unlisted source changed dispatch",
+    )?;
+    Ok(())
+}
+
+fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if let Some(prior) = default_ca_fixture_operand(
+        root,
+        text(row, "path")?,
+        text(row, "sha256")?,
+        row["bytes"].as_u64().map(|n| n as usize),
+    ) {
+        let prior = prior?;
+        material(row, &prior, "0644")?;
+        return Ok(prior);
+    }
     let path = root.join(text(row, "path")?);
     let stat = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
     need(
@@ -535,6 +789,8 @@ fn frozen(root: &Path, doc: &Value) -> Result<(), String> {
                 row,
                 real_clock_successor::Role::FrozenSupport,
             )?;
+        } else if row["path"] == "docs/rust-rewrite/a13/qualification-v1.json" {
+            verify_current_qualification(root, row)?;
         } else {
             read(root, row)?;
         }
@@ -611,6 +867,30 @@ pub(crate) fn try_verify(
     expected: &str,
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
+    if let Some(result) =
+        post_a06_generation::try_current(root, container, container_sha, path, expected, bytes)
+    {
+        return Some(result);
+    }
+    if container == ARTIFACT_COVERAGE
+        && path == "crates/ssx-infra/tests/support/default_ca_environment.rs"
+    {
+        return Some((|| {
+            need(
+                container_sha == ARTIFACT_COVERAGE_SHA && bytes.is_none(),
+                "default-CA A06 frozen caller tuple differs",
+            )?;
+            let caller = historical_caller(root, container, container_sha)?;
+            let doc: Value = serde_json::from_slice(&caller).map_err(|e| e.to_string())?;
+            need(
+                doc["artifacts"][187] == json!({"path":path,"sha256":expected}),
+                "default-CA A06 frozen helper row differs",
+            )?;
+            default_ca_fixture_operand(root, path, expected, bytes)
+                .ok_or("default-CA A06 helper not selected")??;
+            Ok(())
+        })());
+    }
     if let Some(result) = try_a06_artifact(root, container, container_sha, path, expected, bytes) {
         return Some(result);
     }
@@ -733,6 +1013,8 @@ pub(crate) fn compose_scoped(root: &Path, previous: &Value) -> Result<Value, Str
                 *row = a13_header_layout_successor::scoped(root, row, &historical)?;
             }
         }
+        let historical = read(root, &row["historical191"])?;
+        *row = post_a06_generation::scoped(root, row, &historical)?;
     }
     for row in next["additional_current_materials"]
         .as_array_mut()
@@ -756,6 +1038,7 @@ pub(crate) fn compose_scoped(root: &Path, previous: &Value) -> Result<Value, Str
                     row,
                     real_clock_successor::Role::SharedCurrent,
                 )?;
+                *row = post_a06_generation::effective(root, row)?;
             }
         }
     }
@@ -794,6 +1077,7 @@ pub(crate) fn validator_baseline(
         &row["current"],
         real_clock_successor::Role::SharedCurrent,
     )?;
+    let effective = post_a06_generation::effective(root, &effective)?;
     need(
         *requested == row["baseline"] || *requested == row["current"] || *requested == effective,
         "A06 validator predecessor/current request differs",
@@ -887,7 +1171,11 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    default_ca_fixture_controls(root)?;
+    native_search::controls(root)?;
+    post_a06_generation::controls(root)?;
     a13_json_inventory_successor::controls(root)?;
+    a13_qualification_successor::controls(root)?;
     real_clock_successor::controls(root)?;
     t07_source_successor::controls(root)?;
     let doc = load(root)?;
@@ -1543,4 +1831,27 @@ pub(crate) fn t07_opaque_material(
     actual: &[u8],
 ) -> Result<(), String> {
     t07_source_successor::t06_opaque_material(root, expected, actual)
+}
+
+pub(crate) fn verify_current_qualification(root: &Path, expected: &Value) -> Result<(), String> {
+    a13_qualification_successor::verify(root, expected)
+}
+
+/// Historical caller bytes are available only after exact live generation proof.
+pub(crate) fn historical_caller(
+    root: &Path,
+    path: &str,
+    expected_sha: &str,
+) -> Result<Vec<u8>, String> {
+    post_a06_generation::caller_material(root, path, expected_sha)
+}
+
+#[cfg(test)]
+pub(crate) fn generation_control_operand(
+    root: &Path,
+    path: &str,
+    expected: &Value,
+    supplied_current: &[u8],
+) -> Result<Vec<u8>, String> {
+    post_a06_generation::control_operand(root, path, expected, supplied_current)
 }

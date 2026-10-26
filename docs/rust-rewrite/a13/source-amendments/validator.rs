@@ -380,10 +380,14 @@ fn rejects_clinicaltrials_mutants(root: &Path) -> Result<(), String> {
     let container_path = pin["container_path"]
         .as_str()
         .ok_or("A13 ClinicalTrials container absent")?;
-    let container = fs::read(root.join(container_path)).map_err(|error| error.to_string())?;
     let container_sha = pin["container_sha256"]
         .as_str()
         .ok_or("A13 ClinicalTrials container SHA absent")?;
+    let container = causal_successor::a06_source_successor::historical_caller(
+        root,
+        container_path,
+        container_sha,
+    )?;
     let actual_current = fs::read(root.join(path)).map_err(|error| error.to_string())?;
     let current = causal_successor::a06_source_successor::legacy_control_operand(
         root,
@@ -883,8 +887,13 @@ fn rejects_lock_mutants(root: &Path, v5: &Value) -> Result<(), String> {
         let cp = pin["container_path"]
             .as_str()
             .ok_or("A13 container path absent")?;
-        let container_path = root.join(cp);
-        let container = fs::read(&container_path).map_err(|e| e.to_string())?;
+        let container = causal_successor::a06_source_successor::historical_caller(
+            root,
+            cp,
+            pin["container_sha256"]
+                .as_str()
+                .ok_or("A13 lock caller hash absent")?,
+        )?;
         let check = |entry: &Value, path: &str, bytes: &[u8], archive_bytes: &[u8]| {
             verify_payload(PinCheck {
                 amendment: entry,
@@ -965,7 +974,13 @@ fn rejects_lock_mutants(root: &Path, v5: &Value) -> Result<(), String> {
     adjusted["successor"]["bytes"] = serde_json::json!(third_bytes.len());
     let pin = &lock["historical_pins"][0];
     let cp = pin["container_path"].as_str().unwrap();
-    let container = fs::read(root.join(cp)).map_err(|e| e.to_string())?;
+    let container = causal_successor::a06_source_successor::historical_caller(
+        root,
+        cp,
+        pin["container_sha256"]
+            .as_str()
+            .ok_or("A13 third-package caller hash absent")?,
+    )?;
     require(
         verify_payload(PinCheck {
             amendment: &adjusted,
@@ -1035,7 +1050,13 @@ fn rejects_additive_mutants(root: &Path) -> Result<(), String> {
             .ok_or("A13 additive amendment missing")?;
         for pin in entry["historical_pins"].as_array().unwrap() {
             let container_path = pin["container_path"].as_str().unwrap();
-            let container = fs::read(root.join(container_path)).map_err(|e| e.to_string())?;
+            let container = causal_successor::a06_source_successor::historical_caller(
+                root,
+                container_path,
+                pin["container_sha256"]
+                    .as_str()
+                    .ok_or("A13 additive caller hash absent")?,
+            )?;
             let archive_path = root.join(entry["archive"]["path"].as_str().unwrap());
             let archive = fs::read(&archive_path).map_err(|e| e.to_string())?;
             let current_path = root.join(path);
@@ -1048,7 +1069,12 @@ fn rejects_additive_mutants(root: &Path) -> Result<(), String> {
                     &actual_current,
                 )?
             } else {
-                actual_current
+                causal_successor::a06_source_successor::generation_control_operand(
+                    root,
+                    path,
+                    &entry["successor"],
+                    &actual_current,
+                )?
             };
             let check = |payload: &Value, archive: &[u8], current: &[u8], container: &[u8]| {
                 verify_payload(PinCheck {
@@ -1145,7 +1171,11 @@ pub(crate) fn rejects_mutants_on_historical_evidence(
     let pin = &amendment["historical_pins"][0];
     let container_path = pin["container_path"].as_str().unwrap();
     let container_sha = pin["container_sha256"].as_str().unwrap();
-    let container = fs::read(root.join(container_path)).map_err(|error| error.to_string())?;
+    let container = causal_successor::a06_source_successor::historical_caller(
+        root,
+        container_path,
+        container_sha,
+    )?;
     // Explicit accepted-V6 historical operand for unchanged pure legacy assertions.
     let current = historical.accepted_v6_successor_bytes().to_vec();
     let archive_path = amendment["archive"]["path"].as_str().unwrap();

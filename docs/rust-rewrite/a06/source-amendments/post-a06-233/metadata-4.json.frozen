@@ -1,0 +1,3454 @@
+{
+  "schema_version": 1,
+  "plan_id": "A13",
+  "evidence_kind": "STATIC_SOURCE_BOUND_NATIVE_COMPONENT_GATE",
+  "source_provenance": {
+    "original_backend_executed": false,
+    "provider_calls": 0,
+    "current_component_HEAD": "b93c7c7a2ea92ba13a48bd6e0cd72302264b1e0d",
+    "current_integrated_main": "4bc0e618f8f237aa5fbaba5f6ea5f78b4027c6e8",
+    "original_maps_preserved_byte_exact": false,
+    "historical_static_maps": [
+      "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+      "docs/rust-rewrite/a13/remaining/source-map.json"
+    ],
+    "current_owned_source_envelope": "sources rows bind current candidate bytes; original/static map rows retain producer/baseline meaning",
+    "cross_gate_current_pin_changes_not_applied": [
+      "crates/xtask/src/a09.rs",
+      "crates/xtask/src/a11.rs"
+    ],
+    "reviewed_private_plan_sha256": "15d2f43ba35f6056775df84fe48bece72fb02b2312138973f060f0711f2b937a",
+    "reviewed_private_closed_inventories_sha256": "c0804d37f516c7c3dcb7150f06d34e587b70a88b80410606163dadf1fe9bca47",
+    "private_95_prefix_reuse": false,
+    "current_source_maps_rebound": "Only live source digest/byte rows and embedded map hashes were rebound for normal main4bc union; source-base/original-test/case/capture sections remain unchanged.",
+    "full_library_linux_only_names": [
+      "process_pool::cleanup_tests::held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup"
+    ],
+    "full_library_supplement_from_main06": {
+      "baseline_common_names": 247,
+      "additional_common_names": 6,
+      "common_total": 253,
+      "linux_total": 254,
+      "bindings": [
+        {
+          "name": "search::deadline_drain_tests::predeadline_completed_outputs_survive_delayed_owner_drain",
+          "source": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+          "source_sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d",
+          "function": "predeadline_completed_outputs_survive_delayed_owner_drain",
+          "source_line": 427
+        },
+        {
+          "name": "search::deadline_drain_tests::deadline_abort_drains_pending_without_internal_failure",
+          "source": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+          "source_sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d",
+          "function": "deadline_abort_drains_pending_without_internal_failure",
+          "source_line": 431
+        },
+        {
+          "name": "search::deadline_drain_tests::earlier_binding_timeout_completed_after_service_deadline_is_truncated",
+          "source": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+          "source_sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d",
+          "function": "earlier_binding_timeout_completed_after_service_deadline_is_truncated",
+          "source_line": 435
+        },
+        {
+          "name": "search::deadline_drain_tests::cooldown_completed_after_service_deadline_is_truncated",
+          "source": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+          "source_sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d",
+          "function": "cooldown_completed_after_service_deadline_is_truncated",
+          "source_line": 439
+        },
+        {
+          "name": "search::deadline_drain_tests::completed_task_panic_is_not_hidden_by_owner_abort",
+          "source": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+          "source_sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d",
+          "function": "completed_task_panic_is_not_hidden_by_owner_abort",
+          "source_line": 443
+        },
+        {
+          "name": "search::deadline1010_tests::expired_undispatched_service_deadline_keeps_interactive_origin",
+          "source": "crates/ssx-infra/src/search.rs",
+          "source_sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8",
+          "function": "expired_undispatched_service_deadline_keeps_interactive_origin",
+          "source_line": 2124
+        }
+      ],
+      "derivation": "Exact six source-declared tests added by merged deadline PR1020; prior library names and source observations retained. No observed-count substitution."
+    },
+    "full_library_supplement_from_main4bc": {
+      "base_common_names": 214,
+      "additional_common_names": 33,
+      "common_total": 247,
+      "linux_only_total": 1,
+      "linux_total": 248,
+      "bindings": [
+        {
+          "name": "adapters::source_payload::selected_source_object_tests::selected_nested_sources_preserve_exact_values_order_and_null",
+          "function": "selected_nested_sources_preserve_exact_values_order_and_null",
+          "source": "crates/ssx-infra/src/adapters/source_payload.rs",
+          "line": 1289,
+          "sha256": "826006a11ef93c6c6127cdaa7f340d5f8aa1261941d388b38c2437d5ea7f89fb",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "mod selected_source_object_tests {\n    use super::*;\n    use ssx_owned_budget::Budget;\n    #[tokio::test]\n    async fn selected_nested_sources_preserve_exact_values_order_and_null() {\n        let source = super::super::source_json::from_slice(br#\"{\"huge\":18446744073709551617,\"nil\":null,\"tag\":{\"$serde_json::private::Number\":\"literal\"},\"version\":\"3.1\",\"ref\":\"first\"}\"#, None).await.unwrap();"
+        },
+        {
+          "name": "adapters::source_payload::selected_source_object_tests::selected_sources_refuse_budget_deadline_and_release_cancelled_storage",
+          "function": "selected_sources_refuse_budget_deadline_and_release_cancelled_storage",
+          "source": "crates/ssx-infra/src/adapters/source_payload.rs",
+          "line": 1341,
+          "sha256": "826006a11ef93c6c6127cdaa7f340d5f8aa1261941d388b38c2437d5ea7f89fb",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        drop(output);\n        assert_eq!(budget.snapshot().unwrap().used, 0);\n    }\n    #[tokio::test]\n    async fn selected_sources_refuse_budget_deadline_and_release_cancelled_storage() {\n        let source = Value::String(Text::from(\"x\".repeat(100000)));"
+        },
+        {
+          "name": "adapters::source_payload::batch::tests::expired_terminal_handoff_refuses_rows_and_drains_without_success_stamp",
+          "function": "expired_terminal_handoff_refuses_rows_and_drains_without_success_stamp",
+          "source": "crates/ssx-infra/src/adapters/source_payload/batch.rs",
+          "line": 235,
+          "sha256": "f75c77b3e43e307a758a6af685ab39cc3ccd6eec9c1eb4d8f68824114a789bf6",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    // Poll the existing two cooperative yields separately. Expire the real\n    // absolute deadline only after entering the terminal checkpoint; no corpus\n    // replay is delayed or clock-modified by this focused control.\n    #[tokio::test]\n    async fn expired_terminal_handoff_refuses_rows_and_drains_without_success_stamp() {\n        use std::{future::Future, task::Poll};"
+        },
+        {
+          "name": "adapters::vulnerability::tests::child_tests::linux_owned_process_cpu_parser_handles_command_spaces_and_refuses_invalid_counters",
+          "function": "linux_owned_process_cpu_parser_handles_command_spaces_and_refuses_invalid_counters",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_child_tests.rs",
+          "line": 44,
+          "sha256": "d11ef813a00357a465e21ba302c6a46ac6eebeb89ccd66008215c2eefd12c3e7",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        .ok()?\n        .checked_add(fields.get(12)?.parse::<u64>().ok()?)\n}\n#[test]\nfn linux_owned_process_cpu_parser_handles_command_spaces_and_refuses_invalid_counters() {\n    let line = |user: &str, system: &str| {"
+        },
+        {
+          "name": "adapters::vulnerability::tests::child_tests::entered_native_extraction_cancel_deadline_shutdown_reap_and_release",
+          "function": "entered_native_extraction_cancel_deadline_shutdown_reap_and_release",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_child_tests.rs",
+          "line": 55,
+          "sha256": "d11ef813a00357a465e21ba302c6a46ac6eebeb89ccd66008215c2eefd12c3e7",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    assert_eq!(proc_cpu_ticks(&line(\"18446744073709551615\", \"1\")), None);\n    println!(\"A10_CHILD_COMPLETE linux-cpu-parser\");\n}\n#[tokio::test]\nasync fn entered_native_extraction_cancel_deadline_shutdown_reap_and_release() {\n    if std::env::var_os(\"A10_CHILD_ENTRY_FILE\").is_some() {"
+        },
+        {
+          "name": "adapters::vulnerability::tests::child_tests::real_child_frame_and_projection_keep_owned_storage_until_handoff_and_refuse_partial_copies",
+          "function": "real_child_frame_and_projection_keep_owned_storage_until_handoff_and_refuse_partial_copies",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_child_tests.rs",
+          "line": 213,
+          "sha256": "d11ef813a00357a465e21ba302c6a46ac6eebeb89ccd66008215c2eefd12c3e7",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    .await\n    .unwrap()\n}\n#[tokio::test]\nasync fn real_child_frame_and_projection_keep_owned_storage_until_handoff_and_refuse_partial_copies()\n {"
+        },
+        {
+          "name": "adapters::vulnerability::tests::child_tests::real_large_field_projection_cancel_and_operation_deadline_release_all_owned_storage",
+          "function": "real_large_field_projection_cancel_and_operation_deadline_release_all_owned_storage",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_child_tests.rs",
+          "line": 299,
+          "sha256": "d11ef813a00357a465e21ba302c6a46ac6eebeb89ccd66008215c2eefd12c3e7",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    parser.shutdown().await.unwrap();\n    println!(\"A10_OWNERSHIP_COMPLETE frame-projection-handoff-refusals\");\n}\n#[tokio::test]\nasync fn real_large_field_projection_cancel_and_operation_deadline_release_all_owned_storage() {\n    use std::{future::Future, task::Poll};"
+        },
+        {
+          "name": "adapters::vulnerability::tests::child_tests::real_helper_request_matrix_preserves_old_empty_bytes_and_rejects_cross_layout_and_malformed_input",
+          "function": "real_helper_request_matrix_preserves_old_empty_bytes_and_rejects_cross_layout_and_malformed_input",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_child_tests.rs",
+          "line": 371,
+          "sha256": "d11ef813a00357a465e21ba302c6a46ac6eebeb89ccd66008215c2eefd12c3e7",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    header.extend(allowance.to_be_bytes());\n    header\n}\n#[tokio::test]\nasync fn real_helper_request_matrix_preserves_old_empty_bytes_and_rejects_cross_layout_and_malformed_input()\n {"
+        },
+        {
+          "name": "adapters::vulnerability::tests::child_tests::production_same_html_root_charges_frame_projection_and_public_handoff",
+          "function": "production_same_html_root_charges_frame_projection_and_public_handoff",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_child_tests.rs",
+          "line": 507,
+          "sha256": "d11ef813a00357a465e21ba302c6a46ac6eebeb89ccd66008215c2eefd12c3e7",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        \"A10_REQUEST_MATRIX_COMPLETE old24:all72-layout-limit-pairs:prefix32:header5:number4:point3\"\n    );\n}\n#[tokio::test]\nasync fn production_same_html_root_charges_frame_projection_and_public_handoff() {\n    let parser = helper();"
+        },
+        {
+          "name": "adapters::vulnerability::equal::object_index_tests::charged_object_index_comparison_count_scales_n_log_n_and_keeps_exact_values",
+          "function": "charged_object_index_comparison_count_scales_n_log_n_and_keeps_exact_values",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_equal.rs",
+          "line": 316,
+          "sha256": "77c33a637d2fd012d21f9a1e51e73676c3d3dfa6f45629591158d7a6aacc63f5",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "            .await\n            .unwrap()\n    }\n    #[tokio::test]\n    async fn charged_object_index_comparison_count_scales_n_log_n_and_keeps_exact_values() {\n        for n in [32usize, 64, 128, 256, 512, 1024] {"
+        },
+        {
+          "name": "adapters::vulnerability::equal::object_index_tests::actual_object_index_work_cancels_expires_and_releases_charged_borrows",
+          "function": "actual_object_index_work_cancels_expires_and_releases_charged_borrows",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_equal.rs",
+          "line": 399,
+          "sha256": "77c33a637d2fd012d21f9a1e51e73676c3d3dfa6f45629591158d7a6aacc63f5",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        assert_eq!(bounded.snapshot().unwrap().used, 0);\n        println!(\"A10_OBJECT_INDEX_COMPLETE exact-unicode-numeric-nan-refusal\");\n    }\n    #[tokio::test]\n    async fn actual_object_index_work_cancels_expires_and_releases_charged_borrows() {\n        use std::{future::Future, task::Poll};"
+        },
+        {
+          "name": "adapters::vulnerability::equal::object_index_tests::actual_nvd_cwe_parse_path_enters_borrowed_object_index_then_retains_source_error",
+          "function": "actual_nvd_cwe_parse_path_enters_borrowed_object_index_then_retains_source_error",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_equal.rs",
+          "line": 439,
+          "sha256": "77c33a637d2fd012d21f9a1e51e73676c3d3dfa6f45629591158d7a6aacc63f5",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "            println!(\"A10_OBJECT_INDEX_COMPLETE entered-cancel-expire:{expire}\");\n        }\n    }\n    #[tokio::test]\n    async fn actual_nvd_cwe_parse_path_enters_borrowed_object_index_then_retains_source_error() {\n        let left = wire(128, false, false, 0);"
+        },
+        {
+          "name": "adapters::vulnerability::tests::ledger::finite_tiny_variants_require_exact_correlated_tuple_and_success_deadline_witness",
+          "function": "finite_tiny_variants_require_exact_correlated_tuple_and_success_deadline_witness",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_ledger_tests.rs",
+          "line": 188,
+          "sha256": "08b0b1e0f1b5c1256f080c8d7bb2b0f2924e7aae382b8584af0a323019f53da5",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    }\n    Ok(())\n}\n#[test]\nfn finite_tiny_variants_require_exact_correlated_tuple_and_success_deadline_witness() {\n    let expected = expected(\"boundary308\").unwrap();"
+        },
+        {
+          "name": "adapters::vulnerability::tests::ledger::tiny_and_ordinary_mutations_cannot_hide_wrong_requests_partial_results_or_unused_exchanges",
+          "function": "tiny_and_ordinary_mutations_cannot_hide_wrong_requests_partial_results_or_unused_exchanges",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_ledger_tests.rs",
+          "line": 299,
+          "sha256": "08b0b1e0f1b5c1256f080c8d7bb2b0f2924e7aae382b8584af0a323019f53da5",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    }\n    println!(\"A10_LEDGER_COMPLETE finite-tiny-positive-variants\");\n}\n#[test]\nfn tiny_and_ordinary_mutations_cannot_hide_wrong_requests_partial_results_or_unused_exchanges() {\n    let expected = expected(\"boundary308\").unwrap();"
+        },
+        {
+          "name": "adapters::vulnerability::tests::property_tests::source_metadata_factory_auth_contracts_and_original_case_identities",
+          "function": "source_metadata_factory_auth_contracts_and_original_case_identities",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_property_tests.rs",
+          "line": 3,
+          "sha256": "539dbba7b3f45804458f992bacf456829db3502b1d2640bd25ba4337677f63ac",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "use super::*;\n#[tokio::test]\nasync fn source_metadata_factory_auth_contracts_and_original_case_identities() {\n    let parser = helper();"
+        },
+        {
+          "name": "adapters::vulnerability::tests::property_tests::original_regex_cases_all_unicode16_decimal_families_greedy_limits_and_mitre_priority",
+          "function": "original_regex_cases_all_unicode16_decimal_families_greedy_limits_and_mitre_priority",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_property_tests.rs",
+          "line": 132,
+          "sha256": "539dbba7b3f45804458f992bacf456829db3502b1d2640bd25ba4337677f63ac",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        println!(\"A10_SOURCE_TEST_COMPLETE {id}\");\n    }\n}\n#[tokio::test]\nasync fn original_regex_cases_all_unicode16_decimal_families_greedy_limits_and_mitre_priority() {\n    let budget = c::Budget::new(c::ROW_BYTES).unwrap();"
+        },
+        {
+          "name": "adapters::vulnerability::tests::every_frozen_original_observation_full_outputs_and_outbound",
+          "function": "every_frozen_original_observation_full_outputs_and_outbound",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 288,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        _ => panic!(\"unbound original observation {}\", row[\"id\"]),\n    }\n}\n#[tokio::test]\nasync fn every_frozen_original_observation_full_outputs_and_outbound() {\n    let source: Value = serde_json::from_str(include_str!("
+        },
+        {
+          "name": "adapters::vulnerability::tests::html_adapters_retain_absolute_context_and_expired_context_never_dispatches",
+          "function": "html_adapters_retain_absolute_context_and_expired_context_never_dispatches",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 623,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    }\n}\n\n#[tokio::test]\nasync fn html_adapters_retain_absolute_context_and_expired_context_never_dispatches() {\n    let cases: BoundaryCases = serde_json::from_str(include_str!("
+        },
+        {
+          "name": "adapters::vulnerability::tests::exploitdb_actual_header_reader_deadline_retains_timeout",
+          "function": "exploitdb_actual_header_reader_deadline_retains_timeout",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 706,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    }\n    parser.shutdown().await.unwrap();\n}\n#[tokio::test]\nasync fn exploitdb_actual_header_reader_deadline_retains_timeout() {\n    let budget = c::Budget::new(1024).unwrap();"
+        },
+        {
+          "name": "adapters::vulnerability::tests::source_loaded_equality_keeps_numeric_structural_and_unicode_semantics",
+          "function": "source_loaded_equality_keeps_numeric_structural_and_unicode_semantics",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 728,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    println!(\"A10_HEADER_DEADLINE_COMPLETE classified_timeout\");\n}\n\n#[tokio::test]\nasync fn source_loaded_equality_keeps_numeric_structural_and_unicode_semantics() {\n    let budget = c::Budget::new(1024 * 1024).unwrap();"
+        },
+        {
+          "name": "adapters::vulnerability::tests::nvd_adversarial_cwe_work_yields_expires_and_releases_cancelled_storage",
+          "function": "nvd_adversarial_cwe_work_yields_expires_and_releases_cancelled_storage",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 761,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    }\n    println!(\"A10_SOURCE_EQUALITY_COMPLETE exact_values\");\n}\n#[tokio::test]\nasync fn nvd_adversarial_cwe_work_yields_expires_and_releases_cancelled_storage() {\n    use std::{"
+        },
+        {
+          "name": "adapters::vulnerability::tests::all_original_boundary_cases_lossless_full_outputs_and_outbound",
+          "function": "all_original_boundary_cases_lossless_full_outputs_and_outbound",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 835,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    }\n}\n\n#[tokio::test]\nasync fn all_original_boundary_cases_lossless_full_outputs_and_outbound() {\n    replay_boundary_cases("
+        },
+        {
+          "name": "adapters::vulnerability::tests::supplemental_unicode_slice_and_huge_empty_cases_full_path",
+          "function": "supplemental_unicode_slice_and_huge_empty_cases_full_path",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 845,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    )\n    .await\n}\n#[tokio::test]\nasync fn supplemental_unicode_slice_and_huge_empty_cases_full_path() {\n    replay_boundary_cases("
+        },
+        {
+          "name": "adapters::vulnerability::tests::direct_api_configured_deadline_uses_exact_owner_250us_and_preserves_system_context",
+          "function": "direct_api_configured_deadline_uses_exact_owner_250us_and_preserves_system_context",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+          "line": 865,
+          "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "#[path = \"vulnerability_ledger_tests.rs\"]\nmod ledger;\n\n#[test]\nfn direct_api_configured_deadline_uses_exact_owner_250us_and_preserves_system_context() {\n    let replay = Arc::new(Replay {"
+        },
+        {
+          "name": "adapters::vulnerability_wire::tests::complete_frames_keep_layout_utf8_boundaries_and_reject_every_truncation_and_mutation",
+          "function": "complete_frames_keep_layout_utf8_boundaries_and_reject_every_truncation_and_mutation",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_wire_tests.rs",
+          "line": 29,
+          "sha256": "81948469632494600f84df349ecefaf110115aeebea848df482753bc13d17544",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    }\n    bytes\n}\n#[tokio::test]\nasync fn complete_frames_keep_layout_utf8_boundaries_and_reject_every_truncation_and_mutation() {\n    let op = operation().await;"
+        },
+        {
+          "name": "adapters::vulnerability_wire::tests::metadata_only_rows_and_large_fields_yield_then_obey_deadline_and_cancel",
+          "function": "metadata_only_rows_and_large_fields_yield_then_obey_deadline_and_cancel",
+          "source": "crates/ssx-infra/src/adapters/vulnerability_wire_tests.rs",
+          "line": 123,
+          "sha256": "81948469632494600f84df349ecefaf110115aeebea848df482753bc13d17544",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        println!(\"A10_WIRE_COMPLETE layout={layout:?}:valid-truncation-mutation\");\n    }\n}\n#[tokio::test]\nasync fn metadata_only_rows_and_large_fields_yield_then_obey_deadline_and_cancel() {\n    for empty in [false, true] {"
+        },
+        {
+          "name": "process_pool::cleanup_tests::held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup",
+          "function": "held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup",
+          "source": "crates/ssx-infra/src/process_pool.rs",
+          "line": 825,
+          "sha256": "48aa72c6daea89469da559ce319952fb1e7da32a798296472e8bbdaffd34fea6",
+          "cfg": "target_os=linux",
+          "source_context": "        }\n    }\n    #[cfg(target_os = \"linux\")]\n    #[tokio::test]\n    async fn held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup()\n    {"
+        },
+        {
+          "name": "process_pool::cleanup_tests::missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease",
+          "function": "missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease",
+          "source": "crates/ssx-infra/src/process_pool.rs",
+          "line": 879,
+          "sha256": "48aa72c6daea89469da559ce319952fb1e7da32a798296472e8bbdaffd34fea6",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        );\n    }\n    #[cfg(unix)]\n    #[tokio::test]\n    async fn missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease() {\n        let (path, pidfile) = fixture(\"exit 99\");"
+        },
+        {
+          "name": "http::a10_owner_clock_tests::manual_session_survives_elapsed_tokio_after_confirmed_post_exchange_decoder_wait",
+          "function": "manual_session_survives_elapsed_tokio_after_confirmed_post_exchange_decoder_wait",
+          "source": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+          "line": 187,
+          "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        assert_eq!(driver.owners(), 2);\n    }\n}\n#[tokio::test]\nasync fn manual_session_survives_elapsed_tokio_after_confirmed_post_exchange_decoder_wait() {\n    staged_session(true).await;"
+        },
+        {
+          "name": "http::a10_owner_clock_tests::system_session_expires_after_confirmed_post_exchange_decoder_wait",
+          "function": "system_session_expires_after_confirmed_post_exchange_decoder_wait",
+          "source": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+          "line": 192,
+          "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    staged_session(true).await;\n    println!(\"A10_OWNER_CLOCK_COMPLETE manual-session-after-decoder-wait\");\n}\n#[tokio::test]\nasync fn system_session_expires_after_confirmed_post_exchange_decoder_wait() {\n    staged_session(false).await;"
+        },
+        {
+          "name": "http::a10_owner_clock_tests::identity_decoder_uses_owner_after_confirmed_worker_start_and_elapsed_wall_time",
+          "function": "identity_decoder_uses_owner_after_confirmed_worker_start_and_elapsed_wall_time",
+          "source": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+          "line": 211,
+          "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        self.release();\n    }\n}\n#[tokio::test]\nasync fn identity_decoder_uses_owner_after_confirmed_worker_start_and_elapsed_wall_time() {\n    let (transport, request) = captured();"
+        },
+        {
+          "name": "http::a10_owner_clock_tests::manual_pending_exchange_expires_at_exact_250us_and_drops_once",
+          "function": "manual_pending_exchange_expires_at_exact_250us_and_drops_once",
+          "source": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+          "line": 300,
+          "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "        })\n    }\n}\n#[tokio::test]\nasync fn manual_pending_exchange_expires_at_exact_250us_and_drops_once() {\n    let transport = Arc::new(Pending::default());"
+        },
+        {
+          "name": "http::a10_owner_clock_tests::unmocked_system_expiry_and_expired_search_context_dispatch_nothing",
+          "function": "unmocked_system_expiry_and_expired_search_context_dispatch_nothing",
+          "source": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+          "line": 333,
+          "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    drop(http);\n    println!(\"A10_OWNER_CLOCK_COMPLETE pending-exact-250us\");\n}\n#[tokio::test]\nasync fn unmocked_system_expiry_and_expired_search_context_dispatch_nothing() {\n    use ssx_application::SearchEngine;"
+        },
+        {
+          "name": "http::a10_owner_clock_tests::manual_direct_replay_rejects_absolute_search_context",
+          "function": "manual_direct_replay_rejects_absolute_search_context",
+          "source": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+          "line": 386,
+          "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+          "cfg": "test; unix supported gate targets",
+          "source_context": "    drop(http);\n    println!(\"A10_OWNER_CLOCK_COMPLETE system-unmocked-and-context-expiry\");\n}\n#[tokio::test]\nasync fn manual_direct_replay_rejects_absolute_search_context() {\n    use ssx_application::SearchEngine;"
+        }
+      ],
+      "all_old214_names_preserved": true,
+      "compiled_inventory_not_yet_observed_for_union": true
+    }
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860",
+      "bytes": 87421
+    },
+    {
+      "path": "contracts/unicode/provenance.json",
+      "sha256": "a172091a650fdb27f5e753fe65705c68aa7445a440d6ca354144757922256c40",
+      "bytes": 1050
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Include__cpython__unicodeobject.h.txt",
+      "sha256": "a3f5e7c3f6795fb1f0794fd4e41df2fc823c1a7844e82fe96ccc42c94f63146b",
+      "bytes": 27627
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Include__patchlevel.h.txt",
+      "sha256": "16a8955952cbaefd16f85909b73a0a6c182ec813f9544a12c28897c95b8d3f22",
+      "bytes": 1773
+    },
+    {
+      "path": "contracts/unicode/python-text-source/LICENSE.txt",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+      "bytes": 13804
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Modules___sre__sre.c.txt",
+      "sha256": "6d847eb25d5c50e3b33dcb2e39accd9c73f619c2d211a34ed32bb93e9c7299a8",
+      "bytes": 95890
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Modules__unicodedata_db.h.txt",
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110",
+      "bytes": 588046
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodectype.c.txt",
+      "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61",
+      "bytes": 7236
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodeobject.c.txt",
+      "sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3",
+      "bytes": 496004
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodetype_db.h.txt",
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134",
+      "bytes": 281705
+    },
+    {
+      "path": "crates/ssx-application/src/policy.rs",
+      "sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+      "bytes": 38237
+    },
+    {
+      "path": "crates/ssx-config/src/lib.rs",
+      "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+      "bytes": 49685
+    },
+    {
+      "path": "crates/ssx-domain/src/records.rs",
+      "sha256": "5e08c70c9adb8dc1f12562d560191ccf7b262edca73c6e6154057620e353d5bc",
+      "bytes": 11011
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "sha256": "98ba70c193036e309e2f8f01a9bd96a75476bbb96bf53f2e2d47ebf8baeb6ac2",
+      "bytes": 1205
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+      "sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7",
+      "bytes": 33943
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/crates_io.rs",
+      "sha256": "4ac7d0581bd66d61b8fc4568b8c0b128c10cc6dd0979f89d514d00dbcb3ea0d5",
+      "bytes": 12303
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/dehashed.rs",
+      "sha256": "fe3dce1c28f946942af81bfec2c1426443fc622b5299b487e60b9fdba5548545",
+      "bytes": 14772
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/hibp.rs",
+      "sha256": "81e3717db78949b4f85bea5be531216cf43d25eb7c5c09e6c337ce834975b077",
+      "bytes": 18649
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/intelx.rs",
+      "sha256": "8d67d54bd88ecf2599dec36a0c6005d1f1b4bcadb06ecd743fee1073e40fbebd",
+      "bytes": 24349
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/mod.rs",
+      "sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791",
+      "bytes": 32368
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "sha256": "0f42f0c200f1e84f427b03bcb5e9d8fc5251180b7d0f58e22c9e0b724370509d",
+      "bytes": 38543
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "sha256": "826006a11ef93c6c6127cdaa7f340d5f8aa1261941d388b38c2437d5ea7f89fb",
+      "bytes": 53896
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_repr.rs",
+      "sha256": "06680a00d9d8b17082d09a175c44797e5a7a984b64096d18f102b8a2cb2d23fd",
+      "bytes": 17246
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/threat_intel.rs",
+      "sha256": "dde2a34576051a820a48d1b422956443f726a600970cb5868b5318c7b74619f8",
+      "bytes": 25213
+    },
+    {
+      "path": "crates/ssx-infra/src/http.rs",
+      "sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+      "bytes": 41754
+    },
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8",
+      "bytes": 82956
+    },
+    {
+      "path": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "bytes": 61928
+    },
+    {
+      "path": "crates/ssx-infra/tests/a13_hibp.rs",
+      "sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "bytes": 20344
+    },
+    {
+      "path": "crates/ssx-infra/tests/a13_intelx.rs",
+      "sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "bytes": 24217
+    },
+    {
+      "path": "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
+      "sha256": "f79ab11ded4e6d214c16b9f9bedc75b8d57b00f7cfd3e60386ae575ae10f12fc",
+      "bytes": 40406
+    },
+    {
+      "path": "crates/ssx-json/Cargo.toml",
+      "sha256": "7a0c845afac7c12978c32014fc062d9ac40a749a08e242f8018c758fd47ee1a5",
+      "bytes": 298
+    },
+    {
+      "path": "crates/ssx-json/src/lib.rs",
+      "sha256": "f856e408af1eacd41dbfb57e5e34cf59f9245ee7045cf82e4edb7909c10f0ef8",
+      "bytes": 17864
+    },
+    {
+      "path": "crates/ssx-json/src/python_text.rs",
+      "sha256": "3b5f896724c17e8e118e8cf518a03532530a6a89392a3d9d243f0a9b43f59e40",
+      "bytes": 8592
+    },
+    {
+      "path": "crates/ssx-json/src/python_text_data.rs",
+      "sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7",
+      "bytes": 63764
+    },
+    {
+      "path": "crates/ssx-owned-budget/src/lib.rs",
+      "sha256": "3e7990a9aceed34b62aa8e2ddd030d24d15a8f04853aa6d8a1fd9ebeb364f903",
+      "bytes": 15287
+    },
+    {
+      "path": "crates/ssx-registry/src/lib.rs",
+      "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+      "bytes": 11205
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/SpecialCasing-16.0.0.txt",
+      "sha256": "8d5de354eef79f2395a54c9c7dcebbaf3d30fc962d0f85611ea97aa973a0c451",
+      "bytes": 16809
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/UnicodeData-16.0.0.txt",
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f",
+      "bytes": 2175362
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39",
+      "bytes": 21096
+    },
+    {
+      "path": "docs/rust-rewrite/a13/BOUNDS_REVIEW.md",
+      "sha256": "ee88b6aab10d20a07188acd8b0bb3941c9143edb49937e3f1ab186c9307f1231",
+      "bytes": 3642
+    },
+    {
+      "path": "docs/rust-rewrite/a13/PARITY.md",
+      "sha256": "3721c4853ad1f34e203a78619667c8f5a8fbbb1b5844ea5044651000febc5ba0",
+      "bytes": 5829
+    },
+    {
+      "path": "docs/rust-rewrite/a13/PERMANENT_GATE.md",
+      "sha256": "53260685337d365969758d35d545e8d06a6b90a8855a6df4697c13d8e2fd5018",
+      "bytes": 2969
+    },
+    {
+      "path": "docs/rust-rewrite/a13/PORTAL_IMPACT.md",
+      "sha256": "198604af609c815220463cf0702a680be26a466c57d5333810d92806636b35a1",
+      "bytes": 1798
+    },
+    {
+      "path": "docs/rust-rewrite/a13/README.md",
+      "sha256": "f5c08e0bbf8744cabe65151980520221a19a706316a1f9f4166ac47f8c7ab8e5",
+      "bytes": 4861
+    },
+    {
+      "path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+      "sha256": "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d",
+      "bytes": 20934
+    },
+    {
+      "path": "docs/rust-rewrite/a13/dehashed-static-fixture-v1.json",
+      "sha256": "186698d3f589bcb43fa3933dd374e99c01d5fd32a018d9a402caa06bfddd610d",
+      "bytes": 1022
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/BOUNDS_REVIEW.md",
+      "sha256": "c9f449862b499a38ac79591dfc3fdc23b5df625032eac24ee9270712bb4b9193",
+      "bytes": 2018
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/PARITY.md",
+      "sha256": "32e99bd026da92eb60c80f8a3c29fee46a5eed8c3c542e373ad64bd453a55519",
+      "bytes": 1857
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/PORTAL_IMPACT.md",
+      "sha256": "3335b8164f7f3d9ebe0aafd48df085038d14e0e68bcd6ce7eeabcb9d1aa187a4",
+      "bytes": 939
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/README.md",
+      "sha256": "21dcfd4fafc391d49c1f528b5caf0017efe5eeb110093e5af3f2b1469adea3a1",
+      "bytes": 1373
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/cpython-input-pins.json",
+      "sha256": "611c5d6401ab45c30c9a5c2b1681f1af72d23815ca9ac064462a1cee8eb82856",
+      "bytes": 2719
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/native-plan.json",
+      "sha256": "e0d926f756150c3ca81e05da0bcf230d28ec5455000e67563035101d19c2c886",
+      "bytes": 3349
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/original-tests.json",
+      "sha256": "6ff9765b2c22b594f16e3fc1ce21c9ff49c7c986cc3b4c5cf89a8ec8f27afa22",
+      "bytes": 4743
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/source-map.json",
+      "sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+      "bytes": 18823
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/unicode-derivation-proof.json",
+      "sha256": "7d46d6bbb61d40723a1b7eb29ca4f15ca1162651a42efeed714d69b2d7159759",
+      "bytes": 956
+    },
+    {
+      "path": "docs/rust-rewrite/f05/README.md",
+      "sha256": "0006525e760456dd3656019aa4968b53f469f361853f31f13247e3424237aaca",
+      "bytes": 3237
+    },
+    {
+      "path": "docs/rust-rewrite/f06/PARITY.md",
+      "sha256": "f7c8e898111a73399ee1dd31b36d4fc587b37aaba34f281639ca8cdf67fb6236",
+      "bytes": 7446
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/hibp.json",
+      "sha256": "05ed85a091f1559b5791a824256e0a645db49ec76c4958b1196af3c2d8240209",
+      "bytes": 1091
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/intelx.json",
+      "sha256": "4b30bab35de38d57459efbb282e1f8263fe87775ef31179b0e0630958cbf53fe",
+      "bytes": 1095
+    },
+    {
+      "path": "docs/rust-rewrite/f08/README.md",
+      "sha256": "ee18fcdbac2fbedc14b19e4d857be02d824ebd634e567d3bc0769f8fe323449c",
+      "bytes": 6817
+    },
+    {
+      "path": "docs/rust-rewrite/f08/parity.md",
+      "sha256": "42b6811095631a7393a49e442ebbc0d5155abeaa63fc10bbf0692e64b5ae411e",
+      "bytes": 2609
+    },
+    {
+      "path": "docs/rust-rewrite/f09/README.md",
+      "sha256": "24ee261a6c3effcb506524d50dcecfa08fc6ea7920f58b98ba46993ac94a74b7",
+      "bytes": 8194
+    },
+    {
+      "path": "engines/dehashed.py",
+      "sha256": "0af39ca824817ce1bf065c72fbf463e64ef604a68ef5780292328de335d2eeba",
+      "bytes": 5205
+    },
+    {
+      "path": "engines/hibp.py",
+      "sha256": "4e886c3069755d8d5c7e516b19034a11afb62568ae671e8d911594b616178897",
+      "bytes": 4798
+    },
+    {
+      "path": "engines/intelx.py",
+      "sha256": "33cc32df8fc257ce3053c3c785633bc8504e95e5213071676d9cd51ae7b07fd9",
+      "bytes": 6094
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "bytes": 28263
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "bytes": 17458
+    },
+    {
+      "path": "slopsearx/filters.py",
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+      "bytes": 10364
+    },
+    {
+      "path": "slopsearx/jev.py",
+      "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03",
+      "bytes": 13437
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+      "bytes": 130718
+    },
+    {
+      "path": "tests/test_dehashed.py",
+      "sha256": "69de13ea249605010f29c0dd23389fcafe0df49fa18e37c3cf05533bda2e49ce",
+      "bytes": 2017
+    },
+    {
+      "path": "tests/test_hibp.py",
+      "sha256": "81fe83d08c7211793b918a2bfc6d55a2c7f8e44015464b05d83221ee093ff041",
+      "bytes": 2131
+    },
+    {
+      "path": "tests/test_intelx.py",
+      "sha256": "0357854dd009f5543428cf9e66770e45d271ccc75137d2e15de568473a6b1467",
+      "bytes": 1115
+    },
+    {
+      "path": "tests/test_mcp_security.py",
+      "sha256": "24347d97e63a623440803f7c41bbab0391f7f75831faa2ce1d90ec3a211a8935",
+      "bytes": 4388
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload/batch.rs",
+      "sha256": "f75c77b3e43e307a758a6af685ab39cc3ccd6eec9c1eb4d8f68824114a789bf6",
+      "bytes": 18020
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability.rs",
+      "sha256": "5b8852e45bd4b7bd63be0c9fdebf1c245ddd270d2fc3965fddb73dfd4c1f7db4",
+      "bytes": 22046
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_child_tests.rs",
+      "sha256": "d11ef813a00357a465e21ba302c6a46ac6eebeb89ccd66008215c2eefd12c3e7",
+      "bytes": 20523
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_equal.rs",
+      "sha256": "77c33a637d2fd012d21f9a1e51e73676c3d3dfa6f45629591158d7a6aacc63f5",
+      "bytes": 17460
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_ledger_tests.rs",
+      "sha256": "08b0b1e0f1b5c1256f080c8d7bb2b0f2924e7aae382b8584af0a323019f53da5",
+      "bytes": 15911
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_property_tests.rs",
+      "sha256": "539dbba7b3f45804458f992bacf456829db3502b1d2640bd25ba4337677f63ac",
+      "bytes": 8490
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+      "sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+      "bytes": 36757
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_wire.rs",
+      "sha256": "48562f72c3f2a015b64797d23e1019e0c68c3060cb67353fc1916e6189198f28",
+      "bytes": 9652
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_wire_tests.rs",
+      "sha256": "81948469632494600f84df349ecefaf110115aeebea848df482753bc13d17544",
+      "bytes": 5640
+    },
+    {
+      "path": "crates/ssx-infra/src/process_pool.rs",
+      "sha256": "48aa72c6daea89469da559ce319952fb1e7da32a798296472e8bbdaffd34fea6",
+      "bytes": 41419
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+      "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72",
+      "bytes": 15970
+    },
+    {
+      "path": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+      "sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d",
+      "bytes": 14360
+    }
+  ],
+  "suites": [
+    {
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "names": [
+        "adapters::clinicaltrials::deadline_tests::only_pubmed_aggregate_budget_applies_to_source_decode",
+        "adapters::clinicaltrials::resource_tests::actual_adapter_payload_controls_preserve_full_results_and_later_source_error_precedence",
+        "adapters::clinicaltrials::resource_tests::actual_payload_projection_obeys_absolute_context_after_source_rows_finish",
+        "adapters::clinicaltrials::resource_tests::actual_pubchem_cid_reference_parts_yield_and_release_before_second_dispatch",
+        "adapters::clinicaltrials::resource_tests::all_eight_prepared_bodies_fit_candidate_quota_and_transfer_without_cloning",
+        "adapters::clinicaltrials::resource_tests::byte_resource_bound_remains_independent_of_generous_row_budget",
+        "adapters::clinicaltrials::resource_tests::complete_result_normalizer_exposes_actual_nonempty_media",
+        "adapters::clinicaltrials::resource_tests::dropping_actual_payload_projection_after_live_allocation_releases_ownership",
+        "adapters::clinicaltrials::resource_tests::dropping_real_large_inner_loop_futures_releases_all_scratch_and_batch_charges",
+        "adapters::clinicaltrials::resource_tests::first_phase_row_scratch_quota_failure_precedes_any_payload_projection",
+        "adapters::clinicaltrials::resource_tests::five_concurrent_realistic_operation_owners_have_explicit_aggregate_envelope",
+        "adapters::clinicaltrials::resource_tests::legacy_direct_normalization_does_not_reuse_expired_network_timer",
+        "adapters::clinicaltrials::resource_tests::provider_sized_med_digit_scan_and_uniprot_partition_observe_deadline_and_drop",
+        "adapters::clinicaltrials::resource_tests::same_root_quota_is_not_reset_per_row_or_payload_field",
+        "adapters::clinicaltrials::resource_tests::source_decode_context_is_enforced_after_network_completion_for_all_five",
+        "adapters::clinicaltrials::resource_tests::source_repr_profiles_match_legacy_with_charged_cooperative_output",
+        "adapters::clinicaltrials::resource_tests::source_sized_pubmed_error_text_keeps_charge_until_response_handoff",
+        "adapters::clinicaltrials::resource_tests::tiny_quota_is_terminal_error_and_never_partial_success",
+        "adapters::community::tests::fractional_timeout_and_zero_results_remain_representable",
+        "adapters::dehashed::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+        "adapters::dehashed::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+        "adapters::dockerhub::tests::default_route_scope_and_percent_encoding_match_source",
+        "adapters::fda_case::tests::complete_source_whole_string_variants",
+        "adapters::hibp::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+        "adapters::hibp::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+        "adapters::html_helper_tests::actual_bounded_child_quota_and_non_emitting_codec_deadline_cancel_reap",
+        "adapters::html_helper_tests::actual_raw_header_selector_cancellation_retains_lease_until_reap",
+        "adapters::html_helper_tests::actual_rows_worker_quota_deadline_cancel_and_reap",
+        "adapters::html_helper_tests::held_decoder_handoff_deadline_retains_ownership_until_verified_reap",
+        "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+        "adapters::html_helper_tests::registered_factories_share_owned_pool_and_await_teardown_after_caller_drop",
+        "adapters::html_helper_tests::typed_helper_terminal_outcomes_preserve_request_counts_feedback_and_reap",
+        "adapters::html_timeout::tests::scalar_arithmetic_and_absolute_context_are_preserved_without_coercion",
+        "adapters::http_charset::tests::actual_httpx_charset_corpus",
+        "adapters::http_charset::tests::actual_source_boundaries_preserve_success_and_exact_errors",
+        "adapters::http_charset::tests::empty_precedes_headers_checkpoint_and_nul",
+        "adapters::http_charset::tests::every_checkpoint_and_scarce_budget_propagates_without_source_fallback",
+        "adapters::http_charset::tests::resource_deadline_and_parameter_errors_are_terminal_and_release",
+        "adapters::http_headers::tests::both_drivers_match_all_frozen_httpx_named_header_values",
+        "adapters::http_headers::tests::charged_empty_duplicate_copy_has_repeated_pending_then_cancellation_or_real_deadline",
+        "adapters::http_headers::tests::global_decode_duplicate_empty_and_utf8_chunk_boundaries_are_exact",
+        "adapters::http_headers::tests::output_is_precharged_and_failures_release_exact_capacity",
+        "adapters::intelx::delay_tests::actual_source_sleep_pending_cancellation_never_dispatches_get",
+        "adapters::intelx::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+        "adapters::intelx::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+        "adapters::internetarchive::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::internetarchive::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::internetarchive::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::jobs::tests::ashby_uses_graphql_post_and_normalizes_job_postings",
+        "adapters::jobs::tests::company_scope_rejects_before_dispatch_and_404_is_successful_empty",
+        "adapters::jobs::tests::configuration_errors_keep_source_http_and_slice_order",
+        "adapters::jobs::tests::configured_paths_and_source_graphql_document_are_exact",
+        "adapters::jobs::tests::every_provider_timeout_drop_and_owner_shutdown_close_and_join_exchange",
+        "adapters::jobs::tests::greenhouse_builds_content_query_and_job_payload_with_absent_id_preserved",
+        "adapters::jobs::tests::lever_binary64_quotient_then_cpython_half_even_dates",
+        "adapters::jobs::tests::lever_epoch_milliseconds_match_utc_iso",
+        "adapters::jobs::tests::lever_sends_mode_json_and_normalizes_categories_epoch_and_limit",
+        "adapters::jobs::tests::malformed_payloads_and_http_failures_are_classified",
+        "adapters::jobs::tests::original_python_inline_fixtures_match_every_asserted_field",
+        "adapters::jobs::tests::provider_timeout_and_dropped_search_cancel_the_loopback_exchange",
+        "adapters::jobs::tests::resolved_extreme_numeric_timeouts_use_the_finite_caller_lifecycle",
+        "adapters::jobs::tests::resolved_f06_factories_preserve_slice_kind_and_signed_limits",
+        "adapters::jobs::tests::source_company_cases_are_preserved",
+        "adapters::jobs::tests::source_iterables_slice_before_row_access_and_atomic_failure_precedence",
+        "adapters::jobs::tests::source_response_bytes_decode_before_only_retained_output_projection",
+        "adapters::jobs::tests::system_proxy_guard_rejects_every_enabled_system_flag",
+        "adapters::musicbrainz::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::musicbrainz::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::musicbrainz::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::nominatim::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::nominatim::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::nominatim::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::openlibrary::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::openlibrary::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::openlibrary::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::source_json::f15_numeric_tests::shared_float_normalizer_preserves_long_finite_and_nonfinite_source_policy",
+        "adapters::source_json::tests::bounded_depth_bytes_integer_digits_and_deadline",
+        "adapters::source_json::tests::encodings_and_recursive_float_projection",
+        "adapters::source_json::tests::source_nonfinite_and_surrogates_are_data",
+        "adapters::source_json::tests::strict_grammar_and_byte_failures",
+        "adapters::source_payload::batch::tests::batch_owns_projection_capacity_overlap_and_named_handoff",
+        "adapters::source_payload::batch::tests::cancelled_push_drops_partial_storage_before_batch_charge",
+        "adapters::source_payload::batch::tests::non_success_handoff_has_no_partial_rows_and_charges_error_copy",
+        "adapters::source_payload::batch::tests::thumbnail_capacity_refusal_and_cancel_release_projection_storage",
+        "adapters::source_payload::batch::tests::thumbnail_uses_same_budget_and_named_handoff_release",
+        "adapters::source_payload::batch::tests::wrong_ledger_refusal_and_fixed_capacity_preserve_storage_ownership",
+        "adapters::source_payload::generic_envelope_tests::generic_science_wrapper_keeps_bytes_charges_and_declared_envelopes",
+        "adapters::source_payload::scalar_borrow_tests::both_empty_author_paths_yield_after_array_charge_and_observe_deadline",
+        "adapters::source_payload::scalar_borrow_tests::scalar_copy_cancellation_releases_observed_live_reservation",
+        "adapters::source_payload::scalar_borrow_tests::scalar_fields_match_source_text_without_intermediate_source_copies",
+        "adapters::source_payload::tests::actual_source_payload_controls_preserve_codepoints_order_and_depth",
+        "adapters::source_payload::tests::budgeted_numeric_projection_preserves_tokens_and_bounds",
+        "adapters::source_payload::tests::budgeted_projection_cancellation_releases_actual_output_allocations",
+        "adapters::source_payload::tests::budgeted_projection_retains_storage_and_restores_on_refusal",
+        "adapters::source_payload::tests::depth_sentinel_reservation_precedes_allocation_and_rolls_back",
+        "adapters::source_payload::tests::maximal_key_hash_and_collision_latency_on_actual_executor",
+        "adapters::source_payload::tests::ordinary_projection_and_nonfinite_refusal_are_unchanged",
+        "adapters::source_payload::tests::publication_envelope_matches_complete_actual_source_payloads",
+        "adapters::source_repr::tests::absolute_deadline_interrupts_large_repr_after_output_started",
+        "adapters::source_repr::tests::actual_python_35_controls_preserve_quotes_floats_bigints_raw_codepoints_and_depth",
+        "adapters::source_repr::tests::cancellation_after_real_output_growth_drops_every_charge",
+        "adapters::source_repr::tests::flat_array_and_object_event_backing_peaks_are_charged",
+        "adapters::source_repr::tests::flat_container_quota_and_in_progress_event_cancellation_release_every_owner",
+        "adapters::source_repr::tests::large_repr_uses_real_storage_envelope_instead_of_arbitrary_point_multiplier",
+        "adapters::source_repr::tests::quota_failure_is_fallible_terminal_and_releases_stack_and_output",
+        "adapters::stackexchange::tests::zero_string_slice_precedes_row_interpretation_without_accepting_unsliceable_values",
+        "adapters::threat_intel::tests::actual_four_factory_query_scans_cancel_expire_without_dispatch_and_release",
+        "adapters::threat_intel::tests::actual_four_post_source_parse_projection_cancels_expires_and_releases",
+        "adapters::threat_intel::tests::actual_four_projection_refusals_are_classified_after_parse_and_return_all_charges",
+        "adapters::threat_ioc::tests::native_unicode16_word_table_and_all_ioc_grammars_keep_source_boundaries",
+        "adapters::tmdb::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::tmdb::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::tmdb::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "browser_identity::oidc::source_replay::exact_source_claim_signature_settings_and_return_corpus_with_named_hardening",
+        "browser_identity::oidc::tests::authentic_claims_reject_finite_type_issuer_audience_nonce_and_time_boundaries",
+        "browser_identity::oidc::tests::bounded_json_rejects_nested_escaped_duplicates_depth_and_oversize",
+        "browser_identity::oidc::tests::forged_ambiguous_unsupported_or_oversized_jwt_and_jwk_are_denied",
+        "browser_identity::sessions::tests::previous_key_deadline_is_exclusive_and_new_keys_use_only_current",
+        "html::bounded_decode::parent_phase_tests::actual_header_worker_composes_all_source_selector_boundaries",
+        "html::bounded_decode::parent_phase_tests::cancellation_during_actual_header_sizing_keeps_owner_until_drop",
+        "html::bounded_decode::parent_phase_tests::cancellation_during_validation_and_projection_releases_owned_phase",
+        "html::charged_flatten::tests::charged_lossy_conversion_matches_all_byte_pairs_and_releases_capacity",
+        "html::charged_flatten::tests::flat_backing_refusal_retains_existing_storage_until_owner_drop",
+        "html::child_rows::tests::charged_redirect_decoder_matches_previous_full_form_semantics",
+        "html::child_rows::tests::charged_text_trims_across_segments_with_python_whitespace_only",
+        "html::child_rows::tests::google_row_and_borrowed_key_capacity_sweep_keeps_full_output_or_resource",
+        "html::child_rows::tests::redirect_resource_failure_is_typed_and_releases_temporary_bytes",
+        "html::decode_wire::tests::asynchronous_validation_preserves_closed_frame_errors_and_deadline",
+        "html::decode_wire::tests::closed_source_diagnostics_resource_deadline_and_validation_expiry_stay_distinct",
+        "html::decode_wire::tests::complete_frame_preserves_surrogates_and_rejects_every_truncation_and_trailing_byte",
+        "html::decode_wire::tests::selector_stage_codes_are_closed_and_tied_to_header_envelope",
+        "html::http_headers::tests::preserves_order_empty_bytes_and_rejects_every_truncation_and_trailing_byte",
+        "html::row_wire::tests::cancellation_checks_cover_encode_full_validation_and_projection",
+        "html::row_wire::tests::complete_rows_roundtrip_preserves_raw_fields_and_explicit_fallback",
+        "html::row_wire::tests::full_frame_validation_rejects_truncation_trailing_tags_counts_and_utf8",
+        "html::row_wire::tests::size_counting_checks_deadline_and_whole_field_work_has_a_frame_bound",
+        "html::row_wire::tests::streaming_legacy_rows_are_byte_identical_to_checked_buffer_encoder",
+        "html::rows_borrowed::tests::cooperative_fields_preserve_split_utf8_and_reject_malformed_complete_frames",
+        "html::rows_borrowed::tests::image_raw_sanitized_and_optional_empty_fields_are_distinct_and_closed",
+        "html::rows_projection::tests::cancellation_during_private_result_projection_releases_frame_and_batch",
+        "html::rows_projection::tests::produced_batch_retains_fields_until_named_handoff_and_refusal_drops_partial_copy",
+        "html::rows_worker::tests::actual_affine_tree_resource_refusal_and_next_worker_success",
+        "html::rows_worker::tests::closed_row_request_preserves_raw_limit_bits_and_rejects_malformed_fields",
+        "html::rows_worker::tests::hostile_sanitizer_workload_cancel_and_deadline_reap_owned_child",
+        "html_budget::tests::overlap_is_charged_until_owner_drop_and_invalid_limits_fail_closed",
+        "http::decode_tests::decoder_budget_remains_charged_after_waiter_abort_and_drain_joins_workers",
+        "http::decode_tests::decoding_observes_cancel_shutdown_and_expired_budget",
+        "http::decode_tests::decoding_raw_zlib_stacked_and_unknown_encodings",
+        "http::decode_tests::drop_closes_decode_admission_without_claiming_thread_join",
+        "http::f15_header_tests::actual_source_streamed_header_cases_replay_early_admission",
+        "http::f15_header_tests::opt_in_identity_length_limit_preserves_encoding_and_python_integer_rules",
+        "observability::lifecycle_tests::cancelled_shutdown_caller_retains_exporter_and_next_shutdown_joins_socket",
+        "observability::lifecycle_tests::exporter_panic_still_signals_completion",
+        "observability::logging::console_writer_tests::console_writer_preserves_validated_correlation_and_timing",
+        "observability::logging::correlation_tests::request_uuid_and_query_correlation_are_separate_validated_fields",
+        "observability::logging::original_configuration_rows::five_original_explicit_environment_configuration_cases_select_exact_native_profile",
+        "observability::logging::sentry_source_controls::disabled_fallback_selection_and_native_config_bounds",
+        "observability::logging::sentry_source_controls::pinned_sdk_dsn_controls_preserve_endpoint_auth_and_explicit_native_identity",
+        "observability::logging::tests::diagnostics_do_not_contain_raw_text",
+        "observability::logging::tests::sentry_disabled_invalid_and_safe_configuration",
+        "observability::metrics::bucket_source_controls::actual_custom_and_invalid_source_profiles_use_the_production_helpers",
+        "observability::metrics::bucket_source_controls::empty_bounds_render_and_changed_lengths_refuse_without_mutation",
+        "observability::metrics::bucket_source_controls::invalid_observations_retain_no_buckets_and_native_profile_cap_is_explicit",
+        "observability::metrics::catalog_admission::catalog_stops_before_unbounded_duplicate_input",
+        "observability::metrics::explicit_state_controls::original_gap_some_age_and_zero_queued_positive_age_are_preserved",
+        "observability::metrics::explicit_state_controls::same_length_duplicate_or_missing_labels_refuse_without_retaining_series",
+        "observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions",
+        "observability::metrics::original_metrics_tests::original_histogram_assertions",
+        "observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions",
+        "observability::metrics::original_metrics_tests::original_saved_event_metric_assertions",
+        "observability::metrics::original_metrics_tests::original_workflow_metric_assertions",
+        "observability::metrics::source_replay::actual_source_metric_catalog_and_workflow_render",
+        "observability::metrics::tests::all_metric_definitions_have_unique_identity",
+        "observability::metrics::tests::closed_workflow_and_event_vocabularies",
+        "observability::metrics::tests::empty_success_is_not_error_and_caller_cancelled_is_excluded",
+        "observability::metrics::tests::fixed_buckets_counts_and_invalid_values",
+        "observability::metrics::tests::traffic_does_not_invent_series",
+        "observability::metrics::wire_controls::accumulated_histogram_overflow_uses_prometheus_spelling",
+        "observability::metrics::wire_controls::actual_source_numbers_and_escaped_series_order",
+        "observability::metrics::workflow_helpers::workflow_transitions_recovery_and_event_reads_close_stale_gauges",
+        "observability::sentry::lifecycle_controls::cancelled_then_concurrent_shutdown_retains_handle_until_real_response_and_join",
+        "observability::sentry::lifecycle_controls::completion_guard_signals_even_when_its_task_panics",
+        "observability::sentry::lifecycle_controls::non_success_and_connection_refusal_are_nonfatal_without_retry",
+        "observability::sentry::never_polled_control::never_polled_worker_abort_drops_each_envelope_and_signals_completion",
+        "observability::sentry::tests::disabled_and_sample_zero_create_no_sender_http_owner_or_worker",
+        "observability::sentry::tests::full_queue_and_hanging_post_shutdown_account_for_discarded_work_and_close_socket",
+        "observability::sentry::tests::public_operational_error_posts_exact_envelope_auth_and_native_identity",
+        "observability::sentry::tests::redirect_is_failed_once_without_forwarding_authentication",
+        "process_pool::cleanup_tests::both_shutdown_waiters_observe_injected_supervisor_panic",
+        "process_pool::cleanup_tests::cancelled_caller_lease_survives_blocked_cleanup_until_real_reap",
+        "process_pool::cleanup_tests::charged_payload_releases_after_write_and_read_failures",
+        "process_pool::cleanup_tests::charged_payload_survives_supervisor_panic_without_false_drain",
+        "process_pool::cleanup_tests::closed_receiver_during_success_delivery_retains_lease_until_reply_drop",
+        "process_pool::cleanup_tests::concurrent_fixtures_with_identical_clock_have_exclusive_identities",
+        "process_pool::cleanup_tests::incomplete_pid_record_is_not_child_readiness",
+        "process_pool::cleanup_tests::missing_request_readiness_releases_gate_before_bounded_shutdown",
+        "process_pool::cleanup_tests::unknown_cleanup_closes_reuse_and_reports_shutdown_failure",
+        "process_pool::cleanup_tests::unknown_cleanup_retains_lease_and_permit_and_reports_failed_drain",
+        "process_pool::cleanup_tests::verified_success_and_protocol_error_release_lease_after_cleanup",
+        "rerank::f15_provider_tests::native_queue_wait_expires_without_dispatch_and_releases_admission",
+        "rerank::strict_json::tests::cancelled_large_arena_is_dropped_and_joined_without_detached_work",
+        "rerank::strict_json::tests::deep_parser_yields_to_current_thread_heartbeat_and_deadline",
+        "rerank::strict_json::tests::long_significand_conversion_checks_deadline_without_reparsing_scores",
+        "rerank::strict_json::tests::near_limit_finite_float_keeps_heartbeat_and_never_accepts_after_deadline",
+        "rerank::strict_json::tests::strict_json_deep_success_error_and_destruction_use_flat_storage",
+        "rerank::strict_json::tests::strict_json_preserves_python_encodings_numbers_and_surrogates",
+        "research_runner::completion_tests::initial_completion_joins_actual_monitor_before_own_clear",
+        "research_runner::completion_tests::reclaimer_after_monitor_join_before_clear_preserves_replacement_lease_and_evidence",
+        "research_runner::completion_tests::terminal_early_return_joins_actual_monitor_before_own_clear",
+        "search::f15_sensitive_tests::sensitive_post_rank_engine_and_provenance_are_excluded",
+        "search::tests::cooperative_completion_collection_preserves_real_health_origin",
+        "search::tests::zero_remaining_budget_never_polls_engine",
+        "tests::injected_sinks_observe_real_readiness",
+        "tests::unavailable_is_not_missing_or_ready",
+        "adapters::source_payload::batch::tests::expired_terminal_handoff_refuses_rows_and_drains_without_success_stamp",
+        "adapters::source_payload::selected_source_object_tests::selected_nested_sources_preserve_exact_values_order_and_null",
+        "adapters::source_payload::selected_source_object_tests::selected_sources_refuse_budget_deadline_and_release_cancelled_storage",
+        "adapters::vulnerability::equal::object_index_tests::actual_nvd_cwe_parse_path_enters_borrowed_object_index_then_retains_source_error",
+        "adapters::vulnerability::equal::object_index_tests::actual_object_index_work_cancels_expires_and_releases_charged_borrows",
+        "adapters::vulnerability::equal::object_index_tests::charged_object_index_comparison_count_scales_n_log_n_and_keeps_exact_values",
+        "adapters::vulnerability::tests::all_original_boundary_cases_lossless_full_outputs_and_outbound",
+        "adapters::vulnerability::tests::child_tests::entered_native_extraction_cancel_deadline_shutdown_reap_and_release",
+        "adapters::vulnerability::tests::child_tests::linux_owned_process_cpu_parser_handles_command_spaces_and_refuses_invalid_counters",
+        "adapters::vulnerability::tests::child_tests::production_same_html_root_charges_frame_projection_and_public_handoff",
+        "adapters::vulnerability::tests::child_tests::real_child_frame_and_projection_keep_owned_storage_until_handoff_and_refuse_partial_copies",
+        "adapters::vulnerability::tests::child_tests::real_helper_request_matrix_preserves_old_empty_bytes_and_rejects_cross_layout_and_malformed_input",
+        "adapters::vulnerability::tests::child_tests::real_large_field_projection_cancel_and_operation_deadline_release_all_owned_storage",
+        "adapters::vulnerability::tests::direct_api_configured_deadline_uses_exact_owner_250us_and_preserves_system_context",
+        "adapters::vulnerability::tests::every_frozen_original_observation_full_outputs_and_outbound",
+        "adapters::vulnerability::tests::exploitdb_actual_header_reader_deadline_retains_timeout",
+        "adapters::vulnerability::tests::html_adapters_retain_absolute_context_and_expired_context_never_dispatches",
+        "adapters::vulnerability::tests::ledger::finite_tiny_variants_require_exact_correlated_tuple_and_success_deadline_witness",
+        "adapters::vulnerability::tests::ledger::tiny_and_ordinary_mutations_cannot_hide_wrong_requests_partial_results_or_unused_exchanges",
+        "adapters::vulnerability::tests::nvd_adversarial_cwe_work_yields_expires_and_releases_cancelled_storage",
+        "adapters::vulnerability::tests::property_tests::original_regex_cases_all_unicode16_decimal_families_greedy_limits_and_mitre_priority",
+        "adapters::vulnerability::tests::property_tests::source_metadata_factory_auth_contracts_and_original_case_identities",
+        "adapters::vulnerability::tests::source_loaded_equality_keeps_numeric_structural_and_unicode_semantics",
+        "adapters::vulnerability::tests::supplemental_unicode_slice_and_huge_empty_cases_full_path",
+        "adapters::vulnerability_wire::tests::complete_frames_keep_layout_utf8_boundaries_and_reject_every_truncation_and_mutation",
+        "adapters::vulnerability_wire::tests::metadata_only_rows_and_large_fields_yield_then_obey_deadline_and_cancel",
+        "http::a10_owner_clock_tests::identity_decoder_uses_owner_after_confirmed_worker_start_and_elapsed_wall_time",
+        "http::a10_owner_clock_tests::manual_direct_replay_rejects_absolute_search_context",
+        "http::a10_owner_clock_tests::manual_pending_exchange_expires_at_exact_250us_and_drops_once",
+        "http::a10_owner_clock_tests::manual_session_survives_elapsed_tokio_after_confirmed_post_exchange_decoder_wait",
+        "http::a10_owner_clock_tests::system_session_expires_after_confirmed_post_exchange_decoder_wait",
+        "http::a10_owner_clock_tests::unmocked_system_expiry_and_expired_search_context_dispatch_nothing",
+        "process_pool::cleanup_tests::missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease",
+        "search::deadline_drain_tests::predeadline_completed_outputs_survive_delayed_owner_drain",
+        "search::deadline_drain_tests::deadline_abort_drains_pending_without_internal_failure",
+        "search::deadline_drain_tests::earlier_binding_timeout_completed_after_service_deadline_is_truncated",
+        "search::deadline_drain_tests::cooldown_completed_after_service_deadline_is_truncated",
+        "search::deadline_drain_tests::completed_task_panic_is_not_hidden_by_owner_abort",
+        "search::deadline1010_tests::expired_undispatched_service_deadline_keeps_interactive_origin"
+      ]
+    },
+    {
+      "package": "ssx-json",
+      "target": "ssx_json",
+      "kind": "lib",
+      "names": [
+        "borrowed_casefold_tests::every_reviewed_mapping_matches_borrowed_and_existing_whole_string_paths",
+        "boundary_tests::supported_boundaries_and_first_rejections",
+        "dependency_feature_tests::third_party_serde_json_object_behavior_is_unchanged",
+        "float::tests::direct_api_rejects_malformed_incomplete_and_bounds_without_panics",
+        "float::tests::signed_zero_extreme_exponents_subnormal_and_rounding_are_preserved",
+        "literal_tests::embedded_lossless_value_never_rounds",
+        "literal_tests::numeric_equality_is_reflexive",
+        "object_order_tests::opaque_objects_retain_insertion_order_and_canonical_profiles_sort_explicitly",
+        "python_text::tests::every_scalar_matches_frozen_c_word_case_and_full_lower_data",
+        "python_text::tests::full_lower_expansions_and_final_sigma_use_original_context",
+        "python_text::tests::sigma_lookahead_exposes_bounded_progress_and_keeps_constant_state",
+        "python_text::tests::unicode16_versions_and_static_table_structure_are_closed",
+        "python_text::tests::word_uses_unicode16_alnum_without_wordbreak_or_casefold_substitution",
+        "tests::malformed_and_bounds_fail",
+        "tests::number_tags_and_large_integers_roundtrip",
+        "tests::typed_roundtrip"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "names": [
+        "full_source_success_and_complete_outbound",
+        "missing_key_and_admission_precedence",
+        "http_status_classification_and_redaction",
+        "basic_auth_first_colon_unicode_and_empty_components",
+        "source_slices_and_request_limits_are_independent",
+        "empty_and_wrong_shape_source_operations",
+        "fallback_titles_literal_url_and_source_content_order",
+        "used_prefixes_and_unused_unicode_values",
+        "late_failure_is_atomic_and_operation_errors_precede_typed_title",
+        "configured_invalid_inputs_and_codec_refusals_are_atomic",
+        "registry_factory_preserves_all_catalog_metadata",
+        "entered_exchange_cancellation_drops_actual_future_and_keeps_http_owner",
+        "preexpired_caller_context_never_admits_or_dispatches",
+        "genuine_factory_crosses_shared_policy_only_with_sensitive_grant",
+        "entered_exchange_shutdown_joins_and_rejects_reuse",
+        "private_pipe_failures_retain_actual_read_prefix",
+        "private_literal_loopback_complete_http_contract",
+        "actual_configured_and_caller_deadlines_drop_entered_exchange_without_retry",
+        "resolved_settings_and_source_base_query_construction",
+        "unsupported_request_filters_do_not_change_wire_or_claim_media",
+        "source_inventory_is_closed_and_bound_without_original_execution"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "names": [
+        "hibp_source_success_complete_outbound",
+        "hibp_404_empty_before_json",
+        "hibp_missing_key_and_admission_precedence",
+        "hibp_auth_redaction_and_resolved_configuration",
+        "hibp_email_first_match_word_boundaries_and_case",
+        "hibp_fallback_strip_unicode16_lowercase",
+        "hibp_description_prefix_and_source_type_errors",
+        "hibp_grouped_count_numeric_and_error_order",
+        "hibp_data_classes_slice_and_text_join",
+        "hibp_source_operations_before_typed_projection",
+        "hibp_dates_unsliced_and_positions",
+        "hibp_wrong_shapes_and_late_atomicity",
+        "hibp_configured_max_and_request_filters_ignored",
+        "hibp_http_transport_url_and_codec_failures",
+        "hibp_entered_cancel_and_http_reuse",
+        "hibp_entered_shutdown_rejects_reuse",
+        "hibp_caller_and_configured_deadlines",
+        "hibp_real_policy_and_mixed_intelx_atomicity",
+        "hibp_private_literal_http_contract",
+        "hibp_static_source_inventory_closed"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "names": [
+        "intelx_success_two_requests_exact_delay",
+        "intelx_falsey_ids_stop_before_delay",
+        "intelx_start_status_classification",
+        "intelx_result_statuses_are_generic_errors",
+        "intelx_start_shape_and_json_errors",
+        "intelx_id_parameter_source_type_semantics",
+        "intelx_post_json_scalar_order_and_nonfinite_refusal",
+        "intelx_configured_slices_and_invalid_indices",
+        "intelx_result_shape_normalization_before_slice",
+        "intelx_wrapped_skipped_rows_preserve_positions",
+        "intelx_type_label_key_semantics_and_precedence",
+        "intelx_preview_bucket_and_title_operation_order",
+        "intelx_id_url_fallback_and_dates",
+        "intelx_late_failure_and_quota_atomicity",
+        "intelx_header_redaction_settings_and_filters",
+        "intelx_one_session_cookie_continuity",
+        "intelx_fresh_phase_timeout_excludes_source_delay",
+        "intelx_caller_context_bounds_each_phase_and_delay",
+        "intelx_cancel_post_delay_and_get",
+        "intelx_shutdown_entered_and_delayed_no_dispatch",
+        "intelx_private_literal_two_phase_http",
+        "intelx_static_source_inventory_closed"
+      ]
+    }
+  ],
+  "selectors": [
+    {
+      "id": "dehashed-full_source_success_and_complete_outbound",
+      "name": "full_source_success_and_complete_outbound",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "full_source_success_and_complete_outbound",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 217,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE source-success"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-missing_key_and_admission_precedence",
+      "name": "missing_key_and_admission_precedence",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "missing_key_and_admission_precedence",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 236,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE missing-key",
+        "A13_DEHASHED_CASE_COMPLETE admission-denied-first",
+        "A13_DEHASHED_CASE_COMPLETE admission-unavailable-first"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-http_status_classification_and_redaction",
+      "name": "http_status_classification_and_redaction",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "http_status_classification_and_redaction",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 269,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE status-301",
+        "A13_DEHASHED_CASE_COMPLETE status-401",
+        "A13_DEHASHED_CASE_COMPLETE status-403",
+        "A13_DEHASHED_CASE_COMPLETE status-404",
+        "A13_DEHASHED_CASE_COMPLETE status-429",
+        "A13_DEHASHED_CASE_COMPLETE status-500",
+        "A13_DEHASHED_CASE_COMPLETE transport-timeout",
+        "A13_DEHASHED_CASE_COMPLETE transport-error"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-basic_auth_first_colon_unicode_and_empty_components",
+      "name": "basic_auth_first_colon_unicode_and_empty_components",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "basic_auth_first_colon_unicode_and_empty_components",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 320,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE auth-colonless",
+        "A13_DEHASHED_CASE_COMPLETE auth-first-colon",
+        "A13_DEHASHED_CASE_COMPLETE auth-unicode",
+        "A13_DEHASHED_CASE_COMPLETE auth-empty-user",
+        "A13_DEHASHED_CASE_COMPLETE auth-empty-both",
+        "A13_DEHASHED_CASE_COMPLETE config-debug-redacted",
+        "A13_DEHASHED_CASE_COMPLETE auth-header-debug-redacted"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-source_slices_and_request_limits_are_independent",
+      "name": "source_slices_and_request_limits_are_independent",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "source_slices_and_request_limits_are_independent",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 342,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE slice-zero",
+        "A13_DEHASHED_CASE_COMPLETE slice-one",
+        "A13_DEHASHED_CASE_COMPLETE slice-negative",
+        "A13_DEHASHED_CASE_COMPLETE slice-negative-all",
+        "A13_DEHASHED_CASE_COMPLETE slice-bool-true",
+        "A13_DEHASHED_CASE_COMPLETE slice-bool-false",
+        "A13_DEHASHED_CASE_COMPLETE slice-string-refused",
+        "A13_DEHASHED_CASE_COMPLETE slice-float-refused",
+        "A13_DEHASHED_CASE_COMPLETE slice-nan-refused"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-empty_and_wrong_shape_source_operations",
+      "name": "empty_and_wrong_shape_source_operations",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "empty_and_wrong_shape_source_operations",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 418,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE missing-entries",
+        "A13_DEHASHED_CASE_COMPLETE empty-entries",
+        "A13_DEHASHED_CASE_COMPLETE empty-string",
+        "A13_DEHASHED_CASE_COMPLETE sliced-string-empty",
+        "A13_DEHASHED_CASE_COMPLETE nonempty-string",
+        "A13_DEHASHED_CASE_COMPLETE null-entries",
+        "A13_DEHASHED_CASE_COMPLETE mapping-entries",
+        "A13_DEHASHED_CASE_COMPLETE outer-array",
+        "A13_DEHASHED_CASE_COMPLETE outer-null",
+        "A13_DEHASHED_CASE_COMPLETE scalar-row"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-fallback_titles_literal_url_and_source_content_order",
+      "name": "fallback_titles_literal_url_and_source_content_order",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "fallback_titles_literal_url_and_source_content_order",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 501,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE fallback-and-url"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-used_prefixes_and_unused_unicode_values",
+      "name": "used_prefixes_and_unused_unicode_values",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "used_prefixes_and_unused_unicode_values",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 544,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE password-tail-surrogate",
+        "A13_DEHASHED_CASE_COMPLETE hash-tail-surrogate",
+        "A13_DEHASHED_CASE_COMPLETE unused-name-surrogate",
+        "A13_DEHASHED_CASE_COMPLETE unused-extra-surrogate",
+        "A13_DEHASHED_CASE_COMPLETE array-password-slice",
+        "A13_DEHASHED_CASE_COMPLETE selected-surrogate-refused"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-late_failure_is_atomic_and_operation_errors_precede_typed_title",
+      "name": "late_failure_is_atomic_and_operation_errors_precede_typed_title",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "late_failure_is_atomic_and_operation_errors_precede_typed_title",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 614,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE late-row-atomic",
+        "A13_DEHASHED_CASE_COMPLETE prefix-before-title",
+        "A13_DEHASHED_CASE_COMPLETE subscription-before-index",
+        "A13_DEHASHED_CASE_COMPLETE typed-title-after-content"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-configured_invalid_inputs_and_codec_refusals_are_atomic",
+      "name": "configured_invalid_inputs_and_codec_refusals_are_atomic",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "configured_invalid_inputs_and_codec_refusals_are_atomic",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 651,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE invalid-base",
+        "A13_DEHASHED_CASE_COMPLETE zero-timeout",
+        "A13_DEHASHED_CASE_COMPLETE text-timeout",
+        "A13_DEHASHED_CASE_COMPLETE malformed-json",
+        "A13_DEHASHED_CASE_COMPLETE byte-limit"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-registry_factory_preserves_all_catalog_metadata",
+      "name": "registry_factory_preserves_all_catalog_metadata",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "registry_factory_preserves_all_catalog_metadata",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 705,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE real-registration"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-entered_exchange_cancellation_drops_actual_future_and_keeps_http_owner",
+      "name": "entered_exchange_cancellation_drops_actual_future_and_keeps_http_owner",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "entered_exchange_cancellation_drops_actual_future_and_keeps_http_owner",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 767,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE entered-cancel-and-reuse"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-preexpired_caller_context_never_admits_or_dispatches",
+      "name": "preexpired_caller_context_never_admits_or_dispatches",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "preexpired_caller_context_never_admits_or_dispatches",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 802,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE preexpired-context"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-genuine_factory_crosses_shared_policy_only_with_sensitive_grant",
+      "name": "genuine_factory_crosses_shared_policy_only_with_sensitive_grant",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "genuine_factory_crosses_shared_policy_only_with_sensitive_grant",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 924,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE policy-generic",
+        "A13_DEHASHED_CASE_COMPLETE policy-targeted",
+        "A13_DEHASHED_CASE_COMPLETE policy-jobs",
+        "A13_DEHASHED_CASE_COMPLETE policy-security",
+        "A13_DEHASHED_CASE_COMPLETE policy-science",
+        "A13_DEHASHED_CASE_COMPLETE policy-preview",
+        "A13_DEHASHED_CASE_COMPLETE policy-authorized-real-factory"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-entered_exchange_shutdown_joins_and_rejects_reuse",
+      "name": "entered_exchange_shutdown_joins_and_rejects_reuse",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "entered_exchange_shutdown_joins_and_rejects_reuse",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 1005,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE entered-shutdown"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-private_pipe_failures_retain_actual_read_prefix",
+      "name": "private_pipe_failures_retain_actual_read_prefix",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "private_pipe_failures_retain_actual_read_prefix",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 1128,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE pipe-prefix-before-read-error",
+        "A13_DEHASHED_CASE_COMPLETE pipe-prefix-before-cancel",
+        "A13_DEHASHED_CASE_COMPLETE pipe-prefix-before-timeout"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-private_literal_loopback_complete_http_contract",
+      "name": "private_literal_loopback_complete_http_contract",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "private_literal_loopback_complete_http_contract",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 1221,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE literal-http-parent-exit"
+      ],
+      "child": "dehashed"
+    },
+    {
+      "id": "dehashed-actual_configured_and_caller_deadlines_drop_entered_exchange_without_retry",
+      "name": "actual_configured_and_caller_deadlines_drop_entered_exchange_without_retry",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "actual_configured_and_caller_deadlines_drop_entered_exchange_without_retry",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 1444,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE configured-deadline-entered",
+        "A13_DEHASHED_CASE_COMPLETE caller-deadline-entered"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-resolved_settings_and_source_base_query_construction",
+      "name": "resolved_settings_and_source_base_query_construction",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "resolved_settings_and_source_base_query_construction",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 1486,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE resolved-config",
+        "A13_DEHASHED_CASE_COMPLETE source-base-query-fragment",
+        "A13_DEHASHED_CASE_COMPLETE direct-empty-base"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-unsupported_request_filters_do_not_change_wire_or_claim_media",
+      "name": "unsupported_request_filters_do_not_change_wire_or_claim_media",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "unsupported_request_filters_do_not_change_wire_or_claim_media",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 1526,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE ignored-request-fields"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-source_inventory_is_closed_and_bound_without_original_execution",
+      "name": "source_inventory_is_closed_and_bound_without_original_execution",
+      "package": "ssx-infra",
+      "target": "a13_dehashed",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_dehashed",
+        "source_inventory_is_closed_and_bound_without_original_execution",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+      "source_line": 1553,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_CASE_COMPLETE source-bindings-closed"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-adapters::dehashed::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+      "name": "adapters::dehashed::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "adapters::dehashed::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/src/adapters/dehashed.rs",
+      "source_sha256": "fe3dce1c28f946942af81bfec2c1426443fc622b5299b487e60b9fdba5548545",
+      "source_line": 324,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_UNIT_COMPLETE projection-stored-drop"
+      ],
+      "child": null
+    },
+    {
+      "id": "dehashed-adapters::dehashed::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+      "name": "adapters::dehashed::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "adapters::dehashed::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+        "--",
+        "--exact",
+        "--show-output",
+        "--test-threads=1"
+      ],
+      "source": "crates/ssx-infra/src/adapters/dehashed.rs",
+      "source_sha256": "fe3dce1c28f946942af81bfec2c1426443fc622b5299b487e60b9fdba5548545",
+      "source_line": 350,
+      "inline_payloads": [],
+      "markers": [
+        "A13_DEHASHED_UNIT_COMPLETE projection-late-failure",
+        "A13_DEHASHED_UNIT_COMPLETE projection-atomic-quota"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_source_success_complete_outbound",
+      "name": "hibp_source_success_complete_outbound",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_source_success_complete_outbound",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 11,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_source_success_complete_outbound"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_source_success_complete_outbound"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_404_empty_before_json",
+      "name": "hibp_404_empty_before_json",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_404_empty_before_json",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 29,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_404_empty_before_json"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_404_empty_before_json"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_missing_key_and_admission_precedence",
+      "name": "hibp_missing_key_and_admission_precedence",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_missing_key_and_admission_precedence",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 41,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_missing_key_and_admission_precedence"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_missing_key_and_admission_precedence"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_auth_redaction_and_resolved_configuration",
+      "name": "hibp_auth_redaction_and_resolved_configuration",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_auth_redaction_and_resolved_configuration",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 73,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_auth_redaction_and_resolved_configuration"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_auth_redaction_and_resolved_configuration"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_email_first_match_word_boundaries_and_case",
+      "name": "hibp_email_first_match_word_boundaries_and_case",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_email_first_match_word_boundaries_and_case",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 113,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_email_first_match_word_boundaries_and_case"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_email_first_match_word_boundaries_and_case"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_fallback_strip_unicode16_lowercase",
+      "name": "hibp_fallback_strip_unicode16_lowercase",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_fallback_strip_unicode16_lowercase",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 149,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_fallback_strip_unicode16_lowercase"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_fallback_strip_unicode16_lowercase"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_description_prefix_and_source_type_errors",
+      "name": "hibp_description_prefix_and_source_type_errors",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_description_prefix_and_source_type_errors",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 178,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_description_prefix_and_source_type_errors"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_description_prefix_and_source_type_errors"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_grouped_count_numeric_and_error_order",
+      "name": "hibp_grouped_count_numeric_and_error_order",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_grouped_count_numeric_and_error_order",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 247,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_grouped_count_numeric_and_error_order"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_grouped_count_numeric_and_error_order"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_data_classes_slice_and_text_join",
+      "name": "hibp_data_classes_slice_and_text_join",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_data_classes_slice_and_text_join",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 293,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_data_classes_slice_and_text_join"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_data_classes_slice_and_text_join"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_source_operations_before_typed_projection",
+      "name": "hibp_source_operations_before_typed_projection",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_source_operations_before_typed_projection",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 346,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_source_operations_before_typed_projection"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_source_operations_before_typed_projection"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_dates_unsliced_and_positions",
+      "name": "hibp_dates_unsliced_and_positions",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_dates_unsliced_and_positions",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 378,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_dates_unsliced_and_positions"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_dates_unsliced_and_positions"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_wrong_shapes_and_late_atomicity",
+      "name": "hibp_wrong_shapes_and_late_atomicity",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_wrong_shapes_and_late_atomicity",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 409,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_wrong_shapes_and_late_atomicity"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_wrong_shapes_and_late_atomicity"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_configured_max_and_request_filters_ignored",
+      "name": "hibp_configured_max_and_request_filters_ignored",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_configured_max_and_request_filters_ignored",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 440,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_configured_max_and_request_filters_ignored"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_configured_max_and_request_filters_ignored"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_http_transport_url_and_codec_failures",
+      "name": "hibp_http_transport_url_and_codec_failures",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_http_transport_url_and_codec_failures",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 458,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_http_transport_url_and_codec_failures"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_http_transport_url_and_codec_failures"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_entered_cancel_and_http_reuse",
+      "name": "hibp_entered_cancel_and_http_reuse",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_entered_cancel_and_http_reuse",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 521,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_entered_cancel_and_http_reuse"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_entered_cancel_and_http_reuse"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_entered_shutdown_rejects_reuse",
+      "name": "hibp_entered_shutdown_rejects_reuse",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_entered_shutdown_rejects_reuse",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 540,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_entered_shutdown_rejects_reuse"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_entered_shutdown_rejects_reuse"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_caller_and_configured_deadlines",
+      "name": "hibp_caller_and_configured_deadlines",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_caller_and_configured_deadlines",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 571,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_caller_and_configured_deadlines"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_caller_and_configured_deadlines"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_real_policy_and_mixed_intelx_atomicity",
+      "name": "hibp_real_policy_and_mixed_intelx_atomicity",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_real_policy_and_mixed_intelx_atomicity",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 620,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_real_policy_and_mixed_intelx_atomicity"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_real_policy_and_mixed_intelx_atomicity"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-hibp_private_literal_http_contract",
+      "name": "hibp_private_literal_http_contract",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_private_literal_http_contract",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 626,
+      "inline_payloads": [
+        "A13_REMAINING_CHILD_STDOUT_BASE64 <canonical-base64>"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_private_literal_http_contract"
+      ],
+      "child": "hibp"
+    },
+    {
+      "id": "remaining-hibp_static_source_inventory_closed",
+      "name": "hibp_static_source_inventory_closed",
+      "package": "ssx-infra",
+      "target": "a13_hibp",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_hibp",
+        "hibp_static_source_inventory_closed",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_hibp.rs",
+      "source_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "source_line": 631,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE hibp_static_source_inventory_closed"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE hibp_static_source_inventory_closed"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_success_two_requests_exact_delay",
+      "name": "intelx_success_two_requests_exact_delay",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_success_two_requests_exact_delay",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 11,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_success_two_requests_exact_delay"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_success_two_requests_exact_delay"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_falsey_ids_stop_before_delay",
+      "name": "intelx_falsey_ids_stop_before_delay",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_falsey_ids_stop_before_delay",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 35,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_falsey_ids_stop_before_delay"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_falsey_ids_stop_before_delay"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_start_status_classification",
+      "name": "intelx_start_status_classification",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_start_status_classification",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 61,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_start_status_classification"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_start_status_classification"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_result_statuses_are_generic_errors",
+      "name": "intelx_result_statuses_are_generic_errors",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_result_statuses_are_generic_errors",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 82,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_result_statuses_are_generic_errors"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_result_statuses_are_generic_errors"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_start_shape_and_json_errors",
+      "name": "intelx_start_shape_and_json_errors",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_start_shape_and_json_errors",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 107,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_start_shape_and_json_errors"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_start_shape_and_json_errors"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_id_parameter_source_type_semantics",
+      "name": "intelx_id_parameter_source_type_semantics",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_id_parameter_source_type_semantics",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 144,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_id_parameter_source_type_semantics"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_id_parameter_source_type_semantics"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_post_json_scalar_order_and_nonfinite_refusal",
+      "name": "intelx_post_json_scalar_order_and_nonfinite_refusal",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_post_json_scalar_order_and_nonfinite_refusal",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 173,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_post_json_scalar_order_and_nonfinite_refusal"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_post_json_scalar_order_and_nonfinite_refusal"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_configured_slices_and_invalid_indices",
+      "name": "intelx_configured_slices_and_invalid_indices",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_configured_slices_and_invalid_indices",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 205,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_configured_slices_and_invalid_indices"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_configured_slices_and_invalid_indices"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_result_shape_normalization_before_slice",
+      "name": "intelx_result_shape_normalization_before_slice",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_result_shape_normalization_before_slice",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 264,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_result_shape_normalization_before_slice"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_result_shape_normalization_before_slice"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_wrapped_skipped_rows_preserve_positions",
+      "name": "intelx_wrapped_skipped_rows_preserve_positions",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_wrapped_skipped_rows_preserve_positions",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 300,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_wrapped_skipped_rows_preserve_positions"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_wrapped_skipped_rows_preserve_positions"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_type_label_key_semantics_and_precedence",
+      "name": "intelx_type_label_key_semantics_and_precedence",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_type_label_key_semantics_and_precedence",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 323,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_type_label_key_semantics_and_precedence"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_type_label_key_semantics_and_precedence"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_preview_bucket_and_title_operation_order",
+      "name": "intelx_preview_bucket_and_title_operation_order",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_preview_bucket_and_title_operation_order",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 364,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_preview_bucket_and_title_operation_order"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_preview_bucket_and_title_operation_order"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_id_url_fallback_and_dates",
+      "name": "intelx_id_url_fallback_and_dates",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_id_url_fallback_and_dates",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 421,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_id_url_fallback_and_dates"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_id_url_fallback_and_dates"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_late_failure_and_quota_atomicity",
+      "name": "intelx_late_failure_and_quota_atomicity",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_late_failure_and_quota_atomicity",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 461,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_late_failure_and_quota_atomicity"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_late_failure_and_quota_atomicity"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_header_redaction_settings_and_filters",
+      "name": "intelx_header_redaction_settings_and_filters",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_header_redaction_settings_and_filters",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 489,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_header_redaction_settings_and_filters"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_header_redaction_settings_and_filters"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_one_session_cookie_continuity",
+      "name": "intelx_one_session_cookie_continuity",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_one_session_cookie_continuity",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 574,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_one_session_cookie_continuity"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_one_session_cookie_continuity"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_fresh_phase_timeout_excludes_source_delay",
+      "name": "intelx_fresh_phase_timeout_excludes_source_delay",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_fresh_phase_timeout_excludes_source_delay",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 597,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_fresh_phase_timeout_excludes_source_delay"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_fresh_phase_timeout_excludes_source_delay"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_caller_context_bounds_each_phase_and_delay",
+      "name": "intelx_caller_context_bounds_each_phase_and_delay",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_caller_context_bounds_each_phase_and_delay",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 622,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_caller_context_bounds_each_phase_and_delay"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_caller_context_bounds_each_phase_and_delay"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_cancel_post_delay_and_get",
+      "name": "intelx_cancel_post_delay_and_get",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_cancel_post_delay_and_get",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 670,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_cancel_post_delay_and_get"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_cancel_post_delay_and_get"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_shutdown_entered_and_delayed_no_dispatch",
+      "name": "intelx_shutdown_entered_and_delayed_no_dispatch",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_shutdown_entered_and_delayed_no_dispatch",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 699,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_shutdown_entered_and_delayed_no_dispatch"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_shutdown_entered_and_delayed_no_dispatch"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-intelx_private_literal_two_phase_http",
+      "name": "intelx_private_literal_two_phase_http",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_private_literal_two_phase_http",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 729,
+      "inline_payloads": [
+        "A13_REMAINING_CHILD_STDOUT_BASE64 <canonical-base64>"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_private_literal_two_phase_http"
+      ],
+      "child": "intelx"
+    },
+    {
+      "id": "remaining-intelx_static_source_inventory_closed",
+      "name": "intelx_static_source_inventory_closed",
+      "package": "ssx-infra",
+      "target": "a13_intelx",
+      "kind": "test",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--test",
+        "a13_intelx",
+        "intelx_static_source_inventory_closed",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/tests/a13_intelx.rs",
+      "source_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "source_line": 734,
+      "inline_payloads": [
+        "A13_REMAINING_CASE_COMPLETE intelx_static_source_inventory_closed"
+      ],
+      "markers": [
+        "A13_REMAINING_CASE_COMPLETE intelx_static_source_inventory_closed"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-adapters::hibp::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+      "name": "adapters::hibp::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "adapters::hibp::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/src/adapters/hibp.rs",
+      "source_sha256": "81e3717db78949b4f85bea5be531216cf43d25eb7c5c09e6c337ce834975b077",
+      "source_line": 473,
+      "inline_payloads": [
+        "A13_REMAINING_UNIT_COMPLETE hibp-projection-stored-drop"
+      ],
+      "markers": [
+        "A13_REMAINING_UNIT_COMPLETE hibp-projection-stored-drop"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-adapters::hibp::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+      "name": "adapters::hibp::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "adapters::hibp::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/src/adapters/hibp.rs",
+      "source_sha256": "81e3717db78949b4f85bea5be531216cf43d25eb7c5c09e6c337ce834975b077",
+      "source_line": 495,
+      "inline_payloads": [
+        "A13_REMAINING_UNIT_COMPLETE hibp-late-failure",
+        "A13_REMAINING_UNIT_COMPLETE hibp-atomic-quota"
+      ],
+      "markers": [
+        "A13_REMAINING_UNIT_COMPLETE hibp-late-failure",
+        "A13_REMAINING_UNIT_COMPLETE hibp-atomic-quota"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-adapters::intelx::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+      "name": "adapters::intelx::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "adapters::intelx::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/src/adapters/intelx.rs",
+      "source_sha256": "8d67d54bd88ecf2599dec36a0c6005d1f1b4bcadb06ecd743fee1073e40fbebd",
+      "source_line": 545,
+      "inline_payloads": [
+        "A13_REMAINING_UNIT_COMPLETE intelx-projection-stored-drop"
+      ],
+      "markers": [
+        "A13_REMAINING_UNIT_COMPLETE intelx-projection-stored-drop"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-adapters::intelx::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+      "name": "adapters::intelx::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "adapters::intelx::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/src/adapters/intelx.rs",
+      "source_sha256": "8d67d54bd88ecf2599dec36a0c6005d1f1b4bcadb06ecd743fee1073e40fbebd",
+      "source_line": 562,
+      "inline_payloads": [
+        "A13_REMAINING_UNIT_COMPLETE intelx-late-failure",
+        "A13_REMAINING_UNIT_COMPLETE intelx-atomic-quota"
+      ],
+      "markers": [
+        "A13_REMAINING_UNIT_COMPLETE intelx-late-failure",
+        "A13_REMAINING_UNIT_COMPLETE intelx-atomic-quota"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-adapters::intelx::delay_tests::actual_source_sleep_pending_cancellation_never_dispatches_get",
+      "name": "adapters::intelx::delay_tests::actual_source_sleep_pending_cancellation_never_dispatches_get",
+      "package": "ssx-infra",
+      "target": "ssx_infra",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "adapters::intelx::delay_tests::actual_source_sleep_pending_cancellation_never_dispatches_get",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-infra/src/adapters/intelx.rs",
+      "source_sha256": "8d67d54bd88ecf2599dec36a0c6005d1f1b4bcadb06ecd743fee1073e40fbebd",
+      "source_line": 598,
+      "inline_payloads": [
+        "A13_REMAINING_UNIT_COMPLETE intelx-actual-delay-pending-cancel"
+      ],
+      "markers": [
+        "A13_REMAINING_UNIT_COMPLETE intelx-actual-delay-pending-cancel"
+      ],
+      "child": null
+    },
+    {
+      "id": "remaining-python_text::tests::unicode16_versions_and_static_table_structure_are_closed",
+      "name": "python_text::tests::unicode16_versions_and_static_table_structure_are_closed",
+      "package": "ssx-json",
+      "target": "ssx_json",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-json",
+        "--lib",
+        "python_text::tests::unicode16_versions_and_static_table_structure_are_closed",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-json/src/python_text.rs",
+      "source_sha256": "3b5f896724c17e8e118e8cf518a03532530a6a89392a3d9d243f0a9b43f59e40",
+      "source_line": 164,
+      "inline_payloads": [],
+      "markers": [],
+      "child": null
+    },
+    {
+      "id": "remaining-python_text::tests::every_scalar_matches_frozen_c_word_case_and_full_lower_data",
+      "name": "python_text::tests::every_scalar_matches_frozen_c_word_case_and_full_lower_data",
+      "package": "ssx-json",
+      "target": "ssx_json",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-json",
+        "--lib",
+        "python_text::tests::every_scalar_matches_frozen_c_word_case_and_full_lower_data",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-json/src/python_text.rs",
+      "source_sha256": "3b5f896724c17e8e118e8cf518a03532530a6a89392a3d9d243f0a9b43f59e40",
+      "source_line": 182,
+      "inline_payloads": [],
+      "markers": [],
+      "child": null
+    },
+    {
+      "id": "remaining-python_text::tests::full_lower_expansions_and_final_sigma_use_original_context",
+      "name": "python_text::tests::full_lower_expansions_and_final_sigma_use_original_context",
+      "package": "ssx-json",
+      "target": "ssx_json",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-json",
+        "--lib",
+        "python_text::tests::full_lower_expansions_and_final_sigma_use_original_context",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-json/src/python_text.rs",
+      "source_sha256": "3b5f896724c17e8e118e8cf518a03532530a6a89392a3d9d243f0a9b43f59e40",
+      "source_line": 200,
+      "inline_payloads": [],
+      "markers": [],
+      "child": null
+    },
+    {
+      "id": "remaining-python_text::tests::word_uses_unicode16_alnum_without_wordbreak_or_casefold_substitution",
+      "name": "python_text::tests::word_uses_unicode16_alnum_without_wordbreak_or_casefold_substitution",
+      "package": "ssx-json",
+      "target": "ssx_json",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-json",
+        "--lib",
+        "python_text::tests::word_uses_unicode16_alnum_without_wordbreak_or_casefold_substitution",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-json/src/python_text.rs",
+      "source_sha256": "3b5f896724c17e8e118e8cf518a03532530a6a89392a3d9d243f0a9b43f59e40",
+      "source_line": 217,
+      "inline_payloads": [],
+      "markers": [],
+      "child": null
+    },
+    {
+      "id": "remaining-python_text::tests::sigma_lookahead_exposes_bounded_progress_and_keeps_constant_state",
+      "name": "python_text::tests::sigma_lookahead_exposes_bounded_progress_and_keeps_constant_state",
+      "package": "ssx-json",
+      "target": "ssx_json",
+      "kind": "lib",
+      "argv": [
+        "test",
+        "--offline",
+        "--locked",
+        "-p",
+        "ssx-json",
+        "--lib",
+        "python_text::tests::sigma_lookahead_exposes_bounded_progress_and_keeps_constant_state",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "source": "crates/ssx-json/src/python_text.rs",
+      "source_sha256": "3b5f896724c17e8e118e8cf518a03532530a6a89392a3d9d243f0a9b43f59e40",
+      "source_line": 235,
+      "inline_payloads": [],
+      "markers": [],
+      "child": null
+    }
+  ]
+}

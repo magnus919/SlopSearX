@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-HARNESS_SHA = "04c7fc0b42221872e6c6b611be91c68e462fc679"
+HARNESS_SHA = "1c76d40290cdaf9b6603721f899da6c7e8a382b4"
 
 
 def _workflow(filename: str) -> dict:

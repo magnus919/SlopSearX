@@ -1,0 +1,75 @@
+{
+  "archive": {
+    "bytes": 50563,
+    "mode": "0644",
+    "path": "docs/rust-rewrite/a06/source-amendments/a13.rs.d448.frozen",
+    "sha256": "fde085dcc7d153cf8304e69baa3c4a193e07501175e8f982ad10351f55da7fdc"
+  },
+  "current": {
+    "bytes": 56700,
+    "mode": "0644",
+    "path": "crates/xtask/src/a13.rs",
+    "sha256": "7b8c213676b77a5511da43bb1f8bb3d889d4964e3ffceb4719b21801cd5fea95"
+  },
+  "current_edits": [
+    {
+      "at": 487,
+      "remove_utf8": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+      "insert_utf8": "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e"
+    },
+    {
+      "at": 16080,
+      "insert_utf8": "    let progress_prefix = format!(\"test {name} has been running for over \");\n    let is_progress = |line: &str| {\n        line.strip_prefix(&progress_prefix)\n            .and_then(|s| s.strip_suffix(\" seconds\"))\n            .is_some_and(|s| {\n                !s.starts_with('0')\n                    && s.bytes().all(|b| b.is_ascii_digit())\n                    && s.parse::<u64>().is_ok_and(|seconds| seconds > 0)\n            })\n    };\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 16147,
+      "insert_utf8": "        .filter(|(_, s)| {\n            s.starts_with(\"test \") && !s.starts_with(\"test result:\") && !is_progress(s)\n        })\n",
+      "remove_utf8": "        .filter(|(_, s)| s.starts_with(\"test \") && !s.starts_with(\"test result:\"))\n"
+    },
+    {
+      "at": 16386,
+      "insert_utf8": "    require(\n        lines\n            .iter()\n            .enumerate()\n            .all(|(index, line)| !is_progress(line) || index < start),\n        \"A13 progress must precede named terminal/start\",\n    )?;\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 33833,
+      "insert_utf8": "// The frozen qualification keeps its original128 markers. The reviewed header\n// successor adds one mandatory marker to this exact current-source selector.\nfn current_parent_markers(spec: &Selector) -> Vec<String> {\n    let mut expected = spec.markers.clone();\n    if spec.id == \"dehashed-source_inventory_is_closed_and_bound_without_original_execution\"\n        && spec.package == \"ssx-infra\"\n        && spec.kind == \"test\"\n        && spec.target == \"a13_dehashed\"\n        && spec.name == \"source_inventory_is_closed_and_bound_without_original_execution\"\n        && spec.source == \"crates/ssx-infra/tests/a13_dehashed.rs\"\n    {\n        expected.push(\"A13_HEADER_LAYOUT_CONTROLS exact119a_archive_current_and_scoped_proofs_wrong_caller_mode_old_as_current_and_rehashed_edits_rejected=true\".into());\n    }\n    expected\n}\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 37346,
+      "insert_utf8": "        let parent_markers = current_parent_markers(spec);\n        let mut expected = parent_markers.clone();\n",
+      "remove_utf8": "        let mut expected = spec.markers.clone();\n"
+    },
+    {
+      "at": 37654,
+      "insert_utf8": "        records.push(json!({\"A13_native_completion\":spec.name,\"parent_markers\":parent_markers,\"original_execution\":false,\"provider_calls\":0}));\n",
+      "remove_utf8": "        records.push(json!({\"A13_native_completion\":spec.name,\"parent_markers\":spec.markers,\"original_execution\":false,\"provider_calls\":0}));\n"
+    },
+    {
+      "at": 39758,
+      "insert_utf8": "        let progress = \"test selected has been running for over 60 seconds\\n\";\n        let slow = good.replace(\"test selected ...\", &format!(\"{progress}test selected ...\"));\n        assert!(execution(&slow, \"selected\", &[], 0).is_ok());\n        for bad in [\n            slow.replace(\"test selected has\", \"test other has\"),\n            slow.replace(\"test selected ... ok\", \"test other ... ok\"),\n            slow.replace(\"test selected ... ok\\n\", \"\"),\n            slow.replace(\"test selected ... ok\", \"test selected ... FAILED\"),\n            slow.replace(\"test selected ... ok\", \"test selected ... ignored\"),\n            slow.replace(\n                \"test selected ... ok\",\n                \"test selected ... ok\\ntest selected ... ok\",\n            ),\n            good.replace(\n                \"test selected ... ok\\n\",\n                &format!(\"test selected ... ok\\n{progress}\"),\n            ),\n        ] {\n            assert!(execution(&bad, \"selected\", &[], 0).is_err(), \"{bad}\");\n        }\n        for seconds in [\n            \"\",\n            \"0\",\n            \"060\",\n            \"-1\",\n            \"+60\",\n            \"1.5\",\n            \"nan\",\n            \"18446744073709551616\",\n        ] {\n            assert!(\n                execution(\n                    &slow.replace(\"60 seconds\", &format!(\"{seconds} seconds\")),\n                    \"selected\",\n                    &[],\n                    0\n                )\n                .is_err(),\n                \"{seconds}\"\n            );\n        }\n        for bad in [\n            slow.replace(\" seconds\", \" second\"),\n            slow.replace(\" seconds\", \" seconds extra\"),\n        ] {\n            assert!(execution(&bad, \"selected\", &[], 0).is_err(), \"{bad}\");\n        }\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 41119,
+      "insert_utf8": "        assert!(\n            execution(\n                &split.replace(\"test selected ...\", &format!(\"{progress}test selected ...\")),\n                \"selected\",\n                &allowed,\n                0\n            )\n            .is_ok()\n        );\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 46117,
+      "insert_utf8": "        let qualification: Qualification =\n            serde_json::from_str(&std::fs::read_to_string(root.join(QUALIFICATION)).unwrap())\n                .unwrap();\n        validate(&qualification).unwrap();\n        let spec = qualification\n            .selectors\n            .iter()\n            .find(|spec| {\n                spec.id\n                    == \"dehashed-source_inventory_is_closed_and_bound_without_original_execution\"\n            })\n            .unwrap();\n        let extended = current_parent_markers(spec);\n        assert_eq!(\n            spec.markers,\n            strings(&[\"A13_DEHASHED_CASE_COMPLETE source-bindings-closed\"])\n        );\n        assert_eq!(extended.len(), 2);\n        assert_eq!(extended[0], spec.markers[0]);\n        let header = \"A13_HEADER_LAYOUT_CONTROLS exact119a_archive_current_and_scoped_proofs_wrong_caller_mode_old_as_current_and_rehashed_edits_rejected=true\";\n        assert_eq!(extended[1], header);\n        assert!(same(&spec.markers, &extended, \"missing header control\").is_err());\n        let mut duplicate = extended.clone();\n        duplicate.push(header.into());\n        assert!(same(&duplicate, &extended, \"duplicate header control\").is_err());\n        let mut extra = extended.clone();\n        extra.push(\"A13_UNREVIEWED_CONTROL true\".into());\n        assert!(same(&extra, &extended, \"extra marker\").is_err());\n        let mut altered = extended.clone();\n        altered[1].push('x');\n        assert!(same(&altered, &extended, \"altered header control\").is_err());\n        for field in [\"id\", \"package\", \"kind\", \"target\", \"name\", \"source\"] {\n            let mut value: Value =\n                serde_json::from_str(&std::fs::read_to_string(root.join(QUALIFICATION)).unwrap())\n                    .unwrap();\n            let selected = value[\"selectors\"]\n                .as_array_mut()\n                .unwrap()\n                .iter_mut()\n                .find(|row| row[\"id\"] == spec.id)\n                .unwrap();\n            selected[field] = json!(\"wrong\");\n            let wrong: Selector = serde_json::from_value(selected.clone()).unwrap();\n            assert_eq!(current_parent_markers(&wrong), spec.markers);\n            assert!(\n                same(\n                    &extended,\n                    &current_parent_markers(&wrong),\n                    \"wrong selector marker\"\n                )\n                .is_err()\n            );\n        }\n        for other in &qualification.selectors {\n            if other.id != spec.id {\n                assert_eq!(current_parent_markers(other), other.markers);\n            }\n        }\n",
+      "remove_utf8": ""
+    }
+  ],
+  "prior": {
+    "bytes": 50563,
+    "mode": "0644",
+    "path": "crates/xtask/src/a13.rs",
+    "sha256": "fde085dcc7d153cf8304e69baa3c4a193e07501175e8f982ad10351f55da7fdc"
+  },
+  "schema": "A13_EXACT_HEADER_MARKER_SUCCESSOR_V2",
+  "scope": "Exact current DeHashed source-inventory parent-marker extension, selected-name libtest slow-progress framing, and T02 qualification digest replacement. All frozen qualification128markers and75selectors remain unchanged.",
+  "source_parent": "d44802020d321ba6eb5441dc8f53f3c5cbf286af"
+}

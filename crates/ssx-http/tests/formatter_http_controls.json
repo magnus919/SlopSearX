@@ -1,0 +1,457 @@
+{
+  "scope": "deterministic adapter input controls only; expected publication/URL derivation comes from actual source HTTP records",
+  "records": [
+    {
+      "id": "epoch:000",
+      "input": null
+    },
+    {
+      "id": "epoch:001",
+      "input": ""
+    },
+    {
+      "id": "epoch:002",
+      "input": "2026-10-17"
+    },
+    {
+      "id": "epoch:003",
+      "input": "2026-1-2"
+    },
+    {
+      "id": "epoch:004",
+      "input": "2026-01-02T03:04:05Z"
+    },
+    {
+      "id": "epoch:005",
+      "input": "2026-01-02T03:04:05z"
+    },
+    {
+      "id": "epoch:006",
+      "input": "2026-01-02t03:04:05Z"
+    },
+    {
+      "id": "epoch:007",
+      "input": "2026-01-02T3:4:5Z"
+    },
+    {
+      "id": "epoch:008",
+      "input": "2026-01-02T03:04:05+05:30"
+    },
+    {
+      "id": "epoch:009",
+      "input": "2026-01-02T03:04:05-0430"
+    },
+    {
+      "id": "epoch:010",
+      "input": "2026-01-02T03:04:05+05:30:20.123456"
+    },
+    {
+      "id": "epoch:011",
+      "input": "2026-01-02T03:04:05.123Z"
+    },
+    {
+      "id": "epoch:012",
+      "input": "2026-01-02T03:04:05"
+    },
+    {
+      "id": "epoch:013",
+      "input": "1969-12-31T23:59:59+00:00:00.5"
+    },
+    {
+      "id": "epoch:014",
+      "input": "0001-01-01"
+    },
+    {
+      "id": "epoch:015",
+      "input": "9999-12-31T23:59:59-23:59"
+    },
+    {
+      "id": "epoch:016",
+      "input": "2024-02-29"
+    },
+    {
+      "id": "epoch:017",
+      "input": "2025-02-29"
+    },
+    {
+      "id": "epoch:018",
+      "input": "2026-02-30"
+    },
+    {
+      "id": "epoch:019",
+      "input": "2026-13-01"
+    },
+    {
+      "id": "epoch:020",
+      "input": "2026-00-01"
+    },
+    {
+      "id": "epoch:021",
+      "input": " 2026-01-01"
+    },
+    {
+      "id": "epoch:022",
+      "input": "2026-01-01 "
+    },
+    {
+      "id": "epoch:023",
+      "input": "\u0662\u0660\u0662\u0666-01-02"
+    },
+    {
+      "id": "epoch:024",
+      "input": "\uff12\uff10\uff12\uff16-01-02"
+    },
+    {
+      "id": "epoch:025",
+      "input": "2026-\u0660\u0661-02"
+    },
+    {
+      "id": "epoch:026",
+      "input": "2026-01-\u0660\u0662"
+    },
+    {
+      "id": "epoch:027",
+      "input": "2026-01- 2"
+    },
+    {
+      "id": "epoch:028",
+      "input": "2026-01-02T24:00:00Z"
+    },
+    {
+      "id": "epoch:029",
+      "input": "2026-01-02T03:04:60Z"
+    },
+    {
+      "id": "epoch:030",
+      "input": "2026-01-02T03:04:05+24:00"
+    },
+    {
+      "id": "epoch:031",
+      "input": "2026-01-02T03:04:05+00:30:00.5"
+    },
+    {
+      "id": "parsed_url:000",
+      "input": null
+    },
+    {
+      "id": "parsed_url:001",
+      "input": ""
+    },
+    {
+      "id": "parsed_url:002",
+      "input": "relative/path"
+    },
+    {
+      "id": "parsed_url:003",
+      "input": "https://example.test/a;p?q=one#f"
+    },
+    {
+      "id": "parsed_url:004",
+      "input": "HTTPS://EXAMPLE.test/A;B?Q=1#F"
+    },
+    {
+      "id": "parsed_url:005",
+      "input": "http://x/a;b/c;d"
+    },
+    {
+      "id": "parsed_url:006",
+      "input": "http://x/a;b/c"
+    },
+    {
+      "id": "parsed_url:007",
+      "input": "mailto:user@example.test"
+    },
+    {
+      "id": "parsed_url:008",
+      "input": "//example.test/path"
+    },
+    {
+      "id": "parsed_url:009",
+      "input": "https:///path"
+    },
+    {
+      "id": "parsed_url:010",
+      "input": "https://[::1]/p"
+    },
+    {
+      "id": "parsed_url:011",
+      "input": "https://[broken/p"
+    },
+    {
+      "id": "parsed_url:012",
+      "input": "https://\u96ea.example/\u8def\u5f84;\u53c2\u6570?q=\u96ea#\u7247\u6bb5"
+    },
+    {
+      "id": "parsed_url:013",
+      "input": "https://example.test/a\tb"
+    },
+    {
+      "id": "parsed_url:014",
+      "input": "https://example.test/\np"
+    },
+    {
+      "id": "parsed_url:015",
+      "input": "\u0000https://example.test/a"
+    },
+    {
+      "id": "parsed_url:016",
+      "input": "https://example.test:bad/a"
+    },
+    {
+      "id": "parsed_url:017",
+      "input": "1https://x/a"
+    },
+    {
+      "id": "parsed_url:018",
+      "input": "https://user:secret@example.test/a"
+    },
+    {
+      "id": "epoch_extra:000",
+      "input": "2026-01-\u0662"
+    },
+    {
+      "id": "epoch_extra:001",
+      "input": "2026-01-2\u0663"
+    },
+    {
+      "id": "epoch_extra:002",
+      "input": "2026-01-\u0662\u0663"
+    },
+    {
+      "id": "epoch_extra:003",
+      "input": "2026-1\u0662-01"
+    },
+    {
+      "id": "epoch_extra:004",
+      "input": "2026-01-02T0\u0663:0\u0664:0\u0665Z"
+    },
+    {
+      "id": "epoch_extra:005",
+      "input": "2026-01-02T\u0663:\u0664:\u0665Z"
+    },
+    {
+      "id": "epoch_extra:006",
+      "input": "2026-01-02T2\u0663:00:00Z"
+    },
+    {
+      "id": "epoch_extra:007",
+      "input": "2026-01-02T03:5\u0669:00Z"
+    },
+    {
+      "id": "epoch_extra:008",
+      "input": "2026-01-02T03:04:05+\u0660\u0665:3\u0660"
+    },
+    {
+      "id": "epoch_extra:009",
+      "input": "2026-01-02T03:04:05+05:\u0663\u0660"
+    },
+    {
+      "id": "epoch_extra:010",
+      "input": "2026-01-02T03:04:05+05:30:2\u0660"
+    },
+    {
+      "id": "epoch_extra:011",
+      "input": "2026-01-02T03:04:05+05:30:20.\u0661"
+    },
+    {
+      "id": "epoch_extra:012",
+      "input": "2026-01-02T03:04:05+05:3020"
+    },
+    {
+      "id": "epoch_extra:013",
+      "input": "2026-01-02T03:04:05+0530:20"
+    },
+    {
+      "id": "epoch_extra:014",
+      "input": "9999-12-31T23:59:59-00:00:00.999999"
+    },
+    {
+      "id": "epoch_extra:015",
+      "input": "9999-12-31T23:59:59+00:00:00.000001"
+    },
+    {
+      "id": "epoch_extra:016",
+      "input": "0001-01-01T00:00:00+00:00:00.000001"
+    },
+    {
+      "id": "epoch_extra:017",
+      "input": "1969-12-31T23:59:59-00:00:00.999999"
+    },
+    {
+      "id": "epoch_extra:018",
+      "input": "1970-01-01T00:00:00+00:00:00.000001"
+    },
+    {
+      "id": "epoch_extra:019",
+      "input": "2026-01- 9"
+    },
+    {
+      "id": "epoch_extra:020",
+      "input": "2026-01- 0"
+    },
+    {
+      "id": "epoch_extra:021",
+      "input": "2026-01-02T03:04:05+000000.1234567"
+    },
+    {
+      "id": "epoch_extra:022",
+      "input": "2026-01-02T03:04:05+23:59:59.999999"
+    },
+    {
+      "id": "epoch_extra:023",
+      "input": "2026-01-02T03:04:05+00:00:00.000000"
+    },
+    {
+      "id": "epoch:100",
+      "input": "2026-01-\u0662"
+    },
+    {
+      "id": "epoch:101",
+      "input": "2026-01-2\u0663"
+    },
+    {
+      "id": "epoch:102",
+      "input": "2026-01-\u0662\u0663"
+    },
+    {
+      "id": "epoch:103",
+      "input": "2026-1\u0662-01"
+    },
+    {
+      "id": "epoch:104",
+      "input": "2026-01-02T0\u0663:0\u0664:0\u0665Z"
+    },
+    {
+      "id": "epoch:105",
+      "input": "2026-01-02T\u0663:\u0664:\u0665Z"
+    },
+    {
+      "id": "epoch:106",
+      "input": "2026-01-02T2\u0663:00:00Z"
+    },
+    {
+      "id": "epoch:107",
+      "input": "2026-01-02T03:5\u0669:00Z"
+    },
+    {
+      "id": "epoch:108",
+      "input": "2026-01-02T03:04:05+\u0660\u0665:3\u0660"
+    },
+    {
+      "id": "epoch:109",
+      "input": "2026-01-02T03:04:05+05:\u0663\u0660"
+    },
+    {
+      "id": "epoch:110",
+      "input": "2026-01-02T03:04:05+05:30:2\u0660"
+    },
+    {
+      "id": "epoch:111",
+      "input": "2026-01-02T03:04:05+05:30:20.\u0661"
+    },
+    {
+      "id": "epoch:112",
+      "input": "2026-01-02T03:04:05+05:3020"
+    },
+    {
+      "id": "epoch:113",
+      "input": "2026-01-02T03:04:05+0530:20"
+    },
+    {
+      "id": "epoch:114",
+      "input": "9999-12-31T23:59:59-00:00:00.999999"
+    },
+    {
+      "id": "epoch:115",
+      "input": "9999-12-31T23:59:59+00:00:00.000001"
+    },
+    {
+      "id": "epoch:116",
+      "input": "0001-01-01T00:00:00+00:00:00.000001"
+    },
+    {
+      "id": "epoch:117",
+      "input": "1969-12-31T23:59:59-00:00:00.999999"
+    },
+    {
+      "id": "epoch:118",
+      "input": "1970-01-01T00:00:00+00:00:00.000001"
+    },
+    {
+      "id": "epoch:119",
+      "input": "2026-01- 9"
+    },
+    {
+      "id": "epoch:120",
+      "input": "2026-01- 0"
+    },
+    {
+      "id": "epoch:121",
+      "input": "2026-01-02T03:04:05+000000.1234567"
+    },
+    {
+      "id": "epoch:122",
+      "input": "2026-01-02T03:04:05+23:59:59.999999"
+    },
+    {
+      "id": "epoch:123",
+      "input": "2026-01-02T03:04:05+00:00:00.000000"
+    },
+    {
+      "id": "epoch:200",
+      "input": "2026-01-0\u0662"
+    },
+    {
+      "id": "epoch:201",
+      "input": "2026-01-1\u0662"
+    },
+    {
+      "id": "epoch:202",
+      "input": "2026-01-0\uff19"
+    },
+    {
+      "id": "epoch:203",
+      "input": "2026-01- \u0662"
+    },
+    {
+      "id": "epoch:204",
+      "input": "2026-01-02T 3:04:05Z"
+    },
+    {
+      "id": "epoch:205",
+      "input": "2026-01-02T \u0663:04:05Z"
+    },
+    {
+      "id": "epoch:206",
+      "input": "2026-01-02T 0:00:00Z"
+    },
+    {
+      "id": "epoch:207",
+      "input": "2026-01-02T \u0664:04:05+00:00"
+    },
+    {
+      "id": "epoch:208",
+      "input": "2026-01-02T03:04:05+00:00:00.\u0661\u0662\u0663\u0664\u0665\u0666"
+    },
+    {
+      "id": "epoch:209",
+      "input": "2026-01-02T03:04:05+00:00:00.\u0661\u0662\u0663\u0664\u0665\u0666\u0667"
+    },
+    {
+      "id": "epoch:210",
+      "input": "2026-01-02T03:04:05+00:00:00.\uff11\uff12\uff13\uff14\uff15\uff16"
+    },
+    {
+      "id": "epoch:211",
+      "input": "2026-01-02T03:04:05+00:00:00.1\u06623\u06645\u0666"
+    },
+    {
+      "id": "epoch:300",
+      "input": "2026-01-02T03:04:05+01:02:03:"
+    },
+    {
+      "id": "epoch:301",
+      "input": "2026-01-02T03:04:05+01:02::03"
+    }
+  ]
+}

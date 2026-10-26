@@ -588,8 +588,21 @@ mod tests {
             assert!(dead);
             assert_eq!(released, 0);
             assert!(weak.upgrade().is_none());
-            // Preserve exact command/marker for receipt inspection; only owned
-            // fixture files are created and no broad process cleanup is used.
+            // Receipt bytes survive successful fixture retirement in captured stdout.
+            // On any earlier failure the controller retains files until child retirement.
+            let entered = std::fs::read(&marker).unwrap();
+            assert!(
+                script.len() <= 8192 && entered.len() <= 128,
+                "private fixture receipt bound"
+            );
+            println!("A05_MEDIA_FIXTURE_RECEIPT command={script:?} entered={entered:?}");
+            std::fs::remove_file(&command).unwrap();
+            std::fs::remove_file(&marker).unwrap();
+            std::fs::remove_dir(&directory).unwrap();
+            assert!(
+                !directory.exists(),
+                "successful owned fixture must be absent"
+            );
         }
     }
 }
