@@ -301,7 +301,22 @@ fn material(row: &Value, raw: &[u8], mode: &str) -> Result<(), String> {
         row["sha256"] == digest(raw)
             && row["bytes"].as_u64() == Some(raw.len() as u64)
             && row["mode"] == mode,
-        "A06 exact source material differs",
+        &format!(
+            "A06 exact source material differs: path={:?} expected_sha={} actual_sha={} expected_bytes={:?} actual_bytes={} expected_mode={} actual_mode={}",
+            row["path"].as_str().unwrap_or("<missing>"),
+            row["sha256"]
+                .as_str()
+                .filter(|s| s.len() == 64 && s.bytes().all(|b| b.is_ascii_hexdigit()))
+                .unwrap_or("<invalid>"),
+            digest(raw),
+            row["bytes"].as_u64(),
+            raw.len(),
+            row["mode"]
+                .as_str()
+                .filter(|s| s.len() == 4 && s.bytes().all(|b| (b'0'..=b'7').contains(&b)))
+                .unwrap_or("<invalid>"),
+            mode
+        ),
     )
 }
 fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
@@ -407,7 +422,10 @@ pub(crate) fn default_ca_fixture_operand(
                 metadata.is_file() && !metadata.file_type().is_symlink(),
                 "default-CA fixture source must be regular, not symlink",
             )?;
-            let bytes = fs::read(&file).map_err(|e| e.to_string())?;
+            let physical = fs::read(&file).map_err(|e| e.to_string())?;
+            let frame = json!({"path":physical_row.path,"sha256":physical_row.current_sha,"bytes":physical_row.current_len,"mode":"0644"});
+            let bytes =
+                native_search::page_prior(root, &frame, Some(&physical))?.unwrap_or(physical);
             let mode = permissions(&file)?;
             need(
                 mode == "0644"
@@ -428,7 +446,11 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
     for row in DEFAULT_CA_FIXTURES {
         let old = default_ca_fixture_operand(root, row.path, row.before_sha, Some(row.before_len))
             .ok_or("default-CA fixture positive not selected")??;
-        let actual = fs::read(root.join(row.path)).map_err(|e| e.to_string())?;
+        let physical = fs::read(root.join(row.path)).map_err(|e| e.to_string())?;
+        let frame =
+            json!({"path":row.path,"sha256":row.current_sha,"bytes":row.current_len,"mode":"0644"});
+        let ca_current =
+            native_search::page_prior(root, &frame, Some(&physical))?.unwrap_or(physical);
         let claim = json!({"path":row.path,"sha256":row.before_sha,
             "bytes":row.before_len,"mode":"0644"});
         need(
@@ -486,17 +508,18 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
         )?;
         for mode in ["0600", "0755", "4644"] {
             need(
-                default_ca_fixture_inverse(row, &actual, mode, row.insertions).is_err(),
+                default_ca_fixture_inverse(row, &ca_current, mode, row.insertions).is_err(),
                 "default-CA fixture changed mode accepted",
             )?;
         }
-        let mut altered = actual.clone();
+        let mut altered = ca_current.clone();
         altered.push(0);
         need(
             default_ca_fixture_inverse(row, &altered, "0644", row.insertions).is_err(),
-            "default-CA fixture unlisted physical edit accepted",
+            "default-CA fixture unlisted default-CA frame edit accepted",
         )?;
-        // Mutate the relation while holding authenticated physical bytes fixed.
+        // Mutate the original CA relation with its authenticated e127 frame fixed.
+        // page_controls separately rejects changed physical page afterimages.
         // Omitted/duplicated/moved inverse insertions must never reconstruct parent.
         for index in 0..row.insertions.len() {
             let mut missing = row.insertions.to_vec();
@@ -507,7 +530,7 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
             moved[index].0 += 1;
             for edits in [missing, duplicate, moved] {
                 need(
-                    default_ca_fixture_inverse(row, &actual, "0644", &edits).is_err(),
+                    default_ca_fixture_inverse(row, &ca_current, "0644", &edits).is_err(),
                     "default-CA fixture altered inverse relation accepted",
                 )?;
             }
@@ -730,6 +753,7 @@ fn verify_transition(root: &Path, row: &Value) -> Result<(Vec<u8>, Vec<u8>), Str
     let path = text(&row["current"], "path")?;
     let selected_child = real_clock_successor::selected(path);
     let selected_layout = path == a13_header_layout_successor::SOURCE;
+    let selected_page_catalog = path == "crates/ssx-infra/tests/a09_catalog_media.rs";
     let historical = if path == A13 {
         a13_json_inventory_successor::archived_prior(root, &row["current"])?
     } else if selected_layout {
@@ -740,6 +764,17 @@ fn verify_transition(root: &Path, row: &Value) -> Result<(Vec<u8>, Vec<u8>), Str
             &row["current"],
             real_clock_successor::Role::SharedCurrent,
         )?
+    } else if selected_page_catalog {
+        let sealed = load(root)?;
+        need(
+            row == source(&sealed, path)?,
+            "exact sealed A06 catalog transition caller",
+        )?;
+        let current = &row["current"];
+        let frame = json!({"path":current["path"],"sha256":current["sha256"],"bytes":current["bytes"],"mode":current["mode"]});
+        let physical = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+        native_search::page_prior(root, &frame, Some(&physical))?
+            .ok_or("catalog Page operand absent")?
     } else {
         read(root, &row["current"])?
     };
@@ -850,7 +885,7 @@ fn caller(
     Ok(())
 }
 pub(crate) fn selected(container: &str, path: &str) -> bool {
-    SHA_PAIRS.contains(&(container, path))
+    SHA_PAIRS.contains(&(container, path)) || page_a13_selected(container, path)
 }
 pub(crate) fn try_verify(
     root: &Path,
@@ -860,6 +895,10 @@ pub(crate) fn try_verify(
     expected: &str,
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
+    if let Some(result) = page_a13_try_verify(root, container, container_sha, path, expected, bytes)
+    {
+        return Some(result);
+    }
     if let Some(result) =
         post_a06_generation::try_current(root, container, container_sha, path, expected, bytes)
     {
@@ -1008,6 +1047,7 @@ pub(crate) fn compose_scoped(root: &Path, previous: &Value) -> Result<Value, Str
         }
         let historical = read(root, &row["historical191"])?;
         *row = post_a06_generation::scoped(root, row, &historical)?;
+        *row = native_search::page_scoped(root, row, &historical)?;
     }
     for row in next["additional_current_materials"]
         .as_array_mut()
@@ -1495,6 +1535,22 @@ fn artifact_transition(
     material(&row["archive"], before, archive_mode)?;
     transition(row, before, actual, current_mode, edit_sha)
 }
+// This one full artifact row is authenticated before its four-field projection.
+// The returned bytes are the e127 operand of the unchanged artifact proof;
+// the physical Page successor is authenticated separately by the common inverse.
+fn biomedical_page_operand(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    const PATH: &str = "crates/ssx-infra/tests/a07_biomedical.rs";
+    let sealed = artifact_load(root)?;
+    need(
+        row == source(&sealed, PATH)?,
+        "exact sealed A06 biomedical artifact caller",
+    )?;
+    let current = &row["current"];
+    let frame = json!({"path":current["path"],"sha256":current["sha256"],"bytes":current["bytes"],"mode":current["mode"]});
+    let physical = fs::read(root.join(PATH)).map_err(|e| e.to_string())?;
+    native_search::page_prior(root, &frame, Some(&physical))?
+        .ok_or("biomedical Page operand absent".into())
+}
 fn artifact_current(root: &Path, row: &Value) -> Result<(), String> {
     let before = read(root, &row["archive"])?;
     let child_http = row["current"]["path"] == "crates/ssx-infra/src/http.rs";
@@ -1504,6 +1560,8 @@ fn artifact_current(root: &Path, row: &Value) -> Result<(), String> {
             &row["current"],
             real_clock_successor::Role::ArtifactCurrent,
         )?
+    } else if row["current"]["path"] == "crates/ssx-infra/tests/a07_biomedical.rs" {
+        biomedical_page_operand(root, row)?
     } else {
         read(root, &row["current"])?
     };
@@ -1597,6 +1655,8 @@ pub(crate) fn artifact_controls(root: &Path) -> Result<(), String> {
                 &row["current"],
                 real_clock_successor::Role::ArtifactCurrent,
             )?
+        } else if path == "crates/ssx-infra/tests/a07_biomedical.rs" {
+            biomedical_page_operand(root, row)?
         } else {
             read(root, &row["current"])?
         };
@@ -1789,6 +1849,8 @@ pub(crate) fn real_clock_http_prior(
 // Called from the existing DeHashed source-closure selector; adds no test identity.
 #[allow(dead_code)]
 pub(crate) fn a13_header_layout_controls(root: &Path) -> Result<(), String> {
+    native_search::page_controls(root)?;
+    page_a13_controls(root)?;
     a13_header_layout_successor::controls(root)
 }
 
@@ -1817,4 +1879,121 @@ pub(crate) fn generation_control_operand(
     supplied_current: &[u8],
 ) -> Result<Vec<u8>, String> {
     post_a06_generation::control_operand(root, path, expected, supplied_current)
+}
+
+// Only the eight newly impacted source pairs in these three current A13
+// containers. Search and DeHashed retain their existing generation/scoped routes.
+const PAGE_A13_CONTEXTS: &[(&str, &str, &[&str])] = &[
+    (
+        "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+        "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d",
+        &["crates/ssx-domain/src/records.rs"],
+    ),
+    (
+        "docs/rust-rewrite/a13/remaining/source-map.json",
+        "9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f",
+        &[
+            "crates/ssx-domain/src/records.rs",
+            "docs/rust-rewrite/CASE_STUDY.md",
+        ],
+    ),
+    (
+        "docs/rust-rewrite/a13/qualification-v1.json",
+        "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e",
+        &[
+            "crates/ssx-domain/src/records.rs",
+            "docs/rust-rewrite/CASE_STUDY.md",
+            "crates/ssx-infra/tests/a13_hibp.rs",
+            "crates/ssx-infra/tests/a13_intelx.rs",
+            "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+        ],
+    ),
+];
+fn page_a13_selected(container: &str, source: &str) -> bool {
+    PAGE_A13_CONTEXTS
+        .iter()
+        .any(|(c, _, paths)| *c == container && paths.contains(&source))
+}
+fn page_a13_try_verify(
+    root: &Path,
+    container: &str,
+    container_sha: &str,
+    source: &str,
+    expected: &str,
+    bytes: Option<usize>,
+) -> Option<Result<(), String>> {
+    let (_, sealed_sha, paths) = PAGE_A13_CONTEXTS.iter().find(|r| r.0 == container)?;
+    if !paths.contains(&source) {
+        return None;
+    }
+    Some((|| {
+        need(
+            container_sha == *sealed_sha && bytes.is_some(),
+            "exact A13 page container/size caller",
+        )?;
+        let raw = historical_caller(root, container, container_sha)?;
+        need(
+            digest(&raw) == *sealed_sha && permissions(&root.join(container))? == "0644",
+            "authenticated A13 page container",
+        )?;
+        let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+        let rows = doc["sources"]
+            .as_array()
+            .ok_or("A13 page source inventory absent")?
+            .iter()
+            .filter(|r| r["path"] == source)
+            .collect::<Vec<_>>();
+        need(
+            rows.len() == 1
+                && rows[0]["sha256"] == expected
+                && rows[0]["bytes"].as_u64() == bytes.map(|n| n as u64),
+            "exact original A13 page source tuple",
+        )?;
+        let caller = json!({"path":source,"sha256":expected,"bytes":bytes.unwrap(),"mode":"0644"});
+        let prior = native_search::page_prior(root, &caller, None)?
+            .ok_or("A13 page operand not selected")?;
+        need(
+            digest(&prior) == expected && prior.len() == bytes.unwrap(),
+            "A13 page exact original material",
+        )
+    })())
+}
+fn page_a13_controls(root: &Path) -> Result<(), String> {
+    let mut pairs = 0;
+    for &(container, sha, paths) in PAGE_A13_CONTEXTS {
+        let raw = historical_caller(root, container, sha)?;
+        let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+        for &path in paths {
+            pairs += 1;
+            let rows = doc["sources"]
+                .as_array()
+                .ok_or("A13 page controls source inventory")?
+                .iter()
+                .filter(|r| r["path"] == path)
+                .collect::<Vec<_>>();
+            need(rows.len() == 1, "A13 page controls exact source")?;
+            let expected = text(rows[0], "sha256")?;
+            let len = rows[0]["bytes"].as_u64().ok_or("A13 page source size")? as usize;
+            page_a13_try_verify(root, container, sha, path, expected, Some(len))
+                .ok_or("A13 page positive route absent")??;
+            for (hash, source_hash, size) in [
+                ("wrong", expected, Some(len)),
+                (sha, "wrong", Some(len)),
+                (sha, expected, None),
+                (sha, expected, Some(0)),
+            ] {
+                need(
+                    page_a13_try_verify(root, container, hash, path, source_hash, size)
+                        .ok_or("A13 page negative route lost")?
+                        .is_err(),
+                    "altered A13 page caller accepted",
+                )?;
+            }
+        }
+        need(
+            page_a13_try_verify(root, container, sha, "unlisted.rs", "wrong", None).is_none(),
+            "unlisted A13 page source selected",
+        )?;
+    }
+    need(pairs == 8, "closed eight A13 page pairs")
 }

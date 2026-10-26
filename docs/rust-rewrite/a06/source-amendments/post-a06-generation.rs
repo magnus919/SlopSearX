@@ -56,7 +56,11 @@ fn verify(root: &Path, row: &Value) -> Result<(Vec<u8>, Vec<u8>), String> {
         return native_search::materials_for_row(root, row);
     }
     let prior = super::read_exact(root, &row["archive"])?;
-    let current = super::read_exact(root, &row["current"])?;
+    let current = if let Some(prior) = native_search::page_prior(root, &row["current"], None)? {
+        prior
+    } else {
+        super::read_exact(root, &row["current"])?
+    };
     payload(
         row,
         &prior,
@@ -513,6 +517,49 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
             )?;
         }
     }
+    // Exercise the SAME historical-control entry with actual physical Page
+    // successors, not merely the lower native-search verifier's controls.
+    let search_rows = doc["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|r| r["previous"]["path"] == native_search::SOURCE)
+        .collect::<Vec<_>>();
+    super::need(
+        search_rows.len() == 2,
+        "two sealed historical search control tuples",
+    )?;
+    for r in search_rows {
+        let expected = &r["previous"];
+        let physical = fs::read(root.join(native_search::SOURCE)).map_err(|e| e.to_string())?;
+        let (prior, proof_current) = verify(root, r)?;
+        super::need(
+            control_operand(root, native_search::SOURCE, expected, &physical)? == prior,
+            "historical control actual physical positive",
+        )?;
+        super::need(
+            control_operand(root, native_search::SOURCE, expected, &proof_current).is_err(),
+            "historical proof frame accepted as supplied physical source",
+        )?;
+        let mut changed = physical.clone();
+        changed.push(0);
+        super::need(
+            control_operand(root, native_search::SOURCE, expected, &changed).is_err(),
+            "altered supplied physical source accepted by historical control",
+        )?;
+        for field in ["sha256", "bytes", "mode"] {
+            let mut bad = expected.clone();
+            bad[field] = json!("wrong");
+            super::need(
+                control_operand(root, native_search::SOURCE, &bad, &physical).is_err(),
+                "wrong historical control tuple accepted",
+            )?;
+        }
+        super::need(
+            control_operand(root, "Cargo.lock", expected, &physical).is_err(),
+            "wrong historical control path accepted",
+        )?;
+    }
     let mut changed = doc;
     changed["rows"][0]["current"]["sha256"] = json!("wrong");
     super::need(
@@ -544,10 +591,13 @@ pub(super) fn control_operand(
         "T02 unlisted historical control path",
     )?;
     if let Some(row) = find(&doc, expected) {
-        let (prior, actual) = verify(root, row)?;
+        let (prior, proof_current) = verify(root, row)?;
+        let supplied_frame =
+            native_search::page_prior(root, &row["current"], Some(supplied_current))?
+                .unwrap_or_else(|| supplied_current.to_vec());
         super::need(
-            supplied_current == actual,
-            "T02 historical control supplied current differs",
+            supplied_frame == proof_current,
+            "T02 authenticated historical control current frame differs",
         )?;
         return Ok(prior);
     }
