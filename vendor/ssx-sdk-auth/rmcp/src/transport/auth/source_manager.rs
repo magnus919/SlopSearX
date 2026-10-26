@@ -997,7 +997,7 @@ impl AuthorizationManager {
             .map_err(|e| AuthError::TokenExchangeFailed(e.to_string()))?;
         let response_scopes = token
             .scopes()
-            .map(|s| s.iter().map(ToString::to_string).collect());
+            .map(|s| s.iter().map(|scope| scope.as_ref().to_owned()).collect());
         let scopes = {
             let current = self.current_scopes.read().await;
             Self::resolve_granted_scopes(response_scopes, &requested, &current)
@@ -1088,7 +1088,7 @@ impl AuthorizationManager {
         }
         let response_scopes = token
             .scopes()
-            .map(|s| s.iter().map(ToString::to_string).collect());
+            .map(|s| s.iter().map(|scope| scope.as_ref().to_owned()).collect());
         let scopes = {
             let current = self.current_scopes.read().await;
             Self::resolve_granted_scopes(response_scopes, &stored.granted_scopes, &current)
