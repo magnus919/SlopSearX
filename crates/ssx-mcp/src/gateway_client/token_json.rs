@@ -476,6 +476,16 @@ mod source_http_tests {
             );
         }
         drop(projection);
+        // Exact positive-integer boundary in the pinned Jiter decoder.
+        assert!(
+            parse_http("9".repeat(4300).as_bytes(), deadline)
+                .await
+                .is_ok()
+        );
+        assert_eq!(
+            parse_http("9".repeat(4301).as_bytes(), deadline).await,
+            Err(JsonError::Malformed)
+        );
         // Both ignored and known excessive integers fail whole-document
         // Jiter admission before model projection, just as pinned Core does.
         for field in ["expires_in", "extra"] {
