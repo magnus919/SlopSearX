@@ -3,7 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
-const BINDINGS: &str = "d35d65b6eb37ed92c1dc832f4df2fa989f7d398ac95a90235eb3a1ba5d69028c";
+const BINDINGS: &str = "f7af8e1fa564f40a7f95798fab71a034e3a0506cff569c77f0f232dcd80e8b16";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -161,6 +161,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let unit = crate::t07_unit_profile::Profile::open(root, unit_path, unit_path.exists())?;
     // Every selected project target and the genuine unit root compile before any runtime case.
     unit.compile(true, records)?;
+    let sdk_path = std::env::var_os("SLOPSEARX_T07_SDK_UNIT_PROFILE_ROOT")
+        .ok_or("T07 requires a preregistered external genuine SDK profile root")?;
+    let sdk_path = Path::new(&sdk_path);
+    let sdk = crate::t07_unit_profile::Profile::open_sdk(root, sdk_path, sdk_path.exists())?;
+    sdk.compile(true, records)?;
     // Compilation itself proves the real concrete fork APIs are active, not a
     // marker string or a synthetic substitute in the executable.
     command(
@@ -245,6 +250,22 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .ok_or("T07 source-pool unit inventory absent")?,
         records,
     )?;
+    sdk.tests(
+        value["sdk_unit_tests"]
+            .as_array()
+            .ok_or("T07 SDK32 inventory absent")?,
+        records,
+    )?;
+    suite(
+        root,
+        "ssx-infra",
+        "--lib",
+        Some("adapters::source_json::decoded_integer_tests::"),
+        value["source_json_tests"]
+            .as_array()
+            .ok_or("T07 source JSON inventory absent")?,
+        records,
+    )?;
     let count = |key: &str| -> Result<usize> {
         value[key]
             .as_array()
@@ -256,9 +277,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         + count("process_tests")?
         + count("dns_owner_tests")?
         + count("source_pool_unit_tests")?
-        + count("source_stage_tests")?;
+        + count("source_stage_tests")?
+        + count("sdk_unit_tests")?
+        + count("source_json_tests")?;
     let stdio_owner_controls = count("stdio_owner_tests")?;
-    records.push(json!({"contract":"native_gateway_source_bound","source_files":seen.len(),"focused_native_cases":focused_native_cases,"stdio_owner_controls":stdio_owner_controls,"dns_owner_controls":count("dns_owner_tests")?,"focused_native_selectors_total":focused_native_cases+stdio_owner_controls,"python_executed":false,"provider_calls":0,"full_transport_component_acceptance":"independent R1/R2/profile/SDK source-bound receipts and inherited T01/T05/T06/F08 remain required"}));
+    records.push(json!({"contract":"native_gateway_source_bound","source_files":seen.len(),"focused_native_cases":focused_native_cases,"genuine_sdk_source_controls":count("sdk_unit_tests")?,"stdio_owner_controls":stdio_owner_controls,"dns_owner_controls":count("dns_owner_tests")?,"focused_native_selectors_total":focused_native_cases+stdio_owner_controls,"python_executed":false,"provider_calls":0,"full_transport_component_acceptance":"independent R1/R2/profile/SDK source-bound receipts and inherited T01/T05/T06/F08 remain required"}));
     Ok(())
 }
 #[cfg(test)]

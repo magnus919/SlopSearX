@@ -13,3 +13,24 @@ The 128 Linux/macOS xtask controls now include six authored profile/ownership ch
 The13 original cookie/proxy counterfactuals and two reviewed scheme/budget regressions remain required with actual semantic failures, exact source restoration and fresh positives on the final graph. T01/T05/T06/F08/T07, full SDK/profile/privacy/default/global/install and platform evidence remain required. Source review, metadata resolution and source acquisition do not satisfy them. Raw authority, strict Unicode/IDNA, pinned missing-SOCKS failure stages and supported Windows resolver/runtime ownership remain open.
 
 The precise formatting exclusions for9 trailing-whitespace and25 end-of-file inputs preserve immutable upstream/oracle/source-delta bytes. They do not exclude whole vendor trees. JSON/TOML/YAML/conflict/size checks remain, and T07 protects every byte and complete vendor namespace through its source hashes. These exclusions fix a branch-introduced formatting conflict; they do not waive a failing CI check or repin frozen source.
+
+
+The current SDK profile uses the same bounded `Profile` copier and original-child
+retirement checks as Reqwest. `cargo xtask prepare-t07-sdk-unit --profile-dir PATH`
+creates the full 174-file rmcp package outside the checkout; it preserves the
+complete manifest, 12 original dev dependencies, default features, and all 85
+target declarations. `bootstrap-t07-sdk-unit` compiles the genuine library test
+context with the checked 317-record SDK lock and official Cargo registry sources.
+It may download dormant Rust dependency sources while bootstrapping; it never
+activates a Python feature or permits a PyO3 compiler unit. The SDK's original
+unit-only serde declaration remains separate from the production workspace.
+
+CI runs both prepare/bootstrap commands before the offline T07 gate and passes
+`SLOPSEARX_T07_SDK_UNIT_PROFILE_ROOT`. This has no dependency on a developer's
+build-root copy. The SDK full list must contain exactly the retained 580 IDs;
+only the declared 14 metadata, seven manager, and 11 source-operation controls
+run. The current gateway list retains the original 95 IDs and adds 22 reviewed
+IDs. Earlier component receipts remain evidence for their original commits;
+the merged source still requires its own native gate result. No Windows,
+production deployment, concurrency, or performance acceptance follows from
+these inventories.

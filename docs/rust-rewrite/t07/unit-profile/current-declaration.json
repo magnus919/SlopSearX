@@ -166,12 +166,6 @@
       "sha256": "21d3c917c317e2c56ddc227897f88ee0506b11fdc83d1efdad22d4a9c4796eed"
     },
     {
-      "path": "src/connect.rs",
-      "bytes": 74151,
-      "mode": "0o644",
-      "sha256": "45b6d1365c28df984a770be2b5c48730557cb44af8c45e32c29d546519587bc5"
-    },
-    {
       "path": "src/connect/source_http1.rs",
       "bytes": 17061,
       "mode": "0o644",
@@ -182,6 +176,12 @@
       "bytes": 2925,
       "mode": "0o644",
       "sha256": "42c5a06be75c81e03b83d80953a7560a3b1737488ef63cb0cd2e9bf0877678f8"
+    },
+    {
+      "path": "src/connect.rs",
+      "bytes": 74151,
+      "mode": "0o644",
+      "sha256": "45b6d1365c28df984a770be2b5c48730557cb44af8c45e32c29d546519587bc5"
     },
     {
       "path": "src/cookie.rs",
@@ -254,12 +254,6 @@
       "bytes": 15879,
       "mode": "0o644",
       "sha256": "d637969c7b4920bd388e32d1bf3182267df57d3ae35ffa3894df5da744d4ac8b"
-    },
-    {
-      "path": "src/source_pool.rs",
-      "bytes": 33960,
-      "mode": "0o644",
-      "sha256": "ef614c4e0f5edd9511aae96399787435545639549ab3e0da2bf05a0d88b126fa"
     },
     {
       "path": "src/source_pool/environment.rs",
@@ -383,9 +377,15 @@
     },
     {
       "path": "src/source_pool/source_url.rs",
-      "bytes": 51194,
+      "bytes": 56172,
       "mode": "0o644",
-      "sha256": "84184d6b58c263da66d5c14384dc2af4ad350ea2d144bc10c060675c79b7ab3e"
+      "sha256": "0996955e7147c1570af2796f8809fb143ead40f8268bd82bcda20eaeaeead9cf"
+    },
+    {
+      "path": "src/source_pool.rs",
+      "bytes": 34303,
+      "mode": "0o644",
+      "sha256": "be751aba88ab4ddf0145e852694e810f204fa74de3b3dfef4771e1f76e23ccaf"
     },
     {
       "path": "src/tls.rs",
@@ -2284,12 +2284,6 @@
           "sha256": "21d3c917c317e2c56ddc227897f88ee0506b11fdc83d1efdad22d4a9c4796eed"
         },
         {
-          "path": "vendor/ssx-http-source/reqwest/src/connect.rs",
-          "bytes": 74151,
-          "mode": "0o644",
-          "sha256": "45b6d1365c28df984a770be2b5c48730557cb44af8c45e32c29d546519587bc5"
-        },
-        {
           "path": "vendor/ssx-http-source/reqwest/src/connect/source_http1.rs",
           "bytes": 17061,
           "mode": "0o644",
@@ -2300,6 +2294,12 @@
           "bytes": 2925,
           "mode": "0o644",
           "sha256": "42c5a06be75c81e03b83d80953a7560a3b1737488ef63cb0cd2e9bf0877678f8"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/connect.rs",
+          "bytes": 74151,
+          "mode": "0o644",
+          "sha256": "45b6d1365c28df984a770be2b5c48730557cb44af8c45e32c29d546519587bc5"
         },
         {
           "path": "vendor/ssx-http-source/reqwest/src/cookie.rs",
@@ -2372,12 +2372,6 @@
           "bytes": 15879,
           "mode": "0o644",
           "sha256": "d637969c7b4920bd388e32d1bf3182267df57d3ae35ffa3894df5da744d4ac8b"
-        },
-        {
-          "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
-          "bytes": 33960,
-          "mode": "0o644",
-          "sha256": "ef614c4e0f5edd9511aae96399787435545639549ab3e0da2bf05a0d88b126fa"
         },
         {
           "path": "vendor/ssx-http-source/reqwest/src/source_pool/environment.rs",
@@ -2501,9 +2495,15 @@
         },
         {
           "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs",
-          "bytes": 51194,
+          "bytes": 56172,
           "mode": "0o644",
-          "sha256": "84184d6b58c263da66d5c14384dc2af4ad350ea2d144bc10c060675c79b7ab3e"
+          "sha256": "0996955e7147c1570af2796f8809fb143ead40f8268bd82bcda20eaeaeead9cf"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+          "bytes": 34303,
+          "mode": "0o644",
+          "sha256": "be751aba88ab4ddf0145e852694e810f204fa74de3b3dfef4771e1f76e23ccaf"
         },
         {
           "path": "vendor/ssx-http-source/reqwest/src/tls.rs",
@@ -3355,16 +3355,16 @@
           "sha256": "a893df119a025ce5e8226868f76130b50b15dd0a4c8ae007556b14f29cd3520a"
         },
         {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool.rs",
-          "bytes": 38184,
-          "mode": "0o644",
-          "sha256": "2628c26ac14dc48678f3cded2be7f5fd23e7c3304d5eeb99ca9a488e5bc2792e"
-        },
-        {
           "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source.rs",
           "bytes": 33489,
           "mode": "0o644",
           "sha256": "c611472be412f65842ed26845f9eac10b6277a3fbd56969e306eb4550545ad61"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime/io.rs",
+          "bytes": 5212,
+          "mode": "0o644",
+          "sha256": "ef8fb8ff7d89f00fd7ef74a16322b38c9481d115e24f606d5097745dddf259ab"
         },
         {
           "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime.rs",
@@ -3373,10 +3373,10 @@
           "sha256": "679aa6127535d1880e2cf470c67777919d4c6ab47406e14510c25eb41a28ff3d"
         },
         {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool/source_runtime/io.rs",
-          "bytes": 5212,
+          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/pool.rs",
+          "bytes": 38184,
           "mode": "0o644",
-          "sha256": "ef8fb8ff7d89f00fd7ef74a16322b38c9481d115e24f606d5097745dddf259ab"
+          "sha256": "2628c26ac14dc48678f3cded2be7f5fd23e7c3304d5eeb99ca9a488e5bc2792e"
         },
         {
           "path": "vendor/ssx-http-source/hyper-util/src/client/mod.rs",
@@ -3481,12 +3481,6 @@
           "sha256": "5726ebeb27da45b437aa65782915d1b335baf7ec6c2f3abb3a5f2dac24778514"
         },
         {
-          "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio.rs",
-          "bytes": 12096,
-          "mode": "0o644",
-          "sha256": "143023606be7994c8ecbf538eb5816cbedd62172cb3fbb5f981ea411a1581d28"
-        },
-        {
           "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio/with_hyper_io.rs",
           "bytes": 4531,
           "mode": "0o644",
@@ -3497,6 +3491,12 @@
           "bytes": 4751,
           "mode": "0o644",
           "sha256": "70f30a1475ed64047800da86b4e24a4a74e340be5046bc043f2b0b1ac8000fa5"
+        },
+        {
+          "path": "vendor/ssx-http-source/hyper-util/src/rt/tokio.rs",
+          "bytes": 12096,
+          "mode": "0o644",
+          "sha256": "143023606be7994c8ecbf538eb5816cbedd62172cb3fbb5f981ea411a1581d28"
         },
         {
           "path": "vendor/ssx-http-source/hyper-util/src/rt/tracing.rs",
@@ -3575,7 +3575,7 @@
     {
       "name": "rmcp",
       "root": "vendor/ssx-sdk-auth/rmcp",
-      "manifest_sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a",
+      "manifest_sha256": "de275ee47ab722df699f2b290ef50a5fba16c271a9d0454475ff260bcd3e06d6",
       "files": [
         {
           "path": "vendor/ssx-sdk-auth/rmcp/.cargo_vcs_info.json",
@@ -3597,9 +3597,9 @@
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml",
-          "bytes": 18405,
+          "bytes": 18655,
           "mode": "0o644",
-          "sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a"
+          "sha256": "de275ee47ab722df699f2b290ef50a5fba16c271a9d0454475ff260bcd3e06d6"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml.orig",
@@ -3638,28 +3638,16 @@
           "sha256": "240e197f7a463e848202cc4883ec033c94a20a47d86201b28c9dc80a4d25818a"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/handler.rs",
-          "bytes": 86,
-          "mode": "0o644",
-          "sha256": "dc1087d79c9566009906a26162321096ab77aea17499dfabcbb49964aba5b9ed"
-        },
-        {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/client.rs",
-          "bytes": 16235,
-          "mode": "0o644",
-          "sha256": "30fa690622fc9e96274471fce8c210eb12daac81d44ee0d45737c90df061de7f"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/handler/client/progress.rs",
           "bytes": 3173,
           "mode": "0o644",
           "sha256": "d190d05e4b22ad49be7820594b0463272de031f5b97084b5c50c0a157758443e"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server.rs",
-          "bytes": 37340,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/client.rs",
+          "bytes": 16235,
           "mode": "0o644",
-          "sha256": "f5f48bc77c329c01505c26f59ca93cfc16e1be558b219459ffc950c238bde22b"
+          "sha256": "30fa690622fc9e96274471fce8c210eb12daac81d44ee0d45737c90df061de7f"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/common.rs",
@@ -3680,16 +3668,16 @@
           "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router.rs",
-          "bytes": 7752,
-          "mode": "0o644",
-          "sha256": "d3d3c473bfcac764461f410a989c1b41b465048d29b790d169bf35aab7a8cb23"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/prompt.rs",
           "bytes": 5450,
           "mode": "0o644",
           "sha256": "2245cac16b4d82c89363589f876681e1911e5cf70170c42ed3cddbdfe0f03eed"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/tool/tool_traits.rs",
+          "bytes": 10785,
+          "mode": "0o644",
+          "sha256": "4fca15a89dac8627c79488d7d2ed53df84d730a0e2b977a00781d6b35fab0044"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/tool.rs",
@@ -3698,10 +3686,10 @@
           "sha256": "aeeaaf8a6032c457833fca1d25367201349354f0a7e28a460db3fed077f4a8a6"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router/tool/tool_traits.rs",
-          "bytes": 10785,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/router.rs",
+          "bytes": 7752,
           "mode": "0o644",
-          "sha256": "4fca15a89dac8627c79488d7d2ed53df84d730a0e2b977a00781d6b35fab0044"
+          "sha256": "d3d3c473bfcac764461f410a989c1b41b465048d29b790d169bf35aab7a8cb23"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/tool.rs",
@@ -3716,12 +3704,6 @@
           "sha256": "1ada28573a196eb2745a24d98fcccff7b4553deae898f4840fdd0fd5cd215897"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper.rs",
-          "bytes": 66,
-          "mode": "0o644",
-          "sha256": "e594439b9d2c2df8911fb16c93290c55f717db83d74098b9d68817da44f9befe"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper/json.rs",
           "bytes": 1429,
           "mode": "0o644",
@@ -3734,16 +3716,28 @@
           "sha256": "4b2ba0e54cd347a38978bfa6c8fa1e2dec81ff478937b2c4c8601535549a9d4f"
         },
         {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server/wrapper.rs",
+          "bytes": 66,
+          "mode": "0o644",
+          "sha256": "e594439b9d2c2df8911fb16c93290c55f717db83d74098b9d68817da44f9befe"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler/server.rs",
+          "bytes": 37340,
+          "mode": "0o644",
+          "sha256": "f5f48bc77c329c01505c26f59ca93cfc16e1be558b219459ffc950c238bde22b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/handler.rs",
+          "bytes": 86,
+          "mode": "0o644",
+          "sha256": "dc1087d79c9566009906a26162321096ab77aea17499dfabcbb49964aba5b9ed"
+        },
+        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/lib.rs",
           "bytes": 1344,
           "mode": "0o644",
           "sha256": "075c3bf5ccd74441c182da6cd3cf44943d7a5cb6009c1b5e30dc63fee44e4846"
-        },
-        {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/model.rs",
-          "bytes": 200285,
-          "mode": "0o644",
-          "sha256": "b0e808e9f325235e3a19ba1a8b95feec5226b57bf243d02d3dcce81f4c3df63a"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/model/annotated.rs",
@@ -3824,22 +3818,22 @@
           "sha256": "5251faf9065961e2a8521ef5e91eb8466885c609e1c5d2ea716604b51392f47e"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/service.rs",
-          "bytes": 74846,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/model.rs",
+          "bytes": 200285,
           "mode": "0o644",
-          "sha256": "d4a625e7e49009b2ce25b4498ddef88ef6242915b7aa2e53826da4e9b531d473"
-        },
-        {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/service/client.rs",
-          "bytes": 103759,
-          "mode": "0o644",
-          "sha256": "a122773fd2aa273e7707c3b083ce78094acae1c19fd80f319ce4bebc8d4f0814"
+          "sha256": "b0e808e9f325235e3a19ba1a8b95feec5226b57bf243d02d3dcce81f4c3df63a"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/service/client/cache.rs",
           "bytes": 14262,
           "mode": "0o644",
           "sha256": "f036c13be5dd5058867e9cc1b8d0764fa179f6b39978da650d91627785db81e6"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/service/client.rs",
+          "bytes": 103759,
+          "mode": "0o644",
+          "sha256": "a122773fd2aa273e7707c3b083ce78094acae1c19fd80f319ce4bebc8d4f0814"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/service/server.rs",
@@ -3854,28 +3848,22 @@
           "sha256": "4b1971d7ab78ea57ef32380120ed8c74865632e034e51ab7d46448adafef8d29"
         },
         {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/service.rs",
+          "bytes": 74846,
+          "mode": "0o644",
+          "sha256": "d4a625e7e49009b2ce25b4498ddef88ef6242915b7aa2e53826da4e9b531d473"
+        },
+        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/task_manager.rs",
           "bytes": 39036,
           "mode": "0o644",
           "sha256": "814e43d227380982cf076005047141991f08931a1f2226f0eee72390fd9f2529"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/transport.rs",
-          "bytes": 11013,
-          "mode": "0o644",
-          "sha256": "94cbb9c311f7c4e4dd61e231e3574e2e581941a4b355afb2e2be4396e0e25d31"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/async_rw.rs",
           "bytes": 28821,
           "mode": "0o644",
           "sha256": "b4234e7d5df9f80cdcc67755f64c72e4fe7909749754ff569e518e6ebcb7d846"
-        },
-        {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth.rs",
-          "bytes": 376598,
-          "mode": "0o644",
-          "sha256": "80e2e7d6ec5626cba8441518af7f9c4b73a79540db9b129c712dbf47e186656d"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/enterprise.rs",
@@ -3890,28 +3878,40 @@
           "sha256": "77aa0d65839d5e4e41c0e0fab1aed5ff2e6e97558236146d28c1a3fc02a9d7da"
         },
         {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/source_manager.rs",
+          "bytes": 63510,
+          "mode": "0o644",
+          "sha256": "80ec22e9255efd579def12bf939a3915fb09dd9d3a6388e99a33c0c4a37b07e1"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/source_metadata.rs",
+          "bytes": 51818,
+          "mode": "0o644",
+          "sha256": "676468e16e60339a815152c68a427d77162a9d451e1b2aaa7ed4f98c2aef019a"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth.rs",
+          "bytes": 382912,
+          "mode": "0o644",
+          "sha256": "764e68496433fea1c2ac3b75224f3be9af65ac15fb801a89785f92acf7c60bb8"
+        },
+        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/child_process.rs",
           "bytes": 10311,
           "mode": "0o644",
           "sha256": "8612b2607643c89d1bfcabf222070b5f9355df788aabd0cb9d331d764263810e"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common.rs",
-          "bytes": 660,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/auth/streamable_http_client.rs",
+          "bytes": 14265,
           "mode": "0o644",
-          "sha256": "8a4a32f5e206f276754170232224ac9697de6a53240a7482d2a98b53380ec908"
+          "sha256": "7746ca9648b04514b96a9b1e8c1e481a914adc3d8db23b6dee647f5eb156ad89"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/auth.rs",
           "bytes": 81,
           "mode": "0o644",
           "sha256": "7e0e1e85ec7f8836dd2295c7608eb8e2cf05e5b72306277dfe2598fa538e9ea4"
-        },
-        {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/auth/streamable_http_client.rs",
-          "bytes": 14265,
-          "mode": "0o644",
-          "sha256": "7746ca9648b04514b96a9b1e8c1e481a914adc3d8db23b6dee647f5eb156ad89"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/client_side_sse.rs",
@@ -3932,16 +3932,16 @@
           "sha256": "dcf23cff04bb514dbca9a1b9a3931fbd240dd356403ecba7b46449d3f4c3de59"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/reqwest.rs",
-          "bytes": 89,
-          "mode": "0o644",
-          "sha256": "469486be9b576c6a1ff6a40121dd948e7b46d1de82ad5322a6438cb1567099e3"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/reqwest/streamable_http_client.rs",
           "bytes": 24748,
           "mode": "0o644",
           "sha256": "b713b293a5b7f64a8ac625b40863cb7019167a55d6ec80c999e447fa797aec03"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/reqwest.rs",
+          "bytes": 89,
+          "mode": "0o644",
+          "sha256": "469486be9b576c6a1ff6a40121dd948e7b46d1de82ad5322a6438cb1567099e3"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common/server_side_http.rs",
@@ -3954,6 +3954,12 @@
           "bytes": 22685,
           "mode": "0o644",
           "sha256": "40166733db6aa4ceb12a4a09681333aabad05e56c1e0839f4798cfed552500ec"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/common.rs",
+          "bytes": 660,
+          "mode": "0o644",
+          "sha256": "8a4a32f5e206f276754170232224ac9697de6a53240a7482d2a98b53380ec908"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/io.rs",
@@ -3974,18 +3980,6 @@
           "sha256": "72a36d33f4906ba9c50f99ce2cd8252fad193e7efb65d24b411c873fdfa6df39"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server.rs",
-          "bytes": 348,
-          "mode": "0o644",
-          "sha256": "d6f452846ef27b422c2572e1b9e8b9955f95a57d0587e1185612a147275ede66"
-        },
-        {
-          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session.rs",
-          "bytes": 6811,
-          "mode": "0o644",
-          "sha256": "aa3f798d4c6eecc6682134f43438adcc5d4ff1640a202109843d48d276b5fc30"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session/local.rs",
           "bytes": 52086,
           "mode": "0o644",
@@ -4004,10 +3998,22 @@
           "sha256": "7b7efb9f014464a060fa52fb6cdc4cf4acc734035f51048c5c39a4e5d15a01ae"
         },
         {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/session.rs",
+          "bytes": 6811,
+          "mode": "0o644",
+          "sha256": "aa3f798d4c6eecc6682134f43438adcc5d4ff1640a202109843d48d276b5fc30"
+        },
+        {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server/tower.rs",
           "bytes": 98041,
           "mode": "0o644",
           "sha256": "281352686d04c7a45dd010b2ee158737cad1272e0e3b667e255baab48a6a5147"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/streamable_http_server.rs",
+          "bytes": 348,
+          "mode": "0o644",
+          "sha256": "d6f452846ef27b422c2572e1b9e8b9955f95a57d0587e1185612a147275ede66"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/src/transport/worker.rs",
@@ -4020,6 +4026,12 @@
           "bytes": 51,
           "mode": "0o644",
           "sha256": "57025a04e15634a80dc4e8247601b62014ce835568b049f3ea433164bdd7811b"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport.rs",
+          "bytes": 11013,
+          "mode": "0o644",
+          "sha256": "94cbb9c311f7c4e4dd61e231e3574e2e581941a4b355afb2e2be4396e0e25d31"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/common/calculator.rs",
@@ -4106,16 +4118,16 @@
           "sha256": "b73911b23eefb352a07baa5a4294b64f25a08b53525b31b6929dd10fa4db83e6"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_deserialization.rs",
-          "bytes": 14913,
-          "mode": "0o644",
-          "sha256": "77667c484fb67477b1e11017bd07ddf364b84a475177b3c0fe763ee68186f4d1"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/test_deserialization/tool_list_result.json",
           "bytes": 835,
           "mode": "0o644",
           "sha256": "6bf673681ba3b6a30380f067076b0bbaa7c63950ecc5f77725ae0b8383baaa9d"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_deserialization.rs",
+          "bytes": 14913,
+          "mode": "0o644",
+          "sha256": "77667c484fb67477b1e11017bd07ddf364b84a475177b3c0fe763ee68186f4d1"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/test_discover_http_client_startup.rs",
@@ -4160,16 +4172,16 @@
           "sha256": "5b5ac0b409b70385c2b43ddadf0f59a987279af59c088d72d5597df5e6b2d1d4"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_list_tools_result.rs",
-          "bytes": 1523,
-          "mode": "0o644",
-          "sha256": "088927eb3946af919a62059cd92ecc3913537a0f302ec7124839dde7f8759f73"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/test_list_tools_result/list_tools_result.json",
           "bytes": 1553,
           "mode": "0o644",
           "sha256": "81a34ef905aad85620b72a4d03898ebb538abf6ec4e875a17b3ed88f93d33e73"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_list_tools_result.rs",
+          "bytes": 1523,
+          "mode": "0o644",
+          "sha256": "088927eb3946af919a62059cd92ecc3913537a0f302ec7124839dde7f8759f73"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/test_live_oauth_refresh.rs",
@@ -4196,12 +4208,6 @@
           "sha256": "fa4cef7f65e0ef15f1bab4ea54a965d7e220b0c770ffbce3adca5af100f7506a"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema.rs",
-          "bytes": 5923,
-          "mode": "0o644",
-          "sha256": "ef4ee3f9658cbc9878e753bcae5a71433dfa97c4dbf34f0ed6f1a9cf02e913eb"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema.json",
           "bytes": 67263,
           "mode": "0o644",
@@ -4224,6 +4230,12 @@
           "bytes": 119225,
           "mode": "0o644",
           "sha256": "afd49ef61c84f2df8c7167a848653004ac054905115fc60dc1cc096cf2059255"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_message_schema.rs",
+          "bytes": 5923,
+          "mode": "0o644",
+          "sha256": "ef4ee3f9658cbc9878e753bcae5a71433dfa97c4dbf34f0ed6f1a9cf02e913eb"
         },
         {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/test_meta_helpers.rs",
@@ -4568,12 +4580,6 @@
           "sha256": "d36ad39811a7fe9970282d088c431676408a3fb2961810bf7d1834d116961b25"
         },
         {
-          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js.rs",
-          "bytes": 4694,
-          "mode": "0o644",
-          "sha256": "8ea7e3db85b9c5ca15247eadf4d222d3ed0d06b554095a91c4a79f63f6e61419"
-        },
-        {
           "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js/.gitignore",
           "bytes": 31,
           "mode": "0o644",
@@ -4608,6 +4614,12 @@
           "bytes": 2884,
           "mode": "0o644",
           "sha256": "01074613ae942d99028c3f31b1ff35e64817c6de30ab8beabeb3823cb97e7498"
+        },
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/tests/test_with_js.rs",
+          "bytes": 4694,
+          "mode": "0o644",
+          "sha256": "8ea7e3db85b9c5ca15247eadf4d222d3ed0d06b554095a91c4a79f63f6e61419"
         }
       ]
     }
@@ -5271,12 +5283,6 @@
           "sha256": "719e747cd2cd61ce54ce6d8accf56e4c6b145519a672b6dfedfe9d86356d2a52"
         },
         {
-          "path": "crates/ssx-source-codecs/src/iso2022.rs",
-          "bytes": 15960,
-          "mode": "0o644",
-          "sha256": "7716238b0dfba255f9af55a26f09c65500f2beb1cbec254b70d59e763f4ed25b"
-        },
-        {
           "path": "crates/ssx-source-codecs/src/iso2022/gb2312.bin",
           "bytes": 74450,
           "mode": "0o644",
@@ -5323,6 +5329,12 @@
           "bytes": 82260,
           "mode": "0o644",
           "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "crates/ssx-source-codecs/src/iso2022.rs",
+          "bytes": 15960,
+          "mode": "0o644",
+          "sha256": "7716238b0dfba255f9af55a26f09c65500f2beb1cbec254b70d59e763f4ed25b"
         },
         {
           "path": "crates/ssx-source-codecs/src/label_alnum.rs",
@@ -5467,108 +5479,6 @@
           "bytes": 6113,
           "mode": "0o644",
           "sha256": "5aabf89f41f5f3bbe762a4e0a96e85e5834e2e0dcde829c4c7bcf08df2e9c7b5"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/big5.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "201cfa80cfa171862275fb0fb563a6c00365ece9dcd33083f43ee658c9d845de"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/big5hkscs.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "3f9768f72d44d19d81fa457c7c665d32216a244b7abb48b2a6cf590dc70be427"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp932.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "a9a3ef55573d7b0b766dc7417909a545d88a93f7a1743c8e8895de579050b831"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp949.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "b06c8bc05fd5669196112a47d35cd94f66cfbb01d9fb0fb02ce7da677cdb2d78"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp950.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "c20ecf9596783f209e77fd46cf85eb487e123e82b3bb2e0028a98244611bba20"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jis_2004.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "db97d929e170a4ec6586af6a6fe861e302708281d78b1b883e2eaaa2ec4653ff"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jisx0213.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "016282e27fd801c079699617d157ccc4b42af2f94aa317f0ce0beeffa248bbee"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jp.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "c2dbaa67564b660ebf7f6354b27514ffae809d88aaf06914a3b1f7957576311d"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_kr.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "fe13607d63c43b780ba123719992190b86d7a563128543c0799cd192a284de30"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gb18030.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "386d2f7dc0a4bb1ed0986fb8fc1db5f24171271ea0c0458bd627fea6076d0de6"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gb2312.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "e6b42fc00fdf3a4e0c84c12b55a8b6604fef8fae5d61ec59c3bf0a9efec0412d"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gbk.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "97394e6cf8290be58e44ab558b9502abdee448115f0d76656f17817f5503a4c2"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/johab.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "130522f4a7d1c0f1c73b51f82ae51021329d025510b9e9e4e8627e735b555ceb"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/manifest.json",
-          "bytes": 4025,
-          "mode": "0o644",
-          "sha256": "c57d28fdd62595c4ae5c6b63562c16ade6ab0b16384678993f3952ed61683453"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jis.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "02c2dde4fe2ec12884b2c4662db56eae154c1ee8bab28c81b8ec1a20f6c48789"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jis_2004.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "48baf3ca251a7568f4f5c8633233cef3de66174d723409a274489cce80b06722"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jisx0213.valid.bin",
-          "bytes": 8224,
-          "mode": "0o644",
-          "sha256": "ab13f21e2b3451626f206ca4761677c95f283ed0a34997039c03834526f71a50"
         },
         {
           "path": "crates/ssx-source-codecs/tests/cjk/big5.source-pairs.bin",
@@ -5781,6 +5691,108 @@
           "sha256": "c178e46a381969d4ecd02e61e9c1dca469c7e7dc6c49c1a116c51d2fec58bba7"
         },
         {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/big5.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "201cfa80cfa171862275fb0fb563a6c00365ece9dcd33083f43ee658c9d845de"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/big5hkscs.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "3f9768f72d44d19d81fa457c7c665d32216a244b7abb48b2a6cf590dc70be427"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp932.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "a9a3ef55573d7b0b766dc7417909a545d88a93f7a1743c8e8895de579050b831"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp949.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "b06c8bc05fd5669196112a47d35cd94f66cfbb01d9fb0fb02ce7da677cdb2d78"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp950.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "c20ecf9596783f209e77fd46cf85eb487e123e82b3bb2e0028a98244611bba20"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jis_2004.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "db97d929e170a4ec6586af6a6fe861e302708281d78b1b883e2eaaa2ec4653ff"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jisx0213.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "016282e27fd801c079699617d157ccc4b42af2f94aa317f0ce0beeffa248bbee"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jp.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "c2dbaa67564b660ebf7f6354b27514ffae809d88aaf06914a3b1f7957576311d"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_kr.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "fe13607d63c43b780ba123719992190b86d7a563128543c0799cd192a284de30"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gb18030.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "386d2f7dc0a4bb1ed0986fb8fc1db5f24171271ea0c0458bd627fea6076d0de6"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gb2312.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "e6b42fc00fdf3a4e0c84c12b55a8b6604fef8fae5d61ec59c3bf0a9efec0412d"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gbk.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "97394e6cf8290be58e44ab558b9502abdee448115f0d76656f17817f5503a4c2"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/johab.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "130522f4a7d1c0f1c73b51f82ae51021329d025510b9e9e4e8627e735b555ceb"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/manifest.json",
+          "bytes": 4025,
+          "mode": "0o644",
+          "sha256": "c57d28fdd62595c4ae5c6b63562c16ade6ab0b16384678993f3952ed61683453"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jis.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "02c2dde4fe2ec12884b2c4662db56eae154c1ee8bab28c81b8ec1a20f6c48789"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jis_2004.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "48baf3ca251a7568f4f5c8633233cef3de66174d723409a274489cce80b06722"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jisx0213.valid.bin",
+          "bytes": 8224,
+          "mode": "0o644",
+          "sha256": "ab13f21e2b3451626f206ca4761677c95f283ed0a34997039c03834526f71a50"
+        },
+        {
           "path": "crates/ssx-source-codecs/tests/doublebyte.rs",
           "bytes": 7647,
           "mode": "0o644",
@@ -5833,12 +5845,6 @@
           "bytes": 369791,
           "mode": "0o644",
           "sha256": "cf586ffe8275673cea0d4cdd9dd2a876c4d557337f0218750eb45f4efe17c2c0"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/iso2022.rs",
-          "bytes": 3377,
-          "mode": "0o644",
-          "sha256": "0fce38154aced1eb42506be87aa6df21b705a3bd8bd822bbf88d660326a7add9"
         },
         {
           "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-0.errors.json",
@@ -6321,6 +6327,12 @@
           "sha256": "a826a2e510b754b8ca03ce82024c34c01653d4ff97a8cab7fca1ea9a457fe199"
         },
         {
+          "path": "crates/ssx-source-codecs/tests/iso2022.rs",
+          "bytes": 3377,
+          "mode": "0o644",
+          "sha256": "0fce38154aced1eb42506be87aa6df21b705a3bd8bd822bbf88d660326a7add9"
+        },
+        {
           "path": "crates/ssx-source-codecs/tests/label-alias-source.json",
           "bytes": 289747,
           "mode": "0o644",
@@ -6669,24 +6681,6 @@
           "sha256": "1b0c4e6a86bdacf03635ae7bfef4d11f087067aa9525c00074db276b7f4a0197"
         },
         {
-          "path": "crates/ssx-source-codecs/tests/unicode-escape-source.json",
-          "bytes": 134996,
-          "mode": "0o644",
-          "sha256": "b707048a3943128a985ef76bddada3ac153d7c75b3b6208200d01a0dde70ea45"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/unicode-name-source.json",
-          "bytes": 3910257,
-          "mode": "0o644",
-          "sha256": "d4af24adcbe1aba41380e983ab29f549178b98df58926c5b2dedad9e53735f66"
-        },
-        {
-          "path": "crates/ssx-source-codecs/tests/unicode.rs",
-          "bytes": 1853,
-          "mode": "0o644",
-          "sha256": "db08d042a254550522446f077708ce9b383040298edca46817ddc0fc03a9a1ca"
-        },
-        {
           "path": "crates/ssx-source-codecs/tests/unicode/manifest.json",
           "bytes": 773,
           "mode": "0o644",
@@ -6747,6 +6741,24 @@
           "sha256": "5d760463dbc4ac62d9aa73854a2f539fa9ae6e62d9cc8a1e312b58c04a84810a"
         },
         {
+          "path": "crates/ssx-source-codecs/tests/unicode-escape-source.json",
+          "bytes": 134996,
+          "mode": "0o644",
+          "sha256": "b707048a3943128a985ef76bddada3ac153d7c75b3b6208200d01a0dde70ea45"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/unicode-name-source.json",
+          "bytes": 3910257,
+          "mode": "0o644",
+          "sha256": "d4af24adcbe1aba41380e983ab29f549178b98df58926c5b2dedad9e53735f66"
+        },
+        {
+          "path": "crates/ssx-source-codecs/tests/unicode.rs",
+          "bytes": 1853,
+          "mode": "0o644",
+          "sha256": "db08d042a254550522446f077708ce9b383040298edca46817ddc0fc03a9a1ca"
+        },
+        {
           "path": "crates/ssx-source-codecs/tests/unicode_escape.rs",
           "bytes": 939,
           "mode": "0o644",
@@ -6791,413 +6803,88 @@
     "metadata_path_marker": "@SOURCE_ROOT@/crates/ssx-source-codecs"
   },
   "current_successor": {
-    "historical_declaration_sha256": "3f4b9c7b9bc1dc6aaa1b4d34a451f7bffb9446055fdf9f7ce36896a0bdc85118",
-    "source_head": "0af1eb85866240cf84bcb904fdcba3ffcb41cab1",
-    "reason": "Current full72-file Reqwest package/five fork trees; historical66 direct declarations retain all fields except reviewed Tokio dev io-util addition, plus optional codec row67 and reviewed hyper identity feature; no prior unit metadata requalification claim",
+    "parent_declaration_sha256": "8aff81c5463cd7d51724e978d4841c7a579de60e44513e026bad14701946058a",
+    "source_head": "dc2c2625362d0ebd39e31a1f46a2d994e8bb0e48",
+    "reason": "Normal main composition with reviewed currentSourceURL/rawdiscovery/SDK/OAuth fixes. Complete72/5forks/67declarations/defaults retained. Onlycurrentfileclosure hashes change; historicaldeclaration/284lock unchanged.",
     "changed_fork_members": [
       {
-        "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
+        "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs",
         "before": {
-          "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
-          "bytes": 13932,
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs",
+          "bytes": 51194,
           "mode": "0o644",
-          "sha256": "f2c81c01425afbcb21066273d54806bad89ec89a9f0e3e2b554f17d3c7810182"
+          "sha256": "84184d6b58c263da66d5c14384dc2af4ad350ea2d144bc10c060675c79b7ab3e"
         },
         "after": {
-          "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
-          "bytes": 14131,
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs",
+          "bytes": 56172,
           "mode": "0o644",
-          "sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/async_impl/client.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/client.rs",
-          "bytes": 124009,
-          "mode": "0o644",
-          "sha256": "da990eb217f7f000091e46e0a6408e405718a5e5a53073d2b8d28c4d7d773ed5"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/client.rs",
-          "bytes": 154453,
-          "mode": "0o644",
-          "sha256": "b1e97d48e925a46517a2b88c96b7491a5ea669c853bbff18aac394c98e324530"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/async_impl/mod.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/mod.rs",
-          "bytes": 340,
-          "mode": "0o644",
-          "sha256": "d207798170e6263f62e652a5cca27bf868e7e17c910ba3ee8907a303cb34608d"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/mod.rs",
-          "bytes": 484,
-          "mode": "0o644",
-          "sha256": "a6f6dac9ddb6ad9cd406290e5a441d5cccf62e1e5cca78ef20033ac18cc10a37"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/async_impl/request.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/request.rs",
-          "bytes": 36240,
-          "mode": "0o644",
-          "sha256": "f21760887406fddb7ffe3453bb822690c6c4c5b8032853aeb137cd54a7f22213"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/request.rs",
-          "bytes": 42555,
-          "mode": "0o644",
-          "sha256": "f5d54ce05c7b9e67536b5b44f210f0c4790adcd7e4b560b30b975aa9d04723b9"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/async_impl/response.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/response.rs",
-          "bytes": 15698,
-          "mode": "0o644",
-          "sha256": "ab12ec2046e4037e0ba370279362c9a8bbc7bcd5f8b08cfff43c86c28e40eaee"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/response.rs",
-          "bytes": 18489,
-          "mode": "0o644",
-          "sha256": "349e3f3890472a3361040778a5ea71199fa88446a9a6e8900cb6e04d28c93226"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/async_impl/upgrade.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/upgrade.rs",
-          "bytes": 2018,
-          "mode": "0o644",
-          "sha256": "b3944107063f2b5886b754ff80c4d3af34c9a97c4e9206d3bac3f4f3d6ae5d8a"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/async_impl/upgrade.rs",
-          "bytes": 2023,
-          "mode": "0o644",
-          "sha256": "fae5a2cfcf92962613efa939301cafd44c8e47066c69dc652f7eed7626147a43"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/connect.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/connect.rs",
-          "bytes": 73394,
-          "mode": "0o644",
-          "sha256": "d0efe3c19da9aba54598c89b3a68789a97b9c7877e05b43af74a0a7782f18009"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/connect.rs",
-          "bytes": 74151,
-          "mode": "0o644",
-          "sha256": "45b6d1365c28df984a770be2b5c48730557cb44af8c45e32c29d546519587bc5"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/connect/source_http1.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/connect/source_http1.rs",
-          "bytes": 11169,
-          "mode": "0o644",
-          "sha256": "5e369d3930d4058d8c8cef7338947b8e8a51fb9d9c4c297a32e38dcad79fd201"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/connect/source_http1.rs",
-          "bytes": 17061,
-          "mode": "0o644",
-          "sha256": "04f3b3d0c39085b999dad12da6f554702ffa178fd89a3d792538a4ff9e361f58"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/connect/source_phase.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/connect/source_phase.rs",
-          "bytes": 2042,
-          "mode": "0o644",
-          "sha256": "109187c730e273374568fd2d032c26f3e2f3a6e2d11d3086ea43c88c01a8e4ab"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/connect/source_phase.rs",
-          "bytes": 2925,
-          "mode": "0o644",
-          "sha256": "42c5a06be75c81e03b83d80953a7560a3b1737488ef63cb0cd2e9bf0877678f8"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/cookie.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/cookie.rs",
-          "bytes": 8979,
-          "mode": "0o644",
-          "sha256": "9878bfaa8dfd02677e5724e24fada55d1f45d98a52efbc738057412606994adf"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/cookie.rs",
-          "bytes": 9143,
-          "mode": "0o644",
-          "sha256": "05b50f0721d98b237607529f91330c4405eda3b92931ead1ead92645b6fb2099"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/dns/mod.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/dns/mod.rs",
-          "bytes": 284,
-          "mode": "0o644",
-          "sha256": "cf9875316437ff762962a867bb3650dfe93f5cb6ec0a8e3397bfa20e36fb9c44"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/dns/mod.rs",
-          "bytes": 559,
-          "mode": "0o644",
-          "sha256": "4eb01dfa6fc76e08ba7501b7948d8043a12d8406045de828b89d0e8cdfb4f874"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/dns/resolve.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/dns/resolve.rs",
-          "bytes": 5620,
-          "mode": "0o644",
-          "sha256": "87cd433e1e75984007d39a50003fcc5a53b41067cd9e5585710318767a80d425"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/dns/resolve.rs",
-          "bytes": 7038,
-          "mode": "0o644",
-          "sha256": "ca68b4326c3da2ee6b1b29036e620b1445c4bb2a1936911f5dc635afa534850f"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/lib.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/lib.rs",
-          "bytes": 12906,
-          "mode": "0o644",
-          "sha256": "f90e7bc42d19853fc756dc1fdf0bd579d8e2b7d68eb4286dd87aad6fc59191e8"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/lib.rs",
-          "bytes": 13037,
-          "mode": "0o644",
-          "sha256": "0c70868362dc2b6b8353864fbf0b3ae7aaca53cea4ccff4597a3d2336c8e0477"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/redirect.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/redirect.rs",
-          "bytes": 15562,
-          "mode": "0o644",
-          "sha256": "cca8be5601090128836d77dd86b85e4627ed1fba0588c2145445d008e19852b9"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/redirect.rs",
-          "bytes": 15841,
-          "mode": "0o644",
-          "sha256": "d563f08610c54af22e7848c4c9fe58b08fdd3e242c48fbc3dbe4cabcba6577f9"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/retry.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/retry.rs",
-          "bytes": 15720,
-          "mode": "0o644",
-          "sha256": "ce2c5307a449047a9f7187b52d91ddd369c0468900f4f6b0b390a849515ff525"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/retry.rs",
-          "bytes": 15879,
-          "mode": "0o644",
-          "sha256": "d637969c7b4920bd388e32d1bf3182267df57d3ae35ffa3894df5da744d4ac8b"
+          "sha256": "0996955e7147c1570af2796f8809fb143ead40f8268bd82bcda20eaeaeead9cf"
         }
       },
       {
         "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
         "before": {
           "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
-          "bytes": 22918,
-          "mode": "0o644",
-          "sha256": "38099adf861d6ba0a1c3996e892e2fea08edf4a2977bcdbc418307114642ae0f"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
           "bytes": 33960,
           "mode": "0o644",
           "sha256": "ef614c4e0f5edd9511aae96399787435545639549ab3e0da2bf05a0d88b126fa"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
-          "bytes": 9453,
-          "mode": "0o644",
-          "sha256": "288e96d527db84cff6a10704b96b7973b848c5d424b12a5b07948fc753801894"
         },
         "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_cookies.rs",
-          "bytes": 9897,
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool.rs",
+          "bytes": 34303,
           "mode": "0o644",
-          "sha256": "e47b5da392bc7d1ece44570a4895230b422054598a18beb7f4937ac5c1b4f51b"
+          "sha256": "be751aba88ab4ddf0145e852694e810f204fa74de3b3dfef4771e1f76e23ccaf"
         }
       },
       {
-        "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs",
+        "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml",
+        "before": {
+          "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml",
+          "bytes": 18405,
+          "mode": "0o644",
+          "sha256": "c633bd214312a9b0cce7a57fa1726146c91f6b1e8e63ca2296479ee7ad3df76a"
+        },
+        "after": {
+          "path": "vendor/ssx-sdk-auth/rmcp/Cargo.toml",
+          "bytes": 18655,
+          "mode": "0o644",
+          "sha256": "de275ee47ab722df699f2b290ef50a5fba16c271a9d0454475ff260bcd3e06d6"
+        }
+      },
+      {
+        "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/source_manager.rs",
         "before": null,
         "after": {
-          "path": "vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs",
-          "bytes": 51194,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/source_manager.rs",
+          "bytes": 63510,
           "mode": "0o644",
-          "sha256": "84184d6b58c263da66d5c14384dc2af4ad350ea2d144bc10c060675c79b7ab3e"
+          "sha256": "80ec22e9255efd579def12bf939a3915fb09dd9d3a6388e99a33c0c4a37b07e1"
         }
       },
       {
-        "path": "vendor/ssx-http-source/hyper/Cargo.toml",
-        "before": {
-          "path": "vendor/ssx-http-source/hyper/Cargo.toml",
-          "bytes": 7049,
-          "mode": "0o644",
-          "sha256": "55398bc277aab4fb8e13cfc37e7758054f225d2f58bf3679c03682cb388e6833"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/hyper/Cargo.toml",
-          "bytes": 7103,
-          "mode": "0o644",
-          "sha256": "860e543c05cd8633f0d82b14f9aa8603ed1a48e93bbdc8c517a238440b51d73e"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper/src/ext/mod.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/hyper/src/ext/mod.rs",
-          "bytes": 10397,
-          "mode": "0o644",
-          "sha256": "9fe244f5a2d989635c6d422f9658153d8c2f2e3836a5362237581dabe85c7967"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/hyper/src/ext/mod.rs",
-          "bytes": 10642,
-          "mode": "0o644",
-          "sha256": "7b11e6cb6200b867bc034ca0829058588430f8622eebf591bf41043678fd27a7"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper/src/ext/source_identity.rs",
+        "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/source_metadata.rs",
         "before": null,
         "after": {
-          "path": "vendor/ssx-http-source/hyper/src/ext/source_identity.rs",
-          "bytes": 3980,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth/source_metadata.rs",
+          "bytes": 51818,
           "mode": "0o644",
-          "sha256": "8963e5cee14d36d542d099ca0e6e78298b3dae51cd0c27de25fb5d7ca5cfc533"
+          "sha256": "676468e16e60339a815152c68a427d77162a9d451e1b2aaa7ed4f98c2aef019a"
         }
       },
       {
-        "path": "vendor/ssx-http-source/hyper/src/proto/h1/role.rs",
+        "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth.rs",
         "before": {
-          "path": "vendor/ssx-http-source/hyper/src/proto/h1/role.rs",
-          "bytes": 136472,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth.rs",
+          "bytes": 376598,
           "mode": "0o644",
-          "sha256": "ee42a2e80eca9ac06c9558c44ed0bcfed4dc556797cf0e9fe46797970ab96813"
+          "sha256": "80e2e7d6ec5626cba8441518af7f9c4b73a79540db9b129c712dbf47e186656d"
         },
         "after": {
-          "path": "vendor/ssx-http-source/hyper/src/proto/h1/role.rs",
-          "bytes": 136970,
+          "path": "vendor/ssx-sdk-auth/rmcp/src/transport/auth.rs",
+          "bytes": 382912,
           "mode": "0o644",
-          "sha256": "99d47d23c90ee3bba00e4af1133d4dd1991a9785c59f34f6f9e9128304f022e5"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper-util/Cargo.toml",
-        "before": {
-          "path": "vendor/ssx-http-source/hyper-util/Cargo.toml",
-          "bytes": 5175,
-          "mode": "0o644",
-          "sha256": "533ef224d8f5b8ab65a3c75991753ab64dfd1367227a0f7ba6d023ffeb4b2ab1"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/hyper-util/Cargo.toml",
-          "bytes": 5210,
-          "mode": "0o644",
-          "sha256": "12a25f77c65175f13448f4098877bb270de2f1221fd51fa0ad1a28da00ed39b9"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/client.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/client.rs",
-          "bytes": 71225,
-          "mode": "0o644",
-          "sha256": "7928a716dfe27da9fca7ce8dac1e3924f2d9e88246b9f5ad677bb48289b3b667"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/client.rs",
-          "bytes": 75258,
-          "mode": "0o644",
-          "sha256": "31ba4abfd787039f2f016ec375c42e4f852d13ecd2bc0da265af2f2d7a3cb512"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/http.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/http.rs",
-          "bytes": 51864,
-          "mode": "0o644",
-          "sha256": "40f571d7b26e1d3f5f239e48aced0187f9535005c83841e2d7b982ee52e44fb6"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/http.rs",
-          "bytes": 57009,
-          "mode": "0o644",
-          "sha256": "1792585638e01d1db9ba63fc461f5bac37f6c624009689a70e99df0368d4e4ba"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/mod.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/mod.rs",
-          "bytes": 12370,
-          "mode": "0o644",
-          "sha256": "0b471b9813f46bdb80ca2b2263d9adef5f89051b8230e528968a2b2fe87dcb20"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/mod.rs",
-          "bytes": 12438,
-          "mode": "0o644",
-          "sha256": "6fceb8d3e6a56cacb22a4bd210518e0f7af0ce2986e089c1f2fa8c53460e2e1e"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_endpoint.rs",
-        "before": null,
-        "after": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_endpoint.rs",
-          "bytes": 5353,
-          "mode": "0o644",
-          "sha256": "2c998cc3f36368bf9c1116156a8d5bd36f14bd502abc41cb855be69cd5527989"
-        }
-      },
-      {
-        "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_schedule.rs",
-        "before": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_schedule.rs",
-          "bytes": 3442,
-          "mode": "0o644",
-          "sha256": "6afd0ce248b3e8453a8c8db0bf41f3e0d412b2d8404a7bc6bc31c1e79bbd66f8"
-        },
-        "after": {
-          "path": "vendor/ssx-http-source/hyper-util/src/client/legacy/connect/source_schedule.rs",
-          "bytes": 3427,
-          "mode": "0o644",
-          "sha256": "5af111babc91285646a4137e4f8be683eae261a1cb68157005a018051d1d3b7a"
+          "sha256": "764e68496433fea1c2ac3b75224f3be9af65ac15fb801a89785f92acf7c60bb8"
         }
       }
     ]

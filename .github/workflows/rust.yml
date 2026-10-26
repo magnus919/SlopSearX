@@ -573,10 +573,15 @@ jobs:
         run: cargo xtask prepare-t07-unit --profile-dir "$RUNNER_TEMP/ssx-t07-unit"
       - name: Compile exact locked unit profile before offline T07 controls
         run: cargo xtask bootstrap-t07-unit --profile-dir "$RUNNER_TEMP/ssx-t07-unit"
+      - name: Prepare complete genuine SDK unit root
+        run: cargo xtask prepare-t07-sdk-unit --profile-dir "$RUNNER_TEMP/ssx-t07-sdk-unit"
+      - name: Compile exact locked SDK unit profile before offline T07 controls
+        run: cargo xtask bootstrap-t07-sdk-unit --profile-dir "$RUNNER_TEMP/ssx-t07-sdk-unit"
       - name: Native gateway client and owned OAuth lifecycle
         run: cargo xtask check T07 --output target/rust-evidence/T07.json
         env:
           SLOPSEARX_T07_UNIT_PROFILE_ROOT: ${{ runner.temp }}/ssx-t07-unit
+          SLOPSEARX_T07_SDK_UNIT_PROFILE_ROOT: ${{ runner.temp }}/ssx-t07-sdk-unit
 
       - name: MCP transport and gateway qualification
         run: cargo xtask check T01 --output target/rust-evidence/T01.json

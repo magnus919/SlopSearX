@@ -1,4 +1,4 @@
-//! Genuine vendored Reqwest unit root, with portable bounded source preparation.
+//! Genuine vendored Reqwest and SDK unit roots, sharing bounded source preparation.
 use crate::Result;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -11,7 +11,42 @@ use std::{
     time::{Duration, Instant},
 };
 const DECLARATION: &str = "docs/rust-rewrite/t07/unit-profile/current-declaration.json";
-const DECLARATION_SHA: &str = "8aff81c5463cd7d51724e978d4841c7a579de60e44513e026bad14701946058a";
+const DECLARATION_SHA: &str = "e07d55b51f99479038041fa8a49d862c0aaa1030e3296756308b8317d270b12f";
+const SDK_DECLARATION: &str = "docs/rust-rewrite/t07/unit-profile/sdk-current-declaration.json";
+const SDK_DECLARATION_SHA: &str =
+    "3562c6f60afb5e68f24c5fb225fc11db436402c1e50ad7046a75956bc6adabba";
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    Reqwest,
+    Sdk,
+}
+impl Kind {
+    fn declaration(self) -> &'static str {
+        match self {
+            Self::Reqwest => DECLARATION,
+            Self::Sdk => SDK_DECLARATION,
+        }
+    }
+    fn digest(self) -> &'static str {
+        match self {
+            Self::Reqwest => DECLARATION_SHA,
+            Self::Sdk => SDK_DECLARATION_SHA,
+        }
+    }
+}
+fn sdk(doc: &Value) -> bool {
+    doc["kind"] == "T07_GENUINE_SDK_UNIT_PROFILE_V1"
+}
+fn features(doc: &Value) -> Result<String> {
+    rows(doc, "requested_features")?
+        .iter()
+        .map(|v| {
+            v.as_str()
+                .ok_or_else(|| "unit requested feature text".into())
+        })
+        .collect::<Result<Vec<_>>>()
+        .map(|v| v.join(","))
+}
 fn digest(raw: &[u8]) -> String {
     Sha256::digest(raw)
         .iter()
@@ -87,19 +122,42 @@ fn members(root: &Path, directory: &Path, output: &mut BTreeSet<String>) -> Resu
     }
     Ok(())
 }
+#[cfg(test)]
 fn document(raw: &[u8]) -> Result<Value> {
+    document_for(raw, Kind::Reqwest)
+}
+fn document_for(raw: &[u8], kind: Kind) -> Result<Value> {
     need(
-        digest(raw) == DECLARATION_SHA,
+        digest(raw) == kind.digest(),
         "unit profile closed declaration digest",
     )?;
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
     need(
         doc["schema_version"] == 1
-            && doc["kind"] == "T07_GENUINE_REQWEST_UNIT_PROFILE_V1"
-            && doc["requested_features"] == json!(["ssx-http1-source-pool"])
             && doc["default_features"] == true
-            && rows(&doc, "metadata_dependency_declarations")?.len() == 67
-            && rows(&doc, "targets")?.len() == 1,
+            && match kind {
+                Kind::Reqwest => {
+                    doc["kind"] == "T07_GENUINE_REQWEST_UNIT_PROFILE_V1"
+                        && doc["requested_features"] == json!(["ssx-http1-source-pool"])
+                        && rows(&doc, "metadata_dependency_declarations")?.len() == 67
+                        && rows(&doc, "targets")?.len() == 1
+                }
+                Kind::Sdk => {
+                    sdk(&doc)
+                        && rows(&doc, "package_files")?.len() == 174
+                        && rows(&doc, "metadata_dependency_declarations")?.len() == 49
+                        && rows(&doc, "metadata_dependency_declarations")?
+                            .iter()
+                            .filter(|v| v["kind"] == "dev")
+                            .count()
+                            == 12
+                        && rows(&doc, "targets")?.len() == 85
+                        && rows(&doc, "native_test_inventory")?.len() == 580
+                        && rows(&doc, "requested_features")?
+                            .iter()
+                            .any(|v| v == "ssx-source-metadata")
+                }
+            },
         "unit profile closed request",
     )?;
     Ok(doc)
@@ -127,8 +185,10 @@ fn source(root: &Path, doc: &Value) -> Result<()> {
         )?;
     }
     need(
-        doc["original_manifest_declarations"]["package"]["name"] == "reqwest"
-            && doc["original_manifest_declarations"]["package"]["version"] == "0.13.5",
+        doc["original_manifest_declarations"]["package"]["name"]
+            == if sdk(doc) { "rmcp" } else { "reqwest" }
+            && doc["original_manifest_declarations"]["package"]["version"]
+                == if sdk(doc) { "3.5.1" } else { "0.13.5" },
         "unit profile package identity",
     )?;
     for fork in rows(doc, "forks")? {
@@ -171,29 +231,32 @@ fn manifest(root: &Path, package: &Path, doc: &Value) -> Result<Vec<u8>> {
         .map_err(|e| e.to_string())?;
     // The only path-bearing declaration added by the current source. Preserve
     // the entire genuine manifest, including every original dev/default feature.
-    let raw_text = std::str::from_utf8(&raw).map_err(|e| e.to_string())?;
-    let from = "path = \"../../../crates/ssx-source-codecs\"";
-    need(
-        raw_text.matches(from).count() == 1,
-        "unit exact sole codec path rewrite",
-    )?;
-    let original = root
-        .join("crates/ssx-source-codecs")
-        .canonicalize()
-        .map_err(|e| e.to_string())?;
-    raw = raw_text
-        .replacen(from, &format!("path = {}", toml_path(&original)?), 1)
-        .into_bytes();
+    if !sdk(doc) {
+        let raw_text = std::str::from_utf8(&raw).map_err(|e| e.to_string())?;
+        let from = "path = \"../../../crates/ssx-source-codecs\"";
+        need(
+            raw_text.matches(from).count() == 1,
+            "unit exact sole codec path rewrite",
+        )?;
+        let original = root
+            .join("crates/ssx-source-codecs")
+            .canonicalize()
+            .map_err(|e| e.to_string())?;
+        raw = raw_text
+            .replacen(from, &format!("path = {}", toml_path(&original)?), 1)
+            .into_bytes();
+    }
     let mut suffix = "\n[workspace]\nresolver = \"3\"\n\n[patch.crates-io]\n".to_owned();
     for fork in rows(doc, "forks")? {
         let name = text(fork, "name")?;
-        let path = if name == "reqwest" {
-            package.to_owned()
-        } else {
-            root.join(relative(text(fork, "root")?)?)
-                .canonicalize()
-                .map_err(|e| e.to_string())?
-        };
+        let path =
+            if Some(name) == doc["original_manifest_declarations"]["package"]["name"].as_str() {
+                package.to_owned()
+            } else {
+                root.join(relative(text(fork, "root")?)?)
+                    .canonicalize()
+                    .map_err(|e| e.to_string())?
+            };
         suffix.push_str(&format!("{name} = {{ path = {} }}\n", toml_path(&path)?));
     }
     raw.extend_from_slice(suffix.as_bytes());
@@ -237,6 +300,7 @@ pub struct Profile {
     package: PathBuf,
     root: PathBuf,
     doc: Value,
+    kind: Kind,
     lease: Vec<u8>,
     retain_lease: std::cell::Cell<bool>,
 }
@@ -292,12 +356,21 @@ impl Profile {
         )?;
         need(
             fs::read(self.directory.join("declaration.json")).map_err(|e| e.to_string())?
-                == fs::read(self.root.join(DECLARATION)).map_err(|e| e.to_string())?,
+                == fs::read(self.root.join(self.kind.declaration())).map_err(|e| e.to_string())?,
             "unit profile owned marker",
         )
     }
     pub fn open(root: &Path, path: &Path, existing: bool) -> Result<Self> {
-        let doc = document(&fs::read(root.join(DECLARATION)).map_err(|e| e.to_string())?)?;
+        Self::open_kind(root, path, existing, Kind::Reqwest)
+    }
+    pub fn open_sdk(root: &Path, path: &Path, existing: bool) -> Result<Self> {
+        Self::open_kind(root, path, existing, Kind::Sdk)
+    }
+    fn open_kind(root: &Path, path: &Path, existing: bool, kind: Kind) -> Result<Self> {
+        let doc = document_for(
+            &fs::read(root.join(kind.declaration())).map_err(|e| e.to_string())?,
+            kind,
+        )?;
         source(root, &doc)?;
         let directory = destination(root, path)?;
         if existing {
@@ -312,7 +385,7 @@ impl Profile {
                 meta.is_file()
                     && !meta.file_type().is_symlink()
                     && fs::read(marker).map_err(|e| e.to_string())?
-                        == fs::read(root.join(DECLARATION)).map_err(|e| e.to_string())?,
+                        == fs::read(root.join(kind.declaration())).map_err(|e| e.to_string())?,
                 "unit foreign profile marker",
             )?;
             let receipts =
@@ -331,7 +404,7 @@ impl Profile {
                     .map_err(|e| e.to_string())?;
             }
         }
-        let lease = serde_json::to_vec(&json!({"pid":std::process::id(),"declaration":DECLARATION_SHA,"started":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|e.to_string())?.as_nanos()})).map_err(|e| e.to_string())?;
+        let lease = serde_json::to_vec(&json!({"pid":std::process::id(),"declaration":kind.digest(),"started":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|e.to_string())?.as_nanos()})).map_err(|e| e.to_string())?;
         let mut owner = OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -343,6 +416,7 @@ impl Profile {
             directory,
             root: root.to_owned(),
             doc,
+            kind,
             lease,
             retain_lease: std::cell::Cell::new(false),
         };
@@ -378,7 +452,7 @@ impl Profile {
             }
             fs::write(
                 profile.directory.join("declaration.json"),
-                fs::read(root.join(DECLARATION)).map_err(|e| e.to_string())?,
+                fs::read(root.join(kind.declaration())).map_err(|e| e.to_string())?,
             )
             .map_err(|e| e.to_string())?;
         }
@@ -507,33 +581,47 @@ impl Profile {
     }
     pub fn compile(&self, offline: bool, records: &mut Vec<Value>) -> Result<()> {
         self.verify()?;
-        let mut metadata = self.args("metadata", true);
+        let mut metadata = self.args("metadata", offline);
         metadata.extend(["--no-deps".into(), "--format-version=1".into()]);
         let value: Value = serde_json::from_str(&self.command(&self.root, &metadata, records)?)
             .map_err(|e| e.to_string())?;
         let target = PathBuf::from(text(&value, "target_directory")?);
         need(target.is_absolute(), "unit root metadata target path")?;
-        let mut args = self.args("test", offline);
-        args.extend(
-            [
-                "--no-run",
-                "-p",
-                "ssx-mcp",
-                "-p",
-                "ssx-gateway",
-                "-p",
-                "xtask",
-                "--all-targets",
-                "--features",
-                "ssx-gateway/source-endpoint-test-fixtures",
-                "--message-format=json",
-            ]
-            .map(str::to_owned),
-        );
-        args.push("--target-dir".into());
-        args.push(target.to_str().ok_or("unit target UTF8")?.into());
-        self.command(&self.root, &args, records)?;
-        let mut metadata = self.args("metadata", true);
+        if self.kind == Kind::Reqwest {
+            let mut args = self.args("test", offline);
+            args.extend(
+                [
+                    "--no-run",
+                    "-p",
+                    "ssx-mcp",
+                    "-p",
+                    "ssx-gateway",
+                    "-p",
+                    "xtask",
+                    "--all-targets",
+                    "--features",
+                    "ssx-gateway/source-endpoint-test-fixtures",
+                    "--message-format=json",
+                ]
+                .map(str::to_owned),
+            );
+            args.push("--target-dir".into());
+            args.push(target.to_str().ok_or("unit target UTF8")?.into());
+            let output = self.command(&self.root, &args, records)?;
+            no_python_units(&output)?;
+            for line in output.lines().filter(|line| !line.trim().is_empty()) {
+                let unit: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
+                if unit["reason"] == "compiler-artifact" && unit["target"]["name"] == "serde_json" {
+                    need(
+                        !rows(&unit, "features")?
+                            .iter()
+                            .any(|f| f == "arbitrary_precision"),
+                        "production serde arbitrary_precision forbidden",
+                    )?;
+                }
+            }
+        }
+        let mut metadata = self.args("metadata", offline);
         metadata.extend([
             "--no-deps".into(),
             "--format-version=1".into(),
@@ -544,7 +632,7 @@ impl Profile {
                 .ok_or("unit manifest UTF8")?
                 .into(),
             "--features".into(),
-            "ssx-http1-source-pool".into(),
+            features(&self.doc)?,
             "--config".into(),
             format!("build.target-dir={}", toml_path(&target)?),
         ]);
@@ -554,27 +642,40 @@ impl Profile {
         need(packages.len() == 1, "unit genuine root inventory")?;
         let package = &packages[0];
         let mut dependencies = self.doc["metadata_dependency_declarations"].clone();
-        let codec = dependencies
-            .as_array_mut()
-            .ok_or("unit dependency declarations")?
-            .iter_mut()
-            .find(|d| d["name"] == "ssx-source-codecs")
-            .ok_or("unit codec declaration")?;
-        need(
-            codec["path"] == "@SOURCE_ROOT@/crates/ssx-source-codecs",
-            "unit codec path marker",
-        )?;
-        codec["path"] = json!(
-            self.root
-                .join("crates/ssx-source-codecs")
-                .canonicalize()
-                .map_err(|e| e.to_string())?
-        );
+        if self.kind == Kind::Reqwest {
+            let codec = dependencies
+                .as_array_mut()
+                .ok_or("unit dependency declarations")?
+                .iter_mut()
+                .find(|d| d["name"] == "ssx-source-codecs")
+                .ok_or("unit codec declaration")?;
+            need(
+                codec["path"] == "@SOURCE_ROOT@/crates/ssx-source-codecs",
+                "unit codec path marker",
+            )?;
+            codec["path"] = json!(
+                self.root
+                    .join("crates/ssx-source-codecs")
+                    .canonicalize()
+                    .map_err(|e| e.to_string())?
+            );
+        }
         let mut expected = self.doc["targets"].clone();
-        expected[0]["src_path"] = json!(self.package.join("src/lib.rs"));
+        for target in expected.as_array_mut().ok_or("unit target declarations")? {
+            let relative = text(target, "src_path")?
+                .strip_prefix("@PACKAGE_ROOT@/")
+                .map(str::to_owned);
+            if let Some(relative) = relative {
+                target["src_path"] = json!(self.package.join(relative));
+            }
+        }
+        if self.kind == Kind::Reqwest {
+            expected[0]["src_path"] = json!(self.package.join("src/lib.rs"));
+        }
         need(
-            package["name"] == "reqwest"
-                && package["version"] == "0.13.5"
+            package["name"] == self.doc["original_manifest_declarations"]["package"]["name"]
+                && package["version"]
+                    == self.doc["original_manifest_declarations"]["package"]["version"]
                 && package["dependencies"] == dependencies
                 && package["features"] == self.doc["metadata_feature_declarations"]
                 && package["targets"] == expected,
@@ -589,14 +690,19 @@ impl Profile {
                 .ok_or("unit manifest UTF8")?
                 .into(),
             "--features".into(),
-            "ssx-http1-source-pool".into(),
-            "--all-targets".into(),
+            features(&self.doc)?,
+            if self.kind == Kind::Sdk {
+                "--lib".into()
+            } else {
+                "--all-targets".into()
+            },
             "--no-run".into(),
             "--message-format=json".into(),
             "--target-dir".into(),
             target.to_str().ok_or("unit target UTF8")?.into(),
         ]);
         let output = self.command(&self.root, &args, records)?;
+        no_python_units(&output)?;
         let executable = artifact(
             &output,
             text(package, "id")?,
@@ -604,7 +710,7 @@ impl Profile {
             &target,
             &selected_features(&self.doc)?,
         )?;
-        let marker = json!({"target":target,"executable":executable,"binary_sha256":file_digest(&executable)?,"package_id":package["id"],"environment":unit_environment(),"declaration_sha256":DECLARATION_SHA});
+        let marker = json!({"target":target,"executable":executable,"binary_sha256":file_digest(&executable)?,"package_id":package["id"],"environment":unit_environment(),"declaration_sha256":self.kind.digest()});
         publish(
             &self.directory,
             "compiled-unit.json",
@@ -614,8 +720,8 @@ impl Profile {
     }
     pub fn tests(&self, expected: &[Value], records: &mut Vec<Value>) -> Result<()> {
         need(
-            expected.len() == 19,
-            "unit exact nineteen controls required",
+            expected.len() == if self.kind == Kind::Sdk { 32 } else { 19 },
+            "unit exact finite controls required",
         )?;
         self.verify()?;
         let target: Value = serde_json::from_slice(
@@ -624,7 +730,7 @@ impl Profile {
         .map_err(|e| e.to_string())?;
         need(
             target["environment"] == unit_environment()
-                && target["declaration_sha256"] == DECLARATION_SHA,
+                && target["declaration_sha256"] == self.kind.digest(),
             "unit compiled environment/declaration changed",
         )?;
         let executable = Path::new(text(&target, "executable")?);
@@ -632,13 +738,62 @@ impl Profile {
             file_digest(executable)? == text(&target, "binary_sha256")?,
             "unit compiled image changed",
         )?;
-        for (filter, count) in [
-            ("source_pool::source_cookie", 18),
-            (
-                "source_pool::tests::caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers",
-                1,
-            ),
-        ] {
+        if self.kind == Kind::Sdk {
+            let names = rows(&self.doc, "native_test_inventory")?
+                .iter()
+                .map(|v| {
+                    v.as_str()
+                        .map(str::to_owned)
+                        .ok_or_else(|| "SDK fullinventory name".into())
+                })
+                .collect::<Result<BTreeSet<_>>>()?;
+            need(names.len() == 580, "SDK full580 unique IDs")?;
+            let mut args = self.args("test", true);
+            args.extend([
+                "--manifest-path".into(),
+                self.package
+                    .join("Cargo.toml")
+                    .to_str()
+                    .ok_or("SDK manifestUTF8")?
+                    .into(),
+                "--lib".into(),
+                "--features".into(),
+                features(&self.doc)?,
+                "--target-dir".into(),
+                text(&target, "target")?.into(),
+                "--".into(),
+                "--list".into(),
+            ]);
+            let output = self.command(&self.root, &args, records)?;
+            inventory(&output, &names, true)?;
+            need(
+                output
+                    .lines()
+                    .filter(|s| *s == "580 tests, 0 benchmarks")
+                    .count()
+                    == 1,
+                "SDK fullinventory exactsummary",
+            )?;
+        }
+        let groups: &[(&str, usize)] = if self.kind == Kind::Sdk {
+            &[
+                ("transport::auth::source_metadata::", 14),
+                ("transport::auth::source_manager::tests::", 7),
+                (
+                    "transport::auth::source_manager::source_operation_tests::",
+                    11,
+                ),
+            ]
+        } else {
+            &[
+                ("source_pool::source_cookie", 18),
+                (
+                    "source_pool::tests::caller_proxy_authorization_precedes_route_defaults_and_generated_values_never_become_callers",
+                    1,
+                ),
+            ]
+        };
+        for &(filter, count) in groups {
             let names: BTreeSet<String> = expected
                 .iter()
                 .filter_map(Value::as_str)
@@ -656,7 +811,7 @@ impl Profile {
                     .into(),
                 "--lib".into(),
                 "--features".into(),
-                "ssx-http1-source-pool".into(),
+                features(&self.doc)?,
                 "--target-dir".into(),
                 text(&target, "target")?.into(),
                 filter.into(),
@@ -669,7 +824,14 @@ impl Profile {
             listing.push("--list".into());
             inventory(&self.command(&self.root, &listing, records)?, &names, true)?;
             args.push("--test-threads=1".into());
-            inventory(&self.command(&self.root, &args, records)?, &names, false)?;
+            let output = self.command(&self.root, &args, records)?;
+            inventory(&output, &names, false)?;
+            if self.kind == Kind::Sdk {
+                need(
+                    output.contains(&format!("; {} filtered out;", 580 - count)),
+                    "SDK actual fullinventory filtered count",
+                )?;
+            }
         }
         need(
             file_digest(executable)? == text(&target, "binary_sha256")?,
@@ -712,7 +874,10 @@ fn selected_features(doc: &Value) -> Result<BTreeSet<String>> {
     let definitions = doc["metadata_feature_declarations"]
         .as_object()
         .ok_or("unit feature definitions")?;
-    let mut pending = vec!["default".to_owned(), "ssx-http1-source-pool".to_owned()];
+    let mut pending = vec!["default".to_owned()];
+    for feature in rows(doc, "requested_features")? {
+        pending.push(feature.as_str().ok_or("unit requestedfeature")?.to_owned());
+    }
     let mut selected = BTreeSet::new();
     while let Some(feature) = pending.pop() {
         if let Some(values) = definitions.get(&feature)
@@ -727,6 +892,19 @@ fn selected_features(doc: &Value) -> Result<BTreeSet<String>> {
         }
     }
     Ok(selected)
+}
+fn no_python_units(output: &str) -> Result<()> {
+    for line in output.lines().filter(|line| !line.trim().is_empty()) {
+        let value: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
+        need(
+            !(value["reason"] == "compiler-artifact"
+                && value["package_id"]
+                    .as_str()
+                    .is_some_and(|p| p.contains("pyo3"))),
+            "Python compiler unit forbidden",
+        )?;
+    }
+    Ok(())
 }
 fn artifact(
     output: &str,
@@ -1006,7 +1184,13 @@ pub fn cli(root: &Path, args: &[String]) -> bool {
     let Some(role) = args.first() else {
         return false;
     };
-    if !matches!(role.as_str(), "prepare-t07-unit" | "bootstrap-t07-unit") {
+    if !matches!(
+        role.as_str(),
+        "prepare-t07-unit"
+            | "bootstrap-t07-unit"
+            | "prepare-t07-sdk-unit"
+            | "bootstrap-t07-sdk-unit"
+    ) {
         return false;
     }
     let result: Result<()> = (|| {
@@ -1014,9 +1198,13 @@ pub fn cli(root: &Path, args: &[String]) -> bool {
             args.len() == 3 && args[1] == "--profile-dir",
             "usage: cargo xtask prepare-t07-unit|bootstrap-t07-unit --profile-dir PATH",
         )?;
-        let profile = Profile::open(root, Path::new(&args[2]), role == "bootstrap-t07-unit")?;
+        let profile = if role.ends_with("sdk-unit") {
+            Profile::open_sdk(root, Path::new(&args[2]), role.starts_with("bootstrap-"))?
+        } else {
+            Profile::open(root, Path::new(&args[2]), role == "bootstrap-t07-unit")?
+        };
         let mut records = Vec::new();
-        if role == "bootstrap-t07-unit" {
+        if role.starts_with("bootstrap-") {
             profile.compile(false, &mut records)?;
         }
         println!(
@@ -1042,6 +1230,14 @@ mod tests {
         let mut changed = raw.to_vec();
         changed.push(0);
         assert!(document(&changed).is_err());
+        let sdk = include_bytes!(
+            "../../../docs/rust-rewrite/t07/unit-profile/sdk-current-declaration.json"
+        );
+        assert!(document_for(sdk, Kind::Sdk).is_ok());
+        assert!(document_for(sdk, Kind::Reqwest).is_err());
+        let mut changed = sdk.to_vec();
+        changed.push(0);
+        assert!(document_for(&changed, Kind::Sdk).is_err());
     }
     #[test]
     fn path_controls_reject_cross_platform_escapes() {
@@ -1102,35 +1298,37 @@ mod tests {
                 .or_else(|| std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT"))
                 .expect("registered unit test temp root"),
         );
-        let path = parent.join(format!(
-            "t07-unit-copy-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        ));
-        let profile = Profile::open(&root, &path, false).unwrap();
-        assert!(profile.verify().is_ok());
-        assert!(Profile::open(&root, &path, false).is_err());
-        assert!(Profile::open(&root, &path, true).is_err());
-        for name in ["src/lib.rs", "Cargo.toml", "Cargo.lock"] {
-            let file = profile.package.join(name);
+        for kind in [Kind::Reqwest, Kind::Sdk] {
+            let path = parent.join(format!(
+                "t07-unit-copy-{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
+            let profile = Profile::open_kind(&root, &path, false, kind).unwrap();
+            assert!(profile.verify().is_ok());
+            assert!(Profile::open_kind(&root, &path, false, kind).is_err());
+            assert!(Profile::open_kind(&root, &path, true, kind).is_err());
+            for name in ["src/lib.rs", "Cargo.toml", "Cargo.lock"] {
+                let file = profile.package.join(name);
+                let raw = fs::read(&file).unwrap();
+                fs::write(&file, b"tampered").unwrap();
+                assert!(profile.verify().is_err());
+                fs::write(&file, raw).unwrap();
+            }
+            let file = profile.package.join("src/lib.rs");
             let raw = fs::read(&file).unwrap();
-            fs::write(&file, b"tampered").unwrap();
+            fs::remove_file(&file).unwrap();
             assert!(profile.verify().is_err());
-            fs::write(&file, raw).unwrap();
+            fs::write(file, raw).unwrap();
+            assert!(profile.verify().is_ok());
+            drop(profile);
+            let restored = Profile::open_kind(&root, &path, true, kind).unwrap();
+            drop(restored);
+            fs::remove_dir_all(path).unwrap();
         }
-        let file = profile.package.join("src/lib.rs");
-        let raw = fs::read(&file).unwrap();
-        fs::remove_file(&file).unwrap();
-        assert!(profile.verify().is_err());
-        fs::write(file, raw).unwrap();
-        assert!(profile.verify().is_ok());
-        drop(profile);
-        let restored = Profile::open(&root, &path, true).unwrap();
-        drop(restored);
-        fs::remove_dir_all(path).unwrap();
     }
     #[cfg(unix)]
     #[test]
