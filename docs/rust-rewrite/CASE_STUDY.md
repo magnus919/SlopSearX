@@ -80,6 +80,14 @@ F06 provides engine-local metadata fragments or a single integration owner for s
 | Maintained cryptographic verification | Replace hand-written portal RS256 implementation while preserving claims/transaction rules | Controlled IdP and negative security corpus; T09/G02 |
 | Atomic OAuth state | Single-use code/refresh transitions and explicit durable outage policy | Competing-instance/replay tests; T04/T05 |
 
+Issue #1049 restores the original positive page domain through the native shared
+request, cache and HTTP paths. Its one explicit portal hardening keeps the source
+4,300-digit admission limit but disables Next visibly and accessibly when its
+exact successor would need 4,301 digits. Python instead fails while formatting
+that neighbor. Current/previous values remain exact; no wrapped, clamped or
+invalid link is emitted. This compatibility delta requires its own real native
+HTTP control and does not count as unchanged source-corpus parity.
+
 The last three are worthwhile independent of Rust. Record them as intentional hardening changes, not silently accepted parity differences. Existing source suggests risks, not demonstrated incidents. Rust does not by itself improve search relevance, provider quotas, upstream availability, filter enforcement or CAPTCHA handling. Quality changes require their own evidence and must not hide within a port.
 
 ## Sequence, readiness and parallel work

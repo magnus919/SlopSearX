@@ -462,15 +462,7 @@ async fn original_literal_corpus_through_a_real_native_http_process() {
             }
         };
         let after = fs::read_to_string(&calls).unwrap().lines().count();
-        let intentional_page_bound = matches!(
-            source_id,
-            "integer_pageno_01" | "integer_pageno_02" | "integer_pageno_03"
-        );
-        let expected_status = if intentional_page_bound {
-            400
-        } else {
-            case["status"].as_u64().unwrap()
-        };
+        let expected_status = case["status"].as_u64().unwrap();
         let mut differences = Vec::new();
         if u64::from(status) != expected_status {
             differences.push("status");
@@ -491,24 +483,25 @@ async fn original_literal_corpus_through_a_real_native_http_process() {
                 differences.push(header);
             }
         }
-        if after - before
-            != if intentional_page_bound {
-                0
-            } else {
-                case["engine_calls"].as_array().unwrap().len()
-            }
-        {
+        let expected_calls = case["engine_calls"].as_array().unwrap();
+        if after - before != expected_calls.len() {
             differences.push("engine-call-count");
+        }
+        // Compare the frozen integer that actually crossed the adapter port,
+        // independently of the response pagination/enforcement serialization.
+        let observed = fs::read_to_string(&calls).unwrap();
+        for (line, expected) in observed.lines().skip(before).zip(expected_calls) {
+            let actual: Value = ssx_json::from_str(line).unwrap();
+            if actual.get("pageno") != expected["params"].get("pageno") {
+                differences.push("engine-pageno");
+            }
         }
         let media = case["headers"]["content-type"].as_str().unwrap();
         if media.starts_with("application/json") && source_id != "health" {
             match ssx_json::from_str::<Value>(&body) {
                 Ok(mut actual) => {
-                    let mut expected: Value = if intentional_page_bound {
-                        json!({"error":"invalid_filter","message":"Invalid value for 'pageno'.","field":"pageno"})
-                    } else {
-                        ssx_json::from_str(case["body"].as_str().unwrap()).unwrap()
-                    };
+                    let mut expected: Value =
+                        ssx_json::from_str(case["body"].as_str().unwrap()).unwrap();
                     if let Some(id) = actual.get("meta").and_then(|m| m.get("query_id")) {
                         assert!(
                             id.as_str()
@@ -607,7 +600,7 @@ async fn original_literal_corpus_through_a_real_native_http_process() {
                 differences.push("html-error-contract");
             }
         }
-        writeln!(records,"{}",json!({"id":source_id,"status":status,"headers":Value::Object(headers.clone()),"body":body,"engine_call_delta":after-before,"intentional_difference":if intentional_page_bound{Some("T02-page-u64-bound")}else{None},"differences":differences})).unwrap();
+        writeln!(records,"{}",json!({"id":source_id,"status":status,"headers":Value::Object(headers.clone()),"body":body,"engine_call_delta":after-before,"intentional_difference":Value::Null,"differences":differences})).unwrap();
         records.flush().unwrap();
         let receipt = out.join(format!("{source_id}.json"));
         fs::write(&receipt,json!({"id":source_id,"status":status,"headers":headers,"body":body,"engine_call_delta":after-before,"differences":differences}).to_string()).unwrap();
@@ -1745,4 +1738,179 @@ async fn successful_yaml_break_scalars_match_pinned_emitter_on_actual_http() {
         differences.is_empty(),
         "successful YAML scalar source differences: {differences:?}"
     );
+}
+
+#[tokio::test]
+async fn lossless_large_page_html_links_preserve_filters_and_exact_decimal_neighbors() {
+    let _process_test_guard = PROCESS_TEST_LOCK.lock().await;
+    let out = directory("html-lossless-pages");
+    let (mut process, base, _) = start(&out, "darker");
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .unwrap();
+    let cases = [
+        (
+            "18446744073709551616",
+            "18446744073709551615",
+            "18446744073709551617",
+        ),
+        (
+            "170141183460469231731687303715884105727",
+            "170141183460469231731687303715884105726",
+            "170141183460469231731687303715884105728",
+        ),
+        (
+            "170141183460469231731687303715884105728",
+            "170141183460469231731687303715884105727",
+            "170141183460469231731687303715884105729",
+        ),
+    ];
+    let page_url = |pairs: &[(&str, &str)]| {
+        let mut url = reqwest::Url::parse(&format!("{base}/search")).unwrap();
+        url.query_pairs_mut().extend_pairs(pairs.iter().copied());
+        url
+    };
+    let mut captures = Vec::new();
+    for (page, _, _) in cases {
+        let response = client
+            .get(page_url(&[
+                ("q", "large <page> & scope"),
+                ("format", "html"),
+                ("pageno", page),
+                ("categories", "general"),
+                ("engines", "contract"),
+                ("language", "fr"),
+                ("safesearch", "0"),
+                ("time_range", "day"),
+            ]))
+            .send()
+            .await;
+        match response {
+            Ok(response) => {
+                let status = response.status().as_u16();
+                let headers = response
+                    .headers()
+                    .iter()
+                    .map(|(k, v)| (k.as_str().to_owned(), json!(v.to_str().unwrap())))
+                    .collect::<ssx_json::Map<_, _>>();
+                captures.push((status, headers, response.text().await));
+            }
+            Err(error) => {
+                captures.push((0, ssx_json::Map::new(), Err(error)));
+                break;
+            }
+        }
+    }
+    let boundary = "9".repeat(4300);
+    let boundary_previous = format!("{}8", "9".repeat(4299));
+    let boundary_requests = async {
+        let html = client
+            .get(page_url(&[
+                ("q", "boundary"),
+                ("format", "html"),
+                ("pageno", boundary.as_str()),
+            ]))
+            .send()
+            .await?;
+        let html_status = html.status().as_u16();
+        let html_headers = html
+            .headers()
+            .iter()
+            .map(|(k, v)| (k.as_str().to_owned(), json!(v.to_str().unwrap())))
+            .collect::<ssx_json::Map<_, _>>();
+        let html = html.text().await?;
+        let json = client
+            .get(page_url(&[
+                ("q", "boundary"),
+                ("format", "json"),
+                ("pageno", boundary.as_str()),
+            ]))
+            .send()
+            .await?;
+        let json_status = json.status().as_u16();
+        let json_headers = json
+            .headers()
+            .iter()
+            .map(|(k, v)| (k.as_str().to_owned(), json!(v.to_str().unwrap())))
+            .collect::<ssx_json::Map<_, _>>();
+        let json = json.text().await?;
+        Ok::<_, reqwest::Error>((
+            html_status,
+            html_headers,
+            html,
+            json_status,
+            json_headers,
+            json,
+        ))
+    }
+    .await;
+    let clean = stop(&mut process).await;
+    assert!(clean);
+    assert_eq!(captures.len(), cases.len());
+    let mut records = Vec::new();
+    for ((status, headers, body), (page, previous, next)) in captures.into_iter().zip(cases) {
+        assert_eq!(status, 200);
+        let body = body.unwrap();
+        let mut pages = Vec::new();
+        for part in body.split("href=\"").skip(1) {
+            let href = part.split_once('"').unwrap().0.replace("&amp;", "&");
+            if !href.starts_with("/search?") {
+                continue;
+            }
+            let parsed = reqwest::Url::parse(&format!("http://fixture{href}")).unwrap();
+            let fields = parsed
+                .query_pairs()
+                .map(|(k, v)| (k.into_owned(), v.into_owned()))
+                .collect::<std::collections::BTreeMap<_, _>>();
+            let Some(link_page) = fields.get("pageno") else {
+                continue;
+            };
+            assert_eq!(fields["q"], "large <page> & scope");
+            assert_eq!(fields["categories"], "general");
+            assert_eq!(fields["engines"], "contract");
+            assert_eq!(fields["language"], "fr");
+            assert_eq!(fields["safesearch"], "0");
+            assert_eq!(fields["time_range"], "day");
+            pages.push(link_page.clone());
+        }
+        assert_eq!(pages, [previous, next]);
+        records
+            .push(json!({"page":page,"status":status,"headers":headers,"body":body,"previous":previous,"next":next}));
+    }
+    let (html_status, html_headers, html, json_status, json_headers, json_body) =
+        boundary_requests.unwrap();
+    assert_eq!(html_status, 200);
+    assert!(html.contains("aria-disabled=\"true\""));
+    assert!(html.contains("Next page unavailable (page number limit)"));
+    assert!(html.contains(&format!("aria-current=\"page\">Page {boundary}</span>")));
+    assert!(html.contains(&format!("pageno={boundary_previous}\"")));
+    assert!(!html.contains(&format!("pageno=1{}", "0".repeat(4300))));
+    assert_eq!(json_status, 200);
+    assert!(
+        ssx_json::from_str::<Value>(&json_body).unwrap()["results"]
+            .as_array()
+            .is_some()
+    );
+    let call_text = fs::read_to_string(out.join("engine-calls.jsonl")).unwrap();
+    let last: Value = ssx_json::from_str(call_text.lines().last().unwrap()).unwrap();
+    assert_eq!(last["pageno"].to_string(), boundary);
+    records.push(json!({"page":boundary,"status":html_status,"headers":html_headers,"body":html,"adapter_page":last["pageno"].to_string()}));
+    records.push(json!({"page":boundary,"status":json_status,"headers":json_headers,"body":json_body,"adapter_page":last["pageno"].to_string()}));
+    let raw_http_records = out.join("native-records.jsonl");
+    let raw = records
+        .iter()
+        .map(Value::to_string)
+        .collect::<Vec<_>>()
+        .join("\n")
+        + "\n";
+    fs::write(&raw_http_records, &raw).unwrap();
+    let receipt = out.join("terminal.json");
+    fs::write(
+        &receipt,
+        json!({"child_exit_success":clean,"requests_completed":5,"raw_http_records":raw_http_records.to_string_lossy().as_ref(),"raw_http_records_sha256":digest(raw.as_bytes())}).to_string(),
+    )
+    .unwrap();
+    bind_receipt("html", "lossless-pages", &receipt, None);
 }

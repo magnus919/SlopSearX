@@ -308,7 +308,8 @@ async fn run(profile: &'static str, source: &str) -> Discovery {
         };
         let params = &row["params"];
         if let Some(p) = params.get("page").and_then(Value::as_u64) {
-            request.page = p
+            request.page =
+                ssx_domain::SearchPage::from_u64(p).expect("positive source fixture page")
         }
         if let Some(s) = params.get("language").and_then(Value::as_str) {
             request.language = s.into()

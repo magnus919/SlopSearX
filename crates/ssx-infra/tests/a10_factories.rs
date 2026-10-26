@@ -286,7 +286,7 @@ async fn five_resolved_factories_real_wire_headers_full_fields_and_consumer() {
             .unwrap()
             .search(&SearchRequest {
                 query: QUERY.into(),
-                page: 9,
+                page: ssx_domain::SearchPage::from_u64(9).expect("positive fixture page"),
                 max_results: Some(1),
                 language: "fr".into(),
                 ..Default::default()

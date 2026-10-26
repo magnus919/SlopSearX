@@ -382,7 +382,7 @@ fn validated_command_preserves_specialist_values_and_pagination_truth() {
     })
     .unwrap();
     let mut p = proposal(&["alpha"]);
-    p.request.page = 2;
+    p.request.page = ssx_domain::SearchPage::from_u64(2).unwrap();
     let t = s.authorize(p).unwrap();
     assert_eq!(
         t.preview().enforcement["pagination"].to_value()["enforced_by"],
@@ -629,4 +629,23 @@ fn recovered_research_rejects_unknown_and_media_intents_before_dispatch() {
         assert!(s.with_revalidated(&token, |_| calls += 1).is_err());
     }
     assert_eq!(calls, 1);
+}
+
+#[test]
+fn high_page_policy_preserves_exact_request_and_numeric_enforcement_value() {
+    let service = service();
+    let raw = "170141183460469231731687303715884105728";
+    let mut p = proposal(&["alpha"]);
+    p.surface = SearchSurface::Http;
+    p.request.page = ssx_domain::SearchPage::new(raw).unwrap();
+    let token = service.authorize(p).unwrap();
+    service
+        .with_revalidated(&token, |command| {
+            assert_eq!(command.request().page.as_str(), raw);
+            assert_eq!(
+                command.preview().enforcement["pagination"].to_value()["requested"].to_string(),
+                raw
+            );
+        })
+        .unwrap();
 }

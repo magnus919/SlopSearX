@@ -1,0 +1,672 @@
+{
+  "schema_version": 1,
+  "kind": "T02_LOSSLESS_PAGE_1049_SOURCE_SUCCESSOR",
+  "base": "e12744511013bd05370173e777daaef471bf9527",
+  "qualification": "CURRENT_SOURCE_ONLY_NATIVE_GATE_PENDING",
+  "coverage_sha256": "5ce1ab45a2e2006daa03ebf4a4fcd9ed62d9d59b8490ddc8f5eb82b19fc37f28",
+  "rows": [
+    {
+      "path": "crates/ssx-application/src/cache.rs",
+      "before_sha256": "a68f31490b050e77e274bcfeccb2e76d8fdd9b371fdbd94a59c01c6837ee42ec",
+      "before_bytes": 16734,
+      "before_blob": "988350ccc634d5a8793247a2526c65692f604633",
+      "after_sha256": "2ce69f2ca040bdb168ac43d6345cbab09ad2a53f26b66deebac0d1d6a7cf4da5",
+      "after_bytes": 16799,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 9933,
+          "delete": "    pub page: ssx_json::Number,\n",
+          "insert": "    pub page: i64,\n"
+        },
+        {
+          "offset": 10419,
+          "delete": "            page: ssx_json::Number::new(\"1\").expect(\"integer literal\"),\n",
+          "insert": "            page: 1,\n"
+        },
+        {
+          "offset": 11504,
+          "delete": "        &input.page,\n",
+          "insert": "        input.page,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-application/tests/f09.rs",
+      "before_sha256": "43eb5ccef8a020b832c052989c7867760defafcebcaa73a3e61e711e7a79202d",
+      "before_bytes": 23037,
+      "before_blob": "e7d8ec1eb5b970dcbc973b139f337a59bfe95502",
+      "after_sha256": "ad5504feb5e212fde163ae111f20cf7e9a2a0774d2476e4c597345a621f07ceb",
+      "after_bytes": 23747,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 13862,
+          "delete": "    p.request.page = ssx_domain::SearchPage::from_u64(2).unwrap();\n",
+          "insert": "    p.request.page = 2;\n"
+        },
+        {
+          "offset": 23080,
+          "delete": "\n#[test]\nfn high_page_policy_preserves_exact_request_and_numeric_enforcement_value() {\n    let service = service();\n    let raw = \"170141183460469231731687303715884105728\";\n    let mut p = proposal(&[\"alpha\"]);\n    p.surface = SearchSurface::Http;\n    p.request.page = ssx_domain::SearchPage::new(raw).unwrap();\n    let token = service.authorize(p).unwrap();\n    service\n        .with_revalidated(&token, |command| {\n            assert_eq!(command.request().page.as_str(), raw);\n            assert_eq!(\n                command.preview().enforcement[\"pagination\"].to_value()[\"requested\"].to_string(),\n                raw\n            );\n        })\n        .unwrap();\n}\n",
+          "insert": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-application/tests/f13.rs",
+      "before_sha256": "a58b6e6a7c7c44ce8f8ee3a509d28338136fbf7bfc84d8ba65f31690a723bcf0",
+      "before_bytes": 19222,
+      "before_blob": "718a14f286aaec173378caf3e0c76b6fe418cb5d",
+      "after_sha256": "313f6cfc29c0e7086f27b504bbbc60ac8040a4756ddc069fcb9bf11caf9e725f",
+      "after_bytes": 19314,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 1096,
+          "delete": "                    key.page = ssx_json::Number::new(&v.to_string()).unwrap();\n",
+          "insert": "                    key.page = v;\n"
+        },
+        {
+          "offset": 14491,
+          "delete": "            page: ssx_json::Number::new(&(i + 1).to_string()).unwrap(),\n",
+          "insert": "            page: i + 1,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-domain/src/records.rs",
+      "before_sha256": "5e08c70c9adb8dc1f12562d560191ccf7b262edca73c6e6154057620e353d5bc",
+      "before_bytes": 11011,
+      "before_blob": "f048657891f4daca8c413691068b16db3c30df23",
+      "after_sha256": "9f6317fd2d93aeb98551067a4f88984ff13b8dc2ba5ea65d13fc25a94d16a577",
+      "after_bytes": 16022,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 7184,
+          "delete": "/// Positive search page, serialized as an exact JSON integer rather than a\n/// machine word. HTTP owns Python lexical/digit-limit admission separately.\n#[derive(Debug, Clone, PartialEq, Serialize)]\n#[serde(transparent)]\npub struct SearchPage(ssx_json::Number);\nimpl Eq for SearchPage {}\nimpl SearchPage {\n    /// Construct a canonical positive decimal integer. No sign, leading zero,\n    /// fraction, exponent or float conversion enters the shared request domain.\n    pub fn new(digits: &str) -> Result<Self, DomainError> {\n        if digits.is_empty()\n            || digits.starts_with('0')\n            || !digits.bytes().all(|b| b.is_ascii_digit())\n        {\n            return Err(DomainError(\"page must be a positive integer\"));\n        }\n        ssx_json::Number::new(digits)\n            .map(Self)\n            .map_err(|_| DomainError(\"page exceeds JSON number budget\"))\n    }\n    /// Construct an already bounded positive page without changing zero semantics.\n    pub fn from_u64(value: u64) -> Result<Self, DomainError> {\n        Self::new(&value.to_string())\n    }\n    /// Borrow the exact canonical decimal digits.\n    pub fn as_str(&self) -> &str {\n        self.0.as_str()\n    }\n    /// Borrow the existing lossless JSON primitive for cache/wire composition.\n    pub fn as_number(&self) -> &ssx_json::Number {\n        &self.0\n    }\n    /// Exact previous page; page one has no predecessor.\n    pub fn previous_page(&self) -> Option<Self> {\n        if self.as_str() == \"1\" {\n            return None;\n        }\n        let mut digits = self.as_str().as_bytes().to_vec();\n        for digit in digits.iter_mut().rev() {\n            if *digit == b'0' {\n                *digit = b'9';\n            } else {\n                *digit -= 1;\n                break;\n            }\n        }\n        let digits = if digits.first() == Some(&b'0') {\n            &digits[1..]\n        } else {\n            &digits[..]\n        };\n        Self::new(std::str::from_utf8(digits).expect(\"decimal invariant\")).ok()\n    }\n    /// Exact next page. None denotes only the shared JSON byte budget, never a\n    /// machine-word limit. Every HTTP-admitted 4300-digit page fits this budget.\n    pub fn next_page(&self) -> Option<Self> {\n        let mut digits = self.as_str().as_bytes().to_vec();\n        let mut carry = true;\n        for digit in digits.iter_mut().rev() {\n            if *digit == b'9' {\n                *digit = b'0';\n            } else {\n                *digit += 1;\n                carry = false;\n                break;\n            }\n        }\n        if carry {\n            digits.insert(0, b'1');\n        }\n        Self::new(std::str::from_utf8(&digits).expect(\"decimal invariant\")).ok()\n    }\n}\nimpl Default for SearchPage {\n    fn default() -> Self {\n        Self::new(\"1\").expect(\"positive literal\")\n    }\n}\nimpl std::fmt::Display for SearchPage {\n    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n        f.write_str(self.as_str())\n    }\n}\nimpl<'de> Deserialize<'de> for SearchPage {\n    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {\n        let number = ssx_json::Number::deserialize(deserializer)?;\n        Self::new(number.as_str()).map_err(serde::de::Error::custom)\n    }\n}\n",
+          "insert": ""
+        },
+        {
+          "offset": 10747,
+          "delete": "    pub page: SearchPage,\n",
+          "insert": "    pub page: u64,\n"
+        },
+        {
+          "offset": 11481,
+          "delete": "            page: SearchPage::default(),\n",
+          "insert": "            page: 1,\n"
+        },
+        {
+          "offset": 14288,
+          "delete": "\n#[cfg(test)]\nmod search_page_tests {\n    use super::*;\n    #[test]\n    fn original_high_pages_keep_exact_numeric_wire_and_decimal_neighbors() {\n        for (raw, previous, next) in [\n            (\n                \"18446744073709551616\",\n                \"18446744073709551615\",\n                \"18446744073709551617\",\n            ),\n            (\n                \"170141183460469231731687303715884105727\",\n                \"170141183460469231731687303715884105726\",\n                \"170141183460469231731687303715884105728\",\n            ),\n            (\n                \"170141183460469231731687303715884105728\",\n                \"170141183460469231731687303715884105727\",\n                \"170141183460469231731687303715884105729\",\n            ),\n            (\"1000\", \"999\", \"1001\"),\n            (\"999\", \"998\", \"1000\"),\n        ] {\n            let page = SearchPage::new(raw).unwrap();\n            assert_eq!(ssx_json::to_string(&page).unwrap(), raw);\n            assert_eq!(serde_json::to_string(&page).unwrap(), raw);\n            assert_eq!(ssx_json::from_str::<SearchPage>(raw).unwrap(), page);\n            assert_eq!(page.previous_page().unwrap().as_str(), previous);\n            assert_eq!(page.next_page().unwrap().as_str(), next);\n        }\n        let boundary = SearchPage::new(&\"9\".repeat(4300)).unwrap();\n        assert_eq!(\n            boundary.next_page().unwrap().as_str(),\n            format!(\"1{}\", \"0\".repeat(4300))\n        );\n        assert_eq!(ssx_json::to_string(&boundary).unwrap(), \"9\".repeat(4300));\n        assert!(SearchPage::default().previous_page().is_none());\n        for invalid in [\"0\", \"-1\", \"+1\", \"01\", \"1.0\", \"1e0\", \"\", \" 1\"] {\n            assert!(SearchPage::new(invalid).is_err());\n        }\n    }\n}\n",
+          "insert": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/src/html.rs",
+      "before_sha256": "b5901a8d45b0c17eb95359a60416c25a0d4dde2e77a8acfa8c4c3d04257025d4",
+      "before_bytes": 8014,
+      "before_blob": "a47273ff7777a22aca05fdd7615836f824995625",
+      "after_sha256": "8825976f55652cb2bf4ab0fe648e88387eced30c2480942da901f11e628099cc",
+      "after_bytes": 8560,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 7149,
+          "delete": "        let link = |page: &ssx_domain::SearchPage| {\n",
+          "insert": "        let link = |page: u64| {\n"
+        },
+        {
+          "offset": 7573,
+          "delete": "        if let Some(previous) = request.page.previous_page() {\n            body.push_str(&format!(\"<a href=\\\"{}\\\">← Previous</a> \", link(&previous)));\n",
+          "insert": "        if request.page > 1 {\n            body.push_str(&format!(\n                \"<a href=\\\"{}\\\">← Previous</a> \",\n                link(request.page - 1)\n            ));\n"
+        },
+        {
+          "offset": 7736,
+          "delete": "        if let Some(next) = request.page.next_page() {\n            if next.as_str().len() <= crate::native::MAX_PAGE_DIGITS {\n                body.push_str(&format!(\"<a href=\\\"{}\\\">Try next page →</a>\", link(&next)));\n            } else {\n                // Intentional bounded hardening: Python raises while formatting\n                // this4301-digit neighbor. Retain exact current/previous values,\n                // but never emit a link that our unchanged HTTP grammar rejects.\n                body.push_str(&format!(\"<span aria-current=\\\"page\\\">Page {}</span> <span role=\\\"link\\\" aria-disabled=\\\"true\\\">Next page unavailable (page number limit)</span>\", request.page));\n            }\n",
+          "insert": "        if let Some(next) = request.page.checked_add(1) {\n            body.push_str(&format!(\"<a href=\\\"{}\\\">Try next page →</a>\", link(next)));\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/src/native.rs",
+      "before_sha256": "d463f339ea1adbafc2047b38325e8888553461067811ae369c7fbc263c8feb76",
+      "before_bytes": 32677,
+      "before_blob": "0d91628256771f7b3fccfcc12f66eec79b7e9f9e",
+      "after_sha256": "161258d2a5f96622ae4809366ab1734bd4be5a836c0ac3ef5f91f4dc1937e47e",
+      "after_bytes": 33535,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 12471,
+          "delete": "/// Classify the bounded SafeSearch/timeout scalars without changing their\n/// Python lexical/range error order. Page uses lossless classification below.\n",
+          "insert": "/// Classify Python's integer grammar before bounded domain conversion. Values\n/// outside i128 retain their sign/range classification; no accepted value is\n/// truncated or saturated into a provider request.\n"
+        },
+        {
+          "offset": 13152,
+          "delete": "}\npub(crate) const MAX_PAGE_DIGITS: usize = 4300;\nenum PageInteger {\n    NonPositive,\n    Positive(ssx_domain::SearchPage),\n}\nfn page_integer(raw: &str) -> Option<PageInteger> {\n    let text = numeric_text(raw)?;\n    let (negative, digits) = if let Some(s) = text.strip_prefix('-') {\n        (true, s)\n    } else {\n        (false, text.strip_prefix('+').unwrap_or(&text))\n    };\n    // Count source lexical digits BEFORE removing leading zeroes, as int does.\n    if digits.is_empty()\n        || digits.len() > MAX_PAGE_DIGITS\n        || !digits.bytes().all(|b| b.is_ascii_digit())\n    {\n        return None;\n    }\n    let canonical = digits.trim_start_matches('0');\n    if negative || canonical.is_empty() {\n        Some(PageInteger::NonPositive)\n    } else {\n        ssx_domain::SearchPage::new(canonical)\n            .ok()\n            .map(PageInteger::Positive)\n    }\n",
+          "insert": ""
+        },
+        {
+          "offset": 19207,
+          "delete": "    let page = page_integer(param(&pairs, \"pageno\").unwrap_or(\"1\"));\n",
+          "insert": "    let page = integer(param(&pairs, \"pageno\").unwrap_or(\"1\"));\n"
+        },
+        {
+          "offset": 19756,
+          "delete": "        (\"pageno\", matches!(&page, PageInteger::NonPositive)),\n",
+          "insert": "        (\"pageno\", page < 1),\n"
+        },
+        {
+          "offset": 23013,
+          "delete": "    let PageInteger::Positive(page) = page else {\n",
+          "insert": "    let Ok(page) = u64::try_from(page) else {\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/tests/t02_http.rs",
+      "before_sha256": "5f35fb67da317b8ecda19b9f26ea824ef4f90ec505916cc6d13611841eb2315e",
+      "before_bytes": 70408,
+      "before_blob": "c5c7af648fca9d0794db4aa04de432f577e09416",
+      "after_sha256": "8ff22a73a9f874acf3ac25214a226df71623536488023fd8472d2af01ccb1dc5",
+      "after_bytes": 77264,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 17002,
+          "delete": "        let expected_status = case[\"status\"].as_u64().unwrap();\n",
+          "insert": "        let intentional_page_bound = matches!(\n            source_id,\n            \"integer_pageno_01\" | \"integer_pageno_02\" | \"integer_pageno_03\"\n        );\n        let expected_status = if intentional_page_bound {\n            400\n        } else {\n            case[\"status\"].as_u64().unwrap()\n        };\n"
+        },
+        {
+          "offset": 17803,
+          "delete": "        let expected_calls = case[\"engine_calls\"].as_array().unwrap();\n        if after - before != expected_calls.len() {\n",
+          "insert": "        if after - before\n            != if intentional_page_bound {\n                0\n            } else {\n                case[\"engine_calls\"].as_array().unwrap().len()\n            }\n        {\n"
+        },
+        {
+          "offset": 17977,
+          "delete": "        }\n        // Compare the frozen integer that actually crossed the adapter port,\n        // independently of the response pagination/enforcement serialization.\n        let observed = fs::read_to_string(&calls).unwrap();\n        for (line, expected) in observed.lines().skip(before).zip(expected_calls) {\n            let actual: Value = ssx_json::from_str(line).unwrap();\n            if actual.get(\"pageno\") != expected[\"params\"].get(\"pageno\") {\n                differences.push(\"engine-pageno\");\n            }\n",
+          "insert": ""
+        },
+        {
+          "offset": 18742,
+          "delete": "                    let mut expected: Value =\n                        ssx_json::from_str(case[\"body\"].as_str().unwrap()).unwrap();\n",
+          "insert": "                    let mut expected: Value = if intentional_page_bound {\n                        json!({\"error\":\"invalid_filter\",\"message\":\"Invalid value for 'pageno'.\",\"field\":\"pageno\"})\n                    } else {\n                        ssx_json::from_str(case[\"body\"].as_str().unwrap()).unwrap()\n                    };\n"
+        },
+        {
+          "offset": 22984,
+          "delete": "        writeln!(records,\"{}\",json!({\"id\":source_id,\"status\":status,\"headers\":Value::Object(headers.clone()),\"body\":body,\"engine_call_delta\":after-before,\"intentional_difference\":Value::Null,\"differences\":differences})).unwrap();\n",
+          "insert": "        writeln!(records,\"{}\",json!({\"id\":source_id,\"status\":status,\"headers\":Value::Object(headers.clone()),\"body\":body,\"engine_call_delta\":after-before,\"intentional_difference\":if intentional_page_bound{Some(\"T02-page-u64-bound\")}else{None},\"differences\":differences})).unwrap();\n"
+        },
+        {
+          "offset": 70367,
+          "delete": "\n#[tokio::test]\nasync fn lossless_large_page_html_links_preserve_filters_and_exact_decimal_neighbors() {\n    let _process_test_guard = PROCESS_TEST_LOCK.lock().await;\n    let out = directory(\"html-lossless-pages\");\n    let (mut process, base, _) = start(&out, \"darker\");\n    let client = reqwest::Client::builder()\n        .no_proxy()\n        .timeout(Duration::from_secs(5))\n        .build()\n        .unwrap();\n    let cases = [\n        (\n            \"18446744073709551616\",\n            \"18446744073709551615\",\n            \"18446744073709551617\",\n        ),\n        (\n            \"170141183460469231731687303715884105727\",\n            \"170141183460469231731687303715884105726\",\n            \"170141183460469231731687303715884105728\",\n        ),\n        (\n            \"170141183460469231731687303715884105728\",\n            \"170141183460469231731687303715884105727\",\n            \"170141183460469231731687303715884105729\",\n        ),\n    ];\n    let page_url = |pairs: &[(&str, &str)]| {\n        let mut url = reqwest::Url::parse(&format!(\"{base}/search\")).unwrap();\n        url.query_pairs_mut().extend_pairs(pairs.iter().copied());\n        url\n    };\n    let mut captures = Vec::new();\n    for (page, _, _) in cases {\n        let response = client\n            .get(page_url(&[\n                (\"q\", \"large <page> & scope\"),\n                (\"format\", \"html\"),\n                (\"pageno\", page),\n                (\"categories\", \"general\"),\n                (\"engines\", \"contract\"),\n                (\"language\", \"fr\"),\n                (\"safesearch\", \"0\"),\n                (\"time_range\", \"day\"),\n            ]))\n            .send()\n            .await;\n        match response {\n            Ok(response) => {\n                let status = response.status().as_u16();\n                let headers = response\n                    .headers()\n                    .iter()\n                    .map(|(k, v)| (k.as_str().to_owned(), json!(v.to_str().unwrap())))\n                    .collect::<ssx_json::Map<_, _>>();\n                captures.push((status, headers, response.text().await));\n            }\n            Err(error) => {\n                captures.push((0, ssx_json::Map::new(), Err(error)));\n                break;\n            }\n        }\n    }\n    let boundary = \"9\".repeat(4300);\n    let boundary_previous = format!(\"{}8\", \"9\".repeat(4299));\n    let boundary_requests = async {\n        let html = client\n            .get(page_url(&[\n                (\"q\", \"boundary\"),\n                (\"format\", \"html\"),\n                (\"pageno\", boundary.as_str()),\n            ]))\n            .send()\n            .await?;\n        let html_status = html.status().as_u16();\n        let html_headers = html\n            .headers()\n            .iter()\n            .map(|(k, v)| (k.as_str().to_owned(), json!(v.to_str().unwrap())))\n            .collect::<ssx_json::Map<_, _>>();\n        let html = html.text().await?;\n        let json = client\n            .get(page_url(&[\n                (\"q\", \"boundary\"),\n                (\"format\", \"json\"),\n                (\"pageno\", boundary.as_str()),\n            ]))\n            .send()\n            .await?;\n        let json_status = json.status().as_u16();\n        let json_headers = json\n            .headers()\n            .iter()\n            .map(|(k, v)| (k.as_str().to_owned(), json!(v.to_str().unwrap())))\n            .collect::<ssx_json::Map<_, _>>();\n        let json = json.text().await?;\n        Ok::<_, reqwest::Error>((\n            html_status,\n            html_headers,\n            html,\n            json_status,\n            json_headers,\n            json,\n        ))\n    }\n    .await;\n    let clean = stop(&mut process).await;\n    assert!(clean);\n    assert_eq!(captures.len(), cases.len());\n    let mut records = Vec::new();\n    for ((status, headers, body), (page, previous, next)) in captures.into_iter().zip(cases) {\n        assert_eq!(status, 200);\n        let body = body.unwrap();\n        let mut pages = Vec::new();\n        for part in body.split(\"href=\\\"\").skip(1) {\n            let href = part.split_once('\"').unwrap().0.replace(\"&amp;\", \"&\");\n            if !href.starts_with(\"/search?\") {\n                continue;\n            }\n            let parsed = reqwest::Url::parse(&format!(\"http://fixture{href}\")).unwrap();\n            let fields = parsed\n                .query_pairs()\n                .map(|(k, v)| (k.into_owned(), v.into_owned()))\n                .collect::<std::collections::BTreeMap<_, _>>();\n            let Some(link_page) = fields.get(\"pageno\") else {\n                continue;\n            };\n            assert_eq!(fields[\"q\"], \"large <page> & scope\");\n            assert_eq!(fields[\"categories\"], \"general\");\n            assert_eq!(fields[\"engines\"], \"contract\");\n            assert_eq!(fields[\"language\"], \"fr\");\n            assert_eq!(fields[\"safesearch\"], \"0\");\n            assert_eq!(fields[\"time_range\"], \"day\");\n            pages.push(link_page.clone());\n        }\n        assert_eq!(pages, [previous, next]);\n        records\n            .push(json!({\"page\":page,\"status\":status,\"headers\":headers,\"body\":body,\"previous\":previous,\"next\":next}));\n    }\n    let (html_status, html_headers, html, json_status, json_headers, json_body) =\n        boundary_requests.unwrap();\n    assert_eq!(html_status, 200);\n    assert!(html.contains(\"aria-disabled=\\\"true\\\"\"));\n    assert!(html.contains(\"Next page unavailable (page number limit)\"));\n    assert!(html.contains(&format!(\"aria-current=\\\"page\\\">Page {boundary}</span>\")));\n    assert!(html.contains(&format!(\"pageno={boundary_previous}\\\"\")));\n    assert!(!html.contains(&format!(\"pageno=1{}\", \"0\".repeat(4300))));\n    assert_eq!(json_status, 200);\n    assert!(\n        ssx_json::from_str::<Value>(&json_body).unwrap()[\"results\"]\n            .as_array()\n            .is_some()\n    );\n    let call_text = fs::read_to_string(out.join(\"engine-calls.jsonl\")).unwrap();\n    let last: Value = ssx_json::from_str(call_text.lines().last().unwrap()).unwrap();\n    assert_eq!(last[\"pageno\"].to_string(), boundary);\n    records.push(json!({\"page\":boundary,\"status\":html_status,\"headers\":html_headers,\"body\":html,\"adapter_page\":last[\"pageno\"].to_string()}));\n    records.push(json!({\"page\":boundary,\"status\":json_status,\"headers\":json_headers,\"body\":json_body,\"adapter_page\":last[\"pageno\"].to_string()}));\n    let raw_http_records = out.join(\"native-records.jsonl\");\n    let raw = records\n        .iter()\n        .map(Value::to_string)\n        .collect::<Vec<_>>()\n        .join(\"\\n\")\n        + \"\\n\";\n    fs::write(&raw_http_records, &raw).unwrap();\n    let receipt = out.join(\"terminal.json\");\n    fs::write(\n        &receipt,\n        json!({\"child_exit_success\":clean,\"requests_completed\":5,\"raw_http_records\":raw_http_records.to_string_lossy().as_ref(),\"raw_http_records_sha256\":digest(raw.as_bytes())}).to_string(),\n    )\n    .unwrap();\n    bind_receipt(\"html\", \"lossless-pages\", &receipt, None);\n}\n",
+          "insert": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/a07_matrix_replay.rs",
+      "before_sha256": "1b84793a369ccbfe1eb3251fd653f65efd8570f7186e625436071faf3cdac14c",
+      "before_bytes": 12214,
+      "before_blob": "b96477317b498bd212729d990d44f419fa5eb036",
+      "after_sha256": "0d5dc39eb8001b511f0ded42f22c074cea129233ef256935fc5e82d49fecf251",
+      "after_bytes": 12280,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 1459,
+          "delete": "        page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "        page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/jobs.rs",
+      "before_sha256": "93a7d5007dd782ec0f5fc3c79470f592fd02789b717864c1ebe6de9cc7b1844b",
+      "before_bytes": 118691,
+      "before_blob": "923651913fc41d4c49619cd90a6a8e355f3a43ad",
+      "after_sha256": "e9a7cbb12c331c49ea2acfb349f4cfc49ca47b8526bea756207deb6b4d417ed9",
+      "after_bytes": 118757,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 42037,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(4).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 4,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+      "before_sha256": "71c351bb896af5091fc0c79d50b823438456d39a05e5ad30321ce3853cc98d3f",
+      "before_bytes": 36757,
+      "before_blob": "17503d22620abb92bf59d5f759eaf51998247c21",
+      "after_sha256": "4fa651c2138f24e5af6d9a1a24917e7d98c355b29609dbed9ba0aab7bef53748",
+      "after_bytes": 36889,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 13364,
+          "delete": "                page: ssx_domain::SearchPage::from_u64(7).expect(\"positive fixture page\"),\n",
+          "insert": "                page: 7,\n"
+        },
+        {
+          "offset": 22192,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/saved_runner.rs",
+      "before_sha256": "8e8862d422232f96e9f48e8d838e19674a62b72f2a8f078562b103d9fafcde78",
+      "before_bytes": 15142,
+      "before_blob": "d8be7e939673b44f648b3b017fc6e43cd91324c2",
+      "after_sha256": "8e8a2e89a5dc6148d2a6965149bad39c156f325f0890c501601b2a336b2c07e0",
+      "after_bytes": 15174,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 10433,
+          "delete": "                page: ssx_domain::SearchPage::default(),\n",
+          "insert": "                page: 1,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "before_sha256": "a1b310e2ef8692c96109bfd780c0e37d7e50692231e11eceb48e05860e0b5927",
+      "before_bytes": 86610,
+      "before_blob": "f4ad63519cc8d62136dda49db3ad8087c6f7b5ea",
+      "after_sha256": "f67f3952bced1d7f115e0367e844e80a17dc8486ab80ffd2e8dba424f0427733",
+      "after_bytes": 86596,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 49946,
+          "delete": "            &request.page,\n",
+          "insert": "            request.page,\n"
+        },
+        {
+          "offset": 50400,
+          "delete": "            page: request.page.as_number().clone(),\n",
+          "insert": "            page: i64::try_from(request.page).unwrap_or(i64::MAX),\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a01_pilots.rs",
+      "before_sha256": "28499067ad106b11b19f1a0a4f982d8e18a56c78c2140de3151d81e016aa84d0",
+      "before_bytes": 32084,
+      "before_blob": "ff31d240d505536b653242c887e0e9e01ad2e2c3",
+      "after_sha256": "cc06cb325a8b71e6ad8c0eb11c367a76d53fcff7a68913fc54407fccf8911ba1",
+      "after_bytes": 32216,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 3092,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(7).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 7,\n"
+        },
+        {
+          "offset": 4712,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(9).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 9,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a02_packages.rs",
+      "before_sha256": "97104c977b17d012125cdf2a106d87d115cad4e3f4f4c03d44bc16352a697847",
+      "before_bytes": 18047,
+      "before_blob": "538a9eb6bbe92ae94cb268fbf91a617531f85208",
+      "after_sha256": "220049b3177ed0849eeaccc297f0287692ad045896e1198938725d4bfe013342",
+      "after_bytes": 18113,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 5506,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(7).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 7,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a03_community.rs",
+      "before_sha256": "cf93440c89824a5a92e44e2aaaf9c652cc15b96324bac85ae1ff9ff63d550533",
+      "before_bytes": 26481,
+      "before_blob": "f455249ca04b72c4b0ead78729aa1f0a80739d54",
+      "after_sha256": "4c993a562d5f04499ef3029ad46a1c9f9a1918af4f97066bcee4a0c65fa908d5",
+      "after_bytes": 26547,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 1518,
+          "delete": "        page: ssx_domain::SearchPage::from_u64(7).expect(\"positive fixture page\"),\n",
+          "insert": "        page: 7,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a05_html.rs",
+      "before_sha256": "f362f6cc76018afcda82558650861916e7a3430988bf2b8b82c63bdf03aea700",
+      "before_bytes": 30114,
+      "before_blob": "29b4f40dde93a5d82a1fb611a6274c39363b7fb7",
+      "after_sha256": "15ece51bf3b61321a5814c240dda7cda1831706999763608aba7202555dc4e1e",
+      "after_bytes": 30180,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 4303,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(7).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 7,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a07_biomedical.rs",
+      "before_sha256": "f50dad891fe6f16e2b2363536a4c0c4cfd48c932ee7229730af50de8649e514b",
+      "before_bytes": 34801,
+      "before_blob": "bc5639c9be83926fe123359ecb37f2e545d7afac",
+      "after_sha256": "43b35c71ce5166b0664599ae0f6abb422d82063929d7e2eab39f30b27d2af74c",
+      "after_bytes": 34867,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 3677,
+          "delete": "        page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "        page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a08_factories.rs",
+      "before_sha256": "c0978ad1eb426b73043d82ec9691e06f12bd636829d1adbe9275953708185259",
+      "before_bytes": 29122,
+      "before_blob": "0b88a0ba94ea671c435d7b08f8583842a8273424",
+      "after_sha256": "1637fdefa2088b8aeaaade0cd903a31d2b15c18ae4c781265e5225270fc00724",
+      "after_bytes": 29188,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 2261,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a08_regulatory.rs",
+      "before_sha256": "64ca51a260c2d106e63f65aae06c4a912050ab2d8814958b69816ffae4e81254",
+      "before_bytes": 12831,
+      "before_blob": "035f7f525dac5a9ad657ae0191b9938efcfd51c4",
+      "after_sha256": "7bd1bbec05b0f2bd7f4b5768c799fbf0d49bf21c140a2e8a72f5fd4746867881",
+      "after_bytes": 12897,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 7879,
+          "delete": "            page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "            page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a09_catalog_media.rs",
+      "before_sha256": "e25e5b9e756e5143cb5570f6a811bafb451122a7343a7f7a5b81d4fa8415ec43",
+      "before_bytes": 12926,
+      "before_blob": "e54c7db3423819c4d053f9171ab66e928f62d385",
+      "after_sha256": "21599f5631090dfaa0e465a29b3b1e0e94379d6efbef2ce8ba6bdbc6ad356737",
+      "after_bytes": 12992,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 6331,
+          "delete": "                page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "                page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a09_factories.rs",
+      "before_sha256": "a23c6ac515cd06ca31147041d8b49e9bc0f0ca41686c0385033e1d58d6b66df7",
+      "before_bytes": 37495,
+      "before_blob": "1cd31c225e56a789251fe3eb8808cc4b45cb5134",
+      "after_sha256": "f6d89b2911435a46ecab3dbb714aa517700ca2332907fa8623d5f90a8d19492d",
+      "after_bytes": 37561,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 9995,
+          "delete": "                page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "                page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a10_factories.rs",
+      "before_sha256": "05f4012759dd89bd3394081bc88d3f4b33d2fcfd17d6796bdd738cc382e4ba55",
+      "before_bytes": 24508,
+      "before_blob": "58045293c6f0826044323ac5ebb265b013ef505c",
+      "after_sha256": "8d00e116b3871b1397bdfc5ec4fdd6ba6662fd417b7b394787de80354ddf3335",
+      "after_bytes": 24574,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 10212,
+          "delete": "                page: ssx_domain::SearchPage::from_u64(9).expect(\"positive fixture page\"),\n",
+          "insert": "                page: 9,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a11_factories.rs",
+      "before_sha256": "89add53e565a9d02c37b3b148fbf659f629e528ad8d51111f0f217196b4b630f",
+      "before_bytes": 37305,
+      "before_blob": "ca00ca4fb52cf71b74b7f81d5502452793a21da5",
+      "after_sha256": "1a6831b2839626288e8699ef0e17601b2f03260e566941384c1a33b329647ddf",
+      "after_bytes": 37371,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 12974,
+          "delete": "                page: ssx_domain::SearchPage::from_u64(7).expect(\"positive fixture page\"),\n",
+          "insert": "                page: 7,\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a11_replay.rs",
+      "before_sha256": "bd28a553076fad86c66b2f57837beee381842fbe40976354eb905215e7fe0897",
+      "before_bytes": 23066,
+      "before_blob": "dca489d5812c8dfc879e533821a43a8a33e104f3",
+      "after_sha256": "64ef92f372a462f6c278e18ca4df554e6e8676a8f162cb4f1f3923d9a5d3acc8",
+      "after_bytes": 23155,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 10487,
+          "delete": "            request.page =\n                ssx_domain::SearchPage::from_u64(p).expect(\"positive source fixture page\")\n",
+          "insert": "            request.page = p\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a12_security.rs",
+      "before_sha256": "ee1339e68e04241029c78e17711fbff5b1a7b2e6033f5f6816de80bf46ef87ec",
+      "before_bytes": 60225,
+      "before_blob": "dea6da083c03b57e7c6649db437de2f20743fd21",
+      "after_sha256": "8a4a5543bac835042288ace42f7abe1b9be923c21df97fcf267b2f843a096ec9",
+      "after_bytes": 60291,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 52469,
+          "delete": "        q.page = ssx_domain::SearchPage::from_u64(9).expect(\"positive fixture page\");\n",
+          "insert": "        q.page = 9;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "before_sha256": "54f41684a2f7534c581bee17f562af4d6d97eacc81766d6433c2d2a998c22ed6",
+      "before_bytes": 65083,
+      "before_blob": "095a21c67ccebd71717edfed97951757cc874a91",
+      "after_sha256": "c4930e40f68a013f3e437ffd6a8de5a0e7b99de56d339141b1965bbf9a12e29d",
+      "after_bytes": 65215,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 12297,
+          "delete": "        q.page = ssx_domain::SearchPage::from_u64(17).expect(\"positive fixture page\");\n",
+          "insert": "        q.page = 17;\n"
+        },
+        {
+          "offset": 53149,
+          "delete": "    q.page = ssx_domain::SearchPage::from_u64(9).expect(\"positive fixture page\");\n",
+          "insert": "    q.page = 9;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a13_hibp.rs",
+      "before_sha256": "0bb58e68252f427dc501c3eb996d8f6ed01d254edbfad8a06deb87346a46486c",
+      "before_bytes": 20344,
+      "before_blob": "f5ae75e7dc72ff49d0988965a4dd850e25b9da49",
+      "after_sha256": "7e90dd01dd5046496703d860068ad086996b45310662c61fee90e689b9e008cb",
+      "after_bytes": 20410,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 13775,
+          "delete": "    q.page = ssx_domain::SearchPage::from_u64(7).expect(\"positive fixture page\");\n",
+          "insert": "    q.page = 7;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a13_intelx.rs",
+      "before_sha256": "d1bcceec580af8f236e8cfb24bb68e3f5587c7c0bab4acb3eb5fb426a26bbb27",
+      "before_bytes": 24217,
+      "before_blob": "6e939c480385aaea6acb89d4ca226fc718877d19",
+      "after_sha256": "68378f418ab8faf1d47480ca5407add0e338ce9288fabd38f03e3a36e3920762",
+      "after_bytes": 24283,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 17606,
+          "delete": "    q.page = ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\");\n",
+          "insert": "    q.page = 8;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/f14.rs",
+      "before_sha256": "9c42e29411008d20258e3ef5f7003caf465379dad89166a0c22032a2575d51f8",
+      "before_bytes": 90219,
+      "before_blob": "4cee79172d39a35c638581d57ecd6fb133032504",
+      "after_sha256": "60ef4b5004492170be2f9ff8328b50fc56eb02ea1e7676548165e8bb8c8198e2",
+      "after_bytes": 93290,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 18946,
+          "delete": "    page_evidence: bool,\n",
+          "insert": ""
+        },
+        {
+          "offset": 19335,
+          "delete": "            page_evidence: false,\n",
+          "insert": ""
+        },
+        {
+          "offset": 22990,
+          "delete": "                            content: if self.page_evidence {\n                                format!(\"page:{}\", request.page)\n                            } else {\n                                self.content.clone()\n                            },\n",
+          "insert": "                            content: self.content.clone(),\n"
+        },
+        {
+          "offset": 77641,
+          "delete": "    p.request.page = ssx_domain::SearchPage::new(\"9223372036854775807\").unwrap();\n",
+          "insert": "    p.request.page = i64::MAX as u64;\n"
+        },
+        {
+          "offset": 77787,
+          "delete": "    p.request.page = p.request.page.next_page().unwrap();\n",
+          "insert": "    p.request.page += 1;\n"
+        },
+        {
+          "offset": 90543,
+          "delete": "\n#[tokio::test]\nasync fn lossless_high_pages_keep_distinct_valkey_views_and_canonical_snapshots() {\n    let server = PrivateValkey::start().await;\n    let store = Arc::new(Valkey::new(&server.url, Duration::from_millis(250)).unwrap());\n    let mut engine = FixedEngine::new(\"brave\");\n    engine.page_evidence = true;\n    let engine = Arc::new(engine);\n    let mut deps = dependencies(vec![(\"brave\", engine.clone())]);\n    deps.cache = Some(Arc::new(CanonicalCache::new(\n        Arc::new(ValkeyCache::new(store.clone())),\n        CacheTtls::default(),\n    )));\n    let service = SearchService::new(SearchConfig::default(), deps).unwrap();\n    let snapshots = SnapshotService::new(\n        Arc::new(ValkeySnapshots::new(store.clone())),\n        Arc::new(SystemSnapshotClock),\n        Arc::new(RandomSnapshotIds),\n        TenantId::new(\"f14-lossless-page\").unwrap(),\n        SnapshotTtl::new(60).unwrap(),\n    );\n    let pages = [\n        \"1\",\n        \"9223372036854775807\",\n        \"18446744073709551615\",\n        \"170141183460469231731687303715884105727\",\n        \"170141183460469231731687303715884105728\",\n    ];\n    for raw in pages {\n        let mut p = proposal(\"page identity\");\n        p.surface = SearchSurface::Http;\n        p.request.page = SearchPage::new(raw).unwrap();\n        p.request.max_results = Some(1);\n        p.request.include = [\"results\".into()].into_iter().collect();\n        let captured = service\n            .search_snapshot(p.clone(), &snapshots, &[])\n            .await\n            .unwrap();\n        assert!(!captured.response.cached);\n        assert_eq!(captured.response.results.len(), 1);\n        assert_eq!(captured.response.results[0].content, format!(\"page:{raw}\"));\n        assert_eq!(captured.canonical.response().results.len(), 3);\n        let SnapshotLookup::Found(snapshot) = snapshots.read(&captured.snapshot.unwrap()).await\n        else {\n            panic!(\"high-page snapshot missing\");\n        };\n        assert_eq!(snapshot.total(), 3);\n        assert!(\n            snapshot\n                .results()\n                .iter()\n                .all(|r| r.content == format!(\"page:{raw}\"))\n        );\n        let hit = service.search(p).await.unwrap();\n        assert!(hit.cached);\n        assert_eq!(hit.results.len(), 1);\n        assert_eq!(hit.results[0].content, format!(\"page:{raw}\"));\n    }\n    assert_eq!(engine.calls.load(Ordering::SeqCst), pages.len());\n    assert_eq!(\n        engine\n            .requests\n            .lock()\n            .unwrap()\n            .iter()\n            .map(|r| r.page.as_str())\n            .collect::<Vec<_>>(),\n        pages\n    );\n    assert_eq!(server.keys(\"search:native:v1:*\").await.len(), pages.len());\n    service.shutdown().await;\n    store.close().await;\n}\n",
+          "insert": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_source_replay.rs",
+      "before_sha256": "f44fa9e3ac288e63bedfad3f41e6f3bc40a0182e35024a45ce3fa3c4311da04a",
+      "before_bytes": 9170,
+      "before_blob": "2f6ae4a8859d1f3c15287aba54cdb727c3bbd275",
+      "after_sha256": "b2942f111b4cd2434f49b6d7d5b50974e86719fce83a6477562a93c3e9f0a9c5",
+      "after_bytes": 9236,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 2137,
+          "delete": "        page: ssx_domain::SearchPage::from_u64(8).expect(\"positive fixture page\"),\n",
+          "insert": "        page: 8,\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/PORTAL_UX_SPEC.md",
+      "before_sha256": "cc86c5e71ba2070a6031304741889f304baaab72c9c97b016f8001b9b2878ef4",
+      "before_bytes": 9039,
+      "before_blob": "2f750ff89c0c02d9d82ba9f38ba797576d630cce",
+      "after_sha256": "7cb8a121ce082539487baf5c81f8994dc222b2724154e67d95976595a47b4799",
+      "after_bytes": 9761,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 8022,
+          "delete": "Search page numbers retain the full positive decimal value admitted by the HTTP\ninteger grammar, including values beyond machine-word integers. Previous and\nnext links preserve the search filters and use exact decimal neighbors. The HTTP\nlexical limit remains 4,300 digits. At the largest admitted page whose successor\nneeds 4,301 digits, the Rust portal keeps the exact current page and Previous\nlink, and displays a visible, accessible disabled Next control with “page number\nlimit”. It emits no invalid, clamped or aliased next-page URL. This is deliberate\nbounded hardening over the Python formatter's conversion failure at that edge;\nit does not change JSON request admission. See issue #1049 for qualification.\n\n",
+          "insert": ""
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "before_sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39",
+      "before_bytes": 21096,
+      "before_blob": "d609376fa8a8dba26de1d941a60351915f2b1687",
+      "after_sha256": "ac399cc67465e7126bae3929c47e35754eb212b5ecb3c7fe47b088fdfab2dce5",
+      "after_bytes": 21639,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 12756,
+          "delete": "Issue #1049 restores the original positive page domain through the native shared\nrequest, cache and HTTP paths. Its one explicit portal hardening keeps the source\n4,300-digit admission limit but disables Next visibly and accessibly when its\nexact successor would need 4,301 digits. Python instead fails while formatting\nthat neighbor. Current/previous values remain exact; no wrapped, clamped or\ninvalid link is emitted. This compatibility delta requires its own real native\nHTTP control and does not count as unchanged source-corpus parity.\n\n",
+          "insert": ""
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t02/README.md",
+      "before_sha256": "f42cb0231ee87621f252c068974a8d2824882b11b61dbe5468e7f6d88c6ec832",
+      "before_bytes": 8340,
+      "before_blob": "3b216c90ad33a18d142d498c9b0342330cda38eb",
+      "after_sha256": "d7cc994715974e0651553bdc501c8a216df393e96f61f64dc41914c268a3457e",
+      "after_bytes": 9077,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 2522,
+          "delete": "The historical qualification baseline intentionally returned 400 before dispatch\nfor three positive pages beyond its F05 `u64` domain; its immutable evidence is\nretained in `intentional-page-boundary.json`. Issue #1049 restores their original\nHTTP 200 and exact adapter integers using `SearchPage`; acceptance remains pending\ncurrent-source native qualification. Ordinary cache tuple bytes stay unchanged;\nold native keys above `i64::MAX` receive an exact lossless key successor, causing\nbounded cold misses until the prior keys expire. No source response is aliased.\nThe 4,300-digit input limit stays unchanged. At its HTML successor boundary,\nRust intentionally replaces Python's formatting failure with HTTP 200 and a\nvisible accessible disabled Next control, retaining exact current/previous values.\nThis scoped hardening does not claim the old Python 500 passed unchanged. Canonical U+FFFD\n",
+          "insert": "Three positive page values beyond the accepted F05 u64 domain intentionally\nreturn400 before dispatch; see `intentional-page-boundary.json`. Canonical U+FFFD\n"
+        }
+      ]
+    }
+  ]
+}

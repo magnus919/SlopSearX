@@ -252,6 +252,8 @@ fn exact_tests(output: &str, expected: &Value) -> Result<()> {
         "native test missing, duplicate, extra or ignored",
     )
 }
+const PAGE_HTML_TEST: &str =
+    "lossless_large_page_html_links_preserve_filters_and_exact_decimal_neighbors";
 const YAML_SCALAR_TEST: &str = "successful_yaml_break_scalars_match_pinned_emitter_on_actual_http";
 const YAML_SCALAR_REFERENCE: &str = "docs/rust-rewrite/t02/yaml-break-source-controls-v1.json";
 const YAML_SCALAR_REFERENCE_SHA: &str =
@@ -277,7 +279,7 @@ fn current_tests(frozen: &Value, family: &str) -> Result<Value> {
             expected
                 .as_array_mut()
                 .ok_or("HTTP test inventory missing")?
-                .push(json!(YAML_SCALAR_TEST));
+                .extend([json!(YAML_SCALAR_TEST), json!(PAGE_HTML_TEST)]);
         }
         "formatter" | "library" => {}
         _ => return Err("unknown T02 native test family".into()),
@@ -545,12 +547,16 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
         let pin = artifact["sha256"]
             .as_str()
             .ok_or("T02 artifact digest missing")?;
+        let page_prior = source_successor::page_original(root, path)?;
         if let Some(proof) = source_successor::verify(root, path, pin, COVERAGE_SHA) {
             proof?;
         } else {
             require(
                 artifact["sha256"]
-                    == digest(&fs::read(root.join(path)).map_err(|e| format!("{path}:{e}"))?),
+                    == digest(&match page_prior {
+                        Some(prior) => prior,
+                        None => fs::read(root.join(path)).map_err(|e| format!("{path}:{e}"))?,
+                    }),
                 &format!("T02 artifact differs:{path}"),
             )?;
         }
@@ -693,7 +699,9 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
         }
         completed.extend(completions(&output)?);
     }
-    verify_records(&completed, expected, true)?;
+    let mut current_expected = expected.clone();
+    current_expected.push(json!({"kind":"html","id":"lossless-pages","source_record_sha256":null}));
+    verify_records(&completed, &current_expected, true)?;
     commands.push(json!({"T02_actual_wire_receipts":archive_wire_records(&completed)?}));
     // Actually omit one pinned source case in a fresh server run. The test must fail and clean up.
     let skipped = coverage["skip_control_id"]
@@ -751,11 +759,11 @@ mod tests {
     #[test]
     fn missing_duplicate_extra_and_source_drift_fail_closed() {
         source_successor::controls(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap();
-        // Current discovery is precisely the frozen eight plus one reviewed test.
+        // Current discovery retains the frozen eight, the reviewed YAML test, and the additive lossless-page control.
         let frozen = json!(FROZEN_HTTP_TESTS);
         let current = current_tests(&frozen, "http").unwrap();
         let names = current.as_array().unwrap();
-        assert_eq!(names.len(), 9);
+        assert_eq!(names.len(), 10);
         let output = names
             .iter()
             .map(|n| format!("test {} ... ok\n", n.as_str().unwrap()))

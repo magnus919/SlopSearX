@@ -115,10 +115,15 @@ fn read(root: &Path, path: &str) -> Result<Material> {
     #[cfg(not(unix))]
     return Err("T02 source mode proof requires Unix".into());
     #[cfg(unix)]
-    Ok(Material {
-        bytes: fs::read(full).map_err(|e| format!("{path}:{e}"))?,
-        mode,
-    })
+    {
+        let actual = fs::read(full).map_err(|e| format!("{path}:{e}"))?;
+        let bytes = if PAGE_CHAINED.contains(&path) {
+            page_original(root, path)?.ok_or("missing chained page material")?
+        } else {
+            actual
+        };
+        Ok(Material { bytes, mode })
+    }
 }
 fn decode(raw: &[u8], pin: &str) -> Result<Capsule> {
     need(sha(raw) == pin, "T02 successor capsule digest")?;
@@ -154,6 +159,12 @@ fn decode(raw: &[u8], pin: &str) -> Result<Capsule> {
     Ok(c)
 }
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
+    if let ["hash-object", "--", path] = args {
+        if PAGE_CHAINED.contains(path) {
+            page_original(root, path)?.ok_or("missing chained page material")?;
+            return git(root, &["rev-parse", &format!("{PAGE_BASE}:{path}")]);
+        }
+    }
     let result = Command::new("git")
         .args(args)
         .current_dir(root)
@@ -278,6 +289,7 @@ pub(super) fn verify(root: &Path, path: &str, old_sha: &str, coverage: &str) -> 
 }
 /// Mandatory production gate controls, also called by the existing unit identity.
 pub(super) fn controls(root: &Path) -> Result<()> {
+    page_controls(root)?;
     yaml_break::controls(root)?;
     let raw = read(root, CAPSULE)?;
     need(raw.mode == 0o644, "T02 capsule mode")?;
@@ -474,5 +486,165 @@ pub(super) fn controls(root: &Path) -> Result<()> {
     println!(
         "T02_CURRENT_MAIN_SOURCE_SUCCESSOR_CONTROLS two:archives:git:ordered-edits:modes:closed-caller"
     );
+    Ok(())
+}
+
+// #1049 is a finite source successor. The original 43 coverage rows and all
+// previous inverse controls remain immutable. Only these five current callers
+// may project their exactly proved e127 preimage into the historical checks.
+const PAGE_BASE: &str = "e12744511013bd05370173e777daaef471bf9527";
+const PAGE_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/lossless-page-1049-v1.json";
+const PAGE_CAPSULE_SHA: &str = "1a5c8c64939a046e3d9375363c510b403935eca7d3550a74bdc2bfe263f4716d";
+const PAGE_INTERSECTIONS: [&str; 5] = [
+    "crates/ssx-http/src/html.rs",
+    "crates/ssx-http/src/native.rs",
+    "crates/ssx-http/tests/t02_http.rs",
+    "crates/ssx-infra/src/search.rs",
+    "docs/rust-rewrite/t02/README.md",
+];
+const PAGE_CHAINED: [&str; 2] = [
+    "crates/ssx-http/tests/t02_http.rs",
+    "crates/ssx-infra/src/search.rs",
+];
+#[derive(Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PageRow {
+    path: String,
+    before_sha256: String,
+    before_bytes: usize,
+    before_blob: String,
+    after_sha256: String,
+    after_bytes: usize,
+    mode: u32,
+    inverse: Vec<Edit>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PageCapsule {
+    schema_version: u64,
+    kind: String,
+    base: String,
+    qualification: String,
+    coverage_sha256: String,
+    rows: Vec<PageRow>,
+}
+fn page_capsule(root: &Path) -> Result<PageCapsule> {
+    let full = root.join(PAGE_CAPSULE);
+    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
+    need(
+        meta.is_file() && !meta.file_type().is_symlink(),
+        "page capsule regular material",
+    )?;
+    let raw = fs::read(full).map_err(|e| e.to_string())?;
+    need(sha(&raw) == PAGE_CAPSULE_SHA, "page capsule exact digest")?;
+    let c: PageCapsule = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    need(
+        c.schema_version == 1
+            && c.kind == "T02_LOSSLESS_PAGE_1049_SOURCE_SUCCESSOR"
+            && c.base == PAGE_BASE
+            && c.coverage_sha256 == COVERAGE_SHA
+            && c.qualification == "CURRENT_SOURCE_ONLY_NATIVE_GATE_PENDING"
+            && c.rows.len() == 33,
+        "page finite causal inventory",
+    )?;
+    need(
+        c.rows.windows(2).all(|w| w[0].path < w[1].path),
+        "page rows unique ordered",
+    )?;
+    need(
+        PAGE_INTERSECTIONS
+            .iter()
+            .all(|p| c.rows.iter().any(|r| r.path == *p)),
+        "page original five intersections",
+    )?;
+    Ok(c)
+}
+fn page_inverse(row: &PageRow, current: &[u8]) -> Result<Vec<u8>> {
+    need(
+        row.mode == 0o644 && current.len() == row.after_bytes && sha(current) == row.after_sha256,
+        "page exact current whole-file proof",
+    )?;
+    let before = reconstruct(current, &row.inverse)?;
+    need(
+        before.len() == row.before_bytes && sha(&before) == row.before_sha256,
+        "page exact prior whole-file inverse",
+    )?;
+    Ok(before)
+}
+fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
+    let full = root.join(&row.path);
+    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
+    need(
+        meta.is_file() && !meta.file_type().is_symlink(),
+        "page source regular file",
+    )?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        need(
+            permission_bits(meta.permissions().mode()) == row.mode,
+            "page exact source mode",
+        )?;
+    }
+    let current = fs::read(full).map_err(|e| e.to_string())?;
+    let before = page_inverse(row, &current)?;
+    need(
+        git(root, &["show", &format!("{PAGE_BASE}:{}", row.path)])? == before,
+        "page retained actual e127 source bytes",
+    )?;
+    need(
+        String::from_utf8(git(
+            root,
+            &["rev-parse", &format!("{PAGE_BASE}:{}", row.path)],
+        )?)
+        .map_err(|e| e.to_string())?
+        .trim()
+            == row.before_blob,
+        "page actual baseline blob",
+    )?;
+    Ok(before)
+}
+pub(super) fn page_original(root: &Path, path: &str) -> Result<Option<Vec<u8>>> {
+    if !PAGE_INTERSECTIONS.contains(&path) {
+        return Ok(None);
+    }
+    let c = page_capsule(root)?;
+    let row = c
+        .rows
+        .iter()
+        .find(|r| r.path == path)
+        .ok_or("page caller row missing")?;
+    page_row(root, row).map(Some)
+}
+fn page_controls(root: &Path) -> Result<()> {
+    let c = page_capsule(root)?;
+    for row in &c.rows {
+        page_row(root, row)?;
+        let current = fs::read(root.join(&row.path)).map_err(|e| e.to_string())?;
+        let mut changed = current.clone();
+        changed.push(b' ');
+        need(
+            page_inverse(row, &changed).is_err(),
+            "page source weakening/removal accepted",
+        )?;
+        let mut omitted = row.clone();
+        omitted.inverse.clear();
+        need(
+            page_inverse(&omitted, &current).is_err(),
+            "page inverse omission accepted",
+        )?;
+        let mut altered = row.clone();
+        altered.inverse[0].insert.push(' ');
+        need(
+            page_inverse(&altered, &current).is_err(),
+            "page inverse changed prior assertion accepted",
+        )?;
+        let mut removed = row.clone();
+        removed.inverse.pop();
+        need(
+            page_inverse(&removed, &current).is_err(),
+            "page inverse removal accepted",
+        )?;
+    }
     Ok(())
 }
