@@ -159,11 +159,11 @@ fn decode(raw: &[u8], pin: &str) -> Result<Capsule> {
     Ok(c)
 }
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
-    if let ["hash-object", "--", path] = args {
-        if PAGE_CHAINED.contains(path) {
-            page_original(root, path)?.ok_or("missing chained page material")?;
-            return git(root, &["rev-parse", &format!("{PAGE_BASE}:{path}")]);
-        }
+    if let ["hash-object", "--", path] = args
+        && PAGE_CHAINED.contains(path)
+    {
+        page_original(root, path)?.ok_or("missing chained page material")?;
+        return git(root, &["rev-parse", &format!("{PAGE_BASE}:{path}")]);
     }
     let result = Command::new("git")
         .args(args)
