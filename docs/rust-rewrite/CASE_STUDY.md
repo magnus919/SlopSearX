@@ -87,6 +87,10 @@ exact successor would need 4,301 digits. Python instead fails while formatting
 that neighbor. Current/previous values remain exact; no wrapped, clamped or
 invalid link is emitted. This compatibility delta requires its own real native
 HTTP control and does not count as unchanged source-corpus parity.
+The frozen 421-row native inventory keeps its historical three 400/no-dispatch
+records. The current qualification layer retires those deviations by requiring
+exactly the original source-backed 200/one-dispatch observations for those three
+IDs and source hashes; the other 418 rows remain unchanged.
 
 The last three are worthwhile independent of Rust. Record them as intentional hardening changes, not silently accepted parity differences. Existing source suggests risks, not demonstrated incidents. Rust does not by itself improve search relevance, provider quotas, upstream availability, filter enforcement or CAPTCHA handling. Quality changes require their own evidence and must not hide within a port.
 

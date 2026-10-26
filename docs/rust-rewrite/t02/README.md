@@ -49,6 +49,10 @@ This scoped hardening does not claim the old Python 500 passed unchanged. Canoni
 payload roundtrip is tested; raw lone-surrogate ingestion is an F05 typed-value
 boundary. Synthetic date proof is not actual OpenAlex integration and cannot
 close #984. T03 owns full browser/visual fidelity and its two mapped journeys.
+The frozen 421-row native inventory keeps its historical three 400/no-dispatch
+records. The current qualification layer retires those deviations by requiring
+exactly the original source-backed 200/one-dispatch observations for those three
+IDs and source hashes; the other 418 rows remain unchanged.
 
 `crates/ssx-http/Dockerfile.t02` and the dedicated image workflow qualify the same
 offline native router/service fixture with an independent compiled Rust client.
