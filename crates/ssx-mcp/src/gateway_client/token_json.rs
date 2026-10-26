@@ -530,9 +530,10 @@ mod source_http_tests {
             .unwrap();
         let accepted = parse(model.json(), deadline).await.unwrap();
         assert_eq!(accepted.get("client_id").unwrap().as_str(), Some("after"));
-        assert!(
-            parse(token.as_bytes(), deadline).await.is_err(),
-            "file integer limit remains in place"
+        assert!(parse(token.as_bytes(), deadline).await.is_ok());
+        assert_eq!(
+            parse("9".repeat(5000).as_bytes(), deadline).await,
+            Err(JsonError::Limit)
         );
     }
 }
