@@ -10,6 +10,30 @@ pub struct Client {
     pub issuer: Option<String>,
 }
 impl Client {
+    #[cfg(feature = "gateway-source-endpoints")]
+    pub(super) fn from_source_record(
+        value: &ssx_infra::adapters::source_json::Value,
+    ) -> Result<Self> {
+        use ssx_infra::adapters::source_json::Value;
+        // Missing/null is optional; a PRESENT string that Rust cannot represent
+        // must fail closed rather than erasing issuer/authentication binding.
+        let string = |name| -> Result<Option<String>> {
+            match value.get(name) {
+                None | Some(Value::Null) => Ok(None),
+                Some(Value::String(text)) => text
+                    .as_str()
+                    .map(|s| Some(s.to_owned()))
+                    .ok_or_else(|| "OAuth client field is not scalar Unicode".into()),
+                Some(_) => Err("OAuth client field is not a string".into()),
+            }
+        };
+        Ok(Self {
+            id: string("client_id")?.ok_or("OAuth client ID missing")?,
+            secret: string("client_secret")?,
+            method: string("token_endpoint_auth_method")?,
+            issuer: string("issuer")?,
+        })
+    }
     pub fn parse(raw: &[u8]) -> Result<Self> {
         let value: Value = serde_json::from_slice(raw)?;
         Ok(Self {
@@ -102,6 +126,20 @@ fn strings(value: &Value, key: &str) -> Option<Vec<String>> {
     })
 }
 impl Policy {
+    #[cfg(feature = "gateway-source-endpoints")]
+    pub(super) fn new_source(remote: &str) -> Self {
+        Self {
+            client: None,
+            resource: remote.to_owned(),
+            expected_issuer: String::new(),
+            prm_scopes: None,
+            asm_scopes: None,
+            requested: None,
+            refresh_fallback: false,
+            include_resource: false,
+            has_prm: false,
+        }
+    }
     pub fn new(remote: &str) -> Result<Self> {
         Ok(Self {
             client: None,
@@ -137,7 +175,16 @@ impl Policy {
         Ok(())
     }
     pub fn protocol(&mut self, version: Option<&str>) {
-        self.include_resource = self.has_prm || version.is_some_and(|v| v >= "2025-06-18");
+        #[cfg(feature = "gateway-source-endpoints")]
+        {
+            // mcp-types2.3 version.py64–75: unknown strings are not revisions.
+            self.include_resource =
+                self.has_prm || matches!(version, Some("2025-06-18" | "2025-11-25" | "2026-07-28"));
+        }
+        #[cfg(not(feature = "gateway-source-endpoints"))]
+        {
+            self.include_resource = self.has_prm || version.is_some_and(|v| v >= "2025-06-18");
+        }
     }
     pub fn select_scopes(
         &mut self,
@@ -155,7 +202,7 @@ impl Policy {
             .as_ref()
             .is_some_and(|v| v.iter().any(|s| s == "offline_access"))
             && let Some(scope) = selected.as_mut()
-            && !scope.split_whitespace().any(|s| s == "offline_access")
+            && !scope_parts(scope).any(|s| s == "offline_access")
         {
             scope.push_str(" offline_access");
         }
@@ -167,10 +214,7 @@ impl Policy {
         } else {
             selected
         };
-        self.requested
-            .as_deref()
-            .unwrap_or_default()
-            .split_whitespace()
+        scope_parts(self.requested.as_deref().unwrap_or_default())
             .map(str::to_owned)
             .collect()
     }
@@ -237,6 +281,17 @@ fn quote(text: &str) -> String {
     }
     out
 }
+fn scope_parts(value: &str) -> impl Iterator<Item = &str> {
+    value
+        .split(|c: char| {
+            if cfg!(feature = "gateway-source-endpoints") {
+                ssx_json::python_whitespace(c)
+            } else {
+                c.is_whitespace()
+            }
+        })
+        .filter(|part| !part.is_empty())
+}
 pub fn union(previous: Option<&str>, new: Option<&str>) -> Option<String> {
     match (
         previous.filter(|s| !s.is_empty()),
@@ -245,8 +300,8 @@ pub fn union(previous: Option<&str>, new: Option<&str>) -> Option<String> {
         (None, new) => new.map(str::to_owned),
         (Some(previous), None) => Some(previous.into()),
         (Some(previous), Some(new)) => {
-            let mut values: Vec<_> = previous.split_whitespace().collect();
-            for scope in new.split_whitespace() {
+            let mut values: Vec<_> = scope_parts(previous).collect();
+            for scope in scope_parts(new) {
                 if !values.contains(&scope) {
                     values.push(scope)
                 }
@@ -438,5 +493,229 @@ mod review_controls {
             .unwrap()
             .1
         );
+    }
+}
+
+#[cfg(feature = "gateway-source-endpoints")]
+impl Policy {
+    // Compute the entire validated change before the caller replaces policy.
+    // The caller holds the manager and policy guards through the final move.
+    pub(super) fn source_metadata_delta(
+        &self,
+        projection: &rmcp::transport::auth::source_metadata::SourceMetadataProjection,
+        raw_base: &str,
+        expected_issuer: Option<&str>,
+        has_prm: bool,
+    ) -> Result<Self> {
+        use rmcp::transport::auth::source_metadata::SourceMetadataProjection;
+        let mut next = self.clone();
+        match projection {
+            SourceMetadataProjection::Prm(prm) => {
+                let requested = super::source_discovery::source_resource_url(raw_base)?;
+                if !super::source_discovery::source_resource_allowed(
+                    &requested,
+                    prm.resource().as_str(),
+                )? {
+                    return Err("OAuth protected resource mismatch".into());
+                }
+                next.resource = prm.resource().as_str().to_owned();
+                next.expected_issuer = prm.authorization_servers()[0].as_str().to_owned();
+                next.prm_scopes = prm.scopes().map(<[String]>::to_vec);
+                next.has_prm = true;
+                next.include_resource = true;
+            }
+            SourceMetadataProjection::Asm(asm) => {
+                let expected = expected_issuer.ok_or("OAuth discovery issuer absent")?;
+                let actual = asm.issuer().as_str();
+                if actual != expected && (has_prm || !source_issuers_match(actual, expected)?) {
+                    return Err("OAuth authorization server issuer mismatch".into());
+                }
+                next.expected_issuer = expected.to_owned();
+                next.asm_scopes = asm.scopes().map(<[String]>::to_vec);
+            }
+        }
+        Ok(next)
+    }
+}
+
+#[cfg(feature = "gateway-source-endpoints")]
+pub(super) fn source_issuers_match(a: &str, b: &str) -> Result<bool> {
+    if a == b {
+        return Ok(true);
+    }
+    let (short, long) = if a.len() < b.len() { (a, b) } else { (b, a) };
+    let parsed = reqwest::source_pool::source_raw_urlparse(short)?;
+    Ok(
+        long == format!("{short}/")
+            && short == format!("{}://{}", parsed.scheme(), parsed.netloc()),
+    )
+}
+
+#[cfg(all(test, feature = "gateway-source-endpoints"))]
+mod source_metadata_policy_tests {
+    use super::*;
+    use rmcp::transport::auth::source_metadata::{SourceMetadataKind, SourceMetadataProjection};
+
+    #[test]
+    fn rejected_source_prm_preserves_old_policy_and_uses_raw_resource_origin() {
+        let old = Policy::new("http://resource.test/api/child").unwrap();
+        let invalid_scope = SourceMetadataProjection::parse(SourceMetadataKind::Prm,
+            br#"{"resource":"http://other.test/api","authorization_servers":["https://as.test"],"scopes_supported":["write"]}"#).unwrap();
+        assert!(
+            old.source_metadata_delta(
+                &invalid_scope,
+                "http://resource.test/api/child",
+                None,
+                false
+            )
+            .is_err()
+        );
+        assert_eq!(old.resource, "http://resource.test/api/child");
+        assert_eq!(old.expected_issuer, "http://resource.test");
+        assert!(!old.has_prm);
+        assert!(old.prm_scopes.is_none());
+        let explicit_port = SourceMetadataProjection::parse(SourceMetadataKind::Prm,
+            br#"{"resource":"http://resource.test/api","authorization_servers":["https://as.test"]}"#).unwrap();
+        // The model drops :80, while source resource matching compares raw netloc.
+        assert!(
+            old.source_metadata_delta(
+                &explicit_port,
+                "http://resource.test:80/api/child",
+                None,
+                false
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn accepted_source_prm_uses_whole_model_and_retains_empty_scope() {
+        let old = Policy::new("http://resource.test/api/child").unwrap();
+        let prm = SourceMetadataProjection::parse(SourceMetadataKind::Prm,
+            br#"{"resource":"http://resource.test/api","authorization_servers":["https://AS.test:443","https://second.test"],"scopes_supported":[]}"#).unwrap();
+        let next = old
+            .source_metadata_delta(&prm, "http://resource.test/api/child", None, false)
+            .unwrap();
+        assert_eq!(next.resource, "http://resource.test/api");
+        assert_eq!(next.expected_issuer, "https://as.test");
+        assert_eq!(next.prm_scopes, Some(vec![]));
+        assert!(next.has_prm && next.include_resource);
+        assert!(!old.has_prm);
+    }
+
+    #[test]
+    fn source_asm_requires_exact_selected_issuer_but_legacy_allows_root_slash() {
+        let old = Policy::new("https://resource.test/api").unwrap();
+        let asm = SourceMetadataProjection::parse(SourceMetadataKind::Asm,
+            br#"{"issuer":"https://as.test/","authorization_endpoint":"https://as.test/auth","token_endpoint":"https://as.test/token","scopes_supported":[]}"#).unwrap();
+        assert!(
+            old.source_metadata_delta(
+                &asm,
+                "https://resource.test/api",
+                Some("https://as.test"),
+                true
+            )
+            .is_err()
+        );
+        assert!(
+            old.source_metadata_delta(
+                &asm,
+                "https://resource.test/api",
+                Some("https://other.test"),
+                false
+            )
+            .is_err()
+        );
+        let next = old
+            .source_metadata_delta(
+                &asm,
+                "https://resource.test/api",
+                Some("https://as.test"),
+                false,
+            )
+            .unwrap();
+        assert_eq!(next.expected_issuer, "https://as.test");
+        assert_eq!(next.asm_scopes, Some(vec![]));
+        assert_eq!(old.expected_issuer, "https://resource.test");
+    }
+
+    #[test]
+    fn source_issuer_root_equivalence_uses_raw_parse_and_no_host_normalization() {
+        assert!(source_issuers_match("https://as.test", "https://as.test/").unwrap());
+        assert!(!source_issuers_match("https://as.test/path", "https://as.test/path/").unwrap());
+        assert!(!source_issuers_match("HTTPS://as.test", "HTTPS://as.test/").unwrap());
+        assert!(!source_issuers_match("https://AS.test", "https://as.test/").unwrap());
+        assert!(!source_issuers_match("https://as.test:443", "https://as.test/").unwrap());
+    }
+}
+
+#[cfg(all(test, feature = "gateway-source-endpoints"))]
+mod source_scope_policy_tests {
+    use super::*;
+    #[test]
+    fn source_scope_selection_and_step_up_use_python_control_separator() {
+        let mut p = Policy::new_source("https://resource.test/mcp");
+        assert!(!p.include_resource);
+        p.protocol(Some("2025-06-18"));
+        assert!(p.include_resource);
+        p.protocol(None);
+        assert!(!p.include_resource);
+        for version in ["zzz", "2025-12-01", "2025-03-26", "2024-11-05", ""] {
+            p.protocol(Some(version));
+            assert!(!p.include_resource);
+        }
+        p.has_prm = true;
+        p.protocol(Some("zzz"));
+        assert!(p.include_resource);
+        p.has_prm = false;
+        p.asm_scopes = Some(vec!["offline_access".into()]);
+        p.select_scopes(Some("read\u{001c}offline_access"), false, None);
+        assert_eq!(p.requested.as_deref(), Some("read\u{001c}offline_access"));
+        p.select_scopes(Some("write"), true, Some("read\u{001c}offline_access"));
+        assert_eq!(p.requested.as_deref(), Some("read offline_access write"));
+        p.select_scopes(Some(""), false, None);
+        assert_eq!(p.requested.as_deref(), Some(" offline_access"));
+    }
+}
+
+#[cfg(all(test, feature = "gateway-source-endpoints"))]
+mod source_client_projection_tests {
+    use super::*;
+    #[tokio::test]
+    async fn source_client_present_surrogate_security_fields_never_become_absent_bindings() {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        for field in ["issuer", "token_endpoint_auth_method", "client_secret"] {
+            let raw = format!(r#"{{"client_id":"id","{field}":"\ud800"}}"#);
+            let source = super::super::token_json::parse(raw.as_bytes(), deadline)
+                .await
+                .unwrap();
+            let model = super::super::client_model::validate(Some(&source), deadline)
+                .await
+                .unwrap()
+                .unwrap();
+            let accepted_file_record = super::super::token_json::parse(model.json(), deadline)
+                .await
+                .unwrap();
+            assert!(
+                Client::from_source_record(&accepted_file_record).is_err(),
+                "present {field} must not turn into None"
+            );
+        }
+        let source = super::super::token_json::parse(
+            br#"{"client_id":"id","issuer":"https://bound.test","jwks":"\ud800"}"#,
+            deadline,
+        )
+        .await
+        .unwrap();
+        let model = super::super::client_model::validate(Some(&source), deadline)
+            .await
+            .unwrap()
+            .unwrap();
+        let accepted_file_record = super::super::token_json::parse(model.json(), deadline)
+            .await
+            .unwrap();
+        assert!(accepted_file_record.get("jwks").unwrap().as_str().is_none());
+        let client = Client::from_source_record(&accepted_file_record).unwrap();
+        assert_eq!(client.issuer.as_deref(), Some("https://bound.test"));
     }
 }

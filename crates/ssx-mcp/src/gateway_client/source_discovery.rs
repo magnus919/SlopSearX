@@ -41,7 +41,12 @@ fn candidate(text: String, origin: CandidateOrigin) -> DiscoveryCandidate {
 /// Exact case-sensitive re.search for resource_metadata=(?:"([^"]+)"|([^\s,]+)).
 /// No scheme/WWW-Authenticate parser, trimming, or header normalization occurs.
 pub(crate) fn resource_metadata_field(raw: &str) -> Option<&str> {
-    let needle = "resource_metadata=";
+    source_challenge_field(raw, "resource_metadata=")
+}
+pub(crate) fn source_challenge_field<'a>(raw: &'a str, needle: &str) -> Option<&'a str> {
+    if needle.is_empty() {
+        return None;
+    }
     let mut offset = 0;
     while let Some(index) = raw[offset..].find(needle) {
         let start = offset + index + needle.len();
@@ -396,5 +401,38 @@ mod callback_tests {
         assert_eq!(rows[0].text(), rows[1].text());
         assert_eq!(rows[0].origin(), SourceEndpointOrigin::Advertised);
         assert_eq!(rows[1].origin(), SourceEndpointOrigin::Derived);
+    }
+}
+
+#[cfg(test)]
+mod source_challenge_field_tests {
+    use super::*;
+    #[test]
+    fn scope_and_error_keep_source_case_substring_and_unicode_whitespace_rules() {
+        assert_eq!(
+            source_challenge_field(
+                "Bearer scope=\"read  write\", error=insufficient_scope",
+                "scope="
+            ),
+            Some("read  write")
+        );
+        assert_eq!(
+            source_challenge_field("Bearer scope=read\u{2003}write", "scope="),
+            Some("read")
+        );
+        assert_eq!(source_challenge_field("Bearer Scope=read", "scope="), None);
+        assert_eq!(source_challenge_field("", ""), None);
+        assert_eq!(
+            source_challenge_field("prefixscope=read", "scope="),
+            Some("read")
+        );
+        assert_eq!(
+            source_challenge_field("Bearer error=\"\"", "error="),
+            Some("\"\"")
+        );
+        assert_eq!(
+            source_challenge_field("Bearer error=\"insufficient_scope", "error="),
+            Some("\"insufficient_scope")
+        );
     }
 }

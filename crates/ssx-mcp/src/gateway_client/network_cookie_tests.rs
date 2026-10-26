@@ -88,7 +88,7 @@ fn network_from_client(
         resolver: super::super::resolver::GatewayResolver::new(helper, connect),
     })
 }
-fn direct(cookies: Arc<dyn SourceCookieStore>) -> Arc<Network> {
+pub(super) fn direct(cookies: Arc<dyn SourceCookieStore>) -> Arc<Network> {
     network(
         SourceHttp1PoolConfig::new_source(Duration::from_secs(2), Vec::new()).unwrap(),
         cookies,

@@ -10,10 +10,12 @@ publish.workspace = true
 workspace = true
 
 [features]
-gateway-source-endpoints = ["reqwest/ssx-http1-source-pool", "rmcp/ssx-source-metadata"]
+gateway-source-endpoints = ["reqwest/ssx-http1-source-pool", "rmcp/ssx-source-metadata", "dep:jiter"]
 gateway-dns-fixtures = ["ssx-windows-owner/fixtures"]
 
 [dependencies]
+# Same native-only Core-compatible parser already pinned by source SDK metadata.
+jiter = { version = "=0.14.0", optional = true, default-features = false, features = ["num-bigint"] }
 ssx-application.workspace = true
 ssx-infra.workspace = true
 ssx-config.workspace = true

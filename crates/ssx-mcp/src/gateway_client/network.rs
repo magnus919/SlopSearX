@@ -328,3 +328,12 @@ impl Network {
 #[cfg(all(test, unix))]
 #[path = "network_cookie_tests.rs"]
 mod cookie_wire_tests;
+
+#[cfg(all(test, unix))]
+pub(super) fn oauth_loopback_test_network() -> Arc<Network> {
+    let mut network = cookie_wire_tests::direct(Arc::new(SourceCookieJar::default()));
+    Arc::get_mut(&mut network)
+        .expect("unique test Network owner")
+        .oauth = true;
+    network
+}

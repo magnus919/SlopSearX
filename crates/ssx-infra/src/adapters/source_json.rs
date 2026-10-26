@@ -65,6 +65,23 @@ pub enum Number {
     Float(f64),
 }
 impl Number {
+    /// Construct one already-decoded arbitrary JSON integer lexeme. This checks
+    /// JSON integer syntax only; callers own body/resource bounds. The file JSON
+    /// parser retains its separate CPython4300-digit admission limit.
+    pub fn from_integer_text(raw: &str) -> Option<Self> {
+        let digits = raw.strip_prefix('-').unwrap_or(raw);
+        if digits.is_empty()
+            || !digits.bytes().all(|b| b.is_ascii_digit())
+            || (digits.len() > 1 && digits.starts_with('0'))
+        {
+            return None;
+        }
+        Some(Self::Integer(Integer(if raw == "-0" {
+            "0".into()
+        } else {
+            raw.into()
+        })))
+    }
     pub fn is_f64(&self) -> bool {
         matches!(self, Self::Float(_))
     }
@@ -1482,3 +1499,23 @@ mod resource_diagnostic_tests {
 #[path = "source_json_diagnostic.rs"]
 mod diagnostic;
 pub use diagnostic::{DiagnosticError, message_budgeted};
+
+#[cfg(test)]
+mod decoded_integer_tests {
+    use super::*;
+    #[test]
+    fn decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser() {
+        let huge = "9".repeat(5000);
+        assert_eq!(
+            Number::from_integer_text(&huge).unwrap().integer_text(),
+            Some(huge.as_str())
+        );
+        assert_eq!(
+            Number::from_integer_text("-0").unwrap().integer_text(),
+            Some("0")
+        );
+        for invalid in ["", "+1", "01", "-01", "1.0", "1e1", " 1", "-"] {
+            assert!(Number::from_integer_text(invalid).is_none());
+        }
+    }
+}

@@ -1,4 +1,4 @@
-//! Token-file-only Python JSON spelling over the accepted SourceJSON value.
+//! Distinct token-file CPython JSON and source HTTP Jiter entry boundaries.
 use ssx_infra::adapters::source_json::{self as source, Number, Text, Value};
 use std::time::Instant;
 pub const MAX_BYTES: usize = 1024 * 1024;
@@ -300,6 +300,217 @@ mod tests {
         assert_eq!(
             parse(nested(source::MAX_DEPTH + 1).as_bytes(), end).await,
             Err(JsonError::Limit)
+        );
+    }
+}
+
+/// Source HTTP JSON boundary: Core/Jiter grammar validates the ENTIRE document,
+/// including ignored fields, before existing model validators consume SourceIR.
+/// File parse remains separate: no surrogate acceptance or4300-digit cap leaks
+/// into HTTP. One MiB/depth/deadline are explicit native resource limits.
+#[cfg(feature = "gateway-source-endpoints")]
+pub(super) async fn parse_http(bytes: &[u8], deadline: Instant) -> Result<Value, JsonError> {
+    use jiter::{JsonValue, PartialMode};
+    if bytes.len() > MAX_BYTES {
+        return Err(JsonError::Limit);
+    }
+    if Instant::now() >= deadline {
+        return Err(JsonError::Deadline);
+    }
+    tokio::task::yield_now().await;
+    if Instant::now() >= deadline {
+        return Err(JsonError::Deadline);
+    }
+    let parsed = JsonValue::parse_with_config(bytes, true, PartialMode::Off);
+    if Instant::now() >= deadline {
+        return Err(JsonError::Deadline);
+    }
+    // Core2.46.4 maps every parser error (including recursion limit) to
+    // JsonInvalid/ValidationError. Only OUR body/deadline guards are operational.
+    let value = parsed.map_err(|_| JsonError::Malformed)?;
+    enum Step<'a> {
+        Value(&'a JsonValue<'a>, usize),
+        Array(std::slice::Iter<'a, JsonValue<'a>>, Vec<Value>, usize),
+        Object(
+            std::slice::Iter<'a, (std::borrow::Cow<'a, str>, JsonValue<'a>)>,
+            source::Map,
+            Option<Text>,
+            usize,
+        ),
+    }
+    let mut stack = Vec::new();
+    stack.try_reserve(202).map_err(|_| JsonError::Limit)?;
+    stack.push(Step::Value(&value, 0));
+    let mut complete = None;
+    let mut work = 0usize;
+    while let Some(step) = stack.pop() {
+        if Instant::now() >= deadline {
+            return Err(JsonError::Deadline);
+        }
+        work += 1;
+        if work.is_multiple_of(128) {
+            tokio::task::yield_now().await;
+            if Instant::now() >= deadline {
+                return Err(JsonError::Deadline);
+            }
+        }
+        match step {
+            Step::Value(value, depth) => {
+                // Jiter already admitted its own200-level grammar; file100 is
+                // deliberately absent. This guard only bounds our traversal.
+                if depth > 200 {
+                    return Err(JsonError::Limit);
+                }
+                complete = Some(match value {
+                    JsonValue::Null => Value::Null,
+                    JsonValue::Bool(v) => Value::Bool(*v),
+                    JsonValue::Int(v) => Value::integer(*v),
+                    JsonValue::BigInt(v) => Value::Number(
+                        Number::from_integer_text(&v.to_string()).ok_or(JsonError::Malformed)?,
+                    ),
+                    JsonValue::Float(v) => Value::Number(Number::Float(*v)),
+                    JsonValue::Str(v) => Value::String(Text::from(v.as_ref())),
+                    JsonValue::Array(values) => {
+                        let mut out = Vec::new();
+                        out.try_reserve(values.len())
+                            .map_err(|_| JsonError::Limit)?;
+                        stack.push(Step::Array(values.iter(), out, depth));
+                        continue;
+                    }
+                    JsonValue::Object(fields) => {
+                        stack.push(Step::Object(fields.iter(), source::Map::new(), None, depth));
+                        continue;
+                    }
+                });
+            }
+            Step::Array(mut iter, mut out, depth) => {
+                if let Some(value) = complete.take() {
+                    out.push(value);
+                }
+                if let Some(value) = iter.next() {
+                    stack.push(Step::Array(iter, out, depth));
+                    stack.push(Step::Value(value, depth + 1));
+                } else {
+                    complete = Some(Value::Array(out));
+                }
+            }
+            Step::Object(mut iter, mut out, pending, depth) => {
+                if let Some(key) = pending {
+                    out.insert(key, complete.take().ok_or(JsonError::Malformed)?);
+                }
+                if let Some((key, value)) = iter.next() {
+                    // Map insert preserves first key position/final duplicate
+                    // value; checkpoints also bound Vec-map insertion batches.
+                    stack.push(Step::Object(
+                        iter,
+                        out,
+                        Some(Text::from(key.as_ref())),
+                        depth,
+                    ));
+                    stack.push(Step::Value(value, depth + 1));
+                } else {
+                    complete = Some(Value::Object(out));
+                }
+            }
+        }
+    }
+    if Instant::now() >= deadline {
+        return Err(JsonError::Deadline);
+    }
+    complete.ok_or(JsonError::Malformed)
+}
+
+#[cfg(all(test, feature = "gateway-source-endpoints"))]
+mod source_http_tests {
+    use super::*;
+    #[tokio::test]
+    async fn source_http_ignored_surrogates_fail_before_models_while_file_lane_stays_distinct() {
+        let deadline = Instant::now() + std::time::Duration::from_secs(10);
+        for raw in [
+            br#"{"access_token":"ok","token_type":"Bearer","extra":"\ud800"}"#.as_slice(),
+            br#"{"client_id":"ok","issuer":{"ignored":"\ud800"}}"#.as_slice(),
+        ] {
+            assert_eq!(
+                parse_http(raw, deadline).await.unwrap_err(),
+                JsonError::Malformed
+            );
+            assert!(
+                parse(raw, deadline).await.is_ok(),
+                "file JSON permits escaped surrogate text"
+            );
+        }
+        let too_deep = format!(r#"{{"ignored":{}0{}}}"#, "[".repeat(250), "]".repeat(250));
+        assert_eq!(
+            parse_http(too_deep.as_bytes(), deadline).await.unwrap_err(),
+            JsonError::Malformed
+        );
+        assert_eq!(
+            parse_http(b"{}", Instant::now()).await.unwrap_err(),
+            JsonError::Deadline
+        );
+        assert_eq!(
+            parse_http(&vec![b' '; MAX_BYTES + 1], deadline)
+                .await
+                .unwrap_err(),
+            JsonError::Limit
+        );
+    }
+    #[tokio::test]
+    async fn source_http_ignored_big_nan_and_duplicate_members_use_existing_models() {
+        let deadline = Instant::now() + std::time::Duration::from_secs(10);
+        // Drop after actual conversion has started, not only its initial yield.
+        let many = format!(
+            "{{{}}}",
+            (0..2000)
+                .map(|i| format!("\"key{i}\":{i}"))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+        let mut projection = Box::pin(parse_http(many.as_bytes(), deadline));
+        for _ in 0..2 {
+            assert!(
+                std::future::poll_fn(|cx| std::task::Poll::Ready(
+                    projection.as_mut().poll(cx).is_pending()
+                ))
+                .await
+            );
+        }
+        drop(projection);
+        let huge = "9".repeat(5000);
+        let deep = format!("{}0{}", "[".repeat(150), "]".repeat(150));
+        let deep_token = format!(r#"{{"access_token":"ok","ignored":{deep}}}"#);
+        let parsed = parse_http(deep_token.as_bytes(), deadline).await.unwrap();
+        assert!(
+            super::super::token_model::validate(Some(&parsed), deadline)
+                .await
+                .unwrap()
+                .is_some()
+        );
+        let token = format!(
+            r#"{{"access_token":"before","access_token":"after","token_type":"Bearer","extra":[{huge},NaN,Infinity,-Infinity]}}"#
+        );
+        let parsed = parse_http(token.as_bytes(), deadline).await.unwrap();
+        let model = super::super::token_model::validate(Some(&parsed), deadline)
+            .await
+            .unwrap()
+            .unwrap();
+        let accepted = parse(model.json(), deadline).await.unwrap();
+        assert_eq!(
+            accepted.get("access_token").unwrap().as_str(),
+            Some("after")
+        );
+        let client =
+            format!(r#"{{"client_id":"before","client_id":"after","extra":[{huge},NaN]}}"#);
+        let parsed = parse_http(client.as_bytes(), deadline).await.unwrap();
+        let model = super::super::client_model::validate(Some(&parsed), deadline)
+            .await
+            .unwrap()
+            .unwrap();
+        let accepted = parse(model.json(), deadline).await.unwrap();
+        assert_eq!(accepted.get("client_id").unwrap().as_str(), Some("after"));
+        assert!(
+            parse(token.as_bytes(), deadline).await.is_err(),
+            "file integer limit remains in place"
         );
     }
 }
