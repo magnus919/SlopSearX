@@ -1,0 +1,157 @@
+# Contributing to SlopSearX
+
+Thanks for your interest. This project is in early development — the spec is stable but implementation is fluid.
+
+## How to Contribute
+
+1. **Check existing issues** — look for `good first issue` or `help wanted` labels
+2. **Open an issue first** — for bugs, feature requests, or design discussions. Don't jump straight to a PR without discussion
+3. **Branch from main** — `git checkout -b feat/my-thing`
+4. **Keep PRs focused** — one feature or fix per PR. No mega-PRs
+5. **Write tests** — new features come with tests, bug fixes come with regression tests
+6. **Conventional Commits** — `feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `refactor:`
+7. **DCO sign-off** — every commit must be signed (`git commit -s`). By signing you certify that the contribution is your own work or you have the right to submit it under the MIT license
+
+## Measured improvement experiments
+
+For hypothesis-driven improvements, follow the [experiment loop](docs/experiments/README.md).
+Use the [material improvement design](docs/experiments/DESIGN.md) to select
+consequential problems and match evidence to the intended benefit. SLOs are
+optional operator guidance; the runner does not operate production or send alerts.
+Register the metric and decision rule before testing, retain every outcome, and
+submit implementation PRs only when the evidence supports a useful improvement
+and all compatibility guardrails pass. Negative and inconclusive experiments
+remain in the documentation ledger even when their candidate code is discarded.
+Documentation-only experiment PRs are automatically merged without code review,
+CI, or pre-commit; follow the scope verification and signed `[skip ci]` commit
+procedure in the experiment guide. Implementation or mixed PRs retain the normal
+checks and review requirements. For experiment-loop implementation PRs authored
+under magnus919, the maintainer authorizes merging after all applicable CI passes
+and a positive Droid review, or a recorded substantive runner review if Droid
+is unavailable or not working. See the experiment guide for the exact gate.
+No production deployment is authorized by this standing rule.
+
+## Development Setup
+
+```bash
+git clone git@github.com:magnus919/SlopSearX.git
+cd SlopSearX
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+## Before Submitting a PR
+
+- Run pre-commit hooks: `pre-commit run --all-files`
+- Run tests with coverage: `pytest --cov=slopsearx --cov=engines --cov-report=term-missing`
+- Type check: `mypy slopsearx/ engines/`
+- Verify conventional commit format on all commits
+- If this is an agent-authored PR, mention `@droid` in a PR comment to request automated review
+
+## Release automation
+
+Release Please uses `release-please-config.json` and
+`.release-please-manifest.json` to track the root Python package. Tags retain the
+existing `v<version>` format. The manifest starts from the published `v0.5.0`
+release; subsequent release PRs update it automatically.
+
+Release discovery scans up to 1,000 releases, and changelog collection scans up
+to 1,000 commits. Explicit manifest tracking avoids the inline action configuration's 250-commit discovery limit, which can
+miss the previous release during busy development and reset the proposed version
+to `0.1.0`. If a release falls outside the configured window, increase the search
+depths before merging the release PR. Check its version and changelog against the
+latest published release; do not fix a discovery failure by pinning `release-as`.
+
+## Portal impact review
+
+The browser portal is a first-class service. Before changing a backend or
+shared module, review whether the change affects the portal's request state,
+result fields, source capabilities, filter enforcement, policy boundary,
+cache/snapshot behavior, or HTTP errors. Use the accepted contracts in
+[`docs/PORTAL_UX_SPEC.md`](docs/PORTAL_UX_SPEC.md),
+[`docs/PORTAL_VISUAL_SYSTEM.md`](docs/PORTAL_VISUAL_SYSTEM.md), and
+[`docs/PORTAL_ACCEPTANCE.md`](docs/PORTAL_ACCEPTANCE.md) as the review
+baseline.
+
+At minimum, run the deterministic portal contract slice when those boundaries
+change:
+
+```bash
+pytest --no-cov -q tests/test_formatter.py tests/test_server.py
+ruff check slopsearx/formatter.py slopsearx/server.py tests/test_formatter.py tests/test_server.py
+mypy slopsearx/formatter.py slopsearx/server.py
+```
+
+A behavior change that is visible in HTML needs an HTML or browser regression
+test and an update to the portal documentation. A backend change cannot be
+considered isolated solely because it does not edit a frontend file; CI runs
+the portal contract gate for shared backend changes.
+
+## Real Valkey integration tests
+
+CI runs cache and research ownership contracts against a disposable Valkey service.
+
+The `searxng-api-contract` CI job runs the deterministic SearXNG compatibility
+suite on every pull request. See [`docs/SEARXNG_API_CONTRACT.md`](docs/SEARXNG_API_CONTRACT.md)
+for the pinned reference version and update procedure.
+To run them locally, start a separate test instance and set
+`SLOPSEARX_TEST_VALKEY_URL=redis://127.0.0.1:16379/0`, then run
+`pytest --no-cov -q tests/test_cache_integration.py`.
+A Unix socket URL (`unix:///absolute/path/server.sock`) is also supported.
+The suite deliberately ignores the application `VALKEY_URL`, uses random test
+namespaces, and deletes only its own records; it never calls `FLUSHDB`.
+Tests cover actual expiry, competing claims, lease recovery, stale-owner fencing,
+cancellation, tenant isolation, and async connection lifecycle.
+
+## Upstream contract checks
+
+Routine tests replay captured upstream fixtures without network access. For the
+bounded, opt-in live probe and fixture refresh workflow, see
+[Upstream contract validation](docs/UPSTREAM_CONTRACTS.md). Live results distinguish
+availability failures from parser/contract failures and do not measure relevance.
+
+## Adding a New Engine Adapter
+
+See `docs/ENGINE_ADAPTERS.md` for the full reference — contract rules, data types, lifecycle hooks, and the built-in adapter table. Quick checklist:
+
+- [ ] One Python file in `engines/` with a `@register_engine` class
+- [ ] `name`, `display_name`, `engine_type`, `categories` set
+- [ ] Routing role added in `slopsearx/jev.py`; specialists also include a factual `purpose` and discriminating `use_when` card
+- [ ] `async def search()` returns `AdapterResponse` — never raises
+- [ ] Import added to `engines/__init__.py`
+- [ ] Tests added in `tests/test_adapters.py`
+- [ ] Category tags follow SearXNG taxonomy (or use engine-specific namespace prefixes)
+- [ ] **README.md Engines table updated** (name, type, auth, categories)
+- [ ] Tier classification correct — see "Engine Tier Governance" below
+
+**Removing an engine:** Remove its file from `engines/`, its import from `engines/__init__.py`, and its row from the README.md Engines table.
+
+### Engine Tier Governance
+
+SlopSearX uses a two-tier engine system to keep unscoped search results clean while retaining breadth:
+
+- **Tier 1** — Broad, general-purpose engines that return relevant results on any query. These form the primary result set in unscoped searches. Tier 1 engines are curated aggressively to minimise noise.
+- **Tier 2** — All specialised engines (science, packages, security, finance, media, etc.). Their results are surfaced below Tier 1 in unscoped searches, keeping top results focused without losing domain-specific coverage.
+
+**All new engines are Tier 2 by default.** An engine may only be classified as Tier 1 with prior approval from the project maintainers. The bar for Tier 1 is high: the engine must return broadly relevant results across the long tail of everyday queries, not just within its domain.
+
+Current Tier 1 engines are defined in `DEFAULT_TIER1_ENGINES` in `slopsearx/service.py`. This set changes rarely.
+
+## Code of Conduct
+
+Be excellent to each other. This is a small project — disagreements happen, but keep them technical and constructive.
+
+## AI-Assisted Contributions
+
+AI-assisted code generation and editing tools are welcome. Disclose the tool used in the PR description and take responsibility for the output — review it, test it, and own it. The contributor is the human, not the tool.
+
+## Rust Build Artifacts
+
+Rust contributors must use a configured persistent build root outside the
+checkout for builds and temporary inputs/evidence. CI may use its designated
+ephemeral job directory when the job cleans it up. Record ownership and
+retention in the root's persistent task ledger and complete the post-merge
+cleanup audit for each PR. Follow
+[`docs/RUST_BUILD_FOOTPRINT.md`](docs/RUST_BUILD_FOOTPRINT.md) for placement,
+measurement, preservation, and cleanup steps.

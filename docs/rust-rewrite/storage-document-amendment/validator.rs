@@ -129,6 +129,98 @@ pub fn verify_successor(
     }
     Ok(())
 }
+// PR1046 adds only the two reviewed notices. The pre-pause documents remain
+// independently archived and verified through the historical chains above.
+const PAUSE_CAPSULE: &[u8] = include_bytes!("community-pr-pause-v1.json");
+const PAUSE_CAPSULE_SHA256: &str =
+    "e859ec18e37ad02c41d0391e204fa83a6d4ef35ec9106337dda82d0bc599b45a";
+const PRE_PAUSE_AGENTS: &[u8] = include_bytes!("AGENTS.pre-pause-d623.md.frozen");
+const PRE_PAUSE_CONTRIBUTING: &[u8] = include_bytes!("CONTRIBUTING.pre-pause-d623.md.frozen");
+
+pub fn verify_pause_successor(
+    path: &str,
+    baseline: &[u8],
+    current: &[u8],
+    raw: &[u8],
+) -> Result<(), String> {
+    let (expected_baseline, archive) = match path {
+        "AGENTS.md" => (
+            "284b8126bc0e031af6b6b734e5d699a86e2bae8a92faabd90cd35696411aadb3",
+            "docs/rust-rewrite/storage-document-amendment/AGENTS.pre-pause-d623.md.frozen",
+        ),
+        "CONTRIBUTING.md" => (
+            BINDINGS[1].after,
+            "docs/rust-rewrite/storage-document-amendment/CONTRIBUTING.pre-pause-d623.md.frozen",
+        ),
+        _ => return Err("Unreviewed community-pause document path".into()),
+    };
+    if digest(raw) != PAUSE_CAPSULE_SHA256 {
+        return Err("Community-pause capsule differs".into());
+    }
+    let doc: serde_json::Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
+    if doc["kind"] != "SLOPSEARX_COMMUNITY_PR_PAUSE_V1"
+        || doc["baseline_revision"] != "d623c739653fca4812aca982f8ab703e1fbf361a"
+        || doc["candidate_revision"] != "9bae4746b27e7e33a7bad7a7ce048d6234c84f8a"
+        || doc["pull_request"] != 1046
+    {
+        return Err("Community-pause provenance differs".into());
+    }
+    let documents = doc["documents"]
+        .as_array()
+        .ok_or("Pause document rows absent")?;
+    if documents.len() != 2 {
+        return Err("Pause document inventory differs".into());
+    }
+    let rows: Vec<_> = documents
+        .iter()
+        .filter(|row| row["source_path"] == path)
+        .collect();
+    if rows.len() != 1 {
+        return Err("Pause document identity differs".into());
+    }
+    let row = rows[0];
+    if row["archive_path"] != archive
+        || row["baseline"]["sha256"] != expected_baseline
+        || digest(baseline) != expected_baseline
+        || row["baseline"]["bytes"].as_u64() != Some(baseline.len() as u64)
+    {
+        return Err("Pause baseline/archive binding differs".into());
+    }
+    if row["current"]["sha256"] != digest(current)
+        || row["current"]["bytes"].as_u64() != Some(current.len() as u64)
+    {
+        return Err("Pause actual current bytes differ".into());
+    }
+    let edits = row["edits"].as_array().ok_or("Pause edit absent")?;
+    if edits.len() != 1 {
+        return Err("Pause requires exactly one notice insertion".into());
+    }
+    let edit = &edits[0];
+    let at = edit["at"]
+        .as_u64()
+        .and_then(|v| usize::try_from(v).ok())
+        .ok_or("Pause insertion offset invalid")?;
+    let insert = edit["insert_utf8"]
+        .as_str()
+        .ok_or("Pause notice absent")?
+        .as_bytes();
+    let title_end = baseline
+        .windows(2)
+        .position(|w| w == b"\n\n")
+        .ok_or("Pause title boundary absent")?
+        + 2;
+    if edit["remove_utf8"] != "" || at != title_end || insert.is_empty() {
+        return Err("Pause is not a title-adjacent insertion".into());
+    }
+    let mut rebuilt = baseline[..at].to_vec();
+    rebuilt.extend_from_slice(insert);
+    rebuilt.extend_from_slice(&baseline[at..]);
+    if rebuilt != current {
+        return Err("Pause reconstructed successor differs".into());
+    }
+    Ok(())
+}
+
 pub fn verify(
     path: &str,
     original: &str,
@@ -136,17 +228,31 @@ pub fn verify(
     current: &[u8],
     archive: &[u8],
 ) -> Result<(), String> {
-    if path != "AGENTS.md" {
-        return verify_historical(path, original, original_bytes, current, archive);
-    }
-    verify_historical(path, original, original_bytes, ACCEPTED_AGENTS, archive)?;
-    verify_successor(
-        path,
-        BINDINGS[0].after,
-        ACCEPTED_AGENTS,
-        current,
-        AGENTS_SUCCESSOR,
-    )
+    let baseline = match path {
+        "AGENTS.md" => {
+            verify_historical(path, original, original_bytes, ACCEPTED_AGENTS, archive)?;
+            verify_successor(
+                path,
+                BINDINGS[0].after,
+                ACCEPTED_AGENTS,
+                PRE_PAUSE_AGENTS,
+                AGENTS_SUCCESSOR,
+            )?;
+            PRE_PAUSE_AGENTS
+        }
+        "CONTRIBUTING.md" => {
+            verify_historical(
+                path,
+                original,
+                original_bytes,
+                PRE_PAUSE_CONTRIBUTING,
+                archive,
+            )?;
+            PRE_PAUSE_CONTRIBUTING
+        }
+        _ => return Err("Unreviewed storage document path".into()),
+    };
+    verify_pause_successor(path, baseline, current, PAUSE_CAPSULE)
 }
 
 pub fn archive_path(path: &str) -> Result<&'static str, String> {

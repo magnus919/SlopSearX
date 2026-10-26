@@ -1,5 +1,17 @@
 # SlopSearX — Agent Guide
 
+## Community pull requests temporarily paused
+
+SlopSearX is being rewritten in Rust. External and community pull requests are
+temporarily not being accepted, including Python contributions. Do not start or
+continue Python PR work for community submission during this pause; contributors
+should not invest in new Python PRs or revisions intended for acceptance now.
+
+Maintainers may continue the Rust rewrite and related maintenance work. This
+pause remains in effect until maintainers announce that community submissions
+have reopened. The engineering and workflow guidance below still applies to
+maintainer work and to community contributions after reopening.
+
 This document helps AI coding agents understand the project structure, architecture, and conventions.
 
 ## Start Every Session from Current Upstream Main

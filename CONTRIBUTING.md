@@ -1,5 +1,17 @@
 # Contributing to SlopSearX
 
+## Community pull requests temporarily paused
+
+SlopSearX is being rewritten in Rust. We are temporarily not accepting external
+or community pull requests, including Python contributions. Please do not invest
+time in new Python PRs or revise existing Python PRs for acceptance during this
+pause.
+
+Maintainers may continue the Rust rewrite and related maintenance work. The
+community PR pause remains in effect until maintainers announce that submissions
+have reopened. The contribution guidance below applies to maintainer work during
+the pause and to community contributions after reopening.
+
 Thanks for your interest. This project is in early development — the spec is stable but implementation is fluid.
 
 ## How to Contribute

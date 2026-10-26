@@ -1,6 +1,8 @@
 //! xtask-only controls; never included by historical A13 fixture binaries.
 
-use super::storage_document::{archive_path, is_path, verify, verify_historical, verify_successor};
+use super::storage_document::{
+    archive_path, is_path, verify, verify_historical, verify_pause_successor, verify_successor,
+};
 const BINDINGS: &[(&str, &str)] = &[
     (
         "AGENTS.md",
@@ -23,6 +25,39 @@ fn current(path: &str) -> &'static [u8] {
         "AGENTS.md" => include_bytes!("../../../AGENTS.md"),
         "CONTRIBUTING.md" => include_bytes!("../../../CONTRIBUTING.md"),
         _ => panic!("test fixture path"),
+    }
+}
+fn pre_pause(path: &str) -> &'static [u8] {
+    match path {
+        "AGENTS.md" => include_bytes!("AGENTS.pre-pause-d623.md.frozen"),
+        "CONTRIBUTING.md" => include_bytes!("CONTRIBUTING.pre-pause-d623.md.frozen"),
+        _ => panic!("test fixture path"),
+    }
+}
+#[test]
+fn pause_successors_are_exact_and_reject_stale_or_tampered_inputs() {
+    let capsule = include_bytes!("community-pr-pause-v1.json");
+    for (path, original) in BINDINGS {
+        let baseline = pre_pause(path);
+        verify_pause_successor(path, baseline, current(path), capsule).unwrap();
+        // Neither pre-pause documents nor accepted historical documents are live.
+        assert!(verify(path, original, None, baseline, archive(path)).is_err());
+        let mut changed = baseline.to_vec();
+        changed.push(0);
+        assert!(verify_pause_successor(path, &changed, current(path), capsule).is_err());
+        let mut changed = current(path).to_vec();
+        changed.push(0);
+        assert!(verify_pause_successor(path, baseline, &changed, capsule).is_err());
+        let mut changed = capsule.to_vec();
+        changed.push(0);
+        assert!(verify_pause_successor(path, baseline, current(path), &changed).is_err());
+        let other = if *path == "AGENTS.md" {
+            "CONTRIBUTING.md"
+        } else {
+            "AGENTS.md"
+        };
+        assert!(verify_pause_successor(path, pre_pause(other), current(path), capsule).is_err());
+        assert!(verify_pause_successor("./AGENTS.md", baseline, current(path), capsule).is_err());
     }
 }
 #[test]
@@ -53,7 +88,7 @@ fn exact_current_and_original_archives_are_accepted() {
         "AGENTS.md",
         accepted_sha,
         baseline,
-        current("AGENTS.md"),
+        pre_pause("AGENTS.md"),
         capsule,
     )
     .unwrap();
@@ -64,7 +99,7 @@ fn exact_current_and_original_archives_are_accepted() {
             "AGENTS.md",
             original,
             None,
-            current("AGENTS.md"),
+            pre_pause("AGENTS.md"),
             archive("AGENTS.md")
         )
         .is_err()
@@ -76,7 +111,7 @@ fn exact_current_and_original_archives_are_accepted() {
             "AGENTS.md",
             accepted_sha,
             &wrong_baseline,
-            current("AGENTS.md"),
+            pre_pause("AGENTS.md"),
             capsule
         )
         .is_err()
@@ -86,7 +121,7 @@ fn exact_current_and_original_archives_are_accepted() {
             "AGENTS.md",
             "wrong-caller",
             baseline,
-            current("AGENTS.md"),
+            pre_pause("AGENTS.md"),
             capsule
         )
         .is_err()
@@ -96,12 +131,12 @@ fn exact_current_and_original_archives_are_accepted() {
             "CONTRIBUTING.md",
             accepted_sha,
             baseline,
-            current("AGENTS.md"),
+            pre_pause("AGENTS.md"),
             capsule
         )
         .is_err()
     );
-    let mut wrong_current = current("AGENTS.md").to_vec();
+    let mut wrong_current = pre_pause("AGENTS.md").to_vec();
     wrong_current.push(0);
     assert!(
         verify_successor("AGENTS.md", accepted_sha, baseline, &wrong_current, capsule).is_err()
@@ -113,7 +148,7 @@ fn exact_current_and_original_archives_are_accepted() {
             "AGENTS.md",
             accepted_sha,
             baseline,
-            current("AGENTS.md"),
+            pre_pause("AGENTS.md"),
             &wrong_capsule
         )
         .is_err()
