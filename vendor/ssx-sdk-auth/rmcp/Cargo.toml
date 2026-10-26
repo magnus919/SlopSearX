@@ -62,6 +62,7 @@ rustdoc-args = [
 ]
 
 [features]
+ssx-source-metadata = ["auth", "dep:jiter"]
 __reqwest = ["dep:reqwest"]
 auth = [
     "dep:async-trait",
@@ -945,3 +946,10 @@ default-features = false
 [lints.clippy]
 exhaustive_enums = "warn"
 exhaustive_structs = "warn"
+
+# Native Core-compatible metadata JSON only; no Jiter python/pyo3 feature.
+[dependencies.jiter]
+version = "=0.14.0"
+optional = true
+default-features = false
+features = ["num-bigint"]

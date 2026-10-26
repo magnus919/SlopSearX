@@ -10,7 +10,7 @@ publish.workspace = true
 workspace = true
 
 [features]
-gateway-source-endpoints = ["reqwest/ssx-http1-source-pool"]
+gateway-source-endpoints = ["reqwest/ssx-http1-source-pool", "rmcp/ssx-source-metadata"]
 gateway-dns-fixtures = ["ssx-windows-owner/fixtures"]
 
 [dependencies]

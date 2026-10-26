@@ -31,6 +31,12 @@ use crate::transport::common::http_header::HEADER_MCP_PROTOCOL_VERSION;
 #[cfg(feature = "auth-enterprise-managed")]
 pub mod enterprise;
 
+#[cfg(feature = "ssx-source-metadata")]
+mod source_manager;
+/// Opt-in whole source metadata validation and explicit raw HTTP projection.
+#[cfg(feature = "ssx-source-metadata")]
+pub mod source_metadata;
+
 const DEFAULT_HTTP_TIMEOUT: Duration = Duration::from_secs(30);
 const MAX_OAUTH_HTTP_RESPONSE_BODY_BYTES: usize = 1024 * 1024;
 const MAX_OAUTH_DISCOVERY_REDIRECTS: usize = 10;
@@ -104,6 +110,56 @@ pub type OAuthHttpClientFuture<'a> =
 pub trait OAuthHttpClient: Send + Sync {
     /// Execute one OAuth HTTP operation.
     fn execute(&self, request: OAuthHttpRequest) -> OAuthHttpClientFuture<'_>;
+
+    /// Execute an explicitly injected source operation without a default typed URI.
+    /// Default SDK clients refuse it and never silently normalize its target.
+    #[cfg(feature = "ssx-source-metadata")]
+    fn execute_source(
+        &self,
+        _request: source_metadata::SourceOAuthHttpRequest,
+    ) -> OAuthHttpClientFuture<'_> {
+        Box::pin(async {
+            Err(Box::new(source_metadata::SourceOperationUnsupported) as OAuthHttpClientError)
+        })
+    }
+
+    /// Derive only this source discovery purpose using the gateway's admitted
+    /// raw URL/urllib operations. Defaults refuse; never normalize via SDK Url.
+    #[cfg(feature = "ssx-source-metadata")]
+    fn source_metadata_urls(
+        &self,
+        _request: source_metadata::SourceMetadataUrlsRequest,
+    ) -> source_metadata::SourceMetadataUrlsFuture<'_> {
+        Box::pin(async {
+            Err(Box::new(source_metadata::SourceOperationUnsupported) as OAuthHttpClientError)
+        })
+    }
+    /// Determine the expected issuer before credentials are checked or ASM URLs
+    /// are generated. PRM server0 is model-normalized; legacy base remains raw.
+    #[cfg(feature = "ssx-source-metadata")]
+    fn source_expected_issuer(
+        &self,
+        _base: Arc<str>,
+        _selected_server: Option<source_metadata::ModelHttpUrl>,
+    ) -> source_metadata::SourceExpectedIssuerFuture<'_> {
+        Box::pin(async {
+            Err(Box::new(source_metadata::SourceOperationUnsupported) as OAuthHttpClientError)
+        })
+    }
+
+    /// Validate one complete PRM/ASM document before source semantic policy.
+    /// An injected project adapter can call SourceMetadataProjection::parse;
+    /// None means only model-invalid, while transport/operational errors escape.
+    #[cfg(feature = "ssx-source-metadata")]
+    fn source_metadata<'a>(
+        &'a self,
+        _kind: source_metadata::SourceMetadataKind,
+        _body: &'a [u8],
+    ) -> source_metadata::SourceMetadataFuture<'a> {
+        Box::pin(async {
+            Err(Box::new(source_metadata::SourceOperationUnsupported) as OAuthHttpClientError)
+        })
+    }
 }
 
 /// Create an OAuth HTTP client with the SDK's default reqwest configuration.
@@ -567,6 +623,11 @@ impl<C> AuthClient<C> {
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum AuthError {
+    /// An explicitly injected source operation failed; preserve its error chain.
+    #[cfg(feature = "ssx-source-metadata")]
+    #[error("{0}")]
+    SourceOperation(#[source] OAuthHttpClientError),
+
     #[error("OAuth authorization required")]
     AuthorizationRequired,
 
@@ -1135,6 +1196,14 @@ impl Default for ScopeUpgradeConfig {
     }
 }
 
+#[cfg(not(feature = "ssx-source-metadata"))]
+type ManagerBase = Url;
+#[cfg(feature = "ssx-source-metadata")]
+enum ManagerBase {
+    Default(Url),
+    Source(Arc<str>),
+}
+
 /// oauth2 auth manager
 pub struct AuthorizationManager {
     http_client: Arc<dyn OAuthHttpClient>,
@@ -1145,7 +1214,9 @@ pub struct AuthorizationManager {
     oauth_client: Option<OAuthClient>,
     credential_store: Arc<dyn CredentialStore>,
     state_store: Arc<dyn StateStore>,
-    base_url: Url,
+    base_url: ManagerBase,
+    #[cfg(feature = "ssx-source-metadata")]
+    source_metadata_state: source_metadata::SourceMetadataState,
     current_scopes: RwLock<Vec<String>>,
     scope_upgrade_attempts: RwLock<u32>,
     scope_upgrade_config: ScopeUpgradeConfig,
@@ -1219,6 +1290,34 @@ fn is_allowed_client_credentials_endpoint(resource: &Url, token_endpoint: &Url) 
 }
 
 impl AuthorizationManager {
+    fn default_base_url(&self) -> Result<&Url, AuthError> {
+        #[cfg(feature = "ssx-source-metadata")]
+        {
+            match &self.base_url {
+                ManagerBase::Default(url) => Ok(url),
+                ManagerBase::Source(_) => Err(AuthError::SourceOperation(Box::new(
+                    source_metadata::SourceOperationUnsupported,
+                ))),
+            }
+        }
+        #[cfg(not(feature = "ssx-source-metadata"))]
+        {
+            Ok(&self.base_url)
+        }
+    }
+    fn base_text(&self) -> &str {
+        #[cfg(feature = "ssx-source-metadata")]
+        {
+            match &self.base_url {
+                ManagerBase::Default(url) => url.as_str(),
+                ManagerBase::Source(text) => text,
+            }
+        }
+        #[cfg(not(feature = "ssx-source-metadata"))]
+        {
+            self.base_url.as_str()
+        }
+    }
     fn is_http_url(url: &Url) -> bool {
         matches!(url.scheme(), "http" | "https") && url.host_str().is_some()
     }
@@ -1383,7 +1482,20 @@ impl AuthorizationManager {
     ) -> Result<Self, AuthError> {
         let base_url = base_url.into_url()?;
 
-        let manager = Self {
+        #[cfg(feature = "ssx-source-metadata")]
+        let base_url = ManagerBase::Default(base_url);
+        Ok(Self::with_base(
+            base_url,
+            http_client,
+            refresh_redirect_policy,
+        ))
+    }
+    fn with_base(
+        base_url: ManagerBase,
+        http_client: Arc<dyn OAuthHttpClient>,
+        refresh_redirect_policy: OAuthHttpRedirectPolicy,
+    ) -> Self {
+        Self {
             http_client,
             refresh_redirect_policy,
             source_within_origin_redirects: false,
@@ -1392,6 +1504,8 @@ impl AuthorizationManager {
             credential_store: Arc::new(InMemoryCredentialStore::new()),
             state_store: Arc::new(InMemoryStateStore::new()),
             base_url,
+            #[cfg(feature = "ssx-source-metadata")]
+            source_metadata_state: source_metadata::SourceMetadataState::default(),
             current_scopes: RwLock::new(Vec::new()),
             scope_upgrade_attempts: RwLock::new(0),
             scope_upgrade_config: ScopeUpgradeConfig::default(),
@@ -1400,9 +1514,7 @@ impl AuthorizationManager {
             discovered_resource: RwLock::new(None),
             application_type: Some(DEFAULT_APPLICATION_TYPE.to_string()),
             allow_missing_issuer: false,
-        };
-
-        Ok(manager)
+        }
     }
 
     /// Select the source-provider redirect contract on every OAuth subrequest.
@@ -1524,6 +1636,7 @@ impl AuthorizationManager {
     /// Callers needing strict no-redirect handling should pass a custom
     /// [`OAuthHttpClient`] to [`AuthorizationManager::new_with_oauth_http_client`].
     pub fn with_client(&mut self, http_client: ReqwestClient) -> Result<(), AuthError> {
+        self.default_base_url()?;
         // One client for both modes: a built reqwest::Client can't be rebuilt as a
         // no-redirect variant without dropping the caller's configuration.
         self.http_client = Arc::new(ReqwestOAuthHttpClient {
@@ -1567,7 +1680,10 @@ impl AuthorizationManager {
             });
         }
 
-        if let Some(metadata) = self.try_discover_oauth_server(&self.base_url, None).await? {
+        if let Some(metadata) = self
+            .try_discover_oauth_server(self.default_base_url()?, None)
+            .await?
+        {
             return Ok(AuthorizationMetadataResolution {
                 metadata,
                 source: AuthorizationMetadataSource::AuthorizationServerMetadata,
@@ -1576,7 +1692,7 @@ impl AuthorizationManager {
 
         debug!("falling back to legacy OAuth endpoints derived from the base URL");
         Ok(AuthorizationMetadataResolution {
-            metadata: Self::legacy_authorization_metadata(&self.base_url),
+            metadata: Self::legacy_authorization_metadata(self.default_base_url()?),
             source: AuthorizationMetadataSource::LegacyEndpointFallback,
         })
     }
@@ -1596,7 +1712,7 @@ impl AuthorizationManager {
         let Some(www_authenticate) = www_authenticate else {
             return self.resolve_metadata().await;
         };
-        let params = WWWAuthenticateParams::parse(www_authenticate, &self.base_url);
+        let params = WWWAuthenticateParams::parse(www_authenticate, self.default_base_url()?);
 
         self.record_challenge_scope(&params).await;
 
@@ -1660,6 +1776,7 @@ impl AuthorizationManager {
 
     /// configure oauth2 client with client credentials
     pub fn configure_client(&mut self, config: OAuthClientConfig) -> Result<(), AuthError> {
+        self.default_base_url()?;
         if self.metadata.is_none() {
             return Err(AuthError::NoAuthorizationSupport);
         }
@@ -1854,7 +1971,7 @@ impl AuthorizationManager {
             client_id: client_id.to_string(),
             client_secret: None,
             scopes: vec![],
-            redirect_uri: self.base_url.to_string(),
+            redirect_uri: self.base_text().to_string(),
             // keep the manager's current application_type
             application_type: None,
         };
@@ -1919,7 +2036,7 @@ impl AuthorizationManager {
             .read()
             .await
             .clone()
-            .unwrap_or_else(|| self.base_url.to_string())
+            .unwrap_or_else(|| self.base_text().to_string())
     }
 
     /// get the current granted scopes
@@ -2403,7 +2520,8 @@ impl AuthorizationManager {
                 let Ok(value_str) = value.to_str() else {
                     continue;
                 };
-                let params = Self::extract_www_authenticate_params(value_str, &self.base_url);
+                let params =
+                    Self::extract_www_authenticate_params(value_str, self.default_base_url()?);
                 if params.is_insufficient_scope() {
                     let required_scope = params.scope.unwrap_or_default();
                     return Err(AuthError::InsufficientScope {
@@ -2668,7 +2786,10 @@ impl AuthorizationManager {
                 },
             };
 
-            if !Self::is_allowed_authorization_server_metadata_url(&self.base_url, &candidate_url) {
+            if !Self::is_allowed_authorization_server_metadata_url(
+                self.default_base_url()?,
+                &candidate_url,
+            ) {
                 warn!("rejecting authorization server metadata URL");
                 continue;
             }
@@ -2723,10 +2844,11 @@ impl AuthorizationManager {
             ));
         }
 
-        if !Self::is_resource_identifier_valid(&self.base_url, &resource_url) {
+        if !Self::is_resource_identifier_valid(self.default_base_url()?, &resource_url) {
             return Err(AuthError::MetadataError(format!(
                 "Protected resource metadata resource mismatch: reference '{}', permitted '{}'",
-                self.base_url, resource
+                self.base_text(),
+                resource
             )));
         }
 
@@ -2785,9 +2907,9 @@ impl AuthorizationManager {
         // The other place the document can be is the well-known location.
         // https://www.rfc-editor.org/rfc/rfc9728.html#name-obtaining-protected-resourc
         for candidate_path in
-            Self::well_known_paths(self.base_url.path(), "oauth-protected-resource")
+            Self::well_known_paths(self.default_base_url()?.path(), "oauth-protected-resource")
         {
-            let mut candidate_url = self.base_url.clone();
+            let mut candidate_url = self.default_base_url()?.clone();
             candidate_url.set_query(None);
             candidate_url.set_fragment(None);
             candidate_url.set_path(&candidate_path);
@@ -2851,10 +2973,11 @@ impl AuthorizationManager {
     /// discovery before the well-known candidates are tried.
     /// https://www.rfc-editor.org/rfc/rfc9728.html#name-use-of-www-authenticate-for
     async fn probe_resource_endpoint_for_challenge(&self) -> Result<Option<Url>, AuthError> {
+        let base_url = self.default_base_url()?;
         let response = self
-            .discovery_get(&self.base_url)
+            .discovery_get(base_url)
             .await
-            .map_err(|error| Self::discovery_failed(&self.base_url, error))?;
+            .map_err(|error| Self::discovery_failed(base_url, error))?;
 
         if response.status() == StatusCode::UNAUTHORIZED {
             return Ok(self
@@ -2878,7 +3001,8 @@ impl AuthorizationManager {
             let Ok(value_str) = value.to_str() else {
                 continue;
             };
-            let params = Self::extract_www_authenticate_params(value_str, &self.base_url);
+            let params =
+                Self::extract_www_authenticate_params(value_str, self.default_base_url().ok()?);
             if params.resource_metadata_url.is_some() {
                 self.record_challenge_scope(&params).await;
                 parsed_url = params.resource_metadata_url;
@@ -3405,7 +3529,7 @@ impl AuthorizationManager {
                 "Invalid token endpoint URL in authorization metadata: {e}"
             ))
         })?;
-        if !is_allowed_client_credentials_endpoint(&self.base_url, &token_endpoint_url) {
+        if !is_allowed_client_credentials_endpoint(self.default_base_url()?, &token_endpoint_url) {
             return Err(AuthError::ClientCredentialsError(
                 "Insecure token endpoint URL: HTTPS is required for client credentials flow"
                     .to_string(),
