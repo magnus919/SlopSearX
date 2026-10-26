@@ -62,7 +62,7 @@ rustdoc-args = [
 ]
 
 [features]
-ssx-source-metadata = ["auth", "dep:jiter", "dep:base64", "dep:rand"]
+ssx-source-metadata = ["auth", "dep:jiter", "base64", "dep:rand"]
 __reqwest = ["dep:reqwest"]
 auth = [
     "dep:async-trait",
