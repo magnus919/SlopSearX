@@ -1,4 +1,5 @@
 //! Finite W08 semantic execution. Missing, ignored or renamed cases fail closed.
+pub(crate) mod source_successor;
 use crate::{Result, command};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -9,7 +10,7 @@ use std::{
     path::Path,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w08/qualification.json";
-const REGISTRY_SHA: &str = "e793527fc3455fad3301c8c7fe5b475c12d9e4e52399f9ef92342d3aa95fd692";
+const REGISTRY_SHA: &str = "574148ddcec9c6869b7c71b92b56f169ecabe26d76d95ac2a5f5c144ba2653b3";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Qualification {
@@ -74,6 +75,7 @@ fn names(output: &str, listing: bool) -> Result<BTreeSet<String>> {
     Ok(names)
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
+    source_successor::controls(root)?;
     let q: Qualification = serde_json::from_slice(&frozen(root, REGISTRY, REGISTRY_SHA)?)
         .map_err(|e| e.to_string())?;
     if q.schema_version != 1

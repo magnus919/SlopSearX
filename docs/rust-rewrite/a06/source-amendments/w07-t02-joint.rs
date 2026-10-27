@@ -377,6 +377,13 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
         supplied == actual,
         "supplied bytes are not physical joint source",
     )?;
+    // Supplied/current physical equality was checked above. Only then may W08's
+    // exact main insertions yield the unchanged joint-frame inverse operand.
+    let actual = if path == "crates/xtask/src/main.rs" {
+        crate::w08::source_successor::parent(root, path, &actual)?
+    } else {
+        actual
+    };
     if path == "Cargo.lock" {
         paired_manifest(root)?;
     }
@@ -429,11 +436,11 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         "current admission constants",
     )?;
     for r in ROWS {
-        let (actual, mode) = read(root, r)?;
+        let (physical, mode) = read(root, r)?;
         for (kind, p) in [(Parent::W07, &r.w07), (Parent::T02, &r.t02)] {
-            let prior = parent(root, r.path, &actual, kind)?;
+            let prior = parent(root, r.path, &physical, kind)?;
             need(
-                parent_git_blob(root, r.path, &actual, kind)? == p.blob,
+                parent_git_blob(root, r.path, &physical, kind)? == p.blob,
                 "same proved parent Git frame",
             )?;
             let git = Command::new("git")
@@ -459,12 +466,20 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 parent(root, r.path, &prior, kind).is_err(),
                 "historical parent supplied as physical current",
             )?;
-            let mut changed = actual.clone();
+            let mut changed = physical.clone();
             changed.push(0);
             need(
                 parent(root, r.path, &changed, kind).is_err(),
                 "changed supplied current",
             )?;
+            // Preserve the original joint-frame body controls after a positive
+            // inverse, independently from W08's physical afterimage controls.
+            let actual = if r.path == "crates/xtask/src/main.rs" {
+                crate::w08::source_successor::parent(root, r.path, &physical)?
+            } else {
+                physical.clone()
+            };
+            need(inverse(r, &actual, mode, p)? == prior, "positive unchanged joint frame differs")?;
             for bad_mode in [0o600, 0o755, 0o4644] {
                 need(
                     inverse(r, &actual, bad_mode, p).is_err(),

@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "plan_id": "W08",
+  "reference_policy": "read-only pinned source; no mandatory Python helper or interpreter",
+  "native_execution_status": "11 application/7 infrastructure component cases executed; final combined source gate and W02 regression execution pending",
+  "rows": [
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_normalizes_ecosystem_names",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "identity_normalization_and_canonical_digest_are_exact"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_accepts_only_canonical_github_repositories",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "repository_parser_preserves_literal_host_port_and_empty_credentials_semantics"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_resolves_only_exact_attributed_package_payloads",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "exact_attribution_preserves_ambiguity_and_never_infers_ownership"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_rejects_cross_ecosystem_and_bare_repository_metadata",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "exact_attribution_preserves_ambiguity_and_never_infers_ownership"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_malformed_attributed_metadata_never_crashes_resolution",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "exact_attribution_preserves_ambiguity_and_never_infers_ownership"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_start_is_idempotent_and_conflicts_on_identity_change",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "plan_is_bounded_and_idempotency_binds_identity_and_source",
+        "native_service_executes_existing_worker_and_reads_without_new_calls_or_ttl_renewal"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_concurrent_idempotency_admission_creates_one_identity",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "concurrent_idempotency_with_different_source_never_adopts_other_binding"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_completed_dossier_is_attributed_and_read_only",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "native_service_executes_existing_worker_and_reads_without_new_calls_or_ttl_renewal"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_requested_version_matches_among_multiple_observed_versions",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "report_attribution_uses_all_admitted_rows_while_cards_remain_sliced"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_partial_advisory_failure_uses_stable_error",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "report_attribution_uses_all_admitted_rows_while_cards_remain_sliced"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_captured_scope_policy_change_blocks_reads_retry_and_all_dispatch",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "each_destination_grant_and_source_engine_revocation_blocks_unreserved_work",
+        "source_revocation_after_first_query_blocks_next_query"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_generic_extend_rejects_dossier",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+
+      ],
+      "boundary": "Accepted W03 ResearchPlanning::followup rejects nonempty workflow metadata before generic extension; W09 preserves public error projection"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_retry_stops_at_cumulative_adapter_call_budget",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+
+      ],
+      "boundary": "Accepted W02 workflow budget and monotonic reservation regressions, reexecuted by cargo xtask check W02 on final W08 source"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_result_budget_preserves_full_snapshot",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "report_attribution_uses_all_admitted_rows_while_cards_remain_sliced"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_dependency_dossier.py",
+      "source_case": "test_predispatch_charge_survives_interrupted_execution",
+      "source_sha256": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+      "native_cases": [
+        "revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves_reservation"
+      ],
+      "boundary": "W08 native application/service semantic obligation; public envelope/transport projection remains W09"
+    },
+    {
+      "source_path": "tests/test_workflow_composition.py",
+      "source_case": "test_snapshot_to_research_is_idempotent_and_traversable",
+      "source_sha256": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+      "native_cases": [
+        "preview_bounds_snapshot_result_entity_without_persistence_or_dispatch"
+      ],
+      "boundary": "W08 native source-resolution portion only; generic destination admission/idempotent lineage and final public transport integration are W09; saved-to-staged destination execution consumes accepted W06 service"
+    },
+    {
+      "source_path": "tests/test_workflow_composition.py",
+      "source_case": "test_saved_report_composes_into_research_and_explicit_staged_plan",
+      "source_sha256": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+      "native_cases": [
+        "saved_report_uses_historical_window_and_rejects_incomparable_truncated_malformed"
+      ],
+      "boundary": "W08 native source-resolution portion only; generic destination admission/idempotent lineage and final public transport integration are W09; saved-to-staged destination execution consumes accepted W06 service"
+    },
+    {
+      "source_path": "tests/test_workflow_composition.py",
+      "source_case": "test_snapshot_result_and_entity_group_seed_dossiers_without_dispatch",
+      "source_sha256": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+      "native_cases": [
+        "preview_bounds_snapshot_result_entity_without_persistence_or_dispatch"
+      ],
+      "boundary": "W08 native source-resolution portion only; generic destination admission/idempotent lineage and final public transport integration are W09; saved-to-staged destination execution consumes accepted W06 service"
+    },
+    {
+      "source_path": "tests/test_workflow_composition.py",
+      "source_case": "test_staged_and_research_sources_export_bounded_manifests",
+      "source_sha256": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+      "native_cases": [
+        "staged_source_requires_selected_attempt_and_captured_cursor",
+        "research_attempts_stream_valid_retained_cursor_sets"
+      ],
+      "boundary": "W08 native source-resolution portion only; generic destination admission/idempotent lineage and final public transport integration are W09; saved-to-staged destination execution consumes accepted W06 service"
+    },
+    {
+      "source_path": "tests/test_workflow_composition.py",
+      "source_case": "test_source_lifecycle_policy_and_contract_fail_closed_before_dispatch",
+      "source_sha256": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+      "native_cases": [
+        "foreign_expired_missing_unavailable_revoked_and_cancelled_sources_fail_closed",
+        "restart_without_validator_and_malformed_or_tampered_binding_fail_closed"
+      ],
+      "boundary": "W08 native source-resolution portion only; generic destination admission/idempotent lineage and final public transport integration are W09; saved-to-staged destination execution consumes accepted W06 service"
+    },
+    {
+      "source_path": "tests/test_workflow_composition.py",
+      "source_case": "test_partial_incomparable_truncated_and_conflicting_sources_are_explicit",
+      "source_sha256": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+      "native_cases": [
+        "saved_report_uses_historical_window_and_rejects_incomparable_truncated_malformed",
+        "unsupported_transitions_read_nothing_and_research_missing_cursors_are_partial"
+      ],
+      "boundary": "W08 native source-resolution portion only; generic destination admission/idempotent lineage and final public transport integration are W09; saved-to-staged destination execution consumes accepted W06 service"
+    },
+    {
+      "source_path": "tests/test_workflow_composition.py",
+      "source_case": "test_research_rejects_truncated_snapshot_and_staged_snapshot_sources",
+      "source_sha256": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+      "native_cases": [
+        "preview_bounds_snapshot_result_entity_without_persistence_or_dispatch"
+      ],
+      "boundary": "W08 native source-resolution portion only; generic destination admission/idempotent lineage and final public transport integration are W09; saved-to-staged destination execution consumes accepted W06 service"
+    },
+    {
+      "source_path": "tests/test_workflow_composition_transport.py",
+      "source_case": "test_supported_composition_matrix_over_authenticated_transport",
+      "source_sha256": "f1adebf80445a6a61767a406486738f4362fb1e493b2e3e79ec1a07b4deb8a32",
+      "native_cases": [
+
+      ],
+      "boundary": "W09 final authenticated workflow registry/schema/wire integration; W08 does not claim transport parity"
+    }
+  ],
+  "portal_impact": "shared backend reviewed; no existing HTTP/HTML/browser contract change; existing portal CI required; protected composition UI W10",
+  "evidence_limits": "Mapping names is not execution or semantic parity proof; native assertions and exact actual completion receipts are required"
+}

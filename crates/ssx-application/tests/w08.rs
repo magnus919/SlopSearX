@@ -367,7 +367,33 @@ fn exact_attribution_preserves_ambiguity_and_never_infers_ownership() {
     assert_eq!(r["status"], "ambiguous");
     assert_eq!(r["matches"].as_array().unwrap().len(), 2);
     assert_eq!(r["repository_candidates"], json!(["psf/requests"]));
+    for mode in [
+        "schema",
+        "provenance",
+        "adapter_fields",
+        "name",
+        "repository",
+    ] {
+        let mut malformed = package("requests", "1");
+        let payload = malformed.payload.as_mut().unwrap();
+        match mode {
+            "schema" => payload["schema_version"] = json!(2),
+            "provenance" => payload["provenance"] = json!("bad"),
+            "adapter_fields" => payload["provenance"]["adapter_fields"] = json!("name"),
+            "name" => payload["data"]["name"] = json!({"bad":true}),
+            "repository" => payload["data"]["repository_url"] = json!("psf/requests"),
+            _ => unreachable!(),
+        }
+        let result = dossier::resolve_package_results("pypi", "requests", &[malformed]);
+        if mode == "repository" {
+            assert_eq!(result["status"], "resolved");
+            assert_eq!(result["repository_candidates"], json!([]));
+        } else {
+            assert_eq!(result["status"], "unresolved", "{mode}");
+        }
+    }
     let mut wrong = package("requests", "1");
+
     wrong.engine = "npm".into();
     assert_eq!(
         dossier::resolve_package_results("pypi", "requests", &[wrong])["status"],
@@ -704,6 +730,31 @@ fn report_attribution_uses_all_admitted_rows_while_cards_remain_sliced() {
         "not_evaluated"
     );
     assert_eq!(s.results().len(), 2);
+    let failed = ResearchQuery {
+        state: "failed".into(),
+        engine_coverage: vec![EngineCoverage {
+            engine: "nvd".into(),
+            bucket: "failed".into(),
+            failure_class: Some("error".into()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let section = dossier::section_without_snapshot(Some(&failed));
+    assert_eq!(section.value["state"], "failed");
+    assert_eq!(section.value["error"], "upstream_error");
+    let unavailable = ResearchQuery {
+        engine_coverage: vec![EngineCoverage {
+            engine: "nvd".into(),
+            bucket: "unavailable".into(),
+            failure_class: Some("unavailable".into()),
+            ..Default::default()
+        }],
+        ..failed
+    };
+    let section = dossier::section_without_snapshot(Some(&unavailable));
+    assert_eq!(section.value["state"], "unavailable");
+    assert_eq!(section.value["error"], "unavailable");
 }
 fn saved_definition() -> SavedDefinition {
     ssx_json::from_value(json!({"search_id":"saved-a","tenant":"tenant-a","query":"current definition query","engines":["pypi"],"interval_seconds":60,"retention_seconds":600,"max_results":25,"max_reports":2,"created_at":1,"expires_at":200,"next_due":150,"revision":1,"paused":false,"policy_fingerprint":"fixture","last_slot":0,"latest_run_id":"run-a","baseline":null,"lease_token":null,"lease_expires_at":0,"deleted":false})).unwrap()

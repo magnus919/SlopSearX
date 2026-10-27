@@ -63,6 +63,12 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     }
     let bytes = fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
     if sha(&bytes) != expected {
+        if let Some(operand) =
+            crate::w08::source_successor::frozen_operand(root, path, expected, &bytes)?
+        {
+            return Ok(operand);
+        }
+
         if path == crate::t06::lock_amendment::SOURCE_PATH
             && expected == crate::t06::lock_amendment::HISTORICAL_SHA256
         {
@@ -355,7 +361,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         frozen(root, path, digest)?;
     }
     let original = frozen(root, MAIN_ARCHIVE, MAIN_SHA)?;
-    let current = frozen(root, "crates/xtask/src/main.rs", w07_t02_joint::MAIN_SHA)?;
+    let current = crate::w08::source_successor::physical(
+        root,
+        "crates/xtask/src/main.rs",
+        w07_t02_joint::MAIN_SHA,
+    )?;
     let parent = w07_t02_joint::parent(
         root,
         "crates/xtask/src/main.rs",
@@ -572,15 +582,16 @@ mod tests {
     #[test]
     fn metrics_successor_requires_exact_afterimage_and_inverse() {
         use crate::a13::a06_source_successor::metrics_predecessor;
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let path = "crates/ssx-application/src/lib.rs";
         let expected = "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4";
         let actual = include_bytes!("../../ssx-application/src/lib.rs");
-        let predecessor = metrics_predecessor(path, expected, actual).unwrap();
+        let predecessor = metrics_predecessor(&root, path, expected, actual).unwrap();
         assert_eq!(sha(&predecessor), expected);
         assert_eq!(predecessor.len(), 5893);
-        assert!(metrics_predecessor(path, expected, &predecessor).is_err());
-        assert!(metrics_predecessor("unlisted.rs", expected, actual).is_err());
-        assert!(metrics_predecessor(path, &"0".repeat(64), actual).is_err());
+        assert!(metrics_predecessor(&root, path, expected, &predecessor).is_err());
+        assert!(metrics_predecessor(&root, "unlisted.rs", expected, actual).is_err());
+        assert!(metrics_predecessor(&root, path, &"0".repeat(64), actual).is_err());
         let at = 2805;
         let insertion = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n    fn workflow_expired(&self, _: &'static str, _: &'static str) {}\n";
         let mut duplicate = actual.to_vec();
@@ -595,9 +606,34 @@ mod tests {
         let mut extra = actual.to_vec();
         extra.push(b' ');
         for bad in [duplicate, altered, unrelated, moved, extra] {
-            assert!(metrics_predecessor(path, expected, &bad).is_err());
+            assert!(metrics_predecessor(&root, path, expected, &bad).is_err());
         }
+        // Original Metrics-frame controls remain nonvacuous: prove its positive
+        // operand, then mutate that frame rather than only W08's outer buffer.
+        use crate::a13::a06_source_successor::metrics_frame_predecessor;
+        let frame = crate::w08::source_successor::parent(&root, path, actual).unwrap();
+        assert_eq!(
+            metrics_frame_predecessor(path, expected, &frame).unwrap(),
+            predecessor
+        );
+        let mut duplicate = frame.clone();
+        duplicate.splice(at..at, insertion.iter().copied());
+        let mut altered = frame.clone();
+        altered[at] ^= 1;
+        let mut unrelated = frame.clone();
+        unrelated[0] ^= 1;
+        let mut moved = frame.clone();
+        moved.drain(at..at + insertion.len());
+        moved.splice(0..0, insertion.iter().copied());
+        let mut extra = frame.clone();
+        extra.push(b' ');
+        for bad in [duplicate, altered, unrelated, moved, extra] {
+            assert!(metrics_frame_predecessor(path, expected, &bad).is_err());
+        }
+        assert!(metrics_frame_predecessor("unlisted.rs", expected, &frame).is_err());
+        assert!(metrics_frame_predecessor(path, &"0".repeat(64), &frame).is_err());
         // This is O01's real frozen caller; every mutated physical buffer must fail.
+
         use crate::a13::a06_source_successor::o01_metrics_predecessor;
         let caller = include_bytes!("../../../docs/rust-rewrite/o01/coverage.json");
         let current = include_bytes!("../../ssx-infra/src/observability/mod.rs");

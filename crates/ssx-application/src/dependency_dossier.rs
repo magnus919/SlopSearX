@@ -226,6 +226,7 @@ impl Limits {
     }
 }
 /// Pure admission candidate. Callers must authorize the entire plan before create.
+#[allow(clippy::too_many_arguments)]
 pub fn plan(
     identity: Identity,
     tenant: &TenantId,
