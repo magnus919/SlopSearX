@@ -3,7 +3,7 @@ use super::{
     io_owner::{IoError, IoOwner},
     token_json::{self, JsonError},
 };
-use ssx_infra::adapters::source_json::{Map, Number, Text, Value};
+use ssx_source_json::{Map, Number, Text, Value};
 use std::{
     fs::{self, OpenOptions},
     io::{Read, Write},
@@ -607,7 +607,7 @@ mod source_document_controls {
         // model cases remain pending in the separate model-adapter case map.
         let end = Instant::now() + std::time::Duration::from_secs(10);
         let cancel = CancellationToken::new();
-        let fixture = ssx_infra::adapters::source_json::from_slice(
+        let fixture = ssx_source_json::from_slice(
             include_bytes!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
                 "/../../docs/rust-rewrite/t07/token-model-source.json"

@@ -81,7 +81,16 @@ pub(super) fn actual_bytes(
 ) -> Result<Vec<u8>, String> {
     let doc = load(root)?;
     let selected = row(&doc, expected)?;
-    let actual = read(root, &selected["current"])?;
+    let actual = if selected["current"]["path"] == "crates/xtask/src/main.rs" {
+        super::super::main_isolation_current::parent(
+            root,
+            "crates/xtask/src/main.rs",
+            None,
+            super::super::main_isolation_current::Parent::T07,
+        )?
+    } else {
+        read(root, &selected["current"])?
+    };
     validate(
         selected,
         before,
@@ -90,7 +99,16 @@ pub(super) fn actual_bytes(
     )?;
     for row in doc["transitions"].as_array().ok_or("T07 unit-route rows")? {
         let before = read(root, &row["archive"])?;
-        let actual = read(root, &row["current"])?;
+        let actual = if row["current"]["path"] == "crates/xtask/src/main.rs" {
+            super::super::main_isolation_current::parent(
+                root,
+                "crates/xtask/src/main.rs",
+                None,
+                super::super::main_isolation_current::Parent::T07,
+            )?
+        } else {
+            read(root, &row["current"])?
+        };
         validate(
             row,
             &before,

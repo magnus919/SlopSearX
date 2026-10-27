@@ -292,6 +292,23 @@ fn payload_allowed(payload: &str, allowed: &[String]) -> bool {
         }
     })
 }
+// Filtered counts belong to the binary actually invoked, never to a logical
+// cross-package union. Require exactly one selected name in that physical list.
+fn physical_filtered(names: &[String], selected: &str) -> Result<usize> {
+    require(
+        names.iter().collect::<BTreeSet<_>>().len() == names.len()
+            && names
+                .iter()
+                .filter(|name| name.as_str() == selected)
+                .count()
+                == 1,
+        "A13 exact selected physical compiled inventory",
+    )?;
+    names
+        .len()
+        .checked_sub(1)
+        .ok_or_else(|| "A13 empty physical compiled inventory".into())
+}
 // Exactly one named harness start/terminal; one source-owned split is permitted.
 fn execution(output: &str, name: &str, allowed: &[String], filtered: usize) -> Result<()> {
     let lines: Vec<_> = output.lines().collect();
@@ -704,6 +721,9 @@ fn compiled_suite_names(suite: &Suite) -> Vec<String> {
     }
     if suite.package == "ssx-infra" && suite.kind == "lib" && suite.target == "ssx_infra" {
         names.extend(A06_LIB_TESTS.iter().map(|name| (*name).to_owned()));
+        names.push(a06_source_successor::w07_evidence_successor::TEST.into());
+        // Existing T07 decoded-integer coverage moves with the shared parser.
+        names.push("adapters::source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser".into());
     }
     if suite.package == "ssx-json" && suite.kind == "lib" && suite.target == "ssx_json" {
         names.extend(A06_JSON_TESTS.iter().map(|name| (*name).to_owned()));
@@ -792,6 +812,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         ],
         records,
     )?;
+    let mut physical_inventories = BTreeMap::new();
     for suite in &q.suites {
         let mut args = strings(&["test", "--offline", "--locked", "-p", &suite.package]);
         if suite.kind == "lib" {
@@ -806,10 +827,50 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             &args.iter().map(String::as_str).collect::<Vec<_>>(),
             records,
         )?;
+        let physical_names = listed(&output)?;
+        let mut actual_names = physical_names.clone();
+        if suite.package == "ssx-infra" && suite.kind == "lib" && suite.target == "ssx_infra" {
+            // Preserve the frozen logical inventory, while proving the relocated
+            // parser's complete physical inventory in its genuine shared crate.
+            let shared = command(
+                root,
+                "cargo",
+                &[
+                    "test",
+                    "--offline",
+                    "--locked",
+                    "-p",
+                    "ssx-source-json",
+                    "--lib",
+                    "--",
+                    "--list",
+                ],
+                records,
+            )?;
+            for name in listed(&shared)? {
+                let suffix = name
+                    .strip_prefix("source_json::")
+                    .ok_or("A13 unexpected shared JSON test namespace")?;
+                actual_names.push(format!("adapters::source_json::{suffix}"));
+            }
+        }
         same(
-            &listed(&output)?,
+            &actual_names,
             &compiled_suite_names(suite),
             "A13 exact compiled inventory missing/extra/duplicate",
+        )?;
+        require(
+            physical_inventories
+                .insert(
+                    (
+                        suite.package.clone(),
+                        suite.target.clone(),
+                        suite.kind.clone(),
+                    ),
+                    physical_names,
+                )
+                .is_none(),
+            "A13 duplicate physical suite inventory",
         )?;
     }
     for spec in &q.selectors {
@@ -828,7 +889,16 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             &output,
             &spec.name,
             &spec.inline_payloads,
-            compiled_suite_names(suite).len() - 1,
+            physical_filtered(
+                physical_inventories
+                    .get(&(
+                        suite.package.clone(),
+                        suite.target.clone(),
+                        suite.kind.clone(),
+                    ))
+                    .ok_or("A13 physical suite inventory disappeared")?,
+                &spec.name,
+            )?,
         )?;
         let actual = markers(&output, &spec.name, &spec.inline_payloads)?;
         let parent_markers = current_parent_markers(spec);
@@ -911,6 +981,39 @@ mod tests {
     fn strict_harness_framing() {
         let good = output("selected", "", false);
         assert!(execution(&good, "selected", &[], 0).is_ok());
+        // Regression: the same logical union may span two physical binaries.
+        // Its seventeen moved names cannot inflate infra's filtered count.
+        let physical = listed("selected: test\nother: test\n2 tests, 0 benchmarks\n").unwrap();
+        let physical_output = good.replace("0 filtered out", "1 filtered out");
+        let relocation: Value = serde_json::from_str(include_str!(
+            "../../../docs/rust-rewrite/t07/client-dependency-relocation.json"
+        ))
+        .unwrap();
+        let moved = relocation["test_relocation"].as_array().unwrap();
+        assert_eq!(moved.len(), 17);
+        let mut logical = physical.clone();
+        logical.extend(
+            moved
+                .iter()
+                .map(|row| row["old_selector"].as_str().unwrap().to_owned()),
+        );
+        assert_eq!(logical.len(), physical.len() + 17);
+        assert!(
+            execution(
+                &physical_output,
+                "selected",
+                &[],
+                physical_filtered(&physical, "selected").unwrap()
+            )
+            .is_ok()
+        );
+        assert!(execution(&physical_output, "selected", &[], logical.len() - 1).is_err());
+        assert!(physical_filtered(&[], "selected").is_err());
+        assert!(physical_filtered(&physical, "missing").is_err());
+        let mut duplicate = physical.clone();
+        duplicate.push("selected".into());
+        assert!(physical_filtered(&duplicate, "selected").is_err());
+
         let progress = "test selected has been running for over 60 seconds\n";
         let slow = good.replace("test selected ...", &format!("{progress}test selected ..."));
         assert!(execution(&slow, "selected", &[], 0).is_ok());
@@ -1133,6 +1236,7 @@ mod tests {
     fn compiled_inventory_is_closed() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         a06_source_successor::controls(&root).unwrap();
+        a06_source_successor::w07_evidence_successor::controls(&root).unwrap();
         let qualification: Qualification =
             serde_json::from_str(&std::fs::read_to_string(root.join(QUALIFICATION)).unwrap())
                 .unwrap();
@@ -1251,6 +1355,14 @@ mod tests {
         let count = |needle: &str| exact.iter().filter(|name| name.as_str() == needle).count();
         assert_eq!(count("sentinel"), 1);
         assert_eq!(count(PUBCHEM_OWNER_CLOCK_TEST), 1);
+        let w07 = a06_source_successor::w07_evidence_successor::TEST;
+        assert_eq!(count(w07), 1);
+        let mut omitted_w07 = exact.clone();
+        omitted_w07.retain(|name| name != w07);
+        assert!(same(&omitted_w07, &exact, "W07 missing additive identity").is_err());
+        let mut duplicate_w07 = exact.clone();
+        duplicate_w07.push(w07.into());
+        assert!(same(&duplicate_w07, &exact, "W07 duplicate additive identity").is_err());
         let cold = "adapters::html_helper_tests::cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies";
         assert_eq!(count(cold), 1);
         assert_eq!(

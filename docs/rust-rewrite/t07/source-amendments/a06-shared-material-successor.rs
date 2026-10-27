@@ -95,7 +95,14 @@ fn materials(root: &Path, expected: &Value) -> Result<(Vec<u8>, Vec<u8>, Value),
     let actual = if expected["path"] == "Cargo.lock" {
         gateway_dns_lock_successor::archived_prior(root, &row["current"])?
     } else {
-        super::read(root, &row["current"])?
+        let proof = super::main_isolation_current::parent(
+            root,
+            "Cargo.toml",
+            None,
+            super::main_isolation_current::Parent::T07,
+        )?;
+        super::material(&row["current"], &proof, "0644")?;
+        proof
     };
     validate(
         &doc,

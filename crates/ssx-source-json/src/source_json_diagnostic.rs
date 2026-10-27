@@ -303,7 +303,7 @@ mod tests {
     #[tokio::test]
     async fn exact_original_full_adapter_malformed_utf8_utf16_utf32_diagnostics() {
         let data: ssx_json::Value = ssx_json::from_str(include_str!(
-            "../../../../docs/rust-rewrite/a06/source-json-diagnostic.json"
+            "../../../docs/rust-rewrite/a06/source-json-diagnostic.json"
         ))
         .unwrap();
         let mut ids = std::collections::BTreeSet::new();

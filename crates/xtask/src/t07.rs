@@ -3,7 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
-const BINDINGS: &str = "c3a3a0e1b21dc934e149778052573203a1b6e7dded89d92c2c649b99541eea9b";
+const BINDINGS: &str = "878f269126c5330d0ee9f7f32a6051451e601826423950ff2778ad407018a3cc";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -36,6 +36,9 @@ fn suite(
         args.push("--lib")
     } else {
         args.extend(["--test", target])
+    }
+    if target == "t07_runtime" {
+        args.extend(["--features", "server-test-fixtures"]);
     }
     if target == "t07_dns_owner" {
         args.extend(["--features", "dns-test-fixtures"]);
@@ -258,9 +261,9 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     )?;
     suite(
         root,
-        "ssx-infra",
+        "ssx-source-json",
         "--lib",
-        Some("adapters::source_json::decoded_integer_tests::"),
+        Some("source_json::decoded_integer_tests::"),
         value["source_json_tests"]
             .as_array()
             .ok_or("T07 source JSON inventory absent")?,

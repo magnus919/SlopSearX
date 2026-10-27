@@ -10,6 +10,7 @@ publish.workspace = true
 workspace = true
 
 [features]
+server-test-fixtures = ["ssx-mcp/server", "dep:ssx-application", "dep:ssx-infra", "dep:ssx-registry", "dep:ssx-config"]
 source-endpoint-test-fixtures = ["dns-test-fixtures", "ssx-mcp/gateway-source-endpoints"]
 dns-test-fixtures = ["ssx-mcp/gateway-dns-fixtures"]
 
@@ -26,6 +27,11 @@ ssx-mcp = { workspace = true, features = ["gateway-source-endpoints"] }
 tokio.workspace = true
 tokio-util = "=0.7.20"
 
+ssx-application = { workspace = true, optional = true }
+ssx-infra = { workspace = true, optional = true }
+ssx-registry = { workspace = true, optional = true }
+ssx-config = { workspace = true, optional = true }
+
 [dev-dependencies]
 futures-util = "=0.3.34"
 axum.workspace = true
@@ -33,11 +39,7 @@ serde_json.workspace = true
 reqwest.workspace = true
 base64.workspace = true
 sha2.workspace = true
-ssx-application.workspace = true
 ssx-domain.workspace = true
-ssx-infra.workspace = true
-ssx-registry.workspace = true
-ssx-config.workspace = true
 ssx-json.workspace = true
 redis.workspace = true
 chrono = { version = "=0.4.45", default-features = false, features = ["clock", "std"] }

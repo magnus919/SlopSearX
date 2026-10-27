@@ -1,0 +1,20 @@
+[package]
+name = "ssx-source-json"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+ssx-json.workspace = true
+ssx-owned-budget.workspace = true
+ssx-domain.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+base64.workspace = true
+sha2.workspace = true

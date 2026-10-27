@@ -1,5 +1,5 @@
 //! Distinct token-file CPython JSON and source HTTP Jiter entry boundaries.
-use ssx_infra::adapters::source_json::{self as source, Number, Text, Value};
+use ssx_source_json::{self as source, Number, Text, Value};
 use std::time::Instant;
 pub const MAX_BYTES: usize = 1024 * 1024;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

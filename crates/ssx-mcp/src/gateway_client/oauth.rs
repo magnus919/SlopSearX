@@ -1124,7 +1124,7 @@ impl OAuth {
                 .await
                 .take()
                 .ok_or("OAuth source registration model missing")?;
-            use ssx_infra::adapters::source_json::{Text, Value};
+            use ssx_source_json::{Text, Value};
             let mut record = match super::token_json::parse_http(&bytes, self.store.deadline())
                 .await
                 .map_err(|_| "OAuth canonical registration invalid")?
@@ -1185,10 +1185,8 @@ impl OAuth {
     }
 }
 
-fn without_registration_issuer(
-    source: ssx_infra::adapters::source_json::Value,
-) -> ssx_infra::adapters::source_json::Value {
-    use ssx_infra::adapters::source_json::{Map, Value};
+fn without_registration_issuer(source: ssx_source_json::Value) -> ssx_source_json::Value {
+    use ssx_source_json::{Map, Value};
     if let Value::Object(fields) = source {
         let mut clean = Map::new();
         for (key, value) in fields.iter() {
@@ -1485,7 +1483,7 @@ mod source_scope_roundtrip_tests {
             .await
             .unwrap();
         match reparsed.get("expires_in").unwrap() {
-            ssx_infra::adapters::source_json::Value::Number(number) => {
+            ssx_source_json::Value::Number(number) => {
                 assert_eq!(number.integer_text().unwrap().len(), 4000)
             }
             _ => panic!("known HTTP integer was not retained"),

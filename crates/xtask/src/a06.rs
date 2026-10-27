@@ -276,6 +276,7 @@ fn current_library_inventory(root: &Path) -> Result<Value> {
     }
     verify_artifact(root, &doc["qualification"])?;
     crate::a13::a06_source_successor::a13_inventory_library_source(root, &doc["a13_source"])?;
+    crate::a13::a06_source_successor::w07_evidence_successor::prove_search(root)?;
     Ok(doc)
 }
 fn current_tests_for_platform(group: &Value, doc: &Value, linux: bool) -> Result<BTreeSet<String>> {
@@ -306,6 +307,12 @@ fn current_tests_for_platform(group: &Value, doc: &Value, linux: bool) -> Result
     expected.extend(added);
     if expected.len() != 383 + usize::from(linux) {
         return Err("A06 current library platform cardinality differs".into());
+    }
+    if !expected.insert("adapters::source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser".into()) {
+        return Err("T07 current decoded-integer test duplicates historical inventory".into());
+    }
+    if !expected.insert(crate::a13::a06_source_successor::w07_evidence_successor::TEST.into()) {
+        return Err("W07 additive library test duplicates historical inventory".into());
     }
     Ok(expected)
 }
@@ -388,9 +395,22 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     {
         let package = group["package"].as_str().ok_or("A06 package missing")?;
         let target = group["target"].as_str().ok_or("A06 target missing")?;
-        let expected =
+        let logical_expected =
             current_tests_for_platform(group, &current_library, cfg!(target_os = "linux"))?;
-        for name in &expected {
+        let relocated = if package == "ssx-infra" && target == "lib" {
+            crate::a13::a06_source_successor::main_isolation_current::source_json_tests(root)?
+        } else {
+            std::collections::BTreeMap::new()
+        };
+        if !relocated.keys().all(|name| logical_expected.contains(name)) {
+            return Err("A06 relocated physical tests are not exact logical members".into());
+        }
+        let expected = logical_expected
+            .iter()
+            .filter(|name| !relocated.contains_key(*name))
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        for name in &logical_expected {
             if !bindings.insert(format!("{package}/{target}/{name}")) {
                 return Err("A06 duplicate native binding".into());
             }
@@ -444,6 +464,39 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             verify_executed(&output, &expected)?;
             completed_output.push_str(&output);
         }
+        if !relocated.is_empty() {
+            let physical_expected: BTreeSet<_> = relocated.values().cloned().collect();
+            let args = [
+                "test",
+                "--locked",
+                "--offline",
+                "-p",
+                "ssx-source-json",
+                "--lib",
+            ];
+            let mut list = args.to_vec();
+            list.extend(["--", "--list"]);
+            let listed = command(root, "cargo", &list, records)?;
+            let available: BTreeSet<_> = listed
+                .lines()
+                .filter_map(|line| line.strip_suffix(": test").map(str::to_owned))
+                .collect();
+            if available != physical_expected {
+                return Err("A06 shared parser physical inventory differs".into());
+            }
+            let mut run = args.to_vec();
+            run.extend([
+                "--",
+                "--format",
+                "pretty",
+                "--test-threads=1",
+                "--show-output",
+            ]);
+            let output = command(root, "cargo", &run, records)?;
+            verify_executed(&output, &physical_expected)?;
+            completed_output.push_str(&output);
+            records.push(serde_json::json!({"a06_source_json_physical_relocation":relocated,"logical_package":"ssx-infra","physical_package":"ssx-source-json"}));
+        }
     }
     let expected_cases: BTreeSet<String> = coverage["completed_source_cases"]
         .as_array()
@@ -465,7 +518,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             }
         }
     }
-    records.push(json!({"A06_current_library_inventory":{"sidecar":CURRENT_LIBRARY,"sha256":CURRENT_LIBRARY_SHA256,"historical_common":295,"additive_common":88,"current_common":383,"linux_extra":1,"scope":"exact closed list and execution, not arbitrary superset admission"}}));
+    records.push(json!({"A06_current_library_inventory":{"sidecar":CURRENT_LIBRARY,"sha256":CURRENT_LIBRARY_SHA256,"historical_common":295,"additive_common":88,"current_common":385,"physical_infra_common":368,"physical_source_json_common":17,"t07_decoded_integer_additive":true,"linux_extra":1,"w07_additive_test":crate::a13::a06_source_successor::w07_evidence_successor::TEST,"scope":"exact closed list and execution, not arbitrary superset admission"}}));
     records.push(json!({"A06":{"original_regressions":mapped.len(),"completed_native_identities":bindings,"qualification":"local source-bound scholarly factories/helper semantics/lifecycle; reviewed differences retained","temporary_python":"not executed or required","remaining":"G02/global ownership, final platform/exact-head and issue984 cross-surface acceptance remain separate"}}));
     Ok(())
 }
@@ -508,8 +561,24 @@ mod tests {
             .unwrap();
         let common = current_tests_for_platform(group, &doc, false).unwrap();
         let linux = current_tests_for_platform(group, &doc, true).unwrap();
-        assert_eq!(common.len(), 383);
-        assert_eq!(linux.len(), 384);
+        assert_eq!(common.len(), 385);
+        assert_eq!(linux.len(), 386);
+        let relocated =
+            crate::a13::a06_source_successor::main_isolation_current::source_json_tests(&root)
+                .unwrap();
+        assert_eq!(relocated.len(), 17);
+        assert!(relocated.keys().all(|name| common.contains(name)));
+        assert_eq!(
+            common
+                .iter()
+                .filter(|name| !relocated.contains_key(*name))
+                .count(),
+            368
+        );
+        let mut historical = common.clone();
+        assert!(historical.remove(crate::a13::a06_source_successor::w07_evidence_successor::TEST));
+        assert!(historical.remove("adapters::source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser"));
+        assert_eq!(historical.len(), 383);
         assert_eq!(
             linux.difference(&common).cloned().collect::<BTreeSet<_>>(),
             library_names(&doc, "linux_extra").unwrap()
@@ -568,7 +637,7 @@ mod tests {
             );
         }
         println!(
-            "A06_CURRENT_LIBRARY_INVENTORY_CONTROLS frozen295_add88_exact383_linux384_missing_extra_duplicate_substitution_and_partition_rejected=true"
+            "A06_CURRENT_LIBRARY_INVENTORY_CONTROLS frozen295_add88_exact383_linux384_current385_linux386_relocated17_missing_extra_duplicate_substitution_and_partition_rejected=true"
         );
     }
     #[test]

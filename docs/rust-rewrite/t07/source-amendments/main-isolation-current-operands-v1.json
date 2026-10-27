@@ -1,0 +1,1292 @@
+{
+  "kind": "T07_MAIN_AND_CLIENT_ISOLATION_CURRENT_OPERANDS_V1",
+  "scope": "exact12 current paths; both Git parents; four source relocations; no global reader fallback",
+  "source_parents": {
+    "T07": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+    "Main": "e9c5911a468b892fe2adef9027374cb867a2535d"
+  },
+  "relocation_manifest_sha256": "2f655b5c05e4bb3801d1870cb3dec82821ddc85bd9a7a2c106e8dfc9b227b90b",
+  "rows": [
+    {
+      "path": "Cargo.toml",
+      "physical": {
+        "path": "Cargo.toml",
+        "sha256": "fe4e5d047c9d9b03d75567547534d213167a88621ae560a0132488ed37b709a7",
+        "bytes": 2626,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "Cargo.toml",
+          "sha256": "483e31936a032f45588779d8bcfc3cee03792c6332700b017d1b0b28aeec0309",
+          "bytes": 2546,
+          "mode": "0644",
+          "git_blob": "96501423ba080a307131d5a0078a1429df92e3a7",
+          "inverse": [
+            {
+              "at": 1771,
+              "remove_utf8": "ssx-source-json = { path = \"crates/ssx-source-json\" }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 2045,
+              "remove_utf8": "ssx-mcp = { path = \"crates/ssx-mcp\", default-features = false }\n",
+              "insert_utf8": "ssx-mcp = { path = \"crates/ssx-mcp\" }\n"
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "Cargo.toml",
+          "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3",
+          "bytes": 1984,
+          "mode": "0644",
+          "git_blob": "6dc332bf47713645e032e1e44d8b92ed74cdd16f",
+          "inverse": [
+            {
+              "at": 35,
+              "remove_utf8": "exclude = [\"vendor/expat\", \"vendor/libxml\", \"vendor/ssx-http-source/httparse\", \"vendor/ssx-http-source/hyper\", \"vendor/ssx-http-source/hyper-util\", \"vendor/ssx-http-source/reqwest\", \"vendor/ssx-sdk-auth/rmcp\", \"vendor/ssx-windows-owner\", \"vendor/ssx-native-ip-text\"]\n",
+              "insert_utf8": "exclude = [\"vendor/expat\", \"vendor/libxml\"]\n"
+            },
+            {
+              "at": 1771,
+              "remove_utf8": "ssx-source-json = { path = \"crates/ssx-source-json\" }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 2045,
+              "remove_utf8": "ssx-mcp = { path = \"crates/ssx-mcp\", default-features = false }\n",
+              "insert_utf8": "ssx-mcp = { path = \"crates/ssx-mcp\" }\n"
+            },
+            {
+              "at": 2287,
+              "remove_utf8": "\n# Explicit T07 reviewed HTTP/OAuth source composition.\n[patch.crates-io]\nhttparse = { path = \"vendor/ssx-http-source/httparse\" }\nhyper = { path = \"vendor/ssx-http-source/hyper\" }\nhyper-util = { path = \"vendor/ssx-http-source/hyper-util\" }\nreqwest = { path = \"vendor/ssx-http-source/reqwest\" }\nrmcp = { path = \"vendor/ssx-sdk-auth/rmcp\" }\n",
+              "insert_utf8": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "Cargo.lock",
+      "physical": {
+        "path": "Cargo.lock",
+        "sha256": "5708f639558dbaa68983d4d7af044ea2e11d5f3df4060bd761f3da5adc12ab33",
+        "bytes": 97751,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "Cargo.lock",
+          "sha256": "ac68fe297f68ba653cf96b664f0738e26437c5db8519b02fb038a139f6776c2c",
+          "bytes": 97529,
+          "mode": "0644",
+          "git_blob": "b8265553fdccaa345cfeb21381222b7bb9a0a105",
+          "inverse": [
+            {
+              "at": 69643,
+              "remove_utf8": " \"ssx-source-json\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 69936,
+              "remove_utf8": " \"aws-lc-rs\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 70296,
+              "remove_utf8": " \"ssx-source-json\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 71154,
+              "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n",
+              "insert_utf8": ""
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "Cargo.lock",
+          "sha256": "61be734ee8259d76108383154509e8c261e2cf064dc9ebf4def23a9d2a8332dc",
+          "bytes": 87572,
+          "mode": "0644",
+          "git_blob": "356b40d5915deaec9113e754deb7a9d8663ab146",
+          "inverse": [
+            {
+              "at": 293,
+              "remove_utf8": "\n[[package]]\nname = \"ahash\"\nversion = \"0.8.12\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"5a15f179cd60c4584b8a8c596927aadc462e27f2ca70c04e0071964a73ba7a75\"\ndependencies = [\n \"cfg-if\",\n \"getrandom 0.3.3\",\n \"once_cell\",\n \"version_check\",\n \"zerocopy\",\n]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 3261,
+              "remove_utf8": " \"thiserror 2.0.21\",\n",
+              "insert_utf8": " \"thiserror\",\n"
+            },
+            {
+              "at": 6275,
+              "remove_utf8": "version = \"0.22.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6\"\n\n[[package]]\nname = \"base64\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 7364,
+              "remove_utf8": "\n[[package]]\nname = \"bitvec\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"1bc2832c24239b0141d5674bb9174f9d68a8b5b3f2753311927c172ca46f7e9c\"\ndependencies = [\n \"funty\",\n \"radium\",\n \"tap\",\n \"wyz\",\n]\n\n[[package]]\nname = \"block-buffer\"\nversion = \"0.10.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71\"\ndependencies = [\n \"generic-array\",\n]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 9539,
+              "remove_utf8": " \"cpufeatures 0.3.1\",\n \"rand_core 0.10.1\",\n",
+              "insert_utf8": " \"cpufeatures\",\n \"rand_core\",\n"
+            },
+            {
+              "at": 9811,
+              "remove_utf8": " \"js-sys\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 9847,
+              "remove_utf8": " \"wasm-bindgen\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 13521,
+              "remove_utf8": "version = \"0.2.17\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280\"\ndependencies = [\n \"libc\",\n]\n\n[[package]]\nname = \"cpufeatures\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 14155,
+              "remove_utf8": "]\n\n[[package]]\nname = \"crypto-common\"\nversion = \"0.1.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a\"\ndependencies = [\n \"generic-array\",\n \"typenum\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 17183,
+              "remove_utf8": "version = \"0.10.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292\"\ndependencies = [\n \"block-buffer 0.10.4\",\n \"crypto-common 0.1.7\",\n]\n\n[[package]]\nname = \"digest\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 17620,
+              "remove_utf8": " \"block-buffer 0.12.1\",\n",
+              "insert_utf8": " \"block-buffer\",\n"
+            },
+            {
+              "at": 17658,
+              "remove_utf8": " \"crypto-common 0.2.2\",\n",
+              "insert_utf8": " \"crypto-common\",\n"
+            },
+            {
+              "at": 17935,
+              "remove_utf8": "]\n\n[[package]]\nname = \"dns-lookup\"\nversion = \"4.0.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"263c0ccfc6b3b6a93e959edad4f985779e76c0b36dbb2e13e3d27c690974adf1\"\ndependencies = [\n \"cfg-if\",\n \"libc\",\n \"socket2\",\n \"windows-sys 0.61.2\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 22178,
+              "remove_utf8": "name = \"funty\"\nversion = \"2.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c\"\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 24630,
+              "remove_utf8": "name = \"generic-array\"\nversion = \"0.14.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a\"\ndependencies = [\n \"typenum\",\n \"version_check\",\n]\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 25335,
+              "remove_utf8": " \"wasi 0.11.1+wasi-snapshot-preview1\",\n",
+              "insert_utf8": " \"wasi\",\n"
+            },
+            {
+              "at": 25391,
+              "remove_utf8": "]\n\n[[package]]\nname = \"getrandom\"\nversion = \"0.3.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"26145e563e54f2cadc477553f1ec5ee650b00862f0a58bcd12cbdc5f0ea2d2f4\"\ndependencies = [\n \"cfg-if\",\n \"libc\",\n \"r-efi 5.2.0\",\n \"wasi 0.14.2+wasi-0.2.4\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 25909,
+              "remove_utf8": " \"r-efi 6.0.0\",\n \"rand_core 0.10.1\",\n",
+              "insert_utf8": " \"r-efi\",\n \"rand_core\",\n"
+            },
+            {
+              "at": 28154,
+              "remove_utf8": "",
+              "insert_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87\"\n"
+            },
+            {
+              "at": 28621,
+              "remove_utf8": "",
+              "insert_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c\"\n"
+            },
+            {
+              "at": 29181,
+              "remove_utf8": "",
+              "insert_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ddc03d96684f9226b8a787cdb71488417b53ab5ea8fdb1dac946cb9431cc8bff\"\n"
+            },
+            {
+              "at": 29198,
+              "remove_utf8": " \"base64 0.23.1\",\n",
+              "insert_utf8": " \"base64\",\n"
+            },
+            {
+              "at": 33570,
+              "remove_utf8": "name = \"jiter\"\nversion = \"0.14.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b6f3b5d3f84b36f4ad09fd1da896d23d9852a1aa86556578dd0289f43dce311d\"\ndependencies = [\n \"ahash\",\n \"bitvec\",\n \"lexical-parse-float\",\n \"num-bigint 0.4.8\",\n \"num-traits\",\n \"pyo3\",\n \"smallvec\",\n]\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 34147,
+              "remove_utf8": " \"thiserror 2.0.21\",\n",
+              "insert_utf8": " \"thiserror\",\n"
+            },
+            {
+              "at": 35666,
+              "remove_utf8": "name = \"lexical-parse-float\"\nversion = \"1.0.5\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"de6f9cb01fb0b08060209a057c048fcbab8717b4c1ecd2eac66ebfe39a65b0f2\"\ndependencies = [\n \"lexical-parse-integer\",\n \"lexical-util\",\n \"static_assertions\",\n]\n\n[[package]]\nname = \"lexical-parse-integer\"\nversion = \"1.0.5\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"72207aae22fc0a121ba7b6d479e42cbfea549af1479c3f3a4f12c70dd66df12e\"\ndependencies = [\n \"lexical-util\",\n \"static_assertions\",\n]\n\n[[package]]\nname = \"lexical-util\"\nversion = \"1.0.6\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"5a82e24bf537fd24c177ffbbdc6ebcc8d54732c35b50a3f28cc3f4e4c949a0b3\"\ndependencies = [\n \"static_assertions\",\n]\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 36972,
+              "remove_utf8": " \"sha2 0.11.1\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 39481,
+              "remove_utf8": " \"wasi 0.11.1+wasi-snapshot-preview1\",\n",
+              "insert_utf8": " \"wasi\",\n"
+            },
+            {
+              "at": 41915,
+              "remove_utf8": "name = \"oauth2\"\nversion = \"5.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d\"\ndependencies = [\n \"base64 0.22.1\",\n \"chrono\",\n \"getrandom 0.2.17\",\n \"http\",\n \"rand 0.8.8\",\n \"serde\",\n \"serde_json\",\n \"serde_path_to_error\",\n \"sha2 0.10.9\",\n \"thiserror 1.0.69\",\n \"url\",\n]\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 44222,
+              "remove_utf8": " \"base64 0.23.1\",\n",
+              "insert_utf8": " \"base64\",\n"
+            },
+            {
+              "at": 46123,
+              "remove_utf8": "name = \"portable-atomic\"\nversion = \"1.15.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85\"\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 46730,
+              "remove_utf8": "\n[[package]]\nname = \"ppv-lite86\"\nversion = \"0.2.21\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9\"\ndependencies = [\n \"zerocopy\",\n]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 48119,
+              "remove_utf8": "name = \"pyo3\"\nversion = \"0.28.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"cf85e27e86080aafd5a22eae58a162e133a589551542b3e5cee4beb27e54f8e1\"\ndependencies = [\n \"libc\",\n \"num-bigint 0.4.8\",\n \"num-traits\",\n \"once_cell\",\n \"portable-atomic\",\n \"pyo3-build-config\",\n \"pyo3-ffi\",\n \"pyo3-macros\",\n]\n\n[[package]]\nname = \"pyo3-build-config\"\nversion = \"0.28.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"8bf94ee265674bf76c09fa430b0e99c26e319c945d96ca0d5a8215f31bf81cf7\"\ndependencies = [\n \"target-lexicon\",\n]\n\n[[package]]\nname = \"pyo3-ffi\"\nversion = \"0.28.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"491aa5fc66d8059dd44a75f4580a2962c1862a1c2945359db36f6c2818b748dc\"\ndependencies = [\n \"libc\",\n \"pyo3-build-config\",\n]\n\n[[package]]\nname = \"pyo3-macros\"\nversion = \"0.28.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"f5d671734e9d7a43449f8480f8b38115df67bef8d21f76837fa75ee7aaa5e52e\"\ndependencies = [\n \"proc-macro2\",\n \"pyo3-macros-backend\",\n \"quote\",\n \"syn 2.0.119\",\n]\n\n[[package]]\nname = \"pyo3-macros-backend\"\nversion = \"0.28.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"22faaa1ce6c430a1f71658760497291065e6450d7b5dc2bcf254d49f66ee700a\"\ndependencies = [\n \"heck\",\n \"proc-macro2\",\n \"pyo3-build-config\",\n \"quote\",\n \"syn 2.0.119\",\n]\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 50051,
+              "remove_utf8": " \"thiserror 2.0.21\",\n",
+              "insert_utf8": " \"thiserror\",\n"
+            },
+            {
+              "at": 50380,
+              "remove_utf8": " \"rand 0.10.3\",\n",
+              "insert_utf8": " \"rand\",\n"
+            },
+            {
+              "at": 50474,
+              "remove_utf8": " \"thiserror 2.0.21\",\n",
+              "insert_utf8": " \"thiserror\",\n"
+            },
+            {
+              "at": 51086,
+              "remove_utf8": "version = \"5.2.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5\"\n\n[[package]]\nname = \"r-efi\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 51436,
+              "remove_utf8": "\n[[package]]\nname = \"radium\"\nversion = \"0.7.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09\"\n\n[[package]]\nname = \"rand\"\nversion = \"0.8.8\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c\"\ndependencies = [\n \"libc\",\n \"rand_chacha\",\n \"rand_core 0.6.4\",\n]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 52117,
+              "remove_utf8": " \"rand_core 0.10.1\",\n]\n\n[[package]]\nname = \"rand_chacha\"\nversion = \"0.3.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88\"\ndependencies = [\n \"ppv-lite86\",\n \"rand_core 0.6.4\",\n]\n\n[[package]]\nname = \"rand_core\"\nversion = \"0.6.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c\"\ndependencies = [\n \"getrandom 0.2.17\",\n",
+              "insert_utf8": " \"rand_core\",\n"
+            },
+            {
+              "at": 53026,
+              "remove_utf8": " \"rand_core 0.10.1\",\n",
+              "insert_utf8": " \"rand_core\",\n"
+            },
+            {
+              "at": 55275,
+              "remove_utf8": "",
+              "insert_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029\"\n"
+            },
+            {
+              "at": 55292,
+              "remove_utf8": " \"base64 0.23.1\",\n",
+              "insert_utf8": " \"base64\",\n"
+            },
+            {
+              "at": 55320,
+              "remove_utf8": " \"chrono\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 55511,
+              "remove_utf8": " \"libc\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 55537,
+              "remove_utf8": " \"num-bigint 0.4.8\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 55610,
+              "remove_utf8": " \"regex\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 55706,
+              "remove_utf8": " \"ssx-source-codecs\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 56263,
+              "remove_utf8": "",
+              "insert_utf8": "source = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ab5023804cbe0304cbe06197ac16e645a0a0d0ffa2953bf735c15c2fa0213350\"\n"
+            },
+            {
+              "at": 56296,
+              "remove_utf8": " \"base64 0.23.1\",\n",
+              "insert_utf8": " \"base64\",\n"
+            },
+            {
+              "at": 56402,
+              "remove_utf8": " \"jiter\",\n \"oauth2\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 56472,
+              "remove_utf8": " \"rand 0.10.3\",\n",
+              "insert_utf8": " \"rand\",\n"
+            },
+            {
+              "at": 56569,
+              "remove_utf8": " \"thiserror 2.0.21\",\n",
+              "insert_utf8": " \"thiserror\",\n"
+            },
+            {
+              "at": 56662,
+              "remove_utf8": " \"url\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 65093,
+              "remove_utf8": "version = \"0.10.9\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283\"\ndependencies = [\n \"cfg-if\",\n \"cpufeatures 0.2.17\",\n \"digest 0.10.7\",\n]\n\n[[package]]\nname = \"sha2\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 65543,
+              "remove_utf8": " \"cpufeatures 0.3.1\",\n \"digest 0.11.3\",\n",
+              "insert_utf8": " \"cpufeatures\",\n \"digest\",\n"
+            },
+            {
+              "at": 68021,
+              "remove_utf8": " \"sha2 0.11.1\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 68454,
+              "remove_utf8": " \"sha2 0.11.1\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 68583,
+              "remove_utf8": " \"axum\",\n \"base64 0.23.1\",\n \"chrono\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 68630,
+              "remove_utf8": " \"futures-util\",\n \"nix\",\n \"redis\",\n \"reqwest\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 68686,
+              "remove_utf8": " \"serde_json\",\n \"sha2 0.11.1\",\n \"ssx-application\",\n \"ssx-config\",\n \"ssx-domain\",\n \"ssx-infra\",\n \"ssx-json\",\n \"ssx-mcp\",\n \"ssx-registry\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 68836,
+              "remove_utf8": " \"tokio\",\n \"tokio-util\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 68952,
+              "remove_utf8": " \"base64 0.23.1\",\n",
+              "insert_utf8": " \"base64\",\n"
+            },
+            {
+              "at": 69045,
+              "remove_utf8": " \"sha2 0.11.1\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 69317,
+              "remove_utf8": " \"base64 0.23.1\",\n",
+              "insert_utf8": " \"base64\",\n"
+            },
+            {
+              "at": 69492,
+              "remove_utf8": " \"sha2 0.11.1\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 69643,
+              "remove_utf8": " \"ssx-source-json\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 69920,
+              "remove_utf8": " \"async-trait\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 69959,
+              "remove_utf8": " \"base64 0.23.1\",\n \"dns-lookup\",\n \"flate2\",\n",
+              "insert_utf8": " \"base64\",\n"
+            },
+            {
+              "at": 70020,
+              "remove_utf8": " \"indexmap\",\n \"jiter\",\n \"libc\",\n \"nix\",\n \"oauth2\",\n \"rcgen\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 70148,
+              "remove_utf8": " \"sha2 0.11.1\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 70256,
+              "remove_utf8": " \"ssx-native-ip-text\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 70296,
+              "remove_utf8": " \"ssx-source-json\",\n \"ssx-windows-owner\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 70372,
+              "remove_utf8": " \"tokio-rustls\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 70404,
+              "remove_utf8": " \"tracing\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 70459,
+              "remove_utf8": "]\n\n[[package]]\nname = \"ssx-native-ip-text\"\nversion = \"0.1.0\"\ndependencies = [\n \"libc\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 71109,
+              "remove_utf8": " \"idna\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 71154,
+              "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 71396,
+              "remove_utf8": " \"sha2 0.11.1\",\n]\n\n[[package]]\nname = \"ssx-windows-owner\"\nversion = \"0.1.0\"\ndependencies = [\n \"sha2 0.11.1\",\n \"tokio\",\n \"windows-sys 0.61.2\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 71994,
+              "remove_utf8": "\n[[package]]\nname = \"static_assertions\"\nversion = \"1.1.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 74963,
+              "remove_utf8": "name = \"tap\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369\"\n\n[[package]]\nname = \"target-lexicon\"\nversion = \"0.13.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"df7f62577c25e07834649fc3b39fafdc597c0a3527dc1c60129201ccfcbaa50c\"\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 75604,
+              "remove_utf8": "version = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52\"\ndependencies = [\n \"thiserror-impl 1.0.69\",\n]\n\n[[package]]\nname = \"thiserror\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 76022,
+              "remove_utf8": " \"thiserror-impl 2.0.21\",\n]\n\n[[package]]\nname = \"thiserror-impl\"\nversion = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
+              "insert_utf8": " \"thiserror-impl\",\n"
+            },
+            {
+              "at": 82951,
+              "remove_utf8": " \"serde_derive\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 84671,
+              "remove_utf8": "\n[[package]]\nname = \"wasi\"\nversion = \"0.14.2+wasi-0.2.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"9683f9a5a998d873c0d21fcbe3c083009670149a8fab228644b8bd36b2c48cb3\"\ndependencies = [\n \"wit-bindgen-rt\",\n]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 93428,
+              "remove_utf8": "name = \"wit-bindgen-rt\"\nversion = \"0.39.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1\"\ndependencies = [\n \"bitflags\",\n]\n\n[[package]]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 93839,
+              "remove_utf8": "\n[[package]]\nname = \"wyz\"\nversion = \"0.5.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"05f360fc0b24296329c78fda852a1e9ae82de9cf7b27dae4b7f62f118f77b9ed\"\ndependencies = [\n \"tap\",\n]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 94387,
+              "remove_utf8": " \"thiserror 2.0.21\",\n",
+              "insert_utf8": " \"thiserror\",\n"
+            },
+            {
+              "at": 94524,
+              "remove_utf8": " \"sha2 0.11.1\",\n",
+              "insert_utf8": " \"sha2\",\n"
+            },
+            {
+              "at": 95605,
+              "remove_utf8": "]\n\n[[package]]\nname = \"zerocopy\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8\"\ndependencies = [\n \"zerocopy-derive\",\n]\n\n[[package]]\nname = \"zerocopy-derive\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
+              "insert_utf8": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "crates/ssx-mcp/Cargo.toml",
+      "physical": {
+        "path": "crates/ssx-mcp/Cargo.toml",
+        "sha256": "4533776d9d0e23235e711892d99777ce149dacfb13b69751860d22df38a174e6",
+        "bytes": 3275,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/ssx-mcp/Cargo.toml",
+          "sha256": "4c41c8dac0dac04be874dba9c050fba4236fd006e7e3e530957a01fcbf3d4f66",
+          "bytes": 2340,
+          "mode": "0644",
+          "git_blob": "72a3d753e64caa9f2bbc4df8e73627ec8d115d78",
+          "inverse": [
+            {
+              "at": 195,
+              "remove_utf8": "default = [\"server\"]\nserver = [\"dep:ssx-application\", \"dep:ssx-infra\", \"dep:ssx-config\", \"dep:ssx-registry\"]\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 659,
+              "remove_utf8": "ssx-application = { workspace = true, optional = true }\nssx-infra = { workspace = true, optional = true }\nssx-config = { workspace = true, optional = true }\nssx-registry = { workspace = true, optional = true }\n",
+              "insert_utf8": "ssx-application.workspace = true\nssx-infra.workspace = true\nssx-config.workspace = true\nssx-registry.workspace = true\n"
+            },
+            {
+              "at": 1668,
+              "remove_utf8": "ssx-source-json.workspace = true\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 2173,
+              "remove_utf8": "aws-lc-rs.workspace = true\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 2601,
+              "remove_utf8": "\n[[bin]]\nname = \"cancel-wire-qualification\"\npath = \"src/bin/cancel-wire-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"mcp-qualification\"\npath = \"src/bin/mcp-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"planning-qualification\"\npath = \"src/bin/planning-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"search-qualification\"\npath = \"src/bin/search-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"wire-qualification\"\npath = \"src/bin/wire-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"evidence-qualification\"\npath = \"src/bin/evidence-qualification.rs\"\nrequired-features = [\"server\"]\n",
+              "insert_utf8": ""
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/ssx-mcp/Cargo.toml",
+          "sha256": "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
+          "bytes": 1234,
+          "mode": "0644",
+          "git_blob": "3a25afe2908a25a81d0f413d9c098e20bdbf7e86",
+          "inverse": [
+            {
+              "at": 184,
+              "remove_utf8": "[features]\ndefault = [\"server\"]\nserver = [\"dep:ssx-application\", \"dep:ssx-infra\", \"dep:ssx-config\", \"dep:ssx-registry\"]\ngateway-source-endpoints = [\"reqwest/ssx-http1-source-pool\", \"rmcp/ssx-source-metadata\", \"dep:jiter\"]\ngateway-dns-fixtures = [\"ssx-windows-owner/fixtures\"]\n\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 476,
+              "remove_utf8": "# Same native-only Core-compatible parser already pinned by source SDK metadata.\njiter = { version = \"=0.14.0\", optional = true, default-features = false, features = [\"num-bigint\"] }\nssx-application = { workspace = true, optional = true }\nssx-infra = { workspace = true, optional = true }\nssx-config = { workspace = true, optional = true }\nssx-registry = { workspace = true, optional = true }\n",
+              "insert_utf8": "ssx-application.workspace = true\nssx-infra.workspace = true\nssx-config.workspace = true\nssx-registry.workspace = true\n"
+            },
+            {
+              "at": 929,
+              "remove_utf8": "rmcp = { workspace = true, features = [\"auth\", \"client\", \"transport-io\", \"transport-child-process\", \"transport-streamable-http-server\", \"transport-streamable-http-client-reqwest\"] }\n",
+              "insert_utf8": "rmcp = { workspace = true, features = [\"client\", \"transport-io\", \"transport-child-process\", \"transport-streamable-http-server\", \"transport-streamable-http-client-reqwest\"] }\n"
+            },
+            {
+              "at": 1271,
+              "remove_utf8": "reqwest = { workspace = true, features = [\"stream\", \"ssx-http1-source-pool\"] }\n",
+              "insert_utf8": "reqwest = { workspace = true, features = [\"stream\"] }\n"
+            },
+            {
+              "at": 1398,
+              "remove_utf8": "flate2.workspace = true\nasync-trait = \"=0.1.92\"\noauth2 = { version = \"=5.0.0\", default-features = false }\ntracing = \"=0.1.44\"\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 1668,
+              "remove_utf8": "ssx-source-json.workspace = true\nindexmap.workspace = true\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 1880,
+              "remove_utf8": "[target.'cfg(unix)'.dependencies]\nssx-native-ip-text = { path = \"../../vendor/ssx-native-ip-text\", version = \"=0.1.0\" }\nnix = { version = \"=0.31.3\", default-features = false, features = [\"fs\", \"poll\", \"event\", \"process\", \"signal\"] }\nlibc = \"=0.2.190\"\ndns-lookup = \"=4.0.2\"\n\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 2278,
+              "remove_utf8": "\n# Existing workspace TLS fixture stack; native qualification remains pending.\ntokio-rustls.workspace = true\nrcgen = { version = \"=0.14.10\", default-features = false, features = [\"aws_lc_rs\", \"pem\"] }\n\n[target.'cfg(windows)'.dependencies]\nssx-windows-owner = { path = \"../../vendor/ssx-windows-owner\", version = \"=0.1.0\" }\n\n[[bin]]\nname = \"cancel-wire-qualification\"\npath = \"src/bin/cancel-wire-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"mcp-qualification\"\npath = \"src/bin/mcp-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"planning-qualification\"\npath = \"src/bin/planning-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"search-qualification\"\npath = \"src/bin/search-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"wire-qualification\"\npath = \"src/bin/wire-qualification.rs\"\nrequired-features = [\"server\"]\n\n[[bin]]\nname = \"evidence-qualification\"\npath = \"src/bin/evidence-qualification.rs\"\nrequired-features = [\"server\"]\n",
+              "insert_utf8": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "physical": {
+        "path": "crates/ssx-infra/Cargo.toml",
+        "sha256": "f0121ddfe28bb85c8f30d9239fd57cc4bbf9d4f7c3e343db2f490c366b74af93",
+        "bytes": 1316,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/ssx-infra/Cargo.toml",
+          "sha256": "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e",
+          "bytes": 1254,
+          "mode": "0644",
+          "git_blob": "ef6d4a2e8b1fde715c80e0d0c8c37ee0456ed4d9",
+          "inverse": [
+            {
+              "at": 931,
+              "remove_utf8": "ssx-source-json.workspace = true\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 1072,
+              "remove_utf8": "ssx-mcp = { workspace = true, features = [\"server\"] }\n",
+              "insert_utf8": "ssx-mcp.workspace = true\n"
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/ssx-infra/Cargo.toml",
+          "sha256": "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e",
+          "bytes": 1254,
+          "mode": "0644",
+          "git_blob": "ef6d4a2e8b1fde715c80e0d0c8c37ee0456ed4d9",
+          "inverse": [
+            {
+              "at": 931,
+              "remove_utf8": "ssx-source-json.workspace = true\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 1072,
+              "remove_utf8": "ssx-mcp = { workspace = true, features = [\"server\"] }\n",
+              "insert_utf8": "ssx-mcp.workspace = true\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "crates/xtask/Cargo.toml",
+      "physical": {
+        "path": "crates/xtask/Cargo.toml",
+        "sha256": "d9c6c327fd892552c0f57765b16afb37755133fecbd51ecf42934493c0ec55b3",
+        "bytes": 562,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/xtask/Cargo.toml",
+          "sha256": "f3a44a27fc26740aaa57098b310a01075afba6da48380cc367c854de96afb590",
+          "bytes": 533,
+          "mode": "0644",
+          "git_blob": "ca33bdc0d04e86bac78e571add1bca17bb92a24d",
+          "inverse": [
+            {
+              "at": 397,
+              "remove_utf8": "ssx-mcp = { workspace = true, features = [\"server\"] }\n",
+              "insert_utf8": "ssx-mcp.workspace = true\n"
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/xtask/Cargo.toml",
+          "sha256": "f3a44a27fc26740aaa57098b310a01075afba6da48380cc367c854de96afb590",
+          "bytes": 533,
+          "mode": "0644",
+          "git_blob": "ca33bdc0d04e86bac78e571add1bca17bb92a24d",
+          "inverse": [
+            {
+              "at": 397,
+              "remove_utf8": "ssx-mcp = { workspace = true, features = [\"server\"] }\n",
+              "insert_utf8": "ssx-mcp.workspace = true\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "physical": {
+        "path": "crates/xtask/src/main.rs",
+        "sha256": "35b5409de295f4d4753c122c467a4002c7c4541576e4f0376303de632e8ca49d",
+        "bytes": 40529,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/xtask/src/main.rs",
+          "sha256": "9a26d3aa5874ba896fff576d97a02d344fdc39922508e4e94f8a1e8dc57eef60",
+          "bytes": 40257,
+          "mode": "0644",
+          "git_blob": "4215c64eb15486018319d17450f775f8e4592d60",
+          "inverse": [
+            {
+              "at": 603,
+              "remove_utf8": "mod w07;\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 18797,
+              "remove_utf8": "        \"W07\" => w07::check(root, records),\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 27784,
+              "remove_utf8": "    } else if id == \"W07\" {\n        \"exact native receipt/record/lineage/composition/MCP execution and measured frozen Python wire subset; no providers, production activation, startup or complete rewrite certification\"\n",
+              "insert_utf8": ""
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/xtask/src/main.rs",
+          "sha256": "abc9435b419cfa6f0013fe1177d27b6661437baabe40d3824fa95185e6da40ee",
+          "bytes": 39997,
+          "mode": "0644",
+          "git_blob": "16b26bd06aab262cb1a3c41ea29fe81cd2d8c4d8",
+          "inverse": [
+            {
+              "at": 356,
+              "remove_utf8": "#[cfg(unix)]\nmod gateway_package;\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 474,
+              "remove_utf8": "mod t07;\nmod t07_unit_profile;\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 18313,
+              "remove_utf8": "        \"T07\" => t07::check(root, records),\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 20866,
+              "remove_utf8": "    #[cfg(unix)]\n    if gateway_package::cli(&root, &args) {\n        return;\n    }\n    if t07_unit_profile::cli(&root, &args) {\n        return;\n    }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 28640,
+              "remove_utf8": "    } else if id == \"T07\" {\n        \"source-bound native client executable, fixed gateway projection, static/OAuth loopback, invocation and owned startup/cancel/EOF/instance isolation; independent exact R1/R2/profile/SDK and inherited transport acceptance remain required\"\n",
+              "insert_utf8": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "crates/xtask/src/a13.rs",
+      "physical": {
+        "path": "crates/xtask/src/a13.rs",
+        "sha256": "f444ce18a441454d240163a8f402c87cb1725fc0d964c77616d76f9a8b9e63ce",
+        "bytes": 61530,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/xtask/src/a13.rs",
+          "sha256": "7b8c213676b77a5511da43bb1f8bb3d889d4964e3ffceb4719b21801cd5fea95",
+          "bytes": 56700,
+          "mode": "0644",
+          "git_blob": "31f03497b0bf9014907a004deaaae84858d9a2ce",
+          "inverse": [
+            {
+              "at": 15808,
+              "remove_utf8": "}\n// Filtered counts belong to the binary actually invoked, never to a logical\n// cross-package union. Require exactly one selected name in that physical list.\nfn physical_filtered(names: &[String], selected: &str) -> Result<usize> {\n    require(\n        names.iter().collect::<BTreeSet<_>>().len() == names.len()\n            && names\n                .iter()\n                .filter(|name| name.as_str() == selected)\n                .count()\n                == 1,\n        \"A13 exact selected physical compiled inventory\",\n    )?;\n    names\n        .len()\n        .checked_sub(1)\n        .ok_or_else(|| \"A13 empty physical compiled inventory\".into())\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 34980,
+              "remove_utf8": "        names.push(a06_source_successor::w07_evidence_successor::TEST.into());\n        // Existing T07 decoded-integer coverage moves with the shared parser.\n        names.push(\"adapters::source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser\".into());\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 38495,
+              "remove_utf8": "    let mut physical_inventories = BTreeMap::new();\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 39044,
+              "remove_utf8": "        let physical_names = listed(&output)?;\n        let mut actual_names = physical_names.clone();\n        if suite.package == \"ssx-infra\" && suite.kind == \"lib\" && suite.target == \"ssx_infra\" {\n            // Preserve the frozen logical inventory, while proving the relocated\n            // parser's complete physical inventory in its genuine shared crate.\n            let shared = command(\n                root,\n                \"cargo\",\n                &[\n                    \"test\",\n                    \"--offline\",\n                    \"--locked\",\n                    \"-p\",\n                    \"ssx-source-json\",\n                    \"--lib\",\n                    \"--\",\n                    \"--list\",\n                ],\n                records,\n            )?;\n            for name in listed(&shared)? {\n                let suffix = name\n                    .strip_prefix(\"source_json::\")\n                    .ok_or(\"A13 unexpected shared JSON test namespace\")?;\n                actual_names.push(format!(\"adapters::source_json::{suffix}\"));\n            }\n        }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 40127,
+              "remove_utf8": "            &actual_names,\n",
+              "insert_utf8": "            &listed(&output)?,\n"
+            },
+            {
+              "at": 40264,
+              "remove_utf8": "        )?;\n        require(\n            physical_inventories\n                .insert(\n                    (\n                        suite.package.clone(),\n                        suite.target.clone(),\n                        suite.kind.clone(),\n                    ),\n                    physical_names,\n                )\n                .is_none(),\n            \"A13 duplicate physical suite inventory\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 41197,
+              "remove_utf8": "            physical_filtered(\n                physical_inventories\n                    .get(&(\n                        suite.package.clone(),\n                        suite.target.clone(),\n                        suite.kind.clone(),\n                    ))\n                    .ok_or(\"A13 physical suite inventory disappeared\")?,\n                &spec.name,\n            )?,\n",
+              "insert_utf8": "            compiled_suite_names(suite).len() - 1,\n"
+            },
+            {
+              "at": 44132,
+              "remove_utf8": "        // Regression: the same logical union may span two physical binaries.\n        // Its seventeen moved names cannot inflate infra's filtered count.\n        let physical = listed(\"selected: test\\nother: test\\n2 tests, 0 benchmarks\\n\").unwrap();\n        let physical_output = good.replace(\"0 filtered out\", \"1 filtered out\");\n        let relocation: Value = serde_json::from_str(include_str!(\n            \"../../../docs/rust-rewrite/t07/client-dependency-relocation.json\"\n        ))\n        .unwrap();\n        let moved = relocation[\"test_relocation\"].as_array().unwrap();\n        assert_eq!(moved.len(), 17);\n        let mut logical = physical.clone();\n        logical.extend(\n            moved\n                .iter()\n                .map(|row| row[\"old_selector\"].as_str().unwrap().to_owned()),\n        );\n        assert_eq!(logical.len(), physical.len() + 17);\n        assert!(\n            execution(\n                &physical_output,\n                \"selected\",\n                &[],\n                physical_filtered(&physical, \"selected\").unwrap()\n            )\n            .is_ok()\n        );\n        assert!(execution(&physical_output, \"selected\", &[], logical.len() - 1).is_err());\n        assert!(physical_filtered(&[], \"selected\").is_err());\n        assert!(physical_filtered(&physical, \"missing\").is_err());\n        let mut duplicate = physical.clone();\n        duplicate.push(\"selected\".into());\n        assert!(physical_filtered(&duplicate, \"selected\").is_err());\n\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 53948,
+              "remove_utf8": "        a06_source_successor::w07_evidence_successor::controls(&root).unwrap();\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 59086,
+              "remove_utf8": "        let w07 = a06_source_successor::w07_evidence_successor::TEST;\n        assert_eq!(count(w07), 1);\n        let mut omitted_w07 = exact.clone();\n        omitted_w07.retain(|name| name != w07);\n        assert!(same(&omitted_w07, &exact, \"W07 missing additive identity\").is_err());\n        let mut duplicate_w07 = exact.clone();\n        duplicate_w07.push(w07.into());\n        assert!(same(&duplicate_w07, &exact, \"W07 duplicate additive identity\").is_err());\n",
+              "insert_utf8": ""
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/xtask/src/a13.rs",
+          "sha256": "681d6f0d1f1ec6af77bb88aa1774aa8aa8669f390dd801bf7391308db7494ff0",
+          "bytes": 57322,
+          "mode": "0644",
+          "git_blob": "3b6ed827cf06a1b68fd1a040bf34b42df4d6c893",
+          "inverse": [
+            {
+              "at": 15808,
+              "remove_utf8": "}\n// Filtered counts belong to the binary actually invoked, never to a logical\n// cross-package union. Require exactly one selected name in that physical list.\nfn physical_filtered(names: &[String], selected: &str) -> Result<usize> {\n    require(\n        names.iter().collect::<BTreeSet<_>>().len() == names.len()\n            && names\n                .iter()\n                .filter(|name| name.as_str() == selected)\n                .count()\n                == 1,\n        \"A13 exact selected physical compiled inventory\",\n    )?;\n    names\n        .len()\n        .checked_sub(1)\n        .ok_or_else(|| \"A13 empty physical compiled inventory\".into())\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 35059,
+              "remove_utf8": "        // Existing T07 decoded-integer coverage moves with the shared parser.\n        names.push(\"adapters::source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser\".into());\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 38495,
+              "remove_utf8": "    let mut physical_inventories = BTreeMap::new();\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 39044,
+              "remove_utf8": "        let physical_names = listed(&output)?;\n        let mut actual_names = physical_names.clone();\n        if suite.package == \"ssx-infra\" && suite.kind == \"lib\" && suite.target == \"ssx_infra\" {\n            // Preserve the frozen logical inventory, while proving the relocated\n            // parser's complete physical inventory in its genuine shared crate.\n            let shared = command(\n                root,\n                \"cargo\",\n                &[\n                    \"test\",\n                    \"--offline\",\n                    \"--locked\",\n                    \"-p\",\n                    \"ssx-source-json\",\n                    \"--lib\",\n                    \"--\",\n                    \"--list\",\n                ],\n                records,\n            )?;\n            for name in listed(&shared)? {\n                let suffix = name\n                    .strip_prefix(\"source_json::\")\n                    .ok_or(\"A13 unexpected shared JSON test namespace\")?;\n                actual_names.push(format!(\"adapters::source_json::{suffix}\"));\n            }\n        }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 40127,
+              "remove_utf8": "            &actual_names,\n",
+              "insert_utf8": "            &listed(&output)?,\n"
+            },
+            {
+              "at": 40264,
+              "remove_utf8": "        )?;\n        require(\n            physical_inventories\n                .insert(\n                    (\n                        suite.package.clone(),\n                        suite.target.clone(),\n                        suite.kind.clone(),\n                    ),\n                    physical_names,\n                )\n                .is_none(),\n            \"A13 duplicate physical suite inventory\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 41197,
+              "remove_utf8": "            physical_filtered(\n                physical_inventories\n                    .get(&(\n                        suite.package.clone(),\n                        suite.target.clone(),\n                        suite.kind.clone(),\n                    ))\n                    .ok_or(\"A13 physical suite inventory disappeared\")?,\n                &spec.name,\n            )?,\n",
+              "insert_utf8": "            compiled_suite_names(suite).len() - 1,\n"
+            },
+            {
+              "at": 44132,
+              "remove_utf8": "        // Regression: the same logical union may span two physical binaries.\n        // Its seventeen moved names cannot inflate infra's filtered count.\n        let physical = listed(\"selected: test\\nother: test\\n2 tests, 0 benchmarks\\n\").unwrap();\n        let physical_output = good.replace(\"0 filtered out\", \"1 filtered out\");\n        let relocation: Value = serde_json::from_str(include_str!(\n            \"../../../docs/rust-rewrite/t07/client-dependency-relocation.json\"\n        ))\n        .unwrap();\n        let moved = relocation[\"test_relocation\"].as_array().unwrap();\n        assert_eq!(moved.len(), 17);\n        let mut logical = physical.clone();\n        logical.extend(\n            moved\n                .iter()\n                .map(|row| row[\"old_selector\"].as_str().unwrap().to_owned()),\n        );\n        assert_eq!(logical.len(), physical.len() + 17);\n        assert!(\n            execution(\n                &physical_output,\n                \"selected\",\n                &[],\n                physical_filtered(&physical, \"selected\").unwrap()\n            )\n            .is_ok()\n        );\n        assert!(execution(&physical_output, \"selected\", &[], logical.len() - 1).is_err());\n        assert!(physical_filtered(&[], \"selected\").is_err());\n        assert!(physical_filtered(&physical, \"missing\").is_err());\n        let mut duplicate = physical.clone();\n        duplicate.push(\"selected\".into());\n        assert!(physical_filtered(&duplicate, \"selected\").is_err());\n\n",
+              "insert_utf8": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "crates/ssx-mcp/src/opaque.rs",
+      "physical": {
+        "path": "crates/ssx-mcp/src/opaque.rs",
+        "sha256": "eb37f197c6b3b5f4af4c5e01f8b75a26fa735da397d70f7c74a45842634f4f7f",
+        "bytes": 104972,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/ssx-mcp/src/opaque.rs",
+          "sha256": "bcd6a423ff2b917b7253718401e7618231099901cf0d178bf1ee04b2a8d82d3f",
+          "bytes": 104941,
+          "mode": "0644",
+          "git_blob": "2176565525f764611f2cdd3bb702e7dfce621b59",
+          "inverse": [
+            {
+              "at": 98689,
+              "remove_utf8": "    #[cfg(feature = \"server\")]\n",
+              "insert_utf8": ""
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/ssx-mcp/src/opaque.rs",
+          "sha256": "c89e508d9d4d2c86f6d0f0f8cbf8f35690e83e63da94a4ca342c28da60526d41",
+          "bytes": 85717,
+          "mode": "0644",
+          "git_blob": "54314e969672a3c1ebac774da35ce3f634652da6",
+          "inverse": [
+            {
+              "at": 44043,
+              "remove_utf8": "pub type GatewayOpenFuture<'a> = std::pin::Pin<\n    Box<dyn std::future::Future<Output = Result<Box<dyn GatewayHttpResponse>>> + Send + 'a>,\n>;\npub type GatewayChunkFuture<'a> = std::pin::Pin<\n    Box<dyn std::future::Future<Output = Result<Option<axum::body::Bytes>>> + Send + 'a>,\n>;\n/// Protected gateway executor. Implementations own their TLS/proxy/auth policy\n/// and must retain connection/admission ownership in the returned response until\n/// EOF, correlated early-stop, cancellation or drop. No adapter overrides.\npub trait GatewayHttp: Send + Sync {\n    fn open(&self, request: GatewayHttpRequest) -> GatewayOpenFuture<'_>;\n}\n/// Authentication admission is chosen by the transport owner. Cancellation and\n/// session cleanup use only the already-held bearer and cannot acquire OAuth\n/// state, refresh tokens or start authorization while a request is being joined.\n#[derive(Clone, Copy, PartialEq, Eq)]\npub enum GatewayAuthMode {\n    Interactive,\n    ExistingBearer,\n}\n/// Deliberate non-Debug descriptor: bearer, body and session can be sensitive.\npub struct GatewayHttpRequest {\n    pub auth: GatewayAuthMode,\n    pub method: reqwest::Method,\n    pub url: String,\n    pub headers: Vec<(&'static str, String)>,\n    pub body: Option<String>,\n}\n/// Incremental response, not a buffered HTTP body. A POST SSE stream may remain\n/// open after its correlated reply. Implementations retain all body leases.\npub trait GatewayHttpResponse: Send {\n    fn status(&self) -> reqwest::StatusCode;\n    fn headers(&self) -> &reqwest::header::HeaderMap;\n    fn content_length(&self) -> Option<u64>;\n    fn chunk(&mut self) -> GatewayChunkFuture<'_>;\n}\nstruct LegacyGatewayHttp(reqwest::Client);\nstruct LegacyGatewayResponse(reqwest::Response);\nimpl GatewayHttpResponse for LegacyGatewayResponse {\n    fn status(&self) -> reqwest::StatusCode {\n        self.0.status()\n    }\n    fn headers(&self) -> &reqwest::header::HeaderMap {\n        self.0.headers()\n    }\n    fn content_length(&self) -> Option<u64> {\n        self.0.content_length()\n    }\n    fn chunk(&mut self) -> GatewayChunkFuture<'_> {\n        Box::pin(async move { Ok(self.0.chunk().await?) })\n    }\n}\nimpl GatewayHttp for LegacyGatewayHttp {\n    fn open(&self, request: GatewayHttpRequest) -> GatewayOpenFuture<'_> {\n        Box::pin(async move {\n            let mut builder = self.0.request(request.method, request.url);\n            for (name, value) in request.headers {\n                if name == \"authorization\" {\n                    // Legacy only receives the same static bearer descriptor;\n                    // retain reqwest's sensitive header marking/error behavior.\n                    builder = builder.bearer_auth(\n                        value\n                            .strip_prefix(\"Bearer \")\n                            .ok_or(\"invalid legacy bearer descriptor\")?,\n                    );\n                } else {\n                    builder = builder.header(name, value);\n                }\n            }\n            if let Some(body) = request.body {\n                builder = builder.body(body);\n            }\n            let response = builder.send().await?;\n            Ok(Box::new(LegacyGatewayResponse(response)) as Box<dyn GatewayHttpResponse>)\n        })\n    }\n}\n/// Final DELETE grace matches the pinned rmcp streamable-HTTP session cleanup.\n/// Normal source requests retain their independent transport/authorization budgets.\npub const GATEWAY_SESSION_CLEANUP_TIMEOUT: Duration = Duration::from_secs(5);\n\nasync fn gateway_until<T>(\n    deadline: Option<tokio::time::Instant>,\n    future: impl std::future::Future<Output = Result<T>>,\n) -> Result<T> {\n    match deadline {\n        Some(deadline) => tokio::time::timeout_at(deadline, future).await?,\n        None => future.await,\n    }\n}\n#[derive(Clone, Copy, PartialEq, Eq)]\nenum GatewayStartPhase {\n    Cold,\n    Initialized,\n    Ready,\n    Failed,\n    Closed,\n}\n/// Construct synchronously before async startup. Keep this object and the\n/// supplied HTTP owner until explicit close/drain on every failure/EOF/signal.\n/// Drop cannot issue async DELETE or promise joined HTTP shutdown.\npub struct RawGatewayStart {\n    gateway: RawGateway,\n    phase: GatewayStartPhase,\n}\nimpl RawGatewayStart {\n    pub fn new(\n        url: String,\n        token: Option<String>,\n        http: std::sync::Arc<dyn GatewayHttp>,\n    ) -> Result<Self> {\n        Self::new_inner(url, token, http, false)\n    }\n    /// Original gateway accepts URL userinfo/fragments; the client HTTP owner\n    /// applies the original Basic-vs-OAuth precedence and strips wire fragments.\n    pub fn new_source(\n        url: String,\n        token: Option<String>,\n        http: std::sync::Arc<dyn GatewayHttp>,\n    ) -> Result<Self> {\n        Self::new_inner(url, token, http, true)\n    }\n    fn new_inner(\n        url: String,\n        token: Option<String>,\n        http: std::sync::Arc<dyn GatewayHttp>,\n        source_urls: bool,\n    ) -> Result<Self> {\n        let parsed = reqwest::Url::parse(&url)?;\n        if !source_urls\n            && (!parsed.username().is_empty()\n                || parsed.password().is_some()\n                || parsed.fragment().is_some())\n        {\n            return Err(\"invalid MCP remote URL\".into());\n        }\n        Ok(Self {\n            gateway: RawGateway {\n                http,\n                url,\n                token,\n                catalogs: BTreeMap::new(),\n                deadline: Duration::ZERO,\n                transport_budgeted: true,\n                source_projection: false,\n                #[cfg(windows)]\n                input_runtime: Default::default(),\n                session: Default::default(),\n                initialize_result: None,\n                protocol: \"2025-11-25\".into(),\n            },\n            phase: GatewayStartPhase::Cold,\n        })\n    }\n    /// Static source profile supplies Some(connect_timeout); OAuth supplies\n    /// None, retaining its independent HTTP and human-authorization budgets.\n    pub async fn initialize(&mut self, limit: Option<Duration>) -> Result<()> {\n        if self.phase != GatewayStartPhase::Cold {\n            return Err(\"gateway initialization phase invalid\".into());\n        }\n        let deadline = limit\n            .map(|d| {\n                tokio::time::Instant::now()\n                    .checked_add(d)\n                    .ok_or(\"gateway phase deadline overflow\")\n            })\n            .transpose()?;\n        self.phase = GatewayStartPhase::Failed;\n        if limit.is_some_and(|d| d.is_zero()) {\n            return Err(\"gateway phase deadline exceeded\".into());\n        }\n        let result = gateway_until(deadline, self.gateway.initialize_remote()).await;\n        self.phase = if result.is_ok() {\n            GatewayStartPhase::Initialized\n        } else {\n            GatewayStartPhase::Failed\n        };\n        result\n    }\n    /// Source gateway publishes tools only after complete bounded discovery;\n    /// source static resource/prompt projection is the owning client's concern.\n    pub async fn discover_tools(&mut self, limit: Duration) -> Result<()> {\n        if self.phase != GatewayStartPhase::Initialized {\n            return Err(\"gateway discovery phase invalid\".into());\n        }\n        let deadline = tokio::time::Instant::now()\n            .checked_add(limit)\n            .ok_or(\"gateway phase deadline overflow\")?;\n        self.phase = GatewayStartPhase::Failed;\n        if limit.is_zero() {\n            return Err(\"gateway phase deadline exceeded\".into());\n        }\n        let result = gateway_until(\n            Some(deadline),\n            self.gateway.discover_remote(&[(\"tools/list\", \"tools\")]),\n        )\n        .await;\n        self.phase = if result.is_ok() {\n            GatewayStartPhase::Ready\n        } else {\n            GatewayStartPhase::Failed\n        };\n        result\n    }\n    /// Local gateway resources/prompts are fixed source declarations. Only tools\n    /// come from remote discovery; installing this does not issue remote calls.\n    pub fn install_source_projection(&mut self, catalogs: Catalogs) -> Result<()> {\n        if self.phase != GatewayStartPhase::Ready {\n            return Err(\"gateway projection before discovery\".into());\n        }\n        for (method, catalog) in catalogs {\n            if method == \"tools/list\" {\n                return Err(\"gateway tool catalog override refused\".into());\n            }\n            self.gateway.catalogs.insert(method, catalog);\n        }\n        let tools = crate::gateway_client::source_projection::tool_catalog(\n            self.gateway.catalogs[\"tools/list\"].get(),\n        )?;\n        self.gateway.catalogs.insert(\"tools/list\".into(), tools);\n        self.gateway.initialize_result = Some(\n            crate::gateway_client::source_projection::initialize_info(&self.gateway.protocol)?,\n        );\n        self.gateway.source_projection = true;\n        Ok(())\n    }\n    pub fn ready(&self) -> Result<RawGateway> {\n        if self.phase != GatewayStartPhase::Ready {\n            return Err(\"gateway is not ready\".into());\n        }\n        Ok(self.gateway.clone())\n    }\n    pub async fn close(&mut self) -> Result<()> {\n        self.phase = GatewayStartPhase::Failed;\n        let result = self.gateway.close().await;\n        if result.is_ok() {\n            self.phase = GatewayStartPhase::Closed;\n        }\n        result\n    }\n}\n\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 53445,
+              "remove_utf8": "    http: std::sync::Arc<dyn GatewayHttp>,\n",
+              "insert_utf8": "    http: reqwest::Client,\n"
+            },
+            {
+              "at": 53584,
+              "remove_utf8": "    transport_budgeted: bool,\n    source_projection: bool,\n    #[cfg(windows)]\n    input_runtime: crate::gateway_client::stdio_input_windows::InputRuntime,\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 53976,
+              "remove_utf8": "        self.exchange_with_auth(body, GatewayAuthMode::Interactive)\n            .await\n    }\n    async fn exchange_with_auth(\n        &self,\n        body: &str,\n        auth: GatewayAuthMode,\n    ) -> Result<Option<String>> {\n        let deadline =\n            (!self.transport_budgeted).then(|| tokio::time::Instant::now() + self.deadline);\n        let mut headers = vec![\n            (\"accept\", \"application/json, text/event-stream\".into()),\n            (\"content-type\", \"application/json\".into()),\n            (\"mcp-protocol-version\", self.protocol.clone()),\n        ];\n",
+              "insert_utf8": "        let deadline = tokio::time::Instant::now() + self.deadline;\n        let mut request = self\n            .http\n            .post(&self.url)\n            .header(\"accept\", \"application/json, text/event-stream\")\n            .header(\"content-type\", \"application/json\")\n            .header(\"mcp-protocol-version\", self.protocol.as_str())\n            .body(body.to_owned());\n"
+            },
+            {
+              "at": 54592,
+              "remove_utf8": "            headers.push((\"authorization\", format!(\"Bearer {token}\")));\n",
+              "insert_utf8": "            request = request.bearer_auth(token);\n"
+            },
+            {
+              "at": 54796,
+              "remove_utf8": "            headers.push((\"mcp-session-id\", session.to_string()));\n",
+              "insert_utf8": "            request = request.header(\"mcp-session-id\", session.as_str());\n"
+            },
+            {
+              "at": 54873,
+              "remove_utf8": "        let mut response = gateway_until(\n            deadline,\n            self.http.open(GatewayHttpRequest {\n                auth,\n                method: reqwest::Method::POST,\n                url: self.url.clone(),\n                headers,\n                body: Some(body.to_owned()),\n            }),\n        )\n        .await?;\n",
+              "insert_utf8": "        let mut response = tokio::time::timeout_at(deadline, request.send()).await??;\n"
+            },
+            {
+              "at": 58000,
+              "remove_utf8": "        gateway_until(deadline, read).await\n    }\n    async fn initialize_remote(&mut self) -> Result<()> {\n        let initialize=self.exchange(&json!({\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{},\"clientInfo\":{\"name\":\"ssx-native-proxy\",\"version\":\"0.1.0\"}}}).to_string()).await?.ok_or(\"remote initialize had no result\")?;\n        let mut fields: BTreeMap<String, Box<RawValue>> = serde_json::from_str(&initialize)?;\n        if !fields.contains_key(\"result\") || fields.contains_key(\"error\") {\n            return Err(\"remote initialize failed\".into());\n        }\n        self.initialize_result = fields.remove(\"result\");\n        let initialize_fields: BTreeMap<String, Box<RawValue>> = serde_json::from_str(\n            self.initialize_result\n                .as_ref()\n                .ok_or(\"initialize result\")?\n                .get(),\n        )?;\n        let version: String = serde_json::from_str(\n            initialize_fields\n                .get(\"protocolVersion\")\n                .ok_or(\"remote protocol version missing\")?\n                .get(),\n        )?;\n        if ![\"2024-11-05\", \"2025-03-26\", \"2025-06-18\", \"2025-11-25\"].contains(&version.as_str()) {\n            return Err(\"unsupported remote initialize protocol version\".into());\n        }\n        self.protocol = version;\n        self.exchange(r#\"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\"#)\n            .await?;\n        Ok(())\n    }\n    async fn discover_remote(&mut self, catalogs: &[(&str, &str)]) -> Result<()> {\n        let mut budget = crate::gateway::DiscoveryBudget::default();\n        for &(method, field) in catalogs {\n            let mut items: Vec<Box<RawValue>> = Vec::new();\n            let mut names = HashSet::new();\n            let mut cursors = HashSet::new();\n            let mut cursor = None;\n            let mut complete = false;\n            for page in 0..128 {\n                let params = cursor\n                    .as_ref()\n                    .map(|c| json!({\"cursor\":c}))\n                    .unwrap_or(json!({}));\n                let body = self\n                    .exchange(\n                        &json!({\"jsonrpc\":\"2.0\",\"id\":page+1,\"method\":method,\"params\":params})\n                            .to_string(),\n                    )\n                    .await?\n                    .ok_or(\"empty catalog response\")?;\n                budget.charge(body.len())?;\n                let envelope: BTreeMap<String, Box<RawValue>> = serde_json::from_str(&body)?;\n                if envelope.contains_key(\"error\") {\n                    return Err(\"remote catalog error\".into());\n                }\n                let result: BTreeMap<String, Box<RawValue>> = serde_json::from_str(\n                    envelope\n                        .get(\"result\")\n                        .ok_or(\"catalog result missing\")?\n                        .get(),\n                )?;\n                let rows: Vec<Box<RawValue>> = serde_json::from_str(\n                    result.get(field).ok_or(\"catalog entries missing\")?.get(),\n                )?;\n                for row in rows {\n                    let data: BTreeMap<String, Box<RawValue>> = serde_json::from_str(row.get())?;\n                    let identity = crate::gateway::catalog_identity(method)?;\n                    let name: String = serde_json::from_str(\n                        data.get(identity).ok_or(\"catalog identity missing\")?.get(),\n                    )?;\n                    if !names.insert(name) {\n                        return Err(\"duplicate catalog name\".into());\n                    }\n                    items.push(row);\n                    if items.len() > 4096 {\n                        return Err(\"catalog exceeds 4096 items\".into());\n                    }\n                }\n                let next: Option<String> = result\n                    .get(\"nextCursor\")\n                    .map(|c| serde_json::from_str(c.get()))\n                    .transpose()?\n                    .flatten();\n                let Some(next) = next else {\n                    complete = true;\n                    break;\n                };\n                if !cursors.insert(next.clone()) {\n                    return Err(\"repeated catalog cursor\".into());\n                }\n                cursor = Some(next);\n            }\n            if !complete {\n                return Err(\"catalog exceeds 128 pages\".into());\n            }\n            let raw = RawValue::from_string(format!(\n                \"{{{}:{}}}\",\n                serde_json::to_string(field)?,\n                serde_json::to_string(&items)?\n            ))?;\n            self.catalogs.insert(method.into(), raw);\n        }\n        Ok(())\n    }\n    /// Raw upstream RPC for the owning source gateway projection.\n    pub async fn rpc(&self, body: &str) -> Result<Option<String>> {\n        self.exchange(body).await\n",
+              "insert_utf8": "        tokio::time::timeout_at(deadline, read).await?\n"
+            },
+            {
+              "at": 63396,
+              "remove_utf8": "            http: std::sync::Arc::new(LegacyGatewayHttp(http)),\n",
+              "insert_utf8": "            http,\n"
+            },
+            {
+              "at": 63557,
+              "remove_utf8": "            transport_budgeted: false,\n            source_projection: false,\n            #[cfg(windows)]\n            input_runtime: Default::default(),\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 63841,
+              "remove_utf8": "        let startup = tokio::time::timeout(deadline, async {\n            gateway.initialize_remote().await?;\n            gateway\n                .discover_remote(&[\n                    (\"tools/list\", \"tools\"),\n                    (\"resources/list\", \"resources\"),\n                    (\"prompts/list\", \"prompts\"),\n                    (\"resources/templates/list\", \"resourceTemplates\"),\n                ])\n                .await?;\n            Ok::<(), crate::Error>(())\n        })\n        .await\n        .map_err(|e| -> crate::Error { e.into() })\n        .and_then(|v| v);\n",
+              "insert_utf8": "        let startup=tokio::time::timeout(deadline,async {\n            let initialize=gateway.exchange(&json!({\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{},\"clientInfo\":{\"name\":\"ssx-native-proxy\",\"version\":\"0.1.0\"}}}).to_string()).await?.ok_or(\"remote initialize had no result\")?;\n            let mut fields:BTreeMap<String,Box<RawValue>>=serde_json::from_str(&initialize)?;if !fields.contains_key(\"result\") || fields.contains_key(\"error\"){return Err(\"remote initialize failed\".into());}\n            gateway.initialize_result=fields.remove(\"result\");\n            let initialize_fields:BTreeMap<String,Box<RawValue>>=serde_json::from_str(gateway.initialize_result.as_ref().ok_or(\"initialize result\")?.get())?;\n            let version:String=serde_json::from_str(initialize_fields.get(\"protocolVersion\").ok_or(\"remote protocol version missing\")?.get())?;\n            if ![\"2024-11-05\",\"2025-03-26\",\"2025-06-18\",\"2025-11-25\"].contains(&version.as_str()){return Err(\"unsupported remote initialize protocol version\".into());}\n            gateway.protocol=version;\n            gateway.exchange(r#\"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\"#).await?;\n            let mut budget=crate::gateway::DiscoveryBudget::default();\n            for (method,field) in [(\"tools/list\",\"tools\"),(\"resources/list\",\"resources\"),(\"prompts/list\",\"prompts\"),(\"resources/templates/list\",\"resourceTemplates\")] {\n                let mut items:Vec<Box<RawValue>>=Vec::new();let mut names=HashSet::new();let mut cursors=HashSet::new();let mut cursor=None;let mut complete=false;\n                for page in 0..128 {\n                    let params=cursor.as_ref().map(|c|json!({\"cursor\":c})).unwrap_or(json!({}));\n                    let body=gateway.exchange(&json!({\"jsonrpc\":\"2.0\",\"id\":page+1,\"method\":method,\"params\":params}).to_string()).await?.ok_or(\"empty catalog response\")?;\n                    budget.charge(body.len())?;\n                    let envelope:BTreeMap<String,Box<RawValue>>=serde_json::from_str(&body)?;\n                    if envelope.contains_key(\"error\"){return Err(\"remote catalog error\".into());}\n                    let result:BTreeMap<String,Box<RawValue>>=serde_json::from_str(envelope.get(\"result\").ok_or(\"catalog result missing\")?.get())?;\n                    let rows:Vec<Box<RawValue>>=serde_json::from_str(result.get(field).ok_or(\"catalog entries missing\")?.get())?;\n                    for row in rows {let data:BTreeMap<String,Box<RawValue>>=serde_json::from_str(row.get())?;let identity=crate::gateway::catalog_identity(method)?;let name:String=serde_json::from_str(data.get(identity).ok_or(\"catalog identity missing\")?.get())?;if !names.insert(name){return Err(\"duplicate catalog name\".into());}items.push(row);if items.len()>4096{return Err(\"catalog exceeds 4096 items\".into());}}\n                    let next:Option<String>=result.get(\"nextCursor\").map(|c|serde_json::from_str(c.get())).transpose()?.flatten();\n                    let Some(next)=next else{complete=true;break;};if !cursors.insert(next.clone()){return Err(\"repeated catalog cursor\".into());}cursor=Some(next);\n                }\n                if !complete{return Err(\"catalog exceeds 128 pages\".into());}\n                let raw=RawValue::from_string(format!(\"{{{}:{}}}\",serde_json::to_string(field)?,serde_json::to_string(&items)?))?;gateway.catalogs.insert(method.into(),raw);\n            }\n            Ok::<(),crate::Error>(())\n        }).await.map_err(|e|->crate::Error{e.into()}).and_then(|v|v);\n"
+            },
+            {
+              "at": 64552,
+              "remove_utf8": "    }\n    pub async fn stdio_owned(self, cancel: tokio_util::sync::CancellationToken) -> Result<()> {\n        // stdio() owns its SDK service. Cancellation is delivered through EOF\n        // below rather than dropping that service's waiting future.\n        let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();\n        let handler = RawForwarder {\n            gateway: self.clone(),\n            wire: wire.clone(),\n        };\n        #[cfg(any(unix, windows))]\n        {\n            #[cfg(unix)]\n            let mut input = crate::gateway_client::stdio_input::InputOwner::stdin()?;\n            #[cfg(windows)]\n            let mut input = self\n                .input_runtime\n                .stdin(&crate::gateway_client::resolver::install::current_input_image()?)?;\n            let result = stdio_handler_io(\n                handler,\n                std::sync::Arc::new(self.catalogs.clone()),\n                wire,\n                crate::output_limits::OutputLimits::HTTP,\n                cancel,\n                input.reader(),\n                tokio::io::stdout(),\n            )\n            .await;\n            let drained = input.close().await;\n            result.and(drained)\n        }\n        #[cfg(not(any(unix, windows)))]\n        {\n            let _ = (handler, wire, cancel);\n            Err(\"gateway cancellable OS input is not implemented for this platform\".into())\n        }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 66813,
+              "remove_utf8": "        #[cfg(windows)]\n        let input = self.input_runtime.close().await;\n        let session_result: Result<()> = (async {\n            let session = self.session.lock().unwrap().clone();\n            if let Some(session) = session {\n                let mut headers = vec![\n                    (\"mcp-session-id\", session.to_string()),\n                    (\"mcp-protocol-version\", self.protocol.clone()),\n                ];\n                if let Some(token) = &self.token {\n                    headers.push((\"authorization\", format!(\"Bearer {token}\")));\n                }\n                // Final cleanup must reach the retained network/resolver join even\n                // when DELETE needs fresh DNS or the peer holds response headers.\n                // Match rmcp's five-second session-cleanup grace. Unlike rmcp's\n                // logged timeout, our existing fail-closed cleanup contract returns\n                // failure and retains the session identity for a possible retry.\n                let limit = if self.transport_budgeted {\n                    GATEWAY_SESSION_CLEANUP_TIMEOUT\n                } else {\n                    self.deadline\n                };\n                let deadline = Some(tokio::time::Instant::now() + limit);\n                let response = gateway_until(\n                    deadline,\n                    self.http.open(GatewayHttpRequest {\n                        auth: GatewayAuthMode::ExistingBearer,\n                        method: reqwest::Method::DELETE,\n                        url: self.url.clone(),\n                        headers,\n                        body: None,\n                    }),\n                )\n                .await?;\n                let status = response.status();\n                if status.is_success() || status == 404 {\n                    self.clear_closed_session(&session);\n                } else if status != 405 {\n                    return Err(\"remote session cleanup failed\".into());\n                }\n                // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does\n                // not establish remote closure: retain identity for a later attempt.\n",
+              "insert_utf8": "        let session = self.session.lock().unwrap().clone();\n        if let Some(session) = session {\n            let mut request = self\n                .http\n                .delete(&self.url)\n                .header(\"mcp-session-id\", session.as_str())\n                .header(\"mcp-protocol-version\", self.protocol.as_str());\n            if let Some(token) = &self.token {\n                request = request.bearer_auth(token);\n"
+            },
+            {
+              "at": 68981,
+              "remove_utf8": "            Ok(())\n        })\n        .await;\n        #[cfg(windows)]\n        {\n            input.and(session_result)\n",
+              "insert_utf8": "            let response = tokio::time::timeout(self.deadline, request.send()).await??;\n            let status = response.status();\n            if status.is_success() || status == 404 {\n                self.clear_closed_session(&session);\n            } else if status != 405 {\n                return Err(\"remote session cleanup failed\".into());\n            }\n            // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does\n            // not establish remote closure: retain identity for a later attempt.\n"
+            },
+            {
+              "at": 69109,
+              "remove_utf8": "        #[cfg(not(windows))]\n        {\n            session_result\n        }\n",
+              "insert_utf8": "        Ok(())\n"
+            },
+            {
+              "at": 70422,
+              "remove_utf8": "        let request = if self.gateway.source_projection {\n            crate::gateway_client::source_projection::prepare_request(\n                &self.gateway.catalogs,\n                &request,\n            )\n            .map_err(|error| rmcp::ErrorData::invalid_params(error.to_string(), None))?\n        } else {\n            request\n        };\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 71522,
+              "remove_utf8": "                if let Some(id)=fields.get(\"id\"){let notification=format!(\"{{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"method\\\":\\\"notifications/cancelled\\\",\\\"params\\\":{{\\\"requestId\\\":{}}}}}\",id.get());let _=self.gateway.exchange_with_auth(&notification, GatewayAuthMode::ExistingBearer).await;}\n",
+              "insert_utf8": "                if let Some(id)=fields.get(\"id\"){let notification=format!(\"{{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"method\\\":\\\"notifications/cancelled\\\",\\\"params\\\":{{\\\"requestId\\\":{}}}}}\",id.get());let _=self.gateway.exchange(&notification).await;}\n"
+            },
+            {
+              "at": 71890,
+              "remove_utf8": "        };\n        let response = if self.gateway.source_projection {\n            crate::gateway_client::source_projection::project_reply(&request, &response).map_err(\n                |_| rmcp::ErrorData::internal_error(\"remote result projection failed\", None),\n            )?\n        } else {\n            response\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 74903,
+              "remove_utf8": "        params: rmcp::model::CallToolRequestParams,\n",
+              "insert_utf8": "        _: rmcp::model::CallToolRequestParams,\n"
+            },
+            {
+              "at": 75094,
+              "remove_utf8": "        if self.gateway.source_projection {\n            let catalog: BTreeMap<String, Box<RawValue>> =\n                serde_json::from_str(self.gateway.catalogs[\"tools/list\"].get()).map_err(|_| {\n                    rmcp::ErrorData::internal_error(\"gateway catalog invalid\", None)\n                })?;\n            let tools: Vec<BTreeMap<String, Box<RawValue>>> =\n                serde_json::from_str(catalog[\"tools\"].get()).map_err(|_| {\n                    rmcp::ErrorData::internal_error(\"gateway catalog invalid\", None)\n                })?;\n            let known = tools.iter().any(|tool| {\n                tool.get(\"name\")\n                    .and_then(|name| serde_json::from_str::<String>(name.get()).ok())\n                    .is_some_and(|name| name == params.name)\n            });\n            if !known {\n                return Ok(rmcp::model::CallToolResult::error(vec![\n                    rmcp::model::ContentBlock::text(format!(\n                        \"Unknown tool: {}\",\n                        crate::gateway_client::source_projection::python_string_repr(&params.name)\n                            .map_err(|error| rmcp::ErrorData::internal_error(\n                                error.to_string(),\n                                None\n                            ))?\n                    )),\n                ])\n                .into());\n            }\n        }\n        match self.forward::<rmcp::model::CallToolResult>(c).await {\n            Ok(result) => Ok(result.into()),\n            Err(error) if self.gateway.source_projection && error.code.0 != -32021 => Ok(\n                rmcp::model::CallToolResult::error(vec![rmcp::model::ContentBlock::text(\n                    error.message.to_string(),\n                )])\n                .into(),\n            ),\n            Err(error) => Err(error),\n        }\n",
+              "insert_utf8": "        self.forward::<rmcp::model::CallToolResult>(c)\n            .await\n            .map(Into::into)\n"
+            },
+            {
+              "at": 76969,
+              "remove_utf8": "        params: rmcp::model::ReadResourceRequestParams,\n",
+              "insert_utf8": "        _: rmcp::model::ReadResourceRequestParams,\n"
+            },
+            {
+              "at": 77168,
+              "remove_utf8": "        if self.gateway.source_projection\n            && !crate::gateway_client::source_projection::resource_allowed(&params.uri)\n        {\n            return Err(rmcp::ErrorData::invalid_params(\n                format!(\"Resource not found: {:?}\", params.uri),\n                Some(json!({\"uri\":params.uri})),\n            ));\n        }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 77657,
+              "remove_utf8": "        params: rmcp::model::GetPromptRequestParams,\n",
+              "insert_utf8": "        _: rmcp::model::GetPromptRequestParams,\n"
+            },
+            {
+              "at": 77850,
+              "remove_utf8": "        if self.gateway.source_projection\n            && !crate::gateway_client::source_projection::prompt_allowed(&params.name)\n        {\n            return Err(rmcp::ErrorData::invalid_params(\n                format!(\"Unknown prompt: {:?}\", params.name),\n                None,\n            ));\n        }\n        if self.gateway.source_projection {\n            if params\n                .arguments\n                .as_ref()\n                .is_some_and(|args| args.values().any(|v| !v.is_string()))\n            {\n                return Err(rmcp::ErrorData::invalid_params(\n                    \"prompt arguments must be strings\",\n                    None,\n                ));\n            }\n            let arg = crate::gateway_client::source_projection::prompt_argument(&params.name)\n                .ok_or_else(|| rmcp::ErrorData::invalid_params(\"unknown prompt\", None))?;\n            if params\n                .arguments\n                .as_ref()\n                .is_none_or(|args| !args.contains_key(arg))\n            {\n                return Err(rmcp::ErrorData::internal_error(\n                    format!(\"Missing required arguments: {arg}\"),\n                    None,\n                ));\n            }\n        }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 96457,
+              "remove_utf8": "                http: std::sync::Arc::new(LegacyGatewayHttp(reqwest::Client::new())),\n",
+              "insert_utf8": "                http: reqwest::Client::new(),\n"
+            },
+            {
+              "at": 96719,
+              "remove_utf8": "                transport_budgeted: false,\n                source_projection: false,\n                #[cfg(windows)]\n                input_runtime: Default::default(),\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 97575,
+              "remove_utf8": "            http: std::sync::Arc::new(LegacyGatewayHttp(reqwest::Client::new())),\n",
+              "insert_utf8": "            http: reqwest::Client::new(),\n"
+            },
+            {
+              "at": 97799,
+              "remove_utf8": "            transport_budgeted: false,\n            source_projection: false,\n            #[cfg(windows)]\n            input_runtime: Default::default(),\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 98689,
+              "remove_utf8": "    #[cfg(feature = \"server\")]\n",
+              "insert_utf8": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "physical": {
+        "path": "crates/ssx-source-json/src/source_json.rs",
+        "sha256": "b1b31ddb5f9cb698ad8f95dbce6bbcab26591176488f2aec652712476a22c8e8",
+        "bytes": 55141,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/ssx-infra/src/adapters/source_json.rs",
+          "sha256": "f78937bacc4116a251e4fe352b597783a31de4c5b63fcbbcf8fa479810866617",
+          "bytes": 55085,
+          "mode": "0644",
+          "git_blob": "d4ad775a509b61e54c61746236d3ca120947ccd2",
+          "inverse": [
+            {
+              "at": 1178,
+              "remove_utf8": "    /// Preserve source code points, including unpaired surrogates.\n    pub fn from_points(points: Vec<u32>) -> Self {\n",
+              "insert_utf8": "    pub(crate) fn from_points(points: Vec<u32>) -> Self {\n"
+            },
+            {
+              "at": 50647,
+              "remove_utf8": "        let fixture: ssx_json::Value =\n            ssx_json::from_slice(include_bytes!(\"../../../docs/rust-rewrite/f15/cases.json\"))\n                .unwrap();\n",
+              "insert_utf8": "        let fixture: ssx_json::Value = ssx_json::from_slice(include_bytes!(\n            \"../../../../docs/rust-rewrite/f15/cases.json\"\n        ))\n        .unwrap();\n"
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/ssx-infra/src/adapters/source_json.rs",
+          "sha256": "92ab8d19f5ff618c3c98924e9cea17cc9a733ea448fde2f0bab4b55737c5a0f7",
+          "bytes": 53796,
+          "mode": "0644",
+          "git_blob": "cfdd9546f426fcd0055030f7a54e9ff3e2ee17f4",
+          "inverse": [
+            {
+              "at": 1178,
+              "remove_utf8": "    /// Preserve source code points, including unpaired surrogates.\n    pub fn from_points(points: Vec<u32>) -> Self {\n",
+              "insert_utf8": "    pub(crate) fn from_points(points: Vec<u32>) -> Self {\n"
+            },
+            {
+              "at": 1951,
+              "remove_utf8": "    /// Construct one already-decoded arbitrary JSON integer lexeme. This checks\n    /// JSON integer syntax only; callers own body/resource bounds. The file JSON\n    /// parser retains its separate CPython4300-digit admission limit.\n    pub fn from_integer_text(raw: &str) -> Option<Self> {\n        let digits = raw.strip_prefix('-').unwrap_or(raw);\n        if digits.is_empty()\n            || !digits.bytes().all(|b| b.is_ascii_digit())\n            || (digits.len() > 1 && digits.starts_with('0'))\n        {\n            return None;\n        }\n        Some(Self::Integer(Integer(if raw == \"-0\" {\n            \"0\".into()\n        } else {\n            raw.into()\n        })))\n    }\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 50647,
+              "remove_utf8": "        let fixture: ssx_json::Value =\n            ssx_json::from_slice(include_bytes!(\"../../../docs/rust-rewrite/f15/cases.json\"))\n                .unwrap();\n",
+              "insert_utf8": "        let fixture: ssx_json::Value = ssx_json::from_slice(include_bytes!(\n            \"../../../../docs/rust-rewrite/f15/cases.json\"\n        ))\n        .unwrap();\n"
+            },
+            {
+              "at": 54531,
+              "remove_utf8": "\n#[cfg(test)]\nmod decoded_integer_tests {\n    use super::*;\n    #[test]\n    fn decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser() {\n        let huge = \"9\".repeat(5000);\n        assert_eq!(\n            Number::from_integer_text(&huge).unwrap().integer_text(),\n            Some(huge.as_str())\n        );\n        assert_eq!(\n            Number::from_integer_text(\"-0\").unwrap().integer_text(),\n            Some(\"0\")\n        );\n        for invalid in [\"\", \"+1\", \"01\", \"-01\", \"1.0\", \"1e1\", \" 1\", \"-\"] {\n            assert!(Number::from_integer_text(invalid).is_none());\n        }\n    }\n}\n",
+              "insert_utf8": ""
+            }
+          ]
+        }
+      },
+      "old_path_state": {
+        "sha256": "087c2013f7adf0cfc9fe0b63c5a7fd98a4517f87fd14a2d23a1716c74e5241b3",
+        "bytes": 113,
+        "mode": "0644"
+      }
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json_accounting.rs",
+      "physical": {
+        "path": "crates/ssx-source-json/src/source_json_accounting.rs",
+        "sha256": "5e530797905d18de0184e58b5f444643f5069e2bbb25c4e8d3e690d6955e5d1b",
+        "bytes": 3917,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/ssx-infra/src/adapters/source_json_accounting.rs",
+          "sha256": "5e530797905d18de0184e58b5f444643f5069e2bbb25c4e8d3e690d6955e5d1b",
+          "bytes": 3917,
+          "mode": "0644",
+          "git_blob": "0b4828a109c15d030961409e334a49bfe875fd0d",
+          "inverse": []
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/ssx-infra/src/adapters/source_json_accounting.rs",
+          "sha256": "5e530797905d18de0184e58b5f444643f5069e2bbb25c4e8d3e690d6955e5d1b",
+          "bytes": 3917,
+          "mode": "0644",
+          "git_blob": "0b4828a109c15d030961409e334a49bfe875fd0d",
+          "inverse": []
+        }
+      },
+      "old_path_state": "absent"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json_future.rs",
+      "physical": {
+        "path": "crates/ssx-source-json/src/source_json_future.rs",
+        "sha256": "38d2b45d524c6c1e3172fe1db94e6c905537317abfdf0d1886ee90a796455392",
+        "bytes": 1022,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/ssx-infra/src/adapters/source_json_future.rs",
+          "sha256": "38d2b45d524c6c1e3172fe1db94e6c905537317abfdf0d1886ee90a796455392",
+          "bytes": 1022,
+          "mode": "0644",
+          "git_blob": "27f3065f386c5dfcea58923cf821b30c0370205a",
+          "inverse": []
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/ssx-infra/src/adapters/source_json_future.rs",
+          "sha256": "38d2b45d524c6c1e3172fe1db94e6c905537317abfdf0d1886ee90a796455392",
+          "bytes": 1022,
+          "mode": "0644",
+          "git_blob": "27f3065f386c5dfcea58923cf821b30c0370205a",
+          "inverse": []
+        }
+      },
+      "old_path_state": "absent"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json_diagnostic.rs",
+      "physical": {
+        "path": "crates/ssx-source-json/src/source_json_diagnostic.rs",
+        "sha256": "7439f7c603748ef180bbf991ec9bdd93d4074dffee6e412420c1477a39f7d2c6",
+        "bytes": 15537,
+        "mode": "0644"
+      },
+      "parents": {
+        "T07": {
+          "commit": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
+          "path": "crates/ssx-infra/src/adapters/source_json_diagnostic.rs",
+          "sha256": "66961fba2fa9a6b53919360131c4b20f3e393e511eeb7199757f6aeb49d8c90e",
+          "bytes": 15540,
+          "mode": "0644",
+          "git_blob": "0efdc83a91477400872d92236b96406fa8b2c8eb",
+          "inverse": [
+            {
+              "at": 11192,
+              "remove_utf8": "            \"../../../docs/rust-rewrite/a06/source-json-diagnostic.json\"\n",
+              "insert_utf8": "            \"../../../../docs/rust-rewrite/a06/source-json-diagnostic.json\"\n"
+            }
+          ]
+        },
+        "Main": {
+          "commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+          "path": "crates/ssx-infra/src/adapters/source_json_diagnostic.rs",
+          "sha256": "66961fba2fa9a6b53919360131c4b20f3e393e511eeb7199757f6aeb49d8c90e",
+          "bytes": 15540,
+          "mode": "0644",
+          "git_blob": "0efdc83a91477400872d92236b96406fa8b2c8eb",
+          "inverse": [
+            {
+              "at": 11192,
+              "remove_utf8": "            \"../../../docs/rust-rewrite/a06/source-json-diagnostic.json\"\n",
+              "insert_utf8": "            \"../../../../docs/rust-rewrite/a06/source-json-diagnostic.json\"\n"
+            }
+          ]
+        }
+      },
+      "old_path_state": "absent"
+    }
+  ]
+}

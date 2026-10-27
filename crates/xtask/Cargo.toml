@@ -13,7 +13,7 @@ serde-saphyr = { version = "=2.0.0", default-features = false, features = ["dese
 ssx-domain.workspace = true
 ssx-wire.workspace = true
 ssx-http.workspace = true
-ssx-mcp.workspace = true
+ssx-mcp = { workspace = true, features = ["server"] }
 sha2.workspace = true
 ssx-json.workspace = true
 ssx-registry.workspace = true

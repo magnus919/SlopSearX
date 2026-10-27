@@ -10,16 +10,18 @@ publish.workspace = true
 workspace = true
 
 [features]
+default = ["server"]
+server = ["dep:ssx-application", "dep:ssx-infra", "dep:ssx-config", "dep:ssx-registry"]
 gateway-source-endpoints = ["reqwest/ssx-http1-source-pool", "rmcp/ssx-source-metadata", "dep:jiter"]
 gateway-dns-fixtures = ["ssx-windows-owner/fixtures"]
 
 [dependencies]
 # Same native-only Core-compatible parser already pinned by source SDK metadata.
 jiter = { version = "=0.14.0", optional = true, default-features = false, features = ["num-bigint"] }
-ssx-application.workspace = true
-ssx-infra.workspace = true
-ssx-config.workspace = true
-ssx-registry.workspace = true
+ssx-application = { workspace = true, optional = true }
+ssx-infra = { workspace = true, optional = true }
+ssx-config = { workspace = true, optional = true }
+ssx-registry = { workspace = true, optional = true }
 unicode-normalization = "=0.1.24"
 ssx-wire.workspace = true
 rmcp = { workspace = true, features = ["auth", "client", "transport-io", "transport-child-process", "transport-streamable-http-server", "transport-streamable-http-client-reqwest"] }
@@ -39,6 +41,7 @@ subtle = "=2.6.1"
 sse-stream = "=0.2.6"
 ssx-domain.workspace = true
 ssx-json.workspace = true
+ssx-source-json.workspace = true
 indexmap.workspace = true
 
 # T05 protocol codecs and accepted AWS-LC credential randomness.
@@ -54,6 +57,7 @@ libc = "=0.2.190"
 dns-lookup = "=4.0.2"
 
 [dev-dependencies]
+aws-lc-rs.workspace = true
 redis.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 
@@ -63,3 +67,33 @@ rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs
 
 [target.'cfg(windows)'.dependencies]
 ssx-windows-owner = { path = "../../vendor/ssx-windows-owner", version = "=0.1.0" }
+
+[[bin]]
+name = "cancel-wire-qualification"
+path = "src/bin/cancel-wire-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "mcp-qualification"
+path = "src/bin/mcp-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "planning-qualification"
+path = "src/bin/planning-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "search-qualification"
+path = "src/bin/search-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "wire-qualification"
+path = "src/bin/wire-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "evidence-qualification"
+path = "src/bin/evidence-qualification.rs"
+required-features = ["server"]

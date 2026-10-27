@@ -263,7 +263,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "test",
             "--locked",
             "-p",
-            "ssx-infra",
+            "ssx-source-json",
             "--lib",
             "source_json::tests",
         ],

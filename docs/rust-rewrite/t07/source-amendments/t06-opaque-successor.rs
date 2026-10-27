@@ -259,6 +259,28 @@ fn validate_current(
     material(&doc["prior"], &proof, "0644")?;
     Ok(proof)
 }
+// The client-only boundary adds one cfg to a server-fixture test. The exact
+// physical afterimage is authenticated before removing that one annotation;
+// the complete accepted Git/current/owner proof below remains unchanged.
+fn isolation_prior(physical: &[u8], source_mode: &str) -> Result<Vec<u8>, String> {
+    need(
+        source_mode == "0644"
+            && physical.len() == 104972
+            && digest(physical)
+                == "eb37f197c6b3b5f4af4c5e01f8b75a26fa735da397d70f7c74a45842634f4f7f",
+        "T06 isolation physical identity",
+    )?;
+    let at = 98689;
+    let annotation = b"    #[cfg(feature = \"server\")]\n";
+    need(
+        physical.get(at..at + annotation.len()) == Some(annotation),
+        "T06 isolation exact cfg span",
+    )?;
+    let mut accepted = physical.to_vec();
+    accepted.drain(at..at + annotation.len());
+    material(&current_row(0), &accepted, "0644")?;
+    Ok(accepted)
+}
 fn current_operand(
     root: &Path,
     expected: &Value,
@@ -267,12 +289,20 @@ fn current_operand(
     let doc = load_current(root)?;
     // One authenticated physical buffer is compared with the supplied bytes and
     // then inverted. A recovered historical proof operand is never physical input.
-    let actual = read(root, &doc["current"])?;
+    let path = root.join("crates/ssx-mcp/src/opaque.rs");
+    let metadata = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
+    need(
+        metadata.is_file() && !metadata.file_type().is_symlink(),
+        "T06 isolation source must be regular",
+    )?;
+    let physical = fs::read(&path).map_err(|e| e.to_string())?;
+    let accepted = isolation_prior(&physical, &permissions(&path)?)?;
     if let Some(supplied) = supplied {
-        need(supplied == actual, "T06 supplied current opaque differs")?;
+        need(supplied == physical, "T06 supplied current opaque differs")?;
     }
-    let prior = validate_current(root, &doc, expected, &actual, "0644")?;
-    Ok((actual, prior))
+    material(&doc["current"], &accepted, "0644")?;
+    let prior = validate_current(root, &doc, expected, &accepted, "0644")?;
+    Ok((physical, prior))
 }
 
 pub(crate) fn prove(root: &Path, expected: &Value, supplied_current: &[u8]) -> Result<(), String> {
@@ -335,6 +365,15 @@ fn current_controls(
     proof_prior: &[u8],
 ) -> Result<(), String> {
     let doc = load_current(root)?;
+    let accepted = isolation_prior(physical, "0644")?;
+    need(
+        isolation_prior(&accepted, "0644").is_err(),
+        "T06 accepted parent supplied as isolation current",
+    )?;
+    need(
+        isolation_prior(physical, "0600").is_err(),
+        "T06 isolation physical mode",
+    )?;
     need(
         prove(root, expected, proof_prior).is_err(),
         "T06 old proof preimage accepted as physical current",
@@ -346,14 +385,14 @@ fn current_controls(
         "T06 altered supplied physical accepted",
     )?;
     need(
-        validate_current(root, &doc, expected, physical, "0600").is_err(),
+        validate_current(root, &doc, expected, &accepted, "0600").is_err(),
         "T06 wrong physical mode accepted",
     )?;
     for key in ["path", "sha256", "mode", "git_commit", "git_blob"] {
         let mut wrong = doc.clone();
         wrong["current"][key] = json!("unlisted");
         need(
-            validate_current(root, &wrong, expected, physical, "0644").is_err(),
+            validate_current(root, &wrong, expected, &accepted, "0644").is_err(),
             "T06 wrong current row accepted",
         )?;
     }
@@ -373,7 +412,7 @@ fn current_controls(
         validate_current(root, &doc, expected, &altered, "0644").is_err(),
         "T06 altered physical hash accepted",
     )?;
-    let intermediate = edits(physical, &doc["inverse_stages"][0]["inverse"])?;
+    let intermediate = edits(&accepted, &doc["inverse_stages"][0]["inverse"])?;
     need(
         prove(root, expected, &intermediate).is_err(),
         "T06 intermediate proof frame accepted as physical",
@@ -384,7 +423,7 @@ fn current_controls(
         .unwrap()
         .pop();
     need(
-        validate_current(root, &omitted_stage, expected, physical, "0644").is_err(),
+        validate_current(root, &omitted_stage, expected, &accepted, "0644").is_err(),
         "T06 missing inverse stage accepted",
     )?;
     for stage in 0..2 {
@@ -398,7 +437,7 @@ fn current_controls(
                 .unwrap()
                 .remove(index);
             need(
-                validate_current(root, &missing, expected, physical, "0644").is_err(),
+                validate_current(root, &missing, expected, &accepted, "0644").is_err(),
                 "T06 missing current inverse span accepted",
             )?;
             let mut duplicate = doc.clone();
@@ -407,7 +446,7 @@ fn current_controls(
                 .unwrap()
                 .insert(index, rows[index].clone());
             need(
-                validate_current(root, &duplicate, expected, physical, "0644").is_err(),
+                validate_current(root, &duplicate, expected, &accepted, "0644").is_err(),
                 "T06 duplicate current inverse span accepted",
             )?;
             for field in ["remove_utf8", "insert_utf8"] {
@@ -417,7 +456,7 @@ fn current_controls(
                 altered["inverse_stages"][stage]["inverse"][index][field] =
                     json!(format!("{old}x"));
                 need(
-                    validate_current(root, &altered, expected, physical, "0644").is_err(),
+                    validate_current(root, &altered, expected, &accepted, "0644").is_err(),
                     "T06 altered current inverse span accepted",
                 )?;
             }

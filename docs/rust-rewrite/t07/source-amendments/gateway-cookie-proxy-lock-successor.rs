@@ -60,7 +60,12 @@ pub(super) fn actual_bytes(
     before: &[u8],
 ) -> Result<Vec<u8>, String> {
     let doc = load(root)?;
-    let actual = read(root, &doc["current"])?;
+    let actual = super::super::main_isolation_current::parent(
+        root,
+        "Cargo.lock",
+        None,
+        super::super::main_isolation_current::Parent::T07,
+    )?;
     validate(
         &doc,
         expected,

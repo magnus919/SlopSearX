@@ -95,6 +95,101 @@ fn read_material(root: &Path, row: &Value, stage: &str) -> Result<Vec<u8>, Strin
     check_material(row, &bytes, &mode(&path)?, stage)?;
     Ok(bytes)
 }
+
+/// The two composed guards keep physical custody separate from both parent frames.
+fn joint_current_material(root: &Path, path: &str, t02_row: &Value) -> Result<Vec<u8>, String> {
+    joint_current_material_at(root, root, path, t02_row)
+}
+// The owned filesystem negatives use their leaf custody root while retaining
+// the real, independently authenticated Git/capsule proof root. Production
+// always passes the same root for both; supplied bytes are still exact physical.
+fn joint_current_material_at(
+    root: &Path,
+    proof_root: &Path,
+    path: &str,
+    t02_row: &Value,
+) -> Result<Vec<u8>, String> {
+    require(
+        [XTASK_A13, VALIDATOR].contains(&path) && t02_row["path"] == path,
+        "PR1034 exact joint current scope",
+    )?;
+    let file = root.join(path);
+    let metadata = fs::symlink_metadata(&file).map_err(|e| e.to_string())?;
+    require(
+        metadata.is_file() && !metadata.file_type().is_symlink(),
+        "PR1034 joint current must be regular, not symlink",
+    )?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        require(
+            metadata.permissions().mode() & 0o7777 == 0o644,
+            "PR1034 joint current exact full mode",
+        )?;
+    }
+    let physical = fs::read(&file).map_err(|e| e.to_string())?;
+    let permissions = mode(&file)?;
+    use a06_source_successor::w07_t02_joint::{self, Parent};
+    let t02_parent = w07_t02_joint::parent(proof_root, path, &physical, Parent::T02)?;
+    check_material(
+        t02_row,
+        &t02_parent,
+        &permissions,
+        "PR1034 exact T02 parent row",
+    )?;
+
+    for capsule in [
+        "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json",
+        "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json",
+    ] {
+        let metadata = fs::symlink_metadata(root.join(capsule)).map_err(|e| e.to_string())?;
+        require(
+            metadata.is_file() && !metadata.file_type().is_symlink(),
+            "PR1034 custody capsule regular leaf",
+        )?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            require(
+                metadata.permissions().mode() & 0o7777 == 0o644,
+                "PR1034 custody capsule exact mode",
+            )?;
+        }
+        require(
+            fs::read(root.join(capsule)).map_err(|e| e.to_string())?
+                == fs::read(proof_root.join(capsule)).map_err(|e| e.to_string())?,
+            "PR1034 custody/proof capsule bytes differ",
+        )?;
+    }
+    // Select only the existing capsule's predecessor. effective_current seals
+    // that document and proves its W07 inverse from the actual physical file.
+    let capsule = fs::read(
+        root.join("docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json"),
+    )
+    .map_err(|e| e.to_string())?;
+    let capsule: Value = serde_json::from_slice(&capsule).map_err(|e| e.to_string())?;
+    let rows: Vec<_> = capsule["sources"]
+        .as_array()
+        .ok_or("PR1034 W07 source rows absent")?
+        .iter()
+        .filter(|row| row["path"] == path)
+        .collect();
+    require(rows.len() == 1, "PR1034 exact W07 source row")?;
+    let mut prior = rows[0]["prior"].clone();
+    prior["path"] = serde_json::json!(path);
+    prior["mode"] = serde_json::json!("0644");
+    let w07_current =
+        a06_source_successor::w07_evidence_successor::effective_current(proof_root, path, &prior)?;
+    let w07_parent = w07_t02_joint::parent(proof_root, path, &physical, Parent::W07)?;
+    check_material(
+        &w07_current,
+        &w07_parent,
+        &permissions,
+        "PR1034 exact W07 parent row",
+    )?;
+    Ok(physical)
+}
+
 // This one V1 material acquired W07's reviewed wrapper prefix on main. Its
 // original row remains historical premerge evidence; actual CURRENT is read
 // independently from the merged source path, never from an archive.
@@ -217,7 +312,7 @@ fn verify_merged_a13(root: &Path, current_row: &Value) -> Result<(), String> {
         next["current"] == accepted_main_row,
         "PR1034 A13 accepted-main predecessor row differs",
     )?;
-    let actual = read_material(root, current_row, "A06 actual CURRENT composed A13")?;
+    let actual = joint_current_material(root, XTASK_A13, current_row)?;
     check_source_transition(
         &next,
         &previous.bytes,
@@ -670,9 +765,136 @@ pub(crate) fn try_verify(
         Ok(())
     })())
 }
+#[cfg(all(test, not(unix)))]
+fn joint_current_controls(_: &Path) -> Result<(), String> {
+    Err("PR1034 joint filesystem controls require Unix".into())
+}
+#[cfg(all(test, unix))]
+fn joint_current_controls(root: &Path) -> Result<(), String> {
+    use a06_source_successor::w07_t02_joint::{self, Parent};
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    struct Owned(std::path::PathBuf);
+    impl Drop for Owned {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+    let suffix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_nanos();
+    let directory =
+        std::env::temp_dir().join(format!("a04-joint-custody-{}-{suffix}", std::process::id()));
+    fs::create_dir(&directory).map_err(|e| e.to_string())?;
+    let owned = Owned(directory);
+    const CAPSULE: &str = "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json";
+    for path in [
+        CAPSULE,
+        "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json",
+    ] {
+        let target = owned.0.join(path);
+        fs::create_dir_all(target.parent().ok_or("joint capsule parent")?)
+            .map_err(|e| e.to_string())?;
+        fs::write(
+            &target,
+            fs::read(root.join(path)).map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())?;
+        fs::set_permissions(target, fs::Permissions::from_mode(0o644))
+            .map_err(|e| e.to_string())?;
+    }
+    for path in [XTASK_A13, VALIDATOR] {
+        let actual = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+        let prior = w07_t02_joint::parent(root, path, &actual, Parent::T02)?;
+        let row = serde_json::json!({
+            "path": path, "sha256": digest(&prior), "bytes": prior.len(), "mode": "0644"
+        });
+        let target = owned.0.join(path);
+        fs::create_dir_all(target.parent().ok_or("joint source parent")?)
+            .map_err(|e| e.to_string())?;
+        fs::write(&target, &actual).map_err(|e| e.to_string())?;
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o644))
+            .map_err(|e| e.to_string())?;
+        require(
+            joint_current_material_at(&owned.0, root, path, &row)? == actual,
+            "joint custody must return physical bytes",
+        )?;
+        for (key, value) in [
+            ("path", serde_json::json!("unknown.rs")),
+            ("sha256", serde_json::json!("wrong")),
+            ("bytes", serde_json::json!(prior.len() + 1)),
+            ("mode", serde_json::json!("0755")),
+        ] {
+            let mut wrong = row.clone();
+            wrong[key] = value;
+            require(
+                joint_current_material_at(&owned.0, root, path, &wrong).is_err(),
+                "altered declared T02 row accepted",
+            )?;
+        }
+        require(
+            joint_current_material_at(&owned.0, root, "unknown.rs", &row).is_err(),
+            "unknown joint current path accepted",
+        )?;
+        for permissions in [0o600, 0o755, 0o4644] {
+            fs::set_permissions(&target, fs::Permissions::from_mode(permissions))
+                .map_err(|e| e.to_string())?;
+            require(
+                joint_current_material_at(&owned.0, root, path, &row).is_err(),
+                "altered physical joint mode accepted",
+            )?;
+        }
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o644))
+            .map_err(|e| e.to_string())?;
+        let backup = target.with_extension("owned-backup");
+        fs::rename(&target, &backup).map_err(|e| e.to_string())?;
+        require(
+            joint_current_material_at(&owned.0, root, path, &row).is_err(),
+            "missing joint source accepted",
+        )?;
+        symlink(&backup, &target).map_err(|e| e.to_string())?;
+        require(
+            joint_current_material_at(&owned.0, root, path, &row).is_err(),
+            "symlink joint source accepted",
+        )?;
+        fs::remove_file(&target).map_err(|e| e.to_string())?;
+        fs::create_dir(&target).map_err(|e| e.to_string())?;
+        require(
+            joint_current_material_at(&owned.0, root, path, &row).is_err(),
+            "nonregular joint source accepted",
+        )?;
+        fs::remove_dir(&target).map_err(|e| e.to_string())?;
+        fs::rename(backup, &target).map_err(|e| e.to_string())?;
+        for parent in [Parent::T02, Parent::W07] {
+            let projected = w07_t02_joint::parent(root, path, &actual, parent)?;
+            fs::write(&target, projected).map_err(|e| e.to_string())?;
+            require(
+                joint_current_material_at(&owned.0, root, path, &row).is_err(),
+                "projected parent accepted as physical joint source",
+            )?;
+            fs::write(&target, &actual).map_err(|e| e.to_string())?;
+        }
+        let capsule_path = owned.0.join(CAPSULE);
+        let sealed = fs::read(&capsule_path).map_err(|e| e.to_string())?;
+        let mut changed: Value = serde_json::from_slice(&sealed).map_err(|e| e.to_string())?;
+        changed["test"] = serde_json::json!("wrong");
+        fs::write(
+            &capsule_path,
+            serde_json::to_vec(&changed).map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())?;
+        require(
+            joint_current_material_at(&owned.0, root, path, &row).is_err(),
+            "unsealed W07 capsule accepted",
+        )?;
+        fs::write(capsule_path, sealed).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
     factory_controls(root)?;
+    joint_current_controls(root)?;
     let manifest = load(root)?;
     manifest_transition_controls(root, &load_v2(root)?)?;
     // Original version/control relations execute on explicitly archived accepted
@@ -1110,7 +1332,7 @@ fn verify_validator_composition(root: &Path, document: &Value, row: &Value) -> R
         &transition["predecessor_archive"],
         "PR1034 HISTORICAL validator",
     )?;
-    let actual = read_material(root, row, "PR1034 CURRENT validator")?;
+    let actual = joint_current_material(root, VALIDATOR, row)?;
     check_source_transition(
         transition,
         &old,

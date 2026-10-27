@@ -1,4 +1,5 @@
 //! Closed T02 generations after A06. Historical operands never become current identity.
+pub(super) use super::w07_t02_joint;
 use serde_json::{Value, json};
 use std::{fs, path::Path, process::Command};
 #[path = "native-search-reader.rs"]
@@ -132,6 +133,9 @@ pub(super) fn effective(root: &Path, expected: &Value) -> Result<Value, String> 
         }
         None => Ok(expected.clone()),
     }
+}
+pub(super) fn actual(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    super::read_exact(root, &effective(root, expected)?)
 }
 /// Exact caller material for the unchanged historical scoped controls.
 pub(crate) fn caller_material(

@@ -11,10 +11,8 @@ pub struct Client {
 }
 impl Client {
     #[cfg(feature = "gateway-source-endpoints")]
-    pub(super) fn from_source_record(
-        value: &ssx_infra::adapters::source_json::Value,
-    ) -> Result<Self> {
-        use ssx_infra::adapters::source_json::Value;
+    pub(super) fn from_source_record(value: &ssx_source_json::Value) -> Result<Self> {
+        use ssx_source_json::Value;
         // Missing/null is optional; a PRESENT string that Rust cannot represent
         // must fail closed rather than erasing issuer/authentication binding.
         let string = |name| -> Result<Option<String>> {
@@ -109,7 +107,7 @@ fn allowed(requested: &str, parent: &str) -> bool {
         .starts_with(&format!("{}/", b.path().trim_end_matches('/')))
 }
 fn normalized_metadata_url(value: &str) -> Result<String> {
-    use ssx_infra::adapters::source_json::{Text, Value as Source};
+    use ssx_source_json::{Text, Value as Source};
     let normalized = super::client_model::url_value(&Source::String(Text::from(value)), true)
         .map_err(|_| "OAuth metadata URL invalid")?;
     normalized

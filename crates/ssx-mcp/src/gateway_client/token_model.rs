@@ -1,6 +1,6 @@
 //! Source OAuthToken validation, distinct from SDK credential conversion.
 use super::token_json::{self, JsonError};
-use ssx_infra::adapters::source_json::{Map, Number, Text, Value};
+use ssx_source_json::{Map, Number, Text, Value};
 use std::{fmt::Write, time::Instant};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ModelError {

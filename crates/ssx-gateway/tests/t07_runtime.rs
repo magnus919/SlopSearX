@@ -878,10 +878,13 @@ async fn actual_native_oauth_status_matrix_preserves_registration_code_200_201_a
 
 // Current-main integration: these are the accepted native SearchSurface and
 // disposable Valkey fixtures, never a broad synthetic echo catalog.
+#[cfg(feature = "server-test-fixtures")]
 #[path = "../../ssx-mcp/tests/t06_support/fixture.rs"]
 mod current_t06_fixture;
+#[cfg(feature = "server-test-fixtures")]
 #[path = "../../ssx-mcp/tests/t06_support/server.rs"]
 mod current_t06_valkey;
+#[cfg(feature = "server-test-fixtures")]
 #[tokio::test]
 async fn actual_native_current_t06_eleven_tool_catalog_and_discovery_match_direct_http()
 -> ssx_mcp::Result<()> {

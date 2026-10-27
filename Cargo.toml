@@ -40,12 +40,13 @@ ssx-source-codecs = { path = "crates/ssx-source-codecs" }
 ssx-owned-budget = { path = "crates/ssx-owned-budget" }
 ssx-publication = { path = "crates/ssx-publication" }
 ssx-json = { path = "crates/ssx-json" }
+ssx-source-json = { path = "crates/ssx-source-json" }
 ssx-domain = { path = "crates/ssx-domain" }
 ssx-wire = { path = "crates/ssx-wire" }
 ssx-application = { path = "crates/ssx-application" }
 ssx-infra = { path = "crates/ssx-infra" }
 ssx-http = { path = "crates/ssx-http" }
-ssx-mcp = { path = "crates/ssx-mcp" }
+ssx-mcp = { path = "crates/ssx-mcp", default-features = false }
 ssx-config = { path = "crates/ssx-config" }
 ssx-registry = { path = "crates/ssx-registry" }
 

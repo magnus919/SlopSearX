@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "plan_id": "W07",
+  "scope": "finite packaging26.2->26.3 protocol observation only; not fullT06/SDK/backend parity",
+  "old": {
+    "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/output/wire-reference-v4-packaging262.json",
+    "sha256": "e1f67da4007c0e40009d44b4f35c464677ab78894558b4f05781f9430b9226f7",
+    "versions": {
+      "fastmcp": "4.0.11",
+      "mcp": "2.3.0",
+      "pydantic": "2.13.4",
+      "packaging": "26.2"
+    },
+    "packaging_module": {
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/site/packaging/__init__.py",
+      "sha256": "42130474fbb65e882b2735774b42964bab7b97423d93c11e0d1265e1f9f0f3bb"
+    }
+  },
+  "new": {
+    "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/output/wire-reference-v5-packaging263.json",
+    "sha256": "5d964ea762d2f723efb12dc7e27e851712440c0e45306d52d6ccd768e5b490f5",
+    "versions": {
+      "fastmcp": "4.0.11",
+      "mcp": "2.3.0",
+      "pydantic": "2.13.4",
+      "packaging": "26.3"
+    },
+    "packaging_module": {
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w07-d-native-gate-20261023/oracle/packaging263/packaging/__init__.py",
+      "sha256": "6e758cdd0028b2cad74c739b9adc9c9f06f054932306280b878bfe59d39219b5"
+    }
+  },
+  "exact_equalities": {
+    "baseline": true,
+    "sources": true,
+    "producer_sha256": true,
+    "bindings_sha256": true,
+    "interpreter": true,
+    "tools": true,
+    "full_catalog": true,
+    "cases": true,
+    "provider_calls": true,
+    "normalization": true
+  },
+  "catalog_tools": 38,
+  "w07_descriptors": 4,
+  "actual_negative_calls": 22,
+  "case_ids": [
+    "submit_missing",
+    "submit_bad_retriever_type",
+    "read_bool_limit",
+    "read_string_limit",
+    "read_zero_limit",
+    "read_large_limit",
+    "read_malformed_handle",
+    "manifest_bool_depth",
+    "manifest_nested_bad_result",
+    "manifest_nested_bad_artifact",
+    "manifest_conflict",
+    "lineage_bool_depth",
+    "lineage_malformed_artifact",
+    "lineage_invalid_direction",
+    "lineage_large_depth",
+    "lineage_zero_nodes",
+    "t06_search_missing",
+    "t06_search_null_query",
+    "t06_search_unexpected",
+    "t06_read_entities_bool_version",
+    "t06_read_results_bad_cursor_type",
+    "t06_read_result_bad_id_type"
+  ],
+  "normalization": "none; compared full descriptor and call-result JSON trees including all text bytes",
+  "provider_calls": 0,
+  "status": "passed"
+}

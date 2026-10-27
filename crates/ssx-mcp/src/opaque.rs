@@ -2403,6 +2403,7 @@ mod close_tests {
         // Repeated completion is harmless.
         gateway.clear_closed_session(&replacement);
     }
+    #[cfg(feature = "server")]
     #[tokio::test]
     async fn late_post_session_header_does_not_resurrect_closed_identity() -> Result<()> {
         use axum::{response::IntoResponse, routing::post};

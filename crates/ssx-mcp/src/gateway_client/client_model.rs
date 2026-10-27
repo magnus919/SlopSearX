@@ -3,7 +3,7 @@ use super::{
     token_json,
     token_model::{self, ModelError},
 };
-use ssx_infra::adapters::source_json::{Map, Text, Value};
+use ssx_source_json::{Map, Text, Value};
 use std::time::Instant;
 pub struct ClientModel(Vec<u8>);
 impl std::fmt::Debug for ClientModel {

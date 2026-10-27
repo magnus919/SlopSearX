@@ -1,13 +1,19 @@
 //! Native search surfaces and shared MCP transports. T01 Registry remains a qualification fixture.
+#[cfg(feature = "server")]
+pub mod evidence;
 pub mod gateway;
 pub mod gateway_client;
+#[cfg(feature = "server")]
 pub mod harness;
 pub mod http_client;
+#[cfg(feature = "server")]
 pub mod legacy;
+#[cfg(feature = "server")]
 pub mod oauth;
 pub mod opaque;
 pub mod output_limits;
 pub mod projection;
+#[cfg(feature = "server")]
 pub mod search_surface;
 use rmcp::{ErrorData, RoleServer, ServerHandler, model::*, service::RequestContext};
 use serde_json::{Value, json};
