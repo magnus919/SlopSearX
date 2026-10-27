@@ -1,6 +1,7 @@
 //! Exact two-insertion successor of the accepted W07/T02 native gate entrypoint.
 //! Preserves old source-chain operands only after proving physical current bytes.
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
 #[path = "capsule-sha.rs"]
@@ -8,21 +9,79 @@ mod capsule_sha;
 use capsule_sha::SHA;
 const SOURCE: &str = "crates/xtask/src/main.rs";
 const PRIOR_SHA: &str = "abc9435b419cfa6f0013fe1177d27b6661437baabe40d3824fa95185e6da40ee";
+fn need(ok: bool, why: &str) -> Result<(), String> {
+    if ok {
+        Ok(())
+    } else {
+        Err(format!("snapshot main custody: {why}"))
+    }
+}
+fn digest(bytes: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(bytes))
+}
+fn material(row: &Value, bytes: &[u8], mode: &str) -> Result<(), String> {
+    need(
+        row["sha256"] == digest(bytes)
+            && row["bytes"].as_u64() == Some(bytes.len() as u64)
+            && row["mode"] == mode,
+        "exact material",
+    )
+}
+fn text<'a>(row: &'a Value, key: &str) -> Result<&'a str, String> {
+    row[key].as_str().ok_or_else(|| format!("missing {key}"))
+}
+#[cfg(unix)]
+fn permissions(path: &Path) -> Result<String, String> {
+    use std::os::unix::fs::PermissionsExt;
+    Ok(format!(
+        "{:04o}",
+        fs::symlink_metadata(path)
+            .map_err(|e| e.to_string())?
+            .permissions()
+            .mode()
+            & 0o7777
+    ))
+}
+#[cfg(not(unix))]
+fn permissions(_: &Path) -> Result<String, String> {
+    Err("Unix main mode proof required".into())
+}
+fn edits(prior: &[u8], changes: &Value) -> Result<Vec<u8>, String> {
+    let mut result = vec![];
+    let mut end = 0;
+    for edit in changes.as_array().ok_or("main edits absent")? {
+        let at = edit["at"]
+            .as_u64()
+            .and_then(|n| usize::try_from(n).ok())
+            .ok_or("main offset")?;
+        let remove = text(edit, "remove_utf8")?.as_bytes();
+        let next = at.checked_add(remove.len()).ok_or("main span overflow")?;
+        need(
+            at >= end && prior.get(at..next) == Some(remove),
+            "ordered main forward span",
+        )?;
+        result.extend_from_slice(prior.get(end..at).ok_or("main forward prefix")?);
+        result.extend_from_slice(text(edit, "insert_utf8")?.as_bytes());
+        end = next;
+    }
+    result.extend_from_slice(prior.get(end..).ok_or("main forward suffix")?);
+    Ok(result)
+}
 fn regular(root: &Path, relative: &str) -> Result<Vec<u8>, String> {
     let path = root.join(relative);
     let metadata = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
-    super::need(
+    need(
         metadata.is_file()
             && metadata.len() <= 1_048_576
             && !metadata.file_type().is_symlink()
-            && super::permissions(&path)? == "0644",
+            && permissions(&path)? == "0644",
         "snapshot fixture gate source requires regular0644",
     )?;
     fs::read(path).map_err(|e| e.to_string())
 }
 fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<Vec<u8>, String> {
     let row = &doc["main"];
-    super::need(
+    need(
         expected["path"] == SOURCE
             && expected["sha256"] == row["prior"]["sha256"]
             && expected["bytes"] == row["prior"]["bytes"]
@@ -40,11 +99,11 @@ fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<
             }),
         "snapshot fixture exact joint main caller differs",
     )?;
-    super::material(&row["current"], current, mode)?;
+    material(&row["current"], current, mode)?;
     let edits = row["edits"]
         .as_array()
         .ok_or("snapshot fixture main edits absent")?;
-    super::need(
+    need(
         edits.len() == 2,
         "snapshot fixture main closed edit count differs",
     )?;
@@ -55,8 +114,8 @@ fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<
             .as_u64()
             .and_then(|n| usize::try_from(n).ok())
             .ok_or("snapshot fixture main offset absent")?;
-        let insert = super::text(edit, "insert_utf8")?.as_bytes();
-        super::need(
+        let insert = text(edit, "insert_utf8")?.as_bytes();
+        need(
             edit["remove_utf8"] == "" && !insert.is_empty(),
             "snapshot fixture main only insertions allowed",
         )?;
@@ -74,7 +133,7 @@ fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<
         let insert_end = end
             .checked_add(insert.len())
             .ok_or("snapshot fixture main insertion overflow")?;
-        super::need(
+        need(
             current.get(end..insert_end) == Some(insert),
             "snapshot fixture main exact insertion differs",
         )?;
@@ -86,28 +145,28 @@ fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<
             .get(cursor..)
             .ok_or("snapshot fixture main suffix absent")?,
     );
-    super::material(&row["prior"], &prior, "0644")?;
-    super::need(
-        super::edits(&prior, &row["edits"])? == current,
+    material(&row["prior"], &prior, "0644")?;
+    need(
+        edits(&prior, &row["edits"])? == current,
         "snapshot fixture main forward reconstruction differs",
     )?;
     Ok(prior)
 }
 pub(super) fn joint(root: &Path, supplied: &[u8]) -> Result<Vec<u8>, String> {
     let raw = regular(root, CAPSULE)?;
-    super::need(
-        super::digest(&raw) == SHA,
+    need(
+        digest(&raw) == SHA,
         "snapshot fixture main capsule identity differs",
     )?;
     let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
-    super::need(
+    need(
         doc["schema"] == "PORTABLE_SNAPSHOT_FIXTURE_SOURCE_V1"
             && doc["main"]["prior"]["path"] == SOURCE
             && doc["main"]["prior"]["sha256"] == PRIOR_SHA,
         "snapshot fixture main closed source differs",
     )?;
     let current = regular(root, SOURCE)?;
-    super::need(
+    need(
         supplied == current,
         "snapshot fixture supplied main is not physical current",
     )?;
@@ -116,7 +175,7 @@ pub(super) fn joint(root: &Path, supplied: &[u8]) -> Result<Vec<u8>, String> {
         (&doc["main"]["prior"], prior.as_slice()),
         (&doc["main"]["current"], current.as_slice()),
     ] {
-        super::need(
+        need(
             identity["git_blob"] == git_blob(root, bytes)?,
             "snapshot fixture main Git blob differs",
         )?;
@@ -149,7 +208,7 @@ fn git_blob(root: &Path, bytes: &[u8]) -> Result<String, String> {
         return Err(error.to_string());
     }
     let output = child.wait_with_output().map_err(|e| e.to_string())?;
-    super::need(
+    need(
         output.status.success(),
         "snapshot fixture main Git hash failed",
     )?;
@@ -167,11 +226,8 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     let current = regular(root, SOURCE).unwrap();
     let historical = joint(root, &current).unwrap();
     assert!(joint(root, &historical).is_err());
-    let t02 =
-        super::w07_t02_joint::parent(root, SOURCE, &current, super::w07_t02_joint::Parent::T02)?;
-    let old = serde_json::json!({"path":SOURCE,"sha256":"8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c","bytes":39725,"mode":"0644"});
-    assert_eq!(super::read_exact(root, &old)?, t02);
-    super::w07_t02_joint::parent(root, SOURCE, &current, super::w07_t02_joint::Parent::W07)?;
+    super::parent(root, SOURCE, &current, super::Parent::T02)?;
+    super::parent(root, SOURCE, &current, super::Parent::W07)?;
     assert!(inverse(&doc, expected, &historical, "0644").is_err());
     for mode in ["0600", "0755", "4644"] {
         assert!(inverse(&doc, expected, &current, mode).is_err());
@@ -185,7 +241,7 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     let mut changed = current.clone();
     changed.push(b'\n');
     let mut rehashed = doc.clone();
-    rehashed["main"]["current"]["sha256"] = serde_json::json!(super::digest(&changed));
+    rehashed["main"]["current"]["sha256"] = serde_json::json!(digest(&changed));
     rehashed["main"]["current"]["bytes"] = serde_json::json!(changed.len());
     assert!(inverse(&rehashed, expected, &changed, "0644").is_err());
     for mutation in 0..3 {

@@ -13,8 +13,6 @@ mod native_catalog;
 mod native_factory;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
-#[path = "../../snapshot-fixture-amendment/main-custody.rs"]
-mod snapshot_fixture_main;
 #[path = "w07-evidence-successor.rs"]
 pub(crate) mod w07_evidence_successor;
 #[path = "../../w07/source-amendments/main_successor.rs"]
@@ -1949,7 +1947,15 @@ pub(crate) fn native_catalog_source_controls(root: &Path) -> Result<(), String> 
 #[cfg(test)]
 #[allow(dead_code)]
 pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> {
-    snapshot_fixture_main::controls(root)
+    w07_t02_joint::snapshot_fixture_main_controls(root)?;
+    let path = "crates/xtask/src/main.rs";
+    let current = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+    let t02 = w07_t02_joint::parent(root, path, &current, w07_t02_joint::Parent::T02)?;
+    let old = json!({"path":path,"sha256":"8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c","bytes":39725,"mode":"0644"});
+    need(
+        read_exact(root, &old)? == t02,
+        "literal e127 main caller proof",
+    )
 }
 /// Only the reviewed Metrics insertion is removed for existing historical callers.
 /// The full physical afterimage is required; old bytes alone are never current proof.
