@@ -4,9 +4,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
-#[path = "capsule-sha.rs"]
-mod capsule_sha;
-use capsule_sha::SHA;
+include!("capsule-sha.rs");
 const SOURCE: &str = "crates/xtask/src/main.rs";
 const PRIOR_SHA: &str = "abc9435b419cfa6f0013fe1177d27b6661437baabe40d3824fa95185e6da40ee";
 fn need(ok: bool, why: &str) -> Result<(), String> {
