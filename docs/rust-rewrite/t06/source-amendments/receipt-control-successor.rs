@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/t06/source-amendments/receipt-control-successor.json";
-const CAPSULE_SHA: &str = "4bae103d6972ba4aca8acc456ec73d9ee242d2983711f18967b72abafd196d4a";
+const CAPSULE_SHA: &str = "d6fb5b119b7a20b810a5cf2f45bb523d882bce928329ec9b417ae804aeb728b0";
 const BASELINE: &str = "e9c5911a468b892fe2adef9027374cb867a2535d";
 const PATHS: &[&str] = &[
     "crates/ssx-mcp/src/bin/search-qualification.rs",
@@ -69,11 +69,18 @@ fn regular(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {
         meta.is_file() && !meta.file_type().is_symlink(),
         "receipt-control source must be regular",
     )?;
-    use std::os::unix::fs::PermissionsExt;
-    Ok((
-        fs::read(path).map_err(|e| e.to_string())?,
-        meta.permissions().mode() & 0o7777,
-    ))
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        Ok((
+            fs::read(path).map_err(|e| e.to_string())?,
+            meta.permissions().mode() & 0o7777,
+        ))
+    }
+    #[cfg(not(unix))]
+    {
+        Err("receipt-control source mode requires Unix".into())
+    }
 }
 fn load(root: &Path) -> Result<Capsule> {
     let (raw, mode) = regular(root, CAPSULE)?;
@@ -198,6 +205,13 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             inverse(row, &physical, mode)? == prior,
             "receipt-control positive inverse differs",
         )?;
+        if PATHS[2..].contains(&row.path.as_str()) {
+            need(
+                reader_parent(root, &row.path, &row.prior.sha256, &physical)?
+                    == Some(prior.clone()),
+                "receipt-control exact reader route differs",
+            )?;
+        }
         need(
             parent(root, &row.path, &row.prior.sha256, &prior).is_err(),
             "receipt-control old bytes accepted as current",

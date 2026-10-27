@@ -82,3 +82,10 @@ their two source readers at `e9c5911a`; original binding containers and archives
 remain unchanged. Existing T06 and W07 readers reject altered bodies, modes,
 caller tuples and missing or duplicate inverse spans. This qualification-only
 repair does not change backend or portal behavior.
+
+The reviewed current gate root `source-amendments/receipt-control-closure.rs`
+independently pins the complete helper and capsule bytes and modes before either
+T06 reader or the W07 reader delegates to that helper. Its literal expectations
+sit outside the four inverse rows, avoiding a hash cycle. The outer closure's
+own source is explicit current gate code, retained in the final source seal;
+mutating only the executable helper or capsule cannot self-certify an old frame.

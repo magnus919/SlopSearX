@@ -5,6 +5,8 @@ use crate::{Result, command};
 pub(crate) mod lock_amendment;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs"]
 pub(crate) mod receipt_control;
+#[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs"]
+pub(crate) mod receipt_control_closure;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
@@ -76,6 +78,7 @@ fn validate_native_file(root: &Path, row: &Value, bytes: &[u8], storage: &Value)
     } else {
         &row["sha256"]
     };
+    receipt_control_closure::verify(root)?;
     let prior = receipt_control::parent(
         root,
         row["file"].as_str().ok_or("T06 native fixture path")?,
@@ -218,6 +221,7 @@ fn run_suite_for(
     Ok(())
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
+    receipt_control_closure::controls(root)?;
     receipt_control::controls(root)?;
     let raw = fs::read(root.join("docs/rust-rewrite/t06/source_bindings_v2.json"))
         .map_err(|e| e.to_string())?;
@@ -319,6 +323,7 @@ mod tests {
     fn altered_t06_bindings_cannot_self_certify() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         w07_evidence_successor::controls(&root).unwrap();
+        receipt_control_closure::controls(&root).unwrap();
         receipt_control::controls(&root).unwrap();
         native_search::controls(&root).unwrap();
         let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");

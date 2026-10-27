@@ -12,6 +12,8 @@ mod lock_amendment;
 mod native_search;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs"]
 mod receipt_control;
+#[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs"]
+mod receipt_control_closure;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -108,6 +110,7 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
         include_bytes!("../../../docs/rust-rewrite/t06/storage-amendment/server.rs.7f8d.frozen");
     assert_eq!(digest(archive), storage["before_sha256"].as_str().unwrap());
     w07_evidence_successor::controls(&root).unwrap();
+    receipt_control_closure::controls(&root).unwrap();
     receipt_control::controls(&root).unwrap();
     for row in native["files"].as_array().unwrap() {
         let name = row["file"].as_str().unwrap();

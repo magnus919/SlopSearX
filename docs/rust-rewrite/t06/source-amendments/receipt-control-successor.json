@@ -73,30 +73,30 @@
       },
       "prior_git_blob": "eb6e9e2e41752ced1e7cd8568741485f415dca06",
       "current": {
-        "sha256": "29676dd566219fc07db138742a5d3c68f353d8db02c66db69fbdcc9df934f302",
-        "bytes": 18677,
+        "sha256": "e4987b20b758deab8c591875cc1f4bc81c7b7e4dc453f92655eb7fec7909fc7e",
+        "bytes": 18954,
         "mode": 420
       },
       "edits": [
         {
           "current_offset": 302,
           "old": "",
-          "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\npub(crate) mod receipt_control;\n"
+          "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\npub(crate) mod receipt_control;\n#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs\"]\npub(crate) mod receipt_control_closure;\n"
         },
         {
-          "current_offset": 3403,
+          "current_offset": 3531,
           "old": "",
-          "new": "    let prior = receipt_control::parent(\n        root,\n        row[\"file\"].as_str().ok_or(\"T06 native fixture path\")?,\n        expected.as_str().ok_or(\"T06 native fixture hash\")?,\n        bytes,\n    )?;\n    let bytes = prior.as_deref().unwrap_or(bytes);\n"
+          "new": "    receipt_control_closure::verify(root)?;\n    let prior = receipt_control::parent(\n        root,\n        row[\"file\"].as_str().ok_or(\"T06 native fixture path\")?,\n        expected.as_str().ok_or(\"T06 native fixture hash\")?,\n        bytes,\n    )?;\n    let bytes = prior.as_deref().unwrap_or(bytes);\n"
         },
         {
-          "current_offset": 11159,
+          "current_offset": 11331,
           "old": "",
-          "new": "    receipt_control::controls(root)?;\n"
+          "new": "    receipt_control_closure::controls(root)?;\n    receipt_control::controls(root)?;\n"
         },
         {
-          "current_offset": 15826,
+          "current_offset": 16044,
           "old": "",
-          "new": "        receipt_control::controls(&root).unwrap();\n"
+          "new": "        receipt_control_closure::controls(&root).unwrap();\n        receipt_control::controls(&root).unwrap();\n"
         }
       ]
     },
@@ -109,23 +109,23 @@
       },
       "prior_git_blob": "cf1986fcaf6e7bb8ab6c67653cdbea88e9bccbc1",
       "current": {
-        "sha256": "5272daf1699f113ea80da981e12f81bb52afb9636b3bf92145b8956f9c156d28",
-        "bytes": 5548,
+        "sha256": "1d317226f46e04e58d982bb2e8869b331f5a650c0b32b0afd843d3f1f90a1900",
+        "bytes": 5720,
         "mode": 420
       },
       "edits": [
         {
           "current_offset": 557,
           "old": "",
-          "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\nmod receipt_control;\n"
+          "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\nmod receipt_control;\n#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs\"]\nmod receipt_control_closure;\n"
         },
         {
-          "current_offset": 4461,
+          "current_offset": 4578,
           "old": "",
-          "new": "    receipt_control::controls(&root).unwrap();\n"
+          "new": "    receipt_control_closure::controls(&root).unwrap();\n    receipt_control::controls(&root).unwrap();\n"
         },
         {
-          "current_offset": 5162,
+          "current_offset": 5334,
           "old": "",
           "new": "        } else if let Some(prior) = receipt_control::parent(&root, name, expected, &actual).unwrap()\n        {\n            prior\n"
         }
