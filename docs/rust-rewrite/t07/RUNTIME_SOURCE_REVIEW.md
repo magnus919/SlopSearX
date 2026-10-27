@@ -27,3 +27,31 @@ The actual T07 xtask binds exact source digests plus49 component test selectors,
 Review this entire source and separate additive SDK policy/patch/provenance before activation. Review exact four-crate575-file HTTP composition and Cargo feature/lock delta; the new runtime deliberately references concrete fork APIs and cannot compile against stock crates. Preserve and complete independent R1/R2 Q1/Q2/Q3, P/C/W/R/mount/platform/trust/proxy/IDNA/current-consumer obligations, not substitute an aggregate timeout or arbitrary50MiB criterion. Run bounded native qualification, fix compiler/runtime failures, complete inherited T01/T05/T06/F08/shared stdio regressions, workspace quality/portal CI, supported target install evidence, substantive independent review, artifact/ledger/ADR updates and ready PR/exact-head CI before delivery. Native/source-policy tests are not a waiver of missing original executed catalog capture.
 
 Portal impact: this client source does not change SearchService or browser contracts. Packaging changes still require portal impact review and existing required portal CI. No Python behavior changed.
+
+
+## Current registration request fixture
+
+The source OAuth lane sends `application_type: "native"` in its dynamic client
+registration request. MCP 2.3.0 `mcp/shared/auth.py:113–130` gives the request
+model this default, and `mcp/client/auth/utils.py:292` includes it through
+`model_dump(mode="json", exclude_none=True)`. The project constructs that
+request model in `slopsearx/mcp/oauth_client.py:219` without overriding the
+default. The retained primary model has SHA-256
+`899afdfa4f368e89d6672141431b6a32f839f9e38a7f0b3a6e6654cda25200e2`.
+
+This request contract differs from the client-information response model,
+whose `application_type` default is `None` (`auth.py:133–159`). The frozen
+client URL and token-model response fixtures retain their `null` values.
+No intentional wire difference is introduced by correcting the process
+fixture: its registration handler now requires the exact string `native`,
+while retaining the `token_endpoint_auth_method == "none"` assertion and
+all other OAuth, storage, cancellation and shutdown checks.
+
+The accepted source caller already preserves this field, and
+`source_oauth_real_loopback_discovery_registration_code_refresh_and_store`
+and the genuine SDK source-operation control assert it. The first public
+213-case attempt on `4e051784` passed 117 gateway library controls and four
+streaming seams, then stopped with seven process passes and five failures
+at the obsolete absence assertion. That failed attempt remains failed.
+The strict fixture successor and its current binding require focused
+execution and a new complete public T07 result; neither is claimed here.

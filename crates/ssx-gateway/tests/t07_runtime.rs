@@ -173,7 +173,7 @@ async fn oauth_metadata(State(app): State<App>) -> axum::Json<Value> {
     )
 }
 async fn register(State(app): State<App>, axum::Json(value): axum::Json<Value>) -> Response {
-    assert!(value.get("application_type").is_none());
+    assert_eq!(value["application_type"], "native");
     assert_eq!(value["token_endpoint_auth_method"], "none");
     let mut observed = app.state.lock().await;
     observed.registration = Some(value.clone());
