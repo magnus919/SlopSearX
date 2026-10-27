@@ -1086,6 +1086,8 @@ pub(crate) fn validator_baseline(
 }
 /// A08's immutable UA proof consumes the exact A06 manifest predecessor only
 /// after the existing T07 successor has proved the actual current root bytes.
+// Used by xtask A08; this module is also included by standalone A13 tests.
+#[allow(dead_code)]
 pub(crate) fn user_agent_manifest_prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
     need(
         *expected
@@ -1825,6 +1827,8 @@ pub(crate) fn a13_inventory_library_source(root: &Path, expected: &Value) -> Res
 
 /// Single immutable T06 opaque caller, with current T07 reconstruction and an
 /// independent exact default-owner byte invariant; no general material bypass.
+// Used by xtask T06; this module is also included by standalone A13 tests.
+#[allow(dead_code)]
 pub(crate) fn t07_opaque_material(
     root: &Path,
     expected: &Value,

@@ -235,6 +235,8 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+// Called by the shared xtask T06 bridge; standalone A13 includes this module too.
+#[allow(dead_code)]
 pub(super) fn t06_opaque_material(
     root: &Path,
     expected: &Value,
