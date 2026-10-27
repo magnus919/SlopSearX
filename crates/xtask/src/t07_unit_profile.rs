@@ -1248,7 +1248,7 @@ mod tests {
     }
     #[test]
     fn group_probe_accepts_only_closed_pid_specific_esrch_and_clean_success() {
-        assert_eq!(probe_result(42, Some(0), b"", b"").unwrap(), false);
+        assert!(!probe_result(42, Some(0), b"", b"").unwrap());
         for diagnostic in [
             "kill: -42: No such process\n",
             "kill: (-42): No such process\n",
