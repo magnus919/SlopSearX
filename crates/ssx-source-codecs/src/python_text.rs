@@ -134,10 +134,7 @@ mod tests {
             let values = numeric_array("_PyUnicode_TypeRecords");
             assert_eq!(values.len() % 6, 0);
             Self {
-                records: values
-                    .chunks_exact(6)
-                    .map(|v| v.try_into().unwrap())
-                    .collect(),
+                records: values.as_chunks::<6>().0.to_vec(),
                 first: numeric_array("index1"),
                 second: numeric_array("index2"),
                 extended: numeric_array("_PyUnicode_ExtendedCase"),
@@ -251,10 +248,11 @@ mod tests {
             4097
         );
         assert_eq!(lower(&input), format!("aσ{}a", "\u{301}".repeat(4096)));
-        let mut stopped = lowercase_steps(&input);
-        assert_eq!(stopped.next(), Some(LowerStep::Scalar('a')));
-        assert_eq!(stopped.next(), Some(LowerStep::Progress));
-        drop(stopped);
+        {
+            let mut stopped = lowercase_steps(&input);
+            assert_eq!(stopped.next(), Some(LowerStep::Scalar('a')));
+            assert_eq!(stopped.next(), Some(LowerStep::Progress));
+        }
     }
 }
 
