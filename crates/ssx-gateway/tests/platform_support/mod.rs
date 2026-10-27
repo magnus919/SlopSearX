@@ -19,7 +19,16 @@ pub fn root(label: &str) -> PathBuf {
     );
     assert!(root.is_absolute());
     let path = root.join(format!("platform-{label}-{}", std::process::id()));
+    #[cfg(windows)]
     ssx_mcp::gateway_client::resolver::install::prepare_output_root(&path).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+        std::fs::DirBuilder::new()
+            .mode(0o700)
+            .create(&path)
+            .unwrap();
+    }
     path
 }
 pub fn stage(root: &Path, fixture: bool) -> PathBuf {
