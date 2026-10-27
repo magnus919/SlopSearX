@@ -234,7 +234,10 @@ fn windows_held_confidential_read_atomic_replace_and_parent_rename_have_coherent
     }
     let moved = root.join("moved-parent");
     let denial = std::fs::rename(&directory, &moved).unwrap_err();
-    assert_eq!(denial.kind(), std::io::ErrorKind::PermissionDenied);
+    assert!(
+        matches!(denial.raw_os_error(), Some(5 | 32)),
+        "held parent must deny replacement through Windows access/sharing checks"
+    );
     assert!(directory.is_dir() && !moved.exists());
     // Windows may report the replaced original as delete-pending/link-retired.
     // Its exact production identity check must deny that state, never publish

@@ -65,6 +65,11 @@ untrusted writers. Its three fixed Windows roles and exact record/hash/identity
 checks remain authoritative. Package record schema and DNS protocol do not change.
 The new probe and wrong-Job controls exist only behind a nondefault required
 feature; no environment flag or command mode enables them in a production binary.
+A fixture-only owned read guard uses the exact production admission/read helper
+to interleave a held token read with real atomic replacement. It requires a
+complete old document or explicit identity denial, a complete new document at
+the current path, confidential ACLs, and kernel parent-rename denial until the
+original guard is released. No sleep or global mutation hook supplies this barrier.
 The abrupt-parent case captures an original read-only process handle and verifies
 creation time before killing the original owning parent Child. It holds no Job
 handle, so it cannot accidentally defeat the last-handle kill-on-close witness.
