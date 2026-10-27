@@ -135,6 +135,11 @@ const SCIENCE_OPENALEX: &[&str] = &[
     "science_date_denials_never_reach_real_adapter_or_shared_acquisition",
     "science_real_openalex_empty_and_http_failure_remain_distinct",
 ];
+const SCIENCE_HTTP: &[&str] = &[
+    "native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition",
+    "native_http_date_denials_have_zero_real_acquisition",
+    "native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes",
+];
 const T06_WIRE: &[&str] = &[
     "actual_http_native_large_output_and_one_over_profile_fail_closed",
     "actual_legacy_native_large_output_releases_aggregate_budget_on_disconnect",
@@ -294,6 +299,13 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         root,
         &["--test", "science_openalex"],
         SCIENCE_OPENALEX,
+        records,
+    )?;
+    run_suite_for(
+        root,
+        "ssx-http",
+        &["--test", "science_openalex"],
+        SCIENCE_HTTP,
         records,
     )?;
     run_suite(root, &["--test", "t06_wire"], T06_WIRE, records)?;

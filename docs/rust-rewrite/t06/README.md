@@ -137,7 +137,53 @@ The existing T06 gate runs this separate three-name target in addition to every
 original source binding, fixture and transport test. Frozen JSON, historic test
 identities and policy defaults are unchanged. Portal impact: these are additive
 contract tests, with no production request/response or browser-visible change.
-This is the science MCP composition slice of #984; public HTTP GET/form POST,
+This science MCP composition is extended by the native HTTP slice below.
 T03 portal/date links, gateway and production activation remain separate work.
 Source presence is not qualification: record exact-head native commands/results
 and cleanup under the normal resource grant before claiming acceptance.
+
+
+## Native HTTP to actual OpenAlex (#984)
+
+`ssx-http/tests/science_openalex.rs` calls the accepted public native router
+through a real Rust HTTP client on a loopback socket. Its trusted composition
+uses the same registered OpenAlex adapter, descriptor-derived catalog, shared
+service and private Valkey as the three MCP tests. The neutral test fixture is
+`ssx-infra/tests/support/science_openalex.rs`; the original MCP test bodies and
+three selector names are unchanged. No production module, dependency manifest,
+lockfile, policy grant or frozen source inventory changes in this increment.
+
+The HTTP target adds three named tests to the T06 gate. Its inventory is listed
+and compared exactly before execution, alongside the unchanged MCP inventory.
+The required Rust CI workflow also runs `cargo test --locked --workspace` and
+strict Clippy over all targets, which includes this HTTP target.
+
+- `native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition`
+  requires cold acquisition for GET and form POST on both `/` and `/search`
+  for lower-only, upper-only, equal leap-day and two-sided bounds. The fixture
+  checks sixteen exact outbound request lines and compares returned URL/day
+  pairs with the unchanged A06 date corpus. JSON and cached YAML must expose
+  identical requested/applied proof, audited `upstream:openalex` provenance and
+  OpenAlex status/identity. Separate bound keys remain in private Valkey;
+  missing and mismatched proof each require another real acquisition and typed
+  storage readback. An unbounded acquisition preserves JSON/YAML/CSV/RSS use.
+- `native_http_date_denials_have_zero_real_acquisition` requires the reference
+  HTTP 400 error/field behavior for malformed, invalid leap-day, empty or
+  reversed dates, absolute plus relative constraints, implicit/category/mixed/
+  unsupported scopes, unavailable and unaudited adapters, unknown/repeated
+  controls and bounded CSV/RSS. URI and form controls share duplicate detection.
+  Every denial must leave adapter admission, client admission, cache reads and
+  writes at zero, with no upstream requests or private shared records.
+- `native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes`
+  requires actual upstream empty JSON to remain HTTP 200 with status `ok`,
+  while HTTP 500 becomes HTTP 503 with status `error`. Both public JSON and
+  YAML retain bounded proof and engine outcomes.
+
+Portal impact: this increment adds tests of accepted native HTTP behavior;
+there is no browser-visible implementation change. Full T03 browser acceptance
+is still open: the current form loses date/scope controls on resubmission, the
+renderer does not display date enforcement, and machine-format links remain
+unimplemented. Existing pagination date retention does not satisfy that full
+journey. These finite fixtures do not close #984 or integrated parity, measure
+retrieval quality or establish provider/production availability. Exact-head
+commands, results and cleanup must be recorded before claiming local execution.
