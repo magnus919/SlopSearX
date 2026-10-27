@@ -150,10 +150,9 @@ impl Fixture {
                         let (stream,_)=next.unwrap(); let acceptor=acceptor.clone(); let record=record.clone(); let redirect=redirect.clone();
                         connections.spawn(async move {
                             // An untrusted/hostname-negative handshake is expected to abort.
-                            if let Ok(Ok(mut stream))=tokio::time::timeout(BUDGET,acceptor.accept(stream)).await {
-                                if let Some(request)=tokio::time::timeout(BUDGET,request(&mut stream)).await.unwrap().unwrap() {
-                                    respond(&mut stream,&request,redirect.as_deref()).await.unwrap(); record.lock().unwrap().push(request);
-                                }
+                            if let Ok(Ok(mut stream))=tokio::time::timeout(BUDGET,acceptor.accept(stream)).await
+                                && let Some(request)=tokio::time::timeout(BUDGET,request(&mut stream)).await.unwrap().unwrap() {
+                                respond(&mut stream,&request,redirect.as_deref()).await.unwrap(); record.lock().unwrap().push(request);
                             }
                         });
                     }

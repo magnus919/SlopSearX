@@ -230,21 +230,22 @@ async fn installed_tls_connect_proxy_keeps_proxy_credentials_out_of_origin_and_b
     stop.send(()).unwrap();
     tokio::time::timeout(BUDGET, task).await.unwrap().unwrap();
     assert!(!heads.lock().unwrap().is_empty());
-    let observed = fixture.observed.lock().unwrap();
-    assert!(!observed.is_empty());
-    assert!(observed.iter().all(|request| {
-        !request
-            .head
-            .to_ascii_lowercase()
-            .contains("proxy-authorization:")
-    }));
-    assert!(observed.iter().any(|request| {
-        request
-            .head
-            .to_ascii_lowercase()
-            .contains("authorization: bearer platform-sentinel")
-    }));
-    drop(observed);
+    {
+        let observed = fixture.observed.lock().unwrap();
+        assert!(!observed.is_empty());
+        assert!(observed.iter().all(|request| {
+            !request
+                .head
+                .to_ascii_lowercase()
+                .contains("proxy-authorization:")
+        }));
+        assert!(observed.iter().any(|request| {
+            request
+                .head
+                .to_ascii_lowercase()
+                .contains("authorization: bearer platform-sentinel")
+        }));
+    }
     fixture.close().await;
 }
 
