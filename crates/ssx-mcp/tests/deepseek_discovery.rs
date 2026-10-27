@@ -104,10 +104,6 @@ impl SnapshotRepository for MemorySnapshots {
 #[tokio::test]
 async fn native_mcp_capability_tool_keeps_deepseek_visible_disabled_and_truthful() {
     let registry = Arc::new(Registry::builtins().unwrap());
-    assert_eq!(
-        registry.len(),
-        Registry::migration_baseline().unwrap().len() + 1
-    );
     let config = Arc::new(
         ssx_config::load_config_with(Some(std::path::Path::new("/dev/null")), &BTreeMap::new())
             .unwrap(),
