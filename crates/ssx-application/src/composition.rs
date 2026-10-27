@@ -494,33 +494,45 @@ impl SourceResolver {
             .engines
             .extend(job.queries.iter().flat_map(|q| q.engines.clone()));
         self.check(tenant, cancel, fence)?;
-        let mut attempts = job
-            .queries
-            .iter()
-            .flat_map(|q| &q.attempts)
-            .filter(|a| attempt_id.as_ref().is_none_or(|id| id == &a.attempt_id))
-            .peekable();
-        if attempt_id.is_some() && attempts.peek().is_none() {
-            return Err(missing());
-        }
-        let mut cursors = attempts.filter_map(|a| a.cursor.as_deref()).peekable();
-        if cursors.peek().is_none() {
-            return Err(partial());
-        }
+        let mut found_attempt = false;
+        let mut found_cursor = false;
         let mut ids = vec![];
         let mut seen = BTreeSet::new();
         let mut total = 0u64;
-        for cursor in cursors {
-            let snapshot = self.snapshot(tenant, cursor, cancel, fence).await?;
-            total = total
-                .checked_add(snapshot.results().len() as u64)
-                .ok_or_else(malformed)?;
-            for i in 0..snapshot.results().len().min(MAX_SOURCE_RESULTS) {
-                let id = format!("{}:{i}", snapshot.id());
-                if seen.insert(id.clone()) && ids.len() < MAX_SOURCE_RESULTS {
-                    ids.push(id);
+        // Keep only one owned cursor across an await. This preserves valid
+        // retained multi-attempt records without an artificial cursor cap or
+        // a borrowed higher-ranked iterator in the Send source future.
+        for qi in 0..job.queries.len() {
+            for ai in 0..job.queries[qi].attempts.len() {
+                let attempt = &job.queries[qi].attempts[ai];
+                if attempt_id
+                    .as_ref()
+                    .is_some_and(|id| id != &attempt.attempt_id)
+                {
+                    continue;
+                }
+                found_attempt = true;
+                let Some(cursor) = attempt.cursor.clone() else {
+                    continue;
+                };
+                found_cursor = true;
+                let snapshot = self.snapshot(tenant, &cursor, cancel, fence).await?;
+                total = total
+                    .checked_add(snapshot.results().len() as u64)
+                    .ok_or_else(malformed)?;
+                for i in 0..snapshot.results().len().min(MAX_SOURCE_RESULTS) {
+                    let id = format!("{}:{i}", snapshot.id());
+                    if ids.len() < MAX_SOURCE_RESULTS && seen.insert(id.clone()) {
+                        ids.push(id);
+                    }
                 }
             }
+        }
+        if attempt_id.is_some() && !found_attempt {
+            return Err(missing());
+        }
+        if !found_cursor {
+            return Err(partial());
         }
         let count = ids.len();
         Ok(ResolvedSource {
