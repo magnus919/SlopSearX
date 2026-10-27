@@ -7,6 +7,8 @@ mod a13_header_layout_successor;
 #[path = "post-a06-generation.rs"]
 mod post_a06_generation;
 pub(crate) use post_a06_generation::native_search;
+#[path = "../../native-engines/catalog-source-amendment.rs"]
+mod native_catalog;
 #[path = "../../native-engines/factory-source-amendment.rs"]
 mod native_factory;
 #[path = "real-clock-successor.rs"]
@@ -866,6 +868,11 @@ pub(crate) fn try_verify(
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
     if let Some(result) =
+        native_catalog::try_verify(root, container, container_sha, path, expected, bytes)
+    {
+        return Some(result);
+    }
+    if let Some(result) =
         post_a06_generation::try_current(root, container, container_sha, path, expected, bytes)
     {
         return Some(result);
@@ -1157,6 +1164,7 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
     default_ca_fixture_controls(root)?;
     native_factory::controls(root)?;
+    native_catalog::controls(root)?;
     native_search::controls(root)?;
     post_a06_generation::controls(root)?;
     a13_json_inventory_successor::controls(root)?;
@@ -1833,4 +1841,11 @@ pub(crate) fn generation_control_operand(
     supplied_current: &[u8],
 ) -> Result<Vec<u8>, String> {
     post_a06_generation::control_operand(root, path, expected, supplied_current)
+}
+
+/// Focused actual-caller qualification without unrelated provider or Valkey work.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn native_catalog_source_controls(root: &Path) -> Result<(), String> {
+    native_catalog::controls(root)
 }
