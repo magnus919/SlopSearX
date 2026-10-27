@@ -79,7 +79,7 @@ fn validate(
 pub(super) fn archived_prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
     let doc = load(root)?;
     let prior = super::read(root, &doc["archive"])?;
-    let current = super::read(root, &doc["current"])?;
+    let current = super::w07_evidence_successor::prior(root, SOURCE, &doc["current"])?;
     validate(
         &doc,
         expected,
@@ -107,7 +107,7 @@ pub(super) fn library_source(root: &Path, expected: &Value) -> Result<(), String
 pub(super) fn controls(root: &Path) -> Result<(), String> {
     let doc = load(root)?;
     let prior = super::read(root, &doc["archive"])?;
-    let current = super::read(root, &doc["current"])?;
+    let current = super::w07_evidence_successor::prior(root, SOURCE, &doc["current"])?;
     validate(&doc, &prior_caller(), &prior, &current, "0644")?;
     library_source(
         root,

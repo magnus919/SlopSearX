@@ -159,9 +159,16 @@ fn load(root: &Path) -> Result<(Value, Inputs)> {
         need(out.status.success(), "Git proof command")?;
         Ok(out.stdout)
     };
+    let mut current = read(root, SOURCE)?;
+    current.bytes = super::w07_t02_joint::parent(
+        root,
+        SOURCE,
+        &current.bytes,
+        super::w07_t02_joint::Parent::T02,
+    )?;
     let m = Inputs {
         archive: read(root, ARCHIVE)?,
-        current: read(root, SOURCE)?,
+        current,
         git_archive: git(&["show", &format!("{COMMIT}:{SOURCE}")])?,
         git_tree: git(&["ls-tree", COMMIT, "--", SOURCE])?,
     };
@@ -180,13 +187,24 @@ pub(crate) fn verify(root: &Path, path: &str, expected: &str, supplied: &[u8]) -
     let raw = read(root, CAPSULE)?;
     need(raw.mode == 0o644, "capsule mode")?;
     let (_, current) = materials_for_row(root, &row(&raw.bytes)?)?;
-    need(supplied == current, "supplied current material")
+    let supplied_parent =
+        super::w07_t02_joint::parent(root, SOURCE, supplied, super::w07_t02_joint::Parent::T02)?;
+    need(
+        supplied_parent == current,
+        "supplied physical current material",
+    )
 }
 /// Additive controls called by the existing T06 identities, without new test names.
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    super::w07_t02_joint::controls(root)?;
     let (r, good) = load(root)?;
-    verify(root, SOURCE, OLD, &good.current.bytes)?;
+    let physical = read(root, SOURCE)?.bytes;
+    verify(root, SOURCE, OLD, &physical)?;
+    need(
+        verify(root, SOURCE, OLD, &good.current.bytes).is_err(),
+        "T02 parent supplied as physical joint current accepted",
+    )?;
     need(
         verify(root, "Cargo.lock", OLD, &good.current.bytes).is_err(),
         "wrong path accepted",

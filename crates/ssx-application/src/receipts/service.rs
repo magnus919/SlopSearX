@@ -122,6 +122,7 @@ pub struct Service {
     clock: Arc<dyn Clock>,
     lineage: Arc<dyn Resolver>,
     sources: Arc<dyn ManifestSources>,
+    metrics: Arc<dyn crate::Metrics>,
 }
 impl Service {
     pub fn new(
@@ -131,6 +132,7 @@ impl Service {
         clock: Arc<dyn Clock>,
         lineage: Arc<dyn Resolver>,
         sources: Arc<dyn ManifestSources>,
+        metrics: Arc<dyn crate::Metrics>,
     ) -> Self {
         Self {
             repo,
@@ -139,6 +141,7 @@ impl Service {
             clock,
             lineage,
             sources,
+            metrics,
         }
     }
     fn enabled(&self) -> Option<Value> {
@@ -194,7 +197,11 @@ impl Service {
             )
             .await?
         {
-            Replay::Conflict => return Ok(conflict()),
+            Replay::Conflict => {
+                self.metrics
+                    .workflow_rejected("retrieval_receipt", "idempotency");
+                return Ok(conflict());
+            }
             Replay::Replayed(value) => {
                 return Ok(json_with_receipt("replayed", decorate(result_id, value)?));
             }
@@ -208,6 +215,11 @@ impl Service {
         }
         let Source::Live(discovery) = source else {
             unreachable!()
+        };
+        let outcome = if observation.body["observation"]["status"] == "succeeded" {
+            "succeeded"
+        } else {
+            "failed"
         };
         let mut receipt = json!({"contract":super::CONTRACT,"version":1,"result_id":result_id,"attribution":{"retriever":observation.body["retriever"],"authenticated_tenant":tenant.as_str()},"observations_verified":false});
         receipt["observation"] = observation.body["observation"].clone();
@@ -226,13 +238,32 @@ impl Service {
             })
             .await?
         {
-            Submission::Created(v) => Ok(json_with_receipt("created", decorate(result_id, v)?)),
-            Submission::Replayed(v) => Ok(json_with_receipt("replayed", decorate(result_id, v)?)),
-            Submission::Conflict => Ok(conflict()),
-            Submission::Capacity => Ok(error(
-                "resource_limit",
-                "receipt limit reached for this result",
-            )),
+            Submission::Created(v) => {
+                self.metrics
+                    .workflow_accepted("retrieval_receipt", "immediate");
+                self.metrics.workflow_terminal("retrieval_receipt", outcome);
+                Ok(json_with_receipt("created", decorate(result_id, v)?))
+            }
+            Submission::Replayed(v) => {
+                // Source insert-time replay records events; early retained replay does not.
+                self.metrics
+                    .workflow_accepted("retrieval_receipt", "immediate");
+                self.metrics.workflow_terminal("retrieval_receipt", outcome);
+                Ok(json_with_receipt("replayed", decorate(result_id, v)?))
+            }
+            Submission::Conflict => {
+                self.metrics
+                    .workflow_rejected("retrieval_receipt", "idempotency");
+                Ok(conflict())
+            }
+            Submission::Capacity => {
+                self.metrics
+                    .workflow_rejected("retrieval_receipt", "capacity");
+                Ok(error(
+                    "resource_limit",
+                    "receipt limit reached for this result",
+                ))
+            }
             Submission::Size => Ok(error(
                 "invalid_input",
                 "encoded receipt exceeds 32768 bytes",
@@ -266,6 +297,11 @@ impl Service {
         cancel.check()?;
         let discovery = match &source {
             Source::Live(v) => v.clone(),
+            Source::Expired(_) if retained.receipts.is_empty() => {
+                self.metrics
+                    .workflow_expired("retrieval_receipt", "receipt");
+                return Ok(source.error().expect("expired source"));
+            }
             _ if retained.receipts.is_empty() => return Ok(source.error().expect("nonlive")),
             _ => retained.receipts[0]
                 .get("discovery")
@@ -474,6 +510,94 @@ mod service_contract_tests {
             self.0.lock().unwrap().clone()
         }
     }
+    impl crate::Metrics for Trace {
+        fn increment(&self, _: &'static str) {
+            panic!("receipt telemetry must use bounded workflow events");
+        }
+        fn workflow_accepted(&self, workflow: &'static str, mode: &'static str) {
+            assert_eq!((workflow, mode), ("retrieval_receipt", "immediate"));
+            self.push("accepted");
+        }
+        fn workflow_rejected(&self, workflow: &'static str, reason: &'static str) {
+            assert_eq!(workflow, "retrieval_receipt");
+            self.push(match reason {
+                "idempotency" => "rejected_idempotency",
+                "capacity" => "rejected_capacity",
+                _ => panic!("unexpected receipt rejection label"),
+            });
+        }
+        fn workflow_terminal(&self, workflow: &'static str, outcome: &'static str) {
+            assert_eq!(workflow, "retrieval_receipt");
+            self.push(match outcome {
+                "succeeded" => "terminal_succeeded",
+                "failed" => "terminal_failed",
+                _ => panic!("unexpected receipt terminal label"),
+            });
+        }
+        fn workflow_expired(&self, workflow: &'static str, artifact: &'static str) {
+            assert_eq!((workflow, artifact), ("retrieval_receipt", "receipt"));
+            self.push("expired");
+        }
+    }
+    struct TelemetryRepo {
+        trace: Arc<Trace>,
+        replay: Result<Replay, Failure>,
+        insert: Result<Submission, Failure>,
+    }
+    impl ReceiptRepository for TelemetryRepo {
+        fn replay<'a>(
+            &'a self,
+            _: &'a TenantId,
+            _: &'a str,
+            _: &'a str,
+            _: &'a str,
+            _: WallClockTimestamp,
+            _: &'a Cancellation,
+        ) -> PortFuture<'a, Result<Replay, Failure>> {
+            self.trace.push("replay");
+            let result = self.replay.clone();
+            Box::pin(async move { result })
+        }
+        fn submit<'a>(&'a self, _: Insert<'a>) -> PortFuture<'a, Result<Submission, Failure>> {
+            self.trace.push("submit");
+            let result = self.insert.clone();
+            Box::pin(async move { result })
+        }
+        fn read<'a>(
+            &'a self,
+            _: &'a TenantId,
+            _: &'a str,
+            _: WallClockTimestamp,
+            _: usize,
+            _: &'a Cancellation,
+        ) -> PortFuture<'a, Result<Retained, Failure>> {
+            Box::pin(async { panic!("submission telemetry cannot read receipts") })
+        }
+    }
+    fn telemetry_service(
+        trace: Arc<Trace>,
+        enabled: bool,
+        replay: Result<Replay, Failure>,
+        insert: Result<Submission, Failure>,
+        source: Source,
+    ) -> Service {
+        Service::new(
+            Arc::new(TelemetryRepo {
+                trace: trace.clone(),
+                replay,
+                insert,
+            }),
+            Arc::new(SourcePort {
+                trace: trace.clone(),
+                value: source,
+            }),
+            Arc::new(Grant(enabled)),
+            Arc::new(TestClock),
+            Arc::new(NoLineage),
+            Arc::new(NoSources),
+            trace,
+        )
+    }
     struct Repo {
         trace: Arc<Trace>,
         replay: Replay,
@@ -655,6 +779,7 @@ mod service_contract_tests {
             Arc::new(TestClock),
             Arc::new(NoLineage),
             Arc::new(NoSources),
+            Arc::new(crate::NoopSink),
         )
     }
     fn manifest_service(trace: Arc<Trace>) -> Service {
@@ -678,6 +803,7 @@ mod service_contract_tests {
                 trace,
                 result_ids: vec!["result-1".into()],
             }),
+            Arc::new(crate::NoopSink),
         )
     }
     fn manifest_walk_service(trace: Arc<Trace>) -> Service {
@@ -698,6 +824,7 @@ mod service_contract_tests {
             Arc::new(TestClock),
             Arc::new(WalkResolver { trace }),
             Arc::new(NoSources),
+            Arc::new(crate::NoopSink),
         )
     }
     fn run<F: std::future::Future>(future: F) -> F::Output {
@@ -750,6 +877,395 @@ mod service_contract_tests {
         .unwrap();
         assert_eq!(value["state"], "replayed");
         assert_eq!(trace.events(), vec!["replay"]);
+    }
+
+    #[test]
+    fn receipt_read_expiry_metrics_require_expired_source_and_empty_retained_receipts() {
+        let expired = Source::Expired(WallClockTimestamp::new(90.).unwrap());
+        for (source, expected) in [
+            (
+                expired.clone(),
+                Some(
+                    json!({"code":"expired_handle","message":"originating snapshot has expired","expires_at":90.}),
+                ),
+            ),
+            (
+                Source::Unknown,
+                Some(json!({"code":"invalid_result_id","message":"unknown result_id"})),
+            ),
+            (
+                Source::InvalidId,
+                Some(
+                    json!({"code":"invalid_result_id","message":"result_id must be a server-issued snapshot result handle"}),
+                ),
+            ),
+            (
+                Source::Unavailable,
+                Some(json!({"code":"store_unavailable","message":"snapshot store is unavailable"})),
+            ),
+            (Source::Live(json!({"query":"captured"})), None),
+        ] {
+            let trace = Arc::new(Trace::default());
+            let is_expired = matches!(&source, Source::Expired(_));
+            let mut reader = service(
+                trace.clone(),
+                true,
+                Replay::Missing,
+                source,
+                Retained {
+                    receipts: vec![],
+                    total: 0,
+                },
+            );
+            reader.metrics = trace.clone();
+            let value =
+                run(reader.read(&tenant(), "result-1", 20, &Cancellation::default())).unwrap();
+            if let Some(expected) = expected {
+                assert_eq!(value["error"], expected);
+            } else {
+                assert_eq!(value["source_snapshot_status"], "live");
+                assert_eq!(value["receipts"], json!([]));
+            }
+            assert_eq!(
+                trace.events(),
+                if is_expired {
+                    vec!["read", "source", "expired"]
+                } else {
+                    vec!["read", "source"]
+                }
+            );
+        }
+        // Retained evidence keeps its discovery after source expiry without an expiry event.
+        let trace = Arc::new(Trace::default());
+        let saved = json!({"receipt_id":"receipt-1","discovery":{"query":"original"}});
+        let mut retained = service(
+            trace.clone(),
+            true,
+            Replay::Missing,
+            expired.clone(),
+            Retained {
+                receipts: vec![saved],
+                total: 1,
+            },
+        );
+        retained.metrics = trace.clone();
+        let value =
+            run(retained.read(&tenant(), "result-1", 20, &Cancellation::default())).unwrap();
+        assert_eq!(value["source_snapshot_status"], "expired");
+        assert_eq!(value["discovery"]["query"], "original");
+        assert_eq!(trace.events(), vec!["read", "source"]);
+        // Validation, grant and cancellation failures cannot invent an observed expiry.
+        for (enabled, limit, cancelled, expected) in [
+            (true, 0, false, "invalid_input"),
+            (false, 20, false, "tool_disabled"),
+            (true, 20, true, "cancelled"),
+        ] {
+            let trace = Arc::new(Trace::default());
+            let mut reader = service(
+                trace.clone(),
+                enabled,
+                Replay::Missing,
+                expired.clone(),
+                Retained {
+                    receipts: vec![],
+                    total: 0,
+                },
+            );
+            reader.metrics = trace.clone();
+            let cancel = Cancellation::default();
+            if cancelled {
+                cancel.cancel();
+            }
+            let result = run(reader.read(&tenant(), "result-1", limit, &cancel));
+            if cancelled {
+                assert_eq!(result, Err(Failure::Cancelled));
+            } else {
+                assert_eq!(result.unwrap()["error"]["code"], expected);
+            }
+            assert!(trace.events().is_empty());
+        }
+        struct FailedRead(Arc<Trace>);
+        impl ReceiptRepository for FailedRead {
+            fn replay<'a>(
+                &'a self,
+                _: &'a TenantId,
+                _: &'a str,
+                _: &'a str,
+                _: &'a str,
+                _: WallClockTimestamp,
+                _: &'a Cancellation,
+            ) -> PortFuture<'a, Result<Replay, Failure>> {
+                panic!("read cannot replay")
+            }
+            fn submit<'a>(&'a self, _: Insert<'a>) -> PortFuture<'a, Result<Submission, Failure>> {
+                panic!("read cannot submit")
+            }
+            fn read<'a>(
+                &'a self,
+                _: &'a TenantId,
+                _: &'a str,
+                _: WallClockTimestamp,
+                _: usize,
+                _: &'a Cancellation,
+            ) -> PortFuture<'a, Result<Retained, Failure>> {
+                self.0.push("read");
+                Box::pin(async { Err(Failure::Unavailable) })
+            }
+        }
+        let trace = Arc::new(Trace::default());
+        let mut reader = service(
+            trace.clone(),
+            true,
+            Replay::Missing,
+            expired.clone(),
+            Retained {
+                receipts: vec![],
+                total: 0,
+            },
+        );
+        reader.metrics = trace.clone();
+        reader.repo = Arc::new(FailedRead(trace.clone()));
+        assert_eq!(
+            run(reader.read(&tenant(), "result-1", 20, &Cancellation::default())),
+            Err(Failure::Unavailable)
+        );
+        assert_eq!(trace.events(), vec!["read"]);
+        struct CancellingSource(Arc<Trace>);
+        impl SourceReader for CancellingSource {
+            fn discovery<'a>(
+                &'a self,
+                _: &'a TenantId,
+                _: &'a str,
+                cancel: &'a Cancellation,
+            ) -> PortFuture<'a, Result<Source, Failure>> {
+                self.0.push("source");
+                Box::pin(async move {
+                    cancel.cancel();
+                    Ok(Source::Expired(WallClockTimestamp::new(90.).unwrap()))
+                })
+            }
+        }
+        let trace = Arc::new(Trace::default());
+        let mut reader = service(
+            trace.clone(),
+            true,
+            Replay::Missing,
+            expired,
+            Retained {
+                receipts: vec![],
+                total: 0,
+            },
+        );
+        reader.metrics = trace.clone();
+        reader.source = Arc::new(CancellingSource(trace.clone()));
+        assert_eq!(
+            run(reader.read(&tenant(), "result-1", 20, &Cancellation::default())),
+            Err(Failure::Cancelled)
+        );
+        assert_eq!(trace.events(), vec!["read", "source"]);
+    }
+
+    #[test]
+    fn receipt_telemetry_preserves_source_branch_order_and_terminal_status() {
+        let receipt = json!({"receipt_id":"receipt-trace"});
+        for (name, replay, insert, status, wanted, events) in [
+            (
+                "early replay",
+                Replay::Replayed(receipt.clone()),
+                Submission::Size,
+                "succeeded",
+                "replayed",
+                vec!["replay"],
+            ),
+            (
+                "early conflict",
+                Replay::Conflict,
+                Submission::Size,
+                "succeeded",
+                "idempotency_conflict",
+                vec!["replay", "rejected_idempotency"],
+            ),
+            (
+                "insert conflict",
+                Replay::Missing,
+                Submission::Conflict,
+                "succeeded",
+                "idempotency_conflict",
+                vec!["replay", "source", "submit", "rejected_idempotency"],
+            ),
+            (
+                "capacity",
+                Replay::Missing,
+                Submission::Capacity,
+                "succeeded",
+                "resource_limit",
+                vec!["replay", "source", "submit", "rejected_capacity"],
+            ),
+            (
+                "created succeeded",
+                Replay::Missing,
+                Submission::Created(receipt.clone()),
+                "succeeded",
+                "created",
+                vec![
+                    "replay",
+                    "source",
+                    "submit",
+                    "accepted",
+                    "terminal_succeeded",
+                ],
+            ),
+            (
+                "created failed",
+                Replay::Missing,
+                Submission::Created(receipt.clone()),
+                "failed",
+                "created",
+                vec!["replay", "source", "submit", "accepted", "terminal_failed"],
+            ),
+            (
+                "insert-time replay",
+                Replay::Missing,
+                Submission::Replayed(receipt),
+                "failed",
+                "replayed",
+                vec!["replay", "source", "submit", "accepted", "terminal_failed"],
+            ),
+        ] {
+            let trace = Arc::new(Trace::default());
+            let service = telemetry_service(
+                trace.clone(),
+                true,
+                Ok(replay),
+                Ok(insert),
+                Source::Live(json!({"query":"captured"})),
+            );
+            let mut input = observation();
+            input.status = status.into();
+            if status == "failed" {
+                input.failure_code = Some("blocked".into());
+            }
+            let value = run(service.submit(&tenant(), "result-2", input, &Cancellation::default()))
+                .unwrap();
+            let result = value
+                .get("state")
+                .and_then(Value::as_str)
+                .or_else(|| value["error"]["code"].as_str());
+            assert_eq!(result, Some(wanted), "{name}");
+            assert_eq!(trace.events(), events, "{name}");
+        }
+    }
+
+    #[test]
+    fn receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion() {
+        for failure in [
+            Failure::Unavailable,
+            Failure::Closed,
+            Failure::Malformed,
+            Failure::InvalidInput,
+            Failure::CompletionUnknown,
+            Failure::ScriptErrorMayHaveWritten,
+            Failure::Collision,
+            Failure::Cancelled,
+        ] {
+            let trace = Arc::new(Trace::default());
+            let service = telemetry_service(
+                trace.clone(),
+                true,
+                Ok(Replay::Missing),
+                Err(failure),
+                Source::Live(json!({"query":"captured"})),
+            );
+            assert_eq!(
+                run(service.submit(
+                    &tenant(),
+                    "result-2",
+                    observation(),
+                    &Cancellation::default()
+                )),
+                Err(failure)
+            );
+            assert_eq!(trace.events(), ["replay", "source", "submit"]);
+        }
+        let trace = Arc::new(Trace::default());
+        let service = telemetry_service(
+            trace.clone(),
+            true,
+            Ok(Replay::Missing),
+            Ok(Submission::Size),
+            Source::Live(json!({"query":"captured"})),
+        );
+        let value = run(service.submit(
+            &tenant(),
+            "result-2",
+            observation(),
+            &Cancellation::default(),
+        ))
+        .unwrap();
+        assert_eq!(value["error"]["code"], "invalid_input");
+        assert_eq!(trace.events(), ["replay", "source", "submit"]);
+        for (enabled, invalid, cancelled, source, wanted, events) in [
+            (
+                false,
+                false,
+                false,
+                Source::Unknown,
+                "tool_disabled",
+                vec![],
+            ),
+            (true, true, false, Source::Unknown, "invalid_input", vec![]),
+            (true, false, true, Source::Unknown, "cancelled", vec![]),
+            (
+                true,
+                false,
+                false,
+                Source::Unavailable,
+                "store_unavailable",
+                vec!["replay", "source"],
+            ),
+        ] {
+            let trace = Arc::new(Trace::default());
+            let service = telemetry_service(
+                trace.clone(),
+                enabled,
+                Ok(Replay::Missing),
+                Ok(Submission::Size),
+                source,
+            );
+            let mut input = observation();
+            if invalid {
+                input.status = "invalid".into();
+            }
+            let cancel = Cancellation::default();
+            if cancelled {
+                cancel.cancel();
+            }
+            let result = run(service.submit(&tenant(), "result-2", input, &cancel));
+            if cancelled {
+                assert_eq!(result, Err(Failure::Cancelled));
+            } else {
+                assert_eq!(result.unwrap()["error"]["code"], wanted);
+            }
+            assert_eq!(trace.events(), events);
+        }
+        let trace = Arc::new(Trace::default());
+        let service = telemetry_service(
+            trace.clone(),
+            true,
+            Err(Failure::Unavailable),
+            Ok(Submission::Size),
+            Source::Unknown,
+        );
+        assert_eq!(
+            run(service.submit(
+                &tenant(),
+                "result-2",
+                observation(),
+                &Cancellation::default()
+            )),
+            Err(Failure::Unavailable)
+        );
+        assert_eq!(trace.events(), ["replay"]);
     }
 
     #[test]

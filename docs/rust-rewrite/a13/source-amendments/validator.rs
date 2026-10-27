@@ -630,6 +630,19 @@ pub fn verify(
         .iter()
         .find(|entry| entry["source_path"] == source_path)
     {
+        let current = if source_path == "crates/ssx-infra/src/search.rs" {
+            use causal_successor::a06_source_successor::w07_evidence_successor::{
+                self, SearchOperand,
+            };
+            w07_evidence_successor::search_operand(
+                root,
+                SearchOperand::RuntimePin,
+                &amendment["successor"],
+                &current,
+            )?
+        } else {
+            current
+        };
         let archive_path = amendment["archive"]["path"]
             .as_str()
             .ok_or("A13 archive path absent")?;
@@ -1065,6 +1078,16 @@ fn rejects_additive_mutants(root: &Path) -> Result<(), String> {
                 causal_successor::a06_source_successor::legacy_control_operand(
                     root,
                     path,
+                    &entry["successor"],
+                    &actual_current,
+                )?
+            } else if path == "crates/ssx-infra/src/search.rs" {
+                use causal_successor::a06_source_successor::w07_evidence_successor::{
+                    self, SearchOperand,
+                };
+                w07_evidence_successor::search_operand(
+                    root,
+                    SearchOperand::AdditiveControl,
                     &entry["successor"],
                     &actual_current,
                 )?
