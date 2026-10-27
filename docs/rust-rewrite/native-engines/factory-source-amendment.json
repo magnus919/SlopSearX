@@ -1,0 +1,23 @@
+{
+  "schema": "DEEPSEEK_FACTORY_EXACT_INSERTION_V1",
+  "baseline_commit": "e12744511013bd05370173e777daaef471bf9527",
+  "prior": {
+    "path": "crates/ssx-infra/src/adapters/mod.rs",
+    "sha256": "ce4442703459ec6a1cf4da1961e99203d8c1207a58d823f084ed30f4d7df12ad",
+    "bytes": 33724,
+    "mode": "0644",
+    "git_blob": "bd4b78aed8dc813ab62972d4b242d8624d424631"
+  },
+  "current": {
+    "path": "crates/ssx-infra/src/adapters/mod.rs",
+    "sha256": "5fbbe960e4f0577f45115454adaf56c563c95070763c0a5c78942f4e26981788",
+    "bytes": 33775,
+    "mode": "0644",
+    "git_blob": "169f4d9910f78a82a9df7eb91208a609d90873fd"
+  },
+  "insertion": {
+    "at": 171,
+    "utf8": "mod deepseek;\npub use deepseek::register_deepseek;\n"
+  },
+  "scope": "Only native DeepSeek module declaration and factory export; frozen source manifests remain immutable."
+}

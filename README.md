@@ -39,7 +39,18 @@ SlopSearX is a horizontally scalable, stateless meta search engine designed for 
 
 Europe PMC is opt-in; see [configuration, attribution, and evaluation](docs/EUROPEPMC.md).
 
-## Engines (51)
+## Engines
+
+### Rust-only additions
+
+| Engine | Type | Auth | Categories |
+|---|---|---|---|
+| [DeepSeek Search](docs/DEEPSEEK.md) (opt-in, Rust only) | API | `ENGINE_DEEPSEEK_API_KEY` | general |
+
+DeepSeek extends the native registry during the Rust rewrite. It is disabled by
+default and does not change the 51-engine Python migration baseline below.
+
+### Existing engines (51)
 
 The table below is maintained to match the live adapter registry (51 registered
 adapters as of this writing). The MCP server's `slopsearx_list_capabilities`

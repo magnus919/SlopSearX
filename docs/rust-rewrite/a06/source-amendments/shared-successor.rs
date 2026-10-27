@@ -7,6 +7,8 @@ mod a13_header_layout_successor;
 #[path = "post-a06-generation.rs"]
 mod post_a06_generation;
 pub(crate) use post_a06_generation::native_search;
+#[path = "../../native-engines/factory-source-amendment.rs"]
+mod native_factory;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
@@ -544,6 +546,9 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
 }
 
 fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if native_factory::selected(row) {
+        return native_factory::prior(root, row);
+    }
     if let Some(prior) = default_ca_fixture_operand(
         root,
         text(row, "path")?,
@@ -1119,7 +1124,12 @@ pub(crate) fn legacy_control_operand(
     )?;
     let doc = load(root)?;
     let row = source(&doc, path)?;
-    let (before, actual) = verify_transition(root, row)?;
+    let (before, accepted) = verify_transition(root, row)?;
+    let actual = if path == native_factory::SOURCE {
+        native_factory::current(root, &row["current"])?
+    } else {
+        accepted
+    };
     need(
         supplied_current == actual,
         "A06 control operand differs from actual current",
@@ -1146,6 +1156,7 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
     default_ca_fixture_controls(root)?;
+    native_factory::controls(root)?;
     native_search::controls(root)?;
     post_a06_generation::controls(root)?;
     a13_json_inventory_successor::controls(root)?;
@@ -1318,7 +1329,12 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         "crates/ssx-infra/src/adapters/mod.rs",
     ] {
         let row = source(&doc, path)?;
-        let (before, actual) = verify_transition(root, row)?;
+        let (before, accepted_current) = verify_transition(root, row)?;
+        let actual = if path == native_factory::SOURCE {
+            native_factory::current(root, &row["current"])?
+        } else {
+            accepted_current
+        };
         let accepted = legacy_control_operand(root, path, &row["baseline"], &actual)?;
         need(
             accepted == before,

@@ -727,7 +727,8 @@ mod tests {
         )
         .unwrap();
         assert_eq!(empty, missing);
-        assert_eq!(empty.engines.len(), 28);
+        assert_eq!(empty.engines.len(), 29);
+        assert!(!empty.engines["deepseek"].enabled);
         assert!(!empty.engines["europepmc"].enabled);
         assert_eq!(
             empty.engines["brave"].max_results.effective_i64().unwrap(),

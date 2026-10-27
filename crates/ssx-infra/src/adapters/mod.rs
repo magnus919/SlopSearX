@@ -5,6 +5,8 @@ mod arxiv_xml;
 mod brave;
 mod community;
 mod crates_io;
+mod deepseek;
+pub use deepseek::register_deepseek;
 mod github;
 mod hackernews;
 mod huggingface;
