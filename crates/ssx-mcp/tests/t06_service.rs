@@ -174,6 +174,7 @@ async fn preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership() 
     for mode in ["timeout", "drop", "shutdown"] {
         let provider = Provider::new().await.map_err(|e| format!("{e:?}"))?;
         let server = private_valkey::Server::start();
+        let router = provider.router();
         let fixture = fixture::Fixture::with_options(
             server.url(),
             SearchPolicy::default(),
@@ -188,9 +189,31 @@ async fn preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership() 
                 },
                 ..Default::default()
             },
-            Some(provider.router()),
+            Some(router.clone()),
         )
         .await;
+        // Prepare this ordinary retained HTTP owner outside the short ownership
+        // interval. The private request has the router's existing five-second
+        // bound and no cache; it never dispatches an engine.
+        let warm_router = router.clone();
+        let warm_policy = fixture.policy.clone();
+        let warm =
+            tokio::spawn(async move { warm_router.route(&preview(), &warm_policy, None).await });
+        provider.observed().await.map_err(|e| format!("{e:?}"))?;
+        warm.abort();
+        assert!(warm.await.unwrap_err().is_cancelled());
+        let warm_until = tokio::time::Instant::now() + Duration::from_secs(2);
+        while provider.closed.load(Ordering::SeqCst) == 0 {
+            assert!(
+                tokio::time::Instant::now() < warm_until,
+                "warm-up HTTP ownership did not close"
+            );
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(provider.closed.load(Ordering::SeqCst), 1);
+        assert_eq!(provider.started.available_permits(), 0);
+        provider.closed.store(0, Ordering::SeqCst);
+
         let service = fixture.service.clone();
         let task = tokio::spawn(async move { service.preview_scope(&preview()).await });
         provider.observed().await.map_err(|e| format!("{e:?}"))?;
