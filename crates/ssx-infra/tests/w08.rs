@@ -324,7 +324,11 @@ struct Harness {
 impl Harness {
     async fn new() -> Self {
         let server = private_valkey::Server::start();
-        assert!(server.url().starts_with("redis://127.0.0.1:"));
+        assert!(
+            server.url().strip_prefix("unix://").is_some_and(|path| {
+                std::path::Path::new(path).starts_with(std::env::temp_dir())
+            })
+        );
         let loopback = Loopback::new();
         let backend = Arc::new(server.store());
         let authority = Arc::new(Current {
