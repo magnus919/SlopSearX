@@ -342,7 +342,8 @@ async fn cancelling_package_search_drops_work_and_prevents_followup_dispatch() {
 
 #[test]
 fn package_factories_complete_catalog_without_changing_metadata() {
-    let mut registry = Registry::builtins().unwrap();
+    // This port's parity target is the frozen migration catalog, not native additions.
+    let mut registry = Registry::migration_baseline().unwrap();
     let http = Arc::new(AdapterHttp::default());
     register_packages(
         &mut registry,
