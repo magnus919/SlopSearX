@@ -103,7 +103,41 @@ fn policy(denied: bool) -> PolicyService {
 }
 struct Current {
     denied: AtomicBool,
+    revoked: AtomicUsize,
     clock: AtomicU64,
+}
+impl Current {
+    fn policy(&self) -> PolicyService {
+        let mut p = policy(self.denied.load(Ordering::SeqCst));
+        match self.revoked.load(Ordering::SeqCst) {
+            1 => {
+                p.policy.grants.remove("dependency_dossier");
+            }
+            2 => {
+                p.policy.grants.remove("research");
+            }
+            3 => {
+                p.policy.grants.remove("security");
+            }
+            4 => {
+                p.catalog = CatalogSnapshot::new(
+                    ["pypi", "github", "nvd"]
+                        .into_iter()
+                        .map(|name| {
+                            let mut c = capability(name);
+                            if name == "pypi" {
+                                c.enabled = false;
+                            }
+                            c
+                        })
+                        .collect(),
+                )
+                .unwrap();
+            }
+            _ => {}
+        }
+        p
+    }
 }
 impl Clock for Current {
     fn now(&self) -> WallClockTimestamp {
@@ -119,7 +153,7 @@ impl composition::Authority for Current {
     fn current(&self) -> composition::AuthoritySnapshot {
         composition::AuthoritySnapshot {
             tenant: Some(tenant()),
-            policy: policy(self.denied.load(Ordering::SeqCst)),
+            policy: self.policy(),
             staged_limits: ssx_application::staged::Limits {
                 granted: true,
                 ..Default::default()
@@ -131,7 +165,7 @@ impl composition::Authority for Current {
 impl RecordsAuthority for Current {
     fn current(&self) -> RecordsAuthoritySnapshot {
         RecordsAuthoritySnapshot {
-            search: policy(self.denied.load(Ordering::SeqCst)),
+            search: self.policy(),
             limits: ssx_application::saved::SavedLimits {
                 reports: 2,
                 ..Default::default()
@@ -243,6 +277,7 @@ impl Harness {
         let backend = Arc::new(server.store());
         let authority = Arc::new(Current {
             denied: AtomicBool::new(false),
+            revoked: AtomicUsize::new(0),
             clock: AtomicU64::new(now().seconds().to_bits()),
         });
         let snapshots = SnapshotService::new(
@@ -753,4 +788,42 @@ async fn revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves
     assert!(job.queries[0].attempts[0].admitted_result_ids.is_empty());
     assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0);
     h.search.shutdown().await;
+}
+#[tokio::test]
+async fn each_destination_grant_and_source_engine_revocation_blocks_unreserved_work() {
+    for mode in 1..=4 {
+        let h = Harness::new().await;
+        let source = h.source("seed-selective").await;
+        let service = h.service(Arc::new(h.jobs.clone()));
+        service
+            .start(
+                &tenant(),
+                input(Some(&source), None),
+                &Cancellation::default(),
+            )
+            .await
+            .unwrap();
+        h.authority.revoked.store(mode, Ordering::SeqCst);
+        // Selective revocation leaves all other grants intact; this is not an
+        // all-disabled fixture that could hide one missing destination requirement.
+        let current = h.authority.policy();
+        for (index, grant) in ["dependency_dossier", "research", "security"]
+            .into_iter()
+            .enumerate()
+        {
+            assert_eq!(current.policy.grants.contains(grant), mode != index + 1);
+        }
+        let denied = h.tick(service.runner(h.runner.clone())).await;
+        assert_eq!(denied.state, "failed", "mode{mode}");
+        assert_eq!(
+            denied.stop_reason.as_deref(),
+            Some("source_rejected: source_policy_denied"),
+            "mode{mode}"
+        );
+        assert_eq!(denied.budget_used["attempts"], 0);
+        assert_eq!(denied.workflow["budget"]["used_adapter_calls"], 0);
+        assert!(denied.queries.iter().all(|q| q.attempts.is_empty()));
+        assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0);
+        h.search.shutdown().await;
+    }
 }

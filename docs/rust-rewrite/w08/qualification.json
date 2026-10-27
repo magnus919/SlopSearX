@@ -11,10 +11,10 @@
     "tests/test_workflow_composition_transport.py": "f1adebf80445a6a61767a406486738f4362fb1e493b2e3e79ec1a07b4deb8a32",
     "crates/ssx-application/src/composition.rs": "06b54eaafca3a55e0f2afc689eda3c35f9c69f090a35ef3ef75d94c6c537aff5",
     "crates/ssx-application/src/dependency_dossier.rs": "321a5b983f534ffc8c9d151817b5ac559f553115cc3e282a55019039541aae0f",
-    "crates/ssx-infra/src/dependency_dossier.rs": "a9c29c992470efc3f2d9401c4bcef717c8885754a734b4003de06618f28da53e",
+    "crates/ssx-infra/src/dependency_dossier.rs": "970a916ec8cb53abde71b1737dbb8373127c0b203e2e51e2af63b3c69ad596ad",
     "crates/ssx-infra/src/research_runner.rs": "c47c355424910198683c5ccad231b87ed7ed0da1db6d73eef9fef97a953cfc76",
     "crates/ssx-application/tests/w08.rs": "a6d7fe8929a2227156f398c3877348fc53634811464c4a239ed7386b2cbdcac2",
-    "crates/ssx-infra/tests/w08.rs": "3c958f84f626a7777457b73ba65b705873928537c00d166b5b1fca4d14d4b574",
+    "crates/ssx-infra/tests/w08.rs": "c3d576e7bf00445004aeb38089781e57a7f8a29f5e3f41faf3ce9e352e4f0dd0",
     "crates/ssx-infra/tests/w07_support/valkey.rs": "ed4e2e544ff40856f46810532a17cf5fb9a3b393eb35d09a75907c4585b6b699"
   },
   "suites": [
@@ -44,7 +44,8 @@
         "source_revocation_after_first_query_blocks_next_query",
         "restart_without_validator_and_malformed_or_tampered_binding_fail_closed",
         "concurrent_idempotency_with_different_source_never_adopts_other_binding",
-        "revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves_reservation"
+        "revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves_reservation",
+        "each_destination_grant_and_source_engine_revocation_blocks_unreserved_work"
       ]
     }
   ]

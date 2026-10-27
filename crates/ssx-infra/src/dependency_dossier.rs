@@ -335,6 +335,65 @@ impl DossierService {
 pub struct NativeSourceValidator {
     pub sources: Arc<SourceResolver>,
 }
+impl NativeSourceValidator {
+    fn check_current(&self, tenant: &TenantId, job: &ResearchJob) -> Result<(), Error> {
+        let current = self.sources.authority.current();
+        let dossier = job.workflow.get("kind") == Some(&json!("dependency_dossier"));
+        let required = if dossier {
+            &["research", "dependency_dossier", "security"][..]
+        } else {
+            &["research"][..]
+        };
+        if current.tenant.as_ref() != Some(tenant)
+            || job.tenant != tenant.as_str()
+            || required
+                .iter()
+                .any(|g| !current.policy.policy.grants.contains(*g))
+        {
+            return Err(Error::new(
+                "source_policy_denied",
+                "current destination authority denies composed work",
+            ));
+        }
+        let engines = job
+            .queries
+            .iter()
+            .flat_map(|q| q.engines.clone())
+            .collect::<Vec<_>>();
+        current
+            .policy
+            .engine_rejection(&engines, "engines")
+            .map_err(|_| {
+                Error::new(
+                    "source_policy_denied",
+                    "current destination policy denies the complete workflow plan",
+                )
+            })?;
+        current
+            .policy
+            .validate_research_workflow(job)
+            .map_err(|_| {
+                Error::new(
+                    "source_policy_denied",
+                    "current destination grants deny the workflow",
+                )
+            })?;
+        for query in &job.queries {
+            current
+                .policy
+                .authorize(ssx_application::policy::ScopeProposal::from_research_query(
+                    query,
+                ))
+                .map_err(|_| {
+                    Error::new(
+                        "source_policy_denied",
+                        "current destination policy denies a workflow query",
+                    )
+                })?;
+        }
+        Ok(())
+    }
+}
 impl SourceValidator for NativeSourceValidator {
     fn validate<'a>(
         &'a self,
@@ -342,6 +401,7 @@ impl SourceValidator for NativeSourceValidator {
         job: &'a ResearchJob,
     ) -> PortFuture<'a, Result<(), Error>> {
         Box::pin(async move {
+            self.check_current(tenant, job)?;
             let composition = job
                 .workflow
                 .get("composition")
@@ -370,6 +430,7 @@ impl SourceValidator for NativeSourceValidator {
                     "composition source binding differs from retained evidence",
                 ));
             }
+            self.check_current(tenant, job)?;
             Ok(())
         })
     }
