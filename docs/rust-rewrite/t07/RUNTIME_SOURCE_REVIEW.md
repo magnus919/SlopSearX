@@ -1,4 +1,11 @@
-# T07 native runtime source review V2 — uncompiled source
+# Historical source review V2 — captured before native execution
+
+## Current status
+
+See the dated [T07 status and evidence summary](CURRENT_SOURCE.md). This review records the source-only state of its captured revision.
+
+## Historical source review
+
 
 This is a successor to immutable /private/tmp/t07-runtime-source-review-v1, based on fetched origin/main9f1a3fa196c6dcdb966a1fe47b117ad81ebf8010. It is reviewable source, not a passed gate or completed issue902. No Cargo build/test/resolution, dependency download/activation, Python oracle/backend, provider call or external OAuth activation occurred. Cargo.lock is unchanged. Pinned Rust1.99 rustfmt edition2024 parsed/formatted touched leaves; this is not type checking. One SDK formatter edition2021 attempt failed on existing let-chains, then edition2024 succeeded. Graphify AST update is run separately; all semantic tests below remain unexecuted.
 

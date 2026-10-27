@@ -1,5 +1,14 @@
 # T07 client platform acceptance candidate
 
+## Current status
+
+See the dated [T07 status and evidence summary](CURRENT_SOURCE.md). This document retains revision-specific qualification details.
+
+## Historical platform plan (captured earlier)
+
+The remaining prose records an earlier candidate revision; consult the status summary above for present state.
+
+
 This continuation adds a standalone client-only workflow for ADR005's five
 native targets. It preserves the existing Rust foundation workflow and does not
 change native server scope. Source preparation is not platform acceptance: each

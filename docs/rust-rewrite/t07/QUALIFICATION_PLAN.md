@@ -1,5 +1,14 @@
 # T07 current qualification and remaining release gates
 
+## Current status
+
+See the dated [T07 status and evidence summary](CURRENT_SOURCE.md). This document retains revision-specific qualification details.
+
+## Historical qualification snapshot (captured earlier)
+
+The remaining prose records an earlier candidate revision; consult the status summary above for present state.
+
+
 The initial qualified runtime candidate used main `14b5b9ba612ac975e13b46ea1a53363870f9ff7e`. Historical October 19 gate receipts do not qualify this composition. The retained runtime vector `2b88da1551ff45d3a4d0f5cbaac36a51e13d69fe872d4ad061bec01120a54ae0` passed three locked offline no-run compiles, focused strict Clippy and all 76 exact compiled selectors on macOS aarch64 on 2026-10-23:55 gateway components,6 unchanged current stdio controls,3 streaming seams and12 actual gateway process tests. All26 owned nonvendor Rust files passed pinned rustfmt. The full local evidence and immutable failures are retained under the task's registered persistent build root. Metadata changes after that vector require the source-bound gate to be rerun; the earlier runtime result is not an exact-head CI claim.
 
 The current source-bound `cargo xtask check T07` is registered to validate 516 required source/input hashes and exact 411 vendor membership, rejecting generated .cargo-ok markers, symlinks and special files before Cargo dispatch. Its updated inventory must build the real gateway executable and verify all 109 selectors (including six unchanged stdio-owner controls) with zero failed, missing or ignored; this current inventory remains uncompiled/unexecuted. The actual executable fixtures use loopback OAuth, private disposable Valkey and a private browser helper only; no external provider, external browser activation or Python oracle is part of these fixtures.

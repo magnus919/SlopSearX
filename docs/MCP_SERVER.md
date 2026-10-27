@@ -1133,12 +1133,13 @@ cargo xtask gateway-package
 MCP_REMOTE_TOKEN='<remote-token>' /absolute/path/ssx-gateway --remote https://example.org/mcp
 ```
 
-The package includes the digest-bound DNS helper in its fixed `libexec/slopsearx`
-role. Keep the complete package together; an unpackaged Cargo binary cannot discover
-its helper. `cargo xtask gateway -- --remote URL` builds, stages and runs the same
-pair for development. Gateway DNS is cancellable and joined during shutdown;
-ordinary Reqwest clients keep their default resolver. This source increment still
-requires native qualification, and Windows helper/input support remains pending.
+The package includes the digest-bound DNS helper
+in its fixed `libexec/slopsearx` role. Keep the complete package together; an
+unpackaged Cargo binary cannot discover its helper. `cargo xtask gateway -- --remote URL` builds, stages and runs the same
+package for development. Gateway DNS is cancellable and joined during shutdown;
+ordinary Reqwest clients keep their default resolver. Windows ownership/security
+and the five-target workflow are implemented and source-reviewed; hosted platform
+acceptance remains pending. See [T07 current status](rust-rewrite/t07/CURRENT_SOURCE.md).
 
 For an OAuth remote, configure the installed package binary directly:
 
@@ -1158,13 +1159,20 @@ For an OAuth remote, configure the installed package binary directly:
 
 The candidate accepts `--token`, `--oauth-callback-port`, `--oauth-no-browser` and
 `--oauth-token-file`, with the corresponding `MCP_REMOTE_*` variables in §3.2.
+Set `MCP_REMOTE_CA_BUNDLE` to a PEM bundle when the remote endpoint uses an
+operator-managed certificate authority. The gateway requires a regular, nonempty,
+complete bundle no larger than 4 MiB; malformed or unreadable input fails startup.
+Its certificates are added to the platform trust roots, and hostname verification
+remains enabled. A local component fixture verifies rejection of an invalid
+hostname. Platform trust acceptance requires ephemeral hosted CI evidence; it is
+not a personal-Mac trust test. See [T07 current status](rust-rewrite/t07/CURRENT_SOURCE.md).
 Static credentials and OAuth are separate modes. The default callback is loopback
 port 8765; remote OAuth uses HTTPS outside loopback. The authorization URL is
 intentionally printed to stderr for user interaction. `--oauth-no-browser` keeps
 the manual callback flow without launching a browser. Protect the token file and
 its private parent directory; do not check credentials into client configuration.
 
-On the qualified local macOS ARM fixture, EOF/SIGTERM wakes and joins the native
+On the local macOS ARM component fixture, EOF/SIGTERM wakes and joins the native
 input owner, cancels held requests and drains remote session, callback, browser
 and file owners. Cleanup uses only the already-held bearer; denied DELETE or
 cancellation does not register, refresh or open a new authorization flow. A denied
@@ -1173,12 +1181,14 @@ five-second graceful request budget, matching the pinned Rust SDK cleanup budget
 expiry is also a gateway failure. Cleanup then joins the retained HTTP/DNS owners,
 including the original native DNS helper if DELETE needed a held hostname lookup.
 Normal RPC transport budgets are unchanged. This cleanup/DNS increment is source
-registered and awaits current native qualification. The current T06 backend
-stdio owner is unchanged; this is a gateway ownership result.
+registered; see [T07 current status](rust-rewrite/t07/CURRENT_SOURCE.md) for the
+current qualification boundary. The current T06 backend stdio owner is unchanged;
+this is a gateway ownership result.
 
 The distribution goals in [ADR 005](adr/005-rust-protocol-tls-and-platforms.md) are
-Linux x86_64/aarch64, macOS x86_64/aarch64 and Windows x86_64. This intermediate
-cancellable input implementation covers Unix, with local native evidence only on
-macOS aarch64. Windows input is explicitly unimplemented and remains a pending
-O04 goal. A target is not advertised as supported until its install, TLS/CA,
-invocation and signature gates pass. No Python fallback is part of this binary.
+Linux x86_64/aarch64, macOS x86_64/aarch64 and Windows x86_64. Local native
+runtime evidence covers macOS aarch64. Windows ownership/security and the
+five-target workflow are implemented and source-reviewed; hosted native Windows
+ownership and system-trust acceptance remain pending. Install, TLS/CA, invocation
+and signature gates determine release qualification. No Python fallback is part
+of this binary.

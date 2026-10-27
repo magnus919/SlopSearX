@@ -1,5 +1,29 @@
 # T07 current-main gateway candidate
 
+## Local qualification checkpoint — 2026-10-27
+
+The native gateway implementation and the local qualification results below are source-reviewed. This record does not establish a supported release, hosted platform acceptance, or completion of the Rust rewrite. The five public gate reports below are bound to clean commit `e0db690e22fdb99b8d0be195bbf627647fd837c7`, based on freshly fetched upstream main `e9c5911a468b892fe2adef9027374cb867a2535d`.
+
+| Local gate | Verified execution |
+| --- | --- |
+| F08 | 10 commands exited zero; HTTP 24 passed, 0 failed, and 1 isolated subprocess helper was ignored; decoder 4 passed. Parent tests explicitly invoke the helper and check its status and wire behavior. |
+| A04 | 84 commands exited zero; 5 parser and 23 adapter tests passed, none failed or ignored. |
+| F15 | 51 commands exited zero; suite summaries were 15 + 18 + 3 + 368 + 17 passing executions, none failed or ignored. |
+| A06 | 48 command records: 45 exited zero and the three declared negative controls returned exactly 3, 2 and 47. All 449 test executions passed; all 1,619 source-completion records matched. |
+| A13 | 83 commands exited zero; all 75 exact selectors and 5 validator tests passed, none failed or ignored. |
+
+Counts across rows overlap. They are neither unique global cases nor a completion percentage. The original collecting runner stopped after A06 because it conservatively rejected the three deliberate negative exits; that FAILED receipt is preserved. A06 was accepted after source and raw-output review of those exact controls. A13 then passed in a separate one-gate continuation. This is joint acceptance of five canonical reports, not a rewritten six-stage collector result. Strict workspace lint passed at `e0db690e`; this documentation-only child does not claim a rerun.
+
+Earlier component evidence retains its own source identity: the Mac ARM native gateway suite passed 217 tests with 33 successful commands at `e4ac4dea0c817237d19fa9edc14a217c378314d1`; T01, T05 and T06 passed there too. The expanded direct/gateway tool, resource, prompt, domain-error and framework-error comparison passed its existing selector (1 passed, 0 failed, 0 ignored; 1.76s) on the reviewed nine-file overlay at base `7a71ad50181adaa45c7444c88e19b98551fc1e75`. The subsequent proof selector passed on the reviewed ten-file overlay committed as `659c2396`; the later `e0db690e` child changes only a qualification reader. These are overlapping component results, not final-head or production acceptance. The earlier 19 platform/settings/lifecycle witnesses likewise retain their mixed `350`/`9da`/`3d` origins.
+
+The three default-feature client images remain the immutable copies sealed at `350257995001c6bf54d72bf832cf544a79cf58a2`; their product inputs are unchanged. Later fixture builds do not relabel those images. Raw receipts, prior failed attempts and custody records remain retained in the task evidence ledger.
+
+Operator trust is additive through `MCP_REMOTE_CA_BUNDLE`: maintained PEM parsing, a nonempty complete bundle bounded to 4 MiB, system roots retained, and hostname verification enabled. Local component fixtures exercised wrong-hostname refusal. Source implements the five-target client workflow for Linux x86_64/aarch64, macOS x86_64/aarch64 and Windows MSVC; the default client graph excludes backend engines. As of this local checkpoint, no hosted five-target, tracked PowerShell, native Windows ownership/security or system-trust receipt is included here. Each target still requires those acceptance gates. System-store mutation tests are restricted to owned ephemeral hosted CI, never a personal Mac.
+
+Before issue #902 closes, attach the hosted platform and required portal/final-head CI evidence and the reviewed delivery handoff. O04 signing, minimum-OS and release promotion remain downstream. No performance result or production activation is claimed.
+
+## Historical candidate narrative (captured earlier; superseded by the status above)
+
 This candidate reuses the retained V7 native gateway and the reviewed V3 cancellation changes on the original main `14b5b9ba612ac975e13b46ea1a53363870f9ff7e`. Historical COMPOSED_SOURCE_V4/V5/V6/V7 and OAuth review documents retain their source history. October 19 native results do not qualify the current tree.
 
 The runtime vector `2b88da1551ff45d3a4d0f5cbaac36a51e13d69fe872d4ad061bec01120a54ae0` passed 55 component,6 current stdio,3 seam and12 actual process selectors on macOS aarch64, plus locked no-run compilation, focused strict Clippy and owned rustfmt. This is local candidate evidence; it is not final A06 integration, exact-head CI, global fork/default-consumer, install or production acceptance. See [current qualification and remaining gates](QUALIFICATION_PLAN.md).
