@@ -1,0 +1,100 @@
+{
+  "schema": "PORTABLE_SNAPSHOT_FIXTURE_SOURCE_V1",
+  "baseline_commit": "e12744511013bd05370173e777daaef471bf9527",
+  "source": {
+    "prior": {
+      "path": "tests/test_coverage_pipeline_inputs.py",
+      "sha256": "7b8d28b3a295af2ad038821f46df295c501a78107326ce9fb91214fa8ef5dabc",
+      "bytes": 34634,
+      "git_blob": "18871d7fc0c0061e02a0d4527e3f10f03fd00956",
+      "mode": "0644"
+    },
+    "current": {
+      "path": "tests/test_coverage_pipeline_inputs.py",
+      "sha256": "02645c8d9270d02646c431fe9da3704a36994e68f8ddd597f6b8bb72785fbc3f",
+      "bytes": 34668,
+      "git_blob": "b614a57e95657db6b2c1d665597ede604edd092c",
+      "mode": "0644"
+    },
+    "edit": {
+      "at": 15193,
+      "remove_utf8": "    artifact_path = next(root.glob(\"pool-*.json\"))\n",
+      "insert_utf8": "    artifact_path = root / live._snapshot_filename(stage.operations[0].operation_id)\n"
+    }
+  },
+  "main": {
+    "prior": {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "abc9435b419cfa6f0013fe1177d27b6661437baabe40d3824fa95185e6da40ee",
+      "bytes": 39997,
+      "git_blob": "16b26bd06aab262cb1a3c41ea29fe81cd2d8c4d8",
+      "mode": "0644"
+    },
+    "current": {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "8bbbb43768ce82d49ff5af01d1c5231bd32c2ce70ed72dfee522be4cde5753f9",
+      "bytes": 40239,
+      "git_blob": "5fd39cfbc51dfb29e983b893b859ec105c44dab7",
+      "mode": "0644"
+    },
+    "edits": [
+      {
+        "at": 395,
+        "remove_utf8": "",
+        "insert_utf8": "#[path = \"../../../docs/rust-rewrite/snapshot-fixture-amendment/validator.rs\"]\nmod snapshot_fixture_amendment;\n"
+      },
+      {
+        "at": 10976,
+        "remove_utf8": "",
+        "insert_utf8": "        if id == \"F01\" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {\n            continue;\n        }\n"
+      }
+    ]
+  },
+  "bindings": [
+    {
+      "kind": "A06",
+      "container": {
+        "path": "docs/rust-rewrite/a06/coverage.json",
+        "sha256": "92686ed70979a698b0dab3414cad813198b720fe586421062db8a4cef5102d9b",
+        "bytes": 1201634,
+        "git_blob": "e982e569b4ab407bed61d6507ac7120abf8aa290",
+        "mode": "0644"
+      },
+      "pointer": "/artifacts/139",
+      "row": {
+        "path": "tests/test_coverage_pipeline_inputs.py",
+        "sha256": "7b8d28b3a295af2ad038821f46df295c501a78107326ce9fb91214fa8ef5dabc"
+      }
+    },
+    {
+      "kind": "F01",
+      "container": {
+        "path": "crates/xtask/fixtures/F01.json",
+        "sha256": "eeb28862df43b91b1eb6d5e83255e9b1a1c1935b144b5cafcb0ed59fec3239a3",
+        "bytes": 64639,
+        "git_blob": "e0af06245b7dab8d5716005b0ddb6fcab44b8017",
+        "mode": "0644"
+      },
+      "pointer": "/sources/368",
+      "row": {
+        "path": "tests/test_coverage_pipeline_inputs.py",
+        "git_blob": "18871d7fc0c0061e02a0d4527e3f10f03fd00956"
+      }
+    },
+    {
+      "kind": "W03",
+      "container": {
+        "path": "docs/rust-rewrite/w03/oracle-pins.json",
+        "sha256": "20ccdc5ce88182c601030a3c884e9248a8869b85c480f98a7f90ceb53573d0f4",
+        "bytes": 44747,
+        "git_blob": "15ea1a4d88342c5194104135879a23d5f4391f70",
+        "mode": "0644"
+      },
+      "pointer": "/sources/170",
+      "row": {
+        "path": "tests/test_coverage_pipeline_inputs.py",
+        "sha256": "7b8d28b3a295af2ad038821f46df295c501a78107326ce9fb91214fa8ef5dabc"
+      }
+    }
+  ]
+}

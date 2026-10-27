@@ -1,0 +1,251 @@
+{
+  "schema": "DEEPSEEK_NATIVE_CATALOG_SOURCE_SUCCESSOR_V1",
+  "baseline_commit": "e12744511013bd05370173e777daaef471bf9527",
+  "sources": [
+    {
+      "prior": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+        "bytes": 49685,
+        "mode": "0644"
+      },
+      "current": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "c853661524260fd87e985f2604123c6802ad348e30df622a2da312d08b65c7b6",
+        "bytes": 49738,
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 26186,
+          "remove_utf8": "        assert_eq!(empty.engines.len(), 28);\n",
+          "insert_utf8": "        assert_eq!(empty.engines.len(), 29);\n        assert!(!empty.engines[\"deepseek\"].enabled);\n"
+        }
+      ],
+      "edits_sha256": "6296e5f3e7f7ddf0f3fba76575d115cd67592f10a880a8172d075f496a6ecd7a"
+    },
+    {
+      "prior": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+        "bytes": 11205,
+        "mode": "0644"
+      },
+      "current": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "201326fcccdce49e75c8ad5704c67327a4a46ada788df6c22494f1a0b2fd93ab",
+        "bytes": 13478,
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 3519,
+          "remove_utf8": "    pub fn builtins() -> Result<Self, RegistryError> {\n",
+          "insert_utf8": "    /// Frozen Python migration inventory, kept separate from additive native providers.\n    pub fn migration_baseline() -> Result<Self, RegistryError> {\n"
+        },
+        {
+          "at": 3734,
+          "remove_utf8": "",
+          "insert_utf8": "        Self::from_descriptors(descriptors)\n    }\n\n    /// Native-only providers extend the frozen migration catalog without changing its provenance.\n    pub fn builtins() -> Result<Self, RegistryError> {\n        let mut descriptors = Self::migration_baseline()?.descriptors;\n        let native: Vec<EngineDescriptor> = serde_json::from_str(include_str!(\n            \"../../../docs/rust-rewrite/native-engines/catalog.json\"\n        ))\n        .map_err(|error| RegistryError::InvalidCatalog(error.to_string()))?;\n        descriptors.extend(native);\n"
+        },
+        {
+          "at": 7778,
+          "remove_utf8": "        let registry = Registry::builtins().unwrap();\n",
+          "insert_utf8": "        let registry = Registry::migration_baseline().unwrap();\n"
+        },
+        {
+          "at": 8519,
+          "remove_utf8": "",
+          "insert_utf8": "    fn native_additions_preserve_baseline_and_reject_duplicates() {\n        let baseline = Registry::migration_baseline().unwrap();\n        let runtime = Registry::builtins().unwrap();\n        assert_eq!(runtime.len(), baseline.len() + 1);\n        for original in baseline.descriptors() {\n            assert_eq!(runtime.descriptor(&original.name), Some(original));\n        }\n        let native = runtime.descriptor(\"deepseek\").unwrap();\n        assert!(!native.enabled_by_default);\n        assert!(!native.defaults.enabled);\n        assert_eq!(native.defaults.max_results, 10);\n        assert_eq!(native.api_key_env, \"ENGINE_DEEPSEEK_API_KEY\");\n        assert_eq!(native.auth_class, AuthClass::Required);\n        assert_eq!(native.implementation, ImplementationStatus::Available);\n        assert_eq!(native.cost_class.as_deref(), Some(\"paid\"));\n        assert_eq!(native.categories, [\"general\"]);\n        assert_eq!(native.routing.role, RoutingRole::General);\n        assert!(native.enforced_filters.is_empty());\n        assert!(\n            native\n                .supported_filters\n                .values()\n                .all(|supported| !supported)\n        );\n        let mut duplicate: Vec<_> = runtime.descriptors().cloned().collect();\n        duplicate.push(native.clone());\n        assert!(matches!(\n            Registry::from_descriptors(duplicate),\n            Err(RegistryError::Duplicate(_))\n        ));\n        let mut invalid = native.clone();\n        invalid.routing.role = RoutingRole::Specialist;\n        assert!(Registry::from_descriptors([invalid]).is_err());\n    }\n\n    #[test]\n"
+        },
+        {
+          "at": 9210,
+          "remove_utf8": "        assert_eq!(registry.len(), 52);\n",
+          "insert_utf8": "        assert_eq!(registry.len(), builtins.len() + 1);\n"
+        }
+      ],
+      "edits_sha256": "b83d87b8e2944baee944013214e12f90d7e2b08ccda4e23adedf97c34e7da910"
+    }
+  ],
+  "bindings": [
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+        "sha256": "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d",
+        "bytes": 20934,
+        "mode": "0644"
+      },
+      "pointer": "/sources/16",
+      "source_row": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+        "bytes": 49685,
+        "identity": "BASE_GIT_SOURCE"
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+        "sha256": "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d",
+        "bytes": 20934,
+        "mode": "0644"
+      },
+      "pointer": "/sources/17",
+      "source_row": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+        "bytes": 11205,
+        "identity": "BASE_GIT_SOURCE"
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/qualification-v1.json",
+        "sha256": "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e",
+        "bytes": 147854,
+        "mode": "0644"
+      },
+      "pointer": "/sources/11",
+      "source_row": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+        "bytes": 49685
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/qualification-v1.json",
+        "sha256": "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e",
+        "bytes": 147854,
+        "mode": "0644"
+      },
+      "pointer": "/sources/35",
+      "source_row": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+        "bytes": 11205
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/remaining/source-map.json",
+        "sha256": "9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f",
+        "bytes": 18823,
+        "mode": "0644"
+      },
+      "pointer": "/sources/11",
+      "source_row": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+        "bytes": 49685
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/remaining/source-map.json",
+        "sha256": "9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f",
+        "bytes": 18823,
+        "mode": "0644"
+      },
+      "pointer": "/sources/30",
+      "source_row": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+        "bytes": 11205
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/remaining/source-map.json",
+        "sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+        "bytes": 18823,
+        "mode": "0644"
+      },
+      "pointer": "/sources/11",
+      "source_row": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+        "bytes": 49685
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a13/remaining/source-map.json",
+        "sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+        "bytes": 18823,
+        "mode": "0644"
+      },
+      "pointer": "/sources/30",
+      "source_row": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+        "bytes": 11205
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a10/qualification.json",
+        "sha256": "abd85bf644e311c4f6ed00f1e1315e788a930d937c017ecec7f3befeb378c01a",
+        "bytes": 194351,
+        "mode": "0644"
+      },
+      "pointer": "/owned_sources/3",
+      "source_row": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34"
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a10/qualification.json",
+        "sha256": "abd85bf644e311c4f6ed00f1e1315e788a930d937c017ecec7f3befeb378c01a",
+        "bytes": 194351,
+        "mode": "0644"
+      },
+      "pointer": "/owned_sources/39",
+      "source_row": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf"
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a11/qualification.json",
+        "sha256": "89f816f2bc3333233434dcdbf706eab80387124889923658941682d4668352f3",
+        "bytes": 180395,
+        "mode": "0644"
+      },
+      "pointer": "/owned_sources/2",
+      "source_row": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34"
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a11/qualification.json",
+        "sha256": "89f816f2bc3333233434dcdbf706eab80387124889923658941682d4668352f3",
+        "bytes": 180395,
+        "mode": "0644"
+      },
+      "pointer": "/owned_sources/21",
+      "source_row": {
+        "path": "crates/ssx-registry/src/lib.rs",
+        "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf"
+      }
+    },
+    {
+      "container": {
+        "path": "docs/rust-rewrite/a12/qualification-v1.json",
+        "sha256": "f55413a595d927c7450b942bc4b545b8db8401e8a9f730e9321680d63bf5ca39",
+        "bytes": 9431,
+        "mode": "0644"
+      },
+      "pointer": "/sources/3",
+      "source_row": {
+        "path": "crates/ssx-config/src/lib.rs",
+        "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34"
+      }
+    }
+  ]
+}

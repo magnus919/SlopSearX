@@ -106,9 +106,21 @@ pub struct Registry {
     factories: BTreeMap<String, EngineFactory>,
 }
 impl Registry {
-    pub fn builtins() -> Result<Self, RegistryError> {
+    /// Frozen Python migration inventory, kept separate from additive native providers.
+    pub fn migration_baseline() -> Result<Self, RegistryError> {
         let descriptors: Vec<EngineDescriptor> = serde_json::from_str(CATALOG)
             .map_err(|error| RegistryError::InvalidCatalog(error.to_string()))?;
+        Self::from_descriptors(descriptors)
+    }
+
+    /// Native-only providers extend the frozen migration catalog without changing its provenance.
+    pub fn builtins() -> Result<Self, RegistryError> {
+        let mut descriptors = Self::migration_baseline()?.descriptors;
+        let native: Vec<EngineDescriptor> = serde_json::from_str(include_str!(
+            "../../../docs/rust-rewrite/native-engines/catalog.json"
+        ))
+        .map_err(|error| RegistryError::InvalidCatalog(error.to_string()))?;
+        descriptors.extend(native);
         Self::from_descriptors(descriptors)
     }
 
@@ -228,7 +240,7 @@ mod tests {
 
     #[test]
     fn builtins_are_complete_and_unported_engines_are_unavailable() {
-        let registry = Registry::builtins().unwrap();
+        let registry = Registry::migration_baseline().unwrap();
         assert_eq!(registry.len(), 51);
         assert_eq!(
             registry
@@ -253,6 +265,42 @@ mod tests {
     }
 
     #[test]
+    fn native_additions_preserve_baseline_and_reject_duplicates() {
+        let baseline = Registry::migration_baseline().unwrap();
+        let runtime = Registry::builtins().unwrap();
+        assert_eq!(runtime.len(), baseline.len() + 1);
+        for original in baseline.descriptors() {
+            assert_eq!(runtime.descriptor(&original.name), Some(original));
+        }
+        let native = runtime.descriptor("deepseek").unwrap();
+        assert!(!native.enabled_by_default);
+        assert!(!native.defaults.enabled);
+        assert_eq!(native.defaults.max_results, 10);
+        assert_eq!(native.api_key_env, "ENGINE_DEEPSEEK_API_KEY");
+        assert_eq!(native.auth_class, AuthClass::Required);
+        assert_eq!(native.implementation, ImplementationStatus::Available);
+        assert_eq!(native.cost_class.as_deref(), Some("paid"));
+        assert_eq!(native.categories, ["general"]);
+        assert_eq!(native.routing.role, RoutingRole::General);
+        assert!(native.enforced_filters.is_empty());
+        assert!(
+            native
+                .supported_filters
+                .values()
+                .all(|supported| !supported)
+        );
+        let mut duplicate: Vec<_> = runtime.descriptors().cloned().collect();
+        duplicate.push(native.clone());
+        assert!(matches!(
+            Registry::from_descriptors(duplicate),
+            Err(RegistryError::Duplicate(_))
+        ));
+        let mut invalid = native.clone();
+        invalid.routing.role = RoutingRole::Specialist;
+        assert!(Registry::from_descriptors([invalid]).is_err());
+    }
+
+    #[test]
     fn fixture_adapter_registers_through_the_engine_owned_seam() {
         let builtins = Registry::builtins().unwrap();
         let mut descriptors: Vec<_> = builtins.descriptors().cloned().collect();
@@ -265,7 +313,7 @@ mod tests {
         registry
             .register("fixture", Arc::new(|| Box::new(FixtureEngine)))
             .unwrap();
-        assert_eq!(registry.len(), 52);
+        assert_eq!(registry.len(), builtins.len() + 1);
         assert!(registry.is_available("fixture"));
         assert!(registry.instantiate("fixture").is_some());
         assert!(matches!(

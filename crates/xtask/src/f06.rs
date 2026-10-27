@@ -48,6 +48,16 @@ fn read_json(path: &Path) -> Result<Value> {
     serde_json::from_slice(&fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?)
         .map_err(|error| format!("{}: {error}", path.display()))
 }
+
+// This documentation-only successor must reconstruct exactly from the frozen
+// README; no provider/source expectations or historical pins are rewritten.
+const NATIVE_README_SECTION: &str = "## Engines\n\n### Rust-only additions\n\n| Engine | Type | Auth | Categories |\n|---|---|---|---|\n| [DeepSeek Search](docs/DEEPSEEK.md) (opt-in, Rust only) | API | `ENGINE_DEEPSEEK_API_KEY` | general |\n\nDeepSeek extends the native registry during the Rust rewrite. It is disabled by\ndefault and does not change the 51-engine Python migration baseline below.\n\n### Existing engines (51)";
+
+fn native_readme_successor(baseline: &str, current: &str) -> bool {
+    baseline.matches("## Engines (51)").count() == 1
+        && baseline.replacen("## Engines (51)", NATIVE_README_SECTION, 1) == current
+}
+
 fn source_pins(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let path = root.join("docs/rust-rewrite/f06/source-pins.json");
     let pins: Pins = serde_json::from_slice(
@@ -74,7 +84,20 @@ fn source_pins(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         }
         let actual = command(root, "git", &["hash-object", "--", &pin.path], records)?;
         if actual.trim() != pin.git_blob {
-            return Err(format!("stale F06 source evidence: {}", pin.path));
+            let reviewed_readme = if pin.path == "README.md"
+                && pin.git_blob == "3b50b38382be7e918a3d0bf4edf068a674b699b5"
+            {
+                let baseline = command(root, "git", &["cat-file", "blob", &pin.git_blob], records)?;
+                let current =
+                    fs::read_to_string(root.join(&pin.path)).map_err(|error| error.to_string())?;
+                native_readme_successor(&baseline, &current)
+            } else {
+                false
+            };
+            if !reviewed_readme {
+                return Err(format!("stale F06 source evidence: {}", pin.path));
+            }
+            records.push(json!({"kind":"native_readme_successor","baseline_git_blob":pin.git_blob,"path":pin.path,"exact_reconstruction":true}));
         }
     }
     let tracked = command(root, "git", &["ls-files", "-z"], records)?;
@@ -456,7 +479,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     {
         return Err("F06 routing gate does not reject a same-count per-engine card swap".into());
     }
-    let registry = Registry::builtins().map_err(|error| error.to_string())?;
+    let registry = Registry::migration_baseline().map_err(|error| error.to_string())?;
     if registry.len() != descriptors.len()
         || registry
             .descriptors()
@@ -468,6 +491,32 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 .collect::<BTreeSet<_>>()
     {
         return Err("compiled F06 registry and source manifest diverge".into());
+    }
+    // Native additions are not rewritten into the frozen Python parity inventory.
+    let runtime = Registry::builtins().map_err(|error| error.to_string())?;
+    let native: Vec<EngineDescriptor> = serde_json::from_slice(
+        &fs::read(root.join("docs/rust-rewrite/native-engines/catalog.json"))
+            .map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| error.to_string())?;
+    if native.len() != 1
+        || native[0].name != "deepseek"
+        || native[0].enabled_by_default
+        || native[0].defaults.enabled
+        || native[0].routing.role != RoutingRole::General
+        || native[0].auth_class != AuthClass::Required
+        || native[0].implementation != ImplementationStatus::Available
+        || native[0].categories != ["general"]
+        || native[0].defaults.max_results != 10
+        || !native[0].enforced_filters.is_empty()
+        || native[0].supported_filters.values().any(|value| *value)
+        || runtime.len() != descriptors.len() + native.len()
+        || descriptors
+            .iter()
+            .chain(native.iter())
+            .any(|item| runtime.descriptor(&item.name) != Some(item))
+    {
+        return Err("native extension catalog is incomplete or changes migration defaults".into());
     }
     let expected_markdown = generated_markdown(&descriptors);
     let actual_markdown = fs::read_to_string(root.join("docs/rust-rewrite/f06/engine-catalog.md"))
@@ -488,6 +537,33 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 #[cfg(test)]
 mod scalar_capture_tests {
     use super::*;
+    #[test]
+    fn native_readme_amendment_allows_only_exact_reviewed_insertion() {
+        let before = "before\n## Engines (51)\nafter\n";
+        let current = before.replace("## Engines (51)", NATIVE_README_SECTION);
+        assert!(native_readme_successor(before, &current));
+        assert!(!native_readme_successor(before, before));
+        assert!(!native_readme_successor(
+            before,
+            &(current.clone() + "unrelated")
+        ));
+        assert!(!native_readme_successor(
+            before,
+            &current.replace("ENGINE_DEEPSEEK_API_KEY", "SECRET")
+        ));
+        assert!(!native_readme_successor(
+            before,
+            &current.replace(
+                "Rust-only additions",
+                "Rust-only additions\nRust-only additions"
+            )
+        ));
+        assert!(!native_readme_successor(
+            "## Engines (51)\n## Engines (51)",
+            &current
+        ));
+    }
+
     #[test]
     fn yaml_answers_cannot_redeclare_their_own_identity() {
         let raw = include_bytes!("../fixtures/f06/yaml.json");

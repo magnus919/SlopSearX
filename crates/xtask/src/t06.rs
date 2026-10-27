@@ -1,6 +1,8 @@
 //! Source-bound actual T06 search/discovery qualification. Never executes Python.
 use crate::a13::a06_source_successor::{native_search, w07_evidence_successor};
 use crate::{Result, command};
+#[path = "../../../docs/rust-rewrite/native-engines/t06-fixture-amendment.rs"]
+mod fixture_catalog_amendment;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 pub(crate) mod lock_amendment;
 use serde_json::{Value, json};
@@ -57,6 +59,9 @@ fn validate_storage(bytes: &[u8], archive: &[u8]) -> Result<Value> {
     Ok(value)
 }
 fn validate_native_file(root: &Path, row: &Value, bytes: &[u8], storage: &Value) -> Result<()> {
+    if let Some(result) = fixture_catalog_amendment::verify(root, row, bytes) {
+        return result;
+    }
     if row["file"] == native_search::SOURCE {
         native_search::verify(
             root,
@@ -359,5 +364,19 @@ mod tests {
         v["sources"] = json!([]);
         assert!(validate(&serde_json::to_vec(&v).unwrap()).is_err());
         assert!(validate(b"{}").is_err());
+    }
+    #[test]
+    fn native_catalog_fixture_amendment_actual_t06_validator_and_controls() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let native = include_bytes!("../../../docs/rust-rewrite/t06/native_fixture_bindings.json");
+        let manifest = validate_native(native).unwrap();
+        let row = &manifest["files"][1];
+        let current = std::fs::read(root.join(row["file"].as_str().unwrap())).unwrap();
+        validate_native_file(&root, row, &current, &json!({})).unwrap();
+        fixture_catalog_amendment::controls(&root).unwrap();
+        let mut wrong = row.clone();
+        wrong["sha256"] = json!("wrong");
+        assert!(validate_native_file(&root, &wrong, &current, &json!({})).is_err());
+        assert!(validate_native_file(&root, row, b"wrong source", &json!({})).is_err());
     }
 }

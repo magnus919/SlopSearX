@@ -72,7 +72,11 @@ fn accepted_catalog_projection_keeps_distinct_eligibility_and_redacts() {
         300.0,
     )
     .unwrap();
-    assert_eq!(catalog.engines().len(), 51);
+    assert_eq!(catalog.engines().len(), registry.len());
+    let deepseek = catalog.get("deepseek").unwrap();
+    assert!(!deepseek.enabled);
+    assert!(!deepseek.auth_ready);
+    assert!(deepseek.enforced_filters.is_empty());
     assert_eq!(catalog.get("brave").unwrap().categories, ["custom"]);
     assert!(!catalog.get("brave").unwrap().auth_ready);
     assert!(catalog.get("brave").unwrap().enabled);

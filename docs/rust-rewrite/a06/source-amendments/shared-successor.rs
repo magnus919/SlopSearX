@@ -7,6 +7,10 @@ mod a13_header_layout_successor;
 #[path = "post-a06-generation.rs"]
 mod post_a06_generation;
 pub(crate) use post_a06_generation::native_search;
+#[path = "../../native-engines/catalog-source-amendment.rs"]
+mod native_catalog;
+#[path = "../../native-engines/factory-source-amendment.rs"]
+mod native_factory;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
 #[path = "w07-evidence-successor.rs"]
@@ -552,6 +556,9 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
 }
 
 fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if native_factory::selected(row) {
+        return native_factory::prior(root, row);
+    }
     if let Some(prior) = default_ca_fixture_operand(
         root,
         text(row, "path")?,
@@ -941,6 +948,11 @@ pub(crate) fn try_verify(
         })());
     }
     if let Some(result) =
+        native_catalog::try_verify(root, container, container_sha, path, expected, bytes)
+    {
+        return Some(result);
+    }
+    if let Some(result) =
         post_a06_generation::try_current(root, container, container_sha, path, expected, bytes)
     {
         return Some(result);
@@ -1205,7 +1217,12 @@ pub(crate) fn legacy_control_operand(
     )?;
     let doc = load(root)?;
     let row = source(&doc, path)?;
-    let (before, actual) = verify_transition(root, row)?;
+    let (before, accepted) = verify_transition(root, row)?;
+    let actual = if path == native_factory::SOURCE {
+        native_factory::current(root, &row["current"])?
+    } else {
+        accepted
+    };
     need(
         supplied_current == actual,
         "A06 control operand differs from actual current",
@@ -1233,6 +1250,8 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
     w07_test_dependency::controls(root)?;
     default_ca_fixture_controls(root)?;
+    native_factory::controls(root)?;
+    native_catalog::controls(root)?;
     native_search::controls(root)?;
     post_a06_generation::controls(root)?;
     a13_json_inventory_successor::controls(root)?;
@@ -1411,7 +1430,12 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         "crates/ssx-infra/src/adapters/mod.rs",
     ] {
         let row = source(&doc, path)?;
-        let (before, actual) = verify_transition(root, row)?;
+        let (before, accepted_current) = verify_transition(root, row)?;
+        let actual = if path == native_factory::SOURCE {
+            native_factory::current(root, &row["current"])?
+        } else {
+            accepted_current
+        };
         let accepted = legacy_control_operand(root, path, &row["baseline"], &actual)?;
         need(
             accepted == before,
@@ -1912,6 +1936,27 @@ pub(crate) fn generation_control_operand(
     post_a06_generation::control_operand(root, path, expected, supplied_current)
 }
 
+/// Focused actual-caller qualification without unrelated provider or Valkey work.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn native_catalog_source_controls(root: &Path) -> Result<(), String> {
+    native_catalog::controls(root)
+}
+
+/// Keep source-proof controls out of the frozen integration-test inventories.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> {
+    w07_t02_joint::snapshot_fixture_main_controls(root)?;
+    let path = "crates/xtask/src/main.rs";
+    let current = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+    let t02 = w07_t02_joint::parent(root, path, &current, w07_t02_joint::Parent::T02)?;
+    let old = json!({"path":path,"sha256":"8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c","bytes":39725,"mode":"0644"});
+    need(
+        read_exact(root, &old)? == t02,
+        "literal e127 main caller proof",
+    )
+}
 /// Only the reviewed Metrics insertion is removed for existing historical callers.
 /// The full physical afterimage is required; old bytes alone are never current proof.
 pub(crate) fn metrics_predecessor(

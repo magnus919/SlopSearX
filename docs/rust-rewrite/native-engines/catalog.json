@@ -1,0 +1,54 @@
+[
+  {
+    "api_key_env": "ENGINE_DEEPSEEK_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "general"
+    ],
+    "caveats": [
+      "Rust-only opt-in; queries sent to DeepSeek",
+      "Page 1 only; no structured filter enforcement"
+    ],
+    "cost_class": "paid",
+    "defaults": {
+      "base_url": "https://api.deepseek.com/v1/tools/search",
+      "enabled": false,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "DeepSeek Search",
+    "enabled_by_default": false,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "available",
+    "name": "deepseek",
+    "routing": {
+      "purpose": null,
+      "role": "general",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  }
+]

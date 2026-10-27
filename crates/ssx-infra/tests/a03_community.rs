@@ -305,7 +305,8 @@ async fn typed_config_bounds_zero_deadline_and_secret_redaction_before_dispatch(
 async fn shared_registry_preserves_pilots_and_caller_transport_after_adapter_drop() {
     use ssx_infra::adapters::{PilotConfig, register_pilots};
     let http = Arc::new(AdapterHttp::default());
-    let mut registry = Registry::builtins().unwrap();
+    // Preserve this batch's original 51-engine parity target.
+    let mut registry = Registry::migration_baseline().unwrap();
     let descriptors = registry.descriptors().cloned().collect::<Vec<_>>();
     register_pilots(
         &mut registry,
