@@ -1,4 +1,6 @@
 //! Hermetic actual native executable fixtures, not a simulated forwarding seam.
+#[path = "platform_support/production.rs"]
+mod production;
 use axum::{
     Router,
     extract::{Query, State},
@@ -395,11 +397,12 @@ impl Process {
         extra: &[String],
         browser: Option<(&std::path::Path, &std::path::Path)>,
     ) -> Self {
+        let images = production::optional();
         let installed = ssx_mcp::gateway_client::resolver::install::stage_cargo_gateway(
-            std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway")),
-            std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns")),
+            &images.gateway,
+            &images.dns,
             #[cfg(windows)]
-            std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-input")),
+            &images.input,
         )
         .expect("preregistered native gateway package fixture");
         let mut command = tokio::process::Command::new(installed);

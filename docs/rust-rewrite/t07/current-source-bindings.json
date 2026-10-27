@@ -3,6 +3,10 @@
   "oracle_execution": "source-derived contracts plus bounded executed static catalog regression observations",
   "files": [
     {
+      "path": ".github/workflows/rust-client-platforms.yml",
+      "sha256": "e8441e0344cc02640dea49d37e6fb5671ca32d7210b0f0789af9e270ce84dacd"
+    },
+    {
       "path": ".github/workflows/rust.yml",
       "sha256": "e511701afc001bbd3eb160f16cc029b7ed2a0e1f73f6d5953ad056cb21c10937"
     },
@@ -12,7 +16,7 @@
     },
     {
       "path": "Cargo.lock",
-      "sha256": "94a0adb39352710fe2072334359735e471287da0928af69c38ed992a2d138c38"
+      "sha256": "8676f1c9e900522f584e63cbcc0129fbfc6e90aa64c52adefd19272d754c3543"
     },
     {
       "path": "Cargo.toml",
@@ -20,7 +24,7 @@
     },
     {
       "path": "crates/ssx-gateway/Cargo.toml",
-      "sha256": "1b9463b7b120d9418189a2960f4ce78c73c693d4b397af0da7ca920ea53027f3"
+      "sha256": "e7120fd8fc9f229d97b83e5f03dbf6d73ffe7d817d16b4bffc57cf0fa1ac7a5e"
     },
     {
       "path": "crates/ssx-gateway/src/bin/ssx-gateway-dns-fixture.rs",
@@ -35,16 +39,56 @@
       "sha256": "6bd1319ba6d1afa7cb46e0ef8f229a469db0915e37be8c7e4446f1983744a9e7"
     },
     {
+      "path": "crates/ssx-gateway/src/bin/ssx-gateway-owner-probe.rs",
+      "sha256": "4fd41d41262367cbbf276bb41df38f3750a536a8bbec633149ec2866a57bad27"
+    },
+    {
       "path": "crates/ssx-gateway/src/main.rs",
-      "sha256": "e8a9942798b697f85bda53349c36fa1373fc9318d21f380705b331abe6650d3c"
+      "sha256": "be5bd0d82c3216d64a3ab459e834c75581fd6ae167ed3cf82000517515718301"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/mod.rs",
+      "sha256": "07d042142e8a5e4960deea7c2014759c780e8a8efcf09007789831c48fb2f453"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/production.rs",
+      "sha256": "6de8ca7aa3f47d6663c929e551b1437b3c03c67d54da181384c695b3db67316d"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/seal-production.ps1",
+      "sha256": "4148e8239489072e4ce7c9a22edfffeb6dae8eb1f8a4ca5e9f2213731b8b3b58"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/tls.rs",
+      "sha256": "0e45c2c267cb6e6813d2068d80e3f622015bce32237925b7986ab7143014a008"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/trust-store.ps1",
+      "sha256": "ea69956c7fdc725384e15ccc457872347558a123e341031b20f4a4f741a6e167"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/trust-store.sh",
+      "sha256": "acf199723fd98ed169304c0c0f84fae30c630571ae6401163c6b53f2b87793c1"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
+      "sha256": "fc1a08ebfe8b85f3b4c828c0e6c2cd1bfb3889e7ee4f9b22a66881aaabea2c70"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
       "sha256": "b655f5c6e17da19011fba8121f5d3ce61e8336c34358e8db5fb820f20c35b58e"
     },
     {
+      "path": "crates/ssx-gateway/tests/t07_platform_install.rs",
+      "sha256": "49551896606ba54d305e916f3bc5d471651d2a4f729d8b8dac17ee5da681fd8d"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/t07_platform_tls.rs",
+      "sha256": "a38f17daaad3f3b95a8b2a11d687360c93e89cf77e7d0d7b3e36c2a78dc7e630"
+    },
+    {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
-      "sha256": "5ab7784c3f8d99b400e51bc0f89dd21f7800fa9bec7c6a68cd64fbfef59f351f"
+      "sha256": "413fcccd56ce9555c165bf008852471f8f1fe90f823f71168cc5373ffda0a6e7"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_source_stages.rs",
@@ -53,6 +97,10 @@
     {
       "path": "crates/ssx-gateway/tests/t07_windows_owner.rs",
       "sha256": "9517f7df64b75c9def5433764ed34b1f2fb8af12011dc689f13bb68699d390e8"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/t07_windows_security.rs",
+      "sha256": "931befa468735d0ff072710d97a163d2ebaa7060e01464b2b70f4823cbcb6250"
     },
     {
       "path": "crates/ssx-infra/src/adapters/source_json.rs",
@@ -75,6 +123,10 @@
       "sha256": "7b848088406e81c437ed738bfc643bc48e2371620c3b80eefe1a7cdeb5454fb6"
     },
     {
+      "path": "crates/ssx-mcp/src/gateway_client/ca_bundle.rs",
+      "sha256": "c7bd30731e72f6c2aebed3502dffe655e5da32aab747dd3098dd80a19f3a2efd"
+    },
+    {
       "path": "crates/ssx-mcp/src/gateway_client/callback.rs",
       "sha256": "92c1adb91b6c773ece4f4330fd3ed9a5efd5856b639f26840aa000781509d194"
     },
@@ -88,11 +140,11 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/mod.rs",
-      "sha256": "bcb4279bf717e5294a6d1316a85f3e7869e1dfc72bdd1ad69e6eee7b6bbfa2dd"
+      "sha256": "8b988a503b6ec41b9b31cd63b753115ec5254c966ad4e26421753789e65d46fc"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/network.rs",
-      "sha256": "066e9283c0b07962caf77f2a45f051bf40fa676e119e050d216d52f69cad50f9"
+      "sha256": "4cd9e21c488e0a92d720ab7332c261e6daf359b0ec4c3d84bdd917858cd525f6"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/network_cookie_tests.rs",
@@ -100,7 +152,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/oauth.rs",
-      "sha256": "de27ec5f54856317461fe1f02230091181b02761a87f4cd6b122281d6be558d8"
+      "sha256": "5f46d5141d8fcea1aef862bb5fc13eaec45db908c750628cc98ff85360ae08bf"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/oauth_policy.rs",
@@ -152,11 +204,11 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/runtime.rs",
-      "sha256": "b31a539b031fcf57790e43b7deef27e0b8599b964882183ad7a4156107a324d7"
+      "sha256": "f3f7f895bb747a5f335056b60ddf84e69a2fa45e3cfc1f35a68d091e6675f8a4"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/settings.rs",
-      "sha256": "5ec56ce100dd0b1930aadce21e1781f7883b1cddd26836bc879a790d278933b8"
+      "sha256": "635b05393a310c9e98d43229556bc2bfcee1f5e657a5481e3964bdb107daefb8"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/source_discovery.rs",
@@ -192,7 +244,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/token_storage.rs",
-      "sha256": "0e808e0589519fe8f7e203a42d12905bf14e057dca7df894a65580ad9a9df08d"
+      "sha256": "fec112aba4dd926f66fa1db85451666689aaa5ae63fb849806d5e1a96893e1d6"
     },
     {
       "path": "crates/ssx-mcp/src/harness.rs",
@@ -428,7 +480,7 @@
     },
     {
       "path": "crates/xtask/src/w07.rs",
-      "sha256": "3f5f1bda882d94aa9302a8b4c43a8fefb71fbf79ce78965e2e7317e0da919f0d"
+      "sha256": "2888aa32df0598c2173fd8c271bbf994975e81087cacb8423d17930dcf9522de"
     },
     {
       "path": "docs/rust-rewrite/a04/source-amendments/scoped-successor.rs",
@@ -453,6 +505,10 @@
     {
       "path": "docs/rust-rewrite/t07/CLIENT_DEPENDENCY_BOUNDARY.md",
       "sha256": "22b2c4e0c3a3205386509c4a40709e275967d582db3101a7522baeabd011328c"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/CLIENT_PLATFORM_ACCEPTANCE.md",
+      "sha256": "9ad4f78bb90c5dbe1bdfb6466c45a9a23a044d1b7d87b287661e1f52fe8a79fa"
     },
     {
       "path": "docs/rust-rewrite/t07/COMPOSED_SOURCE_V4.md",
@@ -576,11 +632,11 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json",
-      "sha256": "d5f0f4e70776a3347c5c616f607ed6db1ebdcd57f49383d8d518312c8f4d7b51"
+      "sha256": "3e5cb86a53e2060cd9782a812a3834ea23bea96fd0fb4c1f1b5652035a209e82"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs",
-      "sha256": "c65d4601be28b6bacf4acf9ebbbe754bfa9412e4d77b1898f24e1661ab809b0a"
+      "sha256": "c5daa7a3486972cec5b338d458441cb90addb3d0945e49a553ec424a44fece99"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-current-operand-v1.json",
@@ -752,7 +808,7 @@
     },
     {
       "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
-      "sha256": "7f48e7d4f8790f363e89f7ac8295076616860236450ac74c867ba5cfd2275915"
+      "sha256": "a36c4d2a37fec7d017de7e90f535e665b539e538d875080efa63102b668b486b"
     },
     {
       "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
@@ -2492,7 +2548,11 @@
     },
     {
       "path": "vendor/ssx-windows-owner/SAFETY.md",
-      "sha256": "c30373f484c68873a777e4889af40391074579b5afb78be8f3599e31f0dc9aa1"
+      "sha256": "60851d06a54531b3ce02f9f91dfda8d48705cf63874c73f1fcadd9b6e150d0e4"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/src/confidential.rs",
+      "sha256": "c202f73f1044182ec72bb77e24f51a74a2a1f08997162f77bb6ed319d480d0e0"
     },
     {
       "path": "vendor/ssx-windows-owner/src/dns.rs",
@@ -2500,15 +2560,15 @@
     },
     {
       "path": "vendor/ssx-windows-owner/src/lib.rs",
-      "sha256": "bacf9b6b91711e680b50ce0aecced37667abd5f67841e1913bc56b29f36f6ed5"
+      "sha256": "219a62afe13f77a4d0967bed9a2fc582136f4aa48e4171cb2f48af76be3f62b9"
     },
     {
       "path": "vendor/ssx-windows-owner/src/process.rs",
-      "sha256": "078d5db40d029e61683389356b7432dbd7ebbacb399f0bba7fbcafc4d60363df"
+      "sha256": "37eb9589d85ff075cbc2fdaa685a79261a2e8c69f27b9b306e0bcb75ccf541e5"
     },
     {
       "path": "vendor/ssx-windows-owner/src/trust.rs",
-      "sha256": "90ae4678b235f263febcc1c1da97a9b0a8616aa6d12b58165506391bc2e35c35"
+      "sha256": "c69c036335f2fcbd94b8921f5de4919bae7d932581879ef7beea87f1386a1b7a"
     }
   ],
   "library_tests": [
@@ -2524,43 +2584,86 @@
     "gateway_client::client_model::tests::pinned_client_url_model_controls",
     "gateway_client::io_owner::tests::cancelled_waiter_retains_actual_job_until_shutdown_join",
     "gateway_client::io_owner::tests::deadline_queue_and_owner_close_do_not_start_second_worker",
+    "gateway_client::network::cookie_wire_tests::cleared_redirect_userinfo_keeps_actual_sent_basic_header_lineage",
     "gateway_client::network::cookie_wire_tests::connect_uses_selected_proxy_credentials_separately_from_origin_caller_header",
     "gateway_client::network::cookie_wire_tests::environment_no_proxy_route_bypasses_configured_credentials_on_actual_wire",
+    "gateway_client::network::cookie_wire_tests::httpx_redirect_origin_numeric_ipv6_scope_and_zero_are_distinct_from_transport_origin",
+    "gateway_client::network::cookie_wire_tests::initial_lazy_host_failure_precedes_dns_or_socket_admission",
+    "gateway_client::network::cookie_wire_tests::initial_prepare_host_lazy_boundaries_and_vec_body_defaults_are_source_exact",
+    "gateway_client::network::cookie_wire_tests::initial_recorded_host_survives_same_origin_redirect_stream_lineage",
+    "gateway_client::network::cookie_wire_tests::network_cookie_observation_uses_normalized_owner_before_userinfo_auth",
+    "gateway_client::network::cookie_wire_tests::network_oauth_retains_userinfo_but_never_uses_url_basic_without_bearer",
     "gateway_client::network::cookie_wire_tests::oauth_built_request_does_not_merge_client_cookie_but_redirect_uses_shared_jar",
     "gateway_client::network::cookie_wire_tests::queued_caller_cancellation_never_resolves_and_released_credit_uses_new_caller",
     "gateway_client::network::cookie_wire_tests::response_cookie_redirect_selection_replaces_caller_and_persists_deletion",
+    "gateway_client::network::cookie_wire_tests::source_url_auth_flag_preserves_owner_and_explicit_auth_on_actual_wire",
     "gateway_client::network::cookie_wire_tests::two_real_proxy_routes_keep_caller_precedence_and_no_proxy_has_no_ambient_credentials",
     "gateway_client::network::cookie_wire_tests::unfollowed_redirect_prepares_cookie_before_origin_method_and_budget_gates",
     "gateway_client::network::cookie_wire_tests::uppercase_configured_https_returns_secure_cookie_on_next_initial_request",
     "gateway_client::network::cookie_wire_tests::zero_redirect_budget_still_prepares_same_origin_get_307_cookie",
     "gateway_client::oauth::registration_review_controls::wire_issuer_is_discarded_before_model_validation_for_any_json_type",
+    "gateway_client::oauth::source_gate_tests::source_gate_credentials_keep_unbound_and_reject_other_issuer_url_shaped_id",
+    "gateway_client::oauth::source_gate_tests::source_gate_pending_cancel_and_error_cannot_change_prior_policy",
+    "gateway_client::oauth::source_oauth_wire_store_tests::source_oauth_real_loopback_discovery_registration_code_refresh_and_store",
+    "gateway_client::oauth::source_scope_roundtrip_tests::cached_sdk_refresh_scope_reconstruction_preserves_exact_original_text",
+    "gateway_client::oauth::source_scope_roundtrip_tests::source_http_huge_known_expiry_is_valid_model_then_operational_overflow",
+    "gateway_client::oauth::source_token_error_tests::source_token_model_invalid_marker_excludes_limits_deadlines_and_default_lane",
     "gateway_client::oauth::tests::cached_source_expiry_is_not_an_sdk_u64_schema",
     "gateway_client::oauth::tests::source_received_expiry_preserves_signed_and_float_overflow_outcomes",
     "gateway_client::oauth_policy::protocol_tests::resource_parameter_depends_on_prm_or_protocol_and_interactive_url_resource_keeps_userinfo_query",
     "gateway_client::oauth_policy::review_controls::discovered_metadata_missing_registration_endpoint_uses_resource_origin_with_honest_binding",
     "gateway_client::oauth_policy::review_controls::refresh_form_omits_scope_without_changing_authorization_code_form",
+    "gateway_client::oauth_policy::source_client_projection_tests::source_client_present_surrogate_security_fields_never_become_absent_bindings",
+    "gateway_client::oauth_policy::source_metadata_policy_tests::accepted_source_prm_uses_whole_model_and_retains_empty_scope",
+    "gateway_client::oauth_policy::source_metadata_policy_tests::rejected_source_prm_preserves_old_policy_and_uses_raw_resource_origin",
+    "gateway_client::oauth_policy::source_metadata_policy_tests::source_asm_requires_exact_selected_issuer_but_legacy_allows_root_slash",
+    "gateway_client::oauth_policy::source_metadata_policy_tests::source_issuer_root_equivalence_uses_raw_parse_and_no_host_normalization",
+    "gateway_client::oauth_policy::source_scope_policy_tests::source_scope_selection_and_step_up_use_python_control_separator",
     "gateway_client::oauth_policy::tests::minted_method_controls_secret_and_basic_uses_percent20",
     "gateway_client::oauth_policy::tests::source_issuer_root_equivalence_does_not_make_url_client_ids_portable",
     "gateway_client::oauth_policy::tests::source_resource_keeps_query_and_explicit_port_distinction",
     "gateway_client::oauth_policy::tests::source_scope_priority_and_stepup_union_keep_granted_scope",
+    "gateway_client::redirect::source_owner_tests::source_redirect_header_encoding_is_collection_wide_and_duplicates_join",
+    "gateway_client::redirect::source_owner_tests::source_redirect_invalid_location_propagates_but_nonredirect_ignores_it",
+    "gateway_client::redirect::source_owner_tests::source_redirect_method_gate_uses_actual_rewrite_rules",
+    "gateway_client::redirect::source_owner_tests::source_redirect_preserves_empty_query_and_inherits_truthy_fragment",
+    "gateway_client::redirect::source_owner_tests::source_redirect_scheme_without_host_uses_display_host",
+    "gateway_client::redirect::source_owner_tests::source_redirect_userinfo_compares_raw_bytes_and_allows_clear",
+    "gateway_client::redirect::source_owner_tests::source_redirect_uses_source_ports_and_default_upgrade",
     "gateway_client::redirect::tests::source_redirects_keep_method_origin_and_userinfo",
     "gateway_client::redirect::tests::source_static_url_basic_overrides_bearer_but_oauth_does_not_use_url_basic",
     "gateway_client::resolver::install::tests::changed_gateway_or_helper_bytes_cannot_reuse_record_identity",
     "gateway_client::resolver::install::tests::duplicate_unknown_record_fields_and_bad_shape_are_rejected",
     "gateway_client::resolver::install::tests::installed_symlinks_hardlinks_and_writable_package_entries_are_rejected",
+    "gateway_client::resolver::install::tests::legacy_schema_or_missing_mismatched_protocol_cannot_admit_helper",
     "gateway_client::resolver::install::tests::missing_wrong_role_or_changed_record_fails_before_any_helper_spawn",
     "gateway_client::resolver::install::tests::normal_cargo_input_hardlinks_are_copied_to_single_link_private_outputs",
     "gateway_client::resolver::install::tests::repeated_staging_reuses_only_exact_matching_complete_package",
     "gateway_client::resolver::install::tests::staged_record_discovers_helper_without_runtime_user_configuration",
+    "gateway_client::resolver::protocol::tests::first_scope_text_and_secondary_native_sockaddr_are_distinct",
+    "gateway_client::resolver::protocol::tests::real_zero_is_not_dns_only_and_v1_or_cross_kind_is_rejected",
+    "gateway_client::resolver::protocol::tests::request_kind_and_error_phase_are_closed",
     "gateway_client::resolver::protocol::tests::response_rejects_trailing_truncated_or_hostile_count",
     "gateway_client::resolver::protocol::tests::sockaddr_response_preserves_sequence_scope_flow_and_returned_port",
     "gateway_client::resolver::protocol::tests::socket_conversion_order_is_distinct",
     "gateway_client::resolver::runtime::tests::anyio_scoped_literal_compression_keeps_source_scope",
+    "gateway_client::resolver::runtime::tests::literal_compressed_text_has_its_own_mapped_and_compatible_branches",
+    "gateway_client::settings::platform_path_tests::token_path_explicit_and_xdg_inputs_do_not_require_home",
+    "gateway_client::settings::platform_path_tests::windows_native_home_precedence_empty_missing_and_conflicting_inputs",
     "gateway_client::settings::tests::blank_token_override_and_raw_token_path",
     "gateway_client::settings::tests::boolean_environment_and_mutual_exclusion",
     "gateway_client::settings::tests::cli_overrides_environment_without_reading_engine_keys",
     "gateway_client::settings::tests::default_path_hashes_exact_url_and_preserves_empty_xdg",
     "gateway_client::settings::tests::source_integer_forms_preserve_unicode_separators_magnitude_and_eager_env_failure",
+    "gateway_client::source_discovery::callback_tests::typed_callback_preserves_duplicate_raw_text_and_construction_provenance",
+    "gateway_client::source_discovery::resource_tests::resource_policy_preserves_ports_userinfo_unicode_params_and_path_boundaries",
+    "gateway_client::source_discovery::resource_tests::resource_url_uses_raw_split_python_lower_and_public_empty_query_collapse",
+    "gateway_client::source_discovery::source_challenge_field_tests::scope_and_error_keep_source_case_substring_and_unicode_whitespace_rules",
+    "gateway_client::source_discovery::tests::asm_has_exact_path_three_root_two_and_raw_legacy_one_candidates",
+    "gateway_client::source_discovery::tests::challenge_search_is_case_sensitive_unanchored_and_python_whitespace_exact",
+    "gateway_client::source_discovery::tests::prm_preserves_advertised_first_raw_case_userinfo_params_and_duplicates",
+    "gateway_client::source_discovery::tests::unknown_scheme_raw_plan_and_model_issuer_boundaries_remain_distinct",
+    "gateway_client::source_projection::diagnostic_tests::validation_repr_preserves_opaque_numbers_depth_and_python_scalar_escaping",
     "gateway_client::source_projection::framework_error_tests::remote_client_capability_error_stays_protocol_error_and_other_tool_errors_are_results",
     "gateway_client::source_projection::legacy_controls::legacy_json_retains_deep_values_and_duplicate_last_value",
     "gateway_client::source_projection::legacy_controls::nonfinite_legacy_scalar_is_text_null_not_empty_content",
@@ -2574,6 +2677,8 @@
     "gateway_client::stdio_input::tests::eof_preserves_all_bytes_and_joins_worker",
     "gateway_client::title::identifier_tests::original_generated_signature_accepts_unicode16_identifiers_but_not_keywords_or_schema_hyphens",
     "gateway_client::title::tests::source_unicode_title_expansions_digraphs_sigma_and_combining_boundaries",
+    "gateway_client::token_json::source_http_tests::source_http_ignored_big_nan_and_duplicate_members_use_existing_models",
+    "gateway_client::token_json::source_http_tests::source_http_ignored_surrogates_fail_before_models_while_file_lane_stays_distinct",
     "gateway_client::token_json::tests::empty_array_and_long_scalar_work_cooperate_before_completion",
     "gateway_client::token_json::tests::exact_input_integer_and_depth_resource_boundaries",
     "gateway_client::token_json::tests::exact_python_ascii_nan_bigint_and_surrogate_spelling",
@@ -2586,50 +2691,7 @@
     "gateway_client::token_storage::tests::concurrent_atomic_writers_and_continuous_reader_have_no_partial_publication",
     "gateway_client::token_storage::tests::failed_encode_and_failed_rename_preserve_original_and_cleanup",
     "gateway_client::token_storage::tests::special_files_are_rejected_without_waiting_for_fifo_writer",
-    "gateway_client::token_storage::tests::text_decode_and_caught_json_errors_remain_distinct",
-    "gateway_client::network::cookie_wire_tests::cleared_redirect_userinfo_keeps_actual_sent_basic_header_lineage",
-    "gateway_client::network::cookie_wire_tests::httpx_redirect_origin_numeric_ipv6_scope_and_zero_are_distinct_from_transport_origin",
-    "gateway_client::network::cookie_wire_tests::initial_lazy_host_failure_precedes_dns_or_socket_admission",
-    "gateway_client::network::cookie_wire_tests::initial_prepare_host_lazy_boundaries_and_vec_body_defaults_are_source_exact",
-    "gateway_client::network::cookie_wire_tests::initial_recorded_host_survives_same_origin_redirect_stream_lineage",
-    "gateway_client::network::cookie_wire_tests::network_cookie_observation_uses_normalized_owner_before_userinfo_auth",
-    "gateway_client::network::cookie_wire_tests::network_oauth_retains_userinfo_but_never_uses_url_basic_without_bearer",
-    "gateway_client::network::cookie_wire_tests::source_url_auth_flag_preserves_owner_and_explicit_auth_on_actual_wire",
-    "gateway_client::redirect::source_owner_tests::source_redirect_header_encoding_is_collection_wide_and_duplicates_join",
-    "gateway_client::redirect::source_owner_tests::source_redirect_invalid_location_propagates_but_nonredirect_ignores_it",
-    "gateway_client::redirect::source_owner_tests::source_redirect_method_gate_uses_actual_rewrite_rules",
-    "gateway_client::redirect::source_owner_tests::source_redirect_preserves_empty_query_and_inherits_truthy_fragment",
-    "gateway_client::redirect::source_owner_tests::source_redirect_scheme_without_host_uses_display_host",
-    "gateway_client::redirect::source_owner_tests::source_redirect_userinfo_compares_raw_bytes_and_allows_clear",
-    "gateway_client::redirect::source_owner_tests::source_redirect_uses_source_ports_and_default_upgrade",
-    "gateway_client::resolver::install::tests::legacy_schema_or_missing_mismatched_protocol_cannot_admit_helper",
-    "gateway_client::resolver::protocol::tests::first_scope_text_and_secondary_native_sockaddr_are_distinct",
-    "gateway_client::resolver::protocol::tests::real_zero_is_not_dns_only_and_v1_or_cross_kind_is_rejected",
-    "gateway_client::resolver::protocol::tests::request_kind_and_error_phase_are_closed",
-    "gateway_client::resolver::runtime::tests::literal_compressed_text_has_its_own_mapped_and_compatible_branches",
-    "gateway_client::oauth::source_gate_tests::source_gate_credentials_keep_unbound_and_reject_other_issuer_url_shaped_id",
-    "gateway_client::oauth::source_gate_tests::source_gate_pending_cancel_and_error_cannot_change_prior_policy",
-    "gateway_client::oauth::source_oauth_wire_store_tests::source_oauth_real_loopback_discovery_registration_code_refresh_and_store",
-    "gateway_client::oauth::source_scope_roundtrip_tests::cached_sdk_refresh_scope_reconstruction_preserves_exact_original_text",
-    "gateway_client::oauth::source_scope_roundtrip_tests::source_http_huge_known_expiry_is_valid_model_then_operational_overflow",
-    "gateway_client::oauth::source_token_error_tests::source_token_model_invalid_marker_excludes_limits_deadlines_and_default_lane",
-    "gateway_client::oauth_policy::source_client_projection_tests::source_client_present_surrogate_security_fields_never_become_absent_bindings",
-    "gateway_client::oauth_policy::source_metadata_policy_tests::accepted_source_prm_uses_whole_model_and_retains_empty_scope",
-    "gateway_client::oauth_policy::source_metadata_policy_tests::rejected_source_prm_preserves_old_policy_and_uses_raw_resource_origin",
-    "gateway_client::oauth_policy::source_metadata_policy_tests::source_asm_requires_exact_selected_issuer_but_legacy_allows_root_slash",
-    "gateway_client::oauth_policy::source_metadata_policy_tests::source_issuer_root_equivalence_uses_raw_parse_and_no_host_normalization",
-    "gateway_client::oauth_policy::source_scope_policy_tests::source_scope_selection_and_step_up_use_python_control_separator",
-    "gateway_client::source_discovery::callback_tests::typed_callback_preserves_duplicate_raw_text_and_construction_provenance",
-    "gateway_client::source_discovery::resource_tests::resource_policy_preserves_ports_userinfo_unicode_params_and_path_boundaries",
-    "gateway_client::source_discovery::resource_tests::resource_url_uses_raw_split_python_lower_and_public_empty_query_collapse",
-    "gateway_client::source_discovery::source_challenge_field_tests::scope_and_error_keep_source_case_substring_and_unicode_whitespace_rules",
-    "gateway_client::source_discovery::tests::asm_has_exact_path_three_root_two_and_raw_legacy_one_candidates",
-    "gateway_client::source_discovery::tests::challenge_search_is_case_sensitive_unanchored_and_python_whitespace_exact",
-    "gateway_client::source_discovery::tests::prm_preserves_advertised_first_raw_case_userinfo_params_and_duplicates",
-    "gateway_client::source_discovery::tests::unknown_scheme_raw_plan_and_model_issuer_boundaries_remain_distinct",
-    "gateway_client::token_json::source_http_tests::source_http_ignored_big_nan_and_duplicate_members_use_existing_models",
-    "gateway_client::token_json::source_http_tests::source_http_ignored_surrogates_fail_before_models_while_file_lane_stays_distinct",
-    "gateway_client::source_projection::diagnostic_tests::validation_repr_preserves_opaque_numbers_depth_and_python_scalar_escaping"
+    "gateway_client::token_storage::tests::text_decode_and_caught_json_errors_remain_distinct"
   ],
   "seam_tests": [
     "correlated_sse_completes_before_eof_and_releases_actual_body_lease",
@@ -2794,5 +2856,38 @@
     "logical_t07_identities_preserved": 215,
     "source_json_physical_package": "ssx-source-json",
     "scope": "current source and explicit physical selector relocation only; prior215 runtime belongs to 0a44833, combined tree unqualified until current checks"
+  },
+  "client_platform_successor": {
+    "source_parent": "c21327cbb90f186b7a05aa87327590b47ed2ac40",
+    "reviewed_source_branch": "6c4c72c6df067664ae49f5f671352b8b19ecb680",
+    "review_receipt_sha256": "1b3cb833a1b17b79b48306cb71b47ee9cb2519ae79e95174041356334991162f",
+    "original_native_identities_preserved": 215,
+    "ordinary_gate_additions": [
+      "gateway_client::settings::platform_path_tests::token_path_explicit_and_xdg_inputs_do_not_require_home",
+      "gateway_client::settings::platform_path_tests::windows_native_home_precedence_empty_missing_and_conflicting_inputs"
+    ],
+    "declared_ordinary_gate_total": 217,
+    "supplemental_platform_acceptance": {
+      "crates/ssx-gateway/tests/t07_platform_install.rs": [
+        "native_distribution_installs_and_invokes_exact_target_without_backend_runtime"
+      ],
+      "crates/ssx-gateway/tests/t07_platform_tls.rs": [
+        "installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname",
+        "installed_additive_ca_refuses_missing_malformed_bundle_and_wrong_hostname",
+        "installed_tls_connect_proxy_keeps_proxy_credentials_out_of_origin_and_bearer_out_of_connect",
+        "installed_tls_cross_origin_redirect_strips_bearer_before_destination"
+      ],
+      "crates/ssx-gateway/tests/t07_windows_security.rs": [
+        "windows_token_storage_confidentiality_atomic_replacement_and_collision_ownership",
+        "windows_token_reparse_hardlink_and_untrusted_writer_parent_are_rejected",
+        "windows_installed_digest_reparse_and_writer_acl_fail_before_helper_admission",
+        "windows_atomic_job_assignment_failure_never_runs_child_and_valid_control_retires",
+        "windows_abrupt_original_parent_death_closes_last_job_handle_and_retires_entered_child",
+        "windows_held_confidential_read_atomic_replace_and_parent_rename_have_coherent_kernel_outcomes"
+      ]
+    },
+    "supplemental_count": 11,
+    "runtime_state": "source declarations only; currentc213215 remains separate accepted component; platform/Windows and integrated217 unexecuted",
+    "default_shipping_identity": "exact default3 compiler artifacts sealed before featurefixtures; runtime fallback is component-only"
   }
 }

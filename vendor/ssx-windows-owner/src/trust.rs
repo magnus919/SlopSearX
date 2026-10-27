@@ -177,6 +177,9 @@ impl Drop for PrivateSecurity {
 /// Require a non-reparse package object whose owner is current user/System/Admin
 /// and whose DACL grants write/delete/ownership only to those trusted principals.
 fn check_acl(file: &File) -> io::Result<()> {
+    check_acl_policy(file, false)
+}
+fn check_acl_policy(file: &File, confidential: bool) -> io::Result<()> {
     let current = TokenSid::new()?;
     let mut owner = ptr::null_mut();
     let mut acl = ptr::null_mut();
@@ -233,7 +236,15 @@ fn check_acl(file: &File) -> io::Result<()> {
                 }
                 let ace = unsafe { &*(address.cast::<ACCESS_ALLOWED_ACE>()) };
                 let sid = std::ptr::addr_of!(ace.SidStart).cast_mut().cast();
-                if ace.Mask & write != 0 && !trusted(sid) {
+                // Package integrity permits public readers. Token documents do
+                // not: generic/read/execute rights are an additional boundary.
+                let forbidden = write
+                    | if confidential {
+                        GENERIC_READ | GENERIC_EXECUTE | FILE_GENERIC_READ | FILE_GENERIC_EXECUTE
+                    } else {
+                        0
+                    };
+                if ace.Mask & forbidden != 0 && !trusted(sid) {
                     return Err(io::ErrorKind::PermissionDenied.into());
                 }
             }
@@ -243,7 +254,7 @@ fn check_acl(file: &File) -> io::Result<()> {
     Ok(())
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct Identity {
+pub(crate) struct Identity {
     volume: u32,
     index_hi: u32,
     index_lo: u32,
@@ -252,7 +263,7 @@ struct Identity {
     write_hi: u32,
     write_lo: u32,
 }
-fn identity(file: &File, directory: bool) -> io::Result<Identity> {
+pub(crate) fn identity(file: &File, directory: bool) -> io::Result<Identity> {
     let mut info: BY_HANDLE_FILE_INFORMATION = unsafe { mem::zeroed() };
     if unsafe { GetFileInformationByHandle(file.as_raw_handle().cast(), &mut info) } == 0 {
         return Err(io::Error::last_os_error());
@@ -273,7 +284,13 @@ fn identity(file: &File, directory: bool) -> io::Result<Identity> {
         write_lo: info.ftLastWriteTime.dwLowDateTime,
     })
 }
-fn opened(path: &Path, directory: bool) -> io::Result<File> {
+pub(crate) fn opened(path: &Path, directory: bool) -> io::Result<File> {
+    opened_policy(path, directory, false)
+}
+pub(crate) fn opened_confidential(path: &Path) -> io::Result<File> {
+    opened_policy(path, false, true)
+}
+fn opened_policy(path: &Path, directory: bool, confidential: bool) -> io::Result<File> {
     use std::os::windows::fs::MetadataExt;
     if !path.is_absolute() {
         return Err(io::ErrorKind::InvalidInput.into());
@@ -289,7 +306,7 @@ fn opened(path: &Path, directory: bool) -> io::Result<File> {
     let file = OpenOptions::new()
         .read(true)
         .access_mode(FILE_GENERIC_READ | READ_CONTROL)
-        .share_mode(FILE_SHARE_READ)
+        .share_mode(FILE_SHARE_READ | if confidential { FILE_SHARE_DELETE } else { 0 })
         .custom_flags(
             FILE_FLAG_OPEN_REPARSE_POINT
                 | if directory {
@@ -300,7 +317,7 @@ fn opened(path: &Path, directory: bool) -> io::Result<File> {
         )
         .open(path)?;
     identity(&file, directory)?;
-    check_acl(&file)?;
+    check_acl_policy(&file, confidential)?;
     Ok(file)
 }
 pub fn check_private_directory(path: &Path) -> io::Result<()> {
@@ -511,4 +528,41 @@ pub fn package_lock(path: &Path) -> io::Result<File> {
     }
     file.lock()?;
     Ok(file)
+}
+
+/// Qualification-only adversarial ACL; never compiled into a production owner.
+#[cfg(feature = "fixtures")]
+pub fn fixture_public_access(path: &Path, writable: bool) -> io::Result<()> {
+    let mut text = private_sddl()?;
+    text.pop();
+    text.extend(format!("(A;;{};;;WD)", if writable { "GA" } else { "GR" }).encode_utf16());
+    text.push(0);
+    let mut descriptor = ptr::null_mut();
+    if unsafe {
+        ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            text.as_ptr(),
+            SDDL_REVISION_1,
+            &mut descriptor,
+            ptr::null_mut(),
+        )
+    } == 0
+    {
+        return Err(io::Error::last_os_error());
+    }
+    let _allocation = LocalAllocation(descriptor);
+    let path = wide(path.as_os_str())?;
+    // SAFETY: the fixture owns this exact private path; descriptor allocation
+    // remains alive through this synchronous OS call. No caller raw pointer.
+    if unsafe {
+        SetFileSecurityW(
+            path.as_ptr(),
+            DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+            descriptor,
+        )
+    } == 0
+    {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
 }

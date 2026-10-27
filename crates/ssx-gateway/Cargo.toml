@@ -13,11 +13,17 @@ workspace = true
 server-test-fixtures = ["ssx-mcp/server", "dep:ssx-application", "dep:ssx-infra", "dep:ssx-registry", "dep:ssx-config"]
 source-endpoint-test-fixtures = ["dns-test-fixtures", "ssx-mcp/gateway-source-endpoints"]
 dns-test-fixtures = ["ssx-mcp/gateway-dns-fixtures"]
+windows-owner-test-fixtures = ["dns-test-fixtures", "dep:ssx-windows-owner", "ssx-windows-owner/fixtures"]
 
 [[bin]]
 name = "ssx-gateway-dns-fixture"
 path = "src/bin/ssx-gateway-dns-fixture.rs"
 required-features = ["dns-test-fixtures"]
+
+[[bin]]
+name = "ssx-gateway-owner-probe"
+path = "src/bin/ssx-gateway-owner-probe.rs"
+required-features = ["windows-owner-test-fixtures"]
 
 [dependencies]
 ssx-wire.workspace = true
@@ -32,7 +38,13 @@ ssx-infra = { workspace = true, optional = true }
 ssx-registry = { workspace = true, optional = true }
 ssx-config = { workspace = true, optional = true }
 
+[target.'cfg(windows)'.dependencies]
+ssx-windows-owner = { path = "../../vendor/ssx-windows-owner", version = "=0.1.0", optional = true }
+
 [dev-dependencies]
+rustls.workspace = true
+tokio-rustls.workspace = true
+rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
 futures-util = "=0.3.34"
 axum.workspace = true
 serde_json.workspace = true

@@ -72,8 +72,8 @@
       "path": "Cargo.lock",
       "physical": {
         "path": "Cargo.lock",
-        "sha256": "94a0adb39352710fe2072334359735e471287da0928af69c38ed992a2d138c38",
-        "bytes": 97759,
+        "sha256": "8676f1c9e900522f584e63cbcc0129fbfc6e90aa64c52adefd19272d754c3543",
+        "bytes": 97819,
         "mode": "0644"
       },
       "parents": {
@@ -86,22 +86,42 @@
           "git_blob": "b8265553fdccaa345cfeb21381222b7bb9a0a105",
           "inverse": [
             {
-              "at": 69643,
+              "at": 68655,
+              "remove_utf8": " \"rcgen\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 68696,
+              "remove_utf8": " \"rustls\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 68844,
+              "remove_utf8": " \"ssx-windows-owner\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 68889,
+              "remove_utf8": " \"tokio-rustls\",\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 69703,
               "remove_utf8": " \"ssx-source-json\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 69936,
+              "at": 69996,
               "remove_utf8": " \"aws-lc-rs\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 70296,
+              "at": 70356,
               "remove_utf8": " \"ssx-source-json\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 71154,
+              "at": 71214,
               "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n \"url\",\n",
               "insert_utf8": ""
             }
@@ -402,156 +422,156 @@
             },
             {
               "at": 68630,
-              "remove_utf8": " \"futures-util\",\n \"nix\",\n \"redis\",\n \"reqwest\",\n",
+              "remove_utf8": " \"futures-util\",\n \"nix\",\n \"rcgen\",\n \"redis\",\n \"reqwest\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 68686,
-              "remove_utf8": " \"serde_json\",\n \"sha2 0.11.1\",\n \"ssx-application\",\n \"ssx-config\",\n \"ssx-domain\",\n \"ssx-infra\",\n \"ssx-json\",\n \"ssx-mcp\",\n \"ssx-registry\",\n",
+              "at": 68696,
+              "remove_utf8": " \"rustls\",\n \"serde_json\",\n \"sha2 0.11.1\",\n \"ssx-application\",\n \"ssx-config\",\n \"ssx-domain\",\n \"ssx-infra\",\n \"ssx-json\",\n \"ssx-mcp\",\n \"ssx-registry\",\n \"ssx-windows-owner\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 68836,
-              "remove_utf8": " \"tokio\",\n \"tokio-util\",\n",
+              "at": 68879,
+              "remove_utf8": " \"tokio\",\n \"tokio-rustls\",\n \"tokio-util\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 68952,
+              "at": 69012,
               "remove_utf8": " \"base64 0.23.1\",\n",
               "insert_utf8": " \"base64\",\n"
             },
             {
-              "at": 69045,
+              "at": 69105,
               "remove_utf8": " \"sha2 0.11.1\",\n",
               "insert_utf8": " \"sha2\",\n"
             },
             {
-              "at": 69317,
+              "at": 69377,
               "remove_utf8": " \"base64 0.23.1\",\n",
               "insert_utf8": " \"base64\",\n"
             },
             {
-              "at": 69492,
+              "at": 69552,
               "remove_utf8": " \"sha2 0.11.1\",\n",
               "insert_utf8": " \"sha2\",\n"
             },
             {
-              "at": 69643,
+              "at": 69703,
               "remove_utf8": " \"ssx-source-json\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 69920,
+              "at": 69980,
               "remove_utf8": " \"async-trait\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 69959,
+              "at": 70019,
               "remove_utf8": " \"base64 0.23.1\",\n \"dns-lookup\",\n \"flate2\",\n",
               "insert_utf8": " \"base64\",\n"
             },
             {
-              "at": 70020,
+              "at": 70080,
               "remove_utf8": " \"indexmap\",\n \"jiter\",\n \"libc\",\n \"nix\",\n \"oauth2\",\n \"rcgen\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 70148,
+              "at": 70208,
               "remove_utf8": " \"sha2 0.11.1\",\n",
               "insert_utf8": " \"sha2\",\n"
             },
             {
-              "at": 70256,
+              "at": 70316,
               "remove_utf8": " \"ssx-native-ip-text\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 70296,
+              "at": 70356,
               "remove_utf8": " \"ssx-source-json\",\n \"ssx-windows-owner\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 70372,
+              "at": 70432,
               "remove_utf8": " \"tokio-rustls\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 70404,
+              "at": 70464,
               "remove_utf8": " \"tracing\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 70459,
+              "at": 70519,
               "remove_utf8": "]\n\n[[package]]\nname = \"ssx-native-ip-text\"\nversion = \"0.1.0\"\ndependencies = [\n \"libc\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 71109,
+              "at": 71169,
               "remove_utf8": " \"idna\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 71154,
+              "at": 71214,
               "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n \"url\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 71404,
+              "at": 71464,
               "remove_utf8": " \"sha2 0.11.1\",\n]\n\n[[package]]\nname = \"ssx-windows-owner\"\nversion = \"0.1.0\"\ndependencies = [\n \"sha2 0.11.1\",\n \"tokio\",\n \"windows-sys 0.61.2\",\n",
               "insert_utf8": " \"sha2\",\n"
             },
             {
-              "at": 72002,
+              "at": 72062,
               "remove_utf8": "\n[[package]]\nname = \"static_assertions\"\nversion = \"1.1.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f\"\n",
               "insert_utf8": ""
             },
             {
-              "at": 74971,
+              "at": 75031,
               "remove_utf8": "name = \"tap\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369\"\n\n[[package]]\nname = \"target-lexicon\"\nversion = \"0.13.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"df7f62577c25e07834649fc3b39fafdc597c0a3527dc1c60129201ccfcbaa50c\"\n\n[[package]]\n",
               "insert_utf8": ""
             },
             {
-              "at": 75612,
+              "at": 75672,
               "remove_utf8": "version = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52\"\ndependencies = [\n \"thiserror-impl 1.0.69\",\n]\n\n[[package]]\nname = \"thiserror\"\n",
               "insert_utf8": ""
             },
             {
-              "at": 76030,
+              "at": 76090,
               "remove_utf8": " \"thiserror-impl 2.0.21\",\n]\n\n[[package]]\nname = \"thiserror-impl\"\nversion = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
               "insert_utf8": " \"thiserror-impl\",\n"
             },
             {
-              "at": 82959,
+              "at": 83019,
               "remove_utf8": " \"serde_derive\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 84679,
+              "at": 84739,
               "remove_utf8": "\n[[package]]\nname = \"wasi\"\nversion = \"0.14.2+wasi-0.2.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"9683f9a5a998d873c0d21fcbe3c083009670149a8fab228644b8bd36b2c48cb3\"\ndependencies = [\n \"wit-bindgen-rt\",\n]\n",
               "insert_utf8": ""
             },
             {
-              "at": 93436,
+              "at": 93496,
               "remove_utf8": "name = \"wit-bindgen-rt\"\nversion = \"0.39.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1\"\ndependencies = [\n \"bitflags\",\n]\n\n[[package]]\n",
               "insert_utf8": ""
             },
             {
-              "at": 93847,
+              "at": 93907,
               "remove_utf8": "\n[[package]]\nname = \"wyz\"\nversion = \"0.5.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"05f360fc0b24296329c78fda852a1e9ae82de9cf7b27dae4b7f62f118f77b9ed\"\ndependencies = [\n \"tap\",\n]\n",
               "insert_utf8": ""
             },
             {
-              "at": 94395,
+              "at": 94455,
               "remove_utf8": " \"thiserror 2.0.21\",\n",
               "insert_utf8": " \"thiserror\",\n"
             },
             {
-              "at": 94532,
+              "at": 94592,
               "remove_utf8": " \"sha2 0.11.1\",\n",
               "insert_utf8": " \"sha2\",\n"
             },
             {
-              "at": 95613,
+              "at": 95673,
               "remove_utf8": "]\n\n[[package]]\nname = \"zerocopy\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8\"\ndependencies = [\n \"zerocopy-derive\",\n]\n\n[[package]]\nname = \"zerocopy-derive\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
               "insert_utf8": ""
             }

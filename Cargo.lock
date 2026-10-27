@@ -2854,9 +2854,11 @@ dependencies = [
  "clap",
  "futures-util",
  "nix",
+ "rcgen",
  "redis",
  "reqwest",
  "rmcp",
+ "rustls",
  "serde_json",
  "sha2 0.11.1",
  "ssx-application",
@@ -2866,8 +2868,10 @@ dependencies = [
  "ssx-json",
  "ssx-mcp",
  "ssx-registry",
+ "ssx-windows-owner",
  "ssx-wire",
  "tokio",
+ "tokio-rustls",
  "tokio-util",
 ]
 

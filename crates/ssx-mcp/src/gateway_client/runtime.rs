@@ -105,7 +105,32 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
     let browser = Arc::new(BrowserOwner::default());
     let auth_cancel = CancellationToken::new();
     let callback: Arc<tokio::sync::Mutex<Option<LoopbackCallback>>> = Default::default();
-    let network = Network::create(settings.oauth)?;
+    // The one file owner exists before cancellable CA startup. Every error path
+    // drains its original worker before returning; no detached filesystem work.
+    let network = match async {
+        let end = std::time::Instant::now() + Duration::from_secs(30);
+        let roots = super::ca_bundle::load(
+            std::env::var_os("MCP_REMOTE_CA_BUNDLE").map(std::path::PathBuf::from),
+            &io,
+            end,
+            &cancel,
+        )
+        .await?;
+        Network::create(settings.oauth, roots)
+    }
+    .await
+    {
+        Ok(network) => network,
+        Err(error) => {
+            io.close();
+            let drained = io
+                .shutdown()
+                .await
+                .map_err(|_| "gateway file cleanup failed".into());
+            return Err(error).and(drained);
+        }
+    };
+
     let mut startup: Option<RawGatewayStart> = None;
     let serving = async {
         let oauth = if settings.oauth {

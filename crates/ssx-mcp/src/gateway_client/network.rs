@@ -106,10 +106,10 @@ fn prepare_initial_headers(
     Ok(())
 }
 impl Network {
-    pub fn create(oauth: bool) -> Result<Arc<Self>> {
+    pub fn create(oauth: bool, roots: Vec<reqwest::Certificate>) -> Result<Arc<Self>> {
         #[cfg(not(any(unix, windows)))]
         {
-            let _ = oauth;
+            let _ = (oauth, roots);
             Err("gateway DNS owner is unavailable on this platform".into())
         }
         #[cfg(any(unix, windows))]
@@ -123,6 +123,7 @@ impl Network {
             // SourcePool route cloning retain their unchanged defaults.
             let proxies = reqwest::source_pool::current_environment_proxy_info()?;
             let client = reqwest::source_pool::source_request_builder(connect, &proxies)?
+                .tls_certs_merge(roots)
                 .dns_resolver(resolver.clone())
                 .build()?;
             let pool = client

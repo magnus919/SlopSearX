@@ -1,9 +1,13 @@
 //! Private Windows OS boundary. No caller-controlled commands or raw handles.
 //! Application crates keep unsafe_code=forbid. See SAFETY.md for the FFI scope.
 #![cfg(windows)]
+mod confidential;
 mod dns;
 mod process;
 mod trust;
+pub use confidential::{
+    ConfidentialRead, check_confidential_file, read_confidential_file, write_confidential_file,
+};
 pub use dns::{LookupError, lookup, numeric_host, source_connect_port};
 pub use process::{ChildPipes, ExitHandle, ExitObservation, JobCancel, NativeChild, Retirement};
 pub use trust::{
@@ -39,3 +43,11 @@ mod tests {
 
 #[cfg(feature = "fixtures")]
 pub use process::FixtureInput;
+
+#[cfg(feature = "fixtures")]
+pub use process::FixtureProcessWitness;
+#[cfg(feature = "fixtures")]
+pub use trust::fixture_public_access;
+
+#[cfg(feature = "fixtures")]
+pub use confidential::FixtureConfidentialRead;

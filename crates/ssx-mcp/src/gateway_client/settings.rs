@@ -150,6 +150,39 @@ pub fn default_token_path(server_url: &str, xdg: Option<&str>, home: &std::path:
     base.join("slopsearx/oauth")
         .join(format!("{}.json", &hash[..16]))
 }
+/// Explicit storage and XDG paths do not require an unrelated home variable.
+/// Windows mirrors native home selection: USERPROFILE, then HOMEDRIVE/HOMEPATH;
+/// HOME is a Unix input and cannot override a configured Windows profile.
+pub(super) fn resolved_token_path(
+    settings: &Settings,
+    env: &BTreeMap<String, std::ffi::OsString>,
+) -> Option<PathBuf> {
+    if let Some(path) = &settings.token_file {
+        return Some(path.clone());
+    }
+    if let Some(xdg) = env.get("XDG_CONFIG_HOME").and_then(|s| s.to_str()) {
+        return Some(default_token_path(
+            &settings.remote_url,
+            Some(xdg),
+            std::path::Path::new(""),
+        ));
+    }
+    #[cfg(windows)]
+    let home = windows_home(env)?;
+    #[cfg(not(windows))]
+    let home = PathBuf::from(env.get("HOME")?);
+    Some(default_token_path(&settings.remote_url, None, &home))
+}
+#[cfg(any(windows, test))]
+fn windows_home(env: &BTreeMap<String, std::ffi::OsString>) -> Option<PathBuf> {
+    if let Some(profile) = env.get("USERPROFILE").filter(|s| !s.is_empty()) {
+        return Some(profile.into());
+    }
+    let mut drive = env.get("HOMEDRIVE").filter(|s| !s.is_empty())?.clone();
+    drive.push(env.get("HOMEPATH").filter(|s| !s.is_empty())?);
+    Some(drive.into())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -267,5 +300,76 @@ mod tests {
             default_token_path("abc", None, std::path::Path::new("/h")),
             default_token_path("abc ", None, std::path::Path::new("/h"))
         );
+    }
+}
+
+#[cfg(test)]
+mod platform_path_tests {
+    use super::*;
+    fn env(rows: &[(&str, &str)]) -> BTreeMap<String, std::ffi::OsString> {
+        rows.iter()
+            .map(|(k, v)| (k.to_string(), (*v).into()))
+            .collect()
+    }
+    #[test]
+    fn token_path_explicit_and_xdg_inputs_do_not_require_home() {
+        let mut settings = Settings::parse(
+            &[
+                "--remote".into(),
+                "https://fixture.invalid/mcp".into(),
+                "--oauth".into(),
+            ],
+            &BTreeMap::new(),
+        )
+        .unwrap();
+        settings.token_file = Some("chosen.json".into());
+        assert_eq!(
+            resolved_token_path(&settings, &env(&[])),
+            Some("chosen.json".into())
+        );
+        settings.token_file = None;
+        assert!(
+            resolved_token_path(&settings, &env(&[("XDG_CONFIG_HOME", "")]))
+                .unwrap()
+                .starts_with("slopsearx/oauth")
+        );
+        assert!(
+            resolved_token_path(
+                &settings,
+                &env(&[("XDG_CONFIG_HOME", "chosen"), ("HOME", "ignored")])
+            )
+            .unwrap()
+            .starts_with("chosen/slopsearx/oauth")
+        );
+        assert!(resolved_token_path(&settings, &env(&[])).is_none());
+    }
+    #[test]
+    fn windows_native_home_precedence_empty_missing_and_conflicting_inputs() {
+        assert_eq!(
+            windows_home(&env(&[
+                ("HOME", "ignored"),
+                ("USERPROFILE", r"C:\Users\profile"),
+                ("HOMEDRIVE", "D:"),
+                ("HOMEPATH", r"\fallback")
+            ])),
+            Some(r"C:\Users\profile".into())
+        );
+        assert_eq!(
+            windows_home(&env(&[
+                ("USERPROFILE", ""),
+                ("HOMEDRIVE", "D:"),
+                ("HOMEPATH", r"\fallback")
+            ])),
+            Some(r"D:\fallback".into())
+        );
+        for rows in [
+            vec![],
+            vec![("HOME", "ignored")],
+            vec![("USERPROFILE", "")],
+            vec![("HOMEDRIVE", "C:")],
+            vec![("HOMEDRIVE", ""), ("HOMEPATH", r"\fallback")],
+        ] {
+            assert!(windows_home(&env(&rows)).is_none());
+        }
     }
 }
