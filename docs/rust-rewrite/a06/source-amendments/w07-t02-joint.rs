@@ -2,7 +2,7 @@
 //! Physical joint identity precedes either historical parent interpretation.
 #[allow(dead_code)]
 #[path = "../../../../crates/xtask/src/w08/source_successor.rs"]
-mod w08_source_successor;
+pub(crate) mod w08_source_successor;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;

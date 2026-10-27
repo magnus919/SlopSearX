@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/w08/source-successor.json";
-const SHA: &str = "d2ec47bd2159466561c8969487eb1fd75f8e939131b2e99be1de1d64ce589871";
+const SHA: &str = "a12f8ebaf9fe78bbf6b2647562b7af3d6e55f18d53e7caf99ead3b36080ba712";
 const BASELINE: &str = "e9c5911a468b892fe2adef9027374cb867a2535d";
 const PATHS: &[&str] = &[
     "crates/ssx-application/src/lib.rs",

@@ -1,10 +1,8 @@
 //! Finite pure-A06 successors of accepted main. Historical manifests stay immutable.
 use serde_json::{Value, json};
-#[allow(dead_code)]
-#[path = "../../../../crates/xtask/src/w08/source_successor.rs"]
-mod w08_source_successor;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
+use w07_t02_joint::w08_source_successor;
 #[path = "a13-header-layout-successor.rs"]
 mod a13_header_layout_successor;
 #[path = "post-a06-generation.rs"]

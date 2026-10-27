@@ -1,5 +1,5 @@
 //! Finite W08 semantic execution. Missing, ignored or renamed cases fail closed.
-pub(crate) mod source_successor;
+pub(crate) use crate::a13::a06_source_successor::w07_t02_joint::w08_source_successor as source_successor;
 use crate::{Result, command};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -10,7 +10,7 @@ use std::{
     path::Path,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w08/qualification.json";
-const REGISTRY_SHA: &str = "2611adb8e25948479e20c73676f9ce7d7c428b7d7da3feaf2e9dbcd6295255e7";
+const REGISTRY_SHA: &str = "9f05e69d584a15666367ecbdb164f729626f834f72ca2d2d43b1fda15ab4e4f6";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Qualification {
