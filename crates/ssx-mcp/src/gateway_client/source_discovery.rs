@@ -51,12 +51,11 @@ pub(crate) fn source_challenge_field<'a>(raw: &'a str, needle: &str) -> Option<&
     while let Some(index) = raw[offset..].find(needle) {
         let start = offset + index + needle.len();
         let tail = &raw[start..];
-        if let Some(quoted) = tail.strip_prefix('"') {
-            if let Some(end) = quoted.find('"') {
-                if end > 0 {
-                    return Some(&quoted[..end]);
-                }
-            }
+        if let Some(quoted) = tail.strip_prefix('"')
+            && let Some(end) = quoted.find('"')
+            && end > 0
+        {
+            return Some(&quoted[..end]);
         }
         let end = tail
             .find(|c: char| c == ',' || ssx_json::python_whitespace(c))
@@ -86,10 +85,10 @@ pub(crate) fn metadata_urls(
     let mut urls = Vec::new();
     match kind {
         DiscoveryKind::Prm => {
-            if let Some(text) = raw_challenge.and_then(resource_metadata_field) {
-                if !text.is_empty() {
-                    urls.push(candidate(text.into(), CandidateOrigin::Advertised));
-                }
+            if let Some(text) = raw_challenge.and_then(resource_metadata_field)
+                && !text.is_empty()
+            {
+                urls.push(candidate(text.into(), CandidateOrigin::Advertised));
             }
             let (base, path) = raw_origin(raw_base)?;
             if !path.is_empty() && path != "/" {

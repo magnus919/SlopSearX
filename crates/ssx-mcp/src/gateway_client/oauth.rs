@@ -785,9 +785,9 @@ impl OAuth {
         #[cfg(feature = "gateway-source-endpoints")]
         {
             let _ = base;
-            return header.and_then(|header| {
+            header.and_then(|header| {
                 super::source_discovery::source_challenge_field(header, "error=")
-            }) == Some("insufficient_scope");
+            }) == Some("insufficient_scope")
         }
         #[cfg(not(feature = "gateway-source-endpoints"))]
         let Ok(base) = url::Url::parse(base) else {
