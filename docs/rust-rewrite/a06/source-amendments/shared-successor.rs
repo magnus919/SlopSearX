@@ -2167,6 +2167,20 @@ pub(crate) fn page_proof_controls(root: &Path) -> Result<(), String> {
     need(pairs == 20, "closed twenty Page proof pairs")
 }
 
+/// Keep source-proof controls out of the frozen integration-test inventories.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> {
+    w07_t02_joint::snapshot_fixture_main_controls(root)?;
+    let path = "crates/xtask/src/main.rs";
+    let current = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+    let t02 = w07_t02_joint::parent(root, path, &current, w07_t02_joint::Parent::T02)?;
+    let old = json!({"path":path,"sha256":"8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c","bytes":39725,"mode":"0644"});
+    need(
+        read_exact(root, &old)? == t02,
+        "literal e127 main caller proof",
+    )
+}
 /// Only the reviewed Metrics insertion is removed for existing historical callers.
 /// The full physical afterimage is required; old bytes alone are never current proof.
 pub(crate) fn metrics_predecessor(

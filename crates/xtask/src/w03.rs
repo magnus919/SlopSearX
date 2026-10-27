@@ -293,6 +293,17 @@ fn freeze(root: &Path, inventory: &Value) -> Result<Vec<(String, String)>> {
         })
         .collect()
 }
+fn original_source(root: &Path, row: &Value) -> Result<Vec<u8>> {
+    if let Some(prior) = crate::snapshot_fixture_amendment::w03(root, row)? {
+        return Ok(prior);
+    }
+    let path = row["path"].as_str().ok_or("W03 pin path absent")?;
+    let expected = row["sha256"].as_str().ok_or("W03 source digest absent")?;
+    match review_harness_pin::historical(root, path, expected)? {
+        Some(prior) => Ok(prior),
+        None => fs::read(root.join(path)).map_err(|e| e.to_string()),
+    }
+}
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     for (path, expected) in EVIDENCE {
         if digest(&fs::read(root.join(path)).map_err(|e| e.to_string())?) != *expected {
@@ -362,10 +373,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     for row in array(&pins, "sources")? {
         let path = row["path"].as_str().ok_or("W03 pin path absent")?;
         let expected = row["sha256"].as_str().ok_or("W03 source digest absent")?;
-        let raw = match review_harness_pin::historical(root, path, expected)? {
-            Some(prior) => prior,
-            None => fs::read(root.join(path)).map_err(|e| e.to_string())?,
-        };
+        let raw = original_source(root, row)?;
         if !pinned.insert(path) || digest(&raw) != expected {
             return Err(format!("W03 original source drift: {path}"));
         }
@@ -487,4 +495,23 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     }
     records.push(json!({"plan_id":"W03","status":"passed","baseline":BASELINE,"source_functions":array(&map,"functions")?.len(),"original_test_functions":array(&map,"tests")?.len(),"assertion_families":array(&map,"tests")?.iter().map(|t|t["assertion_families"].as_array().map_or(0,Vec::len)).sum::<usize>(),"suites":array(&inventory,"suites")?.len(),"native_tests":array(&inventory,"suites")?.iter().map(|s|s["tests"].as_array().map_or(0,Vec::len)).sum::<usize>(),"finite_negative_controls":finite_negative_controls,"error_envelope_source_functions":array(&envelopes,"functions")?.len(),"error_construction_and_forwarding_sites":array(&envelopes,"functions")?.iter().map(|f|f["sites"].as_array().map_or(0,Vec::len)).sum::<usize>(),"dispatch_string_refusals":array(&envelopes,"functions")?.iter().map(|f|f["string_refusals"].as_array().map_or(0,Vec::len)).sum::<usize>(),"historical_actual_preimport_refusals_verified":12,"additional_stdlib_only_timezone_primitives":2,"source_freeze":before,"timezone":"America/New_York","authority":"actual shared service, private pinned Valkey, native HTTP/SSE/stdio transports","limitations":"start.source artifact composition and final production registry integration remain explicit W09 dependency; no Python runtime or autonomous stopping"}));
     Ok(())
+}
+
+#[cfg(test)]
+mod snapshot_fixture_tests {
+    use super::*;
+    #[test]
+    fn snapshot_fixture_amendment_actual_w03_original_source_consumer() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let pins = read(&root, "docs/rust-rewrite/w03/oracle-pins.json").unwrap();
+        let row = &pins["sources"][170];
+        assert_eq!(row["path"], json!("tests/test_coverage_pipeline_inputs.py"));
+        assert_eq!(digest(&original_source(&root, row).unwrap()), row["sha256"]);
+        let mut wrong = row.clone();
+        wrong["sha256"] = json!("wrong");
+        assert!(original_source(&root, &wrong).is_err());
+        wrong = row.clone();
+        wrong["extra"] = json!(true);
+        assert!(original_source(&root, &wrong).is_err());
+    }
 }

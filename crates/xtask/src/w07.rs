@@ -14,11 +14,13 @@ use crate::a13::a06_source_successor::{
     w07_test_dependency as test_dependency_successor,
 };
 use main_successor::{PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main};
+#[path = "../../../docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs"]
+mod snapshot_helper_amendment;
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "ac8a303da87fc2026fb5cf17c36c8c170ed3805d5f96d3fed5002a81b80b4c8a";
+const REGISTRY_SHA: &str = "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -62,6 +64,13 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         ));
     }
     let bytes = fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
+    if path == "crates/xtask/src/main.rs" && expected == w07_t02_joint::MAIN_SHA {
+        w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
+        return Ok(bytes);
+    }
+    if let Some(proven) = snapshot_helper_amendment::verify(root, path, expected, &bytes) {
+        return proven;
+    }
     if sha(&bytes) != expected {
         if path == crate::t06::lock_amendment::SOURCE_PATH
             && expected == crate::t06::lock_amendment::HISTORICAL_SHA256
@@ -74,6 +83,41 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         }
     }
     Ok(bytes)
+}
+/// Called by the xtask-owned amendment test without adding W07 suite identities.
+#[cfg(test)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
+    let path = "crates/xtask/src/main.rs";
+    let physical = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+    let proven = frozen(root, path, w07_t02_joint::MAIN_SHA)?;
+    if proven != physical {
+        return Err("W07 main seam did not retain physical bytes".into());
+    }
+    let parent = w07_t02_joint::parent(root, path, &proven, w07_t02_joint::Parent::W07)?;
+    reconstruct_main(&parent)?;
+    if frozen(root, path, &"0".repeat(64)).is_ok() {
+        return Err("W07 wrong main caller accepted".into());
+    }
+    let registry: Value =
+        serde_json::from_slice(&fs::read(root.join(REGISTRY)).map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())?;
+    for path in [
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+    ] {
+        let expected = registry["sources"][path]
+            .as_str()
+            .ok_or("W07 helper source absent")?;
+        let prior = frozen(root, path, expected)?;
+        if sha(&prior) != expected {
+            return Err("W07 helper seam did not recover accepted operand".into());
+        }
+        if frozen(root, path, "wrong").is_ok() {
+            return Err("W07 wrong helper caller accepted".into());
+        }
+    }
+    snapshot_helper_amendment::controls(root)?;
+    Ok(())
 }
 fn unique<'a>(values: impl IntoIterator<Item = &'a str>) -> Result<BTreeSet<&'a str>> {
     let mut result = BTreeSet::new();
@@ -335,12 +379,12 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         (
             "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
             "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2",
-            "c173b839bab843a0945c8ff1b5b3b8a67193dc92f8a22aa4e5cd980c5e71a213",
+            "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
         ),
         (
             "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
             "2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6",
-            "c25170f41dc041b4a1deb83e59e91ae3889c3d8860707157acb0fadc231912d9",
+            "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
         ),
         (
             "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
