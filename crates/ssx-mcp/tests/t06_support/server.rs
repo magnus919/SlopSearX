@@ -122,3 +122,70 @@ impl Server {
         &self.url
     }
 }
+
+/// Owns suspension of this fixture's actual child. The borrow prevents stopping,
+/// restarting or dropping the server before the guard resumes it.
+pub struct SuspendedServer<'a> {
+    server: &'a mut Server,
+    resumed: bool,
+}
+impl Server {
+    pub fn suspend(&mut self) -> SuspendedServer<'_> {
+        assert!(
+            self.child.try_wait().unwrap().is_none(),
+            "private Valkey exited"
+        );
+        let guard = SuspendedServer {
+            server: self,
+            resumed: false,
+        };
+        guard.signal("-STOP").expect("suspend owned private Valkey");
+        guard.assert_stopped();
+        guard
+    }
+}
+impl SuspendedServer<'_> {
+    fn signal(&self, signal: &str) -> std::io::Result<()> {
+        let output = Command::new("kill")
+            .arg(signal)
+            .arg(self.server.child.id().to_string())
+            .output()?;
+        if !output.status.success() {
+            return Err(std::io::Error::other(format!(
+                "owned Valkey {signal} failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
+        }
+        Ok(())
+    }
+    pub fn assert_stopped(&self) {
+        let until = Instant::now() + Duration::from_secs(1);
+        loop {
+            let state = Command::new("ps")
+                .args(["-o", "stat=", "-p"])
+                .arg(self.server.child.id().to_string())
+                .output()
+                .expect("read owned Valkey process state");
+            assert!(state.status.success(), "owned Valkey process is absent");
+            if String::from_utf8_lossy(&state.stdout).contains('T') {
+                return;
+            }
+            assert!(Instant::now() < until, "owned Valkey did not stop");
+        }
+    }
+    pub fn resume(mut self) {
+        self.signal("-CONT").expect("resume owned private Valkey");
+        self.resumed = true;
+    }
+}
+impl Drop for SuspendedServer<'_> {
+    fn drop(&mut self) {
+        if !self.resumed
+            && let Err(error) = self.signal("-CONT")
+        {
+            // Preserve an earlier panic/error. Server still owns and reaps the
+            // child after this borrow ends, including a failed resume.
+            eprintln!("failed to resume owned private Valkey during cleanup: {error}");
+        }
+    }
+}

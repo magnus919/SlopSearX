@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "baseline": "e9c5911a468b892fe2adef9027374cb867a2535d",
+  "rows": [
+    {
+      "path": "crates/ssx-mcp/src/bin/search-qualification.rs",
+      "prior": {
+        "sha256": "c78f1946dcfaec59fabfed561af5f6f1f85756e92fdabc9e8989d9631b3be150",
+        "bytes": 8453,
+        "mode": 420
+      },
+      "prior_git_blob": "a6dbba7323f61d8948444f7ce9376174b8e48943",
+      "current": {
+        "sha256": "949d314d646baab52d45d8f4b2b27102f3febf2b21b804c625151ac2a3c948d8",
+        "bytes": 8598,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "current_offset": 5957,
+          "old": "        let server = private_valkey::Server::start();\n",
+          "new": "        let mut server = private_valkey::Server::start();\n"
+        },
+        {
+          "current_offset": 6677,
+          "old": "        // This is an actual delayed private-store write, not an adapter/provider delay.\n        // READ commands and local counter observation remain available.\n        redis::cmd(\"CLIENT\")\n            .arg(\"PAUSE\")\n            .arg(100)\n            .arg(\"WRITE\")\n            .query::<()>(&mut server.connection())?;\n",
+          "new": "        // Hold the actual owned store until explicitly released. A timed CLIENT\n        // PAUSE could expire during the first phase before publication was polled.\n        let suspended = server.suspend();\n"
+        },
+        {
+          "current_offset": 7789,
+          "old": "        let start = tokio::time::Instant::now();\n        receipts.publish().await?;\n",
+          "new": "        let mut publication = std::pin::pin!(receipts.publish());\n"
+        },
+        {
+          "current_offset": 7872,
+          "old": "            start.elapsed() > Duration::from_millis(1),\n            \"control did not delay post-call publication\"\n",
+          "new": "            publication.as_mut().now_or_never().is_none(),\n            \"publication completed while its owned store was suspended\"\n"
+        },
+        {
+          "current_offset": 8014,
+          "old": "",
+          "new": "        // Prove the child remained stopped throughout both phases; Pending alone\n        // could otherwise be ordinary connection I/O rather than the control.\n        suspended.assert_stopped();\n        suspended.resume();\n        publication.await?;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_support/server.rs",
+      "prior": {
+        "sha256": "8484b90d50c711f81cb5852054b40d16338d2e2b8d4cf27838ed5a47fd9a2205",
+        "bytes": 3782,
+        "mode": 420
+      },
+      "prior_git_blob": "cad4ea26dda32e1b8da543648330dadef7cb3144",
+      "current": {
+        "sha256": "b72e6b97c4e5cff2b763ba1eb3cd2f1547a3b60dcda8a02ab664bef383d9cb21",
+        "bytes": 6068,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "current_offset": 3782,
+          "old": "",
+          "new": "\n/// Owns suspension of this fixture's actual child. The borrow prevents stopping,\n/// restarting or dropping the server before the guard resumes it.\npub struct SuspendedServer<'a> {\n    server: &'a mut Server,\n    resumed: bool,\n}\nimpl Server {\n    pub fn suspend(&mut self) -> SuspendedServer<'_> {\n        assert!(\n            self.child.try_wait().unwrap().is_none(),\n            \"private Valkey exited\"\n        );\n        let guard = SuspendedServer {\n            server: self,\n            resumed: false,\n        };\n        guard.signal(\"-STOP\").expect(\"suspend owned private Valkey\");\n        guard.assert_stopped();\n        guard\n    }\n}\nimpl SuspendedServer<'_> {\n    fn signal(&self, signal: &str) -> std::io::Result<()> {\n        let output = Command::new(\"kill\")\n            .arg(signal)\n            .arg(self.server.child.id().to_string())\n            .output()?;\n        if !output.status.success() {\n            return Err(std::io::Error::other(format!(\n                \"owned Valkey {signal} failed: {}\",\n                String::from_utf8_lossy(&output.stderr)\n            )));\n        }\n        Ok(())\n    }\n    pub fn assert_stopped(&self) {\n        let until = Instant::now() + Duration::from_secs(1);\n        loop {\n            let state = Command::new(\"ps\")\n                .args([\"-o\", \"stat=\", \"-p\"])\n                .arg(self.server.child.id().to_string())\n                .output()\n                .expect(\"read owned Valkey process state\");\n            assert!(state.status.success(), \"owned Valkey process is absent\");\n            if String::from_utf8_lossy(&state.stdout).contains('T') {\n                return;\n            }\n            assert!(Instant::now() < until, \"owned Valkey did not stop\");\n        }\n    }\n    pub fn resume(mut self) {\n        self.signal(\"-CONT\").expect(\"resume owned private Valkey\");\n        self.resumed = true;\n    }\n}\nimpl Drop for SuspendedServer<'_> {\n    fn drop(&mut self) {\n        if !self.resumed\n            && let Err(error) = self.signal(\"-CONT\")\n        {\n            // Preserve an earlier panic/error. Server still owns and reaps the\n            // child after this borrow ends, including a failed resume.\n            eprintln!(\"failed to resume owned private Valkey during cleanup: {error}\");\n        }\n    }\n}\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/t06.rs",
+      "prior": {
+        "sha256": "be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0",
+        "bytes": 18212,
+        "mode": 420
+      },
+      "prior_git_blob": "eb6e9e2e41752ced1e7cd8568741485f415dca06",
+      "current": {
+        "sha256": "29676dd566219fc07db138742a5d3c68f353d8db02c66db69fbdcc9df934f302",
+        "bytes": 18677,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "current_offset": 302,
+          "old": "",
+          "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\npub(crate) mod receipt_control;\n"
+        },
+        {
+          "current_offset": 3403,
+          "old": "",
+          "new": "    let prior = receipt_control::parent(\n        root,\n        row[\"file\"].as_str().ok_or(\"T06 native fixture path\")?,\n        expected.as_str().ok_or(\"T06 native fixture hash\")?,\n        bytes,\n    )?;\n    let bytes = prior.as_deref().unwrap_or(bytes);\n"
+        },
+        {
+          "current_offset": 11159,
+          "old": "",
+          "new": "    receipt_control::controls(root)?;\n"
+        },
+        {
+          "current_offset": 15826,
+          "old": "",
+          "new": "        receipt_control::controls(&root).unwrap();\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_source_bindings.rs",
+      "prior": {
+        "sha256": "8d124e73da957742a86afe2d8495a23dbcf88aa5fb711c41b1a3d4fc9148a4cc",
+        "bytes": 5261,
+        "mode": 420
+      },
+      "prior_git_blob": "cf1986fcaf6e7bb8ab6c67653cdbea88e9bccbc1",
+      "current": {
+        "sha256": "5272daf1699f113ea80da981e12f81bb52afb9636b3bf92145b8956f9c156d28",
+        "bytes": 5548,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "current_offset": 557,
+          "old": "",
+          "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\nmod receipt_control;\n"
+        },
+        {
+          "current_offset": 4461,
+          "old": "",
+          "new": "    receipt_control::controls(&root).unwrap();\n"
+        },
+        {
+          "current_offset": 5162,
+          "old": "",
+          "new": "        } else if let Some(prior) = receipt_control::parent(&root, name, expected, &actual).unwrap()\n        {\n            prior\n"
+        }
+      ]
+    }
+  ],
+  "frozen_predecessors": [
+    {
+      "path": "docs/rust-rewrite/t06/native_fixture_bindings.json",
+      "sha256": "16edd8d4c89f463a12e9c1bf4863086ed0268a42736c9a31df5a181b421284e2"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/storage-amendment/current-storage-amendment-v1.json",
+      "sha256": "cc5ec0678ef0a54bc21068ad1ea2a230e0283356f3138cc4424b624b0acc6a23"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/storage-amendment/server.rs.7f8d.frozen",
+      "sha256": "a28581ee38e14923b98218492853f11a291752ada85abbb3744e63e88bc5d567"
+    },
+    {
+      "path": "docs/rust-rewrite/w07/qualification.json",
+      "sha256": "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7"
+    },
+    {
+      "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+      "sha256": "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64"
+    }
+  ]
+}

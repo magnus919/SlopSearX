@@ -10,6 +10,8 @@ use std::path::Path;
 mod lock_amendment;
 #[path = "../../../docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"]
 mod native_search;
+#[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs"]
+mod receipt_control;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -106,6 +108,7 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
         include_bytes!("../../../docs/rust-rewrite/t06/storage-amendment/server.rs.7f8d.frozen");
     assert_eq!(digest(archive), storage["before_sha256"].as_str().unwrap());
     w07_evidence_successor::controls(&root).unwrap();
+    receipt_control::controls(&root).unwrap();
     for row in native["files"].as_array().unwrap() {
         let name = row["file"].as_str().unwrap();
         let expected = if row["file"] == storage["file"] {
@@ -118,6 +121,9 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
         let proven = if name == native_search::SOURCE {
             native_search::verify(&root, name, row["sha256"].as_str().unwrap(), &actual).unwrap();
             w07_evidence_successor::t06_native_search(&root, row, &actual).unwrap()
+        } else if let Some(prior) = receipt_control::parent(&root, name, expected, &actual).unwrap()
+        {
+            prior
         } else {
             actual
         };

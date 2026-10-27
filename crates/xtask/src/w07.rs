@@ -63,6 +63,11 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     }
     let bytes = fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
     if sha(&bytes) != expected {
+        if let Some(prior) =
+            crate::t06::receipt_control::reader_parent(root, path, expected, &bytes)?
+        {
+            return Ok(prior);
+        }
         if path == crate::t06::lock_amendment::SOURCE_PATH
             && expected == crate::t06::lock_amendment::HISTORICAL_SHA256
         {
