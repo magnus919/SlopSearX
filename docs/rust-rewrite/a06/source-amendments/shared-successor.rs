@@ -1823,3 +1823,10 @@ pub(crate) fn generation_control_operand(
 ) -> Result<Vec<u8>, String> {
     post_a06_generation::control_operand(root, path, expected, supplied_current)
 }
+
+/// Keep source-proof controls out of the frozen integration-test inventories.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> {
+    snapshot_fixture_main::controls(root)
+}

@@ -652,4 +652,9 @@ mod tests {
         wrong["extra"] = json!(true);
         assert!(verify_artifact(&root, &wrong).is_err());
     }
+    #[test]
+    fn snapshot_fixture_amendment_exact_main_custody_controls() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        crate::a13::a06_source_successor::snapshot_fixture_main_controls(&root).unwrap();
+    }
 }
