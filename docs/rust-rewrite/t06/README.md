@@ -160,8 +160,8 @@ strict Clippy over all targets, which includes this HTTP target.
 
 - `native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition`
   requires cold acquisition for GET and form POST on both `/` and `/search`
-  for lower-only, upper-only, equal leap-day and two-sided bounds. The fixture
-  checks sixteen exact outbound request lines and compares returned URL/day
+  for lower-only, upper-only, equal leap-day, two-sided and maximum-calendar
+  upper bounds. The fixture checks twenty exact outbound request lines and compares returned URL/day
   pairs with the unchanged A06 date corpus. JSON and cached YAML must expose
   identical requested/applied proof, audited `upstream:openalex` provenance and
   OpenAlex status/identity. Separate bound keys remain in private Valkey;
@@ -187,3 +187,6 @@ unimplemented. Existing pagination date retention does not satisfy that full
 journey. These finite fixtures do not close #984 or integrated parity, measure
 retrieval quality or establish provider/production availability. Exact-head
 commands, results and cleanup must be recorded before claiming local execution.
+
+The [reference regression map and local execution identity](DATE_FILTER_INTEGRATION.md)
+records covered assertions, original failures and remaining T03 acceptance.

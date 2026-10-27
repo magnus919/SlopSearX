@@ -131,7 +131,7 @@ fn assert_http(value: &Value, format: &str, days: &[&str], expected: &Value, cac
 async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition() {
     // Every URI/method pair acquires each bound through actual OpenAlex. YAML
     // then reads the canonical JSON acquisition; two corrupt proofs reacquire.
-    let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(19)).await;
+    let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(23)).await;
     let native = Native::start(&fixture).await;
     let mut equal_key = None;
     let mut equal_wire = String::new();
@@ -161,25 +161,43 @@ async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition
             Some("2024-03-01"),
             vec!["2024-02-28", "2024-02-29", "2024-03-01"],
         ),
+        (
+            "upper_calendar_max",
+            None,
+            Some("9999-12-31"),
+            vec!["2024-02-28", "2024-02-29", "2024-03-01"],
+        ),
     ]
     .into_iter()
     .enumerate()
     {
         let c = corpus();
+        // Additive native calendar maximum: reuse the unchanged upstream body
+        // and both_span's three retained URL/day pairs, with an independent
+        // literal outbound expectation rather than a fabricated source record.
+        let fixture_suffix = if suffix == "upper_calendar_max" {
+            "both_span"
+        } else {
+            suffix
+        };
         let row = c["records"]
             .as_array()
             .unwrap()
             .iter()
-            .find(|r| r["id"].as_str().unwrap().ends_with(suffix))
+            .find(|r| r["id"].as_str().unwrap().ends_with(fixture_suffix))
             .unwrap();
-        let wire = format!(
-            "GET {} HTTP/1.1",
-            row["requests"][0]["url"]
-                .as_str()
-                .unwrap()
-                .strip_prefix("https://api.openalex.org")
-                .unwrap()
-        );
+        let wire = if suffix == "upper_calendar_max" {
+            "GET /works?search=date%20control%20/%20%2B&per_page=10&filter=to_publication_date%3A9999-12-31 HTTP/1.1".to_owned()
+        } else {
+            format!(
+                "GET {} HTTP/1.1",
+                row["requests"][0]["url"]
+                    .as_str()
+                    .unwrap()
+                    .strip_prefix("https://api.openalex.org")
+                    .unwrap()
+            )
+        };
         let mut bound_key: Option<String> = None;
         for path in ["/", "/search"] {
             for method in ["GET", "POST"] {
@@ -312,8 +330,8 @@ async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition
             &proof(Some("2024-02-29"), Some("2024-02-29")),
             false,
         );
-        assert_eq!(fixture.upstream.lines().len(), index + 17);
-        assert_eq!(fixture.upstream.lines()[index + 16], equal_wire);
+        assert_eq!(fixture.upstream.lines().len(), index + 21);
+        assert_eq!(fixture.upstream.lines()[index + 20], equal_wire);
         let repaired: String = redis::cmd("GET")
             .arg(&key)
             .query_async(&mut conn)
@@ -329,7 +347,7 @@ async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition
             repaired.results[0].published_date.as_deref(),
             Some("2024-02-29")
         );
-        assert_eq!(fixture.keys("search:*").await.len(), 4);
+        assert_eq!(fixture.keys("search:*").await.len(), 5);
     }
     // The same actual adapter still supports ordinary unbounded machine views.
     for format in ["json", "yaml", "csv", "rss"] {
@@ -353,12 +371,12 @@ async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition
             assert!(body.contains("2024-02-29"));
         }
     }
-    assert_eq!(fixture.upstream.lines().len(), 19);
+    assert_eq!(fixture.upstream.lines().len(), 23);
     assert_eq!(
-        fixture.upstream.lines()[18],
+        fixture.upstream.lines()[22],
         "GET /works?search=date%20control%20/%20%2B&per_page=10 HTTP/1.1"
     );
-    assert_eq!(fixture.counts.adapter.load(Ordering::SeqCst), 19);
+    assert_eq!(fixture.counts.adapter.load(Ordering::SeqCst), 23);
     drop(conn);
     native.close().await;
     fixture.close().await;
@@ -377,6 +395,54 @@ async fn native_http_date_denials_have_zero_real_acquisition() {
             Mode::Audited,
             "invalid_leap",
             vec![("date_from", "1900-02-29")],
+            "date_from",
+        ),
+        (
+            Mode::Audited,
+            "reference_invalid_lower",
+            vec![("date_from", "2023-02-29")],
+            "date_from",
+        ),
+        (
+            Mode::Audited,
+            "reference_invalid_upper",
+            vec![("date_to", "2024-02-30")],
+            "date_to",
+        ),
+        (
+            Mode::Audited,
+            "reference_relative_day",
+            vec![("time_range", "day")],
+            "time_range",
+        ),
+        (
+            Mode::Audited,
+            "unknown_fromDate",
+            vec![("fromDate", "2024-02-29")],
+            "fromDate",
+        ),
+        (
+            Mode::Audited,
+            "unknown_timeRange",
+            vec![("timeRange", "week")],
+            "timeRange",
+        ),
+        (
+            Mode::Audited,
+            "unknown_DateFrom",
+            vec![("DateFrom", "2024-02-29")],
+            "DateFrom",
+        ),
+        (
+            Mode::Audited,
+            "unknown_dateFrom",
+            vec![("dateFrom", "2024-02-29")],
+            "dateFrom",
+        ),
+        (
+            Mode::Audited,
+            "duplicate_bad_first",
+            vec![("date_from", "bad"), ("date_from", "2024-02-29")],
             "date_from",
         ),
         (Mode::Audited, "empty", vec![("date_from", "")], "date_from"),
@@ -439,8 +505,11 @@ async fn native_http_date_denials_have_zero_real_acquisition() {
                     ("date_to", "2024-02-29"),
                     ("format", "json"),
                 ];
+                if label == "duplicate_bad_first" {
+                    params.retain(|(k, _)| *k != "date_from");
+                }
                 for (key, value) in &changes {
-                    if label != "duplicate" {
+                    if !label.starts_with("duplicate") {
                         params.retain(|(k, _)| k != key);
                     }
                     params.push((*key, *value));
