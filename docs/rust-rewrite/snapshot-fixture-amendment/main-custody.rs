@@ -17,7 +17,10 @@ fn need(ok: bool, why: &str) -> Result<(), String> {
     }
 }
 fn digest(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 fn material(row: &Value, bytes: &[u8], mode: &str) -> Result<(), String> {
     need(
@@ -46,7 +49,7 @@ fn permissions(path: &Path) -> Result<String, String> {
 fn permissions(_: &Path) -> Result<String, String> {
     Err("Unix main mode proof required".into())
 }
-fn edits(prior: &[u8], changes: &Value) -> Result<Vec<u8>, String> {
+fn apply_edits(prior: &[u8], changes: &Value) -> Result<Vec<u8>, String> {
     let mut result = vec![];
     let mut end = 0;
     for edit in changes.as_array().ok_or("main edits absent")? {
@@ -147,7 +150,7 @@ fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<
     );
     material(&row["prior"], &prior, "0644")?;
     need(
-        edits(&prior, &row["edits"])? == current,
+        apply_edits(&prior, &row["edits"])? == current,
         "snapshot fixture main forward reconstruction differs",
     )?;
     Ok(prior)
