@@ -88,6 +88,29 @@ fn validate(
         "T07 shared ordered reconstruction differs",
     )
 }
+// The selected physical manifest is authenticated by main-isolation first.
+// This sole intervening T07 workspace exclusion delta is not an A06 edit.
+fn manifest_capsule_frame(expected: &Value, parent: &[u8], mode: &str) -> Result<Vec<u8>, String> {
+    super::need(
+        *expected
+            == json!({"path":"Cargo.toml","bytes":2489,"sha256":"3e42da30b3d9c9ca417cbd082cc1553d2fc2bf1e31f2d754199d48cc601cc6e3","git_blob":"c727e383e647ed0a5a498f35d26fdd571d971d59","mode":"0644"})
+            && mode == "0644"
+            && parent.len() == 2546
+            && super::digest(parent)
+                == "483e31936a032f45588779d8bcfc3cee03792c6332700b017d1b0b28aeec0309",
+        "T07 manifest exact capsule/parent frame differs",
+    )?;
+    const AT: usize = 243;
+    const INSERTED: &[u8] = br#", "vendor/ssx-windows-owner", "vendor/ssx-native-ip-text""#;
+    super::need(
+        parent.get(AT..AT + INSERTED.len()) == Some(INSERTED),
+        "T07 manifest exclusion span differs",
+    )?;
+    let mut prior = parent[..AT].to_vec();
+    prior.extend_from_slice(&parent[AT + INSERTED.len()..]);
+    super::material(expected, &prior, "0644")?;
+    Ok(prior)
+}
 fn materials(root: &Path, expected: &Value) -> Result<(Vec<u8>, Vec<u8>, Value), String> {
     let doc = load(root)?;
     let row = row(&doc, expected)?;
@@ -101,8 +124,25 @@ fn materials(root: &Path, expected: &Value) -> Result<(Vec<u8>, Vec<u8>, Value),
             None,
             super::main_isolation_current::Parent::T07,
         )?;
-        super::material(&row["current"], &proof, "0644")?;
-        proof
+        let prior = manifest_capsule_frame(
+            &row["current"],
+            &proof,
+            &super::permissions(&root.join("Cargo.toml"))?,
+        )?;
+        let git = std::process::Command::new("git")
+            .args([
+                "cat-file",
+                "blob",
+                "c727e383e647ed0a5a498f35d26fdd571d971d59",
+            ])
+            .current_dir(root)
+            .output()
+            .map_err(|e| e.to_string())?;
+        super::need(
+            git.status.success() && git.stdout == prior,
+            "T07 manifest capsule Git blob differs",
+        )?;
+        prior
     };
     validate(
         &doc,
@@ -170,6 +210,45 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
         let prior = super::read(root, &row["archive"])?;
         let (_, actual, _) = materials(root, expected)?;
         validate(&doc, expected, &prior, &actual, "0644")?;
+        if expected["path"] == "Cargo.toml" {
+            let parent = super::main_isolation_current::parent(
+                root,
+                "Cargo.toml",
+                None,
+                super::main_isolation_current::Parent::T07,
+            )?;
+            super::need(
+                manifest_capsule_frame(&row["current"], &parent, "0644")? == actual,
+                "T07 manifest exact inverse positive differs",
+            )?;
+            for key in ["path", "sha256", "bytes", "git_blob", "mode"] {
+                let mut wrong = row["current"].clone();
+                wrong[key] = json!("unlisted");
+                super::need(
+                    manifest_capsule_frame(&wrong, &parent, "0644").is_err(),
+                    "T07 manifest wrong caller accepted",
+                )?;
+            }
+            super::need(
+                manifest_capsule_frame(&row["current"], &parent, "0600").is_err(),
+                "T07 manifest wrong mode accepted",
+            )?;
+            for bad in [
+                actual.clone(),
+                [parent.as_slice(), b"\n"].concat(),
+                [
+                    parent.as_slice(),
+                    br#", "vendor/ssx-windows-owner", "vendor/ssx-native-ip-text""#,
+                ]
+                .concat(),
+            ] {
+                super::need(
+                    manifest_capsule_frame(&row["current"], &bad, "0644").is_err(),
+                    "T07 manifest missing/duplicate/unlisted delta accepted",
+                )?;
+            }
+        }
+
         let mut wrong = expected.clone();
         wrong["path"] = json!("Cargo.unlisted");
         super::need(
