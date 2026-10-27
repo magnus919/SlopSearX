@@ -12,9 +12,7 @@ use std::{
 type Result<T> = std::result::Result<T, String>;
 const SOURCE: &str = "tests/test_coverage_pipeline_inputs.py";
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
-#[path = "capsule-sha.rs"]
-mod capsule_sha;
-use capsule_sha::SHA as CAPSULE_SHA;
+include!("capsule-sha.rs");
 fn need(condition: bool, message: &str) -> Result<()> {
     if condition {
         Ok(())
@@ -30,7 +28,7 @@ fn digest(bytes: &[u8]) -> String {
 }
 fn document(raw: &[u8]) -> Result<Value> {
     need(
-        digest(raw) == CAPSULE_SHA,
+        digest(raw) == SHA,
         "snapshot fixture sealed capsule differs",
     )?;
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
