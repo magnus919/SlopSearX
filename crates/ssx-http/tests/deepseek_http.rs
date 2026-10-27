@@ -77,17 +77,26 @@ async fn provider(State(seen): State<Exchanges>, request: Request) -> impl IntoR
     } else {
         serde_json::from_slice(&raw).unwrap()
     };
+    let requested_count = body
+        .get("count")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(0);
     seen.lock().unwrap().push(Exchange {
         method,
         path: path.clone(),
         body,
     });
     let response = if path == "/v1/tools/search" {
-        serde_json::json!({"results":[
+        let mut response = serde_json::json!({"results":[
             {"title":"First <result>","url":"https://deepseek.example/first","snippet":"Display <snippet>","summary":"Do not display model summary","date":"2026-10-26T00:00:00Z"},
             {"title":"Second result","url":"https://deepseek.example/second","snippet":"Second snippet","date":null},
             {"title":"Third result","url":"https://deepseek.example/third","snippet":"Third snippet","date":"bad-date"}
-        ]})
+        ]});
+        response["results"]
+            .as_array_mut()
+            .unwrap()
+            .truncate(requested_count as usize);
+        response
     } else if path == "/res/v1/web/search" {
         serde_json::json!({"web":{"results":[{"title":"Brave peer","url":"https://brave.example/peer","description":"Peer remains available"}]}})
     } else {
@@ -113,6 +122,20 @@ impl Drop for Fixture {
 }
 impl Fixture {
     async fn new(with_brave: bool) -> Self {
+        Self::with_configuration(
+            with_brave,
+            10,
+            "deepseek-http-fixture-v1",
+            Arc::new(MemoryCache::default()),
+        )
+        .await
+    }
+    async fn with_configuration(
+        with_brave: bool,
+        count: u8,
+        generation: &str,
+        cache: Arc<MemoryCache>,
+    ) -> Self {
         let seen: Exchanges = Arc::default();
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let upstream = format!("http://{}", listener.local_addr().unwrap());
@@ -138,7 +161,7 @@ impl Fixture {
                     "ENGINE_DEEPSEEK_BASE_URL".into(),
                     format!("{upstream}/v1/tools/search"),
                 ),
-                ("ENGINE_DEEPSEEK_MAX_RESULTS".into(), "10".into()),
+                ("ENGINE_DEEPSEEK_MAX_RESULTS".into(), count.to_string()),
             ]),
         )
         .unwrap();
@@ -151,6 +174,7 @@ impl Fixture {
                 http.clone(),
                 Arc::new(AllowAllAdmission),
                 &config.engines["deepseek"],
+                generation,
             )
             .unwrap()
             .unwrap(),
@@ -201,7 +225,6 @@ impl Fixture {
                 .collect(),
         )
         .unwrap();
-        let cache = Arc::new(MemoryCache::default());
         let service = SearchService::new_with_registry(
             SearchConfig::default(),
             SearchDependencies {
@@ -314,6 +337,10 @@ impl Fixture {
             .count()
     }
     async fn finish(mut self) {
+        // Drain shared flights and every explicitly owned HTTP builder/decoder
+        // before joining fixture listeners. The native server's repeated drain
+        // is intentional: service shutdown is an idempotent ownership boundary.
+        self.service.shutdown().await;
         self.stop_surface.take().unwrap().send(()).unwrap();
         (&mut self.surface).await.unwrap();
         self.stop_provider.take().unwrap().send(()).unwrap();
@@ -444,7 +471,8 @@ async fn default_and_key_only_configuration_cannot_activate_deepseek() {
                 &mut registry,
                 http.clone(),
                 Arc::new(AllowAllAdmission),
-                &config.engines["deepseek"]
+                &config.engines["deepseek"],
+                "disabled-fixture-v1",
             )
             .unwrap()
             .is_none()
@@ -452,4 +480,43 @@ async fn default_and_key_only_configuration_cannot_activate_deepseek() {
         assert!(!registry.is_available("deepseek"));
         http.shutdown_and_wait().await;
     }
+}
+
+#[tokio::test]
+async fn changed_provider_configuration_generation_does_not_reuse_prior_canonical_capture() {
+    let cache = Arc::new(MemoryCache::default());
+    let first =
+        Fixture::with_configuration(false, 1, "deployment-generation-1", cache.clone()).await;
+    let (status, body) = first
+        .get("/search?q=rotated-configuration&engines=deepseek&format=json")
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let body: Value = ssx_json::from_str(&body).unwrap();
+    assert_eq!(body["results"].as_array().unwrap().len(), 1);
+    assert_eq!(body["meta"]["cached"], json!(false));
+    assert_eq!(first.calls("/v1/tools/search"), 1);
+    assert_eq!(first.seen.lock().unwrap()[0].body["count"], 1);
+    assert_eq!(cache.0.lock().unwrap().len(), 1);
+    first.finish().await;
+
+    // A fresh runtime shares persisted canonical evidence but carries the
+    // composition owner's changed generation and configured provider count.
+    let second =
+        Fixture::with_configuration(false, 3, "deployment-generation-2", cache.clone()).await;
+    let path = "/search?q=rotated-configuration&engines=deepseek&format=json";
+    let (status, body) = second.get(path).await;
+    assert_eq!(status, StatusCode::OK);
+    let body: Value = ssx_json::from_str(&body).unwrap();
+    assert_eq!(body["results"].as_array().unwrap().len(), 3);
+    assert_eq!(body["meta"]["cached"], json!(false));
+    assert_eq!(second.calls("/v1/tools/search"), 1);
+    assert_eq!(second.seen.lock().unwrap()[0].body["count"], 3);
+    assert_eq!(cache.0.lock().unwrap().len(), 2);
+    let (status, repeat) = second.get(path).await;
+    assert_eq!(status, StatusCode::OK);
+    let repeat: Value = ssx_json::from_str(&repeat).unwrap();
+    assert_eq!(repeat["meta"]["cached"], json!(true));
+    assert_eq!(repeat["results"].as_array().unwrap().len(), 3);
+    assert_eq!(second.calls("/v1/tools/search"), 1);
+    second.finish().await;
 }

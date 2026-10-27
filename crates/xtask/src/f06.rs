@@ -504,6 +504,9 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         || native[0].enabled_by_default
         || native[0].defaults.enabled
         || native[0].routing.role != RoutingRole::General
+        || native[0].auth_class != AuthClass::Required
+        || native[0].implementation != ImplementationStatus::Available
+        || native[0].categories != ["general"]
         || native[0].defaults.max_results != 10
         || !native[0].enforced_filters.is_empty()
         || native[0].supported_filters.values().any(|value| *value)

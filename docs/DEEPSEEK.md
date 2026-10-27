@@ -42,13 +42,16 @@ owner and F10 admission authority, then calls:
 ```rust,ignore
 let binding = ssx_infra::adapters::register_deepseek(
     &mut registry, http.clone(), admission.clone(), &config.engines["deepseek"],
+    &deployment_generation,
 )?;
-if let Some(mut binding) = binding {
-    // Set the deployment's logical generation on every configuration/key rotation.
-    binding.generation = deployment_generation;
+if let Some(binding) = binding {
     engine_bindings.insert("deepseek".into(), binding);
 }
 ```
+
+The nonempty deployment generation is required at registration. Change it on every
+configuration or key rotation so a new composition cannot reuse stale cached
+captures under the previous identity. Never use the raw key as the generation.
 
 Pass these bindings to the existing `SearchDependencies` and clones of the shared
 `SearchService` to HTTP/MCP/workers. Use the same registry for discovery. Do not

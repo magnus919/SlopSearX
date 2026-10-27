@@ -277,6 +277,9 @@ mod tests {
         assert!(!native.defaults.enabled);
         assert_eq!(native.defaults.max_results, 10);
         assert_eq!(native.api_key_env, "ENGINE_DEEPSEEK_API_KEY");
+        assert_eq!(native.auth_class, AuthClass::Required);
+        assert_eq!(native.implementation, ImplementationStatus::Available);
+        assert_eq!(native.cost_class.as_deref(), Some("paid"));
         assert_eq!(native.categories, ["general"]);
         assert_eq!(native.routing.role, RoutingRole::General);
         assert!(native.enforced_filters.is_empty());

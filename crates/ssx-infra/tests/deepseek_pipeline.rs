@@ -106,6 +106,7 @@ fn setup(
         http.clone(),
         admission,
         config,
+        "test-generation-v1",
     )
     .unwrap()
     .unwrap();
@@ -229,11 +230,29 @@ async fn configuration_is_opt_in_validated_redacted_and_factory_backed() {
     disabled.api_key = Secret::default();
     disabled.max_results = 0.into();
     assert!(
-        register_deepseek(&mut registry, http.clone(), admission.clone(), &disabled)
-            .unwrap()
-            .is_none()
+        register_deepseek(
+            &mut registry,
+            http.clone(),
+            admission.clone(),
+            &disabled,
+            "test-generation-v1"
+        )
+        .unwrap()
+        .is_none()
     );
     assert!(!registry.is_available("deepseek"));
+    for generation in ["", "   "] {
+        assert!(
+            register_deepseek(
+                &mut registry,
+                http.clone(),
+                admission.clone(),
+                &config(),
+                generation
+            )
+            .is_err()
+        );
+    }
     for key in [
         None,
         Some(""),
@@ -244,17 +263,44 @@ async fn configuration_is_opt_in_validated_redacted_and_factory_backed() {
     ] {
         let mut c = config();
         c.api_key = Secret::new(key.map(str::to_owned));
-        assert!(register_deepseek(&mut registry, http.clone(), admission.clone(), &c).is_err());
+        assert!(
+            register_deepseek(
+                &mut registry,
+                http.clone(),
+                admission.clone(),
+                &c,
+                "test-generation-v1"
+            )
+            .is_err()
+        );
     }
     for count in [0, 51, -1] {
         let mut c = config();
         c.max_results = count.into();
-        assert!(register_deepseek(&mut registry, http.clone(), admission.clone(), &c).is_err());
+        assert!(
+            register_deepseek(
+                &mut registry,
+                http.clone(),
+                admission.clone(),
+                &c,
+                "test-generation-v1"
+            )
+            .is_err()
+        );
     }
     for timeout in [0, -1, 300_001, i64::MAX] {
         let mut c = config();
         c.timeout_ms = timeout.into();
-        assert!(register_deepseek(&mut registry, http.clone(), admission.clone(), &c).is_err());
+        assert!(
+            register_deepseek(
+                &mut registry,
+                http.clone(),
+                admission.clone(),
+                &c,
+                "test-generation-v1"
+            )
+            .is_err()
+        );
     }
     assert!(!format!("{:?}", config()).contains("synthetic-secret"));
     assert!(
@@ -264,7 +310,14 @@ async fn configuration_is_opt_in_validated_redacted_and_factory_backed() {
     );
     let wire = Arc::new(Wire::default());
     http.set_transport(wire.clone()).unwrap();
-    register_deepseek(&mut registry, http.clone(), admission.clone(), &config()).unwrap();
+    register_deepseek(
+        &mut registry,
+        http.clone(),
+        admission.clone(),
+        &config(),
+        "test-generation-v1",
+    )
+    .unwrap();
     assert!(registry.is_available("deepseek"));
     assert_eq!(
         registry
@@ -275,7 +328,16 @@ async fn configuration_is_opt_in_validated_redacted_and_factory_backed() {
             .status,
         EngineStatus::Ok
     );
-    assert!(register_deepseek(&mut registry, http.clone(), admission, &config()).is_err());
+    assert!(
+        register_deepseek(
+            &mut registry,
+            http.clone(),
+            admission,
+            &config(),
+            "test-generation-v1"
+        )
+        .is_err()
+    );
     http.shutdown_and_wait().await;
 }
 #[tokio::test]

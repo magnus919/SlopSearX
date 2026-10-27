@@ -27,11 +27,17 @@ pub fn register_deepseek(
     http: Arc<AdapterHttp>,
     admission: Arc<dyn SearchAdmission>,
     config: &EngineConfig,
+    generation: &str,
 ) -> Result<Option<EngineBinding>, RegistryError> {
     if !config.enabled {
         return Ok(None);
     }
     let invalid = |message: &str| RegistryError::InvalidCatalog(format!("DeepSeek: {message}"));
+    if generation.trim().is_empty() {
+        return Err(invalid(
+            "set a nonempty deployment generation; change it on configuration/key rotation",
+        ));
+    }
     let key = config
         .api_key
         .expose()
@@ -86,8 +92,7 @@ pub fn register_deepseek(
     )?;
     Ok(Some(EngineBinding {
         engine: adapter,
-        // Caller must replace generation when rotating any provider configuration.
-        generation: "deepseek-v1".into(),
+        generation: generation.into(),
         timeout,
         scrape: false,
     }))
@@ -134,8 +139,10 @@ impl SearchEngine for DeepSeek {
             match tokio::time::timeout_at(deadline.into(), self.run(request, deadline, started))
                 .await
             {
-                Ok(response) => response,
-                Err(_) => failed(EngineStatus::Timeout, "DeepSeek deadline exceeded", started),
+                Ok(response) if Instant::now() < deadline => response,
+                // JSON normalization is bounded synchronous work; timeout futures
+                // cannot preempt a poll. Recheck before publishing its outcome.
+                _ => failed(EngineStatus::Timeout, "DeepSeek deadline exceeded", started),
             }
         })
     }
