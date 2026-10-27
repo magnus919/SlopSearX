@@ -44,3 +44,24 @@ before #1049 closes. Normal review/merge is pending. This checkpoint does not
 close #897 or establish production activation, performance, Windows, or complete
 Rust-migration acceptance. Persistent raw evidence is retained under
 `1049-main-integration-20261027` in the registered Rust build root.
+
+## Direct base-key identity follow-up
+
+On `a24a7d3117babf0ff5087f9ec270b2b95c052424`, the separate
+`lossless_cache_key` application target passed its exact one-test inventory and
+four independent literal wire/hash cases: `i64::MAX`, its successor, `2^127`, and
+its successor. The test calls the base-key function directly, so the service's
+separate routing hash cannot mask a numeric-serialization regression. Base-only
+i64-clamp, f64-rounding and i128-saturation mutants each compiled successfully,
+then failed the exact identity assertion; the restored normal test passed again.
+Targeted application-test and xtask Clippy checks passed. F13 registers the new
+target additively; its original six application tests, sixteen infra tests and
+130 frozen cases remain unchanged. The full F13 gate was not replayed here.
+
+The first test compile on `fa16d419` failed because the locked SHA-256 digest
+type lacks whole-value hex formatting. The test-only child `a24a7d31` formats
+individual digest bytes instead; all four literal expectations are unchanged.
+That retained compiler failure is not counted as a mutation-test failure.
+Full hooks retained only the exactly restored unrelated Ruff-format baseline;
+scoped checks and the canonical AST-only update passed. Raw follow-up evidence
+is retained under `1061-cache-key-literals-20261027` in the registered build root.
