@@ -65,3 +65,39 @@ That retained compiler failure is not counted as a mutation-test failure.
 Full hooks retained only the exactly restored unrelated Ruff-format baseline;
 scoped checks and the canonical AST-only update passed. Raw follow-up evidence
 is retained under `1061-cache-key-literals-20261027` in the registered build root.
+
+## Page proof-reader follow-up
+
+Both hosted foundation architectures on `0119e061` reached the xtask suite and
+reported 135 passed, four failed, and none ignored. The A07, A08, A12 and A14
+failures rejected source identities changed by the page amendment. They did not
+establish a runtime search defect.
+
+The repair audits all 33 page-modified inputs and their path/hash, include,
+file-read and proof-constant consumers. Identity readers now admit only 20 exact
+predecessor operands and 20 caller/source pairs in ten sealed containers. Actual
+physical bytes and modes are authenticated before the unchanged page inverse;
+legacy proofs then receive their proper historical frame. Native compilation,
+execution and current-source reports keep the physical code. Frozen capsules,
+captures, cases and original pins remain unchanged. Only the two affected current
+W07 reader pins and their exact closed allowances advance; all 75 current source
+pins match.
+
+On `287d944d57721d39dd5eb6a2bdec0fbcb5624760`, the five focused reader controls
+passed, followed by the complete compiled xtask inventory: 139 passed, no failed,
+ignored or filtered tests. Strict Clippy then rejected the new nested tuple type.
+The pure type-alias child `e87c84e3e34f4428ceb812140df1076faaea138f` passed the
+A08 twenty-pair and physical-source controls, W07 registry controls, strict
+xtask/infra/MCP Clippy across all targets, and workspace formatting. The 139-test
+result retains its parent revision; it was not relabeled as a child rerun.
+
+Original runner failures remain preserved: a domain-variant evidence comparison
+after successful compilation/A05 execution, then a prelaunch command-prefix
+error. The separate derived A05 binding links its actual image to the first fresh
+current-source compile. Neither is counted as a product-test failure. All-files
+hooks retain only the known exactly restored unrelated Ruff-format baseline;
+scoped hooks and the AST-only graph update pass. The old automatic review remains
+INCOMPLETE/PARTIAL with NOT_EVALUATED merge status. The tracked #1056 limitation
+is unchanged here, and final-head hosted CI and review remain required. The full
+33-input map and unique raw outputs are retained under
+`1061-page-proof-readers-20261027` in the registered build root.
