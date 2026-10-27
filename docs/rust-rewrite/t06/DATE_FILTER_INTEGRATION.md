@@ -91,13 +91,20 @@ Required full pre-commit returned 1 solely for the existing unrelated Ruff
 format baseline in `tests/test_coverage_saved_method_materials.py`; its exact
 original bytes were restored after checking AST equivalence. All eight scoped
 changed paths passed. The required AST-only `graphify update .` completed with
-source/index unchanged and a 120,557,568-byte local graph. A first graph-update
+source/index unchanged and a 120,606,720-byte local graph. A first graph-update
 monitor stopped on a file-replacement `du` ENOENT; the retained retry recognizes
 only that scoped condition with bounded attempts. No API extraction or force
 option was used. These tooling observations do not extend native/runtime scope.
 
 
-The subsequent HTTP-only table extension adds the exact reference grammar cells
-and maximum-calendar case described above. Its new runtime evidence is pending;
-the `24db49cb` results remain observations of the preceding table. Core fixture,
-MCP bodies, W07 registrar/pins and dependency files are unchanged by the extension.
+The subsequent HTTP-only extension at
+`1b70c53732d9f330a66978524780a24fb187e364` passed its exact three-name HTTP
+inventory and all three tests, including the 23 upstream acquisitions, 93 denial
+requests and maximum-calendar case above. Formatting and strict Clippy for the
+changed HTTP integration target also passed. Compiler JSON records the changed
+HTTP test image as `fresh=false`; its domain dependency is `fresh=true` with the
+same hash already compiled and bound in window 03. Core fixture, MCP bodies,
+W07 registrar/pins and dependency files are unchanged, so their existing
+`24db49cb` qualification origins are retained. Window 04 records the targeted
+commands, original outputs, selected image hash and complete process/lease/TMP
+retirement; MCP and W07 were not replayed for this HTTP-only extension.
