@@ -1,8 +1,11 @@
 //! Source-compatible validation occurs before any application service call.
 use rmcp::ErrorData;
 use ssx_json::{Map, Value};
-pub(super) struct Arguments {
+pub(crate) struct Arguments {
     values: Map<String, Value>,
+    artifact: Option<Result<ssx_domain::ArtifactRef, String>>,
+    source: Option<Result<ssx_domain::ArtifactRef, String>>,
+    artifacts: Option<Vec<Result<ssx_domain::ArtifactRef, String>>>,
 }
 #[derive(Clone)]
 enum Observed {
@@ -284,8 +287,116 @@ fn boolean(value: &Value) -> Result<bool, (&'static str, &'static str)> {
         _ => Err(("Input should be a valid boolean", "bool_type")),
     }
 }
+fn strict_integer(name: &str, key: &str) -> bool {
+    key == "version"
+        || (crate::evidence::tools::TOOL_NAMES.contains(&name)
+            && ["limit", "max_depth", "max_nodes"].contains(&key))
+}
+fn validate_item(
+    rule: &Value,
+    value: &Observed,
+    location: &str,
+    failures: &mut Vec<Failure>,
+    finite_any: bool,
+) {
+    match rule["type"].as_str() {
+        Some("string") if !value.is_string() => failures.push(failure(
+            location,
+            "Input should be a valid string",
+            "string_type",
+            value,
+        )),
+        Some("object") => {
+            if let Observed::Object(object) = value {
+                if finite_any && rule["additionalProperties"] == Value::Bool(true) {
+                    for (key, value) in object {
+                        finite_object(value, &format!("{location}.{key}"), failures);
+                    }
+                }
+                if rule["additionalProperties"]["type"].as_str() == Some("string") {
+                    for (key, value) in object {
+                        validate_item(
+                            &rule["additionalProperties"],
+                            value,
+                            &format!("{location}.{key}"),
+                            failures,
+                            finite_any,
+                        );
+                    }
+                }
+            } else {
+                failures.push(failure(
+                    location,
+                    "Input should be a valid dictionary",
+                    "dict_type",
+                    value,
+                ));
+            }
+        }
+        _ => {}
+    }
+}
+// W07 Any dictionaries are closed identities, not persisted arbitrary payloads.
+// Retain invalid semantic results until their existing tool/service ordering point.
+fn observed_artifact(value: &Observed) -> Result<ssx_domain::ArtifactRef, String> {
+    let shape = "artifact must contain exactly contract, version, kind, and id";
+    let Observed::Object(object) = value else {
+        return Err(shape.into());
+    };
+    if object.len() != 4
+        || !["contract", "version", "kind", "id"]
+            .iter()
+            .all(|k| object.contains_key(*k))
+    {
+        return Err(shape.into());
+    }
+    let version = object["version"].finite();
+    let one = version.is_some_and(|v| {
+        v.as_bool() == Some(true)
+            || v.as_i64() == Some(1)
+            || v.as_u64() == Some(1)
+            || v.as_f64() == Some(1.0)
+    });
+    if object["contract"].finite().and_then(Value::as_str) != Some("slopsearx.artifact_ref") || !one
+    {
+        return Err("unsupported artifact reference contract or version".into());
+    }
+    if !object["kind"].is_string() || !object["id"].is_string() {
+        return Err("artifact kind and id must be strings".into());
+    }
+    let mut projected = Map::new();
+    for key in ["contract", "version", "kind", "id"] {
+        let Some(value) = object[key].finite() else {
+            return Err("artifact kind and id must be strings".into());
+        };
+        projected.insert(key.into(), value.clone());
+    }
+    ssx_application::lineage::input::artifact(&Value::Object(projected)).map_err(|e| e.0.into())
+}
+
+fn finite_object(value: &Observed, location: &str, failures: &mut Vec<Failure>) {
+    match value {
+        Observed::Infinite(_) => failures.push(failure(
+            location,
+            "Input should be a finite number",
+            "finite_number",
+            value,
+        )),
+        Observed::Array(a) => {
+            for (i, v) in a.iter().enumerate() {
+                finite_object(v, &format!("{location}.{i}"), failures);
+            }
+        }
+        Observed::Object(o) => {
+            for (k, v) in o {
+                finite_object(v, &format!("{location}.{k}"), failures);
+            }
+        }
+        _ => {}
+    }
+}
 impl Arguments {
-    pub(super) fn new(name: &str, values: Map<String, Value>) -> Result<Self, ErrorData> {
+    pub(crate) fn new(name: &str, values: Map<String, Value>) -> Result<Self, ErrorData> {
         Self::validate(
             name,
             values
@@ -294,7 +405,7 @@ impl Arguments {
                 .collect(),
         )
     }
-    pub(super) fn raw(name: &str, json: &str) -> Result<Self, ErrorData> {
+    pub(crate) fn raw(name: &str, json: &str) -> Result<Self, ErrorData> {
         let Observed::Object(values) = Observed::parse(json, 0)? else {
             return Err(ErrorData::invalid_params(
                 "arguments must be an object",
@@ -308,6 +419,7 @@ impl Arguments {
         let Some(tool) = descriptors["tools"]
             .as_array()
             .and_then(|a| a.iter().find(|v| v["name"].as_str() == Some(name)))
+            .or_else(|| crate::evidence::tools::descriptor(name))
         else {
             return Err(ErrorData::invalid_params(
                 format!("Unknown tool: {name}"),
@@ -319,6 +431,9 @@ impl Arguments {
         // Function parameters are validated in declaration order; extra keys follow.
         let ordered = schema["properties"].as_object().expect("parameters");
         for (key, _) in ordered {
+            let finite_any = !((name == crate::evidence::tools::TOOL_NAMES[2]
+                && matches!(key.as_str(), "source" | "artifacts"))
+                || (name == crate::evidence::tools::TOOL_NAMES[3] && key == "artifact"));
             let Some(value) = values.get_mut(key) else {
                 if schema["required"]
                     .as_array()
@@ -359,14 +474,13 @@ impl Arguments {
                 Some("array") => {
                     if let Observed::Array(array) = value {
                         for (i, v) in array.iter().enumerate() {
-                            if !v.is_string() {
-                                failures.push(failure(
-                                    format!("{key}.{i}"),
-                                    "Input should be a valid string",
-                                    "string_type",
-                                    v,
-                                ));
-                            }
+                            validate_item(
+                                &rule["items"],
+                                v,
+                                &format!("{key}.{i}"),
+                                &mut failures,
+                                finite_any,
+                            );
                         }
                     } else {
                         failures.push(failure(
@@ -377,12 +491,14 @@ impl Arguments {
                         ));
                     }
                 }
+                Some("object") => validate_item(rule, value, key, &mut failures, finite_any),
                 Some("integer") => match value
                     .finite()
-                    .map(|v| integer(v, key == "version"))
+                    .map(|v| integer(v, strict_integer(name, key)))
                     .unwrap_or_else(|| {
                         Err(
-                            if matches!(value, Observed::Infinite(_)) && key != "version" {
+                            if matches!(value, Observed::Infinite(_)) && !strict_integer(name, key)
+                            {
                                 ("Input should be a finite number", "finite_number")
                             } else {
                                 ("Input should be a valid integer", "int_type")
@@ -421,12 +537,50 @@ impl Arguments {
         if !failures.is_empty() {
             return Err(validation_error(name, failures));
         }
+        let artifact = if name == crate::evidence::tools::TOOL_NAMES[3] {
+            values
+                .shift_remove("artifact")
+                .map(|v| observed_artifact(&v))
+        } else {
+            None
+        };
+        let (source, artifacts) = if name == crate::evidence::tools::TOOL_NAMES[2] {
+            let source = values
+                .shift_remove("source")
+                .filter(|v| !v.is_null())
+                .map(|v| observed_artifact(&v));
+            let artifacts = match values.shift_remove("artifacts") {
+                None | Some(Observed::Scalar(Value::Null)) => None,
+                Some(Observed::Array(items)) => Some(items.iter().map(observed_artifact).collect()),
+                // Function validation above refuses every non-list/non-null value.
+                Some(_) => return Err(ErrorData::invalid_params("artifacts must be a list", None)),
+            };
+            (source, artifacts)
+        } else {
+            (None, None)
+        };
         Ok(Self {
+            artifact,
+            source,
+            artifacts,
             values: values
                 .into_iter()
                 .map(|(k, v)| (k, v.into_value()))
                 .collect(),
         })
+    }
+    pub(crate) fn artifact(&self, key: &str) -> Option<Result<ssx_domain::ArtifactRef, String>> {
+        match key {
+            "artifact" => self.artifact.clone(),
+            "source" => self.source.clone(),
+            _ => None,
+        }
+    }
+    pub(crate) fn artifacts(&self) -> Option<Vec<Result<ssx_domain::ArtifactRef, String>>> {
+        self.artifacts.clone()
+    }
+    pub(crate) fn values(&self) -> &Map<String, Value> {
+        &self.values
     }
     pub(super) fn string<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
         self.string_opt(key).unwrap_or(default)

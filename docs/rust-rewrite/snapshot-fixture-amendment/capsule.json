@@ -25,16 +25,16 @@
   "main": {
     "prior": {
       "path": "crates/xtask/src/main.rs",
-      "sha256": "8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c",
-      "bytes": 39725,
-      "git_blob": "a98daca3091721108dd4b53f8e519e34a5712e6e",
+      "sha256": "abc9435b419cfa6f0013fe1177d27b6661437baabe40d3824fa95185e6da40ee",
+      "bytes": 39997,
+      "git_blob": "16b26bd06aab262cb1a3c41ea29fe81cd2d8c4d8",
       "mode": "0644"
     },
     "current": {
       "path": "crates/xtask/src/main.rs",
-      "sha256": "f75b2ca4ee549e16283976be6e7b6f3514a899af1ccf9076010329b33a014270",
-      "bytes": 39967,
-      "git_blob": "c37ac7b2ef7dff62be27ecf278edbcc2862f59fa",
+      "sha256": "8bbbb43768ce82d49ff5af01d1c5231bd32c2ce70ed72dfee522be4cde5753f9",
+      "bytes": 40239,
+      "git_blob": "5fd39cfbc51dfb29e983b893b859ec105c44dab7",
       "mode": "0644"
     },
     "edits": [
@@ -44,7 +44,7 @@
         "insert_utf8": "#[path = \"../../../docs/rust-rewrite/snapshot-fixture-amendment/validator.rs\"]\nmod snapshot_fixture_amendment;\n"
       },
       {
-        "at": 10967,
+        "at": 10976,
         "remove_utf8": "",
         "insert_utf8": "        if id == \"F01\" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {\n            continue;\n        }\n"
       }

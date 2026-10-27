@@ -95,6 +95,25 @@ impl Sources {
             }
         }
     }
+    fn research_allowed(&self, job: &ssx_domain::research::ResearchJob) -> Result<(), Value> {
+        let policy = self.policy.current();
+        if !policy.policy.grants.contains("research") {
+            return Err(policy_error());
+        }
+        policy
+            .retained_engine_rejection(
+                &job.queries
+                    .iter()
+                    .flat_map(|q| q.engines.clone())
+                    .collect::<Vec<_>>(),
+                "engines",
+            )
+            .map_err(|_| policy_error())?;
+        policy
+            .validate_research_workflow(job)
+            .map_err(|_| policy_error())?;
+        Ok(())
+    }
     async fn research(
         &self,
         tenant: &TenantId,
@@ -138,16 +157,7 @@ impl Sources {
                 "source research artifact was not found",
             ));
         }
-        self.policy
-            .current()
-            .retained_engine_rejection(
-                &job.queries
-                    .iter()
-                    .flat_map(|q| q.engines.clone())
-                    .collect::<Vec<_>>(),
-                "engines",
-            )
-            .map_err(|_| policy_error())?;
+        self.research_allowed(&job)?;
         let attempts = job
             .queries
             .iter()
@@ -176,6 +186,7 @@ impl Sources {
         let mut total = 0usize;
         for cursor in cursors {
             let selected = self.snapshot(tenant, cursor, cancel).await?;
+            self.research_allowed(&job)?;
             total = total
                 .checked_add(selected.total)
                 .ok_or_else(|| error("resource_limit", "source result count overflow"))?;
@@ -243,9 +254,10 @@ impl Sources {
                 "source staged search was not found",
             ));
         }
-        let mut limits = self.staged_limits.clone();
-        limits.granted = true;
-        if staged::revalidate(&self.policy.current(), &limits, &record).is_err() {
+        let (policy, limits, _) = self.policy.current_with_limits(&self.staged_limits, 0);
+        if !policy.policy.grants.contains("staged_search")
+            || staged::revalidate(&policy, &limits, &record).is_err()
+        {
             return Err(error(
                 "source_policy_denied",
                 "current policy denies the source staged search",
@@ -270,6 +282,12 @@ impl Sources {
             ));
         };
         let selected = self.snapshot(tenant, cursor, cancel).await?;
+        let (policy, limits, _) = self.policy.current_with_limits(&self.staged_limits, 0);
+        if !policy.policy.grants.contains("staged_search")
+            || staged::revalidate(&policy, &limits, &record).is_err()
+        {
+            return Err(policy_error());
+        }
         let status = if selected.total > selected.ids.len() {
             "truncated"
         } else {

@@ -365,7 +365,27 @@ async fn fresh_report_bound_and_authoritative_definition_override_stale_hints() 
     // The caller's retained snapshot cannot grant scope or report membership.
     d.engines = vec!["untrusted-stale-engine".into()];
     let c = Cancellation::default();
-    let Read::Found(rows) = r.reports(&tenant(), &d, at(0.), 2, None, &c).await.unwrap() else {
+    assert!(
+        matches!(
+            r.reports(&tenant(), &d, at(0.), 2, None, &c).await.unwrap(),
+            Read::PolicyDenied
+        ),
+        "a narrower final bound must discard the original enumeration"
+    );
+    // A bound fixed before enumeration still uses W04's stored definition, never
+    // the caller's deliberately stale engine list.
+    let bounded = repo(
+        &server,
+        Arc::new(Current {
+            reports: 1,
+            ..Current::normal()
+        }),
+    );
+    let Read::Found(rows) = bounded
+        .reports(&tenant(), &d, at(0.), 2, None, &c)
+        .await
+        .unwrap()
+    else {
         panic!("expected bounded rows")
     };
     assert_eq!(rows, vec![json!({"run_id":"new"})]);
@@ -373,13 +393,21 @@ async fn fresh_report_bound_and_authoritative_definition_override_stale_hints() 
         .arg(&keys[2])
         .query::<()>(&mut server.connection())
         .unwrap();
-    let Read::Found(rows) = r.reports(&tenant(), &d, at(0.), 2, None, &c).await.unwrap() else {
+    let Read::Found(rows) = bounded
+        .reports(&tenant(), &d, at(0.), 2, None, &c)
+        .await
+        .unwrap()
+    else {
         panic!("expected empty rows")
     };
     assert!(rows.is_empty(), "stale report-index hint became authority");
     r.backend.close().await;
+    bounded.backend.close().await;
     assert!(matches!(
-        r.reports(&tenant(), &d, at(0.), 2, None, &c).await.unwrap(),
+        bounded
+            .reports(&tenant(), &d, at(0.), 2, None, &c)
+            .await
+            .unwrap(),
         Read::Unavailable
     ));
 }
@@ -532,6 +560,15 @@ mod cancellation_reply_barrier {
     }
     impl Barrier {
         pub async fn start(upstream_url: &str, exact_get: Vec<u8>) -> Self {
+            Self::start_reply(upstream_url, exact_get, b"$-1\r\n".to_vec(), 1).await
+        }
+        pub async fn start_reply(
+            upstream_url: &str,
+            exact_get: Vec<u8>,
+            expected_reply: Vec<u8>,
+            occurrence: usize,
+        ) -> Self {
+            assert!((1..=6).contains(&occurrence));
             let upstream = PathBuf::from(
                 upstream_url
                     .strip_prefix("unix://")
@@ -589,6 +626,7 @@ mod cancellation_reply_barrier {
             owner.task = Some(thread::spawn(move || {
                 let run = || -> io::Result<()> {
                     let mut reached_tx = Some(reached_tx);
+                    let mut matching_replies = 0;
                     loop {
                         let (mut client, _) = listener.accept()?;
                         if stop.load(Ordering::SeqCst) {
@@ -611,9 +649,17 @@ mod cancellation_reply_barrier {
                             }
                             let reply = frame(&mut upstream)?
                                 .ok_or_else(|| invalid("missing real reply"))?;
-                            if command == exact_get && armed.swap(false, Ordering::SeqCst) {
-                                if reply != b"$-1\r\n" {
-                                    return Err(invalid("expected actual missing-job Nil reply"));
+                            if command == exact_get && armed.load(Ordering::SeqCst) {
+                                matching_replies += 1;
+                            }
+                            if command == exact_get
+                                && matching_replies == occurrence
+                                && armed.swap(false, Ordering::SeqCst)
+                            {
+                                if reply != expected_reply {
+                                    return Err(invalid(
+                                        "actual held reply differs from exact fixture bytes",
+                                    ));
                                 }
                                 held.store(true, Ordering::SeqCst);
                                 reached_tx
@@ -836,4 +882,256 @@ async fn cancellation_before_reads_and_after_dispatched_read_is_drained() {
         .finish()
         .expect("joined relay and removed owned UDS scratch");
     // The unchanged fixture retains and retires its original private Valkey Child.
+}
+
+// Explicit mutation while an empty initial hint or a final W04 CAS reply is
+// withheld. This does not replace the existing cancellation/Nil barrier control.
+struct LiveAuthority {
+    mutation: AtomicUsize,
+    samples: AtomicUsize,
+    expand_engine: bool,
+    wide_membership: bool,
+}
+impl Authority for LiveAuthority {
+    fn current(&self) -> AuthoritySnapshot {
+        let sample = self.samples.fetch_add(1, Ordering::SeqCst);
+        let mut snapshot = Current::normal().current();
+        if self.wide_membership {
+            snapshot.limits.reports = 4;
+        }
+        if self.expand_engine && sample == 0 {
+            let mut engine = snapshot.search.catalog.get("brave").unwrap().clone();
+            engine.enabled = false;
+            snapshot.search.catalog = CatalogSnapshot::new(vec![engine]).unwrap();
+        }
+        match self.mutation.load(Ordering::SeqCst) {
+            0 => (),
+            1 => {
+                snapshot.search.policy.grants.remove("saved_searches");
+            }
+            2 => {
+                let mut engine = snapshot.search.catalog.get("brave").unwrap().clone();
+                engine.enabled = false;
+                snapshot.search.catalog = CatalogSnapshot::new(vec![engine]).unwrap();
+            }
+            3 => snapshot.limits.reports = if self.wide_membership { 3 } else { 1 },
+            _ => panic!("unknown finite policy mutation"),
+        }
+        snapshot
+    }
+}
+async fn held_report_case(mutation: usize, empty: bool) {
+    use std::{future::poll_fn, task::Poll};
+    let server = private_valkey::Server::start();
+    let fixture_backend = Arc::new(server.store());
+    let d = saved(&server, fixture_backend.clone()).await;
+    let keys = reports(&server, &d);
+    fixture_backend.close().await;
+    let (exact_command, expected_reply, occurrence) = if empty {
+        redis::cmd("DEL")
+            .arg(&keys[1])
+            .query::<()>(&mut server.connection())
+            .unwrap();
+        let mut command = redis::cmd("ZREVRANGE");
+        command.arg(&keys[1]).arg(0).arg(1);
+        (command.get_packed_command(), b"*0\r\n".to_vec(), 1)
+    } else {
+        // W04 reads each definition three times: initial raw, load, final CAS.
+        // Two retained rows are enumerated; hold the old selected run's final
+        // (sixth) raw read, after its real report and TIME replies completed.
+        let raw: Vec<u8> = redis::cmd("GET")
+            .arg(&keys[0])
+            .query(&mut server.connection())
+            .unwrap();
+        let mut reply = format!("${}\r\n", raw.len()).into_bytes();
+        reply.extend_from_slice(&raw);
+        reply.extend_from_slice(b"\r\n");
+        let mut command = redis::cmd("GET");
+        command.arg(&keys[0]);
+        (
+            command.get_packed_command(),
+            reply,
+            if mutation == 5 { 3 } else { 6 },
+        )
+    };
+    let watched = keys
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !empty || *i != 1)
+        .map(|(_, key)| key.clone())
+        .collect::<Vec<_>>();
+    let before = dump(&server, &watched);
+    let mut relay = tokio::time::timeout(
+        Duration::from_secs(5),
+        cancellation_reply_barrier::Barrier::start_reply(
+            server.url(),
+            exact_command.clone(),
+            expected_reply,
+            occurrence,
+        ),
+    )
+    .await
+    .expect("bounded exact-reply relay setup");
+    let authority = Arc::new(LiveAuthority {
+        mutation: AtomicUsize::new(0),
+        samples: AtomicUsize::new(0),
+        expand_engine: mutation == 4,
+        wide_membership: mutation == 5,
+    });
+    let r = NativeRecords {
+        backend: Arc::new(
+            ssx_infra::valkey::Valkey::new(relay.url(), Duration::from_secs(30)).unwrap(),
+        ),
+        authority: authority.clone(),
+    };
+    tokio::time::timeout(Duration::from_secs(5), r.backend.ping())
+        .await
+        .unwrap()
+        .unwrap();
+    let mut empty_hint_requests = relay.requests();
+    empty_hint_requests.push(exact_command.clone());
+    relay.arm();
+    let tenant = tenant();
+    let cancel = Cancellation::default();
+    let mut read = r.reports(
+        &tenant,
+        &d,
+        at(0.),
+        if mutation == 5 { 1 } else { 2 },
+        Some(if mutation == 5 { "new" } else { "old" }),
+        &cancel,
+    );
+    tokio::time::timeout(Duration::from_secs(5), async {
+        tokio::select! {
+            biased;
+            result = &mut read => panic!("reports completed before final actual reply: {result:?}"),
+            () = relay.reached() => (),
+        }
+        assert!(relay.is_held());
+        assert_eq!(
+            relay
+                .requests()
+                .iter()
+                .filter(|command| **command == exact_command)
+                .count(),
+            occurrence
+        );
+        if empty {
+            assert_eq!(
+                authority.samples.load(Ordering::SeqCst),
+                1,
+                "only initial authority is sampled before the empty hint reply drains"
+            );
+            assert_eq!(
+                relay.requests(),
+                empty_hint_requests,
+                "empty hint must precede every W04 or metadata read"
+            );
+        } else {
+            assert!(
+                authority.samples.load(Ordering::SeqCst) >= 2,
+                "initial hint and actual W04 authority samples must precede held final reply"
+            );
+        }
+        if mutation == 5 {
+            let mut hint = redis::cmd("ZREVRANGE");
+            hint.arg(&keys[1]).arg(0).arg(0);
+            let mut membership = redis::cmd("ZREVRANGE");
+            membership.arg(&keys[1]).arg(0).arg(3);
+            let requests = relay.requests();
+            assert!(
+                requests.contains(&hint.get_packed_command()),
+                "hint bound must be one"
+            );
+            assert!(
+                requests.contains(&membership.get_packed_command()),
+                "W04 must actually use membership bound four"
+            );
+        }
+        authority.mutation.store(
+            match mutation {
+                4 => 2,
+                5 => 3,
+                other => other,
+            },
+            Ordering::SeqCst,
+        );
+        poll_fn(|cx| {
+            assert!(
+                std::future::Future::poll(read.as_mut(), cx).is_pending(),
+                "reports escaped held real reply"
+            );
+            Poll::Ready(())
+        })
+        .await;
+        relay.release();
+        let result = read.await.unwrap();
+        if mutation == 0 {
+            let Read::Found(rows) = result else {
+                panic!("unchanged authority lost retained rows")
+            };
+            assert_eq!(rows.len(), 2);
+            assert_eq!(rows[1]["run_id"], json!("old"));
+            assert_eq!(rows[1]["status"], json!("incomparable"));
+        } else {
+            assert!(
+                matches!(result, Read::PolicyDenied),
+                "superseded authority disclosed report metadata: {result:?}"
+            );
+        }
+        if empty {
+            assert_eq!(
+                authority.samples.load(Ordering::SeqCst),
+                2,
+                "empty hint must reach the final live authority fence after draining"
+            );
+            assert_eq!(
+                relay.requests(),
+                empty_hint_requests,
+                "empty hint must not dispatch W04 or metadata reads"
+            );
+        }
+        r.backend.ping().await.unwrap();
+    })
+    .await
+    .expect("bounded held final reply, policy mutation, drain and reuse");
+    unchanged(before, dump(&server, &watched));
+    assert_eq!(
+        relay.connections(),
+        1,
+        "post-read fence must not reconnect/retry"
+    );
+    r.backend.close().await;
+    relay
+        .finish()
+        .expect("joined final-reply relay and retired owned scratch");
+}
+#[tokio::test]
+async fn held_final_recent_report_reply_rechecks_saved_grant() {
+    held_report_case(1, false).await;
+}
+#[tokio::test]
+async fn held_final_recent_report_reply_rechecks_retained_engine() {
+    held_report_case(2, false).await;
+}
+#[tokio::test]
+async fn held_final_recent_report_reply_rejects_bound_shrink_for_old_selected_run() {
+    held_report_case(3, false).await;
+}
+#[tokio::test]
+async fn held_empty_hint_reply_rechecks_saved_grant_without_metadata() {
+    held_report_case(1, true).await;
+}
+#[tokio::test]
+async fn unchanged_authority_after_held_final_recent_report_preserves_projection() {
+    held_report_case(0, false).await;
+}
+
+#[tokio::test]
+async fn held_final_report_rejects_engine_allowed_after_hint_then_revoked() {
+    held_report_case(4, false).await;
+}
+#[tokio::test]
+async fn held_final_report_rejects_membership_shrink_still_above_hint_bound() {
+    held_report_case(5, false).await;
 }

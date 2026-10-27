@@ -157,7 +157,11 @@ pub(super) fn prove_current(
         archive(root, child)? == prior,
         "real-clock supplied09ee archive differs",
     )?;
-    let actual = read(root, &child["current"])?;
+    let actual = if path == "docs/rust-rewrite/a13/source-amendments/validator.rs" {
+        super::w07_evidence_successor::prior(root, path, &child["current"])?
+    } else {
+        read(root, &child["current"])?
+    };
     verify(
         child,
         prior,
@@ -303,7 +307,16 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
         .ok_or("real-clock controls missing")?
     {
         let before = archive(root, child)?;
-        let actual = read(root, &child["current"])?;
+        let actual =
+            if child["current"]["path"] == "docs/rust-rewrite/a13/source-amendments/validator.rs" {
+                super::w07_evidence_successor::prior(
+                    root,
+                    "docs/rust-rewrite/a13/source-amendments/validator.rs",
+                    &child["current"],
+                )?
+            } else {
+                read(root, &child["current"])?
+            };
         let pin = text(child, "edits_sha256")?;
         verify(child, &before, &actual, "0644", pin)?;
         need(

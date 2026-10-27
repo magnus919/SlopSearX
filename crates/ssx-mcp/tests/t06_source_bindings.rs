@@ -1,4 +1,9 @@
 //! Native source-drift gate: reads frozen bytes, never executes Python.
+#[allow(dead_code)]
+#[path = "../../../docs/rust-rewrite/a06/source-amendments/w07-evidence-successor.rs"]
+mod w07_evidence_successor;
+#[path = "../../../docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs"]
+mod w07_t02_joint;
 use sha2::{Digest, Sha256};
 use std::path::Path;
 #[path = "../../../docs/rust-rewrite/native-engines/t06-fixture-amendment.rs"]
@@ -102,6 +107,7 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
     let archive =
         include_bytes!("../../../docs/rust-rewrite/t06/storage-amendment/server.rs.7f8d.frozen");
     assert_eq!(digest(archive), storage["before_sha256"].as_str().unwrap());
+    w07_evidence_successor::controls(&root).unwrap();
     for row in native["files"].as_array().unwrap() {
         let name = row["file"].as_str().unwrap();
         if let Some(result) =
@@ -110,24 +116,21 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
             result.unwrap();
             continue;
         }
-        if name == native_search::SOURCE {
-            native_search::verify(
-                &root,
-                name,
-                row["sha256"].as_str().unwrap(),
-                &std::fs::read(root.join(name)).unwrap(),
-            )
-            .unwrap();
-            continue;
-        }
         let expected = if row["file"] == storage["file"] {
             assert_eq!(row["sha256"], storage["before_sha256"]);
             storage["after_sha256"].as_str().unwrap()
         } else {
             row["sha256"].as_str().unwrap()
         };
+        let actual = std::fs::read(root.join(name)).unwrap();
+        let proven = if name == native_search::SOURCE {
+            native_search::verify(&root, name, row["sha256"].as_str().unwrap(), &actual).unwrap();
+            w07_evidence_successor::t06_native_search(&root, row, &actual).unwrap()
+        } else {
+            actual
+        };
         assert_eq!(
-            digest(&std::fs::read(root.join(name)).unwrap()),
+            digest(&proven),
             expected,
             "reviewed native fixture drift: {name}"
         );

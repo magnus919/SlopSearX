@@ -388,18 +388,41 @@ fn v2(r: &SearchResult) -> (Vec<Identity>, String, Value) {
     };
     (identities, reason, data)
 }
-pub(super) fn read(s: &SearchSnapshot, page: i64, start: usize, size: usize, version: u8) -> Value {
-    let mut groups: Vec<Value> = Vec::new();
-    let mut index: BTreeMap<String, usize> = BTreeMap::new();
-    let mut facts: BTreeMap<String, BTreeMap<String, Vec<u8>>> = BTreeMap::new();
-    let mut conflicts: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    let mut edges: BTreeMap<(String, String, String), Value> = BTreeMap::new();
-    for (i, r) in s.results().iter().enumerate() {
+type EntityEdges = BTreeMap<(String, String, String), Value>;
+pub(crate) struct Collector {
+    cursor: String,
+    version: u8,
+    groups: Vec<Value>,
+    index: BTreeMap<String, usize>,
+    facts: BTreeMap<String, BTreeMap<String, Vec<u8>>>,
+    conflicts: BTreeMap<String, BTreeSet<String>>,
+    edges: EntityEdges,
+}
+impl Collector {
+    pub(crate) fn new(cursor: &str, version: u8) -> Self {
+        Self {
+            cursor: cursor.into(),
+            version,
+            groups: Vec::new(),
+            index: BTreeMap::new(),
+            facts: BTreeMap::new(),
+            conflicts: BTreeMap::new(),
+            edges: BTreeMap::new(),
+        }
+    }
+    pub(crate) fn feed(&mut self, i: usize, r: &SearchResult) {
+        let version = self.version;
+        let cursor = self.cursor.as_str();
+        let groups = &mut self.groups;
+        let index = &mut self.index;
+        let facts = &mut self.facts;
+        let conflicts = &mut self.conflicts;
+        let edges = &mut self.edges;
         let (identities, reason, data) = if version == 1 { v1(r) } else { v2(r) };
-        let rid = format!("{}:{i}", s.id().as_str());
+        let rid = format!("{}:{i}", cursor);
         if identities.is_empty() {
             groups.push(json!({"entity_id":null,"namespace":null,"identifier":null,"reason":reason,"result_ids":[rid],"conflicting_fields":[]}));
-            continue;
+            return;
         }
         let mut ids = Vec::new();
         for (namespace, identifier) in identities {
@@ -502,9 +525,45 @@ pub(super) fn read(s: &SearchSnapshot, page: i64, start: usize, size: usize, ver
             }
         }
     }
-    for (id, n) in index {
-        groups[n]["conflicting_fields"] = json!(conflicts.remove(&id).unwrap_or_default());
+    fn finish(mut self) -> (Vec<Value>, EntityEdges) {
+        for (id, n) in self.index {
+            self.groups[n]["conflicting_fields"] =
+                json!(self.conflicts.remove(&id).unwrap_or_default());
+        }
+        (self.groups, self.edges)
     }
+    pub(crate) fn lineage_groups(self) -> Vec<ssx_application::lineage::resolver::EntityGroup> {
+        self.finish()
+            .0
+            .into_iter()
+            .filter_map(|g| {
+                Some(ssx_application::lineage::resolver::EntityGroup {
+                    id: g["entity_id"].as_str()?.into(),
+                    namespace: g["namespace"].as_str()?.into(),
+                    result_indices: g["result_ids"]
+                        .as_array()?
+                        .iter()
+                        .map(|v| {
+                            v.as_str()
+                                .expect("generated result id")
+                                .rsplit_once(':')
+                                .expect("generated result index")
+                                .1
+                                .parse()
+                                .expect("generated usize")
+                        })
+                        .collect(),
+                })
+            })
+            .collect()
+    }
+}
+pub(super) fn read(s: &SearchSnapshot, page: i64, start: usize, size: usize, version: u8) -> Value {
+    let mut collector = Collector::new(s.id().as_str(), version);
+    for (i, r) in s.results().iter().enumerate() {
+        collector.feed(i, r);
+    }
+    let (groups, edges) = collector.finish();
     let unresolved = groups.iter().filter(|v| v["entity_id"].is_null()).count();
     let total = groups.len();
     let selected: Vec<_> = groups

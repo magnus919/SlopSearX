@@ -354,3 +354,111 @@ async fn walk<B: capture::Build, F: FnOnce(&Request) -> B>(
     }
     Ok(graph.finish(truncated))
 }
+
+#[cfg(test)]
+mod source_cycle_contract {
+    use super::*;
+    use ssx_domain::ArtifactKind;
+    struct Cycle {
+        root: ArtifactRef,
+        child: ArtifactRef,
+        expired: ArtifactRef,
+    }
+    impl Resolver for Cycle {
+        fn resolve<'a>(
+            &'a self,
+            _: &'a TenantId,
+            reference: &'a ArtifactRef,
+            _: &'a Cancellation,
+        ) -> PortFuture<'a, Result<Resolved, Failure>> {
+            Box::pin(async move {
+                let child_edge = Edge {
+                    from: self.child.clone(),
+                    relation: LineageRelation::DerivedFrom,
+                    to: self.root.clone(),
+                };
+                let mut node = Node::missing(reference.clone(), Status::Live);
+                let edges = if reference == &self.root {
+                    vec![
+                        child_edge.clone(),
+                        child_edge,
+                        Edge {
+                            from: self.expired.clone(),
+                            relation: LineageRelation::DerivedFrom,
+                            to: self.root.clone(),
+                        },
+                    ]
+                } else if reference == &self.child {
+                    vec![Edge {
+                        from: self.root.clone(),
+                        relation: LineageRelation::Contains,
+                        to: self.child.clone(),
+                    }]
+                } else {
+                    node.status = Status::Expired;
+                    node.expires_at = Some(WallClockTimestamp::new(1.).unwrap());
+                    vec![]
+                };
+                Ok(Resolved { node, edges })
+            })
+        }
+    }
+    fn ready<F: std::future::Future>(future: F) -> F::Output {
+        let mut future = std::pin::pin!(future);
+        match future
+            .as_mut()
+            .poll(&mut std::task::Context::from_waker(std::task::Waker::noop()))
+        {
+            std::task::Poll::Ready(v) => v,
+            std::task::Poll::Pending => panic!("pure source cycle resolver suspended"),
+        }
+    }
+    #[test]
+    fn original_cycle_duplicate_edges_and_expired_nodes_are_exact_and_deterministic() {
+        let model = Cycle {
+            root: ArtifactRef::new(ArtifactKind::Snapshot, "root").unwrap(),
+            child: ArtifactRef::new(ArtifactKind::Result, "root:0").unwrap(),
+            expired: ArtifactRef::new(ArtifactKind::Snapshot, "expired").unwrap(),
+        };
+        let tenant = TenantId::new("cycle-source").unwrap();
+        let cancel = Cancellation::default();
+        let request = || Request {
+            root: model.root.clone(),
+            direction: Direction::Both,
+            max_depth: 5,
+            max_nodes: 100,
+        };
+        let first = ready(traverse(&model, &tenant, request(), &cancel)).unwrap();
+        let second = ready(traverse(&model, &tenant, request(), &cancel)).unwrap();
+        assert_eq!(first, second);
+        assert_eq!(
+            first
+                .nodes
+                .iter()
+                .map(|n| (&n.artifact, n.status))
+                .collect::<Vec<_>>(),
+            vec![
+                (&model.root, Status::Live),
+                (&model.child, Status::Live),
+                (&model.expired, Status::Expired)
+            ]
+        );
+        assert_eq!(
+            first.nodes[2].expires_at,
+            Some(WallClockTimestamp::new(1.).unwrap())
+        );
+        assert_eq!(first.edges.len(), 3);
+        let actual: BTreeSet<_> = first
+            .edges
+            .iter()
+            .map(|e| ssx_json::to_string(&e.to_value()).unwrap())
+            .collect();
+        let expected: BTreeSet<_> = [
+            json!({"from":model.child.to_value(),"relation":"derived_from","to":model.root.to_value()}),
+            json!({"from":model.expired.to_value(),"relation":"derived_from","to":model.root.to_value()}),
+            json!({"from":model.root.to_value(),"relation":"contains","to":model.child.to_value()}),
+        ].iter().map(|e| ssx_json::to_string(e).unwrap()).collect();
+        assert_eq!(actual, expected);
+        assert!(!first.truncated);
+    }
+}

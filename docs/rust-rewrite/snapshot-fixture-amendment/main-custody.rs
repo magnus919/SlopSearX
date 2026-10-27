@@ -1,19 +1,19 @@
-//! Exact two-insertion successor of the e127 native gate entrypoint.
+//! Exact two-insertion successor of the accepted W07/T02 native gate entrypoint.
 //! Preserves old source-chain operands only after proving physical current bytes.
 use serde_json::Value;
 use std::{fs, path::Path};
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
-const SHA: &str = "e8f0b635c6a8a8e9d472587259f54061b6b9f6de345956848571e5b3a12e3256";
+#[path = "capsule-sha.rs"]
+mod capsule_sha;
+use capsule_sha::SHA;
 const SOURCE: &str = "crates/xtask/src/main.rs";
-const PRIOR_SHA: &str = "8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c";
-pub(super) fn selected(row: &Value) -> bool {
-    row["path"] == SOURCE && row["sha256"] == PRIOR_SHA
-}
+const PRIOR_SHA: &str = "abc9435b419cfa6f0013fe1177d27b6661437baabe40d3824fa95185e6da40ee";
 fn regular(root: &Path, relative: &str) -> Result<Vec<u8>, String> {
     let path = root.join(relative);
     let metadata = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
     super::need(
         metadata.is_file()
+            && metadata.len() <= 1_048_576
             && !metadata.file_type().is_symlink()
             && super::permissions(&path)? == "0644",
         "snapshot fixture gate source requires regular0644",
@@ -38,7 +38,7 @@ fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<
                     )
                 })
             }),
-        "snapshot fixture exact e127 main caller differs",
+        "snapshot fixture exact joint main caller differs",
     )?;
     super::material(&row["current"], current, mode)?;
     let edits = row["edits"]
@@ -93,7 +93,7 @@ fn inverse(doc: &Value, expected: &Value, current: &[u8], mode: &str) -> Result<
     )?;
     Ok(prior)
 }
-pub(super) fn prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+pub(super) fn joint(root: &Path, supplied: &[u8]) -> Result<Vec<u8>, String> {
     let raw = regular(root, CAPSULE)?;
     super::need(
         super::digest(&raw) == SHA,
@@ -106,7 +106,57 @@ pub(super) fn prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
             && doc["main"]["prior"]["sha256"] == PRIOR_SHA,
         "snapshot fixture main closed source differs",
     )?;
-    inverse(&doc, expected, &regular(root, SOURCE)?, "0644")
+    let current = regular(root, SOURCE)?;
+    super::need(
+        supplied == current,
+        "snapshot fixture supplied main is not physical current",
+    )?;
+    let prior = inverse(&doc, &doc["main"]["prior"], &current, "0644")?;
+    for (identity, bytes) in [
+        (&doc["main"]["prior"], prior.as_slice()),
+        (&doc["main"]["current"], current.as_slice()),
+    ] {
+        super::need(
+            identity["git_blob"] == git_blob(root, bytes)?,
+            "snapshot fixture main Git blob differs",
+        )?;
+    }
+    Ok(prior)
+}
+fn git_blob(root: &Path, bytes: &[u8]) -> Result<String, String> {
+    use std::{
+        io::Write,
+        process::{Command, Stdio},
+    };
+    let mut child = Command::new("git")
+        .args(["hash-object", "--stdin"])
+        .current_dir(root)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    let Some(mut input) = child.stdin.take() else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err("main Git stdin absent".into());
+    };
+    let written = input.write_all(bytes);
+    drop(input);
+    if let Err(error) = written {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error.to_string());
+    }
+    let output = child.wait_with_output().map_err(|e| e.to_string())?;
+    super::need(
+        output.status.success(),
+        "snapshot fixture main Git hash failed",
+    )?;
+    Ok(String::from_utf8(output.stdout)
+        .map_err(|e| e.to_string())?
+        .trim()
+        .into())
 }
 /// Invoked only by an xtask-owned test; never adds a test to frozen adapter suites.
 #[cfg(test)]
@@ -115,8 +165,13 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     let doc: Value = serde_json::from_slice(&regular(root, CAPSULE).unwrap()).unwrap();
     let expected = &doc["main"]["prior"];
     let current = regular(root, SOURCE).unwrap();
-    let historical = prior(root, expected).unwrap();
-    assert_eq!(super::read_exact(root, expected).unwrap(), historical);
+    let historical = joint(root, &current).unwrap();
+    assert!(joint(root, &historical).is_err());
+    let t02 =
+        super::w07_t02_joint::parent(root, SOURCE, &current, super::w07_t02_joint::Parent::T02)?;
+    let old = serde_json::json!({"path":SOURCE,"sha256":"8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c","bytes":39725,"mode":"0644"});
+    assert_eq!(super::read_exact(root, &old)?, t02);
+    super::w07_t02_joint::parent(root, SOURCE, &current, super::w07_t02_joint::Parent::W07)?;
     assert!(inverse(&doc, expected, &historical, "0644").is_err());
     for mode in ["0600", "0755", "4644"] {
         assert!(inverse(&doc, expected, &current, mode).is_err());

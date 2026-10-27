@@ -12,7 +12,9 @@ use std::{
 type Result<T> = std::result::Result<T, String>;
 const SOURCE: &str = "tests/test_coverage_pipeline_inputs.py";
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
-const CAPSULE_SHA: &str = "e8f0b635c6a8a8e9d472587259f54061b6b9f6de345956848571e5b3a12e3256";
+#[path = "capsule-sha.rs"]
+mod capsule_sha;
+use capsule_sha::SHA as CAPSULE_SHA;
 fn need(condition: bool, message: &str) -> Result<()> {
     if condition {
         Ok(())
