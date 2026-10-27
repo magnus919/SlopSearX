@@ -9,6 +9,8 @@ mod post_a06_generation;
 pub(crate) use post_a06_generation::native_search;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
+#[path = "../../snapshot-fixture-amendment/main-custody.rs"]
+mod snapshot_fixture_main;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
 const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v1.json";
 const VALIDATOR: &str = "docs/rust-rewrite/a13/source-amendments/validator.rs";
@@ -544,6 +546,9 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
 }
 
 fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if snapshot_fixture_main::selected(row) {
+        return snapshot_fixture_main::prior(root, row);
+    }
     if let Some(prior) = default_ca_fixture_operand(
         root,
         text(row, "path")?,
