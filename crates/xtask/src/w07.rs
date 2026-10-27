@@ -14,6 +14,8 @@ use crate::a13::a06_source_successor::{
     w07_test_dependency as test_dependency_successor,
 };
 use main_successor::{PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main};
+#[path = "../../../docs/rust-rewrite/native-engines/w07-source-amendment.rs"]
+mod native_source_amendment;
 #[path = "../../../docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs"]
 mod snapshot_helper_amendment;
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
@@ -68,6 +70,9 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
         return Ok(bytes);
     }
+    if let Some(proven) = native_source_amendment::verify_t06(root, path, expected, &bytes) {
+        return proven;
+    }
     if let Some(proven) = snapshot_helper_amendment::verify(root, path, expected, &bytes) {
         return proven;
     }
@@ -116,6 +121,22 @@ pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
             return Err("W07 wrong helper caller accepted".into());
         }
     }
+    for path in [
+        "crates/ssx-mcp/tests/t06_source_bindings.rs",
+        "crates/xtask/src/t06.rs",
+    ] {
+        let expected = registry["sources"][path]
+            .as_str()
+            .ok_or("W07 T06 source absent")?;
+        let prior = frozen(root, path, expected)?;
+        if sha(&prior) != expected {
+            return Err("W07 T06 seam did not recover original operand".into());
+        }
+        if frozen(root, path, "wrong").is_ok() {
+            return Err("W07 wrong T06 caller accepted".into());
+        }
+    }
+    native_source_amendment::controls(root)?;
     snapshot_helper_amendment::controls(root)?;
     Ok(())
 }

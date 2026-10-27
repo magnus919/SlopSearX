@@ -169,6 +169,14 @@ fn inverse(row: &Value, current: &[u8], mode: &str) -> Result<Vec<u8>> {
     need(forward == current, "independent forward proof")?;
     Ok(prior)
 }
+// Physical custody is proved by the caller before this closed feature normalization.
+fn baseline_operand(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path == SOURCES[0] {
+        super::native_source_amendment::shared_baseline(root, path, physical)
+    } else {
+        Ok(physical.to_vec())
+    }
+}
 pub(crate) fn verify(
     root: &Path,
     path: &str,
@@ -192,7 +200,7 @@ pub(crate) fn verify(
             physical == supplied,
             "supplied differs from physical current",
         )?;
-        let baseline = physical; // Feature composition must prove its physical successor before replacing this operand.
+        let baseline = baseline_operand(root, path, &physical)?;
         inverse(row, &baseline, "0644")
     })())
 }
@@ -205,6 +213,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let expected = text(&row["prior"], "sha256")?;
         let physical = regular(root, path)?;
         let prior = verify(root, path, expected, &physical).ok_or("selected helper absent")??;
+        let baseline = baseline_operand(root, path, &physical)?;
         let git = std::process::Command::new("git")
             .args([
                 "show",
@@ -223,7 +232,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             "wrong pin/old supplied bytes",
         )?;
         for mode in ["0600", "0755", "4644"] {
-            need(inverse(row, &physical, mode).is_err(), "wrong mode")?;
+            need(inverse(row, &baseline, mode).is_err(), "wrong mode")?;
         }
         let mut bad = row.clone();
         bad["pointer"] = serde_json::json!("/sources/wrong");
@@ -246,10 +255,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let mut wrong_length = row.clone();
         wrong_length["current"]["bytes"] = serde_json::json!(0);
         need(
-            inverse(&wrong_length, &physical, "0644").is_err(),
+            inverse(&wrong_length, &baseline, "0644").is_err(),
             "wrong source length",
         )?;
-        let mut changed = physical.clone();
+        let mut changed = baseline.clone();
         changed.push(b'\n');
         bad = row.clone();
         bad["current"]["sha256"] = serde_json::json!(sha(&changed));
@@ -273,7 +282,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 }
             }
             need(
-                inverse(&bad, &physical, "0644").is_err(),
+                inverse(&bad, &baseline, "0644").is_err(),
                 "missing/duplicate/moved edit",
             )?;
         }
@@ -302,7 +311,13 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
                 .as_nanos()
         )));
     fs::create_dir(&owned.0).map_err(|e| e.to_string())?;
-    for path in [CAPSULE, CONTAINER, SOURCES[0], SOURCES[1]] {
+    for path in [
+        CAPSULE,
+        CONTAINER,
+        SOURCES[0],
+        SOURCES[1],
+        "docs/rust-rewrite/native-engines/w07-source-amendment.json",
+    ] {
         let target = owned.0.join(path);
         fs::create_dir_all(target.parent().ok_or("copy parent")?).map_err(|e| e.to_string())?;
         fs::copy(root.join(path), &target).map_err(|e| e.to_string())?;
@@ -360,7 +375,18 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         )?;
         fs::remove_dir(&target).map_err(|e| e.to_string())?;
         fs::rename(&backup, &target).map_err(|e| e.to_string())?;
-        let prior = inverse(row, &physical, "0644")?;
+        let baseline = baseline_operand(root, path, &physical)?;
+        if baseline != physical {
+            fs::write(&target, &baseline).map_err(|e| e.to_string())?;
+            need(
+                verify(&owned.0, path, expected, &baseline)
+                    .unwrap()
+                    .is_err(),
+                "baseline S1 physically substituted for feature S2",
+            )?;
+            fs::write(&target, &physical).map_err(|e| e.to_string())?;
+        }
+        let prior = inverse(row, &baseline, "0644")?;
         fs::write(&target, &prior).map_err(|e| e.to_string())?;
         need(
             verify(&owned.0, path, expected, &prior).unwrap().is_err(),
