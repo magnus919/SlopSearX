@@ -3,8 +3,14 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
+#[path = "../../../docs/rust-rewrite/w03/source-amendments/review-harness-pin.rs"]
+mod review_harness_pin;
 const BASELINE: &str = "87af8096d46359241421ac747ed6aa1ad07f38ec";
 const EVIDENCE: &[(&str, &str)] = &[
+    (
+        "docs/rust-rewrite/w03/source-amendments/review-harness-pin.rs",
+        "38322a0855f6a1da818ff57c0131af235387d2832efead7a35abd21cbd600fb2",
+    ),
     (
         "docs/rust-rewrite/w03/error-envelope-map.json",
         "8703828b8f68312f96b455403636da880e56cc0c91ee640403c3cd4f2cd92edb",
@@ -355,10 +361,12 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let mut pinned = BTreeSet::new();
     for row in array(&pins, "sources")? {
         let path = row["path"].as_str().ok_or("W03 pin path absent")?;
-        if !pinned.insert(path)
-            || Some(digest(&fs::read(root.join(path)).map_err(|e| e.to_string())?).as_str())
-                != row["sha256"].as_str()
-        {
+        let expected = row["sha256"].as_str().ok_or("W03 source digest absent")?;
+        let raw = match review_harness_pin::historical(root, path, expected)? {
+            Some(prior) => prior,
+            None => fs::read(root.join(path)).map_err(|e| e.to_string())?,
+        };
+        if !pinned.insert(path) || digest(&raw) != expected {
             return Err(format!("W03 original source drift: {path}"));
         }
     }

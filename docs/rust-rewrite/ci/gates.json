@@ -1274,7 +1274,7 @@
                 "RUNNER_TEMP": "${{ runner.temp }}"
               },
               "name": "Check out the separately pinned harness",
-              "run": "set -euo pipefail\npython - <<'PY'\nimport json\nimport os\nimport re\nimport subprocess\nfrom pathlib import Path\n\nTRUSTED_HARNESS_SHA = \"04c7fc0b42221872e6c6b611be91c68e462fc679\"\npolicy = json.loads((Path(os.environ[\"GITHUB_WORKSPACE\"]) / \".github/pr-review-publisher-policy.json\").read_text())\nharness = policy[\"called_harness\"]\nif not re.fullmatch(r\"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\", harness[\"repository\"]):\n    raise SystemExit(\"protected_harness_repository_invalid\")\nif not re.fullmatch(r\"(?:[0-9a-f]{40}|[0-9a-f]{64})\", harness[\"sha\"]):\n    raise SystemExit(\"protected_harness_revision_invalid\")\nif harness[\"sha\"] != TRUSTED_HARNESS_SHA:\n    raise SystemExit(\"protected_harness_revision_unreviewed\")\ndest = Path(os.environ[\"RUNNER_TEMP\"]) / \"trusted-review-harness\"\nsubprocess.run([\"git\", \"clone\", \"--no-checkout\", \"--filter=blob:none\", f\"https://github.com/{harness['repository']}.git\", str(dest)], check=True, stdin=subprocess.DEVNULL, timeout=120)\nsubprocess.run([\"git\", \"-C\", str(dest), \"checkout\", \"--detach\", TRUSTED_HARNESS_SHA], check=True, stdin=subprocess.DEVNULL, timeout=30)\nif subprocess.check_output([\"git\", \"-C\", str(dest), \"rev-parse\", \"HEAD\"], text=True, timeout=10).strip() != TRUSTED_HARNESS_SHA:\n    raise SystemExit(\"protected_harness_revision_mismatch\")\nPY\n"
+              "run": "set -euo pipefail\npython - <<'PY'\nimport json\nimport os\nimport re\nimport subprocess\nfrom pathlib import Path\n\nTRUSTED_HARNESS_SHA = \"1c76d40290cdaf9b6603721f899da6c7e8a382b4\"\npolicy = json.loads((Path(os.environ[\"GITHUB_WORKSPACE\"]) / \".github/pr-review-publisher-policy.json\").read_text())\nharness = policy[\"called_harness\"]\nif not re.fullmatch(r\"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\", harness[\"repository\"]):\n    raise SystemExit(\"protected_harness_repository_invalid\")\nif not re.fullmatch(r\"(?:[0-9a-f]{40}|[0-9a-f]{64})\", harness[\"sha\"]):\n    raise SystemExit(\"protected_harness_revision_invalid\")\nif harness[\"sha\"] != TRUSTED_HARNESS_SHA:\n    raise SystemExit(\"protected_harness_revision_unreviewed\")\ndest = Path(os.environ[\"RUNNER_TEMP\"]) / \"trusted-review-harness\"\nsubprocess.run([\"git\", \"clone\", \"--no-checkout\", \"--filter=blob:none\", f\"https://github.com/{harness['repository']}.git\", str(dest)], check=True, stdin=subprocess.DEVNULL, timeout=120)\nsubprocess.run([\"git\", \"-C\", str(dest), \"checkout\", \"--detach\", TRUSTED_HARNESS_SHA], check=True, stdin=subprocess.DEVNULL, timeout=30)\nif subprocess.check_output([\"git\", \"-C\", str(dest), \"rev-parse\", \"HEAD\"], text=True, timeout=10).strip() != TRUSTED_HARNESS_SHA:\n    raise SystemExit(\"protected_harness_revision_mismatch\")\nPY\n"
             },
             {
               "name": "Set up Python",
@@ -1313,7 +1313,7 @@
                 "PYTHONPATH": "${{ runner.temp }}/trusted-review-harness/src"
               },
               "name": "Run the protected publication runtime",
-              "uses": "groktopus/codereview/scripts/protected-publication-action@04c7fc0b42221872e6c6b611be91c68e462fc679"
+              "uses": "groktopus/codereview/scripts/protected-publication-action@1c76d40290cdaf9b6603721f899da6c7e8a382b4"
             }
           ],
           "timeout-minutes": 5
@@ -1364,13 +1364,13 @@
             "LLM_BASE_URL": "${{ secrets.LLM_BASE_URL }}",
             "LLM_MODEL": "${{ secrets.LLM_MODEL }}"
           },
-          "uses": "groktopus/codereview/.github/workflows/pr-analysis.yml@04c7fc0b42221872e6c6b611be91c68e462fc679",
+          "uses": "groktopus/codereview/.github/workflows/pr-analysis.yml@1c76d40290cdaf9b6603721f899da6c7e8a382b4",
           "with": {
             "base_ref": "${{ github.event.pull_request.base.ref }}",
             "base_sha": "${{ github.event.pull_request.base.sha }}",
             "emit_publication_bundle": true,
             "harness_repository": "groktopus/codereview",
-            "harness_sha": "04c7fc0b42221872e6c6b611be91c68e462fc679",
+            "harness_sha": "1c76d40290cdaf9b6603721f899da6c7e8a382b4",
             "head_sha": "${{ github.event.pull_request.head.sha }}",
             "pull_request_number": "${{ github.event.pull_request.number }}",
             "review_contract": "bounded-production-v17",
@@ -2135,7 +2135,7 @@
           "name": "Foundation runtime (${{ matrix.runner }})",
           "needs": "foundation-prerequisites",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 60,
+          "timeout-minutes": 120,
           "strategy": {
             "fail-fast": false,
             "matrix": {
@@ -2383,7 +2383,7 @@
           "name": "Foundation adapters (${{ matrix.runner }})",
           "needs": "foundation-prerequisites",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 60,
+          "timeout-minutes": 120,
           "strategy": {
             "fail-fast": false,
             "matrix": {

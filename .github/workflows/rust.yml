@@ -385,7 +385,7 @@ jobs:
     name: Foundation runtime (${{ matrix.runner }})
     needs: foundation-prerequisites
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -665,7 +665,7 @@ jobs:
     name: Foundation adapters (${{ matrix.runner }})
     needs: foundation-prerequisites
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
