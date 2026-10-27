@@ -250,6 +250,14 @@ impl DeepSeek {
             } else {
                 Duration::from_millis(100 << attempt)
             };
+            // F10 enforces at least one second locally and rounds shared TTLs
+            // up to whole seconds. Publish and wait for that same duration so
+            // our own cooldown cannot reject the following retry.
+            let delay = if response.status == 429 {
+                Duration::from_secs_f64(delay.as_secs_f64().ceil().max(1.0))
+            } else {
+                delay
+            };
             if response.status == 429 {
                 self.admission
                     .set_upstream_cooldown("deepseek", delay.as_secs_f64())

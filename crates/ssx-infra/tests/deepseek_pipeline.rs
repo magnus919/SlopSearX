@@ -526,3 +526,129 @@ async fn clipped_retry_after_never_sends_an_early_retry() {
     assert_eq!(wire.calls.lock().unwrap().len(), 1);
     http.shutdown_and_wait().await;
 }
+
+/// Faithful expiring store for the real F10 policy/adapter bridge. This test
+/// proves cooldown coordination, not distributed Valkey quota correctness.
+#[derive(Default)]
+struct ExpiringRateStore {
+    until: Mutex<Option<Instant>>,
+    published: Mutex<Vec<f64>>,
+    acquisitions: std::sync::atomic::AtomicUsize,
+}
+impl ssx_application::rate::RateStore for ExpiringRateStore {
+    fn acquire<'a>(
+        &'a self,
+        engine: &'a ssx_domain::rate::EngineKey,
+        _: u64,
+    ) -> PortFuture<
+        'a,
+        std::result::Result<ssx_domain::rate::QuotaReceipt, ssx_domain::rate::RateFailure>,
+    > {
+        Box::pin(async move {
+            assert_eq!(engine.as_str(), "deepseek");
+            let count = self
+                .acquisitions
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+                + 1;
+            Ok(ssx_domain::rate::QuotaReceipt {
+                allowed: true,
+                count: count as u64,
+                bucket_key: "offline-deepseek".into(),
+                server_time: ssx_domain::ValkeyQuotaTime::from_milliseconds(0),
+                remaining_ttl_ms: 1,
+            })
+        })
+    }
+    fn cooldown<'a>(
+        &'a self,
+        engine: &'a ssx_domain::rate::EngineKey,
+    ) -> PortFuture<
+        'a,
+        std::result::Result<ssx_domain::rate::SharedCooldown, ssx_domain::rate::RateFailure>,
+    > {
+        Box::pin(async move {
+            assert_eq!(engine.as_str(), "deepseek");
+            let remaining = self.until.lock().unwrap().map_or(Duration::ZERO, |until| {
+                until.saturating_duration_since(Instant::now())
+            });
+            Ok(if remaining.is_zero() {
+                ssx_domain::rate::SharedCooldown::Missing
+            } else {
+                ssx_domain::rate::SharedCooldown::Active {
+                    seconds: remaining.as_secs_f64().ceil() as u64,
+                }
+            })
+        })
+    }
+    fn publish_cooldown<'a>(
+        &'a self,
+        engine: &'a ssx_domain::rate::EngineKey,
+        seconds: f64,
+    ) -> PortFuture<'a, std::result::Result<u64, ssx_domain::rate::RateFailure>> {
+        Box::pin(async move {
+            assert_eq!(engine.as_str(), "deepseek");
+            self.published.lock().unwrap().push(seconds);
+            // DistributedQuota publishes whole-second TTLs through math.ceil.
+            *self.until.lock().unwrap() =
+                Some(Instant::now() + Duration::from_secs_f64(seconds.ceil()));
+            Ok(seconds.ceil() as u64)
+        })
+    }
+    fn warmup(&self) -> PortFuture<'_, std::result::Result<(), ssx_domain::rate::RateFailure>> {
+        Box::pin(async { Ok(()) })
+    }
+    fn shutdown(&self) -> PortFuture<'_, ()> {
+        Box::pin(async {})
+    }
+}
+#[tokio::test]
+async fn retry_delay_matches_actual_f10_minimum_and_whole_second_shared_cooldowns() {
+    for (retry_after, expected_seconds) in [(None, 1.0), (Some("1.01"), 2.0)] {
+        let store = Arc::new(ExpiringRateStore::default());
+        let limiter = Arc::new(tokio::sync::Mutex::new(
+            ssx_application::rate::RateLimiter::new(store.clone(), true),
+        ));
+        let admission = Arc::new(ssx_infra::adapters::F10Admission::new(limiter));
+        let mut first = reply(429, "{}");
+        if let Some(value) = retry_after {
+            first
+                .2
+                .insert("retry-after", HeaderValue::from_str(value).unwrap());
+        }
+        let wire = Arc::new(Wire {
+            replies: Mutex::new([first, reply(200, r#"{"results":[]}"#)].into()),
+            ..Default::default()
+        });
+        let http = Arc::new(AdapterHttp::default());
+        http.set_transport(wire.clone()).unwrap();
+        let binding = register_deepseek(
+            &mut Registry::builtins().unwrap(),
+            http.clone(),
+            admission,
+            &config(),
+            "f10-cooldown-regression",
+        )
+        .unwrap()
+        .unwrap();
+        let outcome = binding
+            .engine
+            .search(&request("rate-limited then successful"))
+            .await;
+        http.shutdown_and_wait().await;
+        assert_eq!(
+            outcome.status,
+            EngineStatus::Ok,
+            "Retry-After: {retry_after:?}"
+        );
+        let calls = wire.calls.lock().unwrap();
+        assert_eq!(calls.len(), 2);
+        assert!(calls.iter().all(|call| call.method == Method::POST));
+        assert_eq!(calls[0].body, calls[1].body);
+        assert_eq!(calls[0].url, calls[1].url);
+        assert_eq!(
+            store.acquisitions.load(std::sync::atomic::Ordering::SeqCst),
+            2
+        );
+        assert_eq!(*store.published.lock().unwrap(), [expected_seconds]);
+    }
+}

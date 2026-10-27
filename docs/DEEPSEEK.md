@@ -100,7 +100,10 @@ redistribution permissions before public deployment; this adapter grants none.
 - Authentication (`401`): check the operator key; no unchanged retry.
 - Insufficient balance (`402`): replenish the provider account; no unchanged retry.
 - Rate limit (`429`): feeds shared cooldown; at most three total attempts under
-  one caller/adapter deadline. Admission is checked before every attempt.
+  one caller/adapter deadline. Admission is checked before every attempt. The
+  retry delay is at least one second and rounded up to whole seconds before both
+  publication and waiting, matching the shared F10 cooldown. Fractional
+  Retry-After values therefore cannot trigger an early retry into that cooldown.
 - Request timeout (`408`) or `5xx`: at most three attempts, using 100/200 ms
   backoff without Retry-After. Retry-After uses the existing shared bounded
   cooldown parser (1..300 seconds); the overall deadline still applies. When
