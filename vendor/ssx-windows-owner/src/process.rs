@@ -258,6 +258,22 @@ impl NativeChild {
         role: ImageRole,
         input: Option<OwnedHandle>,
     ) -> io::Result<(Self, ChildPipes)> {
+        Self::spawn_inner(
+            image,
+            role,
+            input,
+            #[cfg(feature = "fixtures")]
+            None,
+        )
+    }
+    fn spawn_inner(
+        image: &TrustedImage,
+        role: ImageRole,
+        input: Option<OwnedHandle>,
+        #[cfg(feature = "fixtures")] rejected: Option<&mut Option<i32>>,
+    ) -> io::Result<(Self, ChildPipes)> {
+        #[cfg(feature = "fixtures")]
+        let wrong_job = rejected.is_some();
         let application = image.application(role)?;
         let output = PipePair::create(true)?;
         let error = PipePair::create(true)?;
@@ -296,6 +312,8 @@ impl NativeChild {
         }
         let cancel = JobCancel(Arc::new(Job(job)));
         let jobs = [trust::raw(&cancel.0.0)];
+        #[cfg(feature = "fixtures")]
+        let jobs = if wrong_job { [handles[0]] } else { jobs };
         let mut attributes = Attributes::handles(&handles, &jobs)?;
         let mut info: PROCESS_INFORMATION = unsafe { mem::zeroed() };
         let mut startup: STARTUPINFOEXW = unsafe { mem::zeroed() };
@@ -327,7 +345,12 @@ impl NativeChild {
             )
         } == 0
         {
-            return Err(io::Error::last_os_error());
+            let error = io::Error::last_os_error();
+            #[cfg(feature = "fixtures")]
+            if let Some(rejected) = rejected {
+                *rejected = error.raw_os_error();
+            }
+            return Err(error);
         }
         // Successful CreateProcessW guarantees both returned handles. Atomic
         // JOB_LIST assignment already contains the suspended child in our job.
@@ -342,6 +365,20 @@ impl NativeChild {
             pid: info.dwProcessId,
             _image: image.clone(),
         };
+        #[cfg(feature = "fixtures")]
+        if wrong_job {
+            // A kernel regression must not leave an unassigned suspended child.
+            // Terminate only the original returned process handle; never resume.
+            unsafe {
+                TerminateProcess(trust::raw(&child.process), 238);
+            }
+            if unsafe { WaitForSingleObject(trust::raw(&child.process), 5000) } != WAIT_OBJECT_0 {
+                return Err(io::ErrorKind::TimedOut.into());
+            }
+            return Err(io::Error::other(
+                "wrong-type JOB_LIST unexpectedly accepted",
+            ));
+        }
         let pipes = ChildPipes {
             stdin: incoming.map(|p| p.parent),
             stdout: output.parent,
@@ -453,5 +490,67 @@ impl FixtureInput {
             writer: pair.parent,
             input: pair.child,
         })
+    }
+}
+
+#[cfg(feature = "fixtures")]
+impl NativeChild {
+    /// Live non-job handle is held across CreateProcess; no closed-handle reuse.
+    pub fn fixture_reject_wrong_job(image: &TrustedImage) -> io::Result<i32> {
+        let mut rejected = None;
+        match Self::spawn_inner(image, ImageRole::Dns, None, Some(&mut rejected)) {
+            Err(error) => rejected.ok_or(error),
+            Ok(_) => Err(io::Error::other("invalid Job accepted")),
+        }
+    }
+
+    pub fn fixture_creation_time(&self) -> io::Result<u64> {
+        creation_time(trust::raw(&self.process))
+    }
+}
+#[cfg(feature = "fixtures")]
+fn creation_time(process: HANDLE) -> io::Result<u64> {
+    let mut created: FILETIME = unsafe { mem::zeroed() };
+    let mut exited: FILETIME = unsafe { mem::zeroed() };
+    let mut kernel: FILETIME = unsafe { mem::zeroed() };
+    let mut user: FILETIME = unsafe { mem::zeroed() };
+    if unsafe { GetProcessTimes(process, &mut created, &mut exited, &mut kernel, &mut user) } == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok((u64::from(created.dwHighDateTime) << 32) | u64::from(created.dwLowDateTime))
+}
+/// Read-only original process observation; holds no Job or termination authority.
+#[cfg(feature = "fixtures")]
+pub struct FixtureProcessWitness(OwnedHandle);
+#[cfg(feature = "fixtures")]
+impl FixtureProcessWitness {
+    pub fn capture(pid: u32, expected_creation: u64) -> io::Result<Self> {
+        let process = trust::handle(unsafe {
+            OpenProcess(SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
+        })?;
+        if creation_time(trust::raw(&process))? != expected_creation {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        Ok(Self(process))
+    }
+    pub async fn exited(&self, budget: Duration) -> io::Result<()> {
+        tokio::time::timeout(budget, async {
+            loop {
+                match unsafe { WaitForSingleObject(trust::raw(&self.0), 0) } {
+                    WAIT_OBJECT_0 => return Ok(()),
+                    WAIT_TIMEOUT => tokio::time::sleep(Duration::from_millis(2)).await,
+                    _ => return Err(io::Error::last_os_error()),
+                }
+            }
+        })
+        .await
+        .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
+    }
+    pub fn running(&self) -> io::Result<bool> {
+        match unsafe { WaitForSingleObject(trust::raw(&self.0), 0) } {
+            WAIT_TIMEOUT => Ok(true),
+            WAIT_OBJECT_0 => Ok(false),
+            _ => Err(io::Error::last_os_error()),
+        }
     }
 }

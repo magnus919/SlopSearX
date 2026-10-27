@@ -25,3 +25,29 @@ Installed paths are fixed roles in a three-artifact record. Reparse points, wron
 Pinned Windows x86_64 compile/link, strict lints/format, installed distribution without Cargo, console and redirected input bytes/EOF, actual overlapped IO completion, idle/backpressured input cancellation and dropped-close retry; DNS cancellation/deadline/protocol faults/descendants; atomic-job failure injection, unsupported/nested-job rejection and parent-death kill-on-close witnesses. Verify suspended child cannot execute before owner registration and inherited handles remain exactly bounded. Verify denied ACL/reparse/hash/rename controls and package lock contention. Windows 10+ client floor follows the retained Rust/MS source policy; an actual minimum-OS installation witness remains O04 work. Source AST parsing is not Windows compile/link/runtime proof.
 
 Microsoft's UpdateProcThreadAttribute documentation explicitly lists JOB_LIST on Windows 10 / Windows Server 2016 onward: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute . This does not add Windows Server product scope. Exact CPython, AnyIO, toolchain and Windows API source pins are in the separately retained Windows source review packet.
+
+## Client-platform acceptance extension
+
+Token documents use the existing trusted owner set but a separate confidentiality
+policy: public generic/read/execute grants are refused as well as untrusted writes.
+Package integrity continues to permit public readers. Private creation supplies a
+protected DACL at CreateFile time; a held validated parent prevents replacement
+through same-parent atomic publication. Token read handles permit delete sharing
+for replacement but deny writers; identity and link-count checks span the read.
+Read admission does not create directories or renew any shared state. A failed
+create-new collision never transfers cleanup ownership of the existing path.
+
+The nondefault `fixtures` feature additionally permits SetFileSecurityW solely to
+construct adversarial ACLs, and OpenProcess/GetProcessTimes solely to retain a
+read-only process witness with an exact creation-time check. No termination right
+or Job handle is returned to that witness. The required-feature gateway probe
+owns its real NativeChild/Job, publishes only PID plus original creation time
+after helper protocol entry, and is terminated through its original Child.
+The wrong-Job control passes a live pipe handle in JOB_LIST; normal code has no
+fault parameter. Even unexpected kernel acceptance remains suspended and is
+terminated through the original returned process handle before failure. This
+fixture-only TerminateProcess path is never selected by a production build.
+
+These are source-level claims until actual native Windows/MSVC compilation and
+runtime receipts exist. The new five-platform workflow is a candidate witness;
+no Windows minimum-version, release signature or production routing claim follows.

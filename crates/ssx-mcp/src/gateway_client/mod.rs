@@ -1,4 +1,5 @@
 //! Native client-side gateway configuration, OAuth and owned startup.
+mod ca_bundle;
 pub mod settings;
 
 pub mod token_storage;

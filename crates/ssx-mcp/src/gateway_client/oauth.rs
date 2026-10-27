@@ -6,7 +6,7 @@ use super::{
     io_owner::IoOwner,
     network::Network,
     oauth_policy::{Client, Policy},
-    settings::{Settings, default_token_path},
+    settings::{Settings, resolved_token_path},
     token_storage::{FileTokenStorage, Slot},
 };
 use crate::Result;
@@ -626,16 +626,18 @@ impl OAuth {
         callback: Arc<Mutex<Option<LoopbackCallback>>>,
         browser: Arc<BrowserOwner>,
     ) -> Result<Arc<Self>> {
-        let home = std::env::var_os("HOME").map(std::path::PathBuf::from);
-        let path = match &settings.token_file {
-            Some(path) => path.clone(),
-            None => default_token_path(
-                &settings.remote_url,
-                std::env::var("XDG_CONFIG_HOME").ok().as_deref(),
-                home.as_deref()
-                    .ok_or("gateway home directory unavailable")?,
-            ),
-        };
+        let environment = [
+            "HOME",
+            "XDG_CONFIG_HOME",
+            "USERPROFILE",
+            "HOMEDRIVE",
+            "HOMEPATH",
+        ]
+        .into_iter()
+        .filter_map(|key| std::env::var_os(key).map(|value| (key.to_owned(), value)))
+        .collect();
+        let path = resolved_token_path(settings, &environment)
+            .ok_or("gateway home directory unavailable")?;
         let file = Arc::new(
             FileTokenStorage::load(path, io, Instant::now() + AUTH_BUDGET, &cancel)
                 .await

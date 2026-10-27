@@ -2,7 +2,7 @@
 use ssx_mcp::gateway_client::{runtime, settings::Settings};
 use std::{collections::BTreeMap, process::ExitCode};
 use tokio_util::sync::CancellationToken;
-const HELP: &str = "ssx-gateway --remote URL [--token TOKEN | --oauth] [--oauth-callback-port PORT] [--oauth-no-browser] [--oauth-token-file PATH]\nEnvironment: MCP_REMOTE_URL, MCP_REMOTE_TOKEN, MCP_REMOTE_OAUTH, MCP_REMOTE_OAUTH_CALLBACK_PORT, MCP_REMOTE_OAUTH_NO_BROWSER, MCP_REMOTE_TOKEN_FILE\nRemote mode uses stdio. Credentials and URLs are never included in error diagnostics.";
+const HELP: &str = "ssx-gateway --remote URL [--token TOKEN | --oauth] [--oauth-callback-port PORT] [--oauth-no-browser] [--oauth-token-file PATH]\nEnvironment: MCP_REMOTE_URL, MCP_REMOTE_TOKEN, MCP_REMOTE_OAUTH, MCP_REMOTE_OAUTH_CALLBACK_PORT, MCP_REMOTE_OAUTH_NO_BROWSER, MCP_REMOTE_TOKEN_FILE, MCP_REMOTE_CA_BUNDLE\nRemote mode uses stdio. Credentials and URLs are never included in error diagnostics.";
 #[tokio::main]
 async fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();

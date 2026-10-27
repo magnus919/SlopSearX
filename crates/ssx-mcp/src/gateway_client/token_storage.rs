@@ -5,11 +5,15 @@ use super::{
 };
 use ssx_source_json::{Map, Number, Text, Value};
 use std::{
-    fs::{self, OpenOptions},
-    io::{Read, Write},
+    fs,
     path::{Path, PathBuf},
     sync::Arc,
     time::Instant,
+};
+#[cfg(not(windows))]
+use std::{
+    fs::OpenOptions,
+    io::{Read, Write},
 };
 use tokio_util::sync::CancellationToken;
 pub const MAX_TOKEN_FILE_BYTES: usize = token_json::MAX_BYTES;
@@ -69,12 +73,15 @@ impl std::fmt::Debug for FileTokenStorage {
         f.write_str("FileTokenStorage(<redacted>)")
     }
 }
+#[cfg(not(windows))]
 struct Temporary(PathBuf);
+#[cfg(not(windows))]
 impl Drop for Temporary {
     fn drop(&mut self) {
         let _ = fs::remove_file(&self.0);
     }
 }
+#[cfg(not(windows))]
 fn read_path(path: &Path) -> Result<Option<Vec<u8>>, StorageError> {
     let mut options = OpenOptions::new();
     options.read(true);
@@ -102,6 +109,7 @@ fn read_path(path: &Path) -> Result<Option<Vec<u8>>, StorageError> {
     }
     Ok(Some(bytes))
 }
+#[cfg(not(windows))]
 fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
     if bytes.len() > MAX_TOKEN_FILE_BYTES {
         return Err(StorageError::TooLarge);
@@ -134,6 +142,33 @@ fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
     drop(file);
     fs::rename(&temporary.0, path).map_err(|_| StorageError::Io)?;
     Ok(())
+}
+#[cfg(windows)]
+fn read_path(path: &Path) -> Result<Option<Vec<u8>>, StorageError> {
+    if let Ok(metadata) = fs::symlink_metadata(path)
+        && !metadata.is_file()
+    {
+        return Err(StorageError::NotRegular);
+    }
+    match ssx_windows_owner::read_confidential_file(path, MAX_TOKEN_FILE_BYTES)
+        .map_err(|_| StorageError::Io)?
+    {
+        ssx_windows_owner::ConfidentialRead::Missing => Ok(None),
+        ssx_windows_owner::ConfidentialRead::Bytes(bytes) => Ok(Some(bytes)),
+        ssx_windows_owner::ConfidentialRead::TooLarge => Err(StorageError::TooLarge),
+    }
+}
+#[cfg(windows)]
+fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
+    if bytes.len() > MAX_TOKEN_FILE_BYTES {
+        return Err(StorageError::TooLarge);
+    }
+    let mut nonce = [0u8; 16];
+    rustls::crypto::aws_lc_rs::default_provider()
+        .secure_random
+        .fill(&mut nonce)
+        .map_err(|_| StorageError::Randomness)?;
+    ssx_windows_owner::write_confidential_file(path, bytes, nonce).map_err(|_| StorageError::Io)
 }
 fn truthy(value: &Value) -> bool {
     match value {
