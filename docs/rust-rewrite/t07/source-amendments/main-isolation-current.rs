@@ -5,8 +5,8 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 const CAPSULE: &str =
     "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json";
-const SHA: &str = "aa3af59033c65e31ac640175074ebc748048e781726ff1cc614255990295317e";
-const BYTES: usize = 100155;
+const SHA: &str = "d5f0f4e70776a3347c5c616f607ed6db1ebdcd57f49383d8d518312c8f4d7b51";
+const BYTES: usize = 101157;
 const PATHS: [&str; 12] = [
     "Cargo.toml",
     "Cargo.lock",

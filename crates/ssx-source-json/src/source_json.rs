@@ -1,6 +1,9 @@
 //! Bounded Python `json.loads(bytes)` values for adapter source operations.
 //!
 //! This boundary deliberately does not change the finite public JSON codec.
+fn broad_whitespace(ch: char) -> bool {
+    ch.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&ch)
+}
 use std::{future::Future, pin::Pin, time::Instant};
 type ParsedFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, Error>> + Send + 'a>>;
 #[path = "source_json_accounting.rs"]
@@ -930,7 +933,7 @@ impl Text {
         let mut out = Vec::new();
         let mut pending = false;
         for c in &self.0 {
-            if char::from_u32(*c).is_some_and(super::broad_whitespace) {
+            if char::from_u32(*c).is_some_and(broad_whitespace) {
                 pending = !out.is_empty();
             } else {
                 if pending {

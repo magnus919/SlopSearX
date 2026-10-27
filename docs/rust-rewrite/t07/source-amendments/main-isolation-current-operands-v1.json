@@ -5,7 +5,7 @@
     "T07": "1c3a3d6cfd9b20334b46f6a73b8fb068fe78d958",
     "Main": "e9c5911a468b892fe2adef9027374cb867a2535d"
   },
-  "relocation_manifest_sha256": "2f655b5c05e4bb3801d1870cb3dec82821ddc85bd9a7a2c106e8dfc9b227b90b",
+  "relocation_manifest_sha256": "4e0cfb7a6764fee0e768e95340a1b804402e1ab0befd1300cfec3fd3f2e159ac",
   "rows": [
     {
       "path": "Cargo.toml",
@@ -72,8 +72,8 @@
       "path": "Cargo.lock",
       "physical": {
         "path": "Cargo.lock",
-        "sha256": "5708f639558dbaa68983d4d7af044ea2e11d5f3df4060bd761f3da5adc12ab33",
-        "bytes": 97751,
+        "sha256": "94a0adb39352710fe2072334359735e471287da0928af69c38ed992a2d138c38",
+        "bytes": 97759,
         "mode": "0644"
       },
       "parents": {
@@ -102,7 +102,7 @@
             },
             {
               "at": 71154,
-              "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n",
+              "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n \"url\",\n",
               "insert_utf8": ""
             }
           ]
@@ -492,66 +492,66 @@
             },
             {
               "at": 71154,
-              "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n",
+              "remove_utf8": "]\n\n[[package]]\nname = \"ssx-source-json\"\nversion = \"0.1.0\"\ndependencies = [\n \"base64 0.23.1\",\n \"sha2 0.11.1\",\n \"ssx-domain\",\n \"ssx-json\",\n \"ssx-owned-budget\",\n \"tokio\",\n \"url\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 71396,
+              "at": 71404,
               "remove_utf8": " \"sha2 0.11.1\",\n]\n\n[[package]]\nname = \"ssx-windows-owner\"\nversion = \"0.1.0\"\ndependencies = [\n \"sha2 0.11.1\",\n \"tokio\",\n \"windows-sys 0.61.2\",\n",
               "insert_utf8": " \"sha2\",\n"
             },
             {
-              "at": 71994,
+              "at": 72002,
               "remove_utf8": "\n[[package]]\nname = \"static_assertions\"\nversion = \"1.1.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f\"\n",
               "insert_utf8": ""
             },
             {
-              "at": 74963,
+              "at": 74971,
               "remove_utf8": "name = \"tap\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369\"\n\n[[package]]\nname = \"target-lexicon\"\nversion = \"0.13.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"df7f62577c25e07834649fc3b39fafdc597c0a3527dc1c60129201ccfcbaa50c\"\n\n[[package]]\n",
               "insert_utf8": ""
             },
             {
-              "at": 75604,
+              "at": 75612,
               "remove_utf8": "version = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52\"\ndependencies = [\n \"thiserror-impl 1.0.69\",\n]\n\n[[package]]\nname = \"thiserror\"\n",
               "insert_utf8": ""
             },
             {
-              "at": 76022,
+              "at": 76030,
               "remove_utf8": " \"thiserror-impl 2.0.21\",\n]\n\n[[package]]\nname = \"thiserror-impl\"\nversion = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
               "insert_utf8": " \"thiserror-impl\",\n"
             },
             {
-              "at": 82951,
+              "at": 82959,
               "remove_utf8": " \"serde_derive\",\n",
               "insert_utf8": ""
             },
             {
-              "at": 84671,
+              "at": 84679,
               "remove_utf8": "\n[[package]]\nname = \"wasi\"\nversion = \"0.14.2+wasi-0.2.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"9683f9a5a998d873c0d21fcbe3c083009670149a8fab228644b8bd36b2c48cb3\"\ndependencies = [\n \"wit-bindgen-rt\",\n]\n",
               "insert_utf8": ""
             },
             {
-              "at": 93428,
+              "at": 93436,
               "remove_utf8": "name = \"wit-bindgen-rt\"\nversion = \"0.39.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1\"\ndependencies = [\n \"bitflags\",\n]\n\n[[package]]\n",
               "insert_utf8": ""
             },
             {
-              "at": 93839,
+              "at": 93847,
               "remove_utf8": "\n[[package]]\nname = \"wyz\"\nversion = \"0.5.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"05f360fc0b24296329c78fda852a1e9ae82de9cf7b27dae4b7f62f118f77b9ed\"\ndependencies = [\n \"tap\",\n]\n",
               "insert_utf8": ""
             },
             {
-              "at": 94387,
+              "at": 94395,
               "remove_utf8": " \"thiserror 2.0.21\",\n",
               "insert_utf8": " \"thiserror\",\n"
             },
             {
-              "at": 94524,
+              "at": 94532,
               "remove_utf8": " \"sha2 0.11.1\",\n",
               "insert_utf8": " \"sha2\",\n"
             },
             {
-              "at": 95605,
+              "at": 95613,
               "remove_utf8": "]\n\n[[package]]\nname = \"zerocopy\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8\"\ndependencies = [\n \"zerocopy-derive\",\n]\n\n[[package]]\nname = \"zerocopy-derive\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
               "insert_utf8": ""
             }
@@ -1124,8 +1124,8 @@
       "path": "crates/ssx-infra/src/adapters/source_json.rs",
       "physical": {
         "path": "crates/ssx-source-json/src/source_json.rs",
-        "sha256": "b1b31ddb5f9cb698ad8f95dbce6bbcab26591176488f2aec652712476a22c8e8",
-        "bytes": 55141,
+        "sha256": "6d42bfdb26e53fde4c179e3b48cd5d0bf999d8e2fca4af4633c611e7b1c82e71",
+        "bytes": 55238,
         "mode": "0644"
       },
       "parents": {
@@ -1138,12 +1138,22 @@
           "git_blob": "d4ad775a509b61e54c61746236d3ca120947ccd2",
           "inverse": [
             {
-              "at": 1178,
+              "at": 158,
+              "remove_utf8": "fn broad_whitespace(ch: char) -> bool {\n    ch.is_whitespace() || ('\\u{1c}'..='\\u{1f}').contains(&ch)\n}\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 1282,
               "remove_utf8": "    /// Preserve source code points, including unpaired surrogates.\n    pub fn from_points(points: Vec<u32>) -> Self {\n",
               "insert_utf8": "    pub(crate) fn from_points(points: Vec<u32>) -> Self {\n"
             },
             {
-              "at": 50647,
+              "at": 33412,
+              "remove_utf8": "            if char::from_u32(*c).is_some_and(broad_whitespace) {\n",
+              "insert_utf8": "            if char::from_u32(*c).is_some_and(super::broad_whitespace) {\n"
+            },
+            {
+              "at": 50744,
               "remove_utf8": "        let fixture: ssx_json::Value =\n            ssx_json::from_slice(include_bytes!(\"../../../docs/rust-rewrite/f15/cases.json\"))\n                .unwrap();\n",
               "insert_utf8": "        let fixture: ssx_json::Value = ssx_json::from_slice(include_bytes!(\n            \"../../../../docs/rust-rewrite/f15/cases.json\"\n        ))\n        .unwrap();\n"
             }
@@ -1158,22 +1168,32 @@
           "git_blob": "cfdd9546f426fcd0055030f7a54e9ff3e2ee17f4",
           "inverse": [
             {
-              "at": 1178,
+              "at": 158,
+              "remove_utf8": "fn broad_whitespace(ch: char) -> bool {\n    ch.is_whitespace() || ('\\u{1c}'..='\\u{1f}').contains(&ch)\n}\n",
+              "insert_utf8": ""
+            },
+            {
+              "at": 1282,
               "remove_utf8": "    /// Preserve source code points, including unpaired surrogates.\n    pub fn from_points(points: Vec<u32>) -> Self {\n",
               "insert_utf8": "    pub(crate) fn from_points(points: Vec<u32>) -> Self {\n"
             },
             {
-              "at": 1951,
+              "at": 2055,
               "remove_utf8": "    /// Construct one already-decoded arbitrary JSON integer lexeme. This checks\n    /// JSON integer syntax only; callers own body/resource bounds. The file JSON\n    /// parser retains its separate CPython4300-digit admission limit.\n    pub fn from_integer_text(raw: &str) -> Option<Self> {\n        let digits = raw.strip_prefix('-').unwrap_or(raw);\n        if digits.is_empty()\n            || !digits.bytes().all(|b| b.is_ascii_digit())\n            || (digits.len() > 1 && digits.starts_with('0'))\n        {\n            return None;\n        }\n        Some(Self::Integer(Integer(if raw == \"-0\" {\n            \"0\".into()\n        } else {\n            raw.into()\n        })))\n    }\n",
               "insert_utf8": ""
             },
             {
-              "at": 50647,
+              "at": 33412,
+              "remove_utf8": "            if char::from_u32(*c).is_some_and(broad_whitespace) {\n",
+              "insert_utf8": "            if char::from_u32(*c).is_some_and(super::broad_whitespace) {\n"
+            },
+            {
+              "at": 50744,
               "remove_utf8": "        let fixture: ssx_json::Value =\n            ssx_json::from_slice(include_bytes!(\"../../../docs/rust-rewrite/f15/cases.json\"))\n                .unwrap();\n",
               "insert_utf8": "        let fixture: ssx_json::Value = ssx_json::from_slice(include_bytes!(\n            \"../../../../docs/rust-rewrite/f15/cases.json\"\n        ))\n        .unwrap();\n"
             },
             {
-              "at": 54531,
+              "at": 54628,
               "remove_utf8": "\n#[cfg(test)]\nmod decoded_integer_tests {\n    use super::*;\n    #[test]\n    fn decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser() {\n        let huge = \"9\".repeat(5000);\n        assert_eq!(\n            Number::from_integer_text(&huge).unwrap().integer_text(),\n            Some(huge.as_str())\n        );\n        assert_eq!(\n            Number::from_integer_text(\"-0\").unwrap().integer_text(),\n            Some(\"0\")\n        );\n        for invalid in [\"\", \"+1\", \"01\", \"-01\", \"1.0\", \"1e1\", \" 1\", \"-\"] {\n            assert!(Number::from_integer_text(invalid).is_none());\n        }\n    }\n}\n",
               "insert_utf8": ""
             }
