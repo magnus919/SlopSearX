@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "9fdffe00990e1918cf6b23f2917237cc0004bab709470b12cb1e3f657a4ecb7b";
+const REGISTRY_SHA: &str = "ac8a303da87fc2026fb5cf17c36c8c170ed3805d5f96d3fed5002a81b80b4c8a";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -335,7 +335,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         (
             "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
             "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2",
-            "24eae9b826b3891fe8eb8808afe02e301ffce9c3ada373103895840c8e05f8c2",
+            "c173b839bab843a0945c8ff1b5b3b8a67193dc92f8a22aa4e5cd980c5e71a213",
         ),
         (
             "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",

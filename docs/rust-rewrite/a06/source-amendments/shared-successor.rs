@@ -1976,7 +1976,8 @@ pub(crate) fn generation_control_operand(
 }
 
 // Exact Page identity pairs only. Search/DeHashed keep their generation/scoped routes.
-const PAGE_PROOF_CONTEXTS: &[(&str, &str, &[(&str, usize)])] = &[
+type PageProofContext = (&'static str, &'static str, &'static [(&'static str, usize)]);
+const PAGE_PROOF_CONTEXTS: &[PageProofContext] = &[
     (
         "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
         "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d",
