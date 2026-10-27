@@ -376,7 +376,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-successor.rs",
-      "sha256": "f21de15f39e5b7cbbd21a4c02101f80834ca2d4126bb3111f0eef1d52d800283"
+      "sha256": "76df0eea57e4a7114fa09f702f8697b0f2e05e2be83d6ea29790376170b5889a"
     },
     {
       "path": "docs/rust-rewrite/t07/source-inputs/CPYTHON-LICENSE.txt",
@@ -2429,6 +2429,10 @@
     {
       "path": "docs/rust-rewrite/t07/unit-profile/sdk-current-declaration.json",
       "sha256": "a2d39ba33de7d919b35a0d3bf11c8c4a5ffc206c83c625a7e3f1310ce583ac77"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-current-operand-v1.json",
+      "sha256": "900f9c32eb17a791cdba1d4a780878bf03ef003aeeefff98127ee7e986ee7e44"
     }
   ],
   "library_tests": [
@@ -2696,5 +2700,12 @@
     "reference_python": "3.12.11, not a claim of earlier3.14 oracle equivalence",
     "declared_total": 215,
     "runtime_state": "not yet executed on this successor"
+  },
+  "opaque_current_operand_successor": {
+    "parent_bindings_sha256": "8d486b5f22994c4cfaf56c6a4436c309f44cdd9c0d056b237bfa70674195a4a3",
+    "source_head": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
+    "reason": "exactsamephysicalbuffer bcd6\u21923fe5\u2192sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
+    "current_source_rows": 608,
+    "native_identities_unchanged": 215
   }
 }

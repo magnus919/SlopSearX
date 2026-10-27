@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "kind": "T07_T06_EXACT_OPAQUE_CURRENT_OPERAND_V1",
+  "original_capsule_sha256": "924bd720bf302560345ca264629e3aa4ce80b52df89897e9164b4cc5bc33f1c1",
+  "current": {
+    "path": "crates/ssx-mcp/src/opaque.rs",
+    "sha256": "bcd6a423ff2b917b7253718401e7618231099901cf0d178bf1ee04b2a8d82d3f",
+    "bytes": 104941,
+    "mode": "0644",
+    "git_commit": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
+    "git_blob": "2176565525f764611f2cdd3bb702e7dfce621b59"
+  },
+  "prior": {
+    "path": "crates/ssx-mcp/src/opaque.rs",
+    "sha256": "f46db8ce513e3c399169f3560324982c19562f05cc7c5b4658be581c81bc14ab",
+    "bytes": 103482,
+    "mode": "0644",
+    "git_commit": "c23d3148ec028e1c230593f6877506a152ab3271",
+    "git_blob": "1cc2f92ad584f92c98aa516e144bd586dc6d2fe4"
+  },
+  "inverse_stages": [
+    {
+      "from": {
+        "path": "crates/ssx-mcp/src/opaque.rs",
+        "sha256": "bcd6a423ff2b917b7253718401e7618231099901cf0d178bf1ee04b2a8d82d3f",
+        "bytes": 104941,
+        "mode": "0644",
+        "git_commit": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
+        "git_blob": "2176565525f764611f2cdd3bb702e7dfce621b59"
+      },
+      "to": {
+        "path": "crates/ssx-mcp/src/opaque.rs",
+        "sha256": "3fe5f2d3f32ea3de1a5da9479631bd5eff4a5253931ca0d764814a80e4628f64",
+        "bytes": 104612,
+        "mode": "0644",
+        "git_commit": "11ee12000d642cca1d1388499155b9f818af17a6",
+        "git_blob": "9de9692eb9fecc5a5445b4fd0ff931c8b94e9c2a"
+      },
+      "inverse": [
+        {
+          "at": 75977,
+          "remove_utf8": "                    rmcp::model::ContentBlock::text(format!(\n                        \"Unknown tool: {}\",\n                        crate::gateway_client::source_projection::python_string_repr(&params.name)\n                            .map_err(|error| rmcp::ErrorData::internal_error(\n                                error.to_string(),\n                                None\n                            ))?\n                    )),\n",
+          "insert_utf8": "                    rmcp::model::ContentBlock::text(format!(\"Unknown tool: {:?}\", params.name)),\n"
+        }
+      ]
+    },
+    {
+      "from": {
+        "path": "crates/ssx-mcp/src/opaque.rs",
+        "sha256": "3fe5f2d3f32ea3de1a5da9479631bd5eff4a5253931ca0d764814a80e4628f64",
+        "bytes": 104612,
+        "mode": "0644",
+        "git_commit": "11ee12000d642cca1d1388499155b9f818af17a6",
+        "git_blob": "9de9692eb9fecc5a5445b4fd0ff931c8b94e9c2a"
+      },
+      "to": {
+        "path": "crates/ssx-mcp/src/opaque.rs",
+        "sha256": "f46db8ce513e3c399169f3560324982c19562f05cc7c5b4658be581c81bc14ab",
+        "bytes": 103482,
+        "mode": "0644",
+        "git_commit": "c23d3148ec028e1c230593f6877506a152ab3271",
+        "git_blob": "1cc2f92ad584f92c98aa516e144bd586dc6d2fe4"
+      },
+      "inverse": [
+        {
+          "at": 49576,
+          "remove_utf8": "                #[cfg(windows)]\n                input_runtime: Default::default(),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 53643,
+          "remove_utf8": "    #[cfg(windows)]\n    input_runtime: crate::gateway_client::stdio_input_windows::InputRuntime,\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 63634,
+          "remove_utf8": "            #[cfg(windows)]\n            input_runtime: Default::default(),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 65001,
+          "remove_utf8": "        #[cfg(any(unix, windows))]\n",
+          "insert_utf8": "        #[cfg(unix)]\n"
+        },
+        {
+          "at": 65046,
+          "remove_utf8": "            #[cfg(unix)]\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 65157,
+          "remove_utf8": "            #[cfg(windows)]\n            let mut input = self\n                .input_runtime\n                .stdin(&crate::gateway_client::resolver::install::current_input_image()?)?;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 65676,
+          "remove_utf8": "            let drained = input.close().await;\n",
+          "insert_utf8": "            let drained = input.shutdown();\n"
+        },
+        {
+          "at": 65765,
+          "remove_utf8": "        #[cfg(not(any(unix, windows)))]\n",
+          "insert_utf8": "        #[cfg(not(unix))]\n"
+        },
+        {
+          "at": 66813,
+          "remove_utf8": "        #[cfg(windows)]\n        let input = self.input_runtime.close().await;\n        let session_result: Result<()> = (async {\n            let session = self.session.lock().unwrap().clone();\n            if let Some(session) = session {\n                let mut headers = vec![\n                    (\"mcp-session-id\", session.to_string()),\n                    (\"mcp-protocol-version\", self.protocol.clone()),\n                ];\n                if let Some(token) = &self.token {\n                    headers.push((\"authorization\", format!(\"Bearer {token}\")));\n                }\n                // Final cleanup must reach the retained network/resolver join even\n                // when DELETE needs fresh DNS or the peer holds response headers.\n                // Match rmcp's five-second session-cleanup grace. Unlike rmcp's\n                // logged timeout, our existing fail-closed cleanup contract returns\n                // failure and retains the session identity for a possible retry.\n                let limit = if self.transport_budgeted {\n                    GATEWAY_SESSION_CLEANUP_TIMEOUT\n                } else {\n                    self.deadline\n                };\n                let deadline = Some(tokio::time::Instant::now() + limit);\n                let response = gateway_until(\n                    deadline,\n                    self.http.open(GatewayHttpRequest {\n                        auth: GatewayAuthMode::ExistingBearer,\n                        method: reqwest::Method::DELETE,\n                        url: self.url.clone(),\n                        headers,\n                        body: None,\n                    }),\n                )\n                .await?;\n                let status = response.status();\n                if status.is_success() || status == 404 {\n                    self.clear_closed_session(&session);\n                } else if status != 405 {\n                    return Err(\"remote session cleanup failed\".into());\n                }\n                // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does\n                // not establish remote closure: retain identity for a later attempt.\n",
+          "insert_utf8": "        let session = self.session.lock().unwrap().clone();\n        if let Some(session) = session {\n            let mut headers = vec![\n                (\"mcp-session-id\", session.to_string()),\n                (\"mcp-protocol-version\", self.protocol.clone()),\n            ];\n            if let Some(token) = &self.token {\n                headers.push((\"authorization\", format!(\"Bearer {token}\")));\n"
+        },
+        {
+          "at": 68981,
+          "remove_utf8": "            Ok(())\n        })\n        .await;\n        #[cfg(windows)]\n        {\n            input.and(session_result)\n",
+          "insert_utf8": "            // Final cleanup must reach the retained network/resolver join even\n            // when DELETE needs fresh DNS or the peer holds response headers.\n            // Match rmcp's five-second session-cleanup grace. Unlike rmcp's\n            // logged timeout, our existing fail-closed cleanup contract returns\n            // failure and retains the session identity for a possible retry.\n            let limit = if self.transport_budgeted {\n                GATEWAY_SESSION_CLEANUP_TIMEOUT\n            } else {\n                self.deadline\n            };\n            let deadline = Some(tokio::time::Instant::now() + limit);\n            let response = gateway_until(\n                deadline,\n                self.http.open(GatewayHttpRequest {\n                    auth: GatewayAuthMode::ExistingBearer,\n                    method: reqwest::Method::DELETE,\n                    url: self.url.clone(),\n                    headers,\n                    body: None,\n                }),\n            )\n            .await?;\n            let status = response.status();\n            if status.is_success() || status == 404 {\n                self.clear_closed_session(&session);\n            } else if status != 405 {\n                return Err(\"remote session cleanup failed\".into());\n            }\n            // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does\n            // not establish remote closure: retain identity for a later attempt.\n"
+        },
+        {
+          "at": 69109,
+          "remove_utf8": "        #[cfg(not(windows))]\n        {\n            session_result\n        }\n",
+          "insert_utf8": "        Ok(())\n"
+        },
+        {
+          "at": 96475,
+          "remove_utf8": "                #[cfg(windows)]\n                input_runtime: Default::default(),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 97547,
+          "remove_utf8": "            #[cfg(windows)]\n            input_runtime: Default::default(),\n",
+          "insert_utf8": ""
+        }
+      ]
+    }
+  ],
+  "default_owner": {
+    "bytes": 4554,
+    "sha256": "2782b71431ef1260541b240a4930d29e0e2c107f9cf8111e98b5d5c8f0605f19"
+  },
+  "scope": "exactaccepted11eeWindows/inputcleanup +reviewed0acatalogquotation; reconstructoldsealedf46 thenoriginalorderedproof unchanged; no defaultstdioowner/oldfixture relaxation"
+}
