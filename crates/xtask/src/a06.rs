@@ -177,6 +177,9 @@ fn admission_capsule(root: &Path) -> Result<Value> {
 fn verify_artifact(root: &Path, row: &Value) -> Result<()> {
     let path = row["path"].as_str().ok_or("A06 artifact path missing")?;
     let expected = row["sha256"].as_str().ok_or("A06 artifact hash missing")?;
+    if crate::snapshot_fixture_amendment::a06(root, row)?.is_some() {
+        return Ok(());
+    }
     if path == "docs/rust-rewrite/a13/qualification-v1.json" {
         return crate::a13::a06_source_successor::verify_current_qualification(root, row);
     }
@@ -631,5 +634,22 @@ mod tests {
             rehashed["current_bytes"] = json!(changed.len());
             assert!(admission_bytes(&changed, expected, &rehashed).is_err());
         }
+    }
+    #[test]
+    fn snapshot_fixture_amendment_actual_artifact_consumer() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let coverage: Value = serde_json::from_slice(
+            &fs::read(root.join("docs/rust-rewrite/a06/coverage.json")).unwrap(),
+        )
+        .unwrap();
+        let row = &coverage["artifacts"][139];
+        assert_eq!(row["path"], json!("tests/test_coverage_pipeline_inputs.py"));
+        verify_artifact(&root, row).unwrap();
+        let mut wrong = row.clone();
+        wrong["sha256"] = json!("wrong");
+        assert!(verify_artifact(&root, &wrong).is_err());
+        wrong = row.clone();
+        wrong["extra"] = json!(true);
+        assert!(verify_artifact(&root, &wrong).is_err());
     }
 }
