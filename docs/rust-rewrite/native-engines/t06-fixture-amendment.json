@@ -1,0 +1,49 @@
+{
+  "schema": "T06_FROZEN_REFERENCE_CATALOG_SUCCESSOR_V1",
+  "baseline_commit": "e12744511013bd05370173e777daaef471bf9527",
+  "container": {
+    "path": "docs/rust-rewrite/t06/native_fixture_bindings.json",
+    "sha256": "16edd8d4c89f463a12e9c1bf4863086ed0268a42736c9a31df5a181b421284e2",
+    "bytes": 1974,
+    "mode": "0644"
+  },
+  "pointer": "/files/1",
+  "caller_row": {
+    "file": "crates/ssx-mcp/tests/t06_support/fixture.rs",
+    "sha256": "9b8af82a297b4a347d2c2c320ca2a05c54048c4430739b909b6bc47b5f22a3ab"
+  },
+  "prior": {
+    "path": "crates/ssx-mcp/tests/t06_support/fixture.rs",
+    "sha256": "9b8af82a297b4a347d2c2c320ca2a05c54048c4430739b909b6bc47b5f22a3ab",
+    "bytes": 15596,
+    "mode": "0644"
+  },
+  "current": {
+    "path": "crates/ssx-mcp/tests/t06_support/fixture.rs",
+    "sha256": "811885b436c2869ba989b39f4183a4c909dca4f03d4270ee263e49b5fceb0ecc",
+    "bytes": 15959,
+    "mode": "0644"
+  },
+  "edits": [
+    {
+      "at": 5655,
+      "remove_utf8": "",
+      "insert_utf8": "            false,\n"
+    },
+    {
+      "at": 6903,
+      "remove_utf8": "",
+      "insert_utf8": "            true,\n"
+    },
+    {
+      "at": 7339,
+      "remove_utf8": "",
+      "insert_utf8": "        reference_catalog: bool,\n"
+    },
+    {
+      "at": 8114,
+      "remove_utf8": "        let raw = ssx_registry::Registry::builtins().unwrap();\n",
+      "insert_utf8": "        // Only the frozen Python comparison uses its original engine universe.\n        // Native/runtime fixture construction continues to expose native additions.\n        let raw = if reference_catalog {\n            ssx_registry::Registry::migration_baseline().unwrap()\n        } else {\n            ssx_registry::Registry::builtins().unwrap()\n        };\n"
+    }
+  ]
+}

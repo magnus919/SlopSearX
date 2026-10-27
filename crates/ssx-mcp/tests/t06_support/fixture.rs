@@ -175,6 +175,7 @@ impl Fixture {
             search_config,
             jev,
             None,
+            false,
         )
         .await
     }
@@ -211,6 +212,7 @@ impl Fixture {
             SearchConfig::default(),
             None,
             Some(deadline_clock::ManualDeadlineClock::frozen()),
+            true,
         )
         .await
     }
@@ -223,6 +225,7 @@ impl Fixture {
         search_config: SearchConfig,
         jev: Option<Arc<ssx_infra::jev::JevRouter>>,
         deadline_clock: Option<Arc<dyn SearchDeadlineClock>>,
+        reference_catalog: bool,
     ) -> Self {
         let store = Arc::new(Valkey::new(url, Duration::from_secs(2)).unwrap());
         store.ping().await.unwrap();
@@ -243,7 +246,13 @@ impl Fixture {
         }
         let config = Arc::new(configuration);
         let engines: BTreeMap<_, _> = engines.into_iter().map(|e| (e.name.clone(), e)).collect();
-        let raw = ssx_registry::Registry::builtins().unwrap();
+        // Only the frozen Python comparison uses its original engine universe.
+        // Native/runtime fixture construction continues to expose native additions.
+        let raw = if reference_catalog {
+            ssx_registry::Registry::migration_baseline().unwrap()
+        } else {
+            ssx_registry::Registry::builtins().unwrap()
+        };
         let mut descriptors: Vec<_> = raw.descriptors().cloned().collect();
         // The source fixture injects EngineAdapter subclasses whose declarations are
         // intentionally the base defaults, while static class names/types remain.

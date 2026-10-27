@@ -1,6 +1,8 @@
 //! Native source-drift gate: reads frozen bytes, never executes Python.
 use sha2::{Digest, Sha256};
 use std::path::Path;
+#[path = "../../../docs/rust-rewrite/native-engines/t06-fixture-amendment.rs"]
+mod fixture_catalog_amendment;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 mod lock_amendment;
 #[path = "../../../docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"]
@@ -102,6 +104,12 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
     assert_eq!(digest(archive), storage["before_sha256"].as_str().unwrap());
     for row in native["files"].as_array().unwrap() {
         let name = row["file"].as_str().unwrap();
+        if let Some(result) =
+            fixture_catalog_amendment::verify(&root, row, &std::fs::read(root.join(name)).unwrap())
+        {
+            result.unwrap();
+            continue;
+        }
         if name == native_search::SOURCE {
             native_search::verify(
                 &root,
