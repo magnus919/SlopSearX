@@ -45,6 +45,7 @@ mod w05;
 mod w06;
 mod w06_source_amendment;
 mod w07;
+mod w08;
 mod w11;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -503,6 +504,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "W05" => w05::check(root, records),
         "W06" => w06::check(root, records),
         "W07" => w07::check(root, records),
+        "W08" => w08::check(root, records),
         "W11" => w11::check(root, records),
         "F08" => f08::check(root, records),
         "F09" => f09::check(root, records),
@@ -687,6 +689,8 @@ fn main() {
         "saved event atomic publication, exact cursors, ack/replay/retention and actual loopback native MCP with private Valkey; typed observability seam only, full O01/W09 composition pending"
     } else if id == "W06" {
         "staged planning, owned canonical search/snapshot execution and fenced recovery with private Valkey/loopback; source qualification required; no production cutover or exactly-once remote dispatch claim"
+    } else if id == "W08" {
+        "native bounded dossiers and read-only composition with actual research worker/private Valkey/loopback; final workflow transports W09 and protected portal W10 remain separate"
     } else if id == "W07" {
         "exact native receipt/record/lineage/composition/MCP execution and measured frozen Python wire subset; no providers, production activation, startup or complete rewrite certification"
     } else if id == "O03" {
