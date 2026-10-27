@@ -108,51 +108,46 @@ pub(super) fn prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
     )?;
     inverse(&doc, expected, &regular(root, SOURCE)?, "0644")
 }
+/// Invoked only by an xtask-owned test; never adds a test to frozen adapter suites.
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn snapshot_fixture_amendment_exact_main_custody_controls() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let doc: Value = serde_json::from_slice(&regular(&root, CAPSULE).unwrap()).unwrap();
-        let expected = &doc["main"]["prior"];
-        let current = regular(&root, SOURCE).unwrap();
-        let historical = prior(&root, expected).unwrap();
-        assert_eq!(
-            super::super::read_exact(&root, expected).unwrap(),
-            historical
-        );
-        assert!(inverse(&doc, expected, &historical, "0644").is_err());
-        for mode in ["0600", "0755", "4644"] {
-            assert!(inverse(&doc, expected, &current, mode).is_err());
-        }
-        let mut bad = expected.clone();
-        bad["sha256"] = serde_json::json!("wrong");
-        assert!(inverse(&doc, &bad, &current, "0644").is_err());
-        bad = expected.clone();
-        bad["bytes"] = serde_json::json!(0);
-        assert!(inverse(&doc, &bad, &current, "0644").is_err());
-        let mut changed = current.clone();
-        changed.push(b'\n');
-        let mut rehashed = doc.clone();
-        rehashed["main"]["current"]["sha256"] = serde_json::json!(super::super::digest(&changed));
-        rehashed["main"]["current"]["bytes"] = serde_json::json!(changed.len());
-        assert!(inverse(&rehashed, expected, &changed, "0644").is_err());
-        for mutation in 0..3 {
-            let mut wrong = doc.clone();
-            let edits = wrong["main"]["edits"].as_array_mut().unwrap();
-            match mutation {
-                0 => {
-                    edits.pop();
-                }
-                1 => {
-                    edits.push(edits[0].clone());
-                }
-                _ => {
-                    edits[0]["at"] = serde_json::json!(0);
-                }
-            }
-            assert!(inverse(&wrong, expected, &current, "0644").is_err());
-        }
+#[allow(dead_code)]
+pub(super) fn controls(root: &Path) -> Result<(), String> {
+    let doc: Value = serde_json::from_slice(&regular(root, CAPSULE).unwrap()).unwrap();
+    let expected = &doc["main"]["prior"];
+    let current = regular(root, SOURCE).unwrap();
+    let historical = prior(root, expected).unwrap();
+    assert_eq!(super::read_exact(root, expected).unwrap(), historical);
+    assert!(inverse(&doc, expected, &historical, "0644").is_err());
+    for mode in ["0600", "0755", "4644"] {
+        assert!(inverse(&doc, expected, &current, mode).is_err());
     }
+    let mut bad = expected.clone();
+    bad["sha256"] = serde_json::json!("wrong");
+    assert!(inverse(&doc, &bad, &current, "0644").is_err());
+    bad = expected.clone();
+    bad["bytes"] = serde_json::json!(0);
+    assert!(inverse(&doc, &bad, &current, "0644").is_err());
+    let mut changed = current.clone();
+    changed.push(b'\n');
+    let mut rehashed = doc.clone();
+    rehashed["main"]["current"]["sha256"] = serde_json::json!(super::digest(&changed));
+    rehashed["main"]["current"]["bytes"] = serde_json::json!(changed.len());
+    assert!(inverse(&rehashed, expected, &changed, "0644").is_err());
+    for mutation in 0..3 {
+        let mut wrong = doc.clone();
+        let edits = wrong["main"]["edits"].as_array_mut().unwrap();
+        match mutation {
+            0 => {
+                edits.pop();
+            }
+            1 => {
+                edits.push(edits[0].clone());
+            }
+            _ => {
+                edits[0]["at"] = serde_json::json!(0);
+            }
+        }
+        assert!(inverse(&wrong, expected, &current, "0644").is_err());
+    }
+    Ok(())
 }

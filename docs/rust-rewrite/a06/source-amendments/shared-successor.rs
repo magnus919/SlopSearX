@@ -1854,3 +1854,10 @@ pub(crate) fn generation_control_operand(
 pub(crate) fn native_catalog_source_controls(root: &Path) -> Result<(), String> {
     native_catalog::controls(root)
 }
+
+/// Keep source-proof controls out of the frozen integration-test inventories.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> {
+    snapshot_fixture_main::controls(root)
+}
