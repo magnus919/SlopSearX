@@ -23,16 +23,12 @@ use std::{
         Arc,
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
-    task::{Context, Poll, Wake, Waker},
+    task::{Context, Poll, Waker},
 };
 fn run<T>(future: impl Future<Output = T>) -> T {
-    struct NoWake;
-    impl Wake for NoWake {
-        fn wake(self: Arc<Self>) {}
-    }
-    let waker = Waker::from(Arc::new(NoWake));
+    let waker = Waker::noop();
     let mut future = std::pin::pin!(future);
-    match future.as_mut().poll(&mut Context::from_waker(&waker)) {
+    match future.as_mut().poll(&mut Context::from_waker(waker)) {
         Poll::Ready(v) => v,
         Poll::Pending => panic!("fixture unexpectedly needs a runtime"),
     }
