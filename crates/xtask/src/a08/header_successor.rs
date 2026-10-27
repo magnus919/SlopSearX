@@ -111,6 +111,22 @@ struct Material {
 fn permission_bits(raw: u32) -> u32 {
     raw & 0o7777
 }
+fn infra_manifest_claim(row: &Value) -> Result<()> {
+    require(
+        *row == json!({"path":"crates/ssx-infra/Cargo.toml","sha256":"349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e","bytes":1254,"mode":420}),
+        "UA exact infra manifest caller differs",
+    )
+}
+fn infra_manifest_prior(root: &Path, row: &Value) -> Result<Material> {
+    infra_manifest_claim(row)?;
+    let claim = json!({"path":"crates/ssx-infra/Cargo.toml","sha256":"349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e","bytes":1254,"mode":"0644"});
+    let bytes =
+        crate::a13::a06_source_successor::main_isolation_current::a06_current_operand(root, &claim)
+            .ok_or("UA exact infra manifest projection absent")??;
+    let prior = Material { bytes, mode: 0o644 };
+    material(row, &prior)?;
+    Ok(prior)
+}
 fn load(root: &Path, path: &str) -> Result<Material> {
     let old = match path {
         "crates/ssx-infra/tests/a08_factories.rs" => Some((
@@ -414,6 +430,20 @@ fn must_reject(result: Result<Value>, why: &str) -> Result<()> {
     require(result.is_err(), why)
 }
 fn controls(doc: &Value, materials: &BTreeMap<String, Material>) -> Result<()> {
+    let infra = rows(doc, "fixed_sources")?
+        .iter()
+        .find(|r| r["path"] == "crates/ssx-infra/Cargo.toml")
+        .ok_or("UA infra manifest row absent")?;
+    infra_manifest_claim(infra)?;
+    for key in ["path", "sha256", "bytes", "mode"] {
+        let mut wrong = infra.clone();
+        wrong[key] = json!("unlisted");
+        require(
+            infra_manifest_claim(&wrong).is_err(),
+            "UA changed infra manifest caller accepted",
+        )?;
+    }
+
     let check = |d: &Value, m: &BTreeMap<String, Material>| {
         validate(d, &|p| {
             m.get(p)
@@ -654,6 +684,8 @@ pub(crate) fn verify(root: &Path, records: &mut Vec<Value>) -> Result<Value> {
                 bytes: crate::a13::a06_source_successor::user_agent_manifest_prior(root, row)?,
                 mode: 0o644,
             }
+        } else if path == "crates/ssx-infra/Cargo.toml" {
+            infra_manifest_prior(root, row)?
         } else {
             load(root, path)?
         };
