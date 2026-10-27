@@ -48,3 +48,6 @@ pub use process::FixtureInput;
 pub use process::FixtureProcessWitness;
 #[cfg(feature = "fixtures")]
 pub use trust::fixture_public_access;
+
+#[cfg(feature = "fixtures")]
+pub use confidential::FixtureConfidentialRead;

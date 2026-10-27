@@ -202,3 +202,49 @@ async fn windows_abrupt_original_parent_death_closes_last_job_handle_and_retires
     );
     original.exited(BUDGET).await.unwrap();
 }
+
+#[test]
+fn windows_held_confidential_read_atomic_replace_and_parent_rename_have_coherent_kernel_outcomes() {
+    use ssx_windows_owner::{
+        FixtureConfidentialRead, read_confidential_file, write_confidential_file,
+    };
+    let root = root("token-overlap");
+    let directory = root.join("held-parent");
+    ssx_windows_owner::create_private_directory(&directory).unwrap();
+    let path = directory.join("oauth.json");
+    let old = br#"{"tokens":{"access_token":"old-complete-fixture"}}"#;
+    let new = br#"{"tokens":{"access_token":"new-complete-fixture-with-different-length"}}"#;
+    write_confidential_file(&path, old, [5; 16]).unwrap();
+    // Paired positive prevents an always-denied fixture read from qualifying.
+    match FixtureConfidentialRead::open(&path)
+        .unwrap()
+        .read(4096)
+        .unwrap()
+    {
+        ConfidentialRead::Bytes(bytes) => assert_eq!(bytes, old),
+        _ => panic!("positive original read did not return the complete document"),
+    }
+    let held = FixtureConfidentialRead::open(&path).unwrap();
+    // Actual kernel file + directory handles remain open during publication.
+    write_confidential_file(&path, new, [6; 16]).unwrap();
+    ssx_windows_owner::check_confidential_file(&path).unwrap();
+    match read_confidential_file(&path, 4096).unwrap() {
+        ConfidentialRead::Bytes(bytes) => assert_eq!(bytes, new),
+        _ => panic!("fresh pathname did not publish the complete new document"),
+    }
+    let moved = root.join("moved-parent");
+    let denial = std::fs::rename(&directory, &moved).unwrap_err();
+    assert_eq!(denial.kind(), std::io::ErrorKind::PermissionDenied);
+    assert!(directory.is_dir() && !moved.exists());
+    // Windows may report the replaced original as delete-pending/link-retired.
+    // Its exact production identity check must deny that state, never publish
+    // partial bytes or silently switch the held reader to the new pathname.
+    match held.read(4096) {
+        Ok(ConfidentialRead::Bytes(bytes)) => assert_eq!(bytes, old),
+        Err(error) => assert_eq!(error.kind(), std::io::ErrorKind::InvalidData),
+        _ => panic!("held read neither returned old-complete nor classified identity denial"),
+    }
+    // Releasing the original guard really removes the parent sharing fence.
+    std::fs::rename(&directory, &moved).unwrap();
+    ssx_windows_owner::check_confidential_file(&moved.join("oauth.json")).unwrap();
+}

@@ -1,7 +1,7 @@
 //! Token document policy, distinct from publicly readable package integrity.
 //! The current user, SYSTEM and Administrators remain the trusted principals.
 use crate::trust::{
-    create_private_directory, create_private_file, identity, opened, opened_confidential,
+    Identity, create_private_directory, create_private_file, identity, opened, opened_confidential,
 };
 use std::{
     fs::{self, File},
@@ -52,15 +52,30 @@ pub fn read_confidential_file(path: &Path, limit: usize) -> io::Result<Confident
         Err(error) => return Err(error),
         Ok(_) => (),
     }
-    let _parent = opened(parent(&path)?, true)?;
-    let mut file = opened_confidential(&path)?;
+    read_admitted(admit(&path)?, limit)
+}
+struct AdmittedRead {
+    file: File,
+    _parent: File,
+    before: Identity,
+}
+fn admit(path: &Path) -> io::Result<AdmittedRead> {
+    let parent = opened(parent(path)?, true)?;
+    let file = opened_confidential(path)?;
     let before = identity(&file, false)?;
+    Ok(AdmittedRead {
+        file,
+        _parent: parent,
+        before,
+    })
+}
+fn read_admitted(mut admitted: AdmittedRead, limit: usize) -> io::Result<ConfidentialRead> {
     let bound = limit.checked_add(1).ok_or(io::ErrorKind::InvalidInput)?;
     let mut bytes = Vec::new();
-    Read::by_ref(&mut file)
+    Read::by_ref(&mut admitted.file)
         .take(bound as u64)
         .read_to_end(&mut bytes)?;
-    if identity(&file, false)? != before {
+    if identity(&admitted.file, false)? != admitted.before {
         return Err(io::ErrorKind::InvalidData.into());
     }
     Ok(if bytes.len() > limit {
@@ -68,6 +83,19 @@ pub fn read_confidential_file(path: &Path, limit: usize) -> io::Result<Confident
     } else {
         ConfidentialRead::Bytes(bytes)
     })
+}
+/// A deterministic fixture barrier after the exact production read admission.
+/// Owns the original handles; exposes no raw handle or new file access policy.
+#[cfg(feature = "fixtures")]
+pub struct FixtureConfidentialRead(AdmittedRead);
+#[cfg(feature = "fixtures")]
+impl FixtureConfidentialRead {
+    pub fn open(path: &Path) -> io::Result<Self> {
+        Ok(Self(admit(&absolute(path)?)?))
+    }
+    pub fn read(self, limit: usize) -> io::Result<ConfidentialRead> {
+        read_admitted(self.0, limit)
+    }
 }
 pub fn write_confidential_file(path: &Path, bytes: &[u8], nonce: [u8; 16]) -> io::Result<()> {
     let path = absolute(path)?;
