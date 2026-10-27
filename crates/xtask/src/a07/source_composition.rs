@@ -84,6 +84,17 @@ fn composition_material(root: &Path, path: &str) -> Result<Material> {
             )?,
             mode: 0o644,
         })
+    } else if path == "crates/ssx-infra/tests/support/default_ca_environment.rs" {
+        Ok(Material {
+            bytes: crate::a13::a06_source_successor::default_ca_fixture_operand(
+                root,
+                path,
+                "00aee0178f3f111449e5a6e99f495538a1eafa29ec95ced7d8343a3a8ee1108c",
+                Some(959),
+            )
+            .ok_or("A07 default-CA fixture tuple not selected")??,
+            mode: 0o644,
+        })
     } else {
         load(root, path)
     }

@@ -10,15 +10,15 @@ use std::{
     time::{Duration, Instant},
 };
 const HARNESS: &str = "groktopus/codereview";
-const REVISION: &str = "04c7fc0b42221872e6c6b611be91c68e462fc679";
+const REVISION: &str = "1c76d40290cdaf9b6603721f899da6c7e8a382b4";
 const PROTECTED_PINS: [(&str, &str); 4] = [
     (
         ".github/workflows/pr-publish.yml",
-        "766b73be90a60adad843b71cf8995dbb8eb9c2c1",
+        "e68453f8a89ed6fa0c918a1e5ecadd41f8b7d03a",
     ),
     (
         ".github/workflows/pr-review-analysis.yml",
-        "b2f2519d292e94b291280b323dfa2a366e66c444",
+        "57cebed7b7f4e73e30ca673c88d8c4d56c149c6b",
     ),
     (
         ".github/workflows/protected-source-context-probe.yml",
@@ -26,7 +26,7 @@ const PROTECTED_PINS: [(&str, &str); 4] = [
     ),
     (
         ".github/pr-review-publisher-policy.json",
-        "c8ecda28988b1bb0681a1ce31448a51ae7606c30",
+        "701803af2a510fc127cdaa59056776f1d439ab6a",
     ),
 ];
 fn bounded(path: &Path) -> Result<String> {

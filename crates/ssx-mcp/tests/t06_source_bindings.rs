@@ -3,9 +3,12 @@ use sha2::{Digest, Sha256};
 use std::path::Path;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 mod lock_amendment;
+#[path = "../../../docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"]
+mod native_search;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    native_search::controls(&root).unwrap();
     let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
     assert_eq!(
         Sha256::digest(raw)
@@ -99,6 +102,16 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
     assert_eq!(digest(archive), storage["before_sha256"].as_str().unwrap());
     for row in native["files"].as_array().unwrap() {
         let name = row["file"].as_str().unwrap();
+        if name == native_search::SOURCE {
+            native_search::verify(
+                &root,
+                name,
+                row["sha256"].as_str().unwrap(),
+                &std::fs::read(root.join(name)).unwrap(),
+            )
+            .unwrap();
+            continue;
+        }
         let expected = if row["file"] == storage["file"] {
             assert_eq!(row["sha256"], storage["before_sha256"]);
             storage["after_sha256"].as_str().unwrap()

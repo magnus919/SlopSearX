@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  foundation:
-    name: Foundation (${{ matrix.runner }})
+  foundation-prerequisites:
+    name: Foundation prerequisites (${{ matrix.runner }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     strategy:
@@ -109,14 +109,59 @@ jobs:
             printf 'SLOPSEARX_TEST_VALKEY_SERVER_SHA256=%s\n' "$(sha256sum "$valkey_server" | cut -d ' ' -f 1)"
           } >> "$GITHUB_ENV"
 
+      - name: Fresh source-bound workspace compiler provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          evidence="target/rust-evidence/partitions/prerequisites"
+          mkdir -p "$evidence"
+          git ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > "$evidence/source-before.sha256z"
+          git ls-files --stage -z > "$evidence/stage-before.z"
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ]
+          [ -z "$(git status --porcelain)" ]
+          rustc --version --verbose > "$evidence/rustc.txt"
+          cargo --version --verbose > "$evidence/cargo.txt"
+          sha256sum Cargo.toml Cargo.lock rust-toolchain.toml > "$evidence/build-inputs.sha256"
+          cargo build --locked --workspace --all-targets --message-format=json-render-diagnostics > "$evidence/workspace.jsonl"
+          PARTITION=prerequisites TARGET_TRIPLE="${{ matrix.target }}" node <<'NODE'
+          const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+          const root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;
+          const rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\n').map(JSON.parse);
+          const need = (v, s) => { if (!v) throw Error(s); };
+          need(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');
+          const selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);
+          need(selected.length > 0, 'actual executable contexts');
+          const images = selected.map(artifact => {
+            const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);
+            need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');
+            need(artifact.filenames.includes(artifact.executable), 'declared executable filename');
+            const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');
+            return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };
+          });
+          fs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual pre-gate compiler contexts and executable hashes; no immutable byte-archive or OS launch-image claim' }, null, 2) + '\n');
+          NODE
+
       - name: Formatting
         run: cargo fmt --all --check
 
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
+      - name: Build actual-process HTTP fixture server
+        run: cargo build --locked -p ssx-http --example t02_fixture
+
       - name: Workspace tests, including xtask
-        run: cargo test --locked --workspace
+        env:
+          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-workspace
+          TMPDIR: ${{ runner.temp }}/t02-sockets-workspace
+          TMP: ${{ runner.temp }}/t02-sockets-workspace
+          TEMP: ${{ runner.temp }}/t02-sockets-workspace
+        run: |
+          mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
+          trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT" 2>/dev/null || true' EXIT
+          cargo test --locked --workspace
 
       - name: Linux held-writer interpreter mutation control
         timeout-minutes: 10
@@ -313,8 +358,186 @@ jobs:
             exit 1
           fi
 
+      - name: Verify prerequisites source and index unchanged
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="target/rust-evidence/partitions/prerequisites"
+          git ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > "$evidence/source-after.sha256z"
+          git ls-files --stage -z > "$evidence/stage-after.z"
+          cmp "$evidence/source-before.sha256z" "$evidence/source-after.sha256z"
+          cmp "$evidence/stage-before.z" "$evidence/stage-after.z"
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ]
+          [ -z "$(git status --porcelain)" ]
+
+      - name: Retain prerequisites foundation partition evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-foundation-prerequisites-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            target/rust-evidence/
+            target/rust-feature-graph.txt
+          if-no-files-found: warn
+
+  foundation-runtime:
+    name: Foundation runtime (${{ matrix.runner }})
+    needs: foundation-prerequisites
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Confirm pinned toolchain
+        run: rustc --version --verbose
+
+      - name: Install mandatory offline replay isolation
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor
+          /usr/bin/bwrap --version
+          # Same namespace/capability flags as the native runner; no candidate runs here.
+          replay_setup_probe() {
+            /usr/bin/bwrap --unshare-user --unshare-net --unshare-pid --disable-userns \
+              --cap-drop ALL --new-session --die-with-parent --ro-bind / / \
+              --proc /proc --dev /dev -- /bin/sh -c \
+              'cat /proc/self/attr/current; grep "^CapEff:" /proc/self/status; cat /proc/net/dev'
+          }
+          sudo cat /sys/kernel/security/apparmor/profiles | grep -E '^(bwrap|unpriv_bwrap)' || true
+          # Refuse an unexpected executable attachment instead of layering a second profile.
+          for policy in /etc/apparmor.d/*; do
+            if [ -f "$policy" ] && grep -Eq '^[[:space:]]*(profile[[:space:]]+[^[:space:]]+[[:space:]]+)?/usr/bin/bwrap([[:space:]]|$)' "$policy"; then
+              echo "Existing bubblewrap policy: $policy"
+              cat "$policy"
+              if ! grep -Eq '^[[:space:]]*profile[[:space:]]+bwrap[[:space:]]+/usr/bin/bwrap([[:space:]]|$)' "$policy"; then
+                echo "Unexpected bwrap attachment identity; refusing policy replacement" >&2
+                exit 1
+              fi
+            fi
+          done
+          if ! replay_setup_probe; then
+            sudo journalctl -k --no-pager -n 100 | grep -E 'apparmor|userns|bwrap' || true
+          fi
+          # Purpose-built bwrap setup profile plus capability-denied child stack.
+          # See docs/rust-rewrite/replay/README.md for upstream policy provenance.
+          sudo apparmor_parser --replace <<'PROFILE'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile bwrap /usr/bin/bwrap flags=(attach_disconnected,mediate_deleted) {
+            capability,
+            file rwlkm /{**,},
+            network,
+            unix,
+            ptrace,
+            signal,
+            userns,
+            mount,
+            umount,
+            pivot_root,
+            dbus,
+            pix /** -> &bwrap//&ssx_replay_unpriv,
+          }
+          profile ssx_replay_unpriv flags=(attach_disconnected,mediate_deleted) {
+            file rwlkm /{**,},
+            network,
+            unix,
+            ptrace,
+            signal,
+            userns,
+            mount,
+            umount,
+            pivot_root,
+            dbus,
+            pix /** -> &ssx_replay_unpriv,
+            audit deny capability,
+          }
+          PROFILE
+          replay_setup_probe
+
+      - name: Build pinned disposable native Valkey
+        timeout-minutes: 15
+        run: |
+          sh scripts/rust-valkey-build.sh "$RUNNER_TEMP/ssx-valkey/bin"
+          echo "$RUNNER_TEMP/ssx-valkey/bin" >> "$GITHUB_PATH"
+          valkey_server="$RUNNER_TEMP/ssx-valkey/bin/valkey-server"
+          {
+            printf 'SLOPSEARX_TEST_VALKEY_SERVER=%s\n' "$valkey_server"
+            printf 'SLOPSEARX_TEST_VALKEY_SERVER_SHA256=%s\n' "$(sha256sum "$valkey_server" | cut -d ' ' -f 1)"
+          } >> "$GITHUB_ENV"
+
+      - name: Build actual-process HTTP fixture server
+        run: cargo build --locked -p ssx-http --example t02_fixture
+
+      - name: Locked workspace build
+        run: cargo build --locked --workspace --target "${{ matrix.target }}"
+
+      - name: Verify outbound TLS feature graph
+        run: |
+          cargo tree --locked --workspace -e features > target/rust-feature-graph.txt
+          grep -q 'rustls-platform-verifier' target/rust-feature-graph.txt
+          if grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then
+            echo "unexpected native-TLS/OpenSSL backend in the locked feature graph" >&2
+            exit 1
+          fi
+
+      - name: Fresh source-bound workspace compiler provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          evidence="target/rust-evidence/partitions/runtime"
+          mkdir -p "$evidence"
+          git ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > "$evidence/source-before.sha256z"
+          git ls-files --stage -z > "$evidence/stage-before.z"
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ]
+          [ -z "$(git status --porcelain)" ]
+          rustc --version --verbose > "$evidence/rustc.txt"
+          cargo --version --verbose > "$evidence/cargo.txt"
+          sha256sum Cargo.toml Cargo.lock rust-toolchain.toml > "$evidence/build-inputs.sha256"
+          cargo build --locked --workspace --all-targets --message-format=json-render-diagnostics > "$evidence/workspace.jsonl"
+          PARTITION=runtime TARGET_TRIPLE="${{ matrix.target }}" node <<'NODE'
+          const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+          const root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;
+          const rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\n').map(JSON.parse);
+          const need = (v, s) => { if (!v) throw Error(s); };
+          need(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');
+          const selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);
+          need(selected.length > 0, 'actual executable contexts');
+          const images = selected.map(artifact => {
+            const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);
+            need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');
+            need(artifact.filenames.includes(artifact.executable), 'declared executable filename');
+            const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');
+            return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };
+          });
+          fs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual pre-gate compiler contexts and executable hashes; no immutable byte-archive or OS launch-image claim' }, null, 2) + '\n');
+          NODE
+
       - name: Foundation lane evidence
-        run: cargo xtask check F03 --output target/rust-evidence/F03.json
+        env:
+          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-f03
+          TMPDIR: ${{ runner.temp }}/t02-sockets-f03
+          TMP: ${{ runner.temp }}/t02-sockets-f03
+          TEMP: ${{ runner.temp }}/t02-sockets-f03
+        run: |
+          mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
+          trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT" 2>/dev/null || true' EXIT
+          cargo xtask check F03 --output target/rust-evidence/F03.json
 
       - name: Portable replay and differential evidence
         run: cargo xtask check F04 --output target/rust-evidence/F04.json
@@ -332,7 +555,15 @@ jobs:
         run: cargo xtask check T01 --output target/rust-evidence/T01.json
 
       - name: Typed records and stable serialization evidence
-        run: cargo xtask check F05 --output target/rust-evidence/F05.json
+        env:
+          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-f05
+          TMPDIR: ${{ runner.temp }}/t02-sockets-f05
+          TMP: ${{ runner.temp }}/t02-sockets-f05
+          TEMP: ${{ runner.temp }}/t02-sockets-f05
+        run: |
+          mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
+          trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT" 2>/dev/null || true' EXIT
+          cargo xtask check F05 --output target/rust-evidence/F05.json
 
       - name: Layered configuration and engine registry evidence
         run: cargo xtask check F06 --output target/rust-evidence/F06.json
@@ -354,6 +585,17 @@ jobs:
 
       - name: Bounded semantic reranking and read-boundary advisory evidence
         run: cargo xtask check F15 --output target/rust-evidence/F15.json
+
+      - name: Native HTTP original corpus and real-process evidence
+        env:
+          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets
+          TMPDIR: ${{ runner.temp }}/t02-sockets
+          TMP: ${{ runner.temp }}/t02-sockets
+          TEMP: ${{ runner.temp }}/t02-sockets
+        run: |
+          mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
+          trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT" 2>/dev/null || true' EXIT
+          cargo xtask check T02 --output target/rust-evidence/T02.json
 
       - name: Native Valkey ownership and lifecycle evidence
         run: cargo xtask check F07 --output target/rust-evidence/F07.json
@@ -396,6 +638,176 @@ jobs:
 
       - name: Browser OIDC sessions and tenant authority evidence
         run: cargo xtask check T09 --output target/rust-evidence/T09.json
+      - name: Verify runtime source and index unchanged
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="target/rust-evidence/partitions/runtime"
+          git ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > "$evidence/source-after.sha256z"
+          git ls-files --stage -z > "$evidence/stage-after.z"
+          cmp "$evidence/source-before.sha256z" "$evidence/source-after.sha256z"
+          cmp "$evidence/stage-before.z" "$evidence/stage-after.z"
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ]
+          [ -z "$(git status --porcelain)" ]
+
+      - name: Retain runtime foundation partition evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-foundation-runtime-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            target/rust-evidence/
+            target/rust-feature-graph.txt
+          if-no-files-found: warn
+
+  foundation-adapters:
+    name: Foundation adapters (${{ matrix.runner }})
+    needs: foundation-prerequisites
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Confirm pinned toolchain
+        run: rustc --version --verbose
+
+      - name: Install mandatory offline replay isolation
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor
+          /usr/bin/bwrap --version
+          # Same namespace/capability flags as the native runner; no candidate runs here.
+          replay_setup_probe() {
+            /usr/bin/bwrap --unshare-user --unshare-net --unshare-pid --disable-userns \
+              --cap-drop ALL --new-session --die-with-parent --ro-bind / / \
+              --proc /proc --dev /dev -- /bin/sh -c \
+              'cat /proc/self/attr/current; grep "^CapEff:" /proc/self/status; cat /proc/net/dev'
+          }
+          sudo cat /sys/kernel/security/apparmor/profiles | grep -E '^(bwrap|unpriv_bwrap)' || true
+          # Refuse an unexpected executable attachment instead of layering a second profile.
+          for policy in /etc/apparmor.d/*; do
+            if [ -f "$policy" ] && grep -Eq '^[[:space:]]*(profile[[:space:]]+[^[:space:]]+[[:space:]]+)?/usr/bin/bwrap([[:space:]]|$)' "$policy"; then
+              echo "Existing bubblewrap policy: $policy"
+              cat "$policy"
+              if ! grep -Eq '^[[:space:]]*profile[[:space:]]+bwrap[[:space:]]+/usr/bin/bwrap([[:space:]]|$)' "$policy"; then
+                echo "Unexpected bwrap attachment identity; refusing policy replacement" >&2
+                exit 1
+              fi
+            fi
+          done
+          if ! replay_setup_probe; then
+            sudo journalctl -k --no-pager -n 100 | grep -E 'apparmor|userns|bwrap' || true
+          fi
+          # Purpose-built bwrap setup profile plus capability-denied child stack.
+          # See docs/rust-rewrite/replay/README.md for upstream policy provenance.
+          sudo apparmor_parser --replace <<'PROFILE'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile bwrap /usr/bin/bwrap flags=(attach_disconnected,mediate_deleted) {
+            capability,
+            file rwlkm /{**,},
+            network,
+            unix,
+            ptrace,
+            signal,
+            userns,
+            mount,
+            umount,
+            pivot_root,
+            dbus,
+            pix /** -> &bwrap//&ssx_replay_unpriv,
+          }
+          profile ssx_replay_unpriv flags=(attach_disconnected,mediate_deleted) {
+            file rwlkm /{**,},
+            network,
+            unix,
+            ptrace,
+            signal,
+            userns,
+            mount,
+            umount,
+            pivot_root,
+            dbus,
+            pix /** -> &ssx_replay_unpriv,
+            audit deny capability,
+          }
+          PROFILE
+          replay_setup_probe
+
+      - name: Build pinned disposable native Valkey
+        timeout-minutes: 15
+        run: |
+          sh scripts/rust-valkey-build.sh "$RUNNER_TEMP/ssx-valkey/bin"
+          echo "$RUNNER_TEMP/ssx-valkey/bin" >> "$GITHUB_PATH"
+          valkey_server="$RUNNER_TEMP/ssx-valkey/bin/valkey-server"
+          {
+            printf 'SLOPSEARX_TEST_VALKEY_SERVER=%s\n' "$valkey_server"
+            printf 'SLOPSEARX_TEST_VALKEY_SERVER_SHA256=%s\n' "$(sha256sum "$valkey_server" | cut -d ' ' -f 1)"
+          } >> "$GITHUB_ENV"
+
+      - name: Build actual-process HTTP fixture server
+        run: cargo build --locked -p ssx-http --example t02_fixture
+
+      - name: Locked workspace build
+        run: cargo build --locked --workspace --target "${{ matrix.target }}"
+
+      - name: Verify outbound TLS feature graph
+        run: |
+          cargo tree --locked --workspace -e features > target/rust-feature-graph.txt
+          grep -q 'rustls-platform-verifier' target/rust-feature-graph.txt
+          if grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then
+            echo "unexpected native-TLS/OpenSSL backend in the locked feature graph" >&2
+            exit 1
+          fi
+
+      - name: Fresh source-bound workspace compiler provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          evidence="target/rust-evidence/partitions/adapters"
+          mkdir -p "$evidence"
+          git ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > "$evidence/source-before.sha256z"
+          git ls-files --stage -z > "$evidence/stage-before.z"
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ]
+          [ -z "$(git status --porcelain)" ]
+          rustc --version --verbose > "$evidence/rustc.txt"
+          cargo --version --verbose > "$evidence/cargo.txt"
+          sha256sum Cargo.toml Cargo.lock rust-toolchain.toml > "$evidence/build-inputs.sha256"
+          cargo build --locked --workspace --all-targets --message-format=json-render-diagnostics > "$evidence/workspace.jsonl"
+          PARTITION=adapters TARGET_TRIPLE="${{ matrix.target }}" node <<'NODE'
+          const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+          const root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;
+          const rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\n').map(JSON.parse);
+          const need = (v, s) => { if (!v) throw Error(s); };
+          need(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');
+          const selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);
+          need(selected.length > 0, 'actual executable contexts');
+          const images = selected.map(artifact => {
+            const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);
+            need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');
+            need(artifact.filenames.includes(artifact.executable), 'declared executable filename');
+            const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');
+            return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };
+          });
+          fs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual pre-gate compiler contexts and executable hashes; no immutable byte-archive or OS launch-image claim' }, null, 2) + '\n');
+          NODE
+
       - name: Native npm and crates registry pilot adapters
         run: cargo xtask check A01 --output target/rust-evidence/A01.json
 
@@ -439,6 +851,99 @@ jobs:
           SSX_SERVER_BIN: target/${{ matrix.target }}/debug/ssx-server
         run: sh scripts/rust-foundation-smoke.sh
 
+      - name: Verify adapters source and index unchanged
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="target/rust-evidence/partitions/adapters"
+          git ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > "$evidence/source-after.sha256z"
+          git ls-files --stage -z > "$evidence/stage-after.z"
+          cmp "$evidence/source-before.sha256z" "$evidence/source-after.sha256z"
+          cmp "$evidence/stage-before.z" "$evidence/stage-after.z"
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ]
+          [ -z "$(git status --porcelain)" ]
+
+      - name: Retain adapters foundation partition evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-foundation-adapters-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            target/rust-evidence/
+            target/rust-feature-graph.txt
+          if-no-files-found: warn
+
+  foundation:
+    name: Foundation (${{ matrix.runner }})
+    if: ${{ always() }}
+    needs: [foundation-prerequisites, foundation-runtime, foundation-adapters]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download prerequisites partition
+        id: download-prerequisites
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: rust-foundation-prerequisites-${{ matrix.target }}-${{ github.sha }}
+          path: ${{ runner.temp }}/foundation-partitions/prerequisites
+
+      - name: Download runtime partition
+        id: download-runtime
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: rust-foundation-runtime-${{ matrix.target }}-${{ github.sha }}
+          path: ${{ runner.temp }}/foundation-partitions/runtime
+
+      - name: Download adapters partition
+        id: download-adapters
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: rust-foundation-adapters-${{ matrix.target }}-${{ github.sha }}
+          path: ${{ runner.temp }}/foundation-partitions/adapters
+
+      - name: Merge retained partition artifacts without overwrites
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target/rust-evidence
+          for partition in prerequisites runtime adapters; do
+            input="$RUNNER_TEMP/foundation-partitions/$partition"
+            if [ ! -d "$input" ]; then continue; fi
+            if find "$input" -type l -print -quit | grep -q .; then
+              echo "Refusing a symlink in retained partition artifacts" >&2; exit 1
+            fi
+            while IFS= read -r -d '' file; do
+              rel=${file#"$input/"}
+              case "$rel" in rust-evidence/*|rust-feature-graph.txt) ;; *) echo "Unexpected artifact path: $rel" >&2; exit 1;; esac
+              output="target/$rel"
+              if [ -e "$output" ]; then cmp "$file" "$output"; else mkdir -p "$(dirname "$output")"; cp "$file" "$output"; fi
+            done < <(find "$input" -type f -print0)
+          done
+          printf 'source_revision=%s\ntarget=%s\nprerequisites=%s\nruntime=%s\nadapters=%s\n' "$GITHUB_SHA" "${{ matrix.target }}" "${{ needs.foundation-prerequisites.result }}" "${{ needs.foundation-runtime.result }}" "${{ needs.foundation-adapters.result }}" > target/rust-evidence/foundation-partitions.txt
+
       - name: Retain source-bound foundation evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -472,6 +977,7 @@ jobs:
             target/rust-evidence/F13.json
             target/rust-evidence/F14.json
             target/rust-evidence/F15.json
+            target/rust-evidence/T02.json
             target/rust-evidence/T09.json
             target/rust-evidence/A01.json
             target/rust-evidence/A02.json
@@ -489,7 +995,43 @@ jobs:
             target/rust-evidence/A13.json
             target/rust-evidence/A14.json
             target/rust-feature-graph.txt
+            target/rust-evidence/partitions/
+            target/rust-evidence/foundation-partitions.txt
           if-no-files-found: warn
+
+      - name: Require every partition and the complete original evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "${{ needs.foundation-prerequisites.result }}" = success ]
+          [ "${{ needs.foundation-runtime.result }}" = success ]
+          [ "${{ needs.foundation-adapters.result }}" = success ]
+          [ "${{ steps.download-prerequisites.outcome }}" = success ]
+          [ "${{ steps.download-runtime.outcome }}" = success ]
+          [ "${{ steps.download-adapters.outcome }}" = success ]
+          for plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
+          test -s target/rust-feature-graph.txt
+          for partition in prerequisites runtime adapters; do
+            test -s "target/rust-evidence/partitions/$partition/workspace.jsonl"
+            test -s "target/rust-evidence/partitions/$partition/compiler-images.json"
+            cmp "target/rust-evidence/partitions/$partition/source-before.sha256z" "target/rust-evidence/partitions/$partition/source-after.sha256z"
+            cmp "target/rust-evidence/partitions/$partition/stage-before.z" "target/rust-evidence/partitions/$partition/stage-after.z"
+          done
+          cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/runtime/source-before.sha256z
+          cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/adapters/source-before.sha256z
+          TARGET_TRIPLE="${{ matrix.target }}" node <<'NODE'
+          const fs = require('node:fs');
+          for (const partition of ['prerequisites', 'runtime', 'adapters']) {
+            const value = JSON.parse(fs.readFileSync(`target/rust-evidence/partitions/${partition}/identity.json`, 'utf8'));
+            if (value.partition !== partition || value.source_revision !== process.env.GITHUB_SHA || value.target !== process.env.TARGET_TRIPLE || value.run_id !== process.env.GITHUB_RUN_ID || value.run_attempt !== process.env.GITHUB_RUN_ATTEMPT) throw Error('partition identity mismatch');
+          }
+          NODE
+          shopt -s nullglob
+          controls=(target/rust-evidence/A10-linux-control/"${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}".*/control-result.txt)
+          [ "${#controls[@]}" -eq 1 ]
+          grep -Fxq EXPECTED_SEMANTIC_FAILURE_CONFIRMED "${controls[0]}"
+
 
   supply-chain:
     name: Supply-chain policy (cargo-deny 0.20.2)

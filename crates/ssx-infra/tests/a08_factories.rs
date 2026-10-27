@@ -1,3 +1,5 @@
+#[path = "support/default_ca_environment.rs"]
+mod default_ca_environment;
 use ssx_application::{AdmissionDecision, PortFuture, SearchAdmission, SearchContext};
 use ssx_domain::{EngineStatus, SearchRequest};
 use ssx_infra::{
@@ -385,6 +387,11 @@ async fn bounded_loopback<T>(
 }
 #[tokio::test]
 async fn all_four_real_network_timers_match_actual_source_loopback() {
+    if default_ca_environment::default_ca_test_environment(
+        "all_four_real_network_timers_match_actual_source_loopback",
+    ) {
+        return;
+    }
     let source: serde_json::Value = serde_json::from_str(include_str!(
         "../../../docs/rust-rewrite/a08/timeout-loopback.json"
     ))

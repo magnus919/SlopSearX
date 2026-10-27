@@ -1,4 +1,6 @@
 //! Real private-loopback native A09 F06 factories and caller-owned lifecycle.
+#[path = "support/default_ca_environment.rs"]
+mod default_ca_environment;
 use ssx_application::{AdmissionDecision, PortFuture, SearchAdmission, SearchContext};
 use ssx_domain::{EngineStatus, SearchRequest};
 use ssx_infra::{
@@ -566,6 +568,11 @@ async fn a09_warm(http: &AdapterHttp, listener: &Arc<TcpListener>, label: &str) 
 }
 #[tokio::test]
 async fn five_real_timeout_and_expired_context_cleanup() {
+    if default_ca_environment::default_ca_test_environment(
+        "five_real_timeout_and_expired_context_cleanup",
+    ) {
+        return;
+    }
     for name in NAMES {
         let listener = Arc::new(TcpListener::bind("127.0.0.1:0").await.unwrap());
         let addr = listener.local_addr().unwrap();
@@ -623,6 +630,11 @@ async fn five_real_timeout_and_expired_context_cleanup() {
 }
 #[tokio::test]
 async fn archive_real_cdx_timer_one_fallback_and_aggregate_context() {
+    if default_ca_environment::default_ca_test_environment(
+        "archive_real_cdx_timer_one_fallback_and_aggregate_context",
+    ) {
+        return;
+    }
     use ssx_application::SearchEngine;
     for remaining in [true, false] {
         let listener = Arc::new(TcpListener::bind("127.0.0.1:0").await.unwrap());
@@ -785,6 +797,11 @@ fn timeout_output(response: &ssx_domain::AdapterResponse) -> serde_json::Value {
 }
 #[tokio::test]
 async fn actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct() {
+    if default_ca_environment::default_ca_test_environment(
+        "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct",
+    ) {
+        return;
+    }
     let source: serde_json::Value =
         serde_json::from_str(include_str!("../../../docs/rust-rewrite/a09/timeouts.json")).unwrap();
     let differences: serde_json::Value = serde_json::from_str(include_str!(

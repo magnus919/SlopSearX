@@ -19,5 +19,6 @@ pub(crate) fn default_ca_test_environment(test: &str) -> bool {
         "default-CA exact child case failed or did not execute: {test}: {stdout} {}",
         String::from_utf8_lossy(&output.stderr)
     );
+    std::io::Write::write_all(&mut std::io::stdout(), &output.stdout).unwrap();
     true
 }

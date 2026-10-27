@@ -1,0 +1,458 @@
+{
+  "kind": "STATIC_SOURCE_DERIVATION_AND_PROPOSED_NATIVE_SLICE",
+  "baseline": "954cc1e1ef739b84b2ed9ddb1eb966d94bd33c55",
+  "python_executed": false,
+  "provider_calls": 0,
+  "source_runs": [],
+  "current_source_binding": {
+    "head": "601a46a0697a05f063e3ae084f68e798607e360f",
+    "pending_merge_head": "dfb434381af32826fdbee6bc484db71c887e0df6",
+    "scope": "sources rows bind actual current candidate bytes; source_base/baseline and per-row identity labels retain historical derivation classifications, not current Git revision claims",
+    "original_backend_executed": false,
+    "provider_calls": 0
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860",
+      "bytes": 87421
+    },
+    {
+      "path": "contracts/unicode/provenance.json",
+      "sha256": "a172091a650fdb27f5e753fe65705c68aa7445a440d6ca354144757922256c40",
+      "bytes": 1050
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Include__cpython__unicodeobject.h.txt",
+      "sha256": "a3f5e7c3f6795fb1f0794fd4e41df2fc823c1a7844e82fe96ccc42c94f63146b",
+      "bytes": 27627
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Include__patchlevel.h.txt",
+      "sha256": "16a8955952cbaefd16f85909b73a0a6c182ec813f9544a12c28897c95b8d3f22",
+      "bytes": 1773
+    },
+    {
+      "path": "contracts/unicode/python-text-source/LICENSE.txt",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+      "bytes": 13804
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Modules___sre__sre.c.txt",
+      "sha256": "6d847eb25d5c50e3b33dcb2e39accd9c73f619c2d211a34ed32bb93e9c7299a8",
+      "bytes": 95890
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Modules__unicodedata_db.h.txt",
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110",
+      "bytes": 588046
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodectype.c.txt",
+      "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61",
+      "bytes": 7236
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodeobject.c.txt",
+      "sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3",
+      "bytes": 496004
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodetype_db.h.txt",
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134",
+      "bytes": 281705
+    },
+    {
+      "path": "crates/ssx-application/src/policy.rs",
+      "sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+      "bytes": 38237
+    },
+    {
+      "path": "crates/ssx-config/src/lib.rs",
+      "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+      "bytes": 49685
+    },
+    {
+      "path": "crates/ssx-domain/src/records.rs",
+      "sha256": "5e08c70c9adb8dc1f12562d560191ccf7b262edca73c6e6154057620e353d5bc",
+      "bytes": 11011
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "sha256": "98ba70c193036e309e2f8f01a9bd96a75476bbb96bf53f2e2d47ebf8baeb6ac2",
+      "bytes": 1205
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+      "sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7",
+      "bytes": 33943
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/crates_io.rs",
+      "sha256": "4ac7d0581bd66d61b8fc4568b8c0b128c10cc6dd0979f89d514d00dbcb3ea0d5",
+      "bytes": 12303
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/hibp.rs",
+      "sha256": "81e3717db78949b4f85bea5be531216cf43d25eb7c5c09e6c337ce834975b077",
+      "bytes": 18649
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/intelx.rs",
+      "sha256": "8d67d54bd88ecf2599dec36a0c6005d1f1b4bcadb06ecd743fee1073e40fbebd",
+      "bytes": 24349
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/mod.rs",
+      "sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791",
+      "bytes": 32368
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "sha256": "0f42f0c200f1e84f427b03bcb5e9d8fc5251180b7d0f58e22c9e0b724370509d",
+      "bytes": 38543
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "sha256": "826006a11ef93c6c6127cdaa7f340d5f8aa1261941d388b38c2437d5ea7f89fb",
+      "bytes": 53896
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_repr.rs",
+      "sha256": "06680a00d9d8b17082d09a175c44797e5a7a984b64096d18f102b8a2cb2d23fd",
+      "bytes": 17246
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/threat_intel.rs",
+      "sha256": "dde2a34576051a820a48d1b422956443f726a600970cb5868b5318c7b74619f8",
+      "bytes": 25213
+    },
+    {
+      "path": "crates/ssx-infra/src/http.rs",
+      "sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+      "bytes": 41754
+    },
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8",
+      "bytes": 82956
+    },
+    {
+      "path": "crates/ssx-json/Cargo.toml",
+      "sha256": "7a0c845afac7c12978c32014fc062d9ac40a749a08e242f8018c758fd47ee1a5",
+      "bytes": 298
+    },
+    {
+      "path": "crates/ssx-json/src/lib.rs",
+      "sha256": "f856e408af1eacd41dbfb57e5e34cf59f9245ee7045cf82e4edb7909c10f0ef8",
+      "bytes": 17864
+    },
+    {
+      "path": "crates/ssx-json/src/python_text.rs",
+      "sha256": "3b5f896724c17e8e118e8cf518a03532530a6a89392a3d9d243f0a9b43f59e40",
+      "bytes": 8592
+    },
+    {
+      "path": "crates/ssx-json/src/python_text_data.rs",
+      "sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7",
+      "bytes": 63764
+    },
+    {
+      "path": "crates/ssx-owned-budget/src/lib.rs",
+      "sha256": "3e7990a9aceed34b62aa8e2ddd030d24d15a8f04853aa6d8a1fd9ebeb364f903",
+      "bytes": 15287
+    },
+    {
+      "path": "crates/ssx-registry/src/lib.rs",
+      "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf",
+      "bytes": 11205
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/SpecialCasing-16.0.0.txt",
+      "sha256": "8d5de354eef79f2395a54c9c7dcebbaf3d30fc962d0f85611ea97aa973a0c451",
+      "bytes": 16809
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/UnicodeData-16.0.0.txt",
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f",
+      "bytes": 2175362
+    },
+    {
+      "path": "crates/xtask/src/a09.rs",
+      "sha256": "99a99ed417d00bf1438881eecdb71f475cd0e58cadca3ef434c0d22678731193",
+      "bytes": 21552
+    },
+    {
+      "path": "crates/xtask/src/a11.rs",
+      "sha256": "c4b4593ca7cc073137e6618462261fc954959d2069fab7b18e973b2646e9bcb0",
+      "bytes": 19879
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39",
+      "bytes": 21096
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/BOUNDS_REVIEW.md",
+      "sha256": "c9f449862b499a38ac79591dfc3fdc23b5df625032eac24ee9270712bb4b9193",
+      "bytes": 2018
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/PARITY.md",
+      "sha256": "32e99bd026da92eb60c80f8a3c29fee46a5eed8c3c542e373ad64bd453a55519",
+      "bytes": 1857
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/PORTAL_IMPACT.md",
+      "sha256": "3335b8164f7f3d9ebe0aafd48df085038d14e0e68bcd6ce7eeabcb9d1aa187a4",
+      "bytes": 939
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/README.md",
+      "sha256": "21dcfd4fafc391d49c1f528b5caf0017efe5eeb110093e5af3f2b1469adea3a1",
+      "bytes": 1373
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/cpython-input-pins.json",
+      "sha256": "611c5d6401ab45c30c9a5c2b1681f1af72d23815ca9ac064462a1cee8eb82856",
+      "bytes": 2719
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/native-plan.json",
+      "sha256": "e0d926f756150c3ca81e05da0bcf230d28ec5455000e67563035101d19c2c886",
+      "bytes": 3349
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/original-tests.json",
+      "sha256": "6ff9765b2c22b594f16e3fc1ce21c9ff49c7c986cc3b4c5cf89a8ec8f27afa22",
+      "bytes": 4743
+    },
+    {
+      "path": "docs/rust-rewrite/a13/remaining/unicode-derivation-proof.json",
+      "sha256": "7d46d6bbb61d40723a1b7eb29ca4f15ca1162651a42efeed714d69b2d7159759",
+      "bytes": 956
+    },
+    {
+      "path": "docs/rust-rewrite/f05/README.md",
+      "sha256": "0006525e760456dd3656019aa4968b53f469f361853f31f13247e3424237aaca",
+      "bytes": 3237
+    },
+    {
+      "path": "docs/rust-rewrite/f06/PARITY.md",
+      "sha256": "f7c8e898111a73399ee1dd31b36d4fc587b37aaba34f281639ca8cdf67fb6236",
+      "bytes": 7446
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/hibp.json",
+      "sha256": "05ed85a091f1559b5791a824256e0a645db49ec76c4958b1196af3c2d8240209",
+      "bytes": 1091
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/intelx.json",
+      "sha256": "4b30bab35de38d57459efbb282e1f8263fe87775ef31179b0e0630958cbf53fe",
+      "bytes": 1095
+    },
+    {
+      "path": "docs/rust-rewrite/f08/README.md",
+      "sha256": "ee18fcdbac2fbedc14b19e4d857be02d824ebd634e567d3bc0769f8fe323449c",
+      "bytes": 6817
+    },
+    {
+      "path": "docs/rust-rewrite/f08/parity.md",
+      "sha256": "42b6811095631a7393a49e442ebbc0d5155abeaa63fc10bbf0692e64b5ae411e",
+      "bytes": 2609
+    },
+    {
+      "path": "docs/rust-rewrite/f09/README.md",
+      "sha256": "24ee261a6c3effcb506524d50dcecfa08fc6ea7920f58b98ba46993ac94a74b7",
+      "bytes": 8194
+    },
+    {
+      "path": "engines/dehashed.py",
+      "sha256": "0af39ca824817ce1bf065c72fbf463e64ef604a68ef5780292328de335d2eeba",
+      "bytes": 5205
+    },
+    {
+      "path": "engines/hibp.py",
+      "sha256": "4e886c3069755d8d5c7e516b19034a11afb62568ae671e8d911594b616178897",
+      "bytes": 4798
+    },
+    {
+      "path": "engines/intelx.py",
+      "sha256": "33cc32df8fc257ce3053c3c785633bc8504e95e5213071676d9cd51ae7b07fd9",
+      "bytes": 6094
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "bytes": 28263
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "bytes": 17458
+    },
+    {
+      "path": "slopsearx/filters.py",
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+      "bytes": 10364
+    },
+    {
+      "path": "slopsearx/jev.py",
+      "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03",
+      "bytes": 13437
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+      "bytes": 130718
+    },
+    {
+      "path": "tests/test_dehashed.py",
+      "sha256": "69de13ea249605010f29c0dd23389fcafe0df49fa18e37c3cf05533bda2e49ce",
+      "bytes": 2017
+    },
+    {
+      "path": "tests/test_hibp.py",
+      "sha256": "81fe83d08c7211793b918a2bfc6d55a2c7f8e44015464b05d83221ee093ff041",
+      "bytes": 2131
+    },
+    {
+      "path": "tests/test_intelx.py",
+      "sha256": "0357854dd009f5543428cf9e66770e45d271ccc75137d2e15de568473a6b1467",
+      "bytes": 1115
+    },
+    {
+      "path": "tests/test_mcp_security.py",
+      "sha256": "24347d97e63a623440803f7c41bbab0391f7f75831faa2ce1d90ec3a211a8935",
+      "bytes": 4388
+    }
+  ],
+  "original_tests": [
+    {
+      "engine": "hibp",
+      "original_function": "test_search_returns_breaches",
+      "source_file": "tests/test_hibp.py",
+      "source_excerpt": "    async def test_search_returns_breaches(self, adapter):\n        data = [\n            {\n                \"Name\": \"Adobe\",\n                \"Domain\": \"adobe.com\",\n                \"BreachDate\": \"2013-10-04\",\n                \"PwnCount\": 15238235,\n                \"DataClasses\": [\"Email addresses\", \"Passwords\"],\n                \"Description\": \"In October 2013, Adobe suffered a major breach.\",\n            }\n        ]\n        async with MockHTTP(lambda r: httpx.Response(200, json=data)):\n            result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 1\n        assert \"Adobe\" in result.results[0].title\n        assert \"Email addresses\" in result.results[0].content\n\n",
+      "source_executed": false,
+      "native_selector": "hibp_source_success_complete_outbound",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    },
+    {
+      "engine": "hibp",
+      "original_function": "test_no_breaches_404",
+      "source_file": "tests/test_hibp.py",
+      "source_excerpt": "    async def test_no_breaches_404(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(404)):\n            result = await adapter.search(\"nonexistent@example.com\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 0\n\n",
+      "source_executed": false,
+      "native_selector": "hibp_404_empty_before_json",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    },
+    {
+      "engine": "hibp",
+      "original_function": "test_missing_api_key",
+      "source_file": "tests/test_hibp.py",
+      "source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key\" in (result.error_message or \"\")\n\n",
+      "source_executed": false,
+      "native_selector": "hibp_missing_key_and_admission_precedence",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    },
+    {
+      "engine": "hibp",
+      "original_function": "test_rate_limited",
+      "source_file": "tests/test_hibp.py",
+      "source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.RATE_LIMITED\n\n",
+      "source_executed": false,
+      "native_selector": "hibp_http_transport_url_and_codec_failures",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    },
+    {
+      "engine": "hibp",
+      "original_function": "test_adapter_registered",
+      "source_file": "tests/test_hibp.py",
+      "source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"hibp\" in list_engines()\n",
+      "source_executed": false,
+      "native_selector": "hibp_auth_redaction_and_resolved_configuration",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    },
+    {
+      "engine": "intelx",
+      "original_function": "test_missing_api_key",
+      "source_file": "tests/test_intelx.py",
+      "source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key\" in (result.error_message or \"\")\n\n",
+      "source_executed": false,
+      "native_selector": "intelx_header_redaction_settings_and_filters",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    },
+    {
+      "engine": "intelx",
+      "original_function": "test_rate_limited",
+      "source_file": "tests/test_intelx.py",
+      "source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.RATE_LIMITED\n\n",
+      "source_executed": false,
+      "native_selector": "intelx_start_status_classification",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    },
+    {
+      "engine": "intelx",
+      "original_function": "test_adapter_registered",
+      "source_file": "tests/test_intelx.py",
+      "source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"intelx\" in list_engines()\n",
+      "source_executed": false,
+      "native_selector": "intelx_header_redaction_settings_and_filters",
+      "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+    }
+  ],
+  "native_tests": {
+    "hibp": [
+      "hibp_source_success_complete_outbound",
+      "hibp_404_empty_before_json",
+      "hibp_missing_key_and_admission_precedence",
+      "hibp_auth_redaction_and_resolved_configuration",
+      "hibp_email_first_match_word_boundaries_and_case",
+      "hibp_fallback_strip_unicode16_lowercase",
+      "hibp_description_prefix_and_source_type_errors",
+      "hibp_grouped_count_numeric_and_error_order",
+      "hibp_data_classes_slice_and_text_join",
+      "hibp_source_operations_before_typed_projection",
+      "hibp_dates_unsliced_and_positions",
+      "hibp_wrong_shapes_and_late_atomicity",
+      "hibp_configured_max_and_request_filters_ignored",
+      "hibp_http_transport_url_and_codec_failures",
+      "hibp_entered_cancel_and_http_reuse",
+      "hibp_entered_shutdown_rejects_reuse",
+      "hibp_caller_and_configured_deadlines",
+      "hibp_real_policy_and_mixed_intelx_atomicity",
+      "hibp_private_literal_http_contract",
+      "hibp_static_source_inventory_closed"
+    ],
+    "intelx": [
+      "intelx_success_two_requests_exact_delay",
+      "intelx_falsey_ids_stop_before_delay",
+      "intelx_start_status_classification",
+      "intelx_result_statuses_are_generic_errors",
+      "intelx_start_shape_and_json_errors",
+      "intelx_id_parameter_source_type_semantics",
+      "intelx_post_json_scalar_order_and_nonfinite_refusal",
+      "intelx_configured_slices_and_invalid_indices",
+      "intelx_result_shape_normalization_before_slice",
+      "intelx_wrapped_skipped_rows_preserve_positions",
+      "intelx_type_label_key_semantics_and_precedence",
+      "intelx_preview_bucket_and_title_operation_order",
+      "intelx_id_url_fallback_and_dates",
+      "intelx_late_failure_and_quota_atomicity",
+      "intelx_header_redaction_settings_and_filters",
+      "intelx_one_session_cookie_continuity",
+      "intelx_fresh_phase_timeout_excludes_source_delay",
+      "intelx_caller_context_bounds_each_phase_and_delay",
+      "intelx_cancel_post_delay_and_get",
+      "intelx_shutdown_entered_and_delayed_no_dispatch",
+      "intelx_private_literal_two_phase_http",
+      "intelx_static_source_inventory_closed"
+    ]
+  },
+  "map_excludes": [
+    "self digest cycle",
+    "integration test sources and helper: frozen separately in proposal manifest"
+  ],
+  "requires_shared_composition_review": true
+}

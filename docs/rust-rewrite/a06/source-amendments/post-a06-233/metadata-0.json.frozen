@@ -1,0 +1,1877 @@
+{
+  "schema_version": 1,
+  "plan_id": "A09",
+  "issue": 928,
+  "baseline": "9fae1639a57b9e3497c04c3f5fe304651d077ad5",
+  "source_inventory": [
+    {
+      "path": "engines/internetarchive.py",
+      "sha256": "6a4a0cdc10f2bc206380e3b67cbd82cbb329d02f9bbe0e5471ea483bdc44c4b4"
+    },
+    {
+      "path": "engines/musicbrainz.py",
+      "sha256": "63cac10045fcd77406a43c1011ae6542e5091d582cee94a4a11232ef4ee2f062"
+    },
+    {
+      "path": "engines/nominatim.py",
+      "sha256": "e2abcb603545e4fefedd3aa26f8daea122707a6c698200a430cbf9231112d632"
+    },
+    {
+      "path": "engines/openlibrary.py",
+      "sha256": "feeb75a9de3c2474304b04bfa45b635cbf1d6066f64e5b8eec036a056c41c6c6"
+    },
+    {
+      "path": "engines/tmdb.py",
+      "sha256": "72155872efdef1916ee4c37ef4046588c619940bd3e50d3dae20957d133a4a18"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e"
+    },
+    {
+      "path": "slopsearx/formatter.py",
+      "sha256": "8eaf74e1215ebaebc7a9d81438e02512aa56b9f5a7929ebb2df35e5b2f632e7a"
+    },
+    {
+      "path": "slopsearx/merger.py",
+      "sha256": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d"
+    },
+    {
+      "path": "tests/test_adapters.py",
+      "sha256": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454"
+    },
+    {
+      "path": "tests/test_internetarchive_adapter.py",
+      "sha256": "ec75ebdf9184ebb3c352323a96cf03ae6cf8f7946e5149b9290e2c13c5d36baa"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "sha256": "a6df3df9b68fdc8a4b617d4059a5bd26a8cd82c5d8de1574ac9c48d2d14ad8a4"
+    },
+    {
+      "path": "tests/test_openlibrary_url_contract.py",
+      "sha256": "7e8a1d198551a56d72e94372d455ca7df11d5f5e8c33480a1a72c7968f908672"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "sha256": "a7bc52b2747f0ebc440a4d7ce69671635530c7142d43eb128cb3132e297fb11a"
+    },
+    {
+      "path": "tests/test_tier1_adapters.py",
+      "sha256": "1ddcbbbe307319500bc456a388a9650b8e81fab574d20c8df96a91cdf2d04679"
+    },
+    {
+      "path": "tests/test_tmdb.py",
+      "sha256": "ae06578f92be07aa382b5779d120d0588aad75ae306e1c9b10e968a429d9d180"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "d710c84ebad4582dc607cc3bdb806a5a5253259e4cabd5c515f51e55c3588af8"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "2df6be141a3b06c662a4062af79eb074248ea70f297a7bf4c65432c10feba681"
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39"
+    },
+    {
+      "path": "docs/rust-rewrite/a01/README.md",
+      "sha256": "7dfe805866c574f6b781886cf8a225af9b2e72314b77837c617cdb2078a20faa"
+    },
+    {
+      "path": "tests/test_media_contract.py",
+      "sha256": "6a0a7301d8c76373f9ba018514511b13f0f3020e427320d1d6925bc9eb96585d"
+    },
+    {
+      "path": "slopsearx/jev.py",
+      "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/rust-rewrite/a09/BOUNDARIES.md",
+      "sha256": "3cfe29107526fff2d0c21f4646d104dc1d9acf40e21796d2e0e122c99e8e9323"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/CORRECTIONS.md",
+      "sha256": "872568ea5329e832a36603e16a4f25ce58d4242623036b65367f894865171df4"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/INCIDENT.md",
+      "sha256": "5773e5c31b1f7128ec59f6ddfd12c2ffcbdb2bece0f36de60cdb0b5ecc5ea5be"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/PORTAL_IMPACT.md",
+      "sha256": "a681b76cf3a7c2e47d64f72bdb9ee4f5239b62d27334680d5f4441fa08bbaabd"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/README.md",
+      "sha256": "04645acb7e999516604d04b703e7a15908d87bed97dbeea718b3ad6fb5a1bc3d"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-mixed-boundary-review-corrected.json",
+      "sha256": "527f53f737e3ec749ad298ed88363a970cecc409e5e2aef94f3f6c45377ba9ec"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-parent-archive-timeout-review.json",
+      "sha256": "db961937c86daa4c266a4e93b4859f305dd834ef75d674fd27e124f3950c41f9"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-parent-diagnostic-exception-differences-review.json",
+      "sha256": "f18b883698b69fe20bcdc8b4ef7b96eadfeb96ec7b41758bff8625a24274ed08"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-parent-late-projection-proposal-review.json",
+      "sha256": "81808751ede539877cededbd5a0b92f78fad787ff8ae59ba306d3bcfcf03f987"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-parent-mixed-boundary-final-review.json",
+      "sha256": "8cf40c6182d07ba190ba88790b4177060e69e929b242135c92c2d1ef7fc8645e"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-parent-nontext-boundary-review.json",
+      "sha256": "63a1259f51af3df8fba9b6ad5ddec55d4adde6f80a90e93ad7646d12bf53ea7a"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-parent-owned-atomic-test-proposal-review.json",
+      "sha256": "465d179165fcd6350bf975654da120dbbaea310b370f590f1281500a9e42be2b"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-real-ignore-exits.json",
+      "sha256": "5acf96109fdd3a726b21eea4c61964e71c3d838a7aa62c471ac56073513676ad"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/a09-real-skip-exits.json",
+      "sha256": "5acf96109fdd3a726b21eea4c61964e71c3d838a7aa62c471ac56073513676ad"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/differences.json",
+      "sha256": "983b04a985276532154ab2fe43c6944c7ca52711187bece77b8ac39bebf0a31f"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-atomic-replay.json",
+      "sha256": "6477505b909467ae242c9949328192b24d919c94e52c94dd661ffed9bfe97d31"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-causal-late-projection.log.json",
+      "sha256": "341597c4f00917a888ed5802b65ad8c109b16807dc49ee21ab98a0a4100af5ab"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-causal-thumbnail.log.json",
+      "sha256": "2b1ffc384c6edfedeaf06365307cd61eca8bfd722046a025425dd6eb3316361c"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-complete-replay.json",
+      "sha256": "8b6c923b14a1cc00ee4319f8a2cf90ab3820cb6650e9206a16a3c345af154953"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-consumers.json",
+      "sha256": "37f193cb332ef408ba2f632d1b44b347ae0c5fea9b96707f256a9d36cd6a71ba"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-corrected-build.log.json",
+      "sha256": "e79df40fe3291f7b0f457d767f662f2dcb85400b3bfcc18388d9f8242b5d5933"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-corrected-clippy.log.json",
+      "sha256": "84ee152e3453f6563146fc377d42df08ae93a160eebabbe8c5e74980ec424219"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-corrected-fmt.log.json",
+      "sha256": "20af8ce26a3e7963d81422b3d640548cdb31d2beaea65fd959bbaf5261479438"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-corrected-graphify.log.json",
+      "sha256": "e9bbc339846f727a3b2484c218db043028e2e18d502fcb65116b38431424a795"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-corrected-precommit-all.log.json",
+      "sha256": "ba4cf8ac51f13182357d9107f0cc8dbd9ee0023d7fbd7e45f989aa0e8001e42d"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-corrected-precommit-unrelated-format.diff.json",
+      "sha256": "fb6d3af8331694c21787608a3d87e0cb9d4492feb55bf516da68c0bfa3f69b14"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-current-ignore-verifier.log.json",
+      "sha256": "2ccb3f7041b8e0f0c5169f768e11bb45d290430bf1ed223153dffd15ee189690"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-current-skip-verifier.log.json",
+      "sha256": "c9f690267950498202f9ea22aa07c33203420eaffd854a249ceec4e3c58c67c2"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-explicit-guards-lint.log.json",
+      "sha256": "5b32a3f58fb36445899a1b0a2e407f024500d50ee8d4b39e473b9d5992ba2961"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-factories.json",
+      "sha256": "877af8e281824106319ecd13c8c5bd9e0369895ad453280962037025a28db2d3"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-guarded-replay.json",
+      "sha256": "702e3599ea8e11f656eda2275ccbfd8a2b7af6836fdd174a733a6636f9c5ecff"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-ignore-real-test.patch.json",
+      "sha256": "64b152d9667e839e8fac1bd14a84cefd64818cfb319bdfe13195c53600486a5e"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-owned-atomic-approved.log.json",
+      "sha256": "6fccd48b630e862908e4a8a06d31e2e31a394950f02aaa6d6e27fd13c4403617"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-owned-complete.json",
+      "sha256": "3577a14af228c250bce5c8db79aefa54c6bd8bca93fb3861f3e92a3123ab56e4"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-owned-precommit-corrected-r2.log.json",
+      "sha256": "d6a206c31fd5205a7d22bc7c5b5fffe974e4c5fb118524ca71fde6228bd7cadd"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-real-ignore-native.log.json",
+      "sha256": "4eaf4715974501d8119a22e94796b4b320884e0935ac9a114bb204e4aa802c05"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-real-ignore-verifier.log.json",
+      "sha256": "e3e021e9665081630b12c14f6a16133fc45102751fb5198f32ae73f033702b9d"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-real-skip-native.log.json",
+      "sha256": "78f8a1ae9cccbe8756e8124c57d033257c92a3ff854d40ea43710ae238aeeba9"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-real-skip-verifier.log.json",
+      "sha256": "16a81dbc1223d279607a9835055d0ef2fba4db6cb53521a4d8739ab99d4281db"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-replay5.json",
+      "sha256": "3c2e255761379c92d318239b789eb1b9decf22ad6d0859d558a3f760eda4ba2f"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-skip-real-case.patch.json",
+      "sha256": "16ab273c87df0eedc26b685e28213f7a2bf905791a7ed0d087f2e7a46204570d"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/a09-timeout-native-count-qualified.log.json",
+      "sha256": "198e1aac7a8cd54ebba4626361a7ced94683dae68cce86eea6d0242d66a7c115"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/clippy-qualified.json",
+      "sha256": "e9a2e1b866038f9e9a3eec161361ad5c55d9e58bd4ae72b83ecf497ef0b4c1d8"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/corrected-gate-index.json",
+      "sha256": "5a17f27f48e48af4c7e4327933dcfe20b1e336953ca59fa9232ec6cb02752409"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_regressions.py.optimized-output.json",
+      "sha256": "5d7d7ec77cd987442050ae2ca17ef7359cc6dcf61fc2c67ea215b538270e8db6"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_regressions.py.optimized.stdout.txt",
+      "sha256": "412b624acc51bfa0ae25d8cdd4f33b62f58101e29172e30aca95a8cdf07b7143"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_regressions.py.stdout.txt",
+      "sha256": "9eac9b855f40883cef8f21b3a8008ef9b0ecd1ae31e1557fdc29b7d903e980f2"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_source.py.optimized-output.json",
+      "sha256": "fc14ac6ad3e8547cda2a9b7df7ab0c60d2e7cdc72133ace92257f023b1a5a964"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_source.py.optimized.stdout.txt",
+      "sha256": "89fcc63008a6770747da52d6855d841e08229542e18737bb81175b60c63754a3"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_source.py.stdout.txt",
+      "sha256": "be3ba3d9340df5eb88411425f4558f42e215c6a88df2d89a4c65728b3af11431"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_timeouts.py.optimized-output.json",
+      "sha256": "6096c52822d03aa35c7d588cd1fb1d4719fb85d37adac65612d97064dcb5b725"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_timeouts.py.optimized.stdout.txt",
+      "sha256": "635c59603bed09fa9e19579f308136a49f5a6f90e6287189b4051146c815fcb2"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_word.py.optimized-output.json",
+      "sha256": "75aadcf7917ebe985c68246874cfd4934594a75dfb7c0d73d075d317264352d0"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_word.py.optimized.stdout.txt",
+      "sha256": "3d87e7cf5bee98c77640fcd6fa1b10ce7b89230266b881c0f881f064b1c1fbd5"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/export_word.py.stdout.txt",
+      "sha256": "3d87e7cf5bee98c77640fcd6fa1b10ce7b89230266b881c0f881f064b1c1fbd5"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/first-optimized-oracle-runs.json",
+      "sha256": "94ac65f82762eeb4bcab4c1ad92275c776c36cc5d8dadfd7cd42643f502eb9a0"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/graphify-update.json",
+      "sha256": "9238753c5831fa82392036f2a1e047dfbd233aa068b9159674bd7d9d401bda72"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/optimized-stdout-hook-note.json",
+      "sha256": "cad2830b04f3325be7c19cdc7226c94d72f87515a05cd65d0f19417275bc5a5a"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/optimized-wrong-runtime-rejected.json",
+      "sha256": "2606d8b72d97d43506b02d2b7ad6aafdc0a21e39e9d59585a5ec6200b964a546"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/evidence/pre-explicit-guard-captures.json",
+      "sha256": "cd3fc637e741c95f6ca64c77d81b8ea530e9258ec4e6ec782fc15c3b21c0556a"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/header-differences.json",
+      "sha256": "3abf4e95ef384139550e06a5cae59d450e61b330aca563907ba0a074fb58b768"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_regressions.py",
+      "sha256": "181891f1a87dbe9d8d6ef148d7e7349800a0001b349b2e9d8e5260bdcbf117b2"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_source.py",
+      "sha256": "eef0d23f5ad62e7cbf04dae25628b44ae89e8d9d25ea4e0414ca400aa508eb7e"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_timeouts.py",
+      "sha256": "82e43ccfc759d769f9909a6267f06b675c8087d4e210765c46c18d177345c3ad"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_word.py",
+      "sha256": "ab2975e01f5e8480a59b90efc3d45cca82be593828f0d6cca659b8e4b832035b"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle-runs.json",
+      "sha256": "c1fab41c0fd32c8a8ce0b16f2c08615dec905b54b2b012dff8f7819fc1c3db06"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/regressions.json",
+      "sha256": "db6e77d08a31556c76a4386bdaaf9e994fff94bdf3c1275eb23724efe02b6839"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/source.json",
+      "sha256": "9a7c1e17ac900e9afef00dd4ef98402977bad42fd3b3d7e53ff26fa828fcbb87"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/timeout-differences.json",
+      "sha256": "7af95f844de3dd18dda5bb2dc5b1d90210ecc254dcb6b7cbfd7c76d976ffb918"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/timeouts.json",
+      "sha256": "e7946ece1707b5cde64bb1274a76b846ab2b413d4a9614659e468b6ed22f3aa3"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/word16.json",
+      "sha256": "6acf4940b68d7342baea613bb8857c570c7da4b3c9ff825c82ea69147ceffbb3"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/catalog_media.rs",
+      "sha256": "70bf89a8b7f56c9dd850ef882b87bb46e25a1af68ba9d439bd252335fd643a94"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/openlibrary.rs",
+      "sha256": "e962fc28bfaadb3ed301852b6d2b0673caa10ecd27471b1f9410b149053dbd53"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/musicbrainz.rs",
+      "sha256": "755b70b34f37ec75b04b3a1bb717341984a72eff6bf6358eab4c4f7193003d9d"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/tmdb.rs",
+      "sha256": "f05bb041e3dce3ed374007ff4d6edb7902a9ef8ee867523115a16583a298d104"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/tmdb_case.rs",
+      "sha256": "3cddad9834c1a8023ae1756410ee822e88e86c4f4e8673ec34b5e19c165db0da"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/nominatim.rs",
+      "sha256": "7b3afbfb568e9a7ff3e5ff67ec8fd9baf9eb712c8a4fb0f4a54372a1a44bedd0"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/internetarchive.rs",
+      "sha256": "7a6b7b8544652bd5a0bd2ac0395663820c2dae10c4a259dc5bf0c75ce8f4a877"
+    },
+    {
+      "path": "crates/ssx-infra/tests/a09_catalog_media.rs",
+      "sha256": "5e8724ceb76dee446f107f4e048a6cf2cac0737d93f6176e12ba997ce2f375a7"
+    },
+    {
+      "path": "crates/ssx-infra/tests/a09_factories.rs",
+      "sha256": "c7eb4cb261ab85764d3ebe3e7bd1c6648469aadaa1e61fb9b6b51077f3faa8da"
+    },
+    {
+      "path": "crates/ssx-http/tests/a09_consumers.rs",
+      "sha256": "d87cb1a9400a9c13cb10bc73b1baeaf38f44227a9562a79274ff2329ccb6e267"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload/batch.rs",
+      "sha256": "f75c77b3e43e307a758a6af685ab39cc3ccd6eec9c1eb4d8f68824114a789bf6"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "sha256": "826006a11ef93c6c6127cdaa7f340d5f8aa1261941d388b38c2437d5ea7f89fb"
+    },
+    {
+      "path": "crates/ssx-application/src/urls.rs",
+      "sha256": "12b229f22b7a4fb8443f7e9027e4151c27a02fe17f9767da65f4aace8e356b45"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/mod.rs",
+      "sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+    },
+    {
+      "path": "crates/ssx-application/src/lib.rs",
+      "sha256": "a7102f8c75244e74680cf8773c527d21fb2dcd177a29f0bd27abeef2beeb880e"
+    },
+    {
+      "path": "crates/ssx-http/Cargo.toml",
+      "sha256": "7754d39ad4f5592361cbb86f14e9c066783b6e579ad1f11d62985703ab5cc85f"
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "0c60e728c3e5783f4ff01c98a3dd3b8232699b3bf0e7b35620f8fa4643ea53c1"
+    }
+  ],
+  "ordered_case_ids": [
+    "openlibrary-success",
+    "openlibrary-empty",
+    "openlibrary-missing",
+    "openlibrary-null",
+    "openlibrary-scalar",
+    "openlibrary-malformed-row",
+    "openlibrary-http-301",
+    "openlibrary-http-401",
+    "openlibrary-http-403",
+    "openlibrary-http-404",
+    "openlibrary-http-408",
+    "openlibrary-http-429",
+    "openlibrary-http-503",
+    "openlibrary-bad-json",
+    "openlibrary-timeout",
+    "openlibrary-network",
+    "openlibrary-max-0",
+    "openlibrary-max--1",
+    "openlibrary-max-True",
+    "openlibrary-max-2.0",
+    "openlibrary-max-'2'",
+    "openlibrary-timeoutcfg-True",
+    "openlibrary-timeoutcfg-'5000'",
+    "openlibrary-collection-None",
+    "openlibrary-collection-''",
+    "openlibrary-collection-{}",
+    "openlibrary-collection-[None]",
+    "openlibrary-collection-42",
+    "musicbrainz-success",
+    "musicbrainz-empty",
+    "musicbrainz-missing",
+    "musicbrainz-null",
+    "musicbrainz-scalar",
+    "musicbrainz-malformed-row",
+    "musicbrainz-http-301",
+    "musicbrainz-http-401",
+    "musicbrainz-http-403",
+    "musicbrainz-http-404",
+    "musicbrainz-http-408",
+    "musicbrainz-http-429",
+    "musicbrainz-http-503",
+    "musicbrainz-bad-json",
+    "musicbrainz-timeout",
+    "musicbrainz-network",
+    "musicbrainz-max-0",
+    "musicbrainz-max--1",
+    "musicbrainz-max-True",
+    "musicbrainz-max-2.0",
+    "musicbrainz-max-'2'",
+    "musicbrainz-timeoutcfg-True",
+    "musicbrainz-timeoutcfg-'5000'",
+    "musicbrainz-collection-None",
+    "musicbrainz-collection-''",
+    "musicbrainz-collection-{}",
+    "musicbrainz-collection-[None]",
+    "musicbrainz-collection-42",
+    "tmdb-success",
+    "tmdb-empty",
+    "tmdb-missing",
+    "tmdb-null",
+    "tmdb-scalar",
+    "tmdb-malformed-row",
+    "tmdb-http-301",
+    "tmdb-http-401",
+    "tmdb-http-403",
+    "tmdb-http-404",
+    "tmdb-http-408",
+    "tmdb-http-429",
+    "tmdb-http-503",
+    "tmdb-bad-json",
+    "tmdb-timeout",
+    "tmdb-network",
+    "tmdb-max-0",
+    "tmdb-max--1",
+    "tmdb-max-True",
+    "tmdb-max-2.0",
+    "tmdb-max-'2'",
+    "tmdb-timeoutcfg-True",
+    "tmdb-timeoutcfg-'5000'",
+    "tmdb-collection-None",
+    "tmdb-collection-''",
+    "tmdb-collection-{}",
+    "tmdb-collection-[None]",
+    "tmdb-collection-42",
+    "nominatim-success",
+    "nominatim-empty",
+    "nominatim-missing",
+    "nominatim-null",
+    "nominatim-scalar",
+    "nominatim-malformed-row",
+    "nominatim-http-301",
+    "nominatim-http-401",
+    "nominatim-http-403",
+    "nominatim-http-404",
+    "nominatim-http-408",
+    "nominatim-http-429",
+    "nominatim-http-503",
+    "nominatim-bad-json",
+    "nominatim-timeout",
+    "nominatim-network",
+    "nominatim-max-0",
+    "nominatim-max--1",
+    "nominatim-max-True",
+    "nominatim-max-2.0",
+    "nominatim-max-'2'",
+    "nominatim-timeoutcfg-True",
+    "nominatim-timeoutcfg-'5000'",
+    "nominatim-collection-None",
+    "nominatim-collection-''",
+    "nominatim-collection-{}",
+    "nominatim-collection-[None]",
+    "nominatim-collection-42",
+    "internetarchive-success",
+    "internetarchive-empty",
+    "internetarchive-missing",
+    "internetarchive-null",
+    "internetarchive-scalar",
+    "internetarchive-malformed-row",
+    "internetarchive-http-301",
+    "internetarchive-http-401",
+    "internetarchive-http-403",
+    "internetarchive-http-404",
+    "internetarchive-http-408",
+    "internetarchive-http-429",
+    "internetarchive-http-503",
+    "internetarchive-bad-json",
+    "internetarchive-timeout",
+    "internetarchive-network",
+    "internetarchive-max-0",
+    "internetarchive-max--1",
+    "internetarchive-max-True",
+    "internetarchive-max-2.0",
+    "internetarchive-max-'2'",
+    "internetarchive-timeoutcfg-True",
+    "internetarchive-timeoutcfg-'5000'",
+    "internetarchive-collection-None",
+    "internetarchive-collection-''",
+    "internetarchive-collection-{}",
+    "internetarchive-collection-[None]",
+    "internetarchive-collection-42",
+    "openlibrary-key-0",
+    "openlibrary-key-1",
+    "openlibrary-key-2",
+    "openlibrary-key-3",
+    "openlibrary-key-4",
+    "openlibrary-key-5",
+    "openlibrary-key-6",
+    "openlibrary-edition_key-0",
+    "openlibrary-edition_key-1",
+    "openlibrary-edition_key-2",
+    "openlibrary-edition_key-3",
+    "openlibrary-isbn-0",
+    "openlibrary-isbn-1",
+    "openlibrary-isbn-2",
+    "openlibrary-isbn-3",
+    "openlibrary-isbn-4",
+    "openlibrary-isbn-5",
+    "openlibrary-isbn-6",
+    "openlibrary-author_name-0",
+    "openlibrary-author_name-1",
+    "openlibrary-author_name-2",
+    "openlibrary-author_name-3",
+    "openlibrary-author_name-4",
+    "openlibrary-author_name-5",
+    "openlibrary-ratings_count-0",
+    "openlibrary-ratings_count-1",
+    "openlibrary-ratings_count-2",
+    "openlibrary-ratings_count-3",
+    "openlibrary-ratings_count-4",
+    "openlibrary-cover_i-0",
+    "openlibrary-cover_i-1",
+    "openlibrary-cover_i-2",
+    "openlibrary-cover_i-3",
+    "openlibrary-cover_i-4",
+    "openlibrary-title-0",
+    "openlibrary-title-1",
+    "openlibrary-title-2",
+    "openlibrary-identity-priority",
+    "musicbrainz-life-span-0",
+    "musicbrainz-life-span-1",
+    "musicbrainz-life-span-2",
+    "musicbrainz-life-span-3",
+    "musicbrainz-life-span-4",
+    "musicbrainz-life-span-5",
+    "musicbrainz-type-0",
+    "musicbrainz-type-1",
+    "musicbrainz-type-2",
+    "musicbrainz-type-3",
+    "musicbrainz-country-0",
+    "musicbrainz-country-1",
+    "musicbrainz-country-2",
+    "musicbrainz-id-0",
+    "musicbrainz-id-1",
+    "musicbrainz-id-2",
+    "musicbrainz-name-0",
+    "musicbrainz-name-1",
+    "tmdb-media_type-0",
+    "tmdb-media_type-1",
+    "tmdb-media_type-2",
+    "tmdb-media_type-3",
+    "tmdb-media_type-4",
+    "tmdb-media_type-5",
+    "tmdb-vote_average-0",
+    "tmdb-vote_average-1",
+    "tmdb-vote_average-2",
+    "tmdb-vote_average-3",
+    "tmdb-vote_average-4",
+    "tmdb-vote_average-5",
+    "tmdb-vote_average-6",
+    "tmdb-vote_average-7",
+    "tmdb-overview-0",
+    "tmdb-overview-1",
+    "tmdb-overview-2",
+    "tmdb-overview-3",
+    "tmdb-release_date-0",
+    "tmdb-release_date-1",
+    "tmdb-release_date-2",
+    "tmdb-title-0",
+    "tmdb-title-1",
+    "tmdb-poster_path-0",
+    "tmdb-poster_path-1",
+    "tmdb-poster_path-2",
+    "tmdb-poster_path-3",
+    "tmdb-key-0",
+    "tmdb-key-1",
+    "tmdb-key-2",
+    "tmdb-key-3",
+    "nominatim-importance-0",
+    "nominatim-importance-1",
+    "nominatim-importance-2",
+    "nominatim-importance-3",
+    "nominatim-importance-4",
+    "nominatim-importance-5",
+    "nominatim-importance-6",
+    "nominatim-osm_id-0",
+    "nominatim-osm_id-1",
+    "nominatim-osm_id-2",
+    "nominatim-osm_id-3",
+    "nominatim-osm_id-4",
+    "nominatim-osm_type-0",
+    "nominatim-osm_type-1",
+    "nominatim-osm_type-2",
+    "nominatim-display_name-0",
+    "nominatim-display_name-1",
+    "nominatim-display_name-2",
+    "nominatim-category-0",
+    "nominatim-category-1",
+    "internetarchive-downloads-0",
+    "internetarchive-downloads-1",
+    "internetarchive-downloads-2",
+    "internetarchive-downloads-3",
+    "internetarchive-date-0",
+    "internetarchive-date-1",
+    "internetarchive-description-0",
+    "internetarchive-description-1",
+    "internetarchive-description-2",
+    "internetarchive-title-0",
+    "internetarchive-title-1",
+    "internetarchive-identifier-0",
+    "internetarchive-identifier-1",
+    "internetarchive-identifier-2",
+    "cdx-success",
+    "cdx-empty",
+    "cdx-header",
+    "cdx-skips",
+    "cdx-unicode-date",
+    "cdx-bad-outer",
+    "cdx-bad-header",
+    "cdx-fallback-timeout",
+    "cdx-fallback-json",
+    "cdx-fallback-403",
+    "cdx-fallback-429",
+    "availability-available-0",
+    "availability-available-1",
+    "availability-available-2",
+    "availability-available-3",
+    "availability-status-0",
+    "availability-status-1",
+    "availability-status-2",
+    "availability-status-3",
+    "availability-timestamp-0",
+    "availability-timestamp-1",
+    "availability-timestamp-2",
+    "availability-url-0",
+    "availability-url-1",
+    "availability-url-2",
+    "availability-url-3",
+    "availability-url-4",
+    "availability-url-5",
+    "availability-url-6",
+    "availability-url-7",
+    "availability-none",
+    "availability-missing",
+    "availability-empty",
+    "availability-bad-json",
+    "availability-timeout",
+    "availability-401",
+    "availability-403",
+    "availability-408",
+    "availability-429",
+    "availability-503",
+    "archive-routing-0",
+    "archive-routing-1",
+    "archive-routing-2",
+    "archive-routing-3",
+    "archive-routing-4",
+    "archive-routing-5",
+    "archive-routing-6",
+    "archive-routing-7",
+    "archive-routing-8",
+    "archive-routing-9",
+    "archive-routing-10",
+    "availability-url-structural-0",
+    "availability-url-structural-1",
+    "availability-url-structural-2",
+    "availability-url-structural-3",
+    "availability-url-structural-4",
+    "availability-url-structural-5",
+    "availability-url-structural-6",
+    "availability-url-structural-7",
+    "availability-url-structural-8",
+    "tmdb-unicode-capitalize-0",
+    "tmdb-unicode-capitalize-1",
+    "tmdb-unicode-capitalize-2",
+    "tmdb-unicode-capitalize-3",
+    "tmdb-unicode-capitalize-4",
+    "tmdb-unicode-capitalize-5",
+    "tmdb-unicode-capitalize-6",
+    "openlibrary-isbn-strip-after-remove",
+    "openlibrary-atomic-title-0",
+    "openlibrary-atomic-title-1",
+    "musicbrainz-atomic-name-0",
+    "musicbrainz-atomic-name-1",
+    "tmdb-atomic-title-0",
+    "tmdb-atomic-title-1",
+    "internetarchive-atomic-title-0",
+    "internetarchive-atomic-title-1",
+    "internetarchive-atomic-date-0",
+    "tmdb-unicode-overview-prefix",
+    "availability-url-empty-delimiters-0",
+    "availability-url-empty-delimiters-1",
+    "availability-url-empty-delimiters-2",
+    "availability-url-empty-delimiters-3",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_routes_to_wayback#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_wayback_returns_snapshots#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_rejects_regular_text#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_returns_results#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_content_from_description#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_empty_results#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_wayback_error#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_general_error#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_timeout#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_cdx_timeout_falls_back_to_one_validated_closest_snapshot#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_reports_no_snapshot_without_fabricating_history#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_false_is_an_honest_empty_result#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_malformed_json_is_error#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest0]#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest1]#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest2]#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_blocked_is_preserved#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_timeout_is_preserved#0",
+    "tests/test_openlibrary_url_contract.py::test_identifier_urls_prefer_work_then_edition_then_isbn_and_omit_unknown#0",
+    "tests/test_openlibrary_url_contract.py::test_identifier_free_records_are_omitted#0",
+    "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[12345678901]#0",
+    "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[123456789012]#0",
+    "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[1234X67890]#0",
+    "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[978044117271X]#0",
+    "tests/test_openlibrary_url_contract.py::test_isbn_ten_allows_terminal_x_check_character#0",
+    "tests/test_openlibrary_url_contract.py::test_distinct_urls_survive_merger_and_json_formatting#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_search_returns_results#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_uses_bearer_auth_header#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_missing_api_key_returns_not_configured#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_empty_key_treated_as_not_configured#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_whitespace_key_treated_as_not_configured#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_http_status_error_sanitized#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_broad_exception_sanitized#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_rate_limited#0",
+    "tests/test_tmdb.py::TestTMDBAdapterSearch::test_timeout#0",
+    "tests/test_new_engines.py::TestMusicBrainzAdapter::test_search_returns_results#0",
+    "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_returns_results#0",
+    "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_empty#0",
+    "tests/test_new_engines.py::TestTMDBAdapter::test_search_returns_results#0",
+    "tests/test_new_engines.py::TestTMDBAdapter::test_search_missing_key#0",
+    "tests/test_new_engines.py::TestNominatimAdapter::test_search_returns_results#0",
+    "tests/test_payload.py::TestMediaPayload::test_tmdb_payload#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain#1",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text#0",
+    "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text#1",
+    "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#0",
+    "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#1",
+    "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#2",
+    "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#0",
+    "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#1",
+    "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#2"
+  ],
+  "regression_mapping": [
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain#0",
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain#1"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text#0",
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text#1"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterRegistration::test_adapter_categories_excludes_general",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterRegistration::test_adapter_registered",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_blocked_is_preserved",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_blocked_is_preserved#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_false_is_an_honest_empty_result",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_false_is_an_honest_empty_result#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_malformed_json_is_error",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_malformed_json_is_error#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest0]#0",
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest1]#0",
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest2]#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_reports_no_snapshot_without_fabricating_history",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_reports_no_snapshot_without_fabricating_history#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_timeout_is_preserved",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_timeout_is_preserved#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_cdx_timeout_falls_back_to_one_validated_closest_snapshot",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_cdx_timeout_falls_back_to_one_validated_closest_snapshot#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_general_error",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_general_error#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_timeout",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_timeout#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_wayback_error",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_wayback_error#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_content_from_description",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_content_from_description#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_empty_results",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_empty_results#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_returns_results",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_returns_results#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_rejects_regular_text",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_rejects_regular_text#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_routes_to_wayback",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_routes_to_wayback#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_wayback_returns_snapshots",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_wayback_returns_snapshots#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestMusicBrainzAdapter::test_adapter_registered",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestMusicBrainzAdapter::test_search_returns_results",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestMusicBrainzAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestNominatimAdapter::test_adapter_registered",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestNominatimAdapter::test_search_returns_results",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestNominatimAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_adapter_registered",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_empty",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_empty#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_returns_results",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_adapter_registered",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_search_missing_key",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestTMDBAdapter::test_search_missing_key#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    },
+    {
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_search_returns_results",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestTMDBAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_distinct_urls_survive_merger_and_json_formatting",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_openlibrary_url_contract.py::test_distinct_urls_survive_merger_and_json_formatting#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "openlibrary_actual_rank_and_http_json_preserve_original_identity_and_parsed_url"
+      ]
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_identifier_free_records_are_omitted",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_openlibrary_url_contract.py::test_identifier_free_records_are_omitted#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_identifier_urls_prefer_work_then_edition_then_isbn_and_omit_unknown",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_openlibrary_url_contract.py::test_identifier_urls_prefer_work_then_edition_then_isbn_and_omit_unknown#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[12345678901]#0",
+        "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[123456789012]#0",
+        "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[1234X67890]#0",
+        "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[978044117271X]#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_isbn_ten_allows_terminal_x_check_character",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_openlibrary_url_contract.py::test_isbn_ten_allows_terminal_x_check_character#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_payload.py::TestMediaPayload::test_tmdb_payload",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_payload.py::TestMediaPayload::test_tmdb_payload#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "tmdb_actual_complete_payload_and_thumbnail_survive_rank_and_http_projection"
+      ]
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_adapter_categories_excludes_general",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_adapter_default_disabled",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_adapter_registered",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#0",
+        "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#1",
+        "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#2"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#0",
+        "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#1",
+        "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#2"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterRegistration::test_adapter_registered",
+      "kind": "registration-metadata-default",
+      "source_case_ids": [],
+      "native_cases": [
+        "resolved_yaml_env_secret_defaults_and_metadata"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_broad_exception_sanitized",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_broad_exception_sanitized#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_empty_key_treated_as_not_configured",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_empty_key_treated_as_not_configured#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_http_status_error_sanitized",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_http_status_error_sanitized#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_missing_api_key_returns_not_configured",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_missing_api_key_returns_not_configured#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_rate_limited",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_rate_limited#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_search_returns_results",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_timeout",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_timeout#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_uses_bearer_auth_header",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_uses_bearer_auth_header#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_whitespace_key_treated_as_not_configured",
+      "kind": "actual-source-adapter-replay",
+      "source_case_ids": [
+        "tests/test_tmdb.py::TestTMDBAdapterSearch::test_whitespace_key_treated_as_not_configured#0"
+      ],
+      "native_cases": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    }
+  ],
+  "native_case_bindings": {
+    "all_engine_source_replay": {
+      "package": "ssx-infra",
+      "target": "a09_catalog_media",
+      "qualified_name": "all_engine_source_replay"
+    },
+    "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted": {
+      "package": "ssx-infra",
+      "target": "a09_catalog_media",
+      "qualified_name": "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+    },
+    "endpoint_guard_rejects_unresolved_public_fallbacks_and_proxy_flags": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "endpoint_guard_rejects_unresolved_public_fallbacks_and_proxy_flags"
+    },
+    "negative_guard_cases_stop_before_registration_and_dispatch": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "negative_guard_cases_stop_before_registration_and_dispatch"
+    },
+    "five_f06_factories_execute_exact_real_loopback_requests_and_outcomes": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "five_f06_factories_execute_exact_real_loopback_requests_and_outcomes"
+    },
+    "five_admission_denial_unavailable_and_deadline_have_zero_http": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "five_admission_denial_unavailable_and_deadline_have_zero_http"
+    },
+    "five_future_drops_and_owner_shutdown_close_real_pending_sockets": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "five_future_drops_and_owner_shutdown_close_real_pending_sockets"
+    },
+    "five_real_timeout_and_expired_context_cleanup": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "five_real_timeout_and_expired_context_cleanup"
+    },
+    "archive_real_cdx_timer_one_fallback_and_aggregate_context": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "archive_real_cdx_timer_one_fallback_and_aggregate_context"
+    },
+    "resolved_yaml_env_secret_defaults_and_metadata": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "resolved_yaml_env_secret_defaults_and_metadata"
+    },
+    "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct"
+    },
+    "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance": {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "qualified_name": "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+    },
+    "openlibrary_actual_rank_and_http_json_preserve_original_identity_and_parsed_url": {
+      "package": "ssx-http",
+      "target": "a09_consumers",
+      "qualified_name": "openlibrary_actual_rank_and_http_json_preserve_original_identity_and_parsed_url"
+    },
+    "tmdb_actual_complete_payload_and_thumbnail_survive_rank_and_http_projection": {
+      "package": "ssx-http",
+      "target": "a09_consumers",
+      "qualified_name": "tmdb_actual_complete_payload_and_thumbnail_survive_rank_and_http_projection"
+    },
+    "parsed_url_accessor_six_components_and_malformed_authority_boundary": {
+      "package": "ssx-http",
+      "target": "a09_consumers",
+      "qualified_name": "parsed_url_accessor_six_components_and_malformed_authority_boundary"
+    },
+    "adapters::openlibrary::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::openlibrary::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage"
+    },
+    "adapters::openlibrary::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::openlibrary::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows"
+    },
+    "adapters::openlibrary::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::openlibrary::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+    },
+    "adapters::musicbrainz::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::musicbrainz::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage"
+    },
+    "adapters::musicbrainz::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::musicbrainz::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows"
+    },
+    "adapters::musicbrainz::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::musicbrainz::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+    },
+    "adapters::tmdb::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::tmdb::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage"
+    },
+    "adapters::tmdb::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::tmdb::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows"
+    },
+    "adapters::tmdb::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::tmdb::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+    },
+    "adapters::nominatim::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::nominatim::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage"
+    },
+    "adapters::nominatim::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::nominatim::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows"
+    },
+    "adapters::nominatim::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::nominatim::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+    },
+    "adapters::internetarchive::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::internetarchive::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage"
+    },
+    "adapters::internetarchive::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::internetarchive::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows"
+    },
+    "adapters::internetarchive::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::internetarchive::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+    },
+    "adapters::source_payload::batch::tests::thumbnail_uses_same_budget_and_named_handoff_release": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::source_payload::batch::tests::thumbnail_uses_same_budget_and_named_handoff_release"
+    },
+    "adapters::source_payload::batch::tests::thumbnail_capacity_refusal_and_cancel_release_projection_storage": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::source_payload::batch::tests::thumbnail_capacity_refusal_and_cancel_release_projection_storage"
+    },
+    "adapters::source_payload::batch::tests::batch_owns_projection_capacity_overlap_and_named_handoff": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::source_payload::batch::tests::batch_owns_projection_capacity_overlap_and_named_handoff"
+    },
+    "adapters::source_payload::batch::tests::wrong_ledger_refusal_and_fixed_capacity_preserve_storage_ownership": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::source_payload::batch::tests::wrong_ledger_refusal_and_fixed_capacity_preserve_storage_ownership"
+    },
+    "adapters::source_payload::batch::tests::cancelled_push_drops_partial_storage_before_batch_charge": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::source_payload::batch::tests::cancelled_push_drops_partial_storage_before_batch_charge"
+    },
+    "adapters::source_payload::batch::tests::non_success_handoff_has_no_partial_rows_and_charges_error_copy": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::source_payload::batch::tests::non_success_handoff_has_no_partial_rows_and_charges_error_copy"
+    },
+    "tests::builtins_are_complete_and_unported_engines_are_unavailable": {
+      "package": "ssx-registry",
+      "target": "lib",
+      "qualified_name": "tests::builtins_are_complete_and_unported_engines_are_unavailable"
+    },
+    "tests::fixture_adapter_registers_through_the_engine_owned_seam": {
+      "package": "ssx-registry",
+      "target": "lib",
+      "qualified_name": "tests::fixture_adapter_registers_through_the_engine_owned_seam"
+    },
+    "tests::filter_consumption_and_enforcement_are_distinct_layered_metadata": {
+      "package": "ssx-registry",
+      "target": "lib",
+      "qualified_name": "tests::filter_consumption_and_enforcement_are_distinct_layered_metadata"
+    },
+    "tests::duplicate_descriptor_and_invalid_specialist_card_fail_closed": {
+      "package": "ssx-registry",
+      "target": "lib",
+      "qualified_name": "tests::duplicate_descriptor_and_invalid_specialist_card_fail_closed"
+    }
+  },
+  "native_targets": [
+    {
+      "package": "ssx-infra",
+      "target": "a09_catalog_media",
+      "tests": [
+        "all_engine_source_replay",
+        "actual_yaml_env_tmdb_key_precedence_is_bearer_only_and_redacted"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a09_factories",
+      "tests": [
+        "endpoint_guard_rejects_unresolved_public_fallbacks_and_proxy_flags",
+        "negative_guard_cases_stop_before_registration_and_dispatch",
+        "five_f06_factories_execute_exact_real_loopback_requests_and_outcomes",
+        "five_admission_denial_unavailable_and_deadline_have_zero_http",
+        "five_future_drops_and_owner_shutdown_close_real_pending_sockets",
+        "five_real_timeout_and_expired_context_cleanup",
+        "archive_real_cdx_timer_one_fallback_and_aggregate_context",
+        "resolved_yaml_env_secret_defaults_and_metadata",
+        "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct",
+        "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+      ]
+    },
+    {
+      "package": "ssx-http",
+      "target": "a09_consumers",
+      "tests": [
+        "openlibrary_actual_rank_and_http_json_preserve_original_identity_and_parsed_url",
+        "tmdb_actual_complete_payload_and_thumbnail_survive_rank_and_http_projection",
+        "parsed_url_accessor_six_components_and_malformed_authority_boundary"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "lib",
+      "tests": [
+        "adapters::openlibrary::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::openlibrary::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::openlibrary::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::musicbrainz::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::musicbrainz::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::musicbrainz::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::tmdb::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::tmdb::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::tmdb::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::nominatim::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::nominatim::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::nominatim::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::internetarchive::owned_operation_tests::actual_engine_budget_rejects_and_releases_all_operation_storage",
+        "adapters::internetarchive::owned_operation_tests::dropping_actual_projection_future_releases_charged_scratch_and_rows",
+        "adapters::internetarchive::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds",
+        "adapters::source_payload::batch::tests::thumbnail_uses_same_budget_and_named_handoff_release",
+        "adapters::source_payload::batch::tests::thumbnail_capacity_refusal_and_cancel_release_projection_storage",
+        "adapters::source_payload::batch::tests::batch_owns_projection_capacity_overlap_and_named_handoff",
+        "adapters::source_payload::batch::tests::wrong_ledger_refusal_and_fixed_capacity_preserve_storage_ownership",
+        "adapters::source_payload::batch::tests::cancelled_push_drops_partial_storage_before_batch_charge",
+        "adapters::source_payload::batch::tests::non_success_handoff_has_no_partial_rows_and_charges_error_copy"
+      ]
+    },
+    {
+      "package": "ssx-registry",
+      "target": "lib",
+      "tests": [
+        "tests::builtins_are_complete_and_unported_engines_are_unavailable",
+        "tests::fixture_adapter_registers_through_the_engine_owned_seam",
+        "tests::filter_consumption_and_enforcement_are_distinct_layered_metadata",
+        "tests::duplicate_descriptor_and_invalid_specialist_card_fail_closed"
+      ]
+    }
+  ],
+  "downstream_owners": [
+    {
+      "owner": "T03/G01",
+      "contract": "actual portal HTML/browser rendering of exact A09 omissions, dates, thumbnails, payload and closest-snapshot diagnostics"
+    },
+    {
+      "owner": "T02/T06/G01",
+      "contract": "full public HTTP/MCP transports and snapshot/read-result boundary"
+    },
+    {
+      "owner": "G02",
+      "contract": "retained public response, flight, cache and global memory boundaries"
+    },
+    {
+      "owner": "G08",
+      "contract": "retire four executable temporary Python producers"
+    }
+  ],
+  "owned_case_ids": [
+    "openlibrary-atomic-title-0",
+    "openlibrary-atomic-title-1",
+    "musicbrainz-atomic-name-0",
+    "musicbrainz-atomic-name-1",
+    "tmdb-atomic-title-0",
+    "tmdb-atomic-title-1",
+    "internetarchive-atomic-title-0",
+    "internetarchive-atomic-title-1",
+    "internetarchive-atomic-date-0"
+  ],
+  "timer_case_ids": [
+    "archive-timeout-zero-immediate",
+    "archive-timeout-zero-stalled",
+    "archive-timeout-negative-immediate",
+    "archive-timeout-negative-stalled",
+    "archive-timeout-positive-immediate",
+    "archive-timeout-positive-stalled",
+    "archive-timeout-inf-immediate",
+    "archive-timeout-inf-stalled",
+    "archive-timeout-negative-inf-immediate",
+    "archive-timeout-negative-inf-stalled",
+    "archive-timeout-nan-immediate",
+    "archive-timeout-nan-stalled"
+  ],
+  "owned_case_bindings": [
+    {
+      "id": "openlibrary-atomic-title-0",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::openlibrary::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "openlibrary-atomic-title-1",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::openlibrary::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "musicbrainz-atomic-name-0",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::musicbrainz::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "musicbrainz-atomic-name-1",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::musicbrainz::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "tmdb-atomic-title-0",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::tmdb::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "tmdb-atomic-title-1",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::tmdb::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "internetarchive-atomic-title-0",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::internetarchive::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "internetarchive-atomic-title-1",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::internetarchive::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    },
+    {
+      "id": "internetarchive-atomic-date-0",
+      "source_path": "docs/rust-rewrite/a09/source.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::internetarchive::owned_operation_tests::valid_then_invalid_is_atomic_releases_and_next_call_succeeds"
+      }
+    }
+  ],
+  "timer_case_bindings": [
+    {
+      "id": "archive-timeout-zero-immediate",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct"
+      }
+    },
+    {
+      "id": "archive-timeout-zero-stalled",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct"
+      }
+    },
+    {
+      "id": "archive-timeout-negative-immediate",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct"
+      }
+    },
+    {
+      "id": "archive-timeout-negative-stalled",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct"
+      }
+    },
+    {
+      "id": "archive-timeout-positive-immediate",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct"
+      }
+    },
+    {
+      "id": "archive-timeout-positive-stalled",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_source_archive_configured_timers_keep_error_and_context_timeout_distinct"
+      }
+    },
+    {
+      "id": "archive-timeout-inf-immediate",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+      }
+    },
+    {
+      "id": "archive-timeout-inf-stalled",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+      }
+    },
+    {
+      "id": "archive-timeout-negative-inf-immediate",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+      }
+    },
+    {
+      "id": "archive-timeout-negative-inf-stalled",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+      }
+    },
+    {
+      "id": "archive-timeout-nan-immediate",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+      }
+    },
+    {
+      "id": "archive-timeout-nan-stalled",
+      "source_path": "docs/rust-rewrite/a09/timeouts.json",
+      "native": {
+        "package": "ssx-infra",
+        "target": "a09_factories",
+        "qualified_name": "actual_f06_nonfinite_timeout_rejects_before_instantiation_supersedes_raw_adapter_acceptance"
+      }
+    }
+  ]
+}
