@@ -327,6 +327,13 @@ impl Metrics for Telemetry {
     fn workflow_terminal(&self, workflow: &'static str, outcome: &'static str) {
         let _ = self.metrics.workflow_terminal(workflow, outcome, None);
     }
+    fn workflow_expired(&self, workflow: &'static str, artifact: &'static str) {
+        let _ = self.metrics.update(
+            "slopsearx_workflow_expired_total",
+            &[("workflow", workflow), ("artifact", artifact)],
+            1.,
+        );
+    }
     fn cache_lookup(&self, observation: ssx_application::CacheObservation) {
         let kind = match observation {
             ssx_application::CacheObservation::Miss => "miss",

@@ -297,6 +297,11 @@ impl Service {
         cancel.check()?;
         let discovery = match &source {
             Source::Live(v) => v.clone(),
+            Source::Expired(_) if retained.receipts.is_empty() => {
+                self.metrics
+                    .workflow_expired("retrieval_receipt", "receipt");
+                return Ok(source.error().expect("expired source"));
+            }
             _ if retained.receipts.is_empty() => return Ok(source.error().expect("nonlive")),
             _ => retained.receipts[0]
                 .get("discovery")
@@ -528,6 +533,10 @@ mod service_contract_tests {
                 "failed" => "terminal_failed",
                 _ => panic!("unexpected receipt terminal label"),
             });
+        }
+        fn workflow_expired(&self, workflow: &'static str, artifact: &'static str) {
+            assert_eq!((workflow, artifact), ("retrieval_receipt", "receipt"));
+            self.push("expired");
         }
     }
     struct TelemetryRepo {
@@ -868,6 +877,192 @@ mod service_contract_tests {
         .unwrap();
         assert_eq!(value["state"], "replayed");
         assert_eq!(trace.events(), vec!["replay"]);
+    }
+
+    #[test]
+    fn receipt_read_expiry_metrics_require_expired_source_and_empty_retained_receipts() {
+        let expired = Source::Expired(WallClockTimestamp::new(90.).unwrap());
+        for (source, expected) in [
+            (
+                expired.clone(),
+                Some(
+                    json!({"code":"expired_handle","message":"originating snapshot has expired","expires_at":90.}),
+                ),
+            ),
+            (
+                Source::Unknown,
+                Some(json!({"code":"invalid_result_id","message":"unknown result_id"})),
+            ),
+            (
+                Source::InvalidId,
+                Some(
+                    json!({"code":"invalid_result_id","message":"result_id must be a server-issued snapshot result handle"}),
+                ),
+            ),
+            (
+                Source::Unavailable,
+                Some(json!({"code":"store_unavailable","message":"snapshot store is unavailable"})),
+            ),
+            (Source::Live(json!({"query":"captured"})), None),
+        ] {
+            let trace = Arc::new(Trace::default());
+            let is_expired = matches!(&source, Source::Expired(_));
+            let mut reader = service(
+                trace.clone(),
+                true,
+                Replay::Missing,
+                source,
+                Retained {
+                    receipts: vec![],
+                    total: 0,
+                },
+            );
+            reader.metrics = trace.clone();
+            let value =
+                run(reader.read(&tenant(), "result-1", 20, &Cancellation::default())).unwrap();
+            if let Some(expected) = expected {
+                assert_eq!(value["error"], expected);
+            } else {
+                assert_eq!(value["source_snapshot_status"], "live");
+                assert_eq!(value["receipts"], json!([]));
+            }
+            assert_eq!(
+                trace.events(),
+                if is_expired {
+                    vec!["read", "source", "expired"]
+                } else {
+                    vec!["read", "source"]
+                }
+            );
+        }
+        // Retained evidence keeps its discovery after source expiry without an expiry event.
+        let trace = Arc::new(Trace::default());
+        let saved = json!({"receipt_id":"receipt-1","discovery":{"query":"original"}});
+        let mut retained = service(
+            trace.clone(),
+            true,
+            Replay::Missing,
+            expired.clone(),
+            Retained {
+                receipts: vec![saved],
+                total: 1,
+            },
+        );
+        retained.metrics = trace.clone();
+        let value =
+            run(retained.read(&tenant(), "result-1", 20, &Cancellation::default())).unwrap();
+        assert_eq!(value["source_snapshot_status"], "expired");
+        assert_eq!(value["discovery"]["query"], "original");
+        assert_eq!(trace.events(), vec!["read", "source"]);
+        // Validation, grant and cancellation failures cannot invent an observed expiry.
+        for (enabled, limit, cancelled, expected) in [
+            (true, 0, false, "invalid_input"),
+            (false, 20, false, "tool_disabled"),
+            (true, 20, true, "cancelled"),
+        ] {
+            let trace = Arc::new(Trace::default());
+            let mut reader = service(
+                trace.clone(),
+                enabled,
+                Replay::Missing,
+                expired.clone(),
+                Retained {
+                    receipts: vec![],
+                    total: 0,
+                },
+            );
+            reader.metrics = trace.clone();
+            let cancel = Cancellation::default();
+            if cancelled {
+                cancel.cancel();
+            }
+            let result = run(reader.read(&tenant(), "result-1", limit, &cancel));
+            if cancelled {
+                assert_eq!(result, Err(Failure::Cancelled));
+            } else {
+                assert_eq!(result.unwrap()["error"]["code"], expected);
+            }
+            assert!(trace.events().is_empty());
+        }
+        struct FailedRead(Arc<Trace>);
+        impl ReceiptRepository for FailedRead {
+            fn replay<'a>(
+                &'a self,
+                _: &'a TenantId,
+                _: &'a str,
+                _: &'a str,
+                _: &'a str,
+                _: WallClockTimestamp,
+                _: &'a Cancellation,
+            ) -> PortFuture<'a, Result<Replay, Failure>> {
+                panic!("read cannot replay")
+            }
+            fn submit<'a>(&'a self, _: Insert<'a>) -> PortFuture<'a, Result<Submission, Failure>> {
+                panic!("read cannot submit")
+            }
+            fn read<'a>(
+                &'a self,
+                _: &'a TenantId,
+                _: &'a str,
+                _: WallClockTimestamp,
+                _: usize,
+                _: &'a Cancellation,
+            ) -> PortFuture<'a, Result<Retained, Failure>> {
+                self.0.push("read");
+                Box::pin(async { Err(Failure::Unavailable) })
+            }
+        }
+        let trace = Arc::new(Trace::default());
+        let mut reader = service(
+            trace.clone(),
+            true,
+            Replay::Missing,
+            expired.clone(),
+            Retained {
+                receipts: vec![],
+                total: 0,
+            },
+        );
+        reader.metrics = trace.clone();
+        reader.repo = Arc::new(FailedRead(trace.clone()));
+        assert_eq!(
+            run(reader.read(&tenant(), "result-1", 20, &Cancellation::default())),
+            Err(Failure::Unavailable)
+        );
+        assert_eq!(trace.events(), vec!["read"]);
+        struct CancellingSource(Arc<Trace>);
+        impl SourceReader for CancellingSource {
+            fn discovery<'a>(
+                &'a self,
+                _: &'a TenantId,
+                _: &'a str,
+                cancel: &'a Cancellation,
+            ) -> PortFuture<'a, Result<Source, Failure>> {
+                self.0.push("source");
+                Box::pin(async move {
+                    cancel.cancel();
+                    Ok(Source::Expired(WallClockTimestamp::new(90.).unwrap()))
+                })
+            }
+        }
+        let trace = Arc::new(Trace::default());
+        let mut reader = service(
+            trace.clone(),
+            true,
+            Replay::Missing,
+            expired,
+            Retained {
+                receipts: vec![],
+                total: 0,
+            },
+        );
+        reader.metrics = trace.clone();
+        reader.source = Arc::new(CancellingSource(trace.clone()));
+        assert_eq!(
+            run(reader.read(&tenant(), "result-1", 20, &Cancellation::default())),
+            Err(Failure::Cancelled)
+        );
+        assert_eq!(trace.events(), vec!["read", "source"]);
     }
 
     #[test]

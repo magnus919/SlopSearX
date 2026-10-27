@@ -1890,12 +1890,12 @@ pub(crate) fn metrics_predecessor(
         "W07 Metrics caller tuple differs",
     )?;
     need(
-        actual.len() == 6100
-            && digest(actual) == "1c979b776d4f3952316b6b262813784a851d6b841f2d9d95f079e76e038d5a84",
+        actual.len() == 6168
+            && digest(actual) == "e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b",
         "W07 Metrics physical afterimage differs",
     )?;
     let at = 2805;
-    let insertion: &[u8] = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n";
+    let insertion: &[u8] = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n    fn workflow_expired(&self, _: &'static str, _: &'static str) {}\n";
     let end = at + insertion.len();
     need(
         actual.get(at..end) == Some(insertion),

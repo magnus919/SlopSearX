@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "686f3e47f9cf4dd25df51982301a76da5e117c7d84a6aebcdba58601ca12bde9";
+const REGISTRY_SHA: &str = "471501e937e30959e60ec1d51cb1a0d67ca966df487fddc2e81abcb5d33962de";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -191,7 +191,7 @@ fn reference(root: &Path, binding: &Reference, packaging: &str) -> Result<Value>
 }
 fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     let mut expected = original.clone();
-    expected["suites"][0]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"receipts::service::service_contract_tests::receipt_telemetry_preserves_source_branch_order_and_terminal_status\", \"receipts::service::service_contract_tests::receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion\"]").map_err(|e|e.to_string())?);
+    expected["suites"][0]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"receipts::service::service_contract_tests::receipt_telemetry_preserves_source_branch_order_and_terminal_status\", \"receipts::service::service_contract_tests::receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion\", \"receipts::service::service_contract_tests::receipt_read_expiry_metrics_require_expired_source_and_empty_retained_receipts\"]").map_err(|e|e.to_string())?);
     expected["suites"][1]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"lineage::source_cycle_contract::original_cycle_duplicate_edges_and_expired_nodes_are_exact_and_deterministic\"]").map_err(|e|e.to_string())?);
     expected["suites"][6]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_contracts\"]").map_err(|e|e.to_string())?);
     expected["suites"][7]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"authenticated_receipts_emit_source_workflow_counters_on_the_shared_collector\"]").map_err(|e|e.to_string())?);
@@ -221,7 +221,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 original whole-file source pin changed".into());
     }
     expected["sources"]["crates/ssx-application/src/receipts/service.rs"] =
-        Value::String("b2ab0d86f190ae85ae8d2b47b7f930ace5cd7650a9873c3cff6fc4422ba5141d".into());
+        Value::String("294df04b4cab9dd64ccf48e85534b1bb7f592200dbbb1723675e4d7186c7725e".into());
     if expected["sources"]["crates/ssx-mcp/src/evidence/factory.rs"]
         != "3c77f1a7a3b470f72e324f33fbbf006ff256c6a707f2d9415119f520edad8b96"
     {
@@ -249,7 +249,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 original whole-file source pin changed".into());
     }
     expected["sources"]["crates/ssx-mcp/tests/w07_composition.rs"] =
-        Value::String("7b9cf660c1b0f7bf7ed69e10bc556c61cb755378acab35b49c8f1cdd226bd1c2".into());
+        Value::String("1f952da6a11d01234edfe05ff17f0c26690151489245bafeb079d585a82865ca".into());
     if expected["sources"]["crates/ssx-mcp/tests/w07_mcp.rs"]
         != "9c234756fac4aefaffe9bcee8325f8ff6d1d8e2e23949b7ca870395ccaca622e"
     {
@@ -270,7 +270,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 original whole-file source pin changed".into());
     }
     expected["sources"]["docs/rust-rewrite/a06/source-amendments/shared-successor.rs"] =
-        Value::String("f248a1bb993975ca268a2bfbd1fb52bbd815651a852f4045f648fb8151277045".into());
+        Value::String("275bfe84754cb62a84c79cb6f0af2cb6745e232e316c1cd2f383983cb51cf681".into());
     // Normal W07/CI join: preserve the original pin and admit only the reviewed
     // merged whole-file operand, including W07's existing joint module import.
     if expected["sources"]["docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs"]
@@ -308,7 +308,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 new causal source was already present".into());
     }
     expected["sources"]["crates/ssx-application/src/lib.rs"] =
-        Value::String("1c979b776d4f3952316b6b262813784a851d6b841f2d9d95f079e76e038d5a84".into());
+        Value::String("e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b".into());
     if expected["sources"]
         .get("crates/ssx-infra/src/observability/mod.rs")
         .is_some()
@@ -316,7 +316,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 new causal source was already present".into());
     }
     expected["sources"]["crates/ssx-infra/src/observability/mod.rs"] =
-        Value::String("39dcefcdb94bb441fde39263365d25758c6262cca0bb2b4d0078be05f3ca87f9".into());
+        Value::String("e32ec1a5d7b0fa487335a2fd55c142bfbf271634a87a2f1e8edcdafa53c4f032".into());
     if expected["sources"]
         .get("crates/ssx-infra/src/observability/metrics.rs")
         .is_some()
@@ -582,7 +582,7 @@ mod tests {
         assert!(metrics_predecessor("unlisted.rs", expected, actual).is_err());
         assert!(metrics_predecessor(path, &"0".repeat(64), actual).is_err());
         let at = 2805;
-        let insertion = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n";
+        let insertion = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n    fn workflow_expired(&self, _: &'static str, _: &'static str) {}\n";
         let mut duplicate = actual.to_vec();
         duplicate.splice(at..at, insertion.iter().copied());
         let mut altered = actual.to_vec();

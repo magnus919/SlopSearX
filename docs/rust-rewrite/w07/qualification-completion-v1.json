@@ -27,7 +27,8 @@
         "receipts::service::service_contract_tests::submit_normalizes_observation_before_repository_and_never_claims_verification",
         "receipts::source::tests::large_retained_discovery_projection_avoids_default_parser_reentry",
         "receipts::service::service_contract_tests::receipt_telemetry_preserves_source_branch_order_and_terminal_status",
-        "receipts::service::service_contract_tests::receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion"
+        "receipts::service::service_contract_tests::receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion",
+        "receipts::service::service_contract_tests::receipt_read_expiry_metrics_require_expired_source_and_empty_retained_receipts"
       ]
     },
     {
@@ -225,7 +226,7 @@
     "crates/ssx-application/src/receipts/manifest.rs": "11d36e6fa3ad575c7723bf5e35127f843509ba1c558bfdbb3e1b51ef9b1a6374",
     "crates/ssx-application/src/receipts/memory.rs": "b89eea341baa5a4221bb807cdecba19b116d6868682f652e5430debd27b0bff5",
     "crates/ssx-application/src/receipts/observation.rs": "6b6250a57d28a14488602e3614e5796edbc7d3918ea4a8397c812b4cdb2b4d50",
-    "crates/ssx-application/src/receipts/service.rs": "b2ab0d86f190ae85ae8d2b47b7f930ace5cd7650a9873c3cff6fc4422ba5141d",
+    "crates/ssx-application/src/receipts/service.rs": "294df04b4cab9dd64ccf48e85534b1bb7f592200dbbb1723675e4d7186c7725e",
     "crates/ssx-application/src/receipts/source.rs": "d97af9cfe2a2e015d50d0c33c517870bdc78346c10ce7c54671ff17065c69bdf",
     "crates/ssx-application/src/receipts.rs": "f1603e5c7bc25da89e2d8fda38177cc16f704384de6b3a6456d51222d145d583",
     "crates/ssx-application/tests/w07_snapshot_projection.rs": "75ca664c73cd71a706e11f8c4e52c2f9a3846baaf5da8753ffe0474cfd6cc980",
@@ -244,7 +245,7 @@
     "crates/ssx-mcp/src/evidence/tools.rs": "705362f0e083cf1a65b5b1149430231b7f0329517e53311317bc2ff91432f9b9",
     "crates/ssx-mcp/src/search_surface/mod.rs": "1de423862041d7988ce020f801af73abd25db3f9dcdae83a3e362db58428496f",
     "crates/ssx-mcp/src/search_surface/validation.rs": "4163a01d3c879132e60e611f4085cd493f3310a5341bbff54fee86d90fb1af36",
-    "crates/ssx-mcp/tests/w07_composition.rs": "7b9cf660c1b0f7bf7ed69e10bc556c61cb755378acab35b49c8f1cdd226bd1c2",
+    "crates/ssx-mcp/tests/w07_composition.rs": "1f952da6a11d01234edfe05ff17f0c26690151489245bafeb079d585a82865ca",
     "crates/ssx-mcp/tests/w07_mcp.rs": "1cab294c93e03a933c77764edb1628b2727fde9e0dfc5cff34d721fcf1e37084",
     "crates/ssx-mcp/tests/w07_support/mcp.rs": "e0b6368a32e9e1c2070e5944b022d55b37b12304e373eea52051170ba5680545",
     "crates/ssx-mcp/tests/w07_support/observer.rs": "266902a7dd9d3589a39a08174b6859b9f5dbebb0ca0aa3127e7617393776cc89",
@@ -263,7 +264,7 @@
     "crates/ssx-mcp/tests/w07_wire_reference.rs": "91cbb2b2cb3f8ec2be2fb4e93e97261af7e992e993cde0e6777aba533d21ed43",
     "docs/rust-rewrite/t06/entities.json": "e519664f9a3b0d026d0de469c429cea7e0a146e2ecc3ed934339a62e47626232",
     "docs/rust-rewrite/w07/source-amendments/main_successor.rs": "fbd4796c07233de00acf969e7d51384692f5f42f48a4ec7a76d69125688dbe66",
-    "docs/rust-rewrite/a06/source-amendments/shared-successor.rs": "f248a1bb993975ca268a2bfbd1fb52bbd815651a852f4045f648fb8151277045",
+    "docs/rust-rewrite/a06/source-amendments/shared-successor.rs": "275bfe84754cb62a84c79cb6f0af2cb6745e232e316c1cd2f383983cb51cf681",
     "crates/ssx-mcp/tests/t06_source_bindings.rs": "8d124e73da957742a86afe2d8495a23dbcf88aa5fb711c41b1a3d4fc9148a4cc",
     "crates/xtask/src/a03.rs": "81df67e0eb7e19ee2f5456527754f061033859bb4f37bf41fd65ac20d3936df1",
     "crates/xtask/src/t04.rs": "a2fea314bccff94d1e224d21a086c5ed5cdc6b23f125b29e67e292fcefaed861",
@@ -282,8 +283,8 @@
     "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs": "ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4",
     "docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs": "6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c",
     "docs/rust-rewrite/a06/source-amendments/post-a06-generation-v1.json": "3ff125fdcbca12bf6312ef875a613360319fdd11349fd2524a0fb932f31979cd",
-    "crates/ssx-application/src/lib.rs": "1c979b776d4f3952316b6b262813784a851d6b841f2d9d95f079e76e038d5a84",
-    "crates/ssx-infra/src/observability/mod.rs": "39dcefcdb94bb441fde39263365d25758c6262cca0bb2b4d0078be05f3ca87f9",
+    "crates/ssx-application/src/lib.rs": "e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b",
+    "crates/ssx-infra/src/observability/mod.rs": "e32ec1a5d7b0fa487335a2fd55c142bfbf271634a87a2f1e8edcdafa53c4f032",
     "crates/ssx-infra/src/observability/metrics.rs": "cccca54dc139061f691d183c0b073cb479229be0c5c3990752686ce3457bc460"
   },
   "wire_reference": {

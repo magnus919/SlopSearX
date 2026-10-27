@@ -354,6 +354,25 @@ async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_cont
     use ssx_json::{Value, json};
     let server = server();
     let backend = Arc::new(Valkey::new(server.url(), Duration::from_secs(2)).unwrap());
+    let telemetry = ssx_infra::observability::Telemetry::new(
+        ssx_infra::observability::Options {
+            audit: false,
+            ..Default::default()
+        },
+        None,
+        vec!["wikipedia".into()],
+        vec!["general".into()],
+    )
+    .unwrap();
+    let expiry_series = || {
+        telemetry
+            .metrics
+            .render()
+            .lines()
+            .filter(|line| line.starts_with("slopsearx_workflow_expired_total{"))
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+    };
     let mut current = state();
     current.search.policy.grants.insert("research".into());
     current.search.catalog = CatalogSnapshot::new(vec![ssx_application::scope::EngineCapability {
@@ -478,7 +497,7 @@ async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_cont
         snapshots: snapshots.clone(),
         authority: owner.authority(),
         clock: clock.clone(),
-        metrics: Arc::new(ssx_application::NoopSink),
+        metrics: telemetry.clone(),
     });
     let cancel = Cancellation::default();
     let job_graph = lineage::traverse(
@@ -597,6 +616,14 @@ async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_cont
         vec![result0.id(), result1.id()]
     );
     unchanged_snapshot(&before, &stored_snapshot(&server, &tenant, root.id()));
+    let live_empty = runtime
+        .service
+        .read(&tenant, result1.id(), 20, &cancel)
+        .await
+        .unwrap();
+    assert_eq!(live_empty["source_snapshot_status"], "live");
+    assert_eq!(live_empty["receipts"], json!([]));
+    assert!(expiry_series().is_empty());
     let first = runtime
         .service
         .submit(&tenant, result0.id(), observation("expiry-once"), &cancel)
@@ -634,6 +661,33 @@ async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_cont
         read["receipts"][0]["discovery"],
         first["receipt"]["discovery"]
     );
+    unchanged_snapshot(&before, &stored_snapshot(&server, &tenant, root.id()));
+    assert!(
+        expiry_series().is_empty(),
+        "retained expired evidence is not an empty-receipt expiry"
+    );
+    let mut keys_before: Vec<String> = redis::cmd("KEYS").arg("*").query(&mut conn).unwrap();
+    keys_before.sort();
+    for count in [1, 2] {
+        let empty_expired = runtime
+            .service
+            .read(&tenant, result1.id(), 20, &cancel)
+            .await
+            .unwrap();
+        assert_eq!(
+            empty_expired["error"],
+            json!({"code":"expired_handle","message":"originating snapshot has expired","expires_at":1010.})
+        );
+        assert_eq!(
+            expiry_series(),
+            vec![format!(
+                "slopsearx_workflow_expired_total{{artifact=\"receipt\",workflow=\"retrieval_receipt\"}} {count}"
+            )]
+        );
+    }
+    let mut keys_after: Vec<String> = redis::cmd("KEYS").arg("*").query(&mut conn).unwrap();
+    keys_after.sort();
+    assert_eq!(keys_after, keys_before);
     unchanged_snapshot(&before, &stored_snapshot(&server, &tenant, root.id()));
     // Separate owned fixtures: malformed persisted edge and missing legacy lineage.
     for (id, legacy) in [("corrupt-contract", false), ("legacy-contract", true)] {
@@ -709,6 +763,7 @@ async fn retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_cont
     drop(second);
     drop(snapshots);
     backend.close().await;
+    telemetry.shutdown().await;
     drop(owner);
     drop(backend);
     drop(server);
