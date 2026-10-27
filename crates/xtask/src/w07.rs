@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "5b595c895393b9364010ad5ca2e0b67077a938e7f6731f1d08814b046103d504";
+const REGISTRY_SHA: &str = "aef5ee915d22dfe44901b44a2955cbceafcee0b34384ad9ca3eda399cc364f4c";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -350,7 +350,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 exact normal-main parent source pin differs".into());
     }
     expected["sources"]["crates/ssx-mcp/tests/t06_source_bindings.rs"] =
-        Value::String("adddab23bf72005a117cb7896f82fc1a79d4f24609938454d281422db35d6230".into());
+        Value::String("4e32ad700a69b138948689c8bb95c4b0c0cfd0f7c2ee7145102b6b78150dcde1".into());
     if expected["sources"]["crates/xtask/src/t06.rs"]
         != "be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0"
     {

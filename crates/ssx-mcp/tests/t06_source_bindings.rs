@@ -1,4 +1,6 @@
 //! Native source-drift gate: reads frozen bytes, never executes Python.
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs"]
+mod main_isolation_current;
 #[allow(dead_code)]
 #[path = "../../../docs/rust-rewrite/a06/source-amendments/w07-evidence-successor.rs"]
 mod w07_evidence_successor;
@@ -15,6 +17,7 @@ mod t07_opaque_successor;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    main_isolation_current::controls(&root).unwrap();
     native_search::controls(&root).unwrap();
     let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
     assert_eq!(
