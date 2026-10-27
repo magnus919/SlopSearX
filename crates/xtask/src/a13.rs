@@ -704,6 +704,7 @@ fn compiled_suite_names(suite: &Suite) -> Vec<String> {
     }
     if suite.package == "ssx-infra" && suite.kind == "lib" && suite.target == "ssx_infra" {
         names.extend(A06_LIB_TESTS.iter().map(|name| (*name).to_owned()));
+        names.push(a06_source_successor::w07_evidence_successor::TEST.into());
     }
     if suite.package == "ssx-json" && suite.kind == "lib" && suite.target == "ssx_json" {
         names.extend(A06_JSON_TESTS.iter().map(|name| (*name).to_owned()));
@@ -1133,6 +1134,7 @@ mod tests {
     fn compiled_inventory_is_closed() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         a06_source_successor::controls(&root).unwrap();
+        a06_source_successor::w07_evidence_successor::controls(&root).unwrap();
         let qualification: Qualification =
             serde_json::from_str(&std::fs::read_to_string(root.join(QUALIFICATION)).unwrap())
                 .unwrap();
@@ -1251,6 +1253,14 @@ mod tests {
         let count = |needle: &str| exact.iter().filter(|name| name.as_str() == needle).count();
         assert_eq!(count("sentinel"), 1);
         assert_eq!(count(PUBCHEM_OWNER_CLOCK_TEST), 1);
+        let w07 = a06_source_successor::w07_evidence_successor::TEST;
+        assert_eq!(count(w07), 1);
+        let mut omitted_w07 = exact.clone();
+        omitted_w07.retain(|name| name != w07);
+        assert!(same(&omitted_w07, &exact, "W07 missing additive identity").is_err());
+        let mut duplicate_w07 = exact.clone();
+        duplicate_w07.push(w07.into());
+        assert!(same(&duplicate_w07, &exact, "W07 duplicate additive identity").is_err());
         let cold = "adapters::html_helper_tests::cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies";
         assert_eq!(count(cold), 1);
         assert_eq!(

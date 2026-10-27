@@ -21,7 +21,10 @@ use ssx_domain::{
     saved::SavedDefinition, staged::Record,
 };
 use ssx_json::Value;
-use std::{collections::BTreeMap, sync::Arc};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::Arc,
+};
 
 /// One coherent current composition snapshot. Credential VALUES are excluded.
 /// W04 recent_report consumes search, saved_granted and limits.reports; its
@@ -62,6 +65,51 @@ fn saved_failure<T>(error: SavedError) -> Result<Read<T>, Failure> {
             StoreFailure::Unavailable | StoreFailure::Closed | StoreFailure::CompletionUnknown,
         ) => Ok(Read::Unavailable),
         _ => Err(Failure::Malformed),
+    }
+}
+// The authoritative definition remains W04's responsibility. This witness only
+// detects a narrowing of live disclosure authority across the owning read.
+struct ReportReadFence {
+    allowed_engines: BTreeSet<String>,
+    bound: usize,
+}
+impl ReportReadFence {
+    fn new(initial: &AuthoritySnapshot, bound: usize) -> Self {
+        let mut fence = Self {
+            allowed_engines: BTreeSet::new(),
+            bound,
+        };
+        fence.extend(initial, bound);
+        fence
+    }
+    fn extend(&mut self, current: &AuthoritySnapshot, membership_bound: usize) {
+        self.allowed_engines.extend(
+            current
+                .search
+                .catalog
+                .engines()
+                .iter()
+                .filter(|engine| {
+                    current
+                        .search
+                        .retained_engine_rejection(std::slice::from_ref(&engine.name), "engines")
+                        .is_ok()
+                })
+                .map(|engine| engine.name.clone()),
+        );
+        self.bound = self.bound.max(membership_bound);
+    }
+    fn permits(&self, current: &AuthoritySnapshot) -> bool {
+        current.search.policy.grants.contains("saved_searches")
+            && (1..=100).contains(&current.limits.reports)
+            && current.limits.reports as usize >= self.bound
+            && current
+                .search
+                .retained_engine_rejection(
+                    &self.allowed_engines.iter().cloned().collect::<Vec<_>>(),
+                    "engines",
+                )
+                .is_ok()
     }
 }
 impl Records for NativeRecords {
@@ -175,6 +223,7 @@ impl Records for NativeRecords {
             if bound == 0 {
                 return Err(Failure::Malformed);
             }
+            let mut fence = ReportReadFence::new(&initial, bound);
             let key = keys::saved("reports", tenant, Some(id.as_str())).expect("fixed key kind");
             let mut command = redis::cmd("ZREVRANGE");
             command.arg(key).arg(0).arg(bound - 1);
@@ -199,6 +248,10 @@ impl Records for NativeRecords {
             for run in ids {
                 check(cancel)?;
                 let current = self.authority.current();
+                // W04 membership uses this sample's full reports limit, not
+                // merely the outer hint bound. Retain every authority sample
+                // used for any row until the whole projection is returned.
+                fence.extend(&current, current.limits.reports as usize);
                 let policy = SavedPolicy {
                     search: &current.search,
                     saved_granted: current.search.policy.grants.contains("saved_searches"),
@@ -217,6 +270,9 @@ impl Records for NativeRecords {
                         | RecentReport::Truncated(mut value),
                     )) => {
                         let object = value.as_object_mut().ok_or(Failure::Malformed)?;
+                        if !fence.permits(&self.authority.current()) {
+                            return Ok(Read::PolicyDenied);
+                        }
                         let mut projection = ssx_json::Map::new();
                         projection.insert(
                             "run_id".into(),
@@ -237,6 +293,9 @@ impl Records for NativeRecords {
                 }
             }
             check(cancel)?;
+            if !fence.permits(&self.authority.current()) {
+                return Ok(Read::PolicyDenied);
+            }
             Ok(Read::Found(reports))
         })
     }
