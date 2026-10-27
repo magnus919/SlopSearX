@@ -1,5 +1,8 @@
 //! Closed normal-merge composition of the reviewed W07 and T02 source parents.
 //! Physical joint identity precedes either historical parent interpretation.
+#[allow(dead_code)]
+#[path = "../../../../crates/xtask/src/w08/source_successor.rs"]
+mod w08_source_successor;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
@@ -380,7 +383,7 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
     // Supplied/current physical equality was checked above. Only then may W08's
     // exact main insertions yield the unchanged joint-frame inverse operand.
     let actual = if path == "crates/xtask/src/main.rs" {
-        crate::w08::source_successor::parent(root, path, &actual)?
+        w08_source_successor::parent(root, path, &actual)?
     } else {
         actual
     };
@@ -475,11 +478,14 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             // Preserve the original joint-frame body controls after a positive
             // inverse, independently from W08's physical afterimage controls.
             let actual = if r.path == "crates/xtask/src/main.rs" {
-                crate::w08::source_successor::parent(root, r.path, &physical)?
+                w08_source_successor::parent(root, r.path, &physical)?
             } else {
                 physical.clone()
             };
-            need(inverse(r, &actual, mode, p)? == prior, "positive unchanged joint frame differs")?;
+            need(
+                inverse(r, &actual, mode, p)? == prior,
+                "positive unchanged joint frame differs",
+            )?;
             for bad_mode in [0o600, 0o755, 0o4644] {
                 need(
                     inverse(r, &actual, bad_mode, p).is_err(),

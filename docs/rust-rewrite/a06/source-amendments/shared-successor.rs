@@ -1,5 +1,8 @@
 //! Finite pure-A06 successors of accepted main. Historical manifests stay immutable.
 use serde_json::{Value, json};
+#[allow(dead_code)]
+#[path = "../../../../crates/xtask/src/w08/source_successor.rs"]
+mod w08_source_successor;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 #[path = "a13-header-layout-successor.rs"]
@@ -575,14 +578,13 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         && row["sha256"] == "e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b")
         || (row["path"] == "crates/ssx-infra/src/lib.rs"
             && row["sha256"] == "8a58685c0e79b79a12f38d44259f91adf5c5975ee664efed7d5030172d915c4a")
-        || (row["path"] == "crates/xtask/src/main.rs"
-            && row["sha256"] == w07_t02_joint::MAIN_SHA)
+        || (row["path"] == "crates/xtask/src/main.rs" && row["sha256"] == w07_t02_joint::MAIN_SHA)
         || (row["path"] == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs"
             && row["sha256"] == "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2")
         || (row["path"] == "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs"
             && row["sha256"] == "2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6")
     {
-        crate::w08::source_successor::parent(root, text(row, "path")?, &raw)?
+        w08_source_successor::parent(root, text(row, "path")?, &raw)?
     } else {
         raw
     };
@@ -1943,7 +1945,7 @@ pub(crate) fn metrics_predecessor(
             && expected == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4",
         "W07 Metrics caller tuple differs",
     )?;
-    let operand = crate::w08::source_successor::parent(root, path, actual)?;
+    let operand = w08_source_successor::parent(root, path, actual)?;
     metrics_frame_predecessor(path, expected, &operand)
 }
 /// Original exact Metrics-frame proof, independently exercised after the W08

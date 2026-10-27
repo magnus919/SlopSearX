@@ -10,7 +10,7 @@ use std::{
     path::Path,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w08/qualification.json";
-const REGISTRY_SHA: &str = "a7c810adaf05d9dfc450929a03f60a55e5f220497bd61c819fe31d1ecb9e76d2";
+const REGISTRY_SHA: &str = "13a109ab5af335233c0048ad172a1930d0df11ee086c3043f1fd511a7b963b25";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Qualification {
@@ -148,6 +148,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn closed_successor_requires_actual_afterimages_exact_inverses_and_frozen_predecessors() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        source_successor::controls(&root).unwrap();
+    }
     #[test]
     fn semantic_completion_rejects_missing_ignored_failed_and_duplicates() {
         assert!(names("", false).is_err());
