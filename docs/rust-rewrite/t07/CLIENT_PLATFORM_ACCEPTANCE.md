@@ -117,8 +117,13 @@ responsibility. None of these commands is authorized on a personal trust store.
 
 The normal private TLS cases use only loopback endpoints and explicit additive
 trust. They prove no bearer header enters CONNECT, no proxy authorization reaches
-the TLS origin, and cross-origin redirects strip the bearer before destination
-HTTP. Existing runtime cases remain the authority for OAuth/session/EOF behavior;
+the TLS origin, and cross-origin MCP redirects are refused before a destination
+HTTP request. The redirect witness first requires a successful ordinary TLS
+initialization with the same installed client and CA, then independently requires
+failed initialization, the configured bearer at the redirecting origin and zero
+destination requests. This follows retained MCP `next_request_within_origin`
+(`source-inputs/mcp__shared___httpx_utils.py.txt:86–124`); it does not relax the
+product redirect policy. Existing runtime cases remain the authority for OAuth/session/EOF behavior;
 Unix signal controls remain platform-gated. Windows security cases are compiled
 and executed only on Windows with the nondefault owner fixture feature. A zero
 case count on other platforms is not Windows evidence.

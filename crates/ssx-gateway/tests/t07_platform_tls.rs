@@ -249,12 +249,26 @@ async fn installed_tls_connect_proxy_keeps_proxy_credentials_out_of_origin_and_b
 }
 
 #[tokio::test(flavor = "current_thread")]
-async fn installed_tls_cross_origin_redirect_strips_bearer_before_destination() {
+async fn installed_tls_cross_origin_redirect_is_rejected_without_destination_request() {
     let root = root("tls-redirect");
     let executable = stage(&root, false);
     let ca = Ca::new();
     let pem = root.join("ca.pem");
     std::fs::write(&pem, ca.certificate.pem()).unwrap();
+    // The same installed client, CA and ordinary TLS fixture must succeed first.
+    let positive = Fixture::tls(&ca, "127.0.0.1", None).await;
+    let mut control = Process::spawn(
+        &executable,
+        &positive.url,
+        &[("MCP_REMOTE_CA_BUNDLE", pem.to_str().unwrap())],
+    );
+    let initialized = control.initialize().await;
+    control.close(true).await;
+    let positive_reached = !positive.observed.lock().unwrap().is_empty();
+    positive.close().await;
+    assert!(initialized.is_some_and(|value| value.get("result").is_some()));
+    assert!(positive_reached);
+
     let destination = Fixture::tls(&ca, "127.0.0.1", None).await;
     let origin = Fixture::tls(&ca, "127.0.0.1", Some(destination.url.clone())).await;
     let mut process = Process::spawn(
@@ -262,23 +276,18 @@ async fn installed_tls_cross_origin_redirect_strips_bearer_before_destination() 
         &origin.url,
         &[("MCP_REMOTE_CA_BUNDLE", pem.to_str().unwrap())],
     );
-    assert!(process.initialize().await.unwrap().get("result").is_some());
-    process.close(true).await;
-    assert!(origin.observed.lock().unwrap().iter().any(|request| {
+    // MCP follows redirects only within the configured scheme/host/port origin.
+    assert!(process.initialize().await.is_none());
+    process.close(false).await;
+    let origin_bearer_observed = origin.observed.lock().unwrap().iter().any(|request| {
         request
             .head
             .to_ascii_lowercase()
             .contains("authorization: bearer platform-sentinel")
-    }));
-    let seen = destination.observed.lock().unwrap();
-    assert!(!seen.is_empty());
-    assert!(seen.iter().all(|request| {
-        !request
-            .head
-            .to_ascii_lowercase()
-            .contains("\r\nauthorization:")
-    }));
-    drop(seen);
+    });
+    let destination_requests = destination.observed.lock().unwrap().len();
     origin.close().await;
     destination.close().await;
+    assert!(origin_bearer_observed);
+    assert_eq!(destination_requests, 0);
 }

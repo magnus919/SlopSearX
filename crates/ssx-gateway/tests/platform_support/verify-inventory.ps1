@@ -7,7 +7,7 @@ if ($IgnoredOnly) { $expected = @($store) } else {
       'native_distribution_installs_and_invokes_exact_target_without_backend_runtime',
       'installed_additive_ca_refuses_missing_malformed_bundle_and_wrong_hostname',
       'installed_tls_connect_proxy_keeps_proxy_credentials_out_of_origin_and_bearer_out_of_connect',
-      'installed_tls_cross_origin_redirect_strips_bearer_before_destination', $store,
+      'installed_tls_cross_origin_redirect_is_rejected_without_destination_request', $store,
       'actual_native_static_process_preserves_signature_schema_projection_error_channels_and_eof_cleanup',
       'actual_native_oauth_process_challenge_registration_pkce_callback_secure_persistence_and_cleanup',
       'actual_native_startup_failure_redacts_configuration_and_never_publishes',

@@ -72,7 +72,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
-      "sha256": "fc1a08ebfe8b85f3b4c828c0e6c2cd1bfb3889e7ee4f9b22a66881aaabea2c70"
+      "sha256": "ebed01998291d50be3b8bf04d049622a3f9263e8c9590935f902903dd3c86007"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
@@ -84,7 +84,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/t07_platform_tls.rs",
-      "sha256": "a38f17daaad3f3b95a8b2a11d687360c93e89cf77e7d0d7b3e36c2a78dc7e630"
+      "sha256": "6d2b65c7b15897f6245a52ea0b14c7db5fd49505928d30d106d684cdba4ed4f6"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
@@ -508,7 +508,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/CLIENT_PLATFORM_ACCEPTANCE.md",
-      "sha256": "9ad4f78bb90c5dbe1bdfb6466c45a9a23a044d1b7d87b287661e1f52fe8a79fa"
+      "sha256": "a087b4b8a880918ec69f0100b1cf4d317baacc9c2731ba573680a25c427ac8ec"
     },
     {
       "path": "docs/rust-rewrite/t07/COMPOSED_SOURCE_V4.md",
@@ -2875,7 +2875,7 @@
         "installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname",
         "installed_additive_ca_refuses_missing_malformed_bundle_and_wrong_hostname",
         "installed_tls_connect_proxy_keeps_proxy_credentials_out_of_origin_and_bearer_out_of_connect",
-        "installed_tls_cross_origin_redirect_strips_bearer_before_destination"
+        "installed_tls_cross_origin_redirect_is_rejected_without_destination_request"
       ],
       "crates/ssx-gateway/tests/t07_windows_security.rs": [
         "windows_token_storage_confidentiality_atomic_replacement_and_collision_ownership",
@@ -2888,6 +2888,12 @@
     },
     "supplemental_count": 11,
     "runtime_state": "source declarations only; currentc213215 remains separate accepted component; platform/Windows and integrated217 unexecuted",
-    "default_shipping_identity": "exact default3 compiler artifacts sealed before featurefixtures; runtime fallback is component-only"
+    "default_shipping_identity": "exact default3 compiler artifacts sealed before featurefixtures; runtime fallback is component-only",
+    "redirect_witness_correction": {
+      "prior_unpassed_name": "installed_tls_cross_origin_redirect_strips_bearer_before_destination",
+      "current_name": "installed_tls_cross_origin_redirect_is_rejected_without_destination_request",
+      "primary_sha256": "f758208d93eb85d6061650d3257f2fc072fae1d04f871257e9cc4464d33b3e1c",
+      "reason": "MCP origin predicate refuses cross-port redirect; paired ordinary TLSpositive and zeroDestination negative; no production policy change"
+    }
   }
 }
