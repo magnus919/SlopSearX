@@ -37,5 +37,6 @@ sha2.workspace = true
 rustls.workspace = true
 
 [dev-dependencies]
+aws-lc-rs.workspace = true
 redis.workspace = true
 tokio = { workspace = true, features = ["test-util"] }

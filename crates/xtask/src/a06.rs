@@ -276,6 +276,7 @@ fn current_library_inventory(root: &Path) -> Result<Value> {
     }
     verify_artifact(root, &doc["qualification"])?;
     crate::a13::a06_source_successor::a13_inventory_library_source(root, &doc["a13_source"])?;
+    crate::a13::a06_source_successor::w07_evidence_successor::prove_search(root)?;
     Ok(doc)
 }
 fn current_tests_for_platform(group: &Value, doc: &Value, linux: bool) -> Result<BTreeSet<String>> {
@@ -306,6 +307,9 @@ fn current_tests_for_platform(group: &Value, doc: &Value, linux: bool) -> Result
     expected.extend(added);
     if expected.len() != 383 + usize::from(linux) {
         return Err("A06 current library platform cardinality differs".into());
+    }
+    if !expected.insert(crate::a13::a06_source_successor::w07_evidence_successor::TEST.into()) {
+        return Err("W07 additive library test duplicates historical inventory".into());
     }
     Ok(expected)
 }
@@ -465,7 +469,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             }
         }
     }
-    records.push(json!({"A06_current_library_inventory":{"sidecar":CURRENT_LIBRARY,"sha256":CURRENT_LIBRARY_SHA256,"historical_common":295,"additive_common":88,"current_common":383,"linux_extra":1,"scope":"exact closed list and execution, not arbitrary superset admission"}}));
+    records.push(json!({"A06_current_library_inventory":{"sidecar":CURRENT_LIBRARY,"sha256":CURRENT_LIBRARY_SHA256,"historical_common":295,"additive_common":88,"current_common":384,"linux_extra":1,"w07_additive_test":crate::a13::a06_source_successor::w07_evidence_successor::TEST,"scope":"exact closed list and execution, not arbitrary superset admission"}}));
     records.push(json!({"A06":{"original_regressions":mapped.len(),"completed_native_identities":bindings,"qualification":"local source-bound scholarly factories/helper semantics/lifecycle; reviewed differences retained","temporary_python":"not executed or required","remaining":"G02/global ownership, final platform/exact-head and issue984 cross-surface acceptance remain separate"}}));
     Ok(())
 }
@@ -508,8 +512,11 @@ mod tests {
             .unwrap();
         let common = current_tests_for_platform(group, &doc, false).unwrap();
         let linux = current_tests_for_platform(group, &doc, true).unwrap();
-        assert_eq!(common.len(), 383);
-        assert_eq!(linux.len(), 384);
+        assert_eq!(common.len(), 384);
+        assert_eq!(linux.len(), 385);
+        let mut historical = common.clone();
+        assert!(historical.remove(crate::a13::a06_source_successor::w07_evidence_successor::TEST));
+        assert_eq!(historical.len(), 383);
         assert_eq!(
             linux.difference(&common).cloned().collect::<BTreeSet<_>>(),
             library_names(&doc, "linux_extra").unwrap()

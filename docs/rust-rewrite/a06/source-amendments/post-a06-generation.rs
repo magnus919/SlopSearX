@@ -1,4 +1,5 @@
 //! Closed T02 generations after A06. Historical operands never become current identity.
+pub(super) use super::w07_t02_joint;
 use serde_json::{Value, json};
 use std::{fs, path::Path, process::Command};
 #[path = "native-search-reader.rs"]
