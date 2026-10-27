@@ -31,7 +31,11 @@ fn source_base_key_preserves_literal_high_page_integers() {
     ];
     let mut keys = BTreeSet::new();
     for (page, wire, expected_sha256) in cases {
-        assert_eq!(format!("{:x}", Sha256::digest(wire)), expected_sha256);
+        let actual_sha256: String = Sha256::digest(wire)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
+        assert_eq!(actual_sha256, expected_sha256);
         let input = CacheKeyInput {
             query: "page literal".into(),
             page: ssx_json::Number::new(page).unwrap(),
