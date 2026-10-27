@@ -127,7 +127,7 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
                 .shutdown()
                 .await
                 .map_err(|_| "gateway file cleanup failed".into());
-            return Err(error).and(drained);
+            return Err::<(), _>(error).and(drained);
         }
     };
 
