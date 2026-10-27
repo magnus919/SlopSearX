@@ -297,20 +297,37 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
 fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
     use std::os::unix::fs::{PermissionsExt, symlink};
     struct Owned(std::path::PathBuf);
+    impl Owned {
+        fn create(path: std::path::PathBuf) -> Result<Self> {
+            fs::create_dir(&path).map_err(|e| e.to_string())?;
+            Ok(Self(path))
+        }
+    }
     impl Drop for Owned {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
     }
-    let owned = Owned(std::env::temp_dir().join(format!(
+    let owned = Owned::create(std::env::temp_dir().join(format!(
             "snapshot-w07-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_err(|e| e.to_string())?
                 .as_nanos()
-        )));
-    fs::create_dir(&owned.0).map_err(|e| e.to_string())?;
+        )))?;
+    let collision = owned.0.join("preexisting");
+    fs::create_dir(&collision).map_err(|e| e.to_string())?;
+    let sentinel = collision.join("sentinel");
+    fs::write(&sentinel, b"preexisting ownership").map_err(|e| e.to_string())?;
+    need(
+        Owned::create(collision).is_err(),
+        "preexisting directory accepted as newly owned",
+    )?;
+    need(
+        fs::read(sentinel).map_err(|e| e.to_string())? == b"preexisting ownership",
+        "failed acquisition deleted preexisting contents",
+    )?;
     for path in [
         CAPSULE,
         CONTAINER,
