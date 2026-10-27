@@ -332,6 +332,51 @@ const PAGE_OPERANDS: &[(&str, &str, usize)] = &[
         "f50dad891fe6f16e2b2363536a4c0c4cfd48c932ee7229730af50de8649e514b",
         34801,
     ),
+    (
+        "crates/ssx-infra/tests/a08_regulatory.rs",
+        "64ca51a260c2d106e63f65aae06c4a912050ab2d8814958b69816ffae4e81254",
+        12831,
+    ),
+    (
+        "crates/ssx-infra/tests/a12_security.rs",
+        "ee1339e68e04241029c78e17711fbff5b1a7b2e6033f5f6816de80bf46ef87ec",
+        60225,
+    ),
+    (
+        "crates/ssx-infra/src/adapters/jobs.rs",
+        "93a7d5007dd782ec0f5fc3c79470f592fd02789b717864c1ebe6de9cc7b1844b",
+        118691,
+    ),
+    (
+        "crates/ssx-infra/src/adapters/a07_matrix_replay.rs",
+        "1b84793a369ccbfe1eb3251fd653f65efd8570f7186e625436071faf3cdac14c",
+        12214,
+    ),
+    (
+        "crates/ssx-infra/tests/support/a07_source_replay.rs",
+        "f44fa9e3ac288e63bedfad3f41e6f3bc40a0182e35024a45ce3fa3c4311da04a",
+        9170,
+    ),
+    (
+        "crates/ssx-infra/tests/a05_html.rs",
+        "f362f6cc76018afcda82558650861916e7a3430988bf2b8b82c63bdf03aea700",
+        30114,
+    ),
+    (
+        "crates/ssx-infra/tests/a10_factories.rs",
+        "05f4012759dd89bd3394081bc88d3f4b33d2fcfd17d6796bdd738cc382e4ba55",
+        24508,
+    ),
+    (
+        "crates/ssx-infra/tests/a11_factories.rs",
+        "89add53e565a9d02c37b3b148fbf659f629e528ad8d51111f0f217196b4b630f",
+        37305,
+    ),
+    (
+        "crates/ssx-infra/tests/a11_replay.rs",
+        "bd28a553076fad86c66b2f57837beee381842fbe40976354eb905215e7fe0897",
+        23066,
+    ),
 ];
 fn page_document(root: &Path) -> Result<Value> {
     let raw = read(root, PAGE_CAPSULE)?;
@@ -371,7 +416,7 @@ fn page_payload(row: &Value, physical: &Material) -> Result<Vec<u8>> {
     )?;
     Ok(prior)
 }
-/// Recover only these eleven exact e127 proof operands from authenticated physical
+/// Recover only these twenty exact e127 proof operands from authenticated physical
 /// page successors. A supplied buffer is always compared to physical bytes first.
 pub(crate) fn page_prior(
     root: &Path,

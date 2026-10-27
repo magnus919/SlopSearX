@@ -930,7 +930,7 @@ fn caller(
     Ok(())
 }
 pub(crate) fn selected(container: &str, path: &str) -> bool {
-    SHA_PAIRS.contains(&(container, path)) || page_a13_selected(container, path)
+    SHA_PAIRS.contains(&(container, path)) || page_proof_selected(container, path)
 }
 pub(crate) fn try_verify(
     root: &Path,
@@ -940,7 +940,8 @@ pub(crate) fn try_verify(
     expected: &str,
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
-    if let Some(result) = page_a13_try_verify(root, container, container_sha, path, expected, bytes)
+    if let Some(result) =
+        page_proof_try_verify(root, container, container_sha, path, expected, bytes)
     {
         return Some(result);
     }
@@ -1943,7 +1944,7 @@ pub(crate) fn real_clock_http_prior(
 #[allow(dead_code)]
 pub(crate) fn a13_header_layout_controls(root: &Path) -> Result<(), String> {
     native_search::page_controls(root)?;
-    page_a13_controls(root)?;
+    page_proof_controls(root)?;
     a13_header_layout_successor::controls(root)
 }
 
@@ -1974,40 +1975,104 @@ pub(crate) fn generation_control_operand(
     post_a06_generation::control_operand(root, path, expected, supplied_current)
 }
 
-// Only the eight newly impacted source pairs in these three current A13
-// containers. Search and DeHashed retain their existing generation/scoped routes.
-const PAGE_A13_CONTEXTS: &[(&str, &str, &[&str])] = &[
+// Exact Page identity pairs only. Search/DeHashed keep their generation/scoped routes.
+const PAGE_PROOF_CONTEXTS: &[(&str, &str, &[(&str, usize)])] = &[
     (
         "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
         "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d",
-        &["crates/ssx-domain/src/records.rs"],
+        &[("crates/ssx-domain/src/records.rs", 11011)],
     ),
     (
         "docs/rust-rewrite/a13/remaining/source-map.json",
         "9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f",
         &[
-            "crates/ssx-domain/src/records.rs",
-            "docs/rust-rewrite/CASE_STUDY.md",
+            ("crates/ssx-domain/src/records.rs", 11011),
+            ("docs/rust-rewrite/CASE_STUDY.md", 21096),
         ],
     ),
     (
         "docs/rust-rewrite/a13/qualification-v1.json",
         "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e",
         &[
-            "crates/ssx-domain/src/records.rs",
-            "docs/rust-rewrite/CASE_STUDY.md",
-            "crates/ssx-infra/tests/a13_hibp.rs",
-            "crates/ssx-infra/tests/a13_intelx.rs",
-            "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+            ("crates/ssx-domain/src/records.rs", 11011),
+            ("docs/rust-rewrite/CASE_STUDY.md", 21096),
+            ("crates/ssx-infra/tests/a13_hibp.rs", 20344),
+            ("crates/ssx-infra/tests/a13_intelx.rs", 24217),
+            (
+                "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+                36757,
+            ),
+        ],
+    ),
+    (
+        "docs/rust-rewrite/a06/coverage.json",
+        "92686ed70979a698b0dab3414cad813198b720fe586421062db8a4cef5102d9b",
+        &[("crates/ssx-infra/tests/support/a07_source_replay.rs", 9170)],
+    ),
+    (
+        "docs/rust-rewrite/a07/coverage.json",
+        "3356fa8d6933418a666af2642d1c95705f76d60cf1d8306024a7e7f82d0718d2",
+        &[("docs/rust-rewrite/CASE_STUDY.md", 21096)],
+    ),
+    (
+        "docs/rust-rewrite/a08/coverage.json",
+        "4bd65113eded80d605b3fede32f9cb5e97d12b47c4b1756314ed28757f653856",
+        &[("docs/rust-rewrite/CASE_STUDY.md", 21096)],
+    ),
+    (
+        "docs/rust-rewrite/a09/coverage.json",
+        "3dfa3fc89150ba579ee377c730fce66134125c502ab07c624dd6a8768662ef89",
+        &[("docs/rust-rewrite/CASE_STUDY.md", 21096)],
+    ),
+    (
+        "docs/rust-rewrite/a10/qualification.json",
+        "abd85bf644e311c4f6ed00f1e1315e788a930d937c017ecec7f3befeb378c01a",
+        &[
+            ("crates/ssx-domain/src/records.rs", 11011),
+            (
+                "crates/ssx-infra/src/adapters/vulnerability_tests.rs",
+                36757,
+            ),
+            ("crates/ssx-infra/tests/a10_factories.rs", 24508),
+        ],
+    ),
+    (
+        "docs/rust-rewrite/a11/qualification.json",
+        "89f816f2bc3333233434dcdbf706eab80387124889923658941682d4668352f3",
+        &[
+            ("crates/ssx-domain/src/records.rs", 11011),
+            ("crates/ssx-infra/tests/a11_factories.rs", 37305),
+            ("crates/ssx-infra/tests/a11_replay.rs", 23066),
+        ],
+    ),
+    (
+        "docs/rust-rewrite/a12/qualification-v1.json",
+        "f55413a595d927c7450b942bc4b545b8db8401e8a9f730e9321680d63bf5ca39",
+        &[
+            ("crates/ssx-domain/src/records.rs", 11011),
+            ("docs/rust-rewrite/CASE_STUDY.md", 21096),
         ],
     ),
 ];
-fn page_a13_selected(container: &str, source: &str) -> bool {
-    PAGE_A13_CONTEXTS
-        .iter()
-        .any(|(c, _, paths)| *c == container && paths.contains(&source))
+fn page_inventory(container: &str) -> (&'static str, bool) {
+    match container {
+        "docs/rust-rewrite/a06/coverage.json" => ("artifacts", false),
+        "docs/rust-rewrite/a07/coverage.json"
+        | "docs/rust-rewrite/a08/coverage.json"
+        | "docs/rust-rewrite/a09/coverage.json" => ("source_inventory", false),
+        "docs/rust-rewrite/a10/qualification.json" | "docs/rust-rewrite/a11/qualification.json" => {
+            ("owned_sources", false)
+        }
+        "docs/rust-rewrite/a12/qualification-v1.json" => ("sources", false),
+        _ => ("sources", true),
+    }
 }
-fn page_a13_try_verify(
+fn page_proof_selected(container: &str, source: &str) -> bool {
+    PAGE_PROOF_CONTEXTS
+        .iter()
+        .any(|(c, _, paths)| *c == container && paths.iter().any(|(path, _)| *path == source))
+}
+fn page_proof_try_verify(
     root: &Path,
     container: &str,
     container_sha: &str,
@@ -2015,24 +2080,23 @@ fn page_a13_try_verify(
     expected: &str,
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
-    let (_, sealed_sha, paths) = PAGE_A13_CONTEXTS.iter().find(|r| r.0 == container)?;
-    if !paths.contains(&source) {
-        return None;
-    }
+    let (_, sealed_sha, paths) = PAGE_PROOF_CONTEXTS.iter().find(|r| r.0 == container)?;
+    let &(_, len) = paths.iter().find(|(path, _)| *path == source)?;
     Some((|| {
+        let (field, sized) = page_inventory(container);
         need(
-            container_sha == *sealed_sha && bytes.is_some(),
-            "exact A13 page container/size caller",
+            container_sha == *sealed_sha && bytes == sized.then_some(len),
+            "exact Page proof container/size caller",
         )?;
         let raw = historical_caller(root, container, container_sha)?;
         need(
             digest(&raw) == *sealed_sha && permissions(&root.join(container))? == "0644",
-            "authenticated A13 page container",
+            "authenticated Page proof container",
         )?;
         let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
-        let rows = doc["sources"]
+        let rows = doc[field]
             .as_array()
-            .ok_or("A13 page source inventory absent")?
+            .ok_or("Page proof source inventory absent")?
             .iter()
             .filter(|r| r["path"] == source)
             .collect::<Vec<_>>();
@@ -2040,55 +2104,66 @@ fn page_a13_try_verify(
             rows.len() == 1
                 && rows[0]["sha256"] == expected
                 && rows[0]["bytes"].as_u64() == bytes.map(|n| n as u64),
-            "exact original A13 page source tuple",
+            "exact original Page proof source tuple",
         )?;
-        let caller = json!({"path":source,"sha256":expected,"bytes":bytes.unwrap(),"mode":"0644"});
+        if !sized {
+            let mut exact = json!({"path":source,"sha256":expected});
+            if container == "docs/rust-rewrite/a07/coverage.json"
+                || container == "docs/rust-rewrite/a08/coverage.json"
+            {
+                exact["git_blob"] = json!("d609376fa8a8dba26de1d941a60351915f2b1687");
+            }
+            need(*rows[0] == exact, "exact unsized Page proof row shape")?;
+        }
+        let caller = json!({"path":source,"sha256":expected,"bytes":len,"mode":"0644"});
         let prior = native_search::page_prior(root, &caller, None)?
-            .ok_or("A13 page operand not selected")?;
+            .ok_or("Page proof operand not selected")?;
         need(
-            digest(&prior) == expected && prior.len() == bytes.unwrap(),
-            "A13 page exact original material",
+            digest(&prior) == expected && prior.len() == len,
+            "Page proof exact original material",
         )
     })())
 }
-fn page_a13_controls(root: &Path) -> Result<(), String> {
+pub(crate) fn page_proof_controls(root: &Path) -> Result<(), String> {
     let mut pairs = 0;
-    for &(container, sha, paths) in PAGE_A13_CONTEXTS {
+    for &(container, sha, paths) in PAGE_PROOF_CONTEXTS {
         let raw = historical_caller(root, container, sha)?;
         let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
-        for &path in paths {
+        let (field, sized) = page_inventory(container);
+        for &(path, len) in paths {
             pairs += 1;
-            let rows = doc["sources"]
+            let rows = doc[field]
                 .as_array()
-                .ok_or("A13 page controls source inventory")?
+                .ok_or("Page controls source inventory")?
                 .iter()
                 .filter(|r| r["path"] == path)
                 .collect::<Vec<_>>();
-            need(rows.len() == 1, "A13 page controls exact source")?;
+            need(rows.len() == 1, "Page controls exact source")?;
             let expected = text(rows[0], "sha256")?;
-            let len = rows[0]["bytes"].as_u64().ok_or("A13 page source size")? as usize;
-            page_a13_try_verify(root, container, sha, path, expected, Some(len))
-                .ok_or("A13 page positive route absent")??;
-            for (hash, source_hash, size) in [
-                ("wrong", expected, Some(len)),
-                (sha, "wrong", Some(len)),
-                (sha, expected, None),
+            let size = sized.then_some(len);
+            page_proof_try_verify(root, container, sha, path, expected, size)
+                .ok_or("Page positive route absent")??;
+            // Positive is in the caller's exact frame before each refusal family.
+            for (hash, source_hash, changed_size) in [
+                ("wrong", expected, size),
+                (sha, "wrong", size),
+                (sha, expected, if sized { None } else { Some(len) }),
                 (sha, expected, Some(0)),
             ] {
                 need(
-                    page_a13_try_verify(root, container, hash, path, source_hash, size)
-                        .ok_or("A13 page negative route lost")?
+                    page_proof_try_verify(root, container, hash, path, source_hash, changed_size)
+                        .ok_or("Page negative route lost")?
                         .is_err(),
-                    "altered A13 page caller accepted",
+                    "altered Page proof caller accepted",
                 )?;
             }
         }
         need(
-            page_a13_try_verify(root, container, sha, "unlisted.rs", "wrong", None).is_none(),
-            "unlisted A13 page source selected",
+            page_proof_try_verify(root, container, sha, "unlisted.rs", "wrong", None).is_none(),
+            "unlisted Page proof source selected",
         )?;
     }
-    need(pairs == 8, "closed eight A13 page pairs")
+    need(pairs == 20, "closed twenty Page proof pairs")
 }
 
 /// Only the reviewed Metrics insertion is removed for existing historical callers.

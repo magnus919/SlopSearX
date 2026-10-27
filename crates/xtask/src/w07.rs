@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "0035cd5a47aa4d3e6f8dc74450f6995ced309ba96373912c1636f904ae4d07fb";
+const REGISTRY_SHA: &str = "9fdffe00990e1918cf6b23f2917237cc0004bab709470b12cb1e3f657a4ecb7b";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -335,7 +335,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         (
             "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
             "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2",
-            "e2aa70e5a22ab20127aae8cd6a7a981eb3d9a6a76fbee6955590622e80ecbc8e",
+            "24eae9b826b3891fe8eb8808afe02e301ffce9c3ada373103895840c8e05f8c2",
         ),
         (
             "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
@@ -345,7 +345,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         (
             "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
             "ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4",
-            "c9ca232a0d96100c0f1596ec9d2d703b37f493f5a3a2ac0880f58a66c8e0bb68",
+            "bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c",
         ),
         (
             "docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs",
@@ -728,6 +728,8 @@ mod tests {
             "crates/ssx-mcp/src/search_surface/mod.rs",
             "crates/ssx-mcp/src/evidence/tools/tests.rs",
             "crates/ssx-mcp/tests/w07_mcp.rs",
+            "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
         ] {
             let mut missing = current.clone();
             missing["sources"].as_object_mut().unwrap().remove(source);
