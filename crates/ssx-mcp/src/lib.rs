@@ -253,6 +253,8 @@ pub fn compare_descriptor(expected: &Value, actual: &Value) -> Result<()> {
     }
 }
 
+#[cfg(feature = "server")]
 pub mod saved_events;
 
+#[cfg(feature = "server")]
 pub mod research_planning;
