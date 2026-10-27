@@ -24,7 +24,7 @@ use ssx_infra::{
             Authority as RecordsAuthority, AuthoritySnapshot as RecordsAuthoritySnapshot,
             NativeRecords,
         },
-        snapshot::{RandomSnapshotIds, SystemSnapshotClock, ValkeySnapshots},
+        snapshot::{RandomSnapshotIds, ValkeySnapshots},
     },
 };
 use ssx_json::{Value, json};
@@ -226,16 +226,31 @@ impl Loopback {
             while !s.load(Ordering::SeqCst) {
                 match listener.accept() {
                     Ok((mut socket, _)) => {
-                        socket
-                            .set_read_timeout(Some(Duration::from_secs(2)))
-                            .unwrap();
+                        // Darwin inherits O_NONBLOCK from the listener. A timeout
+                        // does not clear it; explicitly select bounded blocking I/O.
+                        socket.set_nonblocking(false).unwrap();
+                        let deadline = std::time::Instant::now() + Duration::from_secs(2);
                         let mut bytes = [0u8; 4096];
-                        let n = socket.read(&mut bytes).unwrap();
-                        assert!(
-                            std::str::from_utf8(&bytes[..n])
-                                .unwrap()
-                                .starts_with("GET /fixture HTTP/1.1")
-                        );
+                        let mut n = 0;
+                        loop {
+                            let remaining = deadline
+                                .checked_duration_since(std::time::Instant::now())
+                                .expect("loopback HTTP header deadline");
+                            socket.set_read_timeout(Some(remaining)).unwrap();
+                            assert!(n < bytes.len(), "loopback HTTP header exceeds bound");
+                            match socket.read(&mut bytes[n..]) {
+                                Ok(0) => panic!("loopback closed before complete HTTP header"),
+                                Ok(read) => n += read,
+                                Err(error) if error.kind() == std::io::ErrorKind::Interrupted => {
+                                    continue;
+                                }
+                                Err(error) => panic!("loopback HTTP header: {error}"),
+                            }
+                            if bytes[..n].windows(4).any(|part| part == b"\r\n\r\n") {
+                                break;
+                            }
+                        }
+                        assert!(bytes[..n].starts_with(b"GET /fixture HTTP/1.1\r\n"));
                         c.fetch_add(1, Ordering::SeqCst);
                         socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}").unwrap();
                     }
@@ -253,11 +268,23 @@ impl Loopback {
             thread: Some(thread),
         }
     }
+    fn assert_healthy(&self) {
+        assert!(
+            !self.thread.as_ref().unwrap().is_finished(),
+            "loopback fixture thread terminated before cleanup"
+        );
+    }
 }
 impl Drop for Loopback {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::SeqCst);
-        self.thread.take().unwrap().join().unwrap();
+        if let Err(error) = self.thread.take().unwrap().join() {
+            // Preserve the original test panic without a second panic/abort.
+            // On an ordinary path fixture failure must still fail the test.
+            if !std::thread::panicking() {
+                std::panic::resume_unwind(error);
+            }
+        }
     }
 }
 struct FixtureEngine {
@@ -297,6 +324,7 @@ struct Harness {
 impl Harness {
     async fn new() -> Self {
         let server = private_valkey::Server::start();
+        assert!(server.url().starts_with("redis://127.0.0.1:"));
         let loopback = Loopback::new();
         let backend = Arc::new(server.store());
         let authority = Arc::new(Current {
@@ -413,11 +441,13 @@ impl Harness {
     }
     async fn tick(&self, runner: ResearchRunner) -> ResearchJob {
         let (_tx, rx) = watch::channel(false);
-        tokio::time::timeout(Duration::from_secs(8), runner.run_once(rx))
+        let job = tokio::time::timeout(Duration::from_secs(8), runner.run_once(rx))
             .await
             .unwrap()
             .unwrap()
-            .unwrap()
+            .unwrap();
+        self.loopback.assert_healthy();
+        job
     }
 }
 fn input<'a>(source: Option<&'a ArtifactRef>, idem: Option<&'a str>) -> Input<'a> {
