@@ -163,10 +163,10 @@ fn package_data<'a>(result: &'a SearchResult, ecosystem: &str) -> Option<&'a Val
         || !provenance["adapter_fields"]
             .as_array()?
             .iter()
-            .any(|v| v == "name")
+            .any(|v| v.as_str() == Some("name"))
         || provenance["inferred_fields"]
             .as_array()
-            .is_some_and(|a| a.iter().any(|v| v == "name"))
+            .is_some_and(|a| a.iter().any(|v| v.as_str() == Some("name")))
     {
         return None;
     }

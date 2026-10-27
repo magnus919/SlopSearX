@@ -369,10 +369,12 @@ impl SourceResolver {
                 .cloned()
                 .ok_or_else(malformed)?,
         };
-        if reasons
-            .iter()
-            .any(|r| r == "observation_truncated" || r == "report_size_exceeded")
-        {
+        if reasons.iter().any(|r| {
+            matches!(
+                r.as_str(),
+                Some("observation_truncated" | "report_size_exceeded")
+            )
+        }) {
             return Err(Error::new(
                 "source_truncated",
                 "source saved-search report is truncated",
