@@ -349,10 +349,18 @@ pub(super) fn controls(root: &Path) -> Result<()> {
             verify_materials(&c, &wrong).is_err(),
             "T02 physical bytes accepted in projected parent slot",
         )?;
+        // This negative needs the physical blob, not git()'s exact page projection.
+        let physical_blob = String::from_utf8(git(
+            root,
+            &["hash-object", "--no-filters", "--", &transition.path],
+        )?)
+        .map_err(|e| e.to_string())?;
+        need(
+            physical_blob != good[index].current_blob,
+            "T02 physical Git negative must differ from the proved parent",
+        )?;
         let mut wrong = good.clone();
-        wrong[index].current_blob =
-            String::from_utf8(git(root, &["hash-object", "--", &transition.path])?)
-                .map_err(|e| e.to_string())?;
+        wrong[index].current_blob = physical_blob;
         need(
             verify_materials(&c, &wrong).is_err(),
             "T02 physical Git blob accepted in projected parent slot",
