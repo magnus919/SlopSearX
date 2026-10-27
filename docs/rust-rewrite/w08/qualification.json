@@ -9,11 +9,11 @@
     "tests/test_dependency_dossier.py": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
     "tests/test_workflow_composition.py": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
     "tests/test_workflow_composition_transport.py": "f1adebf80445a6a61767a406486738f4362fb1e493b2e3e79ec1a07b4deb8a32",
-    "crates/ssx-application/src/composition.rs": "04bc227a93628a9fd97d178c4e09d2863f71bdde19f978a5fe8ec76828e5b067",
-    "crates/ssx-application/src/dependency_dossier.rs": "9def4764636ebe9881e4af75c13033886abeb0285eea1ba673e4825fb94333d4",
+    "crates/ssx-application/src/composition.rs": "1b28d50e6e88f764bc21f00f8c1d724eeec9770786955f3b8498164b4fdac6ba",
+    "crates/ssx-application/src/dependency_dossier.rs": "457bfd9454d6633ff7badc4dfcbb1659f5ba81bcf743a0dd9144b2c4597a0c91",
     "crates/ssx-infra/src/dependency_dossier.rs": "a9c29c992470efc3f2d9401c4bcef717c8885754a734b4003de06618f28da53e",
     "crates/ssx-infra/src/research_runner.rs": "c47c355424910198683c5ccad231b87ed7ed0da1db6d73eef9fef97a953cfc76",
-    "crates/ssx-application/tests/w08.rs": "d60aa8da56cd2f63d0140f2d9b7ef9f21e4f27017c559fc0f59a501805ad895b",
+    "crates/ssx-application/tests/w08.rs": "a6d7fe8929a2227156f398c3877348fc53634811464c4a239ed7386b2cbdcac2",
     "crates/ssx-infra/tests/w08.rs": "3c958f84f626a7777457b73ba65b705873928537c00d166b5b1fca4d14d4b574",
     "crates/ssx-infra/tests/w07_support/valkey.rs": "ed4e2e544ff40856f46810532a17cf5fb9a3b393eb35d09a75907c4585b6b699"
   },
@@ -28,10 +28,11 @@
         "preview_bounds_snapshot_result_entity_without_persistence_or_dispatch",
         "foreign_expired_missing_unavailable_revoked_and_cancelled_sources_fail_closed",
         "unsupported_transitions_read_nothing_and_research_missing_cursors_are_partial",
-        "research_attempts_deduplicate_ids_preserve_partial_and_reject_unbounded_cursors",
+        "research_attempts_stream_valid_retained_cursor_sets",
         "report_attribution_uses_all_admitted_rows_while_cards_remain_sliced",
         "saved_report_uses_historical_window_and_rejects_incomparable_truncated_malformed",
-        "staged_source_requires_selected_attempt_and_captured_cursor"
+        "staged_source_requires_selected_attempt_and_captured_cursor",
+        "repository_parser_preserves_literal_host_port_and_empty_credentials_semantics"
       ]
     },
     {

@@ -1,1 +1,40 @@
-{"schema_version":1,"plan_id":"W08","status":"source_only_pending_native_validation","differences":[{"id":"W08-D01","kind":"security_hardening","reference":"Python resolves composition sources at admission; the retained source is not re-read by the research worker","native":"Re-resolve complete immutable binding before every reservation and after reservation/load/renew awaits before dispatch; absent validator fails closed for composed jobs","evidence":"expiry_during_atomic_create_is_persisted_but_worker_denies_without_charge; revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves_reservation","limit":"No revocation guarantee for requests already admitted and in flight; acknowledged reservations remain monotonic"},{"id":"W08-D02","kind":"bounded_read_hardening","reference":"Research composition iterates all retained attempt cursors","native":"Reject more than 100 retained cursors; read-only validation has a 30-second maximum window in addition to the existing deadline/cancellation boundary","evidence":"research_attempts_deduplicate_ids_preserve_partial_and_reject_unbounded_cursors","limit":"No new retrieval authority is granted"},{"id":"W08-D03","kind":"malformed_record_hardening","reference":"Malformed incomparable_reasons may be treated as an iterable","native":"Reject a malformed report/reasons container and nonstring engine members explicitly","evidence":"saved_report_uses_historical_window_and_rejects_incomparable_truncated_malformed"}],"deferred":[{"owner":"W09","scope":"final workflow MCP registry/schema/wire composition including authenticated transport matrix"},{"owner":"W10","scope":"protected portal composition UI/browser acceptance"}]}
+{
+  "schema_version": 1,
+  "plan_id": "W08",
+  "status": "source_only_pending_native_validation",
+  "differences": [
+    {
+      "id": "W08-D01",
+      "kind": "security_hardening",
+      "reference": "Python resolves composition sources at admission; the retained source is not re-read by the research worker",
+      "native": "Re-resolve complete immutable binding before every reservation and after reservation/load/renew awaits before dispatch; absent validator fails closed for composed jobs",
+      "evidence": "expiry_during_atomic_create_is_persisted_but_worker_denies_without_charge; revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves_reservation",
+      "limit": "No revocation guarantee for requests already admitted and in flight; acknowledged reservations remain monotonic"
+    },
+    {
+      "id": "W08-D03",
+      "kind": "malformed_record_hardening",
+      "reference": "Malformed incomparable_reasons may be treated as an iterable",
+      "native": "Reject a malformed report/reasons container and nonstring engine members explicitly",
+      "evidence": "saved_report_uses_historical_window_and_rejects_incomparable_truncated_malformed"
+    },
+    {
+      "id": "W08-D04",
+      "kind": "bounded_execution",
+      "reference": "Reference resolution has no per-worker source validation step",
+      "native": "Read-only worker source admission observes persisted deadline, worker cancellation and a 30-second maximum operation window; this is not a semantic cursor-count cap",
+      "evidence": "dispatch barrier and create barrier fixtures; native execution pending",
+      "limit": "Valid retained multi-attempt sources remain accepted; final request timeout/cancellation wiring belongs to W09"
+    }
+  ],
+  "deferred": [
+    {
+      "owner": "W09",
+      "scope": "final workflow MCP registry/schema/wire composition including authenticated transport matrix"
+    },
+    {
+      "owner": "W10",
+      "scope": "protected portal composition UI/browser acceptance"
+    }
+  ]
+}

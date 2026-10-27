@@ -74,33 +74,32 @@ pub fn normalize_repository(raw: Option<&str>) -> Result<Option<String>, Error> 
     let value = raw.trim_matches(ssx_json::python_whitespace);
     let path;
     let value = if value.contains("://") {
-        let parsed = url::Url::parse(value)
-            .map_err(|_| invalid("repository must be a public canonical GitHub URL"))?;
-        // Explicit default ports are forbidden too; url::Url normalizes :443 away.
-        let authority = value
-            .split("://")
-            .nth(1)
-            .unwrap_or("")
-            .split('/')
-            .next()
+        // Reuse the accepted structural urllib-compatible splitter. A WHATWG
+        // parser could fold a Unicode/percent-encoded host into github.com.
+        let parsed = crate::urls::parse(value)
+            .ok_or_else(|| invalid("repository must be a public canonical GitHub URL"))?;
+        let credentials = parsed
+            .authority
+            .rsplit_once('@')
+            .map(|(user, _)| user)
             .unwrap_or("");
-        if parsed.scheme() != "https"
-            || !matches!(parsed.host_str(), Some("github.com" | "www.github.com"))
-            || !parsed.username().is_empty()
-            || parsed.password().is_some()
-            || authority.contains(':')
-            || parsed.query().is_some()
-            || parsed.fragment().is_some()
-            || value.contains('\\')
+        let (username, password) = credentials.split_once(':').unwrap_or((credentials, ""));
+        let port_allowed = match parsed.port.as_deref() {
+            None | Some("") => true,
+            Some(p) => p.bytes().all(|b| b.is_ascii_digit()) && p.parse::<u16>().ok() == Some(0),
+        };
+        if parsed.scheme != "https"
+            || !matches!(parsed.host.as_str(), "github.com" | "www.github.com")
+            || !username.is_empty()
+            || !password.is_empty()
+            || !port_allowed
+            || !parsed.query.is_empty()
+            || !parsed.fragment.is_empty()
+            || value.contains(';')
         {
             return Err(invalid("repository must be a public canonical GitHub URL"));
         }
-        path = value
-            .split_once("://")
-            .and_then(|(_, tail)| tail.split_once('/').map(|(_, path)| path))
-            .unwrap_or("")
-            .trim_matches('/')
-            .to_owned();
+        path = parsed.path.trim_matches('/').to_owned();
         path.as_str()
     } else {
         value
@@ -117,9 +116,8 @@ pub fn normalize_repository(raw: Option<&str>) -> Result<Option<String>, Error> 
     Ok(Some(value.into()))
 }
 pub fn github_root_candidate(raw: &str) -> Option<String> {
-    if url::Url::parse(raw.trim())
-        .ok()
-        .is_none_or(|v| v.scheme() != "https")
+    let parsed = crate::urls::parse(raw.trim())?;
+    if parsed.scheme != "https" || !matches!(parsed.host.as_str(), "github.com" | "www.github.com")
     {
         return None;
     }

@@ -593,7 +593,7 @@ fn unsupported_transitions_read_nothing_and_research_missing_cursors_are_partial
     );
 }
 #[test]
-fn research_attempts_deduplicate_ids_preserve_partial_and_reject_unbounded_cursors() {
+fn research_attempts_stream_valid_retained_cursor_sets() {
     let make = |n| {
         let mut rec = records();
         rec.job = Read::Found(ResearchJob {
@@ -626,18 +626,18 @@ fn research_attempts_deduplicate_ids_preserve_partial_and_reject_unbounded_curso
     .unwrap();
     assert_eq!(source.status, SourceStatus::Partial);
     assert_eq!(source.result_ids.len(), 2);
-    let (resolver, _, _) = self::resolver(Some(snapshot(2, 200.)), None, false, make(101));
-    assert_eq!(
-        run(resolver.resolve(
-            &tenant(),
-            &artifact(ArtifactKind::ResearchJob, "job-a"),
-            Destination::ResearchManifest,
-            &Cancellation::default()
-        ))
-        .unwrap_err()
-        .code,
-        "source_truncated"
-    );
+    let (resolver, store, _) = self::resolver(Some(snapshot(2, 200.)), None, false, make(101));
+    let source = run(resolver.resolve(
+        &tenant(),
+        &artifact(ArtifactKind::ResearchJob, "job-a"),
+        Destination::ResearchManifest,
+        &Cancellation::default(),
+    ))
+    .unwrap();
+    assert_eq!(source.status, SourceStatus::Truncated);
+    assert_eq!(source.result_ids.len(), 2);
+    assert_eq!(source.details["result_count"], 202);
+    assert_eq!(store.reads.load(Ordering::SeqCst), 101);
 }
 #[test]
 fn report_attribution_uses_all_admitted_rows_while_cards_remain_sliced() {
@@ -816,5 +816,40 @@ fn staged_source_requires_selected_attempt_and_captured_cursor() {
             assert_eq!(source.unwrap_err().code, "source_partial");
             assert_eq!(store.reads.load(Ordering::SeqCst), 0);
         }
+    }
+}
+#[test]
+fn repository_parser_preserves_literal_host_port_and_empty_credentials_semantics() {
+    for value in [
+        "https://ｇithub.com/a/b",
+        "https://github．com/a/b",
+        "https://%67ithub.com/a/b",
+        "https://github.com:443/a/b",
+        "https://name@github.com/a/b",
+        "https://:secret@github.com/a/b",
+        "https://github.com/a/../b/c",
+        "https://github.com/a/b;",
+    ] {
+        assert!(
+            dossier::normalize_repository(Some(value)).is_err(),
+            "{value}"
+        );
+    }
+    for value in [
+        "https://github.com:0/a/b",
+        "https://github.com:/a/b",
+        "https://@github.com/a/b",
+        "https://:@github.com/a/b",
+        "HTTPS://GitHub.Com/a/b.git",
+        "https://github.com/a/b?",
+        "https://github.com/a/b#",
+    ] {
+        assert_eq!(
+            dossier::normalize_repository(Some(value))
+                .unwrap()
+                .as_deref(),
+            Some("a/b"),
+            "{value}"
+        );
     }
 }

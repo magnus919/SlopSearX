@@ -18,7 +18,6 @@ use ssx_domain::{
 use ssx_json::{Value, json};
 use std::{collections::BTreeSet, sync::Arc};
 pub const MAX_SOURCE_RESULTS: usize = 25;
-pub const MAX_SOURCE_CURSORS: usize = 100;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Error {
     pub code: &'static str,
@@ -493,34 +492,27 @@ impl SourceResolver {
             .engines
             .extend(job.queries.iter().flat_map(|q| q.engines.clone()));
         self.check(tenant, cancel, fence)?;
-        let attempts = job
+        let mut attempts = job
             .queries
             .iter()
             .flat_map(|q| &q.attempts)
             .filter(|a| attempt_id.as_ref().is_none_or(|id| id == &a.attempt_id))
-            .collect::<Vec<_>>();
-        if attempt_id.is_some() && attempts.is_empty() {
+            .peekable();
+        if attempt_id.is_some() && attempts.peek().is_none() {
             return Err(missing());
         }
-        let cursors = attempts
-            .iter()
-            .filter_map(|a| a.cursor.as_deref())
-            .collect::<Vec<_>>();
-        if cursors.is_empty() {
+        let mut cursors = attempts.filter_map(|a| a.cursor.as_deref()).peekable();
+        if cursors.peek().is_none() {
             return Err(partial());
-        }
-        if cursors.len() > MAX_SOURCE_CURSORS {
-            return Err(Error::new(
-                "source_truncated",
-                "source research artifact exceeds the cursor bound",
-            ));
         }
         let mut ids = vec![];
         let mut seen = BTreeSet::new();
-        let mut total = 0;
+        let mut total = 0u64;
         for cursor in cursors {
             let snapshot = self.snapshot(tenant, cursor, cancel, fence).await?;
-            total += snapshot.results().len();
+            total = total
+                .checked_add(snapshot.results().len() as u64)
+                .ok_or_else(malformed)?;
             for i in 0..snapshot.results().len().min(MAX_SOURCE_RESULTS) {
                 let id = format!("{}:{i}", snapshot.id());
                 if seen.insert(id.clone()) && ids.len() < MAX_SOURCE_RESULTS {
@@ -531,7 +523,7 @@ impl SourceResolver {
         let count = ids.len();
         Ok(ResolvedSource {
             artifact: artifact.clone(),
-            status: if total > count {
+            status: if total > count as u64 {
                 SourceStatus::Truncated
             } else if job.state == "succeeded" {
                 SourceStatus::Live
