@@ -526,7 +526,11 @@ pub struct FixtureProcessWitness(OwnedHandle);
 impl FixtureProcessWitness {
     pub fn capture(pid: u32, expected_creation: u64) -> io::Result<Self> {
         let process = trust::handle(unsafe {
-            OpenProcess(SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
+            OpenProcess(
+                SYNCHRONIZATION_SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
+                0,
+                pid,
+            )
         })?;
         if creation_time(trust::raw(&process))? != expected_creation {
             return Err(io::ErrorKind::InvalidData.into());
