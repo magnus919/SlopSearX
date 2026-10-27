@@ -739,7 +739,11 @@ pub(crate) fn try_verify(
                 .as_array()
                 .ok_or("PR1034 payload set absent")?
             {
-                if key == "additional_current_materials" && row["path"] == XTASK_A13 {
+                if key == "additional_current_materials" && row["path"] == "crates/xtask/src/a04.rs"
+                {
+                    let prior = a06_source_successor::a04_scoped_current(root, row)?;
+                    check_material(row, &prior, "0644", "PR1034 current/capture payload")?;
+                } else if key == "additional_current_materials" && row["path"] == XTASK_A13 {
                     verify_merged_a13(root, row)?;
                 } else if key == "additional_current_materials" && row["path"] == VALIDATOR {
                     verify_validator_composition(root, &manifest, row)?;

@@ -309,13 +309,26 @@ fn text<'a>(row: &'a Value, key: &str) -> Result<&'a str, String> {
         .ok_or_else(|| format!("A06 missing {key}"))
 }
 fn material(row: &Value, raw: &[u8], mode: &str) -> Result<(), String> {
-    need(
-        row["sha256"] == digest(raw)
-            && row["bytes"].as_u64() == Some(raw.len() as u64)
-            && row["mode"] == mode,
-        "A06 exact source material differs",
-    )
+    let actual_sha = digest(raw);
+    if row["sha256"] == actual_sha
+        && row["bytes"].as_u64() == Some(raw.len() as u64)
+        && row["mode"] == mode
+    {
+        Ok(())
+    } else {
+        Err(format!(
+            "A06 exact source material differs: path={} expected_sha={} actual_sha={} expected_bytes={} actual_bytes={} expected_mode={} actual_mode={}",
+            row["path"],
+            row["sha256"],
+            actual_sha,
+            row["bytes"],
+            raw.len(),
+            row["mode"],
+            mode
+        ))
+    }
 }
+
 fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     if let Some(prior) = post_a06_generation::historical(root, row)? {
         return Ok(prior);
@@ -555,7 +568,136 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+// The A04 runtime command now executes the relocated parser crate. Only this
+// frozen A06 proof operand receives its exact original command spelling.
+fn a04_relocation_frame(
+    expected: &Value,
+    physical: &[u8],
+    mode: &str,
+    inverse: &Value,
+) -> Result<Vec<u8>, String> {
+    need(
+        *expected
+            == json!({"bytes":17516,"git_blob":"f2bef0f215fcc83614f2b6259470cc16673d5e5b","mode":"0644","path":"crates/xtask/src/a04.rs","sha256":"7b254744ad789c3e24f325880b03b884e696fdb6657515e6460977c129dea3e1"})
+            && mode == "0644"
+            && physical.len() == 17522
+            && digest(physical)
+                == "a428fa3644bc92511de13d5e9344a4f14015e2f37ffc380e45e5c108e08501f3",
+        "A04 exact relocated proof caller/current differs",
+    )?;
+    need(
+        *inverse
+            == json!([{"at":9279,"remove_utf8":"\"ssx-source-json\"","insert_utf8":"\"ssx-infra\""}]),
+        "A04 exact relocated command inverse differs",
+    )?;
+    let prior = edits(physical, inverse)?;
+    material(expected, &prior, "0644")?;
+    Ok(prior)
+}
+fn a04_relocation_operand(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    let file = root.join("crates/xtask/src/a04.rs");
+    let metadata = fs::symlink_metadata(&file).map_err(|e| e.to_string())?;
+    need(
+        metadata.is_file() && !metadata.file_type().is_symlink(),
+        "A04 proof source must be regular",
+    )?;
+    let physical = fs::read(&file).map_err(|e| e.to_string())?;
+    let inverse =
+        json!([{"at":9279,"remove_utf8":"\"ssx-source-json\"","insert_utf8":"\"ssx-infra\""}]);
+    let prior = a04_relocation_frame(expected, &physical, &permissions(&file)?, &inverse)?;
+    let git = std::process::Command::new("git")
+        .args([
+            "cat-file",
+            "blob",
+            "f2bef0f215fcc83614f2b6259470cc16673d5e5b",
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        git.status.success() && git.stdout == prior,
+        "A04 original proof Git blob differs",
+    )?;
+    Ok(prior)
+}
+#[cfg(test)]
+fn a04_relocation_controls(root: &Path) -> Result<(), String> {
+    let doc = load(root)?;
+    let claim = &source(&doc, "crates/xtask/src/a04.rs")?["current"];
+    let physical = fs::read(root.join("crates/xtask/src/a04.rs")).map_err(|e| e.to_string())?;
+    let inverse =
+        json!([{"at":9279,"remove_utf8":"\"ssx-source-json\"","insert_utf8":"\"ssx-infra\""}]);
+    let prior = a04_relocation_operand(root, claim)?;
+    let scoped_current = &source(&doc, "crates/xtask/src/a04.rs")?["current"];
+    need(
+        a04_scoped_current(root, scoped_current)? == prior,
+        "A04 derived scoped current positive differs",
+    )?;
+    for key in ["path", "sha256", "bytes", "git_blob", "mode"] {
+        let mut bad = scoped_current.clone();
+        bad[key] = json!("unlisted");
+        need(
+            a04_scoped_current(root, &bad).is_err(),
+            "A04 derived scoped caller mutation accepted",
+        )?;
+    }
+    need(
+        a04_scoped_current(root, &source(&doc, "crates/xtask/src/a04.rs")?["baseline"]).is_err(),
+        "A04 frozen baseline accepted as derived current",
+    )?;
+    need(
+        a04_relocation_frame(claim, &physical, "0644", &inverse)? == prior,
+        "A04 relocation paired positive differs",
+    )?;
+    for key in ["path", "sha256", "bytes", "git_blob", "mode"] {
+        let mut bad = claim.clone();
+        bad[key] = json!("unlisted");
+        need(
+            a04_relocation_frame(&bad, &physical, "0644", &inverse).is_err(),
+            "A04 wrong relocation caller accepted",
+        )?;
+    }
+    need(
+        a04_relocation_frame(claim, &physical, "0600", &inverse).is_err(),
+        "A04 wrong physical mode accepted",
+    )?;
+    let mut changed = physical.clone();
+    changed.push(0);
+    for bad in [changed, prior] {
+        need(
+            a04_relocation_frame(claim, &bad, "0644", &inverse).is_err(),
+            "A04 altered/old-as-physical accepted",
+        )?;
+    }
+    for key in ["at", "remove_utf8", "insert_utf8"] {
+        let mut bad = inverse.clone();
+        bad[0][key] = if key == "at" {
+            json!(1)
+        } else {
+            json!("unlisted")
+        };
+        need(
+            a04_relocation_frame(claim, &physical, "0644", &bad).is_err(),
+            "A04 changed inverse span accepted",
+        )?;
+    }
+    let mut duplicate = inverse.clone();
+    duplicate.as_array_mut().unwrap().push(inverse[0].clone());
+    for bad in [json!([]), duplicate] {
+        need(
+            a04_relocation_frame(claim, &physical, "0644", &bad).is_err(),
+            "A04 missing/extra inverse accepted",
+        )?;
+    }
+    Ok(())
+}
 fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if row["path"] == "crates/xtask/src/a04.rs"
+        && row["sha256"] == "7b254744ad789c3e24f325880b03b884e696fdb6657515e6460977c129dea3e1"
+    {
+        return a04_relocation_operand(root, row);
+    }
+
     if let Some(proof) = main_isolation_current::a06_current_operand(root, row) {
         return proof;
     }
@@ -1198,6 +1340,25 @@ pub(crate) fn validator_baseline(
     )?;
     Ok((row["baseline"].clone(), before))
 }
+/// PR1034 first validates its immutable baseline row, then compose_scoped
+/// derives this exact A06 current row. Keep that derived frame distinct from
+/// both the frozen baseline and today's relocated command.
+pub(crate) fn a04_scoped_current(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    need(
+        *expected
+            == json!({"bytes":17516,"git_blob":"f2bef0f215fcc83614f2b6259470cc16673d5e5b","mode":"0644","path":"crates/xtask/src/a04.rs","sha256":"7b254744ad789c3e24f325880b03b884e696fdb6657515e6460977c129dea3e1"}),
+        "A04 exact derived PR1034 current caller differs",
+    )?;
+    let doc = load(root)?;
+    let row = source(&doc, "crates/xtask/src/a04.rs")?;
+    need(
+        row["current"] == *expected,
+        "A04 fixed derived current relation differs",
+    )?;
+    let (_, current) = verify_transition(root, row)?;
+    material(expected, &current, "0644")?;
+    Ok(current)
+}
 /// A08's immutable UA proof consumes the exact A06 manifest predecessor only
 /// after the existing T07 successor has proved the actual current root bytes.
 // Used by xtask A08; this module is also included by standalone A13 tests.
@@ -1244,7 +1405,7 @@ pub(crate) fn security_lock_baseline(
         t02_current == post_a06_generation::actual(root, &row["current"])?,
         "A06 normal-main lock parent proof differs",
     )?;
-    let supplied_current = t07_current;
+    let supplied_current = t07_source_successor::lock_parent_frame(root, &t07_current)?;
 
     need(
         supplied_current == actual,
@@ -1306,6 +1467,7 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    a04_relocation_controls(root)?;
     w07_test_dependency::controls(root)?;
     default_ca_fixture_controls(root)?;
     native_search::controls(root)?;
@@ -1466,7 +1628,8 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         main_isolation_current::Parent::T07,
     )?;
     need(
-        t07_current == t07_source_successor::actual_bytes(root, &lock["current"])?,
+        t07_source_successor::lock_parent_frame(root, &t07_current)?
+            == t07_source_successor::actual_bytes(root, &lock["current"])?,
         "A06 physical lock T07 parent differs",
     )?;
 

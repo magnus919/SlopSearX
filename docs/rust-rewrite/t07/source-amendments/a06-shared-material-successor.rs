@@ -189,6 +189,9 @@ pub(super) fn prove_current(
     );
     Ok(())
 }
+pub(super) fn lock_parent_frame(root: &Path, parent: &[u8]) -> Result<Vec<u8>, String> {
+    gateway_cookie_proxy_lock_successor::parent_frame(root, parent)
+}
 pub(super) fn actual_bytes(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
     if gateway_xtask_main_successor::selected(super::text(expected, "path")?) {
         let prior = gateway_xtask_main_successor::archived_prior(root, expected)?;

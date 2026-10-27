@@ -962,7 +962,62 @@ async fn actual_native_current_t06_eleven_tool_catalog_and_discovery_match_direc
             assert_eq!(proxied["result"]["structuredContent"], original["result"]["structuredContent"], "native {name} result");
             assert_ne!(proxied["result"]["isError"], true);
         }
-        let rejected = gateway.rpc(json!({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"slopsearx_search","arguments":{}}})).await;
+        // The same authenticated native surface must produce identical resource
+        // bodies through direct HTTP and the actual installed stdio gateway.
+        // These passive resources contain no observation-time freshness field.
+        for (id, uri) in [(20, "slopsearx://capabilities"), (21, "slopsearx://routing-profiles"), (22, "slopsearx://capabilities/wikipedia")] {
+            let request = json!({"jsonrpc":"2.0","id":id,"method":"resources/read","params":{"uri":uri}});
+            let original = direct(&client, &url, &request).await?;
+            let proxied = gateway.rpc(request).await;
+            assert!(original.get("error").is_none(), "direct resource failed: {uri}");
+            assert_eq!(original["result"]["contents"].as_array().unwrap().len(), 1);
+            assert!(!original["result"]["contents"][0]["text"].as_str().unwrap().is_empty());
+            assert_eq!(proxied, original, "complete direct/gateway resource envelope: {uri}");
+        }
+        let prompt_request = json!({"jsonrpc":"2.0","id":30,"method":"prompts/get","params":{"name":"research_with_source_coverage","arguments":{"question":"paired-native-caller-data"}}});
+        let original_prompt = direct(&client, &url, &prompt_request).await?;
+        let proxied_prompt = gateway.rpc(prompt_request).await;
+        assert!(original_prompt.get("error").is_none());
+        assert_eq!(original_prompt["result"]["description"], "Search broadly, inspect capability coverage, return diverse evidence.");
+        let messages = original_prompt["result"]["messages"].as_array().unwrap();
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0]["role"], "user");
+        assert_eq!(messages[0]["content"]["type"], "text");
+        assert!(messages[0]["content"]["text"].as_str().unwrap().contains("paired-native-caller-data"));
+        // Python gateway._extract_prompt_text returns text to the local prompt
+        // wrapper. The source contract deliberately omits remote description;
+        // compare the complete resulting envelope, without invoking production
+        // projection code to manufacture this test's expected value.
+        assert_eq!(proxied_prompt, json!({"jsonrpc":"2.0","id":30,"result":{"messages":messages}}));
+        let before_error = fixture.calls();
+        let error_request = json!({"jsonrpc":"2.0","id":40,"method":"tools/call","params":{"name":"slopsearx_search","arguments":{"query":""}}});
+        let original_error = direct(&client, &url, &error_request).await?;
+        let proxied_error = gateway.rpc(error_request).await;
+        // Empty query is a real predispatch domain error, carried in the normal
+        // structured result on both paths. Preserve its complete payload and
+        // distinguish it from both protocol errors and framework isError=true.
+        for response in [&original_error, &proxied_error] {
+            assert!(response.get("error").is_none());
+            assert_eq!(response["result"]["isError"], false);
+            assert_eq!(response["result"]["structuredContent"]["error"]["code"], "invalid_input");
+            assert_eq!(response["result"]["structuredContent"]["error"]["field"], "query");
+        }
+        assert_eq!(proxied_error["result"]["structuredContent"], original_error["result"]["structuredContent"], "complete direct/gateway domain-error payload");
+        assert_eq!(fixture.calls(), before_error, "paired domain denial dispatched an engine");
+        let rejected_request = json!({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"slopsearx_search","arguments":{}}});
+        let original_rejected = direct(&client, &url, &rejected_request).await?;
+        let rejected = gateway.rpc(rejected_request).await;
+        for response in [&original_rejected, &rejected] {
+            assert_eq!(response["result"]["isError"], true, "framework rejection became a normal domain result");
+            assert!(response.get("error").is_none(), "framework rejection became a JSON-RPC error");
+            assert!(response["result"].get("structuredContent").is_none(), "framework rejection acquired a structured payload");
+        }
+        // Exact independently frozen source signatures: the T06 server's
+        // parameter is positional while the gateway proxy's is keyword-only.
+        // Their documented diagnostic-text difference grants no permission to
+        // normalize other fields, error classes, channels or arbitrary text.
+        assert_eq!(original_rejected, json!({"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"1 validation error for call[slopsearx_search]\nquery\n  Missing required argument [type=missing_argument, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing_argument"}],"isError":true}}));
+        assert_eq!(rejected, json!({"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"1 validation error for call[slopsearx_search]\nquery\n  Missing required keyword only argument [type=missing_keyword_only_argument, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing_keyword_only_argument"}],"isError":true}}));
         assert_eq!(rejected["result"]["isError"], true);
         assert_eq!(fixture.calls(), 0, "passive discovery or rejected call dispatched an engine");
         Ok::<(), ssx_mcp::Error>(())
