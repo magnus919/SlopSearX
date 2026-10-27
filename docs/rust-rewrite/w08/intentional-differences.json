@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_id": "W08",
-  "status": "source_only_pending_native_validation",
+  "status": "native_scope_qualified",
   "differences": [
     {
       "id": "W08-D01",
@@ -23,7 +23,7 @@
       "kind": "bounded_execution",
       "reference": "Reference resolution has no per-worker source validation step",
       "native": "Read-only worker source admission observes persisted deadline, worker cancellation and a 30-second maximum operation window; this is not a semantic cursor-count cap",
-      "evidence": "dispatch barrier and create barrier fixtures; native execution pending",
+      "evidence": "blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_loss_without_dispatch: actual shutdown/cancel/persisted10sdeadline/30scap/owner-loss cases passed",
       "limit": "Valid retained multi-attempt sources remain accepted; final request timeout/cancellation wiring belongs to W09"
     }
   ],
@@ -36,5 +36,7 @@
       "owner": "W10",
       "scope": "protected portal composition UI/browser acceptance"
     }
-  ]
+  ],
+  "qualified_code_head": "a67a156100d30f87cb824a52699ae575da8dc0cd",
+  "local_acceptance": "docs/rust-rewrite/w08/LOCAL_ACCEPTANCE.json"
 }
