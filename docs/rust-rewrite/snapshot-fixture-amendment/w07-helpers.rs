@@ -5,7 +5,7 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.json";
-const SHA: &str = "70d16e46a6a1f679a4f24d5b31455567f81e8d0492955c5b5eb8e4663cb67a02";
+const SHA: &str = "8889f54d073bc27811febf1bbc6bafdbea1c25303a0f1c0dfff8bff04daaa831";
 const CONTAINER: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const CONTAINER_SHA: &str = "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64";
 const SOURCES: [&str; 2] = [

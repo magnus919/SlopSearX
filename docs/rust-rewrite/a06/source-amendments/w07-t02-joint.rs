@@ -2,6 +2,8 @@
 //! Physical joint identity precedes either historical parent interpretation.
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
+#[path = "../../snapshot-fixture-amendment/main-custody.rs"]
+mod snapshot_fixture_main;
 type Result<T> = std::result::Result<T, String>;
 #[derive(Clone, Copy)]
 pub(crate) enum Parent {
@@ -381,7 +383,7 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
         paired_manifest(root)?;
     }
     let joint = if path == "crates/xtask/src/main.rs" {
-        super::snapshot_fixture_main::joint(root, &actual)?
+        snapshot_fixture_main::joint(root, &actual)?
     } else {
         actual.clone()
     };
@@ -391,6 +393,12 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
         Parent::W07 => w07,
         Parent::T02 => t02,
     })
+}
+/// Ordinary controls for the shared owner's test wrapper, without discovered tests.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
+    snapshot_fixture_main::controls(root)
 }
 /// The historical Git identity belongs to the proved parent frame, never to
 /// the physical joint file. Both Git bytes and mode/blob must independently agree.
@@ -436,7 +444,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     for r in ROWS {
         let (actual, mode) = read(root, r)?;
         let joint = if r.path == "crates/xtask/src/main.rs" {
-            super::snapshot_fixture_main::joint(root, &actual)?
+            snapshot_fixture_main::joint(root, &actual)?
         } else {
             actual.clone()
         };
@@ -571,7 +579,7 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
         parent(&owned.0, r.path, &actual, Parent::W07)?;
         if r.path == "crates/xtask/src/main.rs" {
-            let old_joint = super::snapshot_fixture_main::joint(root, &actual)?;
+            let old_joint = snapshot_fixture_main::joint(root, &actual)?;
             fs::write(&path, &old_joint).map_err(|e| e.to_string())?;
             need(
                 parent(&owned.0, r.path, &old_joint, Parent::W07).is_err(),
