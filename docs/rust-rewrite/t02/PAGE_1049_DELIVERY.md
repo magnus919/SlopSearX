@@ -21,7 +21,7 @@ match the composed files.
 - On `a0675c63`, the standalone T06 source-binding test and A13
   `compiled_inventory_is_closed` each passed exactly one test, with no failures
   or ignored tests. The domain library was freshly compiled from this checkout.
-- On `7829b32b`, the T02 source controls, W07 registry/metrics controls, and
+- On `7829b32b`, the T02 source controls, W07 metrics successor controls, and
   current-policy construction/default-generation test each passed exactly one
   test, with no failures or ignored tests. Strict Clippy passed for xtask, infra,
   and MCP across all targets.
