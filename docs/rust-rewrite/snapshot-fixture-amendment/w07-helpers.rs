@@ -20,7 +20,10 @@ fn need(ok: bool, why: &str) -> Result<()> {
     }
 }
 fn sha(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 fn text<'a>(row: &'a Value, key: &str) -> Result<&'a str> {
     row[key].as_str().ok_or_else(|| format!("missing {key}"))
