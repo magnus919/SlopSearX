@@ -1,0 +1,117 @@
+{
+  "schema": "SNAPSHOT_W07_TWO_HELPER_SUCCESSOR_V1",
+  "prior_commit": "e9c5911a468b892fe2adef9027374cb867a2535d",
+  "container": {
+    "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+    "sha256": "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64",
+    "bytes": 21848,
+    "mode": "0644",
+    "git_blob": "f8326efbc96af5f884d0321bd5714923ab036b5e"
+  },
+  "rows": [
+    {
+      "pointer": "/sources/docs~1rust-rewrite~1a06~1source-amendments~1shared-successor.rs",
+      "caller_entry": {
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs": "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2"
+      },
+      "prior": {
+        "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "sha256": "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2",
+        "bytes": 74022,
+        "mode": "0644",
+        "git_blob": "03b95d46c8ed4f5086469d42a8eb9f477123b377"
+      },
+      "current": {
+        "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "sha256": "0946408fe0f4ae154d3582a6922672dbc26da31fb468e90b5dab0285af909ce4",
+        "bytes": 74718,
+        "mode": "0644",
+        "git_blob": "7047b947cf58e5067ca3421e892f7a6285a166e0"
+      },
+      "edits": [
+        {
+          "at": 69965,
+          "remove_utf8": "",
+          "insert_utf8": "/// Keep source-proof controls out of the frozen integration-test inventories.\n#[cfg(test)]\n#[allow(dead_code)]\npub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> {\n    w07_t02_joint::snapshot_fixture_main_controls(root)?;\n    let path = \"crates/xtask/src/main.rs\";\n    let current = fs::read(root.join(path)).map_err(|e| e.to_string())?;\n    let t02 = w07_t02_joint::parent(root, path, &current, w07_t02_joint::Parent::T02)?;\n    let old = json!({\"path\":path,\"sha256\":\"8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c\",\"bytes\":39725,\"mode\":\"0644\"});\n    need(\n        read_exact(root, &old)? == t02,\n        \"literal e127 main caller proof\",\n    )\n}\n"
+        }
+      ]
+    },
+    {
+      "pointer": "/sources/docs~1rust-rewrite~1a06~1source-amendments~1w07-t02-joint.rs",
+      "caller_entry": {
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs": "2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6"
+      },
+      "prior": {
+        "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "sha256": "2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6",
+        "bytes": 31714,
+        "mode": "0644",
+        "git_blob": "c752e397c8d7f58c2a094f26c112377c45c163fd"
+      },
+      "current": {
+        "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "sha256": "750cdae474caa6cd47a572c26ebc0c245125e649b71dc11679ce3962f05f1db4",
+        "bytes": 33256,
+        "mode": "0644",
+        "git_blob": "ebd4558eee6a8bbb98e0f7edc57f8b85afcc2c6d"
+      },
+      "edits": [
+        {
+          "at": 231,
+          "remove_utf8": "",
+          "insert_utf8": "#[path = \"../../snapshot-fixture-amendment/main-custody.rs\"]\nmod snapshot_fixture_main;\n"
+        },
+        {
+          "at": 21500,
+          "remove_utf8": "    let w07 = inverse(r, &actual, mode, &r.w07)?;\n    let t02 = inverse(r, &actual, mode, &r.t02)?;\n",
+          "insert_utf8": "    let joint = if path == \"crates/xtask/src/main.rs\" {\n        snapshot_fixture_main::joint(root, &actual)?\n    } else {\n        actual.clone()\n    };\n    let w07 = inverse(r, &joint, mode, &r.w07)?;\n    let t02 = inverse(r, &joint, mode, &r.t02)?;\n"
+        },
+        {
+          "at": 21685,
+          "remove_utf8": "",
+          "insert_utf8": "}\n/// Ordinary controls for the shared owner's test wrapper, without discovered tests.\n#[cfg(test)]\n#[allow(dead_code)]\npub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {\n    snapshot_fixture_main::controls(root)\n"
+        },
+        {
+          "at": 23167,
+          "remove_utf8": "",
+          "insert_utf8": "        let joint = if r.path == \"crates/xtask/src/main.rs\" {\n            snapshot_fixture_main::joint(root, &actual)?\n        } else {\n            actual.clone()\n        };\n"
+        },
+        {
+          "at": 24678,
+          "remove_utf8": "                    inverse(r, &actual, bad_mode, p).is_err(),\n",
+          "insert_utf8": "                    inverse(r, &joint, bad_mode, p).is_err(),\n"
+        },
+        {
+          "at": 25644,
+          "remove_utf8": "                            inverse_with_edits(r, &actual, mode, p, &edits).is_err(),\n",
+          "insert_utf8": "                            inverse_with_edits(r, &joint, mode, p, &edits).is_err(),\n"
+        },
+        {
+          "at": 25913,
+          "remove_utf8": "                let mut missing = actual.clone();\n",
+          "insert_utf8": "                let mut missing = joint.clone();\n"
+        },
+        {
+          "at": 26017,
+          "remove_utf8": "                let mut duplicate = actual.clone();\n",
+          "insert_utf8": "                let mut duplicate = joint.clone();\n"
+        },
+        {
+          "at": 26338,
+          "remove_utf8": "                        bad != actual && inverse(r, &bad, mode, p).is_err(),\n",
+          "insert_utf8": "                        bad != joint && inverse(r, &bad, mode, p).is_err(),\n"
+        },
+        {
+          "at": 28062,
+          "remove_utf8": "",
+          "insert_utf8": "    let capsule_relative = \"docs/rust-rewrite/snapshot-fixture-amendment/capsule.json\";\n    let capsule_path = owned.0.join(capsule_relative);\n    fs::create_dir_all(capsule_path.parent().ok_or(\"capsule parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(capsule_relative), &capsule_path).map_err(|e| e.to_string())?;\n    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n"
+        },
+        {
+          "at": 28504,
+          "remove_utf8": "",
+          "insert_utf8": "        if r.path == \"crates/xtask/src/main.rs\" {\n            let old_joint = snapshot_fixture_main::joint(root, &actual)?;\n            fs::write(&path, &old_joint).map_err(|e| e.to_string())?;\n            need(\n                parent(&owned.0, r.path, &old_joint, Parent::W07).is_err(),\n                \"old joint physically substituted for new current\",\n            )?;\n            fs::write(&path, &actual).map_err(|e| e.to_string())?;\n        }\n"
+        }
+      ]
+    }
+  ]
+}
