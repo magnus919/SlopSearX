@@ -133,9 +133,6 @@ pub(super) fn effective(root: &Path, expected: &Value) -> Result<Value, String> 
         None => Ok(expected.clone()),
     }
 }
-pub(super) fn actual(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
-    super::read_exact(root, &effective(root, expected)?)
-}
 /// Exact caller material for the unchanged historical scoped controls.
 pub(crate) fn caller_material(
     root: &Path,

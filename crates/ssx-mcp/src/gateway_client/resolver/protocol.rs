@@ -103,6 +103,7 @@ pub(crate) struct Candidate {
 }
 pub(crate) struct Reply {
     pub addresses: Vec<SocketAddr>,
+    #[cfg(any(test, feature = "gateway-source-endpoints"))]
     pub candidates: Vec<Candidate>,
 }
 #[cfg(unix)]
@@ -326,6 +327,7 @@ pub(crate) fn decode_response(
     }
     let mut rest = &raw[22..];
     let mut addresses = Vec::with_capacity(count);
+    #[cfg(any(test, feature = "gateway-source-endpoints"))]
     let mut candidates = Vec::new();
     for _ in 0..count {
         let n = match rest.first() {
@@ -385,6 +387,7 @@ pub(crate) fn decode_response(
                     }
                 }
             }
+            #[cfg(any(test, feature = "gateway-source-endpoints"))]
             candidates.push(Candidate {
                 family: if address.is_ipv4() {
                     Family::V4
@@ -401,6 +404,7 @@ pub(crate) fn decode_response(
     }
     Ok(Reply {
         addresses,
+        #[cfg(any(test, feature = "gateway-source-endpoints"))]
         candidates,
     })
 }
