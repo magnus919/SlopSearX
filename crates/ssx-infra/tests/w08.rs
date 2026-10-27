@@ -105,6 +105,8 @@ struct Current {
     denied: AtomicBool,
     revoked: AtomicUsize,
     clock: AtomicU64,
+    foreign: AtomicBool,
+    reports_bound: AtomicUsize,
 }
 impl Current {
     fn policy(&self) -> PolicyService {
@@ -118,6 +120,24 @@ impl Current {
             }
             3 => {
                 p.policy.grants.remove("security");
+            }
+            6 => {
+                p.catalog = CatalogSnapshot::new(
+                    ["pypi", "github", "nvd"]
+                        .into_iter()
+                        .map(|name| {
+                            let mut c = capability(name);
+                            if name == "github" {
+                                c.enabled = false;
+                            }
+                            c
+                        })
+                        .collect(),
+                )
+                .unwrap();
+            }
+            5 => {
+                p.policy.grants.remove("saved_searches");
             }
             4 => {
                 p.catalog = CatalogSnapshot::new(
@@ -152,13 +172,17 @@ impl SnapshotClock for Current {
 impl composition::Authority for Current {
     fn current(&self) -> composition::AuthoritySnapshot {
         composition::AuthoritySnapshot {
-            tenant: Some(tenant()),
+            tenant: Some(if self.foreign.load(Ordering::SeqCst) {
+                TenantId::new("tenant-b").unwrap()
+            } else {
+                tenant()
+            }),
             policy: self.policy(),
             staged_limits: ssx_application::staged::Limits {
                 granted: true,
                 ..Default::default()
             },
-            saved_max_reports: 2,
+            saved_max_reports: self.reports_bound.load(Ordering::SeqCst),
         }
     }
 }
@@ -167,7 +191,7 @@ impl RecordsAuthority for Current {
         RecordsAuthoritySnapshot {
             search: self.policy(),
             limits: ssx_application::saved::SavedLimits {
-                reports: 2,
+                reports: self.reports_bound.load(Ordering::SeqCst) as u64,
                 ..Default::default()
             },
             auth_configured: ["pypi", "github", "nvd"]
@@ -278,6 +302,8 @@ impl Harness {
         let authority = Arc::new(Current {
             denied: AtomicBool::new(false),
             revoked: AtomicUsize::new(0),
+            foreign: AtomicBool::new(false),
+            reports_bound: AtomicUsize::new(2),
             clock: AtomicU64::new(now().seconds().to_bits()),
         });
         let snapshots = SnapshotService::new(
@@ -292,6 +318,11 @@ impl Harness {
             records: Arc::new(NativeRecords {
                 backend: backend.clone(),
                 authority: authority.clone(),
+            }),
+            saved_reports: Arc::new(saved_reports::NativeSavedReports {
+                backend: backend.clone(),
+                authority: authority.clone(),
+                principal: authority.clone(),
             }),
             entities: Arc::new(Groups),
             authority: authority.clone(),
@@ -823,6 +854,833 @@ async fn each_destination_grant_and_source_engine_revocation_blocks_unreserved_w
         assert_eq!(denied.budget_used["attempts"], 0);
         assert_eq!(denied.workflow["budget"]["used_adapter_calls"], 0);
         assert!(denied.queries.iter().all(|q| q.attempts.is_empty()));
+        assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0);
+        h.search.shutdown().await;
+    }
+}
+async fn saved_source_fixture(
+    h: &Harness,
+) -> (ArtifactRef, ssx_domain::saved::SavedDefinition, Vec<String>) {
+    use ssx_application::saved::{SavedPolicy, prepare_create};
+    use ssx_infra::valkey::saved::SavedStore;
+    let store = SavedStore::new(h.backend.clone(), tenant());
+    let current = RecordsAuthority::current(h.authority.as_ref());
+    let policy = SavedPolicy {
+        search: &current.search,
+        saved_granted: true,
+        auth_configured: &current.auth_configured,
+        limits: &current.limits,
+    };
+    let prepared=prepare_create(&policy,tenant().as_str(),"saved-source",&json!({"query":"current definition query","engines":["pypi"],"interval_seconds":60,"start_immediately":true,"expires_in_seconds":600,"max_reports":2}),store.now().await.unwrap()).unwrap();
+    store.create(&prepared).await.unwrap();
+    let definition = store
+        .load(&SavedSearchId::new("saved-source").unwrap())
+        .await
+        .unwrap()
+        .unwrap();
+    let report = json!({"search_id":"saved-source","run_id":"run-source","status":"changed","finished_at":definition.created_at.get(),"expires_at":definition.expires_at.get(),"revision":1,"incomparable_reasons":[],"observation":{"window":{"query":"historical source query","engines":["pypi"]}}});
+    let definition_key =
+        valkey::keys::saved("definition", &tenant(), Some("saved-source")).unwrap();
+    let index = valkey::keys::saved("reports", &tenant(), Some("saved-source")).unwrap();
+    let report_key =
+        valkey::keys::saved("report", &tenant(), Some("saved-source:run-source")).unwrap();
+    let mut connection = h.server.connection();
+    redis::cmd("SETEX")
+        .arg(&report_key)
+        .arg(600)
+        .arg(ssx_json::to_string(&report).unwrap())
+        .query::<()>(&mut connection)
+        .unwrap();
+    redis::cmd("ZADD")
+        .arg(&index)
+        .arg(definition.created_at.get())
+        .arg("run-source")
+        .query::<()>(&mut connection)
+        .unwrap();
+    redis::cmd("EXPIRE")
+        .arg(&index)
+        .arg(600)
+        .query::<()>(&mut connection)
+        .unwrap();
+    let artifact = ArtifactRef::new(
+        ArtifactKind::SavedReport,
+        ssx_domain::canonical::composite_artifact_id(&["saved-source", "run-source"]).unwrap(),
+    )
+    .unwrap();
+    (
+        artifact,
+        definition,
+        vec![definition_key, index, report_key],
+    )
+}
+fn source_with_saved(h: &Harness, reports: Arc<dyn composition::SavedReports>) -> SourceResolver {
+    SourceResolver {
+        snapshots: h.sources.snapshots.clone(),
+        records: h.sources.records.clone(),
+        saved_reports: reports,
+        entities: h.sources.entities.clone(),
+        authority: h.sources.authority.clone(),
+        clock: h.sources.clock.clone(),
+    }
+}
+struct LegacyLineageProjection {
+    records: Arc<NativeRecords>,
+}
+impl composition::SavedReports for LegacyLineageProjection {
+    fn selected<'a>(
+        &'a self,
+        tenant: &'a TenantId,
+        definition: &'a ssx_domain::saved::SavedDefinition,
+        run: &'a str,
+        limit: usize,
+        cancel: &'a Cancellation,
+    ) -> PortFuture<
+        'a,
+        Result<ssx_application::lineage::workflows::Read<Value>, ssx_application::lineage::Failure>,
+    > {
+        Box::pin(async move {
+            use ssx_application::lineage::workflows::{Read, Records};
+            match self
+                .records
+                .reports(tenant, definition, now(), limit, Some(run), cancel)
+                .await?
+            {
+                Read::Found(rows) => Ok(rows
+                    .into_iter()
+                    .find(|r| r["run_id"].as_str() == Some(run))
+                    .map(Read::Found)
+                    .unwrap_or(Read::Missing)),
+                Read::Missing => Ok(Read::Missing),
+                Read::Expired(t) => Ok(Read::Expired(t)),
+                Read::Unavailable => Ok(Read::Unavailable),
+                Read::PolicyDenied => Ok(Read::PolicyDenied),
+            }
+        })
+    }
+}
+#[tokio::test]
+async fn real_saved_report_composition_uses_full_authority_and_rejects_lossy_lineage_mutant() {
+    let h = Harness::new().await;
+    let (reference, definition, keys) = saved_source_fixture(&h).await;
+    let mut connection = h.server.connection();
+    let before = keys
+        .iter()
+        .map(|key| {
+            (
+                redis::cmd("DUMP")
+                    .arg(key)
+                    .query::<Option<Vec<u8>>>(&mut connection)
+                    .unwrap(),
+                redis::cmd("PTTL")
+                    .arg(key)
+                    .query::<i64>(&mut connection)
+                    .unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    for destination in [Destination::Research, Destination::StagedSearch] {
+        let source = h
+            .sources
+            .resolve(&tenant(), &reference, destination, &Cancellation::default())
+            .await
+            .unwrap();
+        assert_eq!(source.query.as_deref(), Some("historical source query"));
+        assert_eq!(source.details["revision"], 1);
+        assert_ne!(source.query.as_deref(), Some(definition.query.as_str()));
+    }
+    // This controlled mutant uses the exact accepted NativeRecords projection
+    // that d543 mistakenly treated as a complete composition source.
+    let mutant = source_with_saved(
+        &h,
+        Arc::new(LegacyLineageProjection {
+            records: Arc::new(NativeRecords {
+                backend: h.backend.clone(),
+                authority: h.authority.clone(),
+            }),
+        }),
+    );
+    assert!(
+        mutant
+            .resolve(
+                &tenant(),
+                &reference,
+                Destination::Research,
+                &Cancellation::default()
+            )
+            .await
+            .is_err()
+    );
+    for (index, key) in keys.iter().enumerate() {
+        let after = redis::cmd("DUMP")
+            .arg(key)
+            .query::<Option<Vec<u8>>>(&mut connection)
+            .unwrap();
+        assert_eq!(after, before[index].0);
+        let ttl: i64 = redis::cmd("PTTL").arg(key).query(&mut connection).unwrap();
+        assert!(ttl > 0 && ttl <= before[index].1);
+    }
+    assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0);
+    h.search.shutdown().await;
+}
+struct AfterSavedRead {
+    inner: Arc<dyn composition::SavedReports>,
+    current: Arc<Current>,
+    mode: &'static str,
+}
+impl composition::SavedReports for AfterSavedRead {
+    fn selected<'a>(
+        &'a self,
+        tenant: &'a TenantId,
+        definition: &'a ssx_domain::saved::SavedDefinition,
+        run: &'a str,
+        limit: usize,
+        cancel: &'a Cancellation,
+    ) -> PortFuture<
+        'a,
+        Result<ssx_application::lineage::workflows::Read<Value>, ssx_application::lineage::Failure>,
+    > {
+        Box::pin(async move {
+            let read = self
+                .inner
+                .selected(tenant, definition, run, limit, cancel)
+                .await?;
+            match self.mode {
+                "tenant" => self.current.foreign.store(true, Ordering::SeqCst),
+                "bound" => self.current.reports_bound.store(1, Ordering::SeqCst),
+                "policy" => self.current.revoked.store(5, Ordering::SeqCst),
+                _ => {}
+            }
+            Ok(read)
+        })
+    }
+}
+#[tokio::test]
+async fn real_saved_report_errors_and_awaited_authority_changes_are_readonly() {
+    for mode in [
+        "malformed",
+        "incomparable",
+        "truncated",
+        "foreign",
+        "expired",
+        "policy",
+        "bound",
+        "tenant",
+        "unavailable",
+    ] {
+        let h = Harness::new().await;
+        let (mut reference, definition, keys) = saved_source_fixture(&h).await;
+        let mut connection = h.server.connection();
+        let key = &keys[2];
+        let raw: String = redis::cmd("GET").arg(key).query(&mut connection).unwrap();
+        let mut report: Value = ssx_json::from_str(&raw).unwrap();
+        match mode {
+            "malformed" => report["incomparable_reasons"] = json!("bad"),
+            "incomparable" => report["status"] = json!("incomparable"),
+            "truncated" => {
+                report["status"] = json!("incomparable");
+                report["incomparable_reasons"] = json!(["observation_truncated"]);
+            }
+            "expired" => report["expires_at"] = json!(now().seconds() - 1.),
+            "foreign" => {
+                reference = ArtifactRef::new(
+                    ArtifactKind::SavedReport,
+                    ssx_domain::canonical::composite_artifact_id(&["foreign-source", "run-source"])
+                        .unwrap(),
+                )
+                .unwrap()
+            }
+            _ => {}
+        }
+        if mode == "foreign" {
+            let other = TenantId::new("tenant-b").unwrap();
+            let mut foreign = definition.clone();
+            foreign.tenant = other.as_str().into();
+            foreign.search_id = "foreign-source".into();
+            let mut foreign_report = report.clone();
+            foreign_report["search_id"] = json!("foreign-source");
+            redis::cmd("SETEX")
+                .arg(valkey::keys::saved("definition", &other, Some("foreign-source")).unwrap())
+                .arg(600)
+                .arg(ssx_json::to_string(&foreign.stored_payload().unwrap()).unwrap())
+                .query::<()>(&mut connection)
+                .unwrap();
+            redis::cmd("SETEX")
+                .arg(
+                    valkey::keys::saved("report", &other, Some("foreign-source:run-source"))
+                        .unwrap(),
+                )
+                .arg(600)
+                .arg(ssx_json::to_string(&foreign_report).unwrap())
+                .query::<()>(&mut connection)
+                .unwrap();
+            redis::cmd("ZADD")
+                .arg(valkey::keys::saved("reports", &other, Some("foreign-source")).unwrap())
+                .arg(foreign.created_at.get())
+                .arg("run-source")
+                .query::<()>(&mut connection)
+                .unwrap();
+        }
+        redis::cmd("SETEX")
+            .arg(key)
+            .arg(600)
+            .arg(ssx_json::to_string(&report).unwrap())
+            .query::<()>(&mut connection)
+            .unwrap();
+        if mode == "unavailable" {
+            h.backend.close().await;
+        }
+        let resolver = if ["policy", "bound", "tenant"].contains(&mode) {
+            source_with_saved(
+                &h,
+                Arc::new(AfterSavedRead {
+                    inner: h.sources.saved_reports.clone(),
+                    current: h.authority.clone(),
+                    mode,
+                }),
+            )
+        } else {
+            source_with_saved(&h, h.sources.saved_reports.clone())
+        };
+        let error = resolver
+            .resolve(
+                &tenant(),
+                &reference,
+                Destination::Research,
+                &Cancellation::default(),
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(
+            error.code,
+            match mode {
+                "malformed" => "source_malformed",
+                "incomparable" => "source_incomparable",
+                "truncated" => "source_truncated",
+                "foreign" | "expired" => "source_not_found",
+                "unavailable" => "source_unavailable",
+                _ => "source_policy_denied",
+            },
+            "{mode}"
+        );
+        if mode == "foreign" {
+            h.authority.foreign.store(true, Ordering::SeqCst);
+            let allowed = resolver
+                .resolve(
+                    &TenantId::new("tenant-b").unwrap(),
+                    &reference,
+                    Destination::Research,
+                    &Cancellation::default(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(allowed.query.as_deref(), Some("historical source query"));
+        }
+        let after: String = redis::cmd("GET").arg(key).query(&mut connection).unwrap();
+        assert_eq!(after, ssx_json::to_string(&report).unwrap());
+        assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0);
+        h.search.shutdown().await;
+    }
+}
+struct ClockAfterSnapshotRead {
+    inner: ValkeySnapshots,
+    current: Arc<Current>,
+    id: String,
+    advance: f64,
+}
+impl SnapshotRepository for ClockAfterSnapshotRead {
+    fn create<'a>(
+        &'a self,
+        _: &'a SearchSnapshot,
+        _: NonZeroU64,
+    ) -> PortFuture<'a, Result<SnapshotWrite, SnapshotFailure>> {
+        Box::pin(async { panic!("source read must not create") })
+    }
+    fn read<'a>(
+        &'a self,
+        tenant: &'a TenantId,
+        id: &'a SnapshotId,
+    ) -> PortFuture<'a, Result<Option<SearchSnapshot>, SnapshotFailure>> {
+        Box::pin(async move {
+            let read = self.inner.read(tenant, id).await?;
+            if id.as_str() == self.id {
+                self.current
+                    .clock
+                    .store(self.advance.to_bits(), Ordering::SeqCst);
+            }
+            Ok(read)
+        })
+    }
+}
+#[tokio::test]
+async fn real_staged_expiry_during_selected_snapshot_read_cannot_compose() {
+    let h = Harness::new().await;
+    let accepted = now().seconds();
+    let selected = SearchSnapshot::new(
+        SnapshotId::new("stage-selected").unwrap(),
+        "staged query".into(),
+        QueryId::new("selected-query-id").unwrap(),
+        vec![SearchResult {
+            engine: "pypi".into(),
+            url: "https://pypi.org/project/requests".into(),
+            ..Default::default()
+        }],
+        ScopeDecision {
+            selected_engines: vec!["pypi".into()],
+            ..Default::default()
+        },
+        tenant(),
+        now(),
+        Some(WallClockExpiry::new(accepted + 7200.).unwrap()),
+    )
+    .unwrap();
+    ValkeySnapshots::new(h.backend.clone())
+        .create(&selected, NonZeroU64::new(7500).unwrap())
+        .await
+        .unwrap();
+    let limits = ssx_application::staged::Limits {
+        granted: true,
+        ..Default::default()
+    };
+    let plan = ssx_application::staged::Plan::build(
+        &policy(false),
+        &limits,
+        &ssx_application::staged::Input {
+            query: "staged query".into(),
+            objectives: json!({"deadline_ms":1000,"max_engine_calls":1}),
+            initial_scope: json!({"engines":["pypi"]}),
+            fallback_scope: None,
+            allow_scope_expansion: false,
+            filters: None,
+        },
+    )
+    .unwrap();
+    let record = plan
+        .record(
+            &tenant(),
+            &StagedSearchId::new("stage-expiry").unwrap(),
+            accepted,
+        )
+        .unwrap();
+    let mut value = record.value().clone();
+    value["state"] = json!("completed");
+    value["selected_result_attempt_id"] = json!("selected-attempt");
+    value["budget"]["reserved"] = json!(1);
+    value["budget"]["observed"] = json!(1);
+    let stage = &mut value["stages"].as_array_mut().unwrap()[0];
+    stage["state"] = json!("done");
+    stage["attempts"] = json!([{"attempt_id":"selected-attempt","cursor":"stage-selected","state":"done","started_at":accepted,"finished_at":accepted+1.,"reserved_engine_calls":1,"observed_engine_calls":1,"engine_outcomes":[],"enforcement":stage["enforcement"]}]);
+    let record = ssx_domain::staged::Record::from_value(value).unwrap();
+    let stage_key = valkey::keys::staged("record", &tenant(), Some("stage-expiry")).unwrap();
+    let snapshot_key = valkey::keys::snapshot(&tenant(), "stage-selected");
+    let mut connection = h.server.connection();
+    redis::cmd("SETEX")
+        .arg(&stage_key)
+        .arg(7500)
+        .arg(ssx_json::to_string(record.value()).unwrap())
+        .query::<()>(&mut connection)
+        .unwrap();
+    let before: [i64; 2] = [
+        redis::cmd("PTTL")
+            .arg(&stage_key)
+            .query(&mut connection)
+            .unwrap(),
+        redis::cmd("PTTL")
+            .arg(&snapshot_key)
+            .query(&mut connection)
+            .unwrap(),
+    ];
+    let mut resolver = source_with_saved(&h, h.sources.saved_reports.clone());
+    resolver.snapshots = SnapshotService::new(
+        Arc::new(ClockAfterSnapshotRead {
+            inner: ValkeySnapshots::new(h.backend.clone()),
+            current: h.authority.clone(),
+            id: "stage-selected".into(),
+            advance: accepted + 3601.,
+        }),
+        h.authority.clone(),
+        Arc::new(RandomSnapshotIds),
+        tenant(),
+        SnapshotTtl::new(60).unwrap(),
+    );
+    let reference = ArtifactRef::new(ArtifactKind::StagedSearch, "stage-expiry").unwrap();
+    assert_eq!(
+        resolver
+            .resolve(
+                &tenant(),
+                &reference,
+                Destination::ResearchManifest,
+                &Cancellation::default()
+            )
+            .await
+            .unwrap_err()
+            .code,
+        "source_expired"
+    );
+    assert!(Clock::now(h.authority.as_ref()).seconds() > record.expires_at());
+    assert!(
+        selected.expires_at().unwrap().timestamp().seconds()
+            > Clock::now(h.authority.as_ref()).seconds()
+    );
+    let after: [i64; 2] = [
+        redis::cmd("PTTL")
+            .arg(&stage_key)
+            .query(&mut connection)
+            .unwrap(),
+        redis::cmd("PTTL")
+            .arg(&snapshot_key)
+            .query(&mut connection)
+            .unwrap(),
+    ];
+    assert!(after.iter().zip(before).all(|(a, b)| *a > 0 && *a <= b));
+    assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0);
+    h.search.shutdown().await;
+}
+#[tokio::test]
+async fn dossier_get_preserves_real_missing_expired_unavailable_snapshot_states_without_dispatch() {
+    for mode in ["missing", "expired", "unavailable"] {
+        let h = Harness::new().await;
+        let mut service = h.service(Arc::new(h.jobs.clone()));
+        service
+            .start(&tenant(), input(None, None), &Cancellation::default())
+            .await
+            .unwrap();
+        let job = h.tick(service.runner(h.runner.clone())).await;
+        assert_eq!(job.state, "succeeded");
+        let cursor = job.queries[0].cursor.as_deref().unwrap();
+        match mode {
+            "missing" => {
+                redis::cmd("DEL")
+                    .arg(valkey::keys::snapshot(&tenant(), cursor))
+                    .query::<()>(&mut h.server.connection())
+                    .unwrap();
+            }
+            "expired" => {
+                h.authority
+                    .clock
+                    .store((now().seconds() + 120.).to_bits(), Ordering::SeqCst);
+            }
+            "unavailable" => {
+                let backend = Arc::new(h.server.store());
+                backend.close().await;
+                let mut resolver = source_with_saved(&h, h.sources.saved_reports.clone());
+                resolver.snapshots = SnapshotService::new(
+                    Arc::new(ValkeySnapshots::new(backend)),
+                    h.authority.clone(),
+                    Arc::new(RandomSnapshotIds),
+                    tenant(),
+                    SnapshotTtl::new(60).unwrap(),
+                );
+                service.sources = Arc::new(resolver);
+            }
+            _ => {}
+        }
+        let report = service
+            .get(
+                &tenant(),
+                &JobId::new(&job.job_id).unwrap(),
+                Some(1),
+                &card,
+                &Cancellation::default(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            report["sections"]["package_information"]["state"],
+            match mode {
+                "missing" => "failed",
+                "expired" => "expired",
+                _ => "unavailable",
+            },
+            "{mode}"
+        );
+        assert_eq!(report["partial"], true);
+        assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 2);
+        h.search.shutdown().await;
+    }
+}
+struct DropWitness(Arc<AtomicBool>);
+impl Drop for DropWitness {
+    fn drop(&mut self) {
+        self.0.store(true, Ordering::SeqCst);
+    }
+}
+struct CancelTokens;
+impl valkey::TokenSource<JobId> for CancelTokens {
+    fn next_token(&mut self) -> LeaseToken<JobId> {
+        LeaseToken::new("w08-cancel-token").unwrap()
+    }
+}
+struct BlockingSource {
+    entered: Semaphore,
+    dropped: Arc<AtomicBool>,
+}
+impl SourceValidator for BlockingSource {
+    fn validate<'a>(
+        &'a self,
+        _: &'a TenantId,
+        _: &'a ResearchJob,
+    ) -> PortFuture<'a, Result<(), composition::Error>> {
+        Box::pin(async move {
+            let _drop = DropWitness(self.dropped.clone());
+            self.entered.add_permits(1);
+            std::future::pending::<()>().await;
+            unreachable!()
+        })
+    }
+}
+#[tokio::test]
+async fn blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_loss_without_dispatch()
+ {
+    for mode in ["shutdown", "cancel", "deadline", "owner-loss"] {
+        let h = Harness::new().await;
+        let source = h.source("source-blocked").await;
+        let service = h.service(Arc::new(h.jobs.clone()));
+        let mut args = input(Some(&source), None);
+        if mode == "deadline" {
+            args.deadline = WallClockTimestamp::new(now().seconds() + 10.).unwrap();
+        }
+        let started = service
+            .start(&tenant(), args, &Cancellation::default())
+            .await
+            .unwrap();
+        let id = JobId::new(started["job_id"].as_str().unwrap()).unwrap();
+        let dropped = Arc::new(AtomicBool::new(false));
+        let blocked = Arc::new(BlockingSource {
+            entered: Semaphore::new(0),
+            dropped: dropped.clone(),
+        });
+        let runner = h.runner.clone().with_source_validator(blocked.clone());
+        let (stop, rx) = watch::channel(false);
+        let execute = runner.run_once(rx);
+        tokio::pin!(execute);
+        tokio::select! {r=&mut execute=>panic!("validation did not block: {r:?}"),p=blocked.entered.acquire()=>p.unwrap().forget()};
+        match mode {
+            "shutdown" => {
+                stop.send_replace(true);
+            }
+            "cancel" => {
+                h.jobs
+                    .request_cancel(&id, now(), &mut CancelTokens, || {
+                        AttemptId::new("cancel-attempt").unwrap()
+                    })
+                    .await
+                    .unwrap();
+            }
+            "deadline" => {
+                tokio::time::pause();
+                tokio::time::advance(Duration::from_secs(31)).await;
+                tokio::time::resume();
+            }
+            "owner-loss" => {
+                redis::cmd("SETEX")
+                    .arg(valkey::keys::research("lease", &tenant(), id.as_str()).unwrap())
+                    .arg(30)
+                    .arg("replacement-owner-token")
+                    .query::<()>(&mut h.server.connection())
+                    .unwrap();
+            }
+            _ => {}
+        }
+        let result = tokio::time::timeout(Duration::from_secs(8), &mut execute)
+            .await
+            .unwrap();
+        assert!(
+            dropped.load(Ordering::SeqCst),
+            "readonly future was not dropped: {mode}"
+        );
+        let stored = match h.jobs.load(&id).await {
+            JobRead::Found(job) => job,
+            other => panic!("job unavailable: {other:?}"),
+        };
+        assert_eq!(stored.budget_used["attempts"], 0, "{mode}");
+        assert_eq!(stored.workflow["budget"]["used_adapter_calls"], 0, "{mode}");
+        assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0, "{mode}");
+        match mode {
+            "shutdown" | "owner-loss" => assert!(result.is_err(), "{mode}"),
+            "cancel" => assert_eq!(result.unwrap().unwrap().state, "cancelled"),
+            "deadline" => assert!(
+                result
+                    .unwrap()
+                    .unwrap()
+                    .stop_reason
+                    .as_deref()
+                    .unwrap()
+                    .contains("source_")
+            ),
+            _ => {}
+        }
+        if mode == "owner-loss" {
+            let lease: String = redis::cmd("GET")
+                .arg(valkey::keys::research("lease", &tenant(), id.as_str()).unwrap())
+                .query(&mut h.server.connection())
+                .unwrap();
+            assert_eq!(lease, "replacement-owner-token");
+        }
+        h.search.shutdown().await;
+    }
+}
+struct OperatorFull;
+impl RecordsAuthority for OperatorFull {
+    fn current(&self) -> RecordsAuthoritySnapshot {
+        RecordsAuthoritySnapshot {
+            search: policy(false),
+            limits: ssx_application::saved::SavedLimits {
+                reports: 2,
+                ..Default::default()
+            },
+            auth_configured: ["pypi", "github", "nvd"]
+                .into_iter()
+                .map(|n| (n.into(), true))
+                .collect(),
+        }
+    }
+}
+struct OperatorOnlyReportMutant {
+    backend: Arc<Valkey>,
+}
+impl composition::SavedReports for OperatorOnlyReportMutant {
+    fn selected<'a>(
+        &'a self,
+        tenant: &'a TenantId,
+        definition: &'a ssx_domain::saved::SavedDefinition,
+        run: &'a str,
+        limit: usize,
+        _: &'a Cancellation,
+    ) -> PortFuture<
+        'a,
+        Result<ssx_application::lineage::workflows::Read<Value>, ssx_application::lineage::Failure>,
+    > {
+        Box::pin(async move {
+            use ssx_application::{
+                lineage::{Failure, workflows::Read},
+                saved::SavedPolicy,
+            };
+            use ssx_infra::valkey::saved::{RecentReport, SavedStore};
+            let current = RecordsAuthority::current(&OperatorFull);
+            let mut limits = current.limits;
+            limits.reports = limit as u64;
+            let policy = SavedPolicy {
+                search: &current.search,
+                saved_granted: true,
+                auth_configured: &current.auth_configured,
+                limits: &limits,
+            };
+            match SavedStore::new(self.backend.clone(), tenant.clone())
+                .recent_report(
+                    &SavedSearchId::new(&definition.search_id).unwrap(),
+                    run,
+                    &policy,
+                )
+                .await
+            {
+                Ok(Some(
+                    RecentReport::Found(v)
+                    | RecentReport::Incomparable(v)
+                    | RecentReport::Truncated(v),
+                )) => Ok(Read::Found(v)),
+                Ok(None) => Ok(Read::Missing),
+                Err(_) => Err(Failure::Malformed),
+            }
+        })
+    }
+}
+struct SwitchSavedDefinition {
+    backend: Arc<Valkey>,
+    inner: Arc<dyn composition::SavedReports>,
+}
+impl composition::SavedReports for SwitchSavedDefinition {
+    fn selected<'a>(
+        &'a self,
+        tenant: &'a TenantId,
+        definition: &'a ssx_domain::saved::SavedDefinition,
+        run: &'a str,
+        limit: usize,
+        cancel: &'a Cancellation,
+    ) -> PortFuture<
+        'a,
+        Result<ssx_application::lineage::workflows::Read<Value>, ssx_application::lineage::Failure>,
+    > {
+        Box::pin(async move {
+            use ssx_application::{lineage::Failure, saved::SavedPolicy};
+            use ssx_infra::valkey::saved::SavedStore;
+            let current = RecordsAuthority::current(&OperatorFull);
+            let policy = SavedPolicy {
+                search: &current.search,
+                saved_granted: true,
+                auth_configured: &current.auth_configured,
+                limits: &current.limits,
+            };
+            let changed = SavedStore::new(self.backend.clone(), tenant.clone())
+                .update(
+                    &SavedSearchId::new(&definition.search_id).unwrap(),
+                    definition.revision,
+                    &json!({"engines":["github"]}),
+                    &policy,
+                )
+                .await
+                .map_err(|_| Failure::Malformed)?;
+            assert_eq!(changed.engines, vec!["github"]);
+            self.inner
+                .selected(tenant, definition, run, limit, cancel)
+                .await
+        })
+    }
+}
+#[tokio::test]
+async fn owning_saved_read_uses_principal_operator_intersection_for_changed_definition() {
+    for mutant in [false, true] {
+        let h = Harness::new().await;
+        let (reference, _, _) = saved_source_fixture(&h).await;
+        h.authority.revoked.store(6, Ordering::SeqCst);
+        let concrete: Arc<dyn composition::SavedReports> =
+            Arc::new(saved_reports::NativeSavedReports {
+                backend: h.backend.clone(),
+                authority: Arc::new(OperatorFull),
+                principal: h.authority.clone(),
+            });
+        let positive = source_with_saved(&h, concrete.clone())
+            .resolve(
+                &tenant(),
+                &reference,
+                Destination::Research,
+                &Cancellation::default(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(positive.query.as_deref(), Some("historical source query"));
+        let inner = if mutant {
+            Arc::new(OperatorOnlyReportMutant {
+                backend: h.backend.clone(),
+            }) as Arc<dyn composition::SavedReports>
+        } else {
+            concrete
+        };
+        let resolver = source_with_saved(
+            &h,
+            Arc::new(SwitchSavedDefinition {
+                backend: h.backend.clone(),
+                inner,
+            }),
+        );
+        let outcome = resolver
+            .resolve(
+                &tenant(),
+                &reference,
+                Destination::Research,
+                &Cancellation::default(),
+            )
+            .await;
+        if mutant {
+            assert_eq!(
+                outcome.unwrap().query.as_deref(),
+                Some("historical source query")
+            );
+            eprintln!(
+                "W08_CONTROLLED_MUTANT operator_only_policy admitted current github definition despite principal denial; fixed intersection rejects it"
+            );
+        } else {
+            assert_eq!(outcome.unwrap_err().code, "source_policy_denied");
+        }
         assert_eq!(h.loopback.calls.load(Ordering::SeqCst), 0);
         h.search.shutdown().await;
     }

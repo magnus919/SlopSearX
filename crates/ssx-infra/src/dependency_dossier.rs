@@ -1,5 +1,6 @@
 //! Native durable dossier service. Search execution and discovery use W02's
 //! existing store/runner; report/preview methods have no provider-call path.
+pub mod saved_reports;
 use crate::{
     research_runner::{ResearchRunner, SourceValidator},
     valkey::research::{JobRead, ResearchStore},

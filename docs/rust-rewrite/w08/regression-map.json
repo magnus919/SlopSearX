@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_id": "W08",
   "reference_policy": "read-only pinned source; no mandatory Python helper or interpreter",
-  "native_execution_status": "11 application/7 infrastructure component cases executed; final combined source gate and W02 regression execution pending",
+  "native_execution_status": "Prior18 component cases passed before independent-review corrections; current26 declared native semantic cases and required final worker/quality gates remain pending",
   "rows": [
     {
       "source_path": "tests/test_dependency_dossier.py",
@@ -218,5 +218,30 @@
     }
   ],
   "portal_impact": "shared backend reviewed; no existing HTTP/HTML/browser contract change; existing portal CI required; protected composition UI W10",
-  "evidence_limits": "Mapping names is not execution or semantic parity proof; native assertions and exact actual completion receipts are required"
+  "evidence_limits": "Mapping names is not execution or semantic parity proof; native assertions and exact actual completion receipts are required",
+  "review_regressions": [
+    {
+      "finding": "W07 lineage projection is not full composition data",
+      "native_cases": [
+        "real_saved_report_composition_uses_full_authority_and_rejects_lossy_lineage_mutant",
+        "real_saved_report_errors_and_awaited_authority_changes_are_readonly",
+        "owning_saved_read_uses_principal_operator_intersection_for_changed_definition"
+      ]
+    },
+    {
+      "finding": "Earlier artifact expiry across later awaits",
+      "native_cases": [
+        "staged_expiry_is_rechecked_after_selected_snapshot_read",
+        "earlier_snapshot_expiry_is_rechecked_after_later_cursor_read_and_attempt_refs_are_exact",
+        "real_staged_expiry_during_selected_snapshot_read_cannot_compose"
+      ]
+    },
+    {
+      "finding": "Native-only validator lifecycle and report read states require concrete coverage",
+      "native_cases": [
+        "blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_loss_without_dispatch",
+        "dossier_get_preserves_real_missing_expired_unavailable_snapshot_states_without_dispatch"
+      ]
+    }
+  ]
 }

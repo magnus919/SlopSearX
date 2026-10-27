@@ -1,6 +1,7 @@
 //! Readonly workflow source resolution. This service owns no dispatch, create,
 //! lease, TTL-renewal or provider port. Lineage nodes are not source payloads.
 use crate::{
+    PortFuture,
     lineage::{
         self,
         resolver::Entities,
@@ -12,8 +13,8 @@ use crate::{
     staged,
 };
 use ssx_domain::{
-    ArtifactKind, ArtifactRef, SearchSnapshot, SnapshotId, TenantId,
-    canonical::parse_composite_artifact_id, staged::Record,
+    ArtifactKind, ArtifactRef, SearchSnapshot, SnapshotId, TenantId, WallClockTimestamp,
+    canonical::parse_composite_artifact_id, saved::SavedDefinition, staged::Record,
 };
 use ssx_json::{Value, json};
 use std::{collections::BTreeSet, sync::Arc};
@@ -121,9 +122,22 @@ pub struct AuthoritySnapshot {
 pub trait Authority: Send + Sync {
     fn current(&self) -> AuthoritySnapshot;
 }
+/// Selected authoritative full saved-report data. W07 lineage projections are
+/// deliberately insufficient for this composition contract.
+pub trait SavedReports: Send + Sync {
+    fn selected<'a>(
+        &'a self,
+        tenant: &'a TenantId,
+        definition: &'a SavedDefinition,
+        run: &'a str,
+        limit: usize,
+        cancel: &'a Cancellation,
+    ) -> PortFuture<'a, Result<Read<Value>, lineage::Failure>>;
+}
 pub struct SourceResolver {
     pub snapshots: SnapshotService,
     pub records: Arc<dyn Records>,
+    pub saved_reports: Arc<dyn SavedReports>,
     pub entities: Arc<dyn Entities>,
     pub authority: Arc<dyn Authority>,
     pub clock: Arc<dyn Clock>,
@@ -134,6 +148,21 @@ struct Fence {
     grants: BTreeSet<&'static str>,
     reports_bound: usize,
     staged: Option<Record>,
+    expiry: Option<Expiry>,
+}
+#[derive(Clone, Copy)]
+struct Expiry {
+    at: WallClockTimestamp,
+    inclusive: bool,
+}
+impl Fence {
+    fn witness(&mut self, at: WallClockTimestamp, inclusive: bool) {
+        if self.expiry.is_none_or(|old| {
+            at.seconds() < old.at.seconds() || at.seconds() == old.at.seconds() && inclusive
+        }) {
+            self.expiry = Some(Expiry { at, inclusive });
+        }
+    }
 }
 impl SourceResolver {
     fn check(
@@ -164,6 +193,17 @@ impl SourceResolver {
             })
         {
             return Err(denied());
+        }
+        if let Some(expiry) = fence.expiry {
+            let now = self.clock.now().seconds();
+            if now > expiry.at.seconds() || expiry.inclusive && now == expiry.at.seconds() {
+                let mut error = Error::new(
+                    "source_expired",
+                    "source artifact expired during resolution",
+                );
+                error.details = json!({"expires_at":expiry.at.seconds()});
+                return Err(error);
+            }
         }
         Ok(current)
     }
@@ -217,9 +257,13 @@ impl SourceResolver {
         if snapshot.tenant() != tenant || snapshot.id() != &id {
             return Err(malformed());
         }
+        if let Some(expiry) = snapshot.expires_at() {
+            fence.witness(expiry.timestamp(), false);
+        }
         fence
             .engines
             .extend(snapshot.scope().selected_engines.clone());
+
         self.check(tenant, cancel, fence)?;
         Ok(snapshot)
     }
@@ -334,30 +378,37 @@ impl SourceResolver {
         if definition.tenant != tenant.as_str() || definition.search_id != parts[0] {
             return Err(malformed());
         }
+        fence.witness(
+            WallClockTimestamp::new(definition.expires_at.get()).map_err(|_| malformed())?,
+            true,
+        );
         fence.engines.extend(definition.engines.clone());
         let current = self.check(tenant, cancel, fence)?;
-        let bound = current.saved_max_reports.min(100);
+        let bound = current
+            .saved_max_reports
+            .min(100)
+            .min(usize::try_from(definition.max_reports).unwrap_or(usize::MAX));
         if bound == 0 {
             return Err(denied());
         }
         fence.reports_bound = bound;
         let read = self
-            .records
-            .reports(
-                tenant,
-                &definition,
-                self.clock.now(),
-                bound,
-                Some(&parts[1]),
-                cancel,
-            )
+            .saved_reports
+            .selected(tenant, &definition, &parts[1], bound, cancel)
             .await;
         self.check(tenant, cancel, fence)?;
-        let reports = self.read(read)?;
-        let report = reports
-            .into_iter()
-            .find(|r| r["run_id"].as_str() == Some(&parts[1]))
-            .ok_or_else(missing)?;
+        let report = self.read(read)?;
+        if report["search_id"].as_str() != Some(parts[0].as_str())
+            || report["run_id"].as_str() != Some(parts[1].as_str())
+        {
+            return Err(malformed());
+        }
+        let expires = report["expires_at"]
+            .as_f64()
+            .and_then(|n| WallClockTimestamp::new(n).ok())
+            .ok_or_else(malformed)?;
+        fence.witness(expires, true);
+        self.check(tenant, cancel, fence)?;
         if !report.is_object() || report["status"].as_str().is_none_or(|s| s.is_empty()) {
             return Err(malformed());
         }
@@ -436,6 +487,10 @@ impl SourceResolver {
         if record.tenant() != *tenant || record.id().as_str() != artifact.id() {
             return Err(malformed());
         }
+        fence.witness(
+            WallClockTimestamp::new(record.expires_at()).map_err(|_| malformed())?,
+            true,
+        );
         fence.staged = Some(record.clone());
         self.check(tenant, cancel, fence)?;
         let v = record.value();

@@ -223,6 +223,27 @@ impl Records for WorkflowRecords {
         })
     }
 }
+impl SavedReports for WorkflowRecords {
+    fn selected<'a>(
+        &'a self,
+        _: &'a TenantId,
+        _: &'a SavedDefinition,
+        run: &'a str,
+        limit: usize,
+        _: &'a Cancellation,
+    ) -> PortFuture<'a, Result<Read<Value>, Failure>> {
+        Box::pin(async move {
+            assert_eq!(limit, 2);
+            Ok(self
+                .reports
+                .iter()
+                .find(|r| r["run_id"].as_str() == Some(run))
+                .cloned()
+                .map(Read::Found)
+                .unwrap_or(Read::Missing))
+        })
+    }
+}
 fn records() -> WorkflowRecords {
     WorkflowRecords {
         job: Read::Missing,
@@ -264,6 +285,7 @@ fn resolver(
         deny: AtomicBool::new(false),
         foreign: AtomicBool::new(false),
     });
+    let records = Arc::new(records);
     let store = Arc::new(Snapshots {
         snapshot,
         failure,
@@ -279,7 +301,8 @@ fn resolver(
                 tenant(),
                 SnapshotTtl::new(200).unwrap(),
             ),
-            records: Arc::new(records),
+            records: records.clone(),
+            saved_reports: records,
             entities: Arc::new(Groups),
             authority: authority.clone(),
             clock: Arc::new(Fixed),
@@ -775,7 +798,7 @@ fn saved_report_uses_historical_window_and_rejects_incomparable_truncated_malfor
     ] {
         let mut rec = records();
         rec.definition = Read::Found(saved_definition());
-        let mut report = json!({"run_id":"run-a","status":"changed","revision":1,"incomparable_reasons":[],"observation":{"window":{"query":"historical window query","engines":["pypi"]}}});
+        let mut report = json!({"search_id":"saved-a","run_id":"run-a","expires_at":200,"status":"changed","revision":1,"incomparable_reasons":[],"observation":{"window":{"query":"historical window query","engines":["pypi"]}}});
         match mode {
             "truncated" => report["incomparable_reasons"] = json!(["observation_truncated"]),
             "incomparable" => report["status"] = json!("incomparable"),
@@ -903,4 +926,191 @@ fn repository_parser_preserves_literal_host_port_and_empty_credentials_semantics
             "{value}"
         );
     }
+}
+struct MovingClock(std::sync::atomic::AtomicU64);
+impl Clock for MovingClock {
+    fn now(&self) -> WallClockTimestamp {
+        at(f64::from_bits(self.0.load(Ordering::SeqCst)))
+    }
+}
+impl SnapshotClock for MovingClock {
+    fn now(&self) -> WallClockTimestamp {
+        Clock::now(self)
+    }
+}
+struct AdvancingSnapshots {
+    rows: BTreeMap<String, SearchSnapshot>,
+    clock: Arc<MovingClock>,
+    advance_on: String,
+    advance_to: f64,
+    reads: AtomicUsize,
+}
+impl SnapshotRepository for AdvancingSnapshots {
+    fn create<'a>(
+        &'a self,
+        _: &'a SearchSnapshot,
+        _: NonZeroU64,
+    ) -> PortFuture<'a, Result<SnapshotWrite, SnapshotFailure>> {
+        Box::pin(async { panic!("expiry witness resolution must not persist") })
+    }
+    fn read<'a>(
+        &'a self,
+        _: &'a TenantId,
+        id: &'a SnapshotId,
+    ) -> PortFuture<'a, Result<Option<SearchSnapshot>, SnapshotFailure>> {
+        Box::pin(async move {
+            self.reads.fetch_add(1, Ordering::SeqCst);
+            if id.as_str() == self.advance_on {
+                self.clock
+                    .0
+                    .store(self.advance_to.to_bits(), Ordering::SeqCst);
+            }
+            Ok(self.rows.get(id.as_str()).cloned())
+        })
+    }
+}
+#[test]
+fn earlier_snapshot_expiry_is_rechecked_after_later_cursor_read_and_attempt_refs_are_exact() {
+    let clock = Arc::new(MovingClock(std::sync::atomic::AtomicU64::new(
+        100f64.to_bits(),
+    )));
+    let mut b = snapshot(1, 5000.);
+    b = SearchSnapshot::new(
+        SnapshotId::new("snapshot-b").unwrap(),
+        b.query().into(),
+        b.query_id().clone(),
+        b.results().to_vec(),
+        b.scope().clone(),
+        tenant(),
+        at(1.),
+        b.expires_at(),
+    )
+    .unwrap();
+    let store = Arc::new(AdvancingSnapshots {
+        rows: [
+            ("snapshot-a".into(), snapshot(1, 200.)),
+            ("snapshot-b".into(), b),
+        ]
+        .into_iter()
+        .collect(),
+        clock: clock.clone(),
+        advance_on: "snapshot-b".into(),
+        advance_to: 201.,
+        reads: AtomicUsize::new(0),
+    });
+    let mut rec = records();
+    rec.job = Read::Found(ResearchJob {
+        job_id: "job-attempts".into(),
+        tenant: tenant().as_str().into(),
+        state: "succeeded".into(),
+        question: "q".into(),
+        queries: vec![ResearchQuery {
+            engines: vec!["pypi".into()],
+            attempts: vec![
+                ResearchQueryAttempt {
+                    attempt_id: "attempt-a".into(),
+                    cursor: Some("snapshot-a".into()),
+                    ..Default::default()
+                },
+                ResearchQueryAttempt {
+                    attempt_id: "attempt-b".into(),
+                    cursor: Some("snapshot-b".into()),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let (mut resolver, _, _) = resolver(None, None, false, rec);
+    resolver.snapshots = SnapshotService::new(
+        store.clone(),
+        clock.clone(),
+        Arc::new(Fixed),
+        tenant(),
+        SnapshotTtl::new(60).unwrap(),
+    );
+    resolver.clock = clock.clone();
+    let attempt = artifact(
+        ArtifactKind::ResearchAttempt,
+        &ssx_domain::canonical::composite_artifact_id(&["job-attempts", "attempt-a"]).unwrap(),
+    );
+    let source = run(resolver.resolve(
+        &tenant(),
+        &attempt,
+        Destination::ResearchManifest,
+        &Cancellation::default(),
+    ))
+    .unwrap();
+    assert_eq!(source.result_ids, vec!["snapshot-a:0"]);
+    assert_eq!(store.reads.load(Ordering::SeqCst), 1);
+    let missing = artifact(
+        ArtifactKind::ResearchAttempt,
+        &ssx_domain::canonical::composite_artifact_id(&["job-attempts", "missing"]).unwrap(),
+    );
+    assert_eq!(
+        run(resolver.resolve(
+            &tenant(),
+            &missing,
+            Destination::ResearchManifest,
+            &Cancellation::default()
+        ))
+        .unwrap_err()
+        .code,
+        "source_not_found"
+    );
+    assert_eq!(store.reads.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        run(resolver.resolve(
+            &tenant(),
+            &artifact(ArtifactKind::ResearchJob, "job-attempts"),
+            Destination::ResearchManifest,
+            &Cancellation::default()
+        ))
+        .unwrap_err()
+        .code,
+        "source_expired"
+    );
+    assert_eq!(Clock::now(clock.as_ref()).seconds(), 201.);
+    assert_eq!(store.reads.load(Ordering::SeqCst), 3);
+}
+#[test]
+fn staged_expiry_is_rechecked_after_selected_snapshot_read() {
+    let clock = Arc::new(MovingClock(std::sync::atomic::AtomicU64::new(
+        100f64.to_bits(),
+    )));
+    let store = Arc::new(AdvancingSnapshots {
+        rows: [("snapshot-a".into(), snapshot(1, 5000.))]
+            .into_iter()
+            .collect(),
+        clock: clock.clone(),
+        advance_on: "snapshot-a".into(),
+        advance_to: 3701.,
+        reads: AtomicUsize::new(0),
+    });
+    let mut rec = records();
+    let staged = staged_record(true);
+    assert_eq!(staged.expires_at(), 3700.);
+    rec.staged = Read::Found(staged);
+    let (mut resolver, _, _) = resolver(None, None, false, rec);
+    resolver.snapshots = SnapshotService::new(
+        store.clone(),
+        clock.clone(),
+        Arc::new(Fixed),
+        tenant(),
+        SnapshotTtl::new(60).unwrap(),
+    );
+    resolver.clock = clock;
+    assert_eq!(
+        run(resolver.resolve(
+            &tenant(),
+            &artifact(ArtifactKind::StagedSearch, "stage-a"),
+            Destination::ResearchManifest,
+            &Cancellation::default()
+        ))
+        .unwrap_err()
+        .code,
+        "source_expired"
+    );
+    assert_eq!(store.reads.load(Ordering::SeqCst), 1);
 }
