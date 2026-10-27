@@ -374,21 +374,55 @@ fn paired_manifest(root: &Path) -> Result<()> {
 /// Only the five exact physical afterimages can yield either sealed parent.
 /// A parent supplied in place of actual current bytes is always rejected.
 pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -> Result<Vec<u8>> {
+    parent_at_physical_root(root, root, None, path, supplied, parent)
+}
+// The existing filesystem controls own a disposable physical directory. This
+// private scope is constructed only there; it cannot authorize another caller's
+// source or make a fixture into a Git/capsule authority.
+struct FilesystemControl {
+    physical_root: std::path::PathBuf,
+    trusted_source_root: std::path::PathBuf,
+}
+impl Drop for FilesystemControl {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.physical_root);
+    }
+}
+fn parent_at_physical_root(
+    physical_root: &Path,
+    trusted_source_root: &Path,
+    control: Option<&FilesystemControl>,
+    path: &str,
+    supplied: &[u8],
+    parent: Parent,
+) -> Result<Vec<u8>> {
     let r = row(path)?;
-    let (actual, mode) = read(root, r)?;
+    let (actual, mode) = read(physical_root, r)?;
+    need(
+        mode == 0o644,
+        "exact physical source mode before interpretation",
+    )?;
     need(
         supplied == actual,
         "supplied bytes are not physical joint source",
     )?;
+    need(
+        physical_root == trusted_source_root
+            || control.is_some_and(|scope| {
+                physical_root == scope.physical_root
+                    && trusted_source_root == scope.trusted_source_root
+            }),
+        "distinct source roots require the owned filesystem-control scope",
+    )?;
     // Supplied/current physical equality was checked above. Only then may W08's
     // exact main insertions yield the unchanged joint-frame inverse operand.
     let actual = if path == "crates/xtask/src/main.rs" {
-        w08_source_successor::parent(root, path, &actual)?
+        w08_source_successor::parent(trusted_source_root, path, &actual)?
     } else {
         actual
     };
     if path == "Cargo.lock" {
-        paired_manifest(root)?;
+        paired_manifest(physical_root)?;
     }
     let w07 = inverse(r, &actual, mode, &r.w07)?;
     let t02 = inverse(r, &actual, mode, &r.t02)?;
@@ -546,20 +580,27 @@ fn filesystem_controls(_: &Path) -> Result<()> {
 #[cfg(unix)]
 fn filesystem_controls(root: &Path) -> Result<()> {
     use std::os::unix::fs::{PermissionsExt, symlink};
-    struct Owned(std::path::PathBuf);
-    impl Drop for Owned {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.0);
-        }
-    }
     let suffix = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_err(|e| e.to_string())?
         .as_nanos();
     let directory = std::env::temp_dir().join(format!("w07-joint-{}-{suffix}", std::process::id()));
     fs::create_dir(&directory).map_err(|e| e.to_string())?;
-    let owned = Owned(directory);
-    let manifest_path = owned.0.join("crates/ssx-mcp/Cargo.toml");
+    let owned = FilesystemControl {
+        physical_root: directory,
+        trusted_source_root: root.to_path_buf(),
+    };
+    let fixture_parent = |path: &str, supplied: &[u8], kind: Parent| {
+        parent_at_physical_root(
+            &owned.physical_root,
+            root,
+            Some(&owned),
+            path,
+            supplied,
+            kind,
+        )
+    };
+    let manifest_path = owned.physical_root.join("crates/ssx-mcp/Cargo.toml");
     fs::create_dir_all(manifest_path.parent().ok_or("paired manifest parent")?)
         .map_err(|e| e.to_string())?;
     let manifest = fs::read(root.join("crates/ssx-mcp/Cargo.toml")).map_err(|e| e.to_string())?;
@@ -568,17 +609,39 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         .map_err(|e| e.to_string())?;
     for r in ROWS {
         let (actual, _) = read(root, r)?;
-        let path = owned.0.join(r.path);
+        let path = owned.physical_root.join(r.path);
         fs::create_dir_all(path.parent().ok_or("joint owned source parent")?)
             .map_err(|e| e.to_string())?;
         fs::write(&path, &actual).map_err(|e| e.to_string())?;
         fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
-        parent(&owned.0, r.path, &actual, Parent::W07)?;
+        fixture_parent(r.path, &actual, Parent::W07)?;
+        if r.path == "crates/xtask/src/main.rs" {
+            let mut changed = actual.clone();
+            changed.push(0);
+            fs::write(&path, &changed).map_err(|e| e.to_string())?;
+            need(
+                fixture_parent(r.path, &changed, Parent::W07).is_err(),
+                "changed fixture main accepted against trusted physical source",
+            )?;
+            fs::write(&path, &actual).map_err(|e| e.to_string())?;
+        }
+        need(
+            parent_at_physical_root(
+                &owned.physical_root,
+                root,
+                None,
+                r.path,
+                &actual,
+                Parent::W07,
+            )
+            .is_err(),
+            "unguarded distinct physical/source roots accepted",
+        )?;
         for bad_mode in [0o600, 0o4644] {
             fs::set_permissions(&path, fs::Permissions::from_mode(bad_mode))
                 .map_err(|e| e.to_string())?;
             need(
-                parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+                fixture_parent(r.path, &actual, Parent::W07).is_err(),
                 "physical source mode accepted",
             )?;
         }
@@ -586,30 +649,30 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         let backup = path.with_extension("owned-backup");
         fs::rename(&path, &backup).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+            fixture_parent(r.path, &actual, Parent::W07).is_err(),
             "missing physical source accepted",
         )?;
         symlink(&backup, &path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+            fixture_parent(r.path, &actual, Parent::W07).is_err(),
             "symlink physical source accepted",
         )?;
         fs::remove_file(&path).map_err(|e| e.to_string())?;
         fs::create_dir(&path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+            fixture_parent(r.path, &actual, Parent::W07).is_err(),
             "nonregular physical source accepted",
         )?;
         fs::remove_dir(&path).map_err(|e| e.to_string())?;
         fs::rename(backup, path).map_err(|e| e.to_string())?;
     }
-    let lock = fs::read(owned.0.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    let lock = fs::read(owned.physical_root.join("Cargo.lock")).map_err(|e| e.to_string())?;
     for kind in [Parent::W07, Parent::T02] {
         let mut changed = manifest.clone();
         changed[0] ^= 1;
         fs::write(&manifest_path, changed).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
             "wrong paired manifest accepted",
         )?;
         fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
@@ -617,7 +680,7 @@ fn filesystem_controls(root: &Path) -> Result<()> {
             fs::set_permissions(&manifest_path, fs::Permissions::from_mode(mode))
                 .map_err(|e| e.to_string())?;
             need(
-                parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+                fixture_parent("Cargo.lock", &lock, kind).is_err(),
                 "paired manifest mode accepted",
             )?;
         }
@@ -626,23 +689,23 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         let backup = manifest_path.with_extension("owned-backup");
         fs::rename(&manifest_path, &backup).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
             "missing paired manifest accepted",
         )?;
         symlink(&backup, &manifest_path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
             "symlink paired manifest accepted",
         )?;
         fs::remove_file(&manifest_path).map_err(|e| e.to_string())?;
         fs::create_dir(&manifest_path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
             "nonregular paired manifest accepted",
         )?;
         fs::remove_dir(&manifest_path).map_err(|e| e.to_string())?;
         fs::rename(backup, &manifest_path).map_err(|e| e.to_string())?;
-        parent(&owned.0, "Cargo.lock", &lock, kind)?;
+        fixture_parent("Cargo.lock", &lock, kind)?;
     }
     Ok(())
 }

@@ -131,8 +131,8 @@
       },
       "prior_git_blob": "c752e397c8d7f58c2a094f26c112377c45c163fd",
       "current": {
-        "sha256": "0831c810ef97434348cc3dbe72c8d65cac3626c3445b6645a2f5c5ae48bb111f",
-        "bytes": 32657,
+        "sha256": "f5f070920e817254d80f388ab8932886da988bc6c1ac7ae608aa522a2d3fd932",
+        "bytes": 34836,
         "mode": 420
       },
       "edits": [
@@ -142,34 +142,124 @@
           "new": "#[allow(dead_code)]\n#[path = \"../../../../crates/xtask/src/w08/source_successor.rs\"]\nmod w08_source_successor;\n"
         },
         {
-          "current_offset": 21543,
+          "current_offset": 21376,
           "old": "",
-          "new": "    // Supplied/current physical equality was checked above. Only then may W08's\n    // exact main insertions yield the unchanged joint-frame inverse operand.\n    let actual = if path == \"crates/xtask/src/main.rs\" {\n        w08_source_successor::parent(root, path, &actual)?\n    } else {\n        actual\n    };\n"
+          "new": "    parent_at_physical_root(root, root, None, path, supplied, parent)\n}\n// The existing filesystem controls own a disposable physical directory. This\n// private scope is constructed only there; it cannot authorize another caller's\n// source or make a fixture into a Git/capsule authority.\nstruct FilesystemControl {\n    physical_root: std::path::PathBuf,\n    trusted_source_root: std::path::PathBuf,\n}\nimpl Drop for FilesystemControl {\n    fn drop(&mut self) {\n        let _ = fs::remove_dir_all(&self.physical_root);\n    }\n}\nfn parent_at_physical_root(\n    physical_root: &Path,\n    trusted_source_root: &Path,\n    control: Option<&FilesystemControl>,\n    path: &str,\n    supplied: &[u8],\n    parent: Parent,\n) -> Result<Vec<u8>> {\n"
         },
         {
-          "current_offset": 23543,
+          "current_offset": 22133,
+          "old": "    let (actual, mode) = read(root, r)?;\n",
+          "new": "    let (actual, mode) = read(physical_root, r)?;\n    need(\n        mode == 0o644,\n        \"exact physical source mode before interpretation\",\n    )?;\n"
+        },
+        {
+          "current_offset": 22386,
+          "old": "",
+          "new": "    need(\n        physical_root == trusted_source_root\n            || control.is_some_and(|scope| {\n                physical_root == scope.physical_root\n                    && trusted_source_root == scope.trusted_source_root\n            }),\n        \"distinct source roots require the owned filesystem-control scope\",\n    )?;\n    // Supplied/current physical equality was checked above. Only then may W08's\n    // exact main insertions yield the unchanged joint-frame inverse operand.\n    let actual = if path == \"crates/xtask/src/main.rs\" {\n        w08_source_successor::parent(trusted_source_root, path, &actual)?\n    } else {\n        actual\n    };\n"
+        },
+        {
+          "current_offset": 23066,
+          "old": "        paired_manifest(root)?;\n",
+          "new": "        paired_manifest(physical_root)?;\n"
+        },
+        {
+          "current_offset": 24735,
           "old": "        let (actual, mode) = read(root, r)?;\n",
           "new": "        let (physical, mode) = read(root, r)?;\n"
         },
         {
-          "current_offset": 23664,
+          "current_offset": 24856,
           "old": "            let prior = parent(root, r.path, &actual, kind)?;\n",
           "new": "            let prior = parent(root, r.path, &physical, kind)?;\n"
         },
         {
-          "current_offset": 23746,
+          "current_offset": 24938,
           "old": "                parent_git_blob(root, r.path, &actual, kind)? == p.blob,\n",
           "new": "                parent_git_blob(root, r.path, &physical, kind)? == p.blob,\n"
         },
         {
-          "current_offset": 24814,
+          "current_offset": 26006,
           "old": "            let mut changed = actual.clone();\n",
           "new": "            let mut changed = physical.clone();\n"
         },
         {
-          "current_offset": 25032,
+          "current_offset": 26224,
           "old": "",
           "new": "            // Preserve the original joint-frame body controls after a positive\n            // inverse, independently from W08's physical afterimage controls.\n            let actual = if r.path == \"crates/xtask/src/main.rs\" {\n                w08_source_successor::parent(root, r.path, &physical)?\n            } else {\n                physical.clone()\n            };\n            need(\n                inverse(r, &actual, mode, p)? == prior,\n                \"positive unchanged joint frame differs\",\n            )?;\n"
+        },
+        {
+          "current_offset": 29228,
+          "old": "    struct Owned(std::path::PathBuf);\n    impl Drop for Owned {\n        fn drop(&mut self) {\n            let _ = fs::remove_dir_all(&self.0);\n        }\n    }\n",
+          "new": ""
+        },
+        {
+          "current_offset": 29540,
+          "old": "    let owned = Owned(directory);\n    let manifest_path = owned.0.join(\"crates/ssx-mcp/Cargo.toml\");\n",
+          "new": "    let owned = FilesystemControl {\n        physical_root: directory,\n        trusted_source_root: root.to_path_buf(),\n    };\n    let fixture_parent = |path: &str, supplied: &[u8], kind: Parent| {\n        parent_at_physical_root(\n            &owned.physical_root,\n            root,\n            Some(&owned),\n            path,\n            supplied,\n            kind,\n        )\n    };\n    let manifest_path = owned.physical_root.join(\"crates/ssx-mcp/Cargo.toml\");\n"
+        },
+        {
+          "current_offset": 30462,
+          "old": "        let path = owned.0.join(r.path);\n",
+          "new": "        let path = owned.physical_root.join(r.path);\n"
+        },
+        {
+          "current_offset": 30797,
+          "old": "        parent(&owned.0, r.path, &actual, Parent::W07)?;\n",
+          "new": "        fixture_parent(r.path, &actual, Parent::W07)?;\n        if r.path == \"crates/xtask/src/main.rs\" {\n            let mut changed = actual.clone();\n            changed.push(0);\n            fs::write(&path, &changed).map_err(|e| e.to_string())?;\n            need(\n                fixture_parent(r.path, &changed, Parent::W07).is_err(),\n                \"changed fixture main accepted against trusted physical source\",\n            )?;\n            fs::write(&path, &actual).map_err(|e| e.to_string())?;\n        }\n        need(\n            parent_at_physical_root(\n                &owned.physical_root,\n                root,\n                None,\n                r.path,\n                &actual,\n                Parent::W07,\n            )\n            .is_err(),\n            \"unguarded distinct physical/source roots accepted\",\n        )?;\n"
+        },
+        {
+          "current_offset": 31817,
+          "old": "                parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+          "new": "                fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+        },
+        {
+          "current_offset": 32198,
+          "old": "            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+          "new": "            fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+        },
+        {
+          "current_offset": 32400,
+          "old": "            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+          "new": "            fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+        },
+        {
+          "current_offset": 32660,
+          "old": "            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+          "new": "            fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+        },
+        {
+          "current_offset": 32917,
+          "old": "    let lock = fs::read(owned.0.join(\"Cargo.lock\")).map_err(|e| e.to_string())?;\n",
+          "new": "    let lock = fs::read(owned.physical_root.join(\"Cargo.lock\")).map_err(|e| e.to_string())?;\n"
+        },
+        {
+          "current_offset": 33210,
+          "old": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+          "new": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+        },
+        {
+          "current_offset": 33597,
+          "old": "                parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+          "new": "                fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+        },
+        {
+          "current_offset": 34015,
+          "old": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+          "new": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+        },
+        {
+          "current_offset": 34223,
+          "old": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+          "new": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+        },
+        {
+          "current_offset": 34498,
+          "old": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+          "new": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+        },
+        {
+          "current_offset": 34765,
+          "old": "        parent(&owned.0, \"Cargo.lock\", &lock, kind)?;\n",
+          "new": "        fixture_parent(\"Cargo.lock\", &lock, kind)?;\n"
         }
       ]
     }
