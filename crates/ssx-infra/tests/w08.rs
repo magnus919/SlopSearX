@@ -1431,7 +1431,7 @@ impl SourceValidator for BlockingSource {
 #[tokio::test]
 async fn blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_loss_without_dispatch()
  {
-    for mode in ["shutdown", "cancel", "deadline", "owner-loss"] {
+    for mode in ["shutdown", "cancel", "deadline", "cap", "owner-loss"] {
         let h = Harness::new().await;
         let source = h.source("source-blocked").await;
         let service = h.service(Arc::new(h.jobs.clone()));
@@ -1439,6 +1439,11 @@ async fn blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_l
         if mode == "deadline" {
             args.deadline = WallClockTimestamp::new(now().seconds() + 10.).unwrap();
         }
+        if mode == "cap" {
+            args.deadline = WallClockTimestamp::new(now().seconds() + 120.).unwrap();
+        }
+        let requested_deadline = args.deadline;
+
         let started = service
             .start(&tenant(), args, &Cancellation::default())
             .await
@@ -1466,11 +1471,22 @@ async fn blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_l
                     .await
                     .unwrap();
             }
-            "deadline" => {
+            "deadline" | "cap" => {
+                let persisted = match h.jobs.load(&id).await {
+                    JobRead::Found(job) => job,
+                    other => panic!("persisted horizon missing: {other:?}"),
+                };
+                assert_eq!(persisted.deadline.get(), requested_deadline.seconds());
                 tokio::time::pause();
-                tokio::time::advance(Duration::from_secs(31)).await;
+                tokio::time::advance(Duration::from_secs(if mode == "deadline" {
+                    11
+                } else {
+                    31
+                }))
+                .await;
                 tokio::time::resume();
             }
+
             "owner-loss" => {
                 redis::cmd("SETEX")
                     .arg(valkey::keys::research("lease", &tenant(), id.as_str()).unwrap())
@@ -1481,9 +1497,16 @@ async fn blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_l
             }
             _ => {}
         }
-        let result = tokio::time::timeout(Duration::from_secs(8), &mut execute)
-            .await
-            .unwrap();
+        let result = tokio::time::timeout(
+            Duration::from_secs(if mode == "deadline" || mode == "cap" {
+                2
+            } else {
+                8
+            }),
+            &mut execute,
+        )
+        .await
+        .unwrap();
         assert!(
             dropped.load(Ordering::SeqCst),
             "readonly future was not dropped: {mode}"
@@ -1498,7 +1521,7 @@ async fn blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_l
         match mode {
             "shutdown" | "owner-loss" => assert!(result.is_err(), "{mode}"),
             "cancel" => assert_eq!(result.unwrap().unwrap().state, "cancelled"),
-            "deadline" => assert!(
+            "deadline" | "cap" => assert!(
                 result
                     .unwrap()
                     .unwrap()
