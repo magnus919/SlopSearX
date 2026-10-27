@@ -9,6 +9,14 @@ mod post_a06_generation;
 pub(crate) use post_a06_generation::native_search;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
+#[path = "w07-evidence-successor.rs"]
+pub(crate) mod w07_evidence_successor;
+#[path = "../../w07/source-amendments/main_successor.rs"]
+pub(crate) mod w07_main_successor;
+#[path = "w07-t02-joint.rs"]
+pub(crate) mod w07_t02_joint;
+#[path = "../../w07/source-amendments/test_dependency_successor.rs"]
+pub(crate) mod w07_test_dependency;
 const MANIFEST: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v2.json";
 const PREDECESSOR: &str = "docs/rust-rewrite/a06/source-amendments/shared-successor-v1.json";
 const VALIDATOR: &str = "docs/rust-rewrite/a13/source-amendments/validator.rs";
@@ -584,6 +592,43 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         "A06 source must be regular, not symlink",
     )?;
     let raw = fs::read(&path).map_err(|e| e.to_string())?;
+    // Joint normalization is permitted only for these exact historical/current tuples.
+    let raw = if (row["path"] == "crates/xtask/src/main.rs"
+        && row["sha256"] == "8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c")
+        || (row["path"] == "Cargo.lock"
+            && row["sha256"] == "96e9a7760d163fc5ea2afa23033e58cfb7e59d0f2d93f66d8847ef352e0b765d")
+        || (row["path"] == "crates/ssx-infra/src/search.rs"
+            && row["sha256"] == "a1b310e2ef8692c96109bfd780c0e37d7e50692231e11eceb48e05860e0b5927")
+        || (row["path"] == "crates/xtask/src/a13.rs"
+            && row["sha256"] == "7b8c213676b77a5511da43bb1f8bb3d889d4964e3ffceb4719b21801cd5fea95")
+        || (row["path"] == "docs/rust-rewrite/a13/source-amendments/validator.rs"
+            && row["sha256"] == "bb1eec7b1376a2437d7069588634d9c40bf985a233b66106b1e5b49c0a473c58")
+    {
+        w07_t02_joint::parent(root, text(row, "path")?, &raw, w07_t02_joint::Parent::T02)?
+    } else if row["path"] == "crates/xtask/src/main.rs"
+        && row["sha256"] == w07_main_successor::PRIOR_SHA
+    {
+        w07_t02_joint::parent(root, text(row, "path")?, &raw, w07_t02_joint::Parent::W07)?
+    } else {
+        raw
+    };
+    let raw = if row["path"] == "crates/ssx-application/src/lib.rs"
+        && row["sha256"] == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4"
+    {
+        metrics_predecessor(text(row, "path")?, text(row, "sha256")?, &raw)?
+    } else {
+        raw
+    };
+    // D's original inverse remains unchanged after the physical joint proof.
+    let raw = if row["path"] == "crates/xtask/src/main.rs"
+        && row["sha256"] == w07_main_successor::PRIOR_SHA
+    {
+        w07_main_successor::reconstruct(&raw)?
+    } else if row["path"] == "Cargo.lock" && row["sha256"] == w07_test_dependency::LOCK_PRIOR_SHA {
+        w07_test_dependency::historical_lock(root, &raw)?
+    } else {
+        raw
+    };
     material(row, &raw, &permissions(&path)?)?;
     Ok(raw)
 }
@@ -899,6 +944,41 @@ pub(crate) fn try_verify(
     {
         return Some(result);
     }
+    // O01's frozen row predates only W07's four Metrics forwarding methods.
+    if container == "docs/rust-rewrite/o01/coverage.json"
+        && path == "crates/ssx-infra/src/observability/mod.rs"
+    {
+        return Some((|| {
+            let source = root.join(path);
+            let metadata = fs::symlink_metadata(&source).map_err(|e| e.to_string())?;
+            need(
+                metadata.is_file() && !metadata.file_type().is_symlink(),
+                "O01 Metrics source must be regular",
+            )?;
+            let actual = fs::read(&source).map_err(|e| e.to_string())?;
+            let caller = fs::read(root.join(container)).map_err(|e| e.to_string())?;
+            let prior = o01_metrics_predecessor(
+                (container, container_sha, path, expected, bytes),
+                &caller,
+                &actual,
+                &permissions(&source)?,
+            )?;
+            let git = std::process::Command::new("git")
+                .args([
+                    "cat-file",
+                    "blob",
+                    "e5c97a3ab52b3534a5f796ac9e89b1a0ee9fd489",
+                ])
+                .current_dir(root)
+                .output()
+                .map_err(|e| e.to_string())?;
+            need(
+                git.status.success() && git.stdout == prior,
+                "O01 Metrics original Git blob differs",
+            )?;
+            Ok(())
+        })());
+    }
     if let Some(result) =
         post_a06_generation::try_current(root, container, container_sha, path, expected, bytes)
     {
@@ -1125,6 +1205,12 @@ pub(crate) fn security_lock_baseline(
     let row = source(&doc, "Cargo.lock")?;
     let (before, _) = verify_transition(root, row)?;
     let actual = post_a06_generation::actual(root, &row["current"])?;
+    let supplied_current = w07_t02_joint::parent(
+        root,
+        "Cargo.lock",
+        supplied_current,
+        w07_t02_joint::Parent::T02,
+    )?;
     need(
         supplied_current == actual,
         "A06 supplied lock differs from actual current",
@@ -1185,12 +1271,14 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    w07_test_dependency::controls(root)?;
     default_ca_fixture_controls(root)?;
     native_search::controls(root)?;
     post_a06_generation::controls(root)?;
     a13_json_inventory_successor::controls(root)?;
     a13_qualification_successor::controls(root)?;
     real_clock_successor::controls(root)?;
+    w07_evidence_successor::controls(root)?;
     let doc = load(root)?;
     frozen(root, &doc)?;
     scope(&doc)?;
@@ -1333,7 +1421,12 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     )?;
     let lock = source(&doc, "Cargo.lock")?;
     let (before, _) = verify_transition(root, lock)?;
-    let actual = post_a06_generation::actual(root, &lock["current"])?;
+    let expected = post_a06_generation::actual(root, &lock["current"])?;
+    let actual = fs::read(root.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    need(
+        w07_t02_joint::parent(root, "Cargo.lock", &actual, w07_t02_joint::Parent::T02)? == expected,
+        "A06 physical lock parent differs from canonical current proof",
+    )?;
     security_lock_successor(root, &before, &actual)?;
     let mut wrong_baseline = before.clone();
     wrong_baseline.push(0);
@@ -1350,7 +1443,7 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         security_lock_successor(root, &before, &wrong_current)
             .err()
             .as_deref()
-            == Some("A06 supplied lock differs from actual current"),
+            == Some("W07/T02 joint source: supplied bytes are not physical joint source"),
         "A06 altered actual lock accepted",
     )?;
     for path in [
@@ -1996,4 +2089,84 @@ fn page_a13_controls(root: &Path) -> Result<(), String> {
         )?;
     }
     need(pairs == 8, "closed eight A13 page pairs")
+}
+
+/// Only the reviewed Metrics insertion is removed for existing historical callers.
+/// The full physical afterimage is required; old bytes alone are never current proof.
+pub(crate) fn metrics_predecessor(
+    path: &str,
+    expected: &str,
+    actual: &[u8],
+) -> Result<Vec<u8>, String> {
+    need(
+        path == "crates/ssx-application/src/lib.rs"
+            && expected == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4",
+        "W07 Metrics caller tuple differs",
+    )?;
+    need(
+        actual.len() == 6168
+            && digest(actual) == "e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b",
+        "W07 Metrics physical afterimage differs",
+    )?;
+    let at = 2805;
+    let insertion: &[u8] = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n    fn workflow_expired(&self, _: &'static str, _: &'static str) {}\n";
+    let end = at + insertion.len();
+    need(
+        actual.get(at..end) == Some(insertion),
+        "W07 Metrics exact insertion span differs",
+    )?;
+    let mut predecessor = actual[..at].to_vec();
+    predecessor.extend_from_slice(&actual[end..]);
+    need(
+        predecessor.len() == 5893 && digest(&predecessor) == expected,
+        "W07 Metrics unrelated predecessor bytes changed",
+    )?;
+    Ok(predecessor)
+}
+
+/// Recover only O01's exact frozen Telemetry operand from the reviewed W07 afterimage.
+pub(crate) fn o01_metrics_predecessor(
+    claim: (&str, &str, &str, &str, Option<usize>),
+    caller: &[u8],
+    actual: &[u8],
+    mode: &str,
+) -> Result<Vec<u8>, String> {
+    let (container, container_sha, path, expected, bytes) = claim;
+    need(
+        container == "docs/rust-rewrite/o01/coverage.json"
+            && container_sha == "32da35318cb2b2e369b10975bb985aa55469bcc1a39c1549425d1723bd5dcbce"
+            && path == "crates/ssx-infra/src/observability/mod.rs"
+            && expected == "a2cff0ef1848fcac8c6c7630406217e824d9a6a3b860235843fe69074c5733ae"
+            && bytes.is_none(),
+        "O01 Metrics exact caller tuple differs",
+    )?;
+    need(
+        digest(caller) == container_sha,
+        "O01 Metrics frozen container differs",
+    )?;
+    let doc: Value = serde_json::from_slice(caller).map_err(|e| e.to_string())?;
+    need(
+        doc["artifacts"][6] == json!({"path":path,"sha256":expected}),
+        "O01 Metrics frozen row differs",
+    )?;
+    need(
+        mode == "0644"
+            && actual.len() == 21121
+            && digest(actual) == "e32ec1a5d7b0fa487335a2fd55c142bfbf271634a87a2f1e8edcdafa53c4f032",
+        "O01 Metrics physical afterimage differs",
+    )?;
+    let at = 10996;
+    let insertion: &[u8] = b"    fn workflow_accepted(&self, workflow: &'static str, mode: &'static str) {\n        let _ = self.metrics.workflow_accepted(workflow, mode);\n    }\n    fn workflow_rejected(&self, workflow: &'static str, reason: &'static str) {\n        let _ = self.metrics.update(\n            \"slopsearx_workflow_rejections_total\",\n            &[(\"workflow\", workflow), (\"reason\", reason)],\n            1.,\n        );\n    }\n    fn workflow_terminal(&self, workflow: &'static str, outcome: &'static str) {\n        let _ = self.metrics.workflow_terminal(workflow, outcome, None);\n    }\n    fn workflow_expired(&self, workflow: &'static str, artifact: &'static str) {\n        let _ = self.metrics.update(\n            \"slopsearx_workflow_expired_total\",\n            &[(\"workflow\", workflow), (\"artifact\", artifact)],\n            1.,\n        );\n    }\n";
+    let end = at + insertion.len();
+    need(
+        actual.get(at..end) == Some(insertion),
+        "O01 Metrics forwarding span differs",
+    )?;
+    let mut prior = actual[..at].to_vec();
+    prior.extend_from_slice(&actual[end..]);
+    need(
+        prior.len() == 20291 && digest(&prior) == expected,
+        "O01 Metrics unrelated predecessor bytes differ",
+    )?;
+    Ok(prior)
 }

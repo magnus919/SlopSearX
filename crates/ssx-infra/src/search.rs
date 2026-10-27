@@ -294,6 +294,10 @@ impl SearchCancellation {
     pub fn cancel(&self) {
         self.0.send_replace(true);
     }
+    /// Observe the caller's existing signal without creating an owner or task.
+    pub async fn cancelled(&self) {
+        cancelled(&mut self.0.subscribe()).await;
+    }
 }
 struct Waiter(Arc<Flight>);
 impl Drop for Waiter {
@@ -310,7 +314,12 @@ impl Drop for Waiter {
 pub trait AdvisoryCatalog: Send + Sync {
     fn snapshot(&self) -> ssx_application::scope::CatalogSnapshot;
 }
+/// Trusted, bounded, in-memory current policy. Never caller input or I/O.
+pub trait CurrentPolicy: Send + Sync {
+    fn current(&self) -> PolicyService;
+}
 struct Inner {
+    policy_source: Option<Arc<dyn CurrentPolicy>>,
     deadline_clock: DeadlineClock,
     advisory_catalog: Option<Arc<dyn AdvisoryCatalog>>,
     registry: Arc<ssx_registry::Registry>,
@@ -504,6 +513,19 @@ impl SearchService {
 }
 
 impl SearchService {
+    /// Install only before sharing, with the exact initial dependency policy.
+    /// Dynamic consumers still use the existing shared policy methods.
+    pub fn with_policy_source(
+        mut self,
+        source: Arc<dyn CurrentPolicy>,
+    ) -> Result<Self, SearchError> {
+        let inner = Arc::get_mut(&mut self.0).ok_or(SearchError::InvalidConfiguration)?;
+        if format!("{:?}", source.current()) != format!("{:?}", inner.deps.policy) {
+            return Err(SearchError::InvalidConfiguration);
+        }
+        inner.policy_source = Some(source);
+        Ok(self)
+    }
     /// Construction-only injection. Refuse replacement after the owner is shared.
     /// Normal constructors and production startup always retain the System clock.
     pub fn with_deadline_clock(
@@ -558,6 +580,7 @@ impl SearchService {
             return Err(SearchError::InvalidConfiguration);
         }
         Ok(Self(Arc::new(Inner {
+            policy_source: None,
             deadline_clock: DeadlineClock::System,
             advisory_catalog,
             registry,
@@ -578,7 +601,11 @@ impl SearchService {
         self.0.health.lock().unwrap().clone()
     }
     fn current_policy(&self, now: WallClockTimestamp) -> Result<PolicyService, SearchError> {
-        let mut policy = self.0.deps.policy.clone();
+        let mut policy = self
+            .0
+            .policy_source
+            .as_ref()
+            .map_or_else(|| self.0.deps.policy.clone(), |source| source.current());
         let mut capabilities = policy.catalog.engines().to_vec();
         for capability in &mut capabilities {
             if let Some(health) = self.0.health.lock().unwrap().get(&capability.name) {
@@ -2114,6 +2141,78 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn current_policy_source_is_construction_only_and_preserves_default_generation() {
+        struct Current(std::sync::RwLock<PolicyService>);
+        impl CurrentPolicy for Current {
+            fn current(&self) -> PolicyService {
+                self.0.read().unwrap().clone()
+            }
+        }
+        let policy = PolicyService {
+            policy: SearchPolicy::default(),
+            catalog: CatalogSnapshot::new(vec![]).unwrap(),
+            resolver: ScopeResolver::default(),
+        };
+        let current = Arc::new(Current(std::sync::RwLock::new(policy.clone())));
+        let service = SearchService::new(
+            SearchConfig::default(),
+            SearchDependencies {
+                policy: policy.clone(),
+                engines: BTreeMap::new(),
+                routing_identity: RoutingIdentity {
+                    catalog: None,
+                    sensitive: Default::default(),
+                    tier1: Default::default(),
+                    budget: None,
+                    ranking_strategy: "presence".into(),
+                    work_group_version: "scholarly-work-v3".into(),
+                    rerank_identity: None,
+                    routing_extension: None,
+                },
+                cache: None,
+                client_admission: None,
+                suggestions: None,
+                jev: None,
+                routing_cache: None,
+                metrics: Arc::new(NoopSink),
+                supervisor: Arc::new(NoopSink),
+                audit: Arc::new(NoopSink),
+                cooldowns: None,
+                owned_http: vec![],
+                owned_stores: vec![],
+                clock: Arc::new(SystemSearchClock),
+                reranker: None,
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            format!(
+                "{:?}",
+                service
+                    .current_policy(WallClockTimestamp::new(1.0).unwrap())
+                    .unwrap()
+            ),
+            format!("{policy:?}")
+        );
+        let service = service.with_policy_source(current.clone()).unwrap();
+        current.0.write().unwrap().policy.sensitive_allowed = true;
+        assert!(
+            service
+                .current_policy(WallClockTimestamp::new(1.0).unwrap())
+                .unwrap()
+                .policy
+                .sensitive_allowed
+        );
+        assert!(!service.0.deps.policy.policy.sensitive_allowed);
+        let clone = service.clone();
+        assert!(matches!(
+            service.with_policy_source(current),
+            Err(SearchError::InvalidConfiguration)
+        ));
+        drop(clone);
     }
 
     #[tokio::test]

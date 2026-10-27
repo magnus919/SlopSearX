@@ -166,9 +166,10 @@ fn load(root: &Path) -> Result<(Value, Inputs)> {
         need(out.status.success(), "Git proof command")?;
         Ok(out.stdout)
     };
+    let current = read(root, SOURCE)?;
     let mut m = Inputs {
         archive: read(root, ARCHIVE)?,
-        current: read(root, SOURCE)?,
+        current,
         git_archive: git(&["show", &format!("{COMMIT}:{SOURCE}")])?,
         git_tree: git(&["ls-tree", COMMIT, "--", SOURCE])?,
     };
@@ -202,6 +203,7 @@ pub(crate) fn verify(root: &Path, path: &str, expected: &str, supplied: &[u8]) -
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
     page_controls(root)?;
+    super::w07_t02_joint::controls(root)?;
     let (r, good) = load(root)?;
     let physical = read(root, SOURCE)?;
     verify(root, SOURCE, OLD, &physical.bytes)?;
@@ -404,6 +406,14 @@ pub(crate) fn page_prior(
         r["before_sha256"] == *pin && r["before_bytes"] == *len,
         "page predecessor matches selected historical operand",
     )?;
+    let physical = if path == SOURCE {
+        Material {
+            bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
+            mode: physical.mode,
+        }
+    } else {
+        physical
+    };
     let prior = page_payload(r, &physical)?;
     for (args, wanted) in [
         (
@@ -474,6 +484,15 @@ pub(crate) fn page_controls(root: &Path) -> Result<()> {
                 )?;
             }
         }
+        let physical = if path == SOURCE {
+            Material {
+                bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
+                mode: physical.mode,
+            }
+        } else {
+            physical
+        };
+        page_payload(r, &physical)?;
         for mode in [0o600, 0o755, 0o4644] {
             let mut bad = physical.clone();
             bad.mode = mode;
