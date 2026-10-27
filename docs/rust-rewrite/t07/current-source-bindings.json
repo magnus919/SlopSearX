@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "oracle_execution": "none; source-derived contracts plus retained component captures",
+  "oracle_execution": "source-derived contracts plus bounded executed static catalog regression observations",
   "files": [
     {
       "path": ".github/workflows/rust.yml",
@@ -40,7 +40,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
-      "sha256": "e7d0ce6252acd0c728ced88640b01e0bc6b25f4c9afb4c51d95681e260a4fbd4"
+      "sha256": "8161b1d7aef48231fc3e3d1cd82d963e4d3dcd7a92eea5cf1bf2c7677c75e057"
     },
     {
       "path": "crates/ssx-mcp/Cargo.toml",
@@ -52,7 +52,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/arguments.rs",
-      "sha256": "7d355b018a6621ab2e2dc61201026306a5f808ed9b07ab476933a7eb27d49b7a"
+      "sha256": "e3ca311cec5f145b3031af5e3b183b15bad04dc64c212c160cd2e900827d6ac4"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/browser.rs",
@@ -124,7 +124,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/source_projection.rs",
-      "sha256": "931da9c052a4be3b57b97aedcbc595d57d6d80be70c30c05f1d87b28f000a8ef"
+      "sha256": "1272976261da72f71c336d2e1d8a7f5af39d783f35527eca5ecb84c5cf416b0a"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/stdio_input.rs",
@@ -160,7 +160,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/opaque.rs",
-      "sha256": "3fe5f2d3f32ea3de1a5da9479631bd5eff4a5253931ca0d764814a80e4628f64"
+      "sha256": "bcd6a423ff2b917b7253718401e7618231099901cf0d178bf1ee04b2a8d82d3f"
     },
     {
       "path": "crates/ssx-mcp/src/search_surface/entities.rs",
@@ -2548,7 +2548,8 @@
     "gateway_client::source_discovery::tests::prm_preserves_advertised_first_raw_case_userinfo_params_and_duplicates",
     "gateway_client::source_discovery::tests::unknown_scheme_raw_plan_and_model_issuer_boundaries_remain_distinct",
     "gateway_client::token_json::source_http_tests::source_http_ignored_big_nan_and_duplicate_members_use_existing_models",
-    "gateway_client::token_json::source_http_tests::source_http_ignored_surrogates_fail_before_models_while_file_lane_stays_distinct"
+    "gateway_client::token_json::source_http_tests::source_http_ignored_surrogates_fail_before_models_while_file_lane_stays_distinct",
+    "gateway_client::source_projection::diagnostic_tests::validation_repr_preserves_opaque_numbers_depth_and_python_scalar_escaping"
   ],
   "seam_tests": [
     "correlated_sse_completes_before_eof_and_releases_actual_body_lease",
@@ -2568,7 +2569,8 @@
     "actual_native_two_instances_keep_remote_sessions_and_catalogs_independent",
     "actual_native_current_t06_eleven_tool_catalog_and_discovery_match_direct_http",
     "actual_native_oauth_denied_delete_on_eof_and_sigterm_never_reauthorizes_or_refreshes_and_retires_owners",
-    "actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners"
+    "actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners",
+    "actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch"
   ],
   "stdio_owner_tests": [
     "opaque::tests::owned_stdio_outer_abort_drops_held_sdk_initialization",
@@ -2685,5 +2687,14 @@
   ],
   "source_json_tests": [
     "adapters::source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser"
-  ]
+  ],
+  "catalog_successor": {
+    "parent_bindings_sha256": "34545c09270d0c52c05beb32e740b36cf9edcc56c033b3ffdd709d80ee9c5fda",
+    "source_head": "c5f7d4035056004636944297e2c7ad59de9f6803",
+    "reason": "five prompt descriptions/static flags/structured source validation and Python unknown-tool quoting;2 additive regressions; all prior213 preserved",
+    "executed_oracle_sha256": "1a4e2dc2c7d44d9257b419edc123a71b07e676c3346cdd92e8f3359ac9585e0d",
+    "reference_python": "3.12.11, not a claim of earlier3.14 oracle equivalence",
+    "declared_total": 215,
+    "runtime_state": "not yet executed on this successor"
+  }
 }

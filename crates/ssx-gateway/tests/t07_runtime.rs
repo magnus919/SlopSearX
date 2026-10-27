@@ -17,6 +17,7 @@ use tokio_util::sync::CancellationToken;
 #[derive(Default)]
 struct Observed {
     calls: Vec<Value>,
+    catalog_override: Option<String>,
     registration: Option<Value>,
     registrations: usize,
     challenge: Option<String>,
@@ -97,6 +98,19 @@ async fn mcp(State(app): State<App>, headers: HeaderMap, body: axum::body::Bytes
             return StatusCode::ACCEPTED.into_response();
         }
         "tools/list" => {
+            if let Some(tools) = app.state.lock().await.catalog_override.clone() {
+                return (
+                    [
+                        ("mcp-session-id", "private-loopback-session"),
+                        ("content-type", "application/json"),
+                    ],
+                    format!(
+                        "{{\"jsonrpc\":\"2.0\",\"id\":{},\"result\":{tools}}}",
+                        value["id"]
+                    ),
+                )
+                    .into_response();
+            }
             json!({"tools":[{"name":"echo","description":"Remote echo","inputSchema":{"type":"object","properties":{"query":{"type":"integer"},"optional":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"required":["query"],"x-remote-future":{"opaque":true}},"_meta":{"private":"not-reexposed"}}]})
         }
         "tools/call" => {
@@ -1390,4 +1404,41 @@ async fn actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth
         }
     }
     Ok(())
+}
+
+// Expected envelopes are literal bounded original-gateway observations, including
+// the three combined/quoted-name controls. See RUNTIME_SOURCE_REVIEW.md.
+#[tokio::test]
+async fn actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch() {
+    let fixture = Fixture::start(false).await;
+    // Keep the original signature's property order. serde_json::Value's map
+    // ordering is irrelevant for envelopes but cannot construct this raw schema.
+    fixture.app.state.lock().await.catalog_override = Some(r#"{"tools":[{"name":"slopsearx_search","inputSchema":{"type":"object","properties":{"query":{"type":"string"},"intent":{"type":"string"},"language":{"type":"string"}},"required":["query"]}}]}"#.into());
+    let mut process = Process::spawn(&fixture, &["--token".into(), "static-sentinel".into()]);
+    let outcome = catch_process_case(async {
+        let initialized = process.rpc(json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"source-catalog-control","version":"1"}}})).await;
+        assert_eq!(initialized["result"]["capabilities"]["tools"]["listChanged"], true);
+        assert_eq!(initialized["result"]["capabilities"]["resources"], json!({"subscribe":false,"listChanged":false}));
+        assert_eq!(initialized["result"]["capabilities"]["prompts"]["listChanged"], false);
+        assert_eq!(initialized["result"]["serverInfo"]["version"], env!("CARGO_PKG_VERSION"));
+        let prompts = process.rpc(json!({"jsonrpc":"2.0","id":2,"method":"prompts/list"})).await;
+        let expected_prompts: Value = serde_json::from_str(r####"[{"_meta":{"fastmcp":{"tags":[]}},"arguments":[{"description":"Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.","name":"question","required":true}],"name":"research_with_source_coverage"},{"_meta":{"fastmcp":{"tags":[]}},"arguments":[{"description":"Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.","name":"target","required":true}],"name":"investigate_vulnerability"},{"_meta":{"fastmcp":{"tags":[]}},"arguments":[{"description":"Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.","name":"company","required":true}],"name":"find_company_jobs"},{"_meta":{"fastmcp":{"tags":[]}},"arguments":[{"description":"Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.","name":"name","required":true}],"name":"compare_package_or_project"},{"_meta":{"fastmcp":{"tags":[]}},"arguments":[{"description":"Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.","name":"question","required":true}],"name":"plan_research_with_evidence"}]"####).unwrap();
+        assert_eq!(prompts["result"]["prompts"], expected_prompts);
+        let cases: Vec<Value> = serde_json::from_str(r####"[{"request":{"method":"tools/call","params":{"name":"slopsearx_search","arguments":{}}},"result":{"content":[{"text":"1 validation error for call[slopsearx_search]\nquery\n  Missing required keyword only argument [type=missing_keyword_only_argument, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing_keyword_only_argument","type":"text"}],"isError":true}},{"request":{"method":"tools/call","params":{"name":"slopsearx_search","arguments":{"query":null}}},"result":{"content":[{"text":"1 validation error for call[slopsearx_search]\nquery\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.13/v/string_type","type":"text"}],"isError":true}},{"request":{"method":"tools/call","params":{"name":"slopsearx_search","arguments":{"query":"test","unexpected_catalog_field":true}}},"result":{"content":[{"text":"1 validation error for call[slopsearx_search]\nunexpected_catalog_field\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value=True, input_type=bool]\n    For further information visit https://errors.pydantic.dev/2.13/v/unexpected_keyword_argument","type":"text"}],"isError":true}},{"request":{"method":"tools/call","params":{"name":"catalog_absent","arguments":{}}},"result":{"content":[{"text":"Unknown tool: 'catalog_absent'","type":"text"}],"isError":true}},{"request":{"method":"tools/call","params":{"name":"slopsearx_search","arguments":{"query":null,"intent":null,"language":5,"unexpected_catalog_field":true}}},"result":{"content":[{"text":"4 validation errors for call[slopsearx_search]\nquery\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.13/v/string_type\nintent\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.13/v/string_type\nlanguage\n  Input should be a valid string [type=string_type, input_value=5, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.13/v/string_type\nunexpected_catalog_field\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value=True, input_type=bool]\n    For further information visit https://errors.pydantic.dev/2.13/v/unexpected_keyword_argument","type":"text"}],"isError":true}},{"request":{"method":"tools/call","params":{"name":"catalog_'\"\\\n_absent","arguments":{}}},"result":{"content":[{"text":"Unknown tool: 'catalog_\\'\"\\\\\\n_absent'","type":"text"}],"isError":true}},{"request":{"method":"tools/call","params":{"name":"slopsearx_search","arguments":{"unexpected_catalog_field":true}}},"result":{"content":[{"text":"2 validation errors for call[slopsearx_search]\nquery\n  Missing required keyword only argument [type=missing_keyword_only_argument, input_value={'unexpected_catalog_field': True}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing_keyword_only_argument\nunexpected_catalog_field\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value=True, input_type=bool]\n    For further information visit https://errors.pydantic.dev/2.13/v/unexpected_keyword_argument","type":"text"}],"isError":true}}]"####).unwrap();
+        let before = fixture.app.state.lock().await.calls.iter().filter(|row| row["method"] == "tools/call").count();
+        for (index, case) in cases.into_iter().enumerate() {
+            let mut request = case["request"].clone();
+            request["jsonrpc"] = json!("2.0"); request["id"] = json!(index + 10);
+            let result = process.rpc(request).await;
+            assert_eq!(result, json!({"jsonrpc":"2.0","id":index+10,"result":case["result"]}), "source validation case {index}");
+            assert_eq!(fixture.app.state.lock().await.calls.iter().filter(|row| row["method"] == "tools/call").count(), before, "validation must not dispatch case {index}");
+        }
+        let accepted = process.rpc(json!({"jsonrpc":"2.0","id":99,"method":"tools/call","params":{"name":"slopsearx_search","arguments":{"query":"ok"}}})).await;
+        assert_eq!(accepted["result"]["structuredContent"], json!({"query":"ok","intent":null,"language":null}));
+        assert_eq!(fixture.app.state.lock().await.calls.iter().filter(|row| row["method"] == "tools/call").count(), before+1);
+        Ok(())
+    }).await;
+    process.close().await;
+    fixture.close().await;
+    finish_process_case(outcome).unwrap();
 }

@@ -1,7 +1,24 @@
 //! Original generated Python signature semantics: only top-level annotations.
 use crate::Result;
 use ssx_json::{Number, Value};
-fn integer(value: &Value) -> Result<Value> {
+#[derive(Debug)]
+struct CoercionError {
+    kind: &'static str,
+    message: String,
+}
+impl std::fmt::Display for CoercionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+impl std::error::Error for CoercionError {}
+fn coercion(kind: &'static str, message: &str) -> CoercionError {
+    CoercionError {
+        kind,
+        message: message.into(),
+    }
+}
+fn integer(value: &Value) -> std::result::Result<Value, CoercionError> {
     let raw = match value {
         Value::Bool(v) => {
             if *v {
@@ -12,19 +29,23 @@ fn integer(value: &Value) -> Result<Value> {
         }
         Value::Number(n) if !n.is_f64() => n.as_str().to_owned(),
         Value::Number(n) => {
-            let f = n.as_f64().ok_or("Input should be a finite number")?;
+            let f = n
+                .as_f64()
+                .ok_or_else(|| coercion("finite_number", "Input should be a finite number"))?;
             if f.fract() != 0.0 {
-                return Err(
-                    "Input should be a valid integer, got a number with a fractional part".into(),
-                );
+                return Err(coercion(
+                    "int_from_float",
+                    "Input should be a valid integer, got a number with a fractional part",
+                ));
             }
             format!("{f:.0}")
         }
         Value::String(s) => {
             if s.len() > 4300 {
-                return Err(
-                    "Unable to parse input string as an integer, exceeded maximum size".into(),
-                );
+                return Err(coercion(
+                    "int_parsing_size",
+                    "Unable to parse input string as an integer, exceeded maximum size",
+                ));
             }
             let s = s.trim_matches(ssx_json::python_whitespace);
             let (sign, digits) = s
@@ -32,10 +53,10 @@ fn integer(value: &Value) -> Result<Value> {
                 .map_or_else(|| ("", s.strip_prefix('+').unwrap_or(s)), |v| ("-", v));
             let digits = if let Some((integer, fraction)) = digits.split_once('.') {
                 if fraction.is_empty() || !fraction.bytes().all(|b| b == b'0') {
-                    return Err(
-                        "Input should be a valid integer, unable to parse string as an integer"
-                            .into(),
-                    );
+                    return Err(coercion(
+                        "int_parsing",
+                        "Input should be a valid integer, unable to parse string as an integer",
+                    ));
                 }
                 integer
             } else {
@@ -47,9 +68,10 @@ fn integer(value: &Value) -> Result<Value> {
                 || digits.contains("__")
                 || !digits.bytes().all(|b| b.is_ascii_digit() || b == b'_')
             {
-                return Err(
-                    "Input should be a valid integer, unable to parse string as an integer".into(),
-                );
+                return Err(coercion(
+                    "int_parsing",
+                    "Input should be a valid integer, unable to parse string as an integer",
+                ));
             }
             let digits = digits.replace('_', "");
             let digits = digits.trim_start_matches('0');
@@ -59,11 +81,13 @@ fn integer(value: &Value) -> Result<Value> {
                 format!("{sign}{digits}")
             }
         }
-        _ => return Err("Input should be a valid integer".into()),
+        _ => return Err(coercion("int_type", "Input should be a valid integer")),
     };
-    Ok(Value::Number(Number::new(&raw)?))
+    Ok(Value::Number(
+        Number::new(&raw).map_err(|e| coercion("int_parsing", &e.to_string()))?,
+    ))
 }
-fn number(value: &Value) -> Result<Value> {
+fn number(value: &Value) -> std::result::Result<Value, CoercionError> {
     let value = match value {
         Value::Bool(v) => {
             if *v {
@@ -72,7 +96,9 @@ fn number(value: &Value) -> Result<Value> {
                 0.0
             }
         }
-        Value::Number(n) => n.as_f64().ok_or("Input should be a finite number")?,
+        Value::Number(n) => n
+            .as_f64()
+            .ok_or_else(|| coercion("finite_number", "Input should be a finite number"))?,
         Value::String(s) => {
             let s = s.trim_matches(ssx_json::python_whitespace);
             if s.as_bytes().iter().enumerate().any(|(i, b)| {
@@ -82,34 +108,48 @@ fn number(value: &Value) -> Result<Value> {
                         || !s.as_bytes()[i - 1].is_ascii_digit()
                         || !s.as_bytes()[i + 1].is_ascii_digit())
             }) {
-                return Err(
-                    "Input should be a valid number, unable to parse string as a number".into(),
-                );
+                return Err(coercion(
+                    "float_parsing",
+                    "Input should be a valid number, unable to parse string as a number",
+                ));
             }
             let s = s.replace('_', "");
-            s.parse::<f64>()
-                .map_err(|_| "Input should be a valid number, unable to parse string as a number")?
+            s.parse::<f64>().map_err(|_| {
+                coercion(
+                    "float_parsing",
+                    "Input should be a valid number, unable to parse string as a number",
+                )
+            })?
         }
-        _ => return Err("Input should be a valid number".into()),
+        _ => return Err(coercion("float_type", "Input should be a valid number")),
     };
-    Ok(Value::Number(Number::from_f64(value).map_err(
-        |_| "gateway float cannot be represented on JSON wire",
-    )?))
+    Ok(Value::Number(Number::from_f64(value).map_err(|_| {
+        coercion(
+            "finite_number",
+            "gateway float cannot be represented on JSON wire",
+        )
+    })?))
 }
-fn boolean(value: &Value) -> Result<Value> {
+fn boolean(value: &Value) -> std::result::Result<Value, CoercionError> {
     match value {
         Value::Bool(_) => Ok(value.clone()),
         Value::Number(n) => match n.as_f64() {
             Some(0.0) => Ok(Value::Bool(false)),
             Some(1.0) => Ok(Value::Bool(true)),
-            _ => Err("Input should be a valid boolean, unable to interpret input".into()),
+            _ => Err(coercion(
+                "bool_parsing",
+                "Input should be a valid boolean, unable to interpret input",
+            )),
         },
         Value::String(s) => match s.to_ascii_lowercase().as_str() {
             "true" | "1" | "yes" | "on" | "y" | "t" => Ok(Value::Bool(true)),
             "false" | "0" | "no" | "off" | "n" | "f" => Ok(Value::Bool(false)),
-            _ => Err("Input should be a valid boolean, unable to interpret input".into()),
+            _ => Err(coercion(
+                "bool_parsing",
+                "Input should be a valid boolean, unable to interpret input",
+            )),
         },
-        _ => Err("Input should be a valid boolean".into()),
+        _ => Err(coercion("bool_type", "Input should be a valid boolean")),
     }
 }
 fn annotation(schema: &Value) -> Option<&str> {
@@ -174,6 +214,44 @@ pub fn normalize(schema: &Value, arguments: &Value) -> Result<Value> {
     Ok(Value::Object(output))
 }
 
+/// A generated keyword-only signature failure, retained structurally until the
+/// source gateway renders its public validation diagnostic.
+#[derive(Debug)]
+pub(crate) struct ArgumentIssue {
+    pub location: String,
+    pub kind: &'static str,
+    pub message: String,
+    pub input: String,
+}
+#[derive(Debug)]
+pub(crate) struct ArgumentValidation(pub Vec<ArgumentIssue>);
+impl std::fmt::Display for ArgumentValidation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (index, issue) in self.0.iter().enumerate() {
+            if index != 0 {
+                f.write_str("\n")?;
+            }
+            write!(f, "{}: {}", issue.location, issue.message)?;
+        }
+        Ok(())
+    }
+}
+impl std::error::Error for ArgumentValidation {}
+fn issue_kind(kind: Option<&str>, error: &crate::Error) -> &'static str {
+    if let Some(error) = error.downcast_ref::<CoercionError>() {
+        return error.kind;
+    }
+    match kind {
+        Some("string") => "string_type",
+        Some("array") => "list_type",
+        Some("object") => "dict_type",
+        Some("integer") => "int_type",
+        Some("number") => "float_type",
+        Some("boolean") => "bool_type",
+        _ => "value_error",
+    }
+}
+
 /// Preserve nested opaque argument/schema/default JSON without projecting it
 /// through the finite domain Value codec. Python's list/dict annotations are
 /// shallow; their nested values are not validated by JSON Schema constraints.
@@ -181,6 +259,7 @@ pub fn normalize_raw(schema: &str, arguments: &str) -> Result<String> {
     use serde_json::value::RawValue;
     type Raw = ssx_json::Map<String, Box<RawValue>>;
     let schema: Raw = serde_json::from_str(schema)?;
+    let arguments_raw = arguments;
     let arguments: Raw = serde_json::from_str(arguments)?;
     let properties: Raw = schema
         .get("properties")
@@ -202,16 +281,28 @@ pub fn normalize_raw(schema: &str, arguments: &str) -> Result<String> {
         return Err("Missing required positional argument".into());
     }
     let mut output: Raw = ssx_json::Map::new();
-    for key in arguments.keys() {
-        if !properties.contains_key(key) {
-            errors.push(format!("{key}: Unexpected keyword argument"));
-        }
-    }
+    // Pydantic validates declared keyword-only parameters in signature order;
+    // unexpected kwargs follow them in original input order.
+    let unexpected: Vec<_> = arguments
+        .iter()
+        .filter(|(key, _)| !properties.contains_key(*key))
+        .map(|(key, value)| ArgumentIssue {
+            location: key.clone(),
+            kind: "unexpected_keyword_argument",
+            message: "Unexpected keyword argument".into(),
+            input: value.get().into(),
+        })
+        .collect();
     for (name, property) in properties {
         let property: Raw = serde_json::from_str(property.get())?;
         let Some(value) = arguments.get(&name) else {
             if required.contains(&name) {
-                errors.push(format!("{name}: Missing required argument"));
+                errors.push(ArgumentIssue {
+                    location: name.clone(),
+                    kind: "missing_keyword_only_argument",
+                    message: "Missing required keyword only argument".into(),
+                    input: arguments_raw.to_owned(),
+                });
             } else {
                 output.insert(
                     name,
@@ -249,16 +340,21 @@ pub fn normalize_raw(schema: &str, arguments: &str) -> Result<String> {
             Some("string") if prefix != Some(b'"') => Err("Input should be a valid string".into()),
             Some("integer" | "number" | "boolean") => {
                 let primitive = if matches!(prefix, Some(b'[' | b'{')) {
-                    Err("Input should have the declared primitive type".into())
+                    Err(match kind {
+                        Some("integer") => "Input should be a valid integer",
+                        Some("number") => "Input should be a valid number",
+                        _ => "Input should be a valid boolean",
+                    }
+                    .into())
                 } else {
                     ssx_json::from_str::<Value>(value.get())
                         .map_err(|error| -> crate::Error { error.into() })
                 };
                 primitive
                     .and_then(|value| match kind {
-                        Some("integer") => integer(&value),
-                        Some("number") => number(&value),
-                        _ => boolean(&value),
+                        Some("integer") => integer(&value).map_err(Into::into),
+                        Some("number") => number(&value).map_err(Into::into),
+                        _ => boolean(&value).map_err(Into::into),
                     })
                     .and_then(|v| Ok(RawValue::from_string(ssx_json::to_string(&v)?)?))
             }
@@ -268,11 +364,20 @@ pub fn normalize_raw(schema: &str, arguments: &str) -> Result<String> {
             Ok(value) => {
                 output.insert(name, value);
             }
-            Err(error) => errors.push(format!("{name}: {error}")),
+            Err(error) => {
+                let message = error.to_string();
+                errors.push(ArgumentIssue {
+                    location: name,
+                    kind: issue_kind(kind, &error),
+                    message,
+                    input: value.get().to_owned(),
+                });
+            }
         }
     }
+    errors.extend(unexpected);
     if !errors.is_empty() {
-        return Err(errors.join("\n").into());
+        return Err(ArgumentValidation(errors).into());
     }
     let encoded = serde_json::to_string(&output)?;
     outgoing_utf8(&encoded)?;

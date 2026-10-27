@@ -1,5 +1,5 @@
 //! Projection derived from gateway.py declarations and extraction functions.
-//! Source-derived contract; this is not an executed Python observation.
+//! Source-derived contract with bounded executed catalog observations.
 use crate::{Result, opaque::Catalogs};
 use serde_json::value::RawValue;
 use std::collections::BTreeMap;
@@ -17,7 +17,7 @@ pub fn catalogs() -> Result<Catalogs> {
  {"uri":"slopsearx://routing-profiles","name":"_routing_profiles_resource","title":"Routing profiles (remote)","description":"Intent-to-category/profile definitions and their provenance","mimeType":"text/plain"},
  {"uri":"slopsearx://health/summary","name":"_health_summary_resource","title":"Health summary (remote)","description":"Current server health with the active-health limitation stated","mimeType":"text/plain"}]});
     let templates = serde_json::json!({"resourceTemplates":[{"uriTemplate":"slopsearx://capabilities/{engine}","name":"_engine_capability_resource","title":"Engine capability (remote)","description":"One engine's metadata, caveats, and auth class","mimeType":"text/plain"}]});
-    let prompts:Vec<_>=PROMPTS.iter().map(|(name,arg)|serde_json::json!({"name":name,"arguments":[{"name":arg,"required":true}]})).collect();
+    let prompts:Vec<_>=PROMPTS.iter().map(|(name,arg)|serde_json::json!({"name":name,"arguments":[{"name":arg,"required":true,"description":"Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON."}]})).collect();
     let mut resources = resources;
     let mut templates = templates;
     let mut prompts = prompts;
@@ -405,7 +405,16 @@ pub fn prepare_request(catalogs: &Catalogs, raw: &str) -> Result<String> {
         .filter(|v| v.get() != "null")
         .map(|v| v.get())
         .unwrap_or("{}");
-    let normalized = super::arguments::normalize_raw(schema.get(), arguments)?;
+    let normalized = super::arguments::normalize_raw(schema.get(), arguments).map_err(|error| {
+        if let Some(validation) = error.downcast_ref::<super::arguments::ArgumentValidation>() {
+            match validation_diagnostic(&name, validation) {
+                Ok(message) => crate::Error::from(message),
+                Err(error) => error,
+            }
+        } else {
+            error
+        }
+    })?;
     params.insert("arguments".into(), RawValue::from_string(normalized)?);
     request.insert(
         "params".into(),
@@ -413,8 +422,215 @@ pub fn prepare_request(catalogs: &Catalogs, raw: &str) -> Result<String> {
     );
     Ok(serde_json::to_string(&request)?)
 }
+// RawValue retains arbitrary JSON integer spelling and opaque nested values.
+// Diagnostics must not reparse through the finite public Value codec. The only
+// scalar escaping rule is the existing pinned Unicode16 Python repr helper.
+fn raw_string_repr(raw: &str) -> Result<String> {
+    use ssx_domain::storage::{PythonReprQuote, python_repr_character};
+    let mut chars = raw[1..raw.len() - 1].chars().peekable();
+    let mut points = Vec::new();
+    while let Some(ch) = chars.next() {
+        if u32::from(ch) != 92 {
+            points.push(u32::from(ch));
+            continue;
+        }
+        let escaped = chars.next().ok_or("JSON string escape absent")?;
+        let point = match escaped {
+            'u' => {
+                let hex: String = chars.by_ref().take(4).collect();
+                u32::from(u16::from_str_radix(&hex, 16)?)
+            }
+            'n' => 10,
+            'r' => 13,
+            't' => 9,
+            'b' => 8,
+            'f' => 12,
+            v if u32::from(v) == 92 => 92,
+            '/' => 47,
+            '"' => 34,
+            _ => return Err("invalid JSON string escape".into()),
+        };
+        points.push(point);
+    }
+    let quote = if points.contains(&39) && !points.contains(&34) {
+        '"'
+    } else {
+        '\''
+    };
+    let mode = if quote == '\'' {
+        PythonReprQuote::Single
+    } else {
+        PythonReprQuote::Double
+    };
+    let mut output = String::from(quote);
+    let mut i = 0;
+    while i < points.len() {
+        let mut cp = points[i];
+        if (0xd800..=0xdbff).contains(&cp)
+            && points
+                .get(i + 1)
+                .is_some_and(|low| (0xdc00..=0xdfff).contains(low))
+        {
+            cp = 0x10000 + ((cp - 0xd800) << 10) + (points[i + 1] - 0xdc00);
+            i += 1;
+        }
+        if let Some(ch) = char::from_u32(cp) {
+            output.push_str(python_repr_character(ch, mode).as_str());
+        } else {
+            output.push(char::from(92));
+            output.push_str(&format!("u{cp:04x}"));
+        }
+        i += 1;
+    }
+    output.push(quote);
+    Ok(output)
+}
+pub(crate) fn python_string_repr(text: &str) -> Result<String> {
+    raw_string_repr(&serde_json::to_string(text)?)
+}
+// Stream already-valid JSON key/value tokens without decoding keys into Rust
+// String. Python dict keys may contain unpaired surrogates. The canonical repr
+// key also preserves Python's last-value/first-position rule for duplicate keys,
+// including equivalent literal/escaped spellings; no numeric/depth projection.
+fn raw_object_repr_entries(raw: &str) -> Result<ssx_json::Map<String, Box<RawValue>>> {
+    let mut remaining = raw[1..raw.len() - 1].trim_start();
+    let mut entries = ssx_json::Map::new();
+    while !remaining.is_empty() {
+        let mut tokens = serde_json::Deserializer::from_str(remaining).into_iter::<Box<RawValue>>();
+        let key = tokens.next().ok_or("object key absent")??;
+        if !key.get().starts_with('"') {
+            return Err("object key is not text".into());
+        }
+        remaining = remaining[tokens.byte_offset()..].trim_start();
+        remaining = remaining
+            .strip_prefix(':')
+            .ok_or("object colon absent")?
+            .trim_start();
+        let mut tokens = serde_json::Deserializer::from_str(remaining).into_iter::<Box<RawValue>>();
+        let value = tokens.next().ok_or("object value absent")??;
+        remaining = remaining[tokens.byte_offset()..].trim_start();
+        entries.insert(raw_string_repr(key.get())?, value);
+        if remaining.is_empty() {
+            break;
+        }
+        remaining = remaining
+            .strip_prefix(',')
+            .ok_or("object comma absent")?
+            .trim_start();
+        if remaining.is_empty() {
+            return Err("trailing object comma".into());
+        }
+    }
+    Ok(entries)
+}
+fn raw_input_repr(raw: &str) -> Result<(String, &'static str)> {
+    enum Part {
+        Raw(String),
+        Literal(String),
+    }
+    let raw = raw.trim();
+    let kind = match raw.as_bytes().first() {
+        Some(b'{') => "dict",
+        Some(b'[') => "list",
+        Some(b'"') => "str",
+        Some(b't' | b'f') => "bool",
+        Some(b'n') => "NoneType",
+        _ if raw.contains(['.', 'e', 'E']) => "float",
+        _ => "int",
+    };
+    let mut output = String::new();
+    let mut pending = vec![Part::Raw(raw.to_owned())];
+    while let Some(part) = pending.pop() {
+        let Part::Raw(raw) = part else {
+            if let Part::Literal(text) = part {
+                output.push_str(&text);
+            }
+            continue;
+        };
+        match raw.as_bytes().first() {
+            Some(b'{') => {
+                let values = raw_object_repr_entries(&raw)?;
+                output.push('{');
+                pending.push(Part::Literal("}".into()));
+                for (index, (key, value)) in values.into_iter().enumerate().rev() {
+                    pending.push(Part::Raw(value.get().into()));
+                    pending.push(Part::Literal(": ".into()));
+                    pending.push(Part::Literal(key));
+                    if index != 0 {
+                        pending.push(Part::Literal(", ".into()));
+                    }
+                }
+            }
+            Some(b'[') => {
+                let values: Vec<Box<RawValue>> = serde_json::from_str(&raw)?;
+                output.push('[');
+                pending.push(Part::Literal("]".into()));
+                for (index, value) in values.into_iter().enumerate().rev() {
+                    pending.push(Part::Raw(value.get().into()));
+                    if index != 0 {
+                        pending.push(Part::Literal(", ".into()));
+                    }
+                }
+            }
+            Some(b'"') => output.push_str(&raw_string_repr(&raw)?),
+            Some(b't') => output.push_str("True"),
+            Some(b'f') => output.push_str("False"),
+            Some(b'n') => output.push_str("None"),
+            _ if raw.contains(['.', 'e', 'E']) => {
+                let value: f64 = raw.parse()?;
+                if value.is_finite() {
+                    output.push_str(&ssx_json::python_float(value)?);
+                } else {
+                    output.push_str(if value.is_sign_negative() {
+                        "-inf"
+                    } else {
+                        "inf"
+                    });
+                }
+            }
+            _ => output.push_str(if raw == "-0" { "0" } else { &raw }),
+        }
+    }
+    Ok((output, kind))
+}
+fn validation_diagnostic(
+    name: &str,
+    errors: &super::arguments::ArgumentValidation,
+) -> Result<String> {
+    let count = errors.0.len();
+    let mut output = format!(
+        "{count} validation error{} for call[{name}]",
+        if count == 1 { "" } else { "s" }
+    );
+    for issue in &errors.0 {
+        let (repr, kind) = raw_input_repr(&issue.input)?;
+        // PydanticCore2.46.4 tools.rs write_truncated_to_limited_bytes(50):
+        // first25 and last24 bytes, rounded inward to UTF8 boundaries, plus ... .
+        let repr = if repr.len() > 50 {
+            let mut start = 25;
+            while !repr.is_char_boundary(start) {
+                start -= 1;
+            }
+            let mut end = repr.len() - 24;
+            while !repr.is_char_boundary(end) {
+                end += 1;
+            }
+            format!("{}...{}", &repr[..start], &repr[end..])
+        } else {
+            repr
+        };
+        let location = if issue.location.contains('.') {
+            format!("`{}`", issue.location)
+        } else {
+            issue.location.clone()
+        };
+        output.push_str(&format!("\n{}\n  {} [type={}, input_value={}, input_type={}]\n    For further information visit https://errors.pydantic.dev/2.13/v/{}", location, issue.message, issue.kind, repr, kind, issue.kind));
+    }
+    Ok(output)
+}
+
 pub fn initialize_info(protocol: &str) -> Result<Box<RawValue>> {
-    let value = serde_json::json!({"protocolVersion":protocol,"capabilities":{"tools":{"listChanged":true},"resources":{"subscribe":false,"listChanged":true},"prompts":{"listChanged":true},"logging":{}},"serverInfo":{"name":"slopsearx-remote","version":env!("CARGO_PKG_VERSION")},"instructions":GATEWAY_INSTRUCTIONS});
+    let value = serde_json::json!({"protocolVersion":protocol,"capabilities":{"tools":{"listChanged":true},"resources":{"subscribe":false,"listChanged":false},"prompts":{"listChanged":false},"logging":{}},"serverInfo":{"name":"slopsearx-remote","version":env!("CARGO_PKG_VERSION")},"instructions":GATEWAY_INSTRUCTIONS});
     Ok(RawValue::from_string(value.to_string())?)
 }
 const GATEWAY_INSTRUCTIONS: &str = "SlopSearX remote gateway.\n\nThis process is a proxy: it forwards every tool call over a streamable HTTP\nconnection to a remote SlopSearX server. Behavior, results, warnings, and\nlimitations are identical to connecting to that server directly — see the\nremote server's instructions. All server-side configuration (Valkey, engine\nkeys, grants) lives on the remote host, not here.\n";
@@ -608,5 +824,52 @@ mod legacy_controls {
             r#"{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"NaN"}]}}"#;
         let output = project_reply(r#"{"method":"tools/call"}"#, response).unwrap();
         assert!(output.contains(r#""text":"null""#));
+    }
+}
+
+#[cfg(test)]
+mod diagnostic_tests {
+    use super::*;
+    #[test]
+    fn validation_repr_preserves_opaque_numbers_depth_and_python_scalar_escaping() {
+        let integer = "9".repeat(4301);
+        assert_eq!(raw_input_repr(&integer).unwrap(), (integer.clone(), "int"));
+        let deep = format!("{}{}{}", "[".repeat(200), integer, "]".repeat(200));
+        assert_eq!(raw_input_repr(&deep).unwrap().0, deep);
+        assert_eq!(
+            raw_input_repr(r#"{"x":[null,true,1.0]}"#).unwrap().0,
+            "{'x': [None, True, 1.0]}"
+        );
+        assert_eq!(raw_input_repr(r#""\ud800""#).unwrap().0, "'\\ud800'");
+        assert_eq!(
+            raw_input_repr(r#"{"outer":{"\ud800":1}}"#).unwrap().0,
+            "{'outer': {'\\ud800': 1}}"
+        );
+        assert_eq!(
+            raw_input_repr(r#"{"a":1,"\u0061":2,"\ud800":3}"#)
+                .unwrap()
+                .0,
+            "{'a': 2, '\\ud800': 3}"
+        );
+        assert_eq!(raw_input_repr(r#""\ud800\udc00""#).unwrap().0, "'𐀀'");
+        assert_eq!(python_string_repr("one'quote").unwrap(), "\"one'quote\"");
+        assert_eq!(
+            python_string_repr("both'\"\\\n").unwrap(),
+            "'both\\'\"\\\\\\n'"
+        );
+        let errors = super::super::arguments::ArgumentValidation(vec![
+            super::super::arguments::ArgumentIssue {
+                location: "value".into(),
+                kind: "string_type",
+                message: "Input should be a valid string".into(),
+                input: format!("\"{}\"", "x".repeat(60)),
+            },
+        ]);
+        let diagnostic = validation_diagnostic("bounded", &errors).unwrap();
+        assert!(diagnostic.contains(&format!(
+            "input_value='{}...{}', input_type=str",
+            "x".repeat(24),
+            "x".repeat(23)
+        )));
     }
 }

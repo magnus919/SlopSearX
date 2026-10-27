@@ -55,3 +55,56 @@ streaming seams, then stopped with seven process passes and five failures
 at the obsolete absence assertion. That failed attempt remains failed.
 The strict fixture successor and its current binding require focused
 execution and a new complete public T07 result; neither is claimed here.
+
+
+## Executed static catalog correction (2026-10-27)
+
+The bounded executed catalog comparison used the locked FastMCP 4.0.11, MCP
+2.3.0, Pydantic 2.13.4 reference environment on Python 3.12.11. It did not
+establish equivalence to the earlier Python 3.14 reference. All 38 tool names
+and complete advertised input schemas matched. The current native correction
+restores the five FastMCP-generated string prompt argument descriptions and
+static resources/prompts `listChanged=false`; tools retain `listChanged=true`.
+
+Generated tool validation retains the signature's keyword-only parameter order,
+then reports unexpected kwargs in input order. The diagnostic carries each
+location, source error kind, message and original raw input until the gateway
+renders the Pydantic 2.13 header, Python input representation/type and error URL.
+Missing keyword-only parameters report the entire kwargs object, while value
+failures and unexpected kwargs report the offending value. The renderer reuses
+the existing Unicode16 Python scalar repr rule, scans raw opaque containers
+without the finite public JSON number/depth projection, and applies the pinned
+PydanticCore 2.46.4 50-byte UTF8-safe input-repr truncation. Unknown-tool names
+use Python quoting/escaping. Primitive normalization, policy and backend
+invocation remain at their existing boundaries.
+
+The additive real-process control compares all seven literal captured error
+envelopes, including combined failures and a quoted/backslash/newline tool
+name, and measures zero upstream `tools/call` operations for every rejected
+request. It also requires an admitted request to dispatch once and preserve
+its structured content. A separate source projection control exercises raw
+large integers, deep opaque input, surrogate/scalar escaping and truncation.
+These two new identities make the declared current inventory 215 (118 gateway
+library controls and 13 process controls; the other groups are unchanged).
+They are declarations until the corrected native gate actually executes.
+Original frozen source ledgers and the parent 213-pass evidence remain intact.
+
+Two raw comparison differences remain explicit: native `serverInfo.version`
+truthfully reports the native package version rather than impersonating
+FastMCP 4.0.11; health-summary freshness timestamps vary by observation time.
+Neither exception permits changing any other catalog, error-envelope or health
+field. This correction does not establish Windows, external-provider, whole
+transport/catalog or release acceptance. Independent inherited, profile,
+current-consumer and exact-head CI obligations remain required.
+
+
+An additional original-only surrogate-key wire probe produced no response within
+its 20-second observation budget and made zero upstream tool calls. It does not
+establish an expected error envelope or successful MCP input admission. No native
+process parity assertion uses that probe. The formatter's separate internal
+representation control retains raw surrogate object keys, including nested keys
+and duplicate escaped spellings, by using existing JSON token offsets and the
+same string-repr helper. This prevents a secondary diagnostic formatting failure;
+it does not change the gateway's existing input parser, byte/depth limits,
+normalization admission or supported wire domain. The seven observed process
+envelopes remain the executed-source parity expectations.

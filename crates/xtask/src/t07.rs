@@ -3,7 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
-const BINDINGS: &str = "34545c09270d0c52c05beb32e740b36cf9edcc56c033b3ffdd709d80ee9c5fda";
+const BINDINGS: &str = "8d486b5f22994c4cfaf56c6a4436c309f44cdd9c0d056b237bfa70674195a4a3";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -17,7 +17,7 @@ fn validate(raw: &[u8]) -> Result<Value> {
     let value: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
     if value["schema_version"] != 1
         || value["oracle_execution"]
-            != "none; source-derived contracts plus retained component captures"
+            != "source-derived contracts plus bounded executed static catalog regression observations"
     {
         return Err("T07 contract provenance invalid".into());
     }

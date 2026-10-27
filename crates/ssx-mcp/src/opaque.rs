@@ -1853,7 +1853,14 @@ impl rmcp::ServerHandler for RawForwarder {
             });
             if !known {
                 return Ok(rmcp::model::CallToolResult::error(vec![
-                    rmcp::model::ContentBlock::text(format!("Unknown tool: {:?}", params.name)),
+                    rmcp::model::ContentBlock::text(format!(
+                        "Unknown tool: {}",
+                        crate::gateway_client::source_projection::python_string_repr(&params.name)
+                            .map_err(|error| rmcp::ErrorData::internal_error(
+                                error.to_string(),
+                                None
+                            ))?
+                    )),
                 ])
                 .into());
             }
