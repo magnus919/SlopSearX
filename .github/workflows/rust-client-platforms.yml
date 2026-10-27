@@ -43,6 +43,7 @@ jobs:
       CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-client-target
       SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-client-install
       SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-client-unit
+      SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST: ${{ runner.temp }}/ssx-client-evidence/production-artifacts.json
       RUST_BACKTRACE: 1
     steps:
       - uses: actions/checkout@v7
@@ -84,11 +85,31 @@ jobs:
             exit 1
           fi
           cargo build --locked -p ssx-gateway --no-default-features --bin ssx-gateway --bin ssx-gateway-dns --bin ssx-gateway-input --message-format=json > "$RUNNER_TEMP/ssx-client-evidence/client-build.jsonl"
+      - name: Preserve exact default production artifacts before feature builds
+        shell: pwsh
+        run: |
+          ./crates/ssx-gateway/tests/platform_support/seal-production.ps1 -BuildJson "$env:RUNNER_TEMP/ssx-client-evidence/client-build.jsonl" -OutputRoot "$env:RUNNER_TEMP/ssx-client-shipping" -Manifest $env:SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST -Target '${{ matrix.target }}'
+      - name: Assert compiled platform test inventory before execution
+        run: |
+          set -euo pipefail
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_install --test t07_platform_tls --test t07_runtime --test t07_windows_owner --test t07_windows_security -- --list 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt"
+      - name: Verify required named native cases are present exactly once
+        shell: pwsh
+        run: |
+          ./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory "$env:RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt"
       - name: Native installed client and private TLS witnesses
         run: |
           set -euo pipefail
           features=source-endpoint-test-fixtures,windows-owner-test-fixtures
           cargo test --locked -p ssx-gateway --no-default-features --features "$features" --test t07_platform_install --test t07_platform_tls --test t07_runtime --test t07_windows_owner --test t07_windows_security -- --nocapture 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/runtime.txt"
+      - name: Assert exact ignored hosted trust-store inventory
+        run: |
+          set -euo pipefail
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --list 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/store-inventory.txt"
+      - name: Verify nonzero exact hosted trust-store case
+        shell: pwsh
+        run: |
+          ./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory "$env:RUNNER_TEMP/ssx-client-evidence/store-inventory.txt" -IgnoredOnly
       - name: Dedicated ephemeral platform trust-store witness
         env:
           SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
@@ -123,4 +144,4 @@ jobs:
           for case_root in "$SLOPSEARX_INSTALL_TEST_ROOT"/platform-tls-store-*; do
             test ! -f "$case_root/trust-active"
           done
-          rm -rf -- "$CARGO_TARGET_DIR" "$SLOPSEARX_INSTALL_TEST_ROOT" "$SLOPSEARX_T07_UNIT_TEST_ROOT"
+          rm -rf -- "$CARGO_TARGET_DIR" "$SLOPSEARX_INSTALL_TEST_ROOT" "$SLOPSEARX_T07_UNIT_TEST_ROOT" "$RUNNER_TEMP/ssx-client-shipping"

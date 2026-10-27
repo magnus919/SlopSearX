@@ -9,6 +9,8 @@ use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines},
     process::{Child, ChildStdin, ChildStdout},
 };
+#[path = "production.rs"]
+mod production;
 pub const BUDGET: Duration = Duration::from_secs(15);
 pub fn root(label: &str) -> PathBuf {
     let root = PathBuf::from(
@@ -21,16 +23,20 @@ pub fn root(label: &str) -> PathBuf {
     path
 }
 pub fn stage(root: &Path, fixture: bool) -> PathBuf {
+    let images = production::manifest(&PathBuf::from(
+        std::env::var_os("SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST")
+            .expect("default shipping image must be sealed before feature build"),
+    ));
     let dns = if fixture {
-        env!("CARGO_BIN_EXE_ssx-gateway-dns-fixture")
+        Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns-fixture"))
     } else {
-        env!("CARGO_BIN_EXE_ssx-gateway-dns")
+        &images.dns
     };
     ssx_mcp::gateway_client::resolver::install::stage(
-        Path::new(env!("CARGO_BIN_EXE_ssx-gateway")),
-        Path::new(dns),
+        &images.gateway,
+        dns,
         #[cfg(windows)]
-        Path::new(env!("CARGO_BIN_EXE_ssx-gateway-input")),
+        &images.input,
         root,
     )
     .unwrap()

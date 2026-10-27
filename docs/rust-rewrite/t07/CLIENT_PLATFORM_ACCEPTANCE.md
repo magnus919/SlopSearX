@@ -16,6 +16,14 @@ O04 signature, release packaging and artifact promotion remain separate.
 
 Runner labels and native architectures were verified on 2026-10-27 against
 [GitHub's primary runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+Before enabling test features, the lane copies the three exact default Cargo
+compiler-artifact executables and records their SHA256/length/role/version/target
+in an explicit manifest. Installation/TLS tests require those preserved inputs;
+existing runtime tests use them whenever that manifest is supplied. Fixture DNS
+and the owner probe remain separate explicitly named component controls. Later
+feature builds cannot silently replace the preserved shipping images. Named
+compiled inventories require each relevant OS case exactly once, including the
+exact ignored hosted trust case, before execution. Inventory is not a runtime pass.
 The lane asserts `rustc -vV`'s actual host, uses the pinned toolchain, keeps target
 and test roots in the disposable job directory, retains raw command receipts,
 and removes its reproducible outputs. It never uses a cross-build as runtime
