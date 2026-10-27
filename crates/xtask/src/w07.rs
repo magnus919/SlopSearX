@@ -18,7 +18,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "471501e937e30959e60ec1d51cb1a0d67ca966df487fddc2e81abcb5d33962de";
+const REGISTRY_SHA: &str = "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -270,7 +270,7 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         return Err("W07 original whole-file source pin changed".into());
     }
     expected["sources"]["docs/rust-rewrite/a06/source-amendments/shared-successor.rs"] =
-        Value::String("275bfe84754cb62a84c79cb6f0af2cb6745e232e316c1cd2f383983cb51cf681".into());
+        Value::String("7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2".into());
     // Normal W07/CI join: preserve the original pin and admit only the reviewed
     // merged whole-file operand, including W07's existing joint module import.
     if expected["sources"]["docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs"]
@@ -596,6 +596,47 @@ mod tests {
         extra.push(b' ');
         for bad in [duplicate, altered, unrelated, moved, extra] {
             assert!(metrics_predecessor(path, expected, &bad).is_err());
+        }
+        // This is O01's real frozen caller; every mutated physical buffer must fail.
+        use crate::a13::a06_source_successor::o01_metrics_predecessor;
+        let caller = include_bytes!("../../../docs/rust-rewrite/o01/coverage.json");
+        let current = include_bytes!("../../ssx-infra/src/observability/mod.rs");
+        let claim = (
+            "docs/rust-rewrite/o01/coverage.json",
+            "32da35318cb2b2e369b10975bb985aa55469bcc1a39c1549425d1723bd5dcbce",
+            "crates/ssx-infra/src/observability/mod.rs",
+            "a2cff0ef1848fcac8c6c7630406217e824d9a6a3b860235843fe69074c5733ae",
+            None,
+        );
+        let prior = o01_metrics_predecessor(claim, caller, current, "0644").unwrap();
+        assert_eq!(prior.len(), 20291);
+        assert_eq!(sha(&prior), claim.3);
+        let at = 10996;
+        let end = at + 830;
+        let mut duplicate = current.to_vec();
+        duplicate.splice(at..at, current[at..end].iter().copied());
+        let mut altered = current.to_vec();
+        altered[at] ^= 1;
+        let mut unrelated = current.to_vec();
+        unrelated[0] ^= 1;
+        let mut moved = current.to_vec();
+        let span = moved.drain(at..end).collect::<Vec<_>>();
+        moved.splice(0..0, span);
+        for bad in [prior, duplicate, altered, unrelated, moved] {
+            assert!(o01_metrics_predecessor(claim, caller, &bad, "0644").is_err());
+        }
+        let mut bad_caller = caller.to_vec();
+        bad_caller.push(b' ');
+        assert!(o01_metrics_predecessor(claim, &bad_caller, current, "0644").is_err());
+        assert!(o01_metrics_predecessor(claim, caller, current, "0755").is_err());
+        for bad in [
+            ("unlisted.json", claim.1, claim.2, claim.3, claim.4),
+            (claim.0, "wrong", claim.2, claim.3, claim.4),
+            (claim.0, claim.1, "unlisted.rs", claim.3, claim.4),
+            (claim.0, claim.1, claim.2, "wrong", claim.4),
+            (claim.0, claim.1, claim.2, claim.3, Some(20291)),
+        ] {
+            assert!(o01_metrics_predecessor(bad, caller, current, "0644").is_err());
         }
         // Assert the successor preserves every original identity and oracle.
         let original: Value = serde_json::from_slice(include_bytes!(

@@ -905,6 +905,41 @@ pub(crate) fn try_verify(
     expected: &str,
     bytes: Option<usize>,
 ) -> Option<Result<(), String>> {
+    // O01's frozen row predates only W07's four Metrics forwarding methods.
+    if container == "docs/rust-rewrite/o01/coverage.json"
+        && path == "crates/ssx-infra/src/observability/mod.rs"
+    {
+        return Some((|| {
+            let source = root.join(path);
+            let metadata = fs::symlink_metadata(&source).map_err(|e| e.to_string())?;
+            need(
+                metadata.is_file() && !metadata.file_type().is_symlink(),
+                "O01 Metrics source must be regular",
+            )?;
+            let actual = fs::read(&source).map_err(|e| e.to_string())?;
+            let caller = fs::read(root.join(container)).map_err(|e| e.to_string())?;
+            let prior = o01_metrics_predecessor(
+                (container, container_sha, path, expected, bytes),
+                &caller,
+                &actual,
+                &permissions(&source)?,
+            )?;
+            let git = std::process::Command::new("git")
+                .args([
+                    "cat-file",
+                    "blob",
+                    "e5c97a3ab52b3534a5f796ac9e89b1a0ee9fd489",
+                ])
+                .current_dir(root)
+                .output()
+                .map_err(|e| e.to_string())?;
+            need(
+                git.status.success() && git.stdout == prior,
+                "O01 Metrics original Git blob differs",
+            )?;
+            Ok(())
+        })());
+    }
     if let Some(result) =
         post_a06_generation::try_current(root, container, container_sha, path, expected, bytes)
     {
@@ -1908,4 +1943,51 @@ pub(crate) fn metrics_predecessor(
         "W07 Metrics unrelated predecessor bytes changed",
     )?;
     Ok(predecessor)
+}
+
+/// Recover only O01's exact frozen Telemetry operand from the reviewed W07 afterimage.
+pub(crate) fn o01_metrics_predecessor(
+    claim: (&str, &str, &str, &str, Option<usize>),
+    caller: &[u8],
+    actual: &[u8],
+    mode: &str,
+) -> Result<Vec<u8>, String> {
+    let (container, container_sha, path, expected, bytes) = claim;
+    need(
+        container == "docs/rust-rewrite/o01/coverage.json"
+            && container_sha == "32da35318cb2b2e369b10975bb985aa55469bcc1a39c1549425d1723bd5dcbce"
+            && path == "crates/ssx-infra/src/observability/mod.rs"
+            && expected == "a2cff0ef1848fcac8c6c7630406217e824d9a6a3b860235843fe69074c5733ae"
+            && bytes.is_none(),
+        "O01 Metrics exact caller tuple differs",
+    )?;
+    need(
+        digest(caller) == container_sha,
+        "O01 Metrics frozen container differs",
+    )?;
+    let doc: Value = serde_json::from_slice(caller).map_err(|e| e.to_string())?;
+    need(
+        doc["artifacts"][6] == json!({"path":path,"sha256":expected}),
+        "O01 Metrics frozen row differs",
+    )?;
+    need(
+        mode == "0644"
+            && actual.len() == 21121
+            && digest(actual) == "e32ec1a5d7b0fa487335a2fd55c142bfbf271634a87a2f1e8edcdafa53c4f032",
+        "O01 Metrics physical afterimage differs",
+    )?;
+    let at = 10996;
+    let insertion: &[u8] = b"    fn workflow_accepted(&self, workflow: &'static str, mode: &'static str) {\n        let _ = self.metrics.workflow_accepted(workflow, mode);\n    }\n    fn workflow_rejected(&self, workflow: &'static str, reason: &'static str) {\n        let _ = self.metrics.update(\n            \"slopsearx_workflow_rejections_total\",\n            &[(\"workflow\", workflow), (\"reason\", reason)],\n            1.,\n        );\n    }\n    fn workflow_terminal(&self, workflow: &'static str, outcome: &'static str) {\n        let _ = self.metrics.workflow_terminal(workflow, outcome, None);\n    }\n    fn workflow_expired(&self, workflow: &'static str, artifact: &'static str) {\n        let _ = self.metrics.update(\n            \"slopsearx_workflow_expired_total\",\n            &[(\"workflow\", workflow), (\"artifact\", artifact)],\n            1.,\n        );\n    }\n";
+    let end = at + insertion.len();
+    need(
+        actual.get(at..end) == Some(insertion),
+        "O01 Metrics forwarding span differs",
+    )?;
+    let mut prior = actual[..at].to_vec();
+    prior.extend_from_slice(&actual[end..]);
+    need(
+        prior.len() == 20291 && digest(&prior) == expected,
+        "O01 Metrics unrelated predecessor bytes differ",
+    )?;
+    Ok(prior)
 }
