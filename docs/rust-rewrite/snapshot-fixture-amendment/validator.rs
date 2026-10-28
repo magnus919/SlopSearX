@@ -450,22 +450,22 @@ mod tests {
             fs::write(&path, &physical).unwrap();
             fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
             assert_eq!(
-                f01_container_proof(&fixture, frame, &physical).unwrap(),
+                f01_container_proof(fixture, frame, &physical).unwrap(),
                 historical
             );
             for mode in [0o600, 0o755, 0o4644] {
                 fs::set_permissions(&path, fs::Permissions::from_mode(mode)).unwrap();
-                assert!(f01_container_proof(&fixture, frame, &physical).is_err());
+                assert!(f01_container_proof(fixture, frame, &physical).is_err());
             }
             fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
             fs::write(&path, &historical).unwrap();
-            assert!(f01_container_proof(&fixture, frame, &historical).is_err());
+            assert!(f01_container_proof(fixture, frame, &historical).is_err());
             fs::write(&path, &physical).unwrap();
             let mut changed = physical.clone();
             changed.push(0);
-            assert!(f01_container_proof(&fixture, frame, &changed).is_err());
+            assert!(f01_container_proof(fixture, frame, &changed).is_err());
             fs::write(&path, &changed).unwrap();
-            assert!(f01_container_proof(&fixture, frame, &changed).is_err());
+            assert!(f01_container_proof(fixture, frame, &changed).is_err());
             drop(owned);
         }
         for kind in ["F01", "A06", "W03"] {
