@@ -2,6 +2,8 @@
 //! Physical joint identity precedes either historical parent interpretation.
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
+#[path = "../../snapshot-fixture-amendment/main-custody.rs"]
+mod snapshot_fixture_main;
 type Result<T> = std::result::Result<T, String>;
 #[derive(Clone, Copy)]
 pub(crate) enum Parent {
@@ -380,12 +382,23 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
     if path == "Cargo.lock" {
         paired_manifest(root)?;
     }
-    let w07 = inverse(r, &actual, mode, &r.w07)?;
-    let t02 = inverse(r, &actual, mode, &r.t02)?;
+    let joint = if path == "crates/xtask/src/main.rs" {
+        snapshot_fixture_main::joint(root, &actual)?
+    } else {
+        actual.clone()
+    };
+    let w07 = inverse(r, &joint, mode, &r.w07)?;
+    let t02 = inverse(r, &joint, mode, &r.t02)?;
     Ok(match parent {
         Parent::W07 => w07,
         Parent::T02 => t02,
     })
+}
+/// Ordinary controls for the shared owner's test wrapper, without discovered tests.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
+    snapshot_fixture_main::controls(root)
 }
 /// The historical Git identity belongs to the proved parent frame, never to
 /// the physical joint file. Both Git bytes and mode/blob must independently agree.
@@ -430,6 +443,11 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     )?;
     for r in ROWS {
         let (actual, mode) = read(root, r)?;
+        let joint = if r.path == "crates/xtask/src/main.rs" {
+            snapshot_fixture_main::joint(root, &actual)?
+        } else {
+            actual.clone()
+        };
         for (kind, p) in [(Parent::W07, &r.w07), (Parent::T02, &r.t02)] {
             let prior = parent(root, r.path, &actual, kind)?;
             need(
@@ -467,7 +485,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             )?;
             for bad_mode in [0o600, 0o755, 0o4644] {
                 need(
-                    inverse(r, &actual, bad_mode, p).is_err(),
+                    inverse(r, &joint, bad_mode, p).is_err(),
                     "changed source mode",
                 )?;
             }
@@ -486,21 +504,21 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                             "unchanged joint edit descriptor",
                         )?;
                         need(
-                            inverse_with_edits(r, &actual, mode, p, &edits).is_err(),
+                            inverse_with_edits(r, &joint, mode, p, &edits).is_err(),
                             "missing/duplicate/relocated insertion-only joint edit",
                         )?;
                     }
                     continue;
                 }
-                let mut missing = actual.clone();
+                let mut missing = joint.clone();
                 missing.drain(at..at + remove.len());
-                let mut duplicate = actual.clone();
+                let mut duplicate = joint.clone();
                 duplicate.splice(at..at, remove.as_bytes().iter().copied());
                 let mut moved = missing.clone();
                 moved.extend_from_slice(remove.as_bytes());
                 for bad in [missing, duplicate, moved] {
                     need(
-                        bad != actual && inverse(r, &bad, mode, p).is_err(),
+                        bad != joint && inverse(r, &bad, mode, p).is_err(),
                         "missing/duplicate/relocated joint span",
                     )?;
                 }
@@ -545,6 +563,13 @@ fn filesystem_controls(root: &Path) -> Result<()> {
     fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
     fs::set_permissions(&manifest_path, fs::Permissions::from_mode(0o644))
         .map_err(|e| e.to_string())?;
+    let capsule_relative = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
+    let capsule_path = owned.0.join(capsule_relative);
+    fs::create_dir_all(capsule_path.parent().ok_or("capsule parent")?)
+        .map_err(|e| e.to_string())?;
+    fs::copy(root.join(capsule_relative), &capsule_path).map_err(|e| e.to_string())?;
+    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))
+        .map_err(|e| e.to_string())?;
     for r in ROWS {
         let (actual, _) = read(root, r)?;
         let path = owned.0.join(r.path);
@@ -553,6 +578,15 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         fs::write(&path, &actual).map_err(|e| e.to_string())?;
         fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
         parent(&owned.0, r.path, &actual, Parent::W07)?;
+        if r.path == "crates/xtask/src/main.rs" {
+            let old_joint = snapshot_fixture_main::joint(root, &actual)?;
+            fs::write(&path, &old_joint).map_err(|e| e.to_string())?;
+            need(
+                parent(&owned.0, r.path, &old_joint, Parent::W07).is_err(),
+                "old joint physically substituted for new current",
+            )?;
+            fs::write(&path, &actual).map_err(|e| e.to_string())?;
+        }
         for bad_mode in [0o600, 0o4644] {
             fs::set_permissions(&path, fs::Permissions::from_mode(bad_mode))
                 .map_err(|e| e.to_string())?;
