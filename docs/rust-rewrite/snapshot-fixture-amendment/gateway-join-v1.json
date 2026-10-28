@@ -168,10 +168,10 @@
     {
       "current": {
         "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-        "sha256": "870de929fd73e9d4ecc4d73d9ffc2a68e05547d270c1c78d2ee4897417bbce57",
-        "bytes": 34298,
+        "sha256": "2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba",
+        "bytes": 34632,
         "mode": "0644",
-        "git_blob": "b3fa446d1d3328a3e647ea33a86d7fad6ab2796a"
+        "git_blob": "14c67d31cdaeb96e4ddc6c21e1d909e3ad92a93c"
       },
       "gateway": {
         "prior": {
@@ -183,10 +183,10 @@
         },
         "current": {
           "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-          "sha256": "870de929fd73e9d4ecc4d73d9ffc2a68e05547d270c1c78d2ee4897417bbce57",
-          "bytes": 34298,
+          "sha256": "2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba",
+          "bytes": 34632,
           "mode": "0644",
-          "git_blob": "b3fa446d1d3328a3e647ea33a86d7fad6ab2796a"
+          "git_blob": "14c67d31cdaeb96e4ddc6c21e1d909e3ad92a93c"
         },
         "edits": [
           {
@@ -195,9 +195,19 @@
             "insert_utf8": "#[path = \"../../snapshot-fixture-amendment/main-custody.rs\"]\nmod snapshot_fixture_main;\npub(crate) use snapshot_fixture_main::gateway_main_join as snapshot_helper_amendment;\n"
           },
           {
-            "at": 23377,
+            "at": 21932,
+            "remove_utf8": "        super::main_isolation_current::parent(\n",
+            "insert_utf8": "        let canonical = super::main_isolation_current::parent(\n"
+          },
+          {
+            "at": 22100,
+            "remove_utf8": "        )\n",
+            "insert_utf8": "        )?;\n        if path == \"crates/xtask/src/main.rs\" {\n            let snapshot = snapshot_fixture_main::joint(root, supplied)?;\n            need(\n                canonical == snapshot,\n                \"gateway and snapshot proofs must agree on the exact common main frame\",\n            )?;\n        }\n        Ok(canonical)\n"
+          },
+          {
+            "at": 23375,
             "remove_utf8": "",
-            "insert_utf8": "/// Ordinary controls for the shared owner's test wrapper, without discovered tests.\n#[cfg(test)]\n#[allow(dead_code)]\npub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {\n    snapshot_fixture_main::controls(root)\n}\n"
+            "insert_utf8": "}\n/// Ordinary controls for the shared owner's test wrapper, without discovered tests.\n#[cfg(test)]\n#[allow(dead_code)]\npub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {\n    snapshot_fixture_main::controls(root)\n"
           },
           {
             "at": 25061,
@@ -216,10 +226,10 @@
         },
         "current": {
           "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-          "sha256": "870de929fd73e9d4ecc4d73d9ffc2a68e05547d270c1c78d2ee4897417bbce57",
-          "bytes": 34298,
+          "sha256": "2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba",
+          "bytes": 34632,
           "mode": "0644",
-          "git_blob": "b3fa446d1d3328a3e647ea33a86d7fad6ab2796a"
+          "git_blob": "14c67d31cdaeb96e4ddc6c21e1d909e3ad92a93c"
         },
         "edits": [
           {
@@ -235,7 +245,7 @@
           {
             "at": 21588,
             "remove_utf8": "    let joint = if path == \"crates/xtask/src/main.rs\" {\n        snapshot_fixture_main::joint(root, &actual)?\n",
-            "insert_utf8": "    let w07 = inverse(r, &actual, mode, &r.w07)?;\n    let t02 = inverse(r, &actual, mode, &r.t02)?;\n    Ok(match parent {\n        Parent::W07 => w07,\n        Parent::T02 => t02,\n    })\n}\nfn canonical_input(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {\n    if [\n        \"Cargo.lock\",\n        \"crates/xtask/src/main.rs\",\n        \"crates/xtask/src/a13.rs\",\n    ]\n    .contains(&path)\n    {\n        super::main_isolation_current::parent(\n            root,\n            path,\n            Some(supplied),\n            super::main_isolation_current::Parent::Main,\n        )\n"
+            "insert_utf8": "    let w07 = inverse(r, &actual, mode, &r.w07)?;\n    let t02 = inverse(r, &actual, mode, &r.t02)?;\n    Ok(match parent {\n        Parent::W07 => w07,\n        Parent::T02 => t02,\n    })\n}\nfn canonical_input(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {\n    if [\n        \"Cargo.lock\",\n        \"crates/xtask/src/main.rs\",\n        \"crates/xtask/src/a13.rs\",\n    ]\n    .contains(&path)\n    {\n        let canonical = super::main_isolation_current::parent(\n            root,\n            path,\n            Some(supplied),\n            super::main_isolation_current::Parent::Main,\n        )?;\n        if path == \"crates/xtask/src/main.rs\" {\n            let snapshot = snapshot_fixture_main::joint(root, supplied)?;\n            need(\n                canonical == snapshot,\n                \"gateway and snapshot proofs must agree on the exact common main frame\",\n            )?;\n        }\n        Ok(canonical)\n"
           },
           {
             "at": 21710,
@@ -444,10 +454,10 @@
   "registry": {
     "current": {
       "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
-      "sha256": "4cc0c24e87a7f0894870b8aa4d120cd6ab0f75b6c190e8d349abc939944e08ac",
+      "sha256": "04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d",
       "bytes": 22275,
       "mode": "0644",
-      "git_blob": "6b1975ecb9aad7447f70fb90a03f8ac8da28ea73"
+      "git_blob": "2fefd240ff259399018741c2c7786e493e9f685f"
     },
     "gateway": {
       "prior": {
@@ -459,10 +469,10 @@
       },
       "current": {
         "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
-        "sha256": "4cc0c24e87a7f0894870b8aa4d120cd6ab0f75b6c190e8d349abc939944e08ac",
+        "sha256": "04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d",
         "bytes": 22275,
         "mode": "0644",
-        "git_blob": "6b1975ecb9aad7447f70fb90a03f8ac8da28ea73"
+        "git_blob": "2fefd240ff259399018741c2c7786e493e9f685f"
       },
       "edits": [
         {
@@ -473,7 +483,7 @@
         {
           "at": 20567,
           "remove_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"09132cc49c459cca3abb990de737b3545ce53f4f4d528ea47443e998460a41d4\",\n",
-          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"870de929fd73e9d4ecc4d73d9ffc2a68e05547d270c1c78d2ee4897417bbce57\",\n"
+          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba\",\n"
         },
         {
           "at": 21466,
@@ -492,10 +502,10 @@
       },
       "current": {
         "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
-        "sha256": "4cc0c24e87a7f0894870b8aa4d120cd6ab0f75b6c190e8d349abc939944e08ac",
+        "sha256": "04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d",
         "bytes": 22275,
         "mode": "0644",
-        "git_blob": "6b1975ecb9aad7447f70fb90a03f8ac8da28ea73"
+        "git_blob": "2fefd240ff259399018741c2c7786e493e9f685f"
       },
       "edits": [
         {
@@ -516,7 +526,7 @@
         {
           "at": 20567,
           "remove_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\",\n",
-          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"870de929fd73e9d4ecc4d73d9ffc2a68e05547d270c1c78d2ee4897417bbce57\",\n"
+          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba\",\n"
         },
         {
           "at": 21345,

@@ -403,12 +403,20 @@ fn canonical_input(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> 
     ]
     .contains(&path)
     {
-        super::main_isolation_current::parent(
+        let canonical = super::main_isolation_current::parent(
             root,
             path,
             Some(supplied),
             super::main_isolation_current::Parent::Main,
-        )
+        )?;
+        if path == "crates/xtask/src/main.rs" {
+            let snapshot = snapshot_fixture_main::joint(root, supplied)?;
+            need(
+                canonical == snapshot,
+                "gateway and snapshot proofs must agree on the exact common main frame",
+            )?;
+        }
+        Ok(canonical)
     } else {
         Ok(supplied.to_vec())
     }
