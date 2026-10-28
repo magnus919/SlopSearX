@@ -9,6 +9,7 @@ use std::{
     path::Path,
 };
 
+use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;
 use crate::a13::a06_source_successor::{
     w07_main_successor as main_successor, w07_t02_joint,
     w07_test_dependency as test_dependency_successor,
@@ -62,6 +63,13 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         ));
     }
     let bytes = fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
+    if path == "crates/xtask/src/main.rs" && expected == w07_t02_joint::MAIN_SHA {
+        w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
+        return Ok(bytes);
+    }
+    if let Some(proven) = snapshot_helper_amendment::verify(root, path, expected, &bytes) {
+        return proven;
+    }
     if sha(&bytes) != expected {
         if let Some(operand) =
             crate::w08::source_successor::frozen_operand(root, path, expected, &bytes)?
@@ -80,6 +88,41 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         }
     }
     Ok(bytes)
+}
+/// Called by the xtask-owned amendment test without adding W07 suite identities.
+#[cfg(test)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
+    let path = "crates/xtask/src/main.rs";
+    let physical = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+    let proven = frozen(root, path, w07_t02_joint::MAIN_SHA)?;
+    if proven != physical {
+        return Err("W07 main seam did not retain physical bytes".into());
+    }
+    let parent = w07_t02_joint::parent(root, path, &proven, w07_t02_joint::Parent::W07)?;
+    reconstruct_main(&parent)?;
+    if frozen(root, path, &"0".repeat(64)).is_ok() {
+        return Err("W07 wrong main caller accepted".into());
+    }
+    let registry: Value =
+        serde_json::from_slice(&fs::read(root.join(REGISTRY)).map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())?;
+    for path in [
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+    ] {
+        let expected = registry["sources"][path]
+            .as_str()
+            .ok_or("W07 helper source absent")?;
+        let prior = frozen(root, path, expected)?;
+        if sha(&prior) != expected {
+            return Err("W07 helper seam did not recover accepted operand".into());
+        }
+        if frozen(root, path, "wrong").is_ok() {
+            return Err("W07 wrong helper caller accepted".into());
+        }
+    }
+    snapshot_helper_amendment::controls(root)?;
+    Ok(())
 }
 fn unique<'a>(values: impl IntoIterator<Item = &'a str>) -> Result<BTreeSet<&'a str>> {
     let mut result = BTreeSet::new();

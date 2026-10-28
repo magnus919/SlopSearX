@@ -10,7 +10,7 @@ use std::{
     path::Path,
 };
 const REGISTRY: &str = "docs/rust-rewrite/w08/qualification.json";
-const REGISTRY_SHA: &str = "9f05e69d584a15666367ecbdb164f729626f834f72ca2d2d43b1fda15ab4e4f6";
+const REGISTRY_SHA: &str = "a5edc7b5975357b5db8628c038a5aea70cc542dec04f90e5d9d4ed7a74973555";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Qualification {

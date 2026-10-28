@@ -30,6 +30,8 @@ mod o01;
 mod o03;
 mod o06;
 mod replay;
+#[path = "../../../docs/rust-rewrite/snapshot-fixture-amendment/validator.rs"]
+mod snapshot_fixture_amendment;
 mod t01;
 mod t02;
 mod t04;
@@ -323,6 +325,9 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
     }
 
     for s in &f.sources {
+        if id == "F01" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {
+            continue;
+        }
         let actual = command(root, "git", &["hash-object", "--", &s.path], records)?;
         if actual.trim() != s.git_blob {
             return Err(format!("stale source fixture: {}", s.path));

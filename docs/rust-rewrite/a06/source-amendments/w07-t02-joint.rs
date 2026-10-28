@@ -5,6 +5,9 @@
 pub(crate) mod w08_source_successor;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
+#[path = "../../snapshot-fixture-amendment/main-custody.rs"]
+mod snapshot_fixture_main;
+pub(crate) use snapshot_fixture_main::w08_main_join as snapshot_helper_amendment;
 type Result<T> = std::result::Result<T, String>;
 #[derive(Clone, Copy)]
 pub(crate) enum Parent {
@@ -417,7 +420,13 @@ fn parent_at_physical_root(
     // Supplied/current physical equality was checked above. Only then may W08's
     // exact main insertions yield the unchanged joint-frame inverse operand.
     let actual = if path == "crates/xtask/src/main.rs" {
-        w08_source_successor::parent(trusted_source_root, path, &actual)?
+        let w08 = w08_source_successor::parent(trusted_source_root, path, &actual)?;
+        let snapshot = snapshot_fixture_main::joint(trusted_source_root, &actual)?;
+        need(
+            w08 == snapshot,
+            "W08 and snapshot proofs must agree on the exact common main frame",
+        )?;
+        w08
     } else {
         actual
     };
@@ -430,6 +439,12 @@ fn parent_at_physical_root(
         Parent::W07 => w07,
         Parent::T02 => t02,
     })
+}
+/// Ordinary controls retained in the existing xtask-owned source test.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
+    snapshot_fixture_main::controls(root)
 }
 /// The historical Git identity belongs to the proved parent frame, never to
 /// the physical joint file. Both Git bytes and mode/blob must independently agree.
@@ -622,6 +637,13 @@ fn filesystem_controls(root: &Path) -> Result<()> {
             need(
                 fixture_parent(r.path, &changed, Parent::W07).is_err(),
                 "changed fixture main accepted against trusted physical source",
+            )?;
+            fs::write(&path, &actual).map_err(|e| e.to_string())?;
+            let old_joint = w08_source_successor::parent(root, r.path, &actual)?;
+            fs::write(&path, &old_joint).map_err(|e| e.to_string())?;
+            need(
+                fixture_parent(r.path, &old_joint, Parent::W07).is_err(),
+                "old joint physically substituted for current W08/snapshot source",
             )?;
             fs::write(&path, &actual).map_err(|e| e.to_string())?;
         }

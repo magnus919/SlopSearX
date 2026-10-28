@@ -180,12 +180,22 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>
     let doc = load(root)?;
     let row = selected(&doc, path)?;
     let (physical, mode) = regular(root, path)?;
-    material(&row.current, &physical, mode)?;
     need(
         supplied == physical,
         "W08 supplied material is not the actual physical source",
     )?;
-    let prior = inverse(row, &physical, mode)?;
+    let logical = if [
+        "crates/xtask/src/main.rs",
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+    ]
+    .contains(&path)
+    {
+        super::snapshot_helper_amendment::w08_operand(root, path, &physical)?
+    } else {
+        physical.clone()
+    };
+    let prior = inverse(row, &logical, mode)?;
     git_parent(root, row, &prior)?;
     Ok(prior)
 }
@@ -221,6 +231,7 @@ pub(crate) fn frozen_operand(
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = load(root)?;
+    super::snapshot_helper_amendment::composition_controls(root)?;
     for frozen in &doc.frozen_predecessors {
         let (raw, mode) = regular(root, &frozen.path)?;
         need(
@@ -230,9 +241,26 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     }
     for row in &doc.rows {
         let (physical, mode) = regular(root, &row.path)?;
+        let logical = if [
+            "crates/xtask/src/main.rs",
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+            "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        ]
+        .contains(&row.path.as_str())
+        {
+            super::snapshot_helper_amendment::w08_operand(root, &row.path, &physical)?
+        } else {
+            physical.clone()
+        };
         let prior = parent(root, &row.path, &physical)?;
+        if logical != physical {
+            need(
+                parent(root, &row.path, &logical).is_err(),
+                "old W08 frame supplied as physical current",
+            )?;
+        }
         need(
-            inverse(row, &physical, mode)? == prior,
+            inverse(row, &logical, mode)? == prior,
             "W08 positive same-buffer inverse differs",
         )?;
         need(
@@ -240,14 +268,14 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             "W08 accepted old bytes as current physical source",
         )?;
         need(
-            inverse(row, &physical, 0o755).is_err(),
+            inverse(row, &logical, 0o755).is_err(),
             "W08 accepted changed source mode",
         )?;
-        let mut changed = physical.clone();
+        let mut changed = logical.clone();
         changed[0] ^= 1;
-        let mut duplicate = physical.clone();
+        let mut duplicate = logical.clone();
         duplicate.extend_from_slice(row.edits[0].new.as_bytes());
-        let mut moved = physical.clone();
+        let mut moved = logical.clone();
         let first = &row.edits[0];
         if !first.new.is_empty() {
             moved.drain(first.current_offset..first.current_offset + first.new.len());
@@ -262,26 +290,26 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let mut missing = row.clone();
         missing.edits.remove(0);
         need(
-            inverse(&missing, &physical, mode).is_err(),
+            inverse(&missing, &logical, mode).is_err(),
             "W08 accepted a missing inverse descriptor",
         )?;
         let mut duplicate_edit = row.clone();
         duplicate_edit.edits.insert(0, row.edits[0].clone());
         need(
-            inverse(&duplicate_edit, &physical, mode).is_err(),
+            inverse(&duplicate_edit, &logical, mode).is_err(),
             "W08 accepted a duplicate inverse descriptor",
         )?;
         let mut moved_edit = row.clone();
         moved_edit.edits[0].current_offset += 1;
         need(
-            inverse(&moved_edit, &physical, mode).is_err(),
+            inverse(&moved_edit, &logical, mode).is_err(),
             "W08 accepted a relocated inverse descriptor",
         )?;
         let mut wrong = row.clone();
 
         wrong.prior.sha256 = "0".repeat(64);
         need(
-            inverse(&wrong, &physical, mode).is_err(),
+            inverse(&wrong, &logical, mode).is_err(),
             "W08 accepted altered predecessor tuple",
         )?;
     }

@@ -367,7 +367,7 @@ def test_builder_reloads_only_hash_verified_snapshot_files(tmp_path):
     )
     assert output["tasks"][0]["cards"][0]["full_metadata"]["title"] == "Synthetic card 0"
 
-    artifact_path = next(root.glob("pool-*.json"))
+    artifact_path = root / live._snapshot_filename(stage.operations[0].operation_id)
     changed = json.loads(artifact_path.read_bytes())
     changed["operation"]["query"] = "tampered query"
     artifact_path.write_bytes(pipeline._canonical(changed))
