@@ -207,7 +207,27 @@ pub(crate) fn operands(
             "exact relocation and seventeen-selector manifest",
         )?;
     }
-    let proof = validate(row, &actual, supplied, selected)?;
+    let proof_input = if path == "crates/xtask/src/main.rs" {
+        if let Some(buffer) = supplied {
+            need(
+                buffer == actual,
+                "supplied gateway main is not physical current",
+            )?;
+        }
+        super::w07_t02_joint::snapshot_helper_amendment::gateway_main(root, &actual)?
+    } else {
+        actual.clone()
+    };
+    let proof = validate(
+        row,
+        &proof_input,
+        if path == "crates/xtask/src/main.rs" {
+            supplied.map(|_| proof_input.as_slice())
+        } else {
+            supplied
+        },
+        selected,
+    )?;
     git_material(
         root,
         &row["parents"][match selected {
@@ -320,9 +340,28 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     source_json_tests(root)?;
     for path in PATHS {
         let row = row(&doc, path)?;
-        let actual = regular(root, text(&row["physical"], "path")?)?;
+        let physical = regular(root, text(&row["physical"], "path")?)?;
+        let actual = if path == "crates/xtask/src/main.rs" {
+            super::w07_t02_joint::snapshot_helper_amendment::gateway_main(root, &physical)?
+        } else {
+            physical.clone()
+        };
         for selected in [Parent::T07, Parent::Main] {
-            let proof = parent(root, path, Some(&actual), selected)?;
+            let (reported, proof) = operands(root, path, Some(&physical), selected)?;
+            need(
+                reported == physical,
+                "current operand reporting retains physical bytes",
+            )?;
+            need(
+                validate(row, &actual, Some(&actual), selected)? == proof,
+                "original twelve-row pure positive before mutants",
+            )?;
+            if actual != physical {
+                need(
+                    parent(root, path, Some(&actual), selected).is_err(),
+                    "gateway logical main supplied as physical current",
+                )?;
+            }
             if proof != actual {
                 need(
                     validate(row, &actual, Some(&proof), selected).is_err(),

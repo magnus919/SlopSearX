@@ -9,6 +9,7 @@ use std::{
     path::Path,
 };
 
+use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;
 use crate::a13::a06_source_successor::{
     w07_main_successor as main_successor, w07_t02_joint,
     w07_test_dependency as test_dependency_successor,
@@ -18,7 +19,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "6ea8ff255690b7940b27d632327ee7e9307a4d2fc500f3ff46b3e6bf90b9f4b2";
+const REGISTRY_SHA: &str = "4cc0c24e87a7f0894870b8aa4d120cd6ab0f75b6c190e8d349abc939944e08ac";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -62,6 +63,13 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         ));
     }
     let bytes = fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
+    if path == "crates/xtask/src/main.rs" && expected == w07_t02_joint::MAIN_SHA {
+        w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
+        return Ok(bytes);
+    }
+    if let Some(proven) = snapshot_helper_amendment::verify(root, path, expected, &bytes) {
+        return proven;
+    }
     if sha(&bytes) != expected {
         if path == "crates/xtask/src/main.rs" && expected == w07_t02_joint::MAIN_SHA {
             let accepted = crate::a13::a06_source_successor::main_isolation_current::parent(
@@ -84,6 +92,41 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         }
     }
     Ok(bytes)
+}
+/// Called by the xtask-owned amendment test without adding W07 suite identities.
+#[cfg(test)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
+    let path = "crates/xtask/src/main.rs";
+    let physical = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+    let proven = frozen(root, path, w07_t02_joint::MAIN_SHA)?;
+    if proven != physical {
+        return Err("W07 main seam did not retain physical bytes".into());
+    }
+    let parent = w07_t02_joint::parent(root, path, &proven, w07_t02_joint::Parent::W07)?;
+    reconstruct_main(&parent)?;
+    if frozen(root, path, &"0".repeat(64)).is_ok() {
+        return Err("W07 wrong main caller accepted".into());
+    }
+    let registry: Value =
+        serde_json::from_slice(&fs::read(root.join(REGISTRY)).map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())?;
+    for path in [
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+    ] {
+        let expected = registry["sources"][path]
+            .as_str()
+            .ok_or("W07 helper source absent")?;
+        let prior = frozen(root, path, expected)?;
+        if sha(&prior) != expected {
+            return Err("W07 helper seam did not recover accepted operand".into());
+        }
+        if frozen(root, path, "wrong").is_ok() {
+            return Err("W07 wrong helper caller accepted".into());
+        }
+    }
+    snapshot_helper_amendment::controls(root)?;
+    Ok(())
 }
 fn unique<'a>(values: impl IntoIterator<Item = &'a str>) -> Result<BTreeSet<&'a str>> {
     let mut result = BTreeSet::new();
@@ -410,6 +453,62 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     }
     expected["sources"]["docs/rust-rewrite/t07/client-dependency-relocation.json"] =
         Value::String("2f655b5c05e4bb3801d1870cb3dec82821ddc85bd9a7a2c106e8dfc9b227b90b".into());
+    // Closed older material to Ready059de; original transition guards above remain intact.
+    for (path, before, after) in [
+        (
+            "Cargo.lock",
+            "5708f639558dbaa68983d4d7af044ea2e11d5f3df4060bd761f3da5adc12ab33",
+            "8676f1c9e900522f584e63cbcc0129fbfc6e90aa64c52adefd19272d754c3543",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+            "7649fbaf8b9b781841124d0dccd1bb902821733816878bec0b13b08c3700f89b",
+            "b25c39e4bdab702c6beff60ad193d7f15acc92e9ffbbed409f6834f0f3297774",
+        ),
+        (
+            "docs/rust-rewrite/t07/client-dependency-relocation.json",
+            "2f655b5c05e4bb3801d1870cb3dec82821ddc85bd9a7a2c106e8dfc9b227b90b",
+            "4e0cfb7a6764fee0e768e95340a1b804402e1ab0befd1300cfec3fd3f2e159ac",
+        ),
+        (
+            "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json",
+            "aa3af59033c65e31ac640175074ebc748048e781726ff1cc614255990295317e",
+            "3e5cb86a53e2060cd9782a812a3834ea23bea96fd0fb4c1f1b5652035a209e82",
+        ),
+        (
+            "docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs",
+            "62f5a5b3f5e99ab9d49d1d1369cf9d67be14ebddd0db93ad2b192faa356139f8",
+            "c5daa7a3486972cec5b338d458441cb90addb3d0945e49a553ec424a44fece99",
+        ),
+    ] {
+        if expected["sources"][path] != before {
+            return Err("W07 exact Ready059de predecessor source pin differs".into());
+        }
+        expected["sources"][path] = Value::String(after.into());
+    }
+    // Only these Ready059de source rows advance into the gateway/snapshot union.
+    for (path, before, after) in [
+        (
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+            "b25c39e4bdab702c6beff60ad193d7f15acc92e9ffbbed409f6834f0f3297774",
+            "38a380da7a97a5b27c9251c0ab7aff3e008e15b66f4432b0d31021a1b2d5ffa5",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+            "09132cc49c459cca3abb990de737b3545ce53f4f4d528ea47443e998460a41d4",
+            "870de929fd73e9d4ecc4d73d9ffc2a68e05547d270c1c78d2ee4897417bbce57",
+        ),
+        (
+            "docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs",
+            "c5daa7a3486972cec5b338d458441cb90addb3d0945e49a553ec424a44fece99",
+            "b46c1df9b2d1a547475d1a6d4fbfc14f679ae631ec1c034f752dee7a15657f6c",
+        ),
+    ] {
+        if expected["sources"][path] != before {
+            return Err("W07 exact gateway/snapshot union predecessor source pin differs".into());
+        }
+        expected["sources"][path] = Value::String(after.into());
+    }
     if expected != *current {
         return Err(
             "W07 completion inventory differs from the exact additive source/test delta".into(),
@@ -780,6 +879,12 @@ mod tests {
             "crates/ssx-mcp/src/search_surface/mod.rs",
             "crates/ssx-mcp/src/evidence/tools/tests.rs",
             "crates/ssx-mcp/tests/w07_mcp.rs",
+            "Cargo.lock",
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+            "docs/rust-rewrite/t07/client-dependency-relocation.json",
+            "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json",
+            "docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs",
+            "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
         ] {
             let mut missing = current.clone();
             missing["sources"].as_object_mut().unwrap().remove(source);

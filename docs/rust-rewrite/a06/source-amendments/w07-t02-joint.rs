@@ -2,6 +2,9 @@
 //! Physical joint identity precedes either historical parent interpretation.
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
+#[path = "../../snapshot-fixture-amendment/main-custody.rs"]
+mod snapshot_fixture_main;
+pub(crate) use snapshot_fixture_main::gateway_main_join as snapshot_helper_amendment;
 type Result<T> = std::result::Result<T, String>;
 #[derive(Clone, Copy)]
 pub(crate) enum Parent {
@@ -448,6 +451,12 @@ pub(crate) fn parent(
         Parent::T02 => t02,
     })
 }
+/// Ordinary controls for the shared owner's test wrapper, without discovered tests.
+#[cfg(test)]
+#[allow(dead_code)]
+pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
+    snapshot_fixture_main::controls(root)
+}
 /// The historical Git identity belongs to the proved parent frame, never to
 /// the physical joint file. Both Git bytes and mode/blob must independently agree.
 pub(crate) fn parent_git_blob(
@@ -494,6 +503,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let actual = canonical_input(root, r.path, &physical)?;
         for (kind, p) in [(Parent::W07, &r.w07), (Parent::T02, &r.t02)] {
             let prior = parent(root, r.path, &physical, kind)?;
+            need(
+                inverse(r, &actual, mode, p)? == prior,
+                "pure controls use the same gateway canonical frame",
+            )?;
             need(
                 parent_git_blob(root, r.path, &physical, kind)? == p.blob,
                 "same proved parent Git frame",
