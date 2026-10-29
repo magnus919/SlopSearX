@@ -678,8 +678,7 @@ fn hygiene_with_policy(root: &Path, policy: AssetPolicy<'_>) -> Result<()> {
             )?;
             let rules = unlisted_text_rules(file, raw.as_bytes(), &assets);
             if rules.license_separator {
-                hygiene_text_with_rules(file, &raw, rules)
-                    .map_err(|e| format!("{file}: {e}"))?;
+                hygiene_text_with_rules(file, &raw, rules).map_err(|e| format!("{file}: {e}"))?;
             } else {
                 hygiene_text(file, &raw).map_err(|e| format!("{file}: {e}"))?;
             }
@@ -911,44 +910,44 @@ mod tests {
                 .contains("unlisted binary")
         );
     }
-#[test]
-fn only_exact_pinned_idna_cpython_license_copy_gets_separator_waiver() {
-    let fixture = AssetFixture::new();
-    let license_path = CPYTHON_LICENSE_ASSET;
-    let copy_path = IDNA_CPYTHON_LICENSE_COPY;
-    let license = b"CPython license text\n================\n";
-    fixture.write(license_path, license);
-    fixture.write(copy_path, license);
-    let mut pin = test_asset(license_path, license, false);
-    pin["text_rules"]["license_separator"] = json!(true);
-    fixture.check(vec![pin.clone()]).unwrap();
+    #[test]
+    fn only_exact_pinned_idna_cpython_license_copy_gets_separator_waiver() {
+        let fixture = AssetFixture::new();
+        let license_path = CPYTHON_LICENSE_ASSET;
+        let copy_path = IDNA_CPYTHON_LICENSE_COPY;
+        let license = b"CPython license text\n================\n";
+        fixture.write(license_path, license);
+        fixture.write(copy_path, license);
+        let mut pin = test_asset(license_path, license, false);
+        pin["text_rules"]["license_separator"] = json!(true);
+        fixture.check(vec![pin.clone()]).unwrap();
 
-    for (changed, reason) in [
-        (b"<<<<<<< branch\n".as_slice(), "merge conflict marker"),
-        (b">>>>>>> branch\n".as_slice(), "merge conflict marker"),
-        (
-            b"CPython license text\n======= altered\n".as_slice(),
-            "merge conflict marker",
-        ),
-    ] {
-        fixture.write(copy_path, changed);
+        for (changed, reason) in [
+            (b"<<<<<<< branch\n".as_slice(), "merge conflict marker"),
+            (b">>>>>>> branch\n".as_slice(), "merge conflict marker"),
+            (
+                b"CPython license text\n======= altered\n".as_slice(),
+                "merge conflict marker",
+            ),
+        ] {
+            fixture.write(copy_path, changed);
+            assert!(
+                fixture
+                    .check(vec![pin.clone()])
+                    .unwrap_err()
+                    .contains(reason)
+            );
+        }
+
+        fixture.write(copy_path, license);
+        fixture.write("crates/plain.rs", license);
         assert!(
             fixture
-                .check(vec![pin.clone()])
+                .check(vec![pin])
                 .unwrap_err()
-                .contains(reason)
+                .contains("merge conflict marker")
         );
     }
-
-    fixture.write(copy_path, license);
-    fixture.write("crates/plain.rs", license);
-    assert!(
-        fixture
-            .check(vec![pin])
-            .unwrap_err()
-            .contains("merge conflict marker")
-    );
-}
     #[test]
     fn pinned_text_keeps_semantic_validation_and_only_named_whitespace_waivers() {
         let fixture = AssetFixture::new();
