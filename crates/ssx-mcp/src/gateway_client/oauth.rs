@@ -3,6 +3,7 @@
 use super::{
     browser::BrowserOwner,
     callback::LoopbackCallback,
+    diagnostics::{Diagnostics, Stage},
     io_owner::IoOwner,
     network::Network,
     oauth_policy::{Client, Policy},
@@ -193,6 +194,8 @@ fn sdk_token(raw: &[u8]) -> Result<OAuthTokenResponse> {
 /// SDK requests execute through caller-configured clients; suggested aggregate
 /// SDK30s timeout is not placed over source read300/interactive300 phases.
 struct Http {
+    #[cfg(feature = "gateway-source-endpoints")]
+    diagnostics: Arc<Diagnostics>,
     cache: Arc<Mutex<Option<Option<StoredCredentials>>>>,
     policy: Arc<Mutex<Policy>>,
     network: Arc<Network>,
@@ -336,6 +339,7 @@ impl OAuthHttpClient for Http {
         Box::pin(async move {
             use rmcp::transport::auth::source_metadata::SourceOAuthPurpose;
             let purpose = operation.purpose;
+            let code_exchange = purpose == SourceOAuthPurpose::CodeExchange;
             let discovery = purpose == SourceOAuthPurpose::Discovery;
             let registration = purpose == SourceOAuthPurpose::Registration;
             let refresh = purpose == SourceOAuthPurpose::Refresh;
@@ -375,6 +379,9 @@ impl OAuthHttpClient for Http {
             };
             // This exact endpoint text reaches the single Network SourceUrl parse;
             // no Url or http::Uri target is constructed by the OAuth adapter.
+            if code_exchange {
+                self.diagnostics.checkpoint(Stage::OAuthCodeSend);
+            }
             let mut response = self
                 .network
                 .send_built_request(
@@ -384,15 +391,40 @@ impl OAuthHttpClient for Http {
                     body,
                     max_redirects,
                 )
-                .await?;
+                .await
+                .inspect_err(|error| {
+                    if code_exchange {
+                        self.diagnostics
+                            .record(Stage::OAuthCodeSendFailed, error.as_ref());
+                    }
+                })?;
             let status = response.status();
+            if code_exchange {
+                self.diagnostics.record_code_status(status);
+            }
             let headers = response.headers().clone();
             let mut bytes = Vec::new();
-            while let Some(chunk) = self.network.chunk(&mut response).await? {
+            while let Some(chunk) =
+                self.network
+                    .chunk(&mut response)
+                    .await
+                    .inspect_err(|error| {
+                        if code_exchange {
+                            self.diagnostics
+                                .record(Stage::OAuthCodeBodyFailed, error.as_ref());
+                        }
+                    })?
+            {
                 if chunk.len() > super::token_json::MAX_BYTES.saturating_sub(bytes.len()) {
+                    if code_exchange {
+                        self.diagnostics.checkpoint(Stage::OAuthCodeBodyLimit);
+                    }
                     return Err("OAuth response exceeds source document profile".into());
                 }
                 bytes.extend_from_slice(&chunk);
+            }
+            if code_exchange {
+                self.diagnostics.checkpoint(Stage::OAuthCodeBodyComplete);
             }
             if refresh && status != reqwest::StatusCode::OK {
                 self.policy.lock().await.refresh_fallback = true;
@@ -602,6 +634,7 @@ impl OAuthHttpClient for Http {
     }
 }
 pub struct OAuth {
+    diagnostics: Arc<Diagnostics>,
     // Observe the already-bound real listener only for the owned loopback test.
     #[cfg(all(test, unix, feature = "gateway-source-endpoints"))]
     callback_test_address: std::sync::Mutex<Option<std::net::SocketAddr>>,
@@ -638,6 +671,7 @@ impl OAuth {
         .collect();
         let path = resolved_token_path(settings, &environment)
             .ok_or("gateway home directory unavailable")?;
+        let diagnostics = io.diagnostics.clone();
         let file = Arc::new(
             FileTokenStorage::load(path, io, Instant::now() + AUTH_BUDGET, &cancel)
                 .await
@@ -685,6 +719,8 @@ impl OAuth {
         let policy = Arc::new(Mutex::new(policy));
         let registration = Arc::new(Mutex::new(None));
         let http = Arc::new(Http {
+            #[cfg(feature = "gateway-source-endpoints")]
+            diagnostics: diagnostics.clone(),
             cache: store.cache.clone(),
             policy: policy.clone(),
             network,
@@ -707,6 +743,7 @@ impl OAuth {
         manager.set_credential_store(store.clone());
         let redirect = format!("http://127.0.0.1:{}/callback", settings.callback_port);
         Ok(Arc::new(Self {
+            diagnostics,
             #[cfg(all(test, unix, feature = "gateway-source-endpoints"))]
             callback_test_address: std::sync::Mutex::new(None),
             manager: Mutex::new(manager),
@@ -1023,16 +1060,26 @@ impl OAuth {
             let _ = self.browser.open(&url).await;
         }
         let code = tokio::select! {biased;_ = self.cancel.cancelled()=>return Err("gateway stopped".into()),v=callback.as_mut().expect("installed callback").wait()=>v.map_err(|_|"OAuth callback failed")?};
-        let state = code
-            .state
-            .as_deref()
-            .ok_or("OAuth callback state missing")?;
+        self.diagnostics.checkpoint(Stage::OAuthCallbackComplete);
+        let state = code.state.as_deref().ok_or_else(|| {
+            self.diagnostics
+                .checkpoint(Stage::OAuthCallbackStateMissing);
+            "OAuth callback state missing"
+        })?;
         #[cfg(feature = "gateway-source-endpoints")]
-        self.sync_source_client(&mut manager).await?;
+        {
+            self.sync_source_client(&mut manager).await?;
+            self.diagnostics.checkpoint(Stage::OAuthSourceClientSynced);
+        }
         let tokens = manager
             .exchange_code_for_token(&code.code, state)
             .await
+            .inspect_err(|error| {
+                self.diagnostics
+                    .record_auth_failure(Stage::OAuthExchangeFailed, error)
+            })
             .map_err(|_| "OAuth authorization exchange failed")?;
+        self.diagnostics.checkpoint(Stage::OAuthExchangeComplete);
         Ok(tokens.access_token().secret().to_owned())
     }
     #[cfg(feature = "gateway-source-endpoints")]
@@ -1053,6 +1100,10 @@ impl OAuth {
         manager
             .configure_source_client(config, client.method, resource, client.issuer)
             .await
+            .inspect_err(|error| {
+                self.diagnostics
+                    .record_auth_failure(Stage::OAuthSourceClientSyncFailed, error)
+            })
             .map_err(|_| "OAuth source client configuration failed")
             .map_err(Into::into)
     }

@@ -1,7 +1,8 @@
 //! Token document policy, distinct from publicly readable package integrity.
 //! The current user, SYSTEM and Administrators remain the trusted principals.
 use crate::trust::{
-    Identity, create_private_directory, create_private_file, identity, opened, opened_confidential,
+    Identity, create_private_directory, create_private_file, identity, opened_confidential,
+    opened_confidential_parent,
 };
 use std::{
     fs::{self, File},
@@ -29,12 +30,12 @@ fn parent(path: &Path) -> io::Result<&Path> {
         .ok_or_else(|| io::ErrorKind::InvalidInput.into())
 }
 fn prepare_directory(path: &Path) -> io::Result<File> {
-    match opened(path, true) {
+    match opened_confidential_parent(path) {
         Ok(file) => Ok(file),
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             let _parent = prepare_directory(parent(path)?)?;
             create_private_directory(path)?;
-            opened(path, true)
+            opened_confidential_parent(path)
         }
         Err(error) => Err(error),
     }
@@ -60,7 +61,7 @@ struct AdmittedRead {
     before: Identity,
 }
 fn admit(path: &Path) -> io::Result<AdmittedRead> {
-    let parent = opened(parent(path)?, true)?;
+    let parent = opened_confidential_parent(parent(path)?)?;
     let file = opened_confidential(path)?;
     let before = identity(&file, false)?;
     Ok(AdmittedRead {

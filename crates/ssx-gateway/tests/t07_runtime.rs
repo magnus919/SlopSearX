@@ -775,6 +775,41 @@ fn classification_line(text: &str) -> bool {
     let stages = [
         "NetworkStartup",
         "OAuthStartup",
+        "OAuthCallbackComplete",
+        "OAuthCallbackStateMissing",
+        "OAuthExchangeFailed",
+        "OAuthExchangeComplete",
+        "AuthAuthorizationRequired",
+        "AuthAuthorizationFailed",
+        "AuthTokenExchangeFailed",
+        "AuthTokenRefreshFailed",
+        "AuthTokenRefreshRejected",
+        "AuthCredentialStore",
+        "AuthHttp",
+        "AuthOAuth",
+        "AuthMetadata",
+        "AuthPkceUnsupported",
+        "AuthUrl",
+        "AuthNoAuthorizationSupport",
+        "AuthInternal",
+        "AuthInvalidTokenType",
+        "AuthTokenExpired",
+        "AuthInvalidScope",
+        "AuthRegistrationFailed",
+        "AuthInsufficientScope",
+        "AuthIssuerMismatch",
+        "AuthIssuerMissing",
+        "AuthClientCredentials",
+        "AuthOther",
+        "OAuthSourceClientSynced",
+        "OAuthSourceClientSyncFailed",
+        "OAuthCodeSend",
+        "OAuthCodeSendFailed",
+        "OAuthCodeStatus",
+        "OAuthCodeBodyComplete",
+        "OAuthCodeBodyFailed",
+        "OAuthCodeBodyLimit",
+        "AuthSourceOperation",
         "RemoteConstruction",
         "RemoteInitialization",
         "RemoteHttpResponse",
@@ -1241,6 +1276,45 @@ async fn private_causal_stderr_accepts_only_finite_fields_and_drains_secret_over
     use tokio::io::AsyncWriteExt;
     let good = "gateway-classification-v1 stage=TokenWrite io_kind=permission_denied os_code=Some(5) http_flags=0 http_status=None chain_truncated=false";
     assert!(classification_line(good));
+    for stage in [
+        "OAuthCallbackComplete",
+        "OAuthCallbackStateMissing",
+        "OAuthExchangeFailed",
+        "OAuthExchangeComplete",
+        "AuthAuthorizationRequired",
+        "AuthAuthorizationFailed",
+        "AuthTokenExchangeFailed",
+        "AuthTokenRefreshFailed",
+        "AuthTokenRefreshRejected",
+        "AuthCredentialStore",
+        "AuthHttp",
+        "AuthOAuth",
+        "AuthMetadata",
+        "AuthPkceUnsupported",
+        "AuthUrl",
+        "AuthNoAuthorizationSupport",
+        "AuthInternal",
+        "AuthInvalidTokenType",
+        "AuthTokenExpired",
+        "AuthInvalidScope",
+        "AuthRegistrationFailed",
+        "AuthInsufficientScope",
+        "AuthIssuerMismatch",
+        "AuthIssuerMissing",
+        "AuthClientCredentials",
+        "AuthOther",
+        "OAuthSourceClientSynced",
+        "OAuthSourceClientSyncFailed",
+        "OAuthCodeSend",
+        "OAuthCodeSendFailed",
+        "OAuthCodeStatus",
+        "OAuthCodeBodyComplete",
+        "OAuthCodeBodyFailed",
+        "OAuthCodeBodyLimit",
+        "AuthSourceOperation",
+    ] {
+        assert!(classification_line(&good.replace("TokenWrite", stage)));
+    }
     for bad in [
         good.replace(
             "TokenWrite",
@@ -2912,6 +2986,22 @@ async fn actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth
             finish_process_case(outcome)?;
             let stderr = stderr_result?;
             stdout_result??;
+            // After actual child/readers/fixture/path retirement, prove that the
+            // successful first OAuth flow exercised the finite production wiring.
+            for stage in [
+                "OAuthCallbackComplete",
+                "OAuthSourceClientSynced",
+                "OAuthCodeSend",
+                "OAuthCodeStatus",
+                "OAuthCodeBodyComplete",
+                "OAuthExchangeComplete",
+            ] {
+                let marker = format!("gateway-classification-v1 stage={stage} ");
+                assert!(
+                    stderr.lines().any(|line| line.starts_with(&marker)),
+                    "private held OAuth omitted finite stage {stage}"
+                );
+            }
             assert!(!stderr.contains("loopback-access") && !stderr.contains("loopback-refresh"));
             assert!(!stdout.contains("loopback-access") && !stdout.contains("loopback-refresh"));
             for line in stdout.lines() {

@@ -251,7 +251,10 @@ fn windows_held_confidential_read_atomic_replace_and_parent_rename_have_coherent
     let path = directory.join("oauth.json");
     let old = br#"{"tokens":{"access_token":"old-complete-fixture"}}"#;
     let new = br#"{"tokens":{"access_token":"new-complete-fixture-with-different-length"}}"#;
+    assert_eq!(std::fs::read_dir(&directory).unwrap().count(), 0);
+    // Initial atomic publication itself retains a production parent guard.
     write_confidential_file(&path, old, [5; 16]).unwrap();
+    assert_eq!(std::fs::read_dir(&directory).unwrap().count(), 1);
     // Paired positive prevents an always-denied fixture read from qualifying.
     match FixtureConfidentialRead::open(&path)
         .unwrap()
@@ -262,8 +265,21 @@ fn windows_held_confidential_read_atomic_replace_and_parent_rename_have_coherent
         _ => panic!("positive original read did not return the complete document"),
     }
     let held = FixtureConfidentialRead::open(&path).unwrap();
+    // The kernel rename opens its destination parent with FILE_ADD_FILE. This
+    // exact access must coexist with the held production read's parent guard.
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+        let add_file = std::fs::OpenOptions::new()
+            .access_mode(0x0000_0002) // FILE_ADD_FILE
+            .share_mode(0x0000_0007) // READ | WRITE | DELETE
+            .custom_flags(0x0200_0000) // FILE_FLAG_BACKUP_SEMANTICS
+            .open(&directory)
+            .unwrap();
+        drop(add_file);
+    }
     // Actual kernel file + directory handles remain open during publication.
     write_confidential_file(&path, new, [6; 16]).unwrap();
+    assert_eq!(std::fs::read_dir(&directory).unwrap().count(), 1);
     ssx_windows_owner::check_confidential_file(&path).unwrap();
     match read_confidential_file(&path, 4096).unwrap() {
         ConfidentialRead::Bytes(bytes) => assert_eq!(bytes, new),

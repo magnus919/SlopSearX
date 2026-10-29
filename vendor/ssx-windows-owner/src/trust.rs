@@ -286,12 +286,23 @@ pub(crate) fn identity(file: &File, directory: bool) -> io::Result<Identity> {
     })
 }
 pub(crate) fn opened(path: &Path, directory: bool) -> io::Result<File> {
-    opened_policy(path, directory, false)
+    opened_policy(path, directory, false, FILE_SHARE_READ)
 }
 pub(crate) fn opened_confidential(path: &Path) -> io::Result<File> {
-    opened_policy(path, false, true)
+    opened_policy(path, false, true, FILE_SHARE_READ | FILE_SHARE_DELETE)
 }
-fn opened_policy(path: &Path, directory: bool, confidential: bool) -> io::Result<File> {
+pub(crate) fn opened_confidential_parent(path: &Path) -> io::Result<File> {
+    // FileRenameInformation opens the destination directory with FILE_ADD_FILE.
+    // Permit that authorized child mutation while retaining the no-delete fence
+    // on this admitted parent. Package/image and confidential-file roles differ.
+    opened_policy(path, true, false, FILE_SHARE_READ | FILE_SHARE_WRITE)
+}
+fn opened_policy(
+    path: &Path,
+    directory: bool,
+    confidential: bool,
+    share: FILE_SHARE_MODE,
+) -> io::Result<File> {
     use std::os::windows::fs::MetadataExt;
     if !path.is_absolute() {
         return Err(io::ErrorKind::InvalidInput.into());
@@ -303,11 +314,11 @@ fn opened_policy(path: &Path, directory: bool, confidential: bool) -> io::Result
             return Err(io::ErrorKind::InvalidData.into());
         }
     }
-    // Retain no-delete/no-write sharing for exact package bytes through launch.
+    // The private wrappers above select sharing for their distinct custody roles.
     let file = OpenOptions::new()
         .read(true)
         .access_mode(FILE_GENERIC_READ | READ_CONTROL)
-        .share_mode(FILE_SHARE_READ | if confidential { FILE_SHARE_DELETE } else { 0 })
+        .share_mode(share)
         .custom_flags(
             FILE_FLAG_OPEN_REPARSE_POINT
                 | if directory {

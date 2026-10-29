@@ -5,6 +5,50 @@ const MODE: &str = "classification-v1";
 pub(super) enum Stage {
     NetworkStartup,
     OAuthStartup,
+    OAuthCallbackComplete,
+    OAuthCallbackStateMissing,
+    OAuthExchangeFailed,
+    OAuthExchangeComplete,
+    AuthAuthorizationRequired,
+    AuthAuthorizationFailed,
+    AuthTokenExchangeFailed,
+    AuthTokenRefreshFailed,
+    AuthTokenRefreshRejected,
+    AuthCredentialStore,
+    AuthHttp,
+    AuthOAuth,
+    AuthMetadata,
+    AuthPkceUnsupported,
+    AuthUrl,
+    AuthNoAuthorizationSupport,
+    AuthInternal,
+    AuthInvalidTokenType,
+    AuthTokenExpired,
+    AuthInvalidScope,
+    AuthRegistrationFailed,
+    AuthInsufficientScope,
+    AuthIssuerMismatch,
+    AuthIssuerMissing,
+    AuthClientCredentials,
+    AuthOther,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthSourceClientSynced,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthSourceClientSyncFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthCodeSend,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthCodeSendFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthCodeStatus,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthCodeBodyComplete,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthCodeBodyFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthCodeBodyLimit,
+    #[cfg(feature = "gateway-source-endpoints")]
+    AuthSourceOperation,
     RemoteConstruction,
     RemoteInitialization,
     RemoteHttpResponse,
@@ -165,6 +209,56 @@ impl Diagnostics {
             self.record_class(stage, classify(error));
         }
     }
+    pub(super) fn checkpoint(&self, stage: Stage) {
+        self.record_class(stage, Classification::default());
+    }
+    pub(super) fn record_auth_failure(
+        &self,
+        stage: Stage,
+        error: &rmcp::transport::auth::AuthError,
+    ) {
+        use rmcp::transport::auth::AuthError;
+        // Match variants only; their strings, URLs and issuer values are never kept.
+        let kind = match error {
+            AuthError::AuthorizationRequired => Stage::AuthAuthorizationRequired,
+            AuthError::AuthorizationFailed(_) => Stage::AuthAuthorizationFailed,
+            AuthError::TokenExchangeFailed(_) => Stage::AuthTokenExchangeFailed,
+            AuthError::TokenRefreshFailed(_) => Stage::AuthTokenRefreshFailed,
+            AuthError::TokenRefreshRejected(_) => Stage::AuthTokenRefreshRejected,
+            AuthError::CredentialStoreError(_) => Stage::AuthCredentialStore,
+            AuthError::HttpError(_) => Stage::AuthHttp,
+            AuthError::OAuthError(_) => Stage::AuthOAuth,
+            AuthError::MetadataError(_) => Stage::AuthMetadata,
+            AuthError::PkceUnsupported => Stage::AuthPkceUnsupported,
+            AuthError::UrlError(_) => Stage::AuthUrl,
+            AuthError::NoAuthorizationSupport => Stage::AuthNoAuthorizationSupport,
+            AuthError::InternalError(_) => Stage::AuthInternal,
+            AuthError::InvalidTokenType(_) => Stage::AuthInvalidTokenType,
+            AuthError::TokenExpired => Stage::AuthTokenExpired,
+            AuthError::InvalidScope(_) => Stage::AuthInvalidScope,
+            AuthError::RegistrationFailed(_) => Stage::AuthRegistrationFailed,
+            AuthError::InsufficientScope { .. } => Stage::AuthInsufficientScope,
+            AuthError::AuthorizationServerMismatch { .. } => Stage::AuthIssuerMismatch,
+            AuthError::AuthorizationServerMissingIssuer { .. } => Stage::AuthIssuerMissing,
+            AuthError::ClientCredentialsError(_) => Stage::AuthClientCredentials,
+            #[cfg(feature = "gateway-source-endpoints")]
+            AuthError::SourceOperation(_) => Stage::AuthSourceOperation,
+            _ => Stage::AuthOther,
+        };
+        self.record(stage, error);
+        self.record(kind, error);
+    }
+    #[cfg(feature = "gateway-source-endpoints")]
+    pub(super) fn record_code_status(&self, status: reqwest::StatusCode) {
+        self.record_class(
+            Stage::OAuthCodeStatus,
+            Classification {
+                http_flags: 128,
+                http_status: Some(status.as_u16()),
+                ..Classification::default()
+            },
+        );
+    }
     pub(super) fn record_http_status(&self, status: reqwest::StatusCode) {
         self.record_class(
             Stage::RemoteHttpResponse,
@@ -250,6 +344,57 @@ mod tests {
             "https://",
         ] {
             assert!(!rendered.contains(forbidden));
+        }
+        // Secret-bearing AuthError payloads must never be formatted or retained.
+        use rmcp::transport::auth::AuthError;
+        let auth_events = Diagnostics::new(Some(OsStr::new(MODE)));
+        auth_events.checkpoint(Stage::OAuthCallbackComplete);
+        for error in [
+            AuthError::InternalError("private-secret /private/token-path".into()),
+            AuthError::TokenExchangeFailed("https://example.invalid/?code=private-code".into()),
+            AuthError::AuthorizationServerMismatch {
+                expected_issuer: "https://user:private-secret@example.invalid".into(),
+                received_issuer: "/private/token-path".into(),
+            },
+        ] {
+            auth_events.record_auth_failure(Stage::OAuthExchangeFailed, &error);
+        }
+        #[cfg(feature = "gateway-source-endpoints")]
+        {
+            auth_events.record_auth_failure(
+                Stage::OAuthExchangeFailed,
+                &AuthError::SourceOperation(Box::new(std::io::Error::other(SecretError))),
+            );
+            auth_events.checkpoint(Stage::OAuthSourceClientSynced);
+            auth_events.checkpoint(Stage::OAuthCodeSend);
+            auth_events.record_code_status(reqwest::StatusCode::BAD_REQUEST);
+            auth_events.checkpoint(Stage::OAuthCodeBodyComplete);
+        }
+        let mut auth_output = Vec::new();
+        let emission = auth_events.emit(&mut auth_output);
+        assert!(!emission.failed && !emission.overflowed);
+        let auth_output = String::from_utf8(auth_output).unwrap();
+        for expected in [
+            "OAuthCallbackComplete",
+            "AuthInternal",
+            "AuthTokenExchangeFailed",
+            "AuthIssuerMismatch",
+        ] {
+            assert!(auth_output.contains(expected));
+        }
+        #[cfg(feature = "gateway-source-endpoints")]
+        {
+            assert!(auth_output.contains("stage=AuthSourceOperation "));
+            assert!(auth_output.contains("stage=OAuthCodeStatus io_kind=none os_code=None http_flags=128 http_status=Some(400)"));
+        }
+        for forbidden in [
+            "private-secret",
+            "private-code",
+            "example.invalid",
+            "token-path",
+            "https://",
+        ] {
+            assert!(!auth_output.contains(forbidden));
         }
         struct FailingSink;
         impl std::io::Write for FailingSink {

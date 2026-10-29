@@ -31,9 +31,13 @@ Microsoft's UpdateProcThreadAttribute documentation explicitly lists JOB_LIST on
 Token documents use the existing trusted owner set but a separate confidentiality
 policy: public generic/read/execute grants are refused as well as untrusted writes.
 Package integrity continues to permit public readers. Private creation supplies a
-protected DACL at CreateFile time; a held validated parent prevents replacement
-through same-parent atomic publication. Token read handles permit delete sharing
-for replacement but deny writers; identity and link-count checks span the read.
+protected DACL at CreateFile time. Confidential parent guards permit read/write
+sharing because Windows opens the rename destination directory with FILE_ADD_FILE;
+they still deny delete sharing, retaining the parent replacement fence through
+same-parent atomic publication. Parent ACL, reparse, link and identity admission
+is unchanged. Token read handles permit delete sharing for replacement but deny
+writers; package/image handles continue to deny write/delete sharing. Identity
+and link-count checks span the read.
 Read admission does not create directories or renew any shared state. A failed
 create-new collision never transfers cleanup ownership of the existing path.
 
