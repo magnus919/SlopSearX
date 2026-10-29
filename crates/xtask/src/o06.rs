@@ -625,8 +625,159 @@ fn hygiene_text_with_rules(path: &str, raw: &str, rules: AssetTextRules) -> Resu
     }
     Ok(())
 }
+
+// One immutable IDNA input family and one reviewed generated output. The
+// existing A05 208-asset manifest remains a separate, unchanged trust boundary.
+const IDNA_INPUT_MANIFEST: &str = "crates/ssx-source-codecs/provenance/idna2008/input-pins.json";
+const IDNA_INPUT_MANIFEST_BYTES: u64 = 4937;
+const IDNA_INPUT_MANIFEST_SHA256: &str =
+    "7a5a777d6338d8e946a269cc9a0f9d84d9852b9f1f8f35cf7a509b96417e6474";
+const IDNA_INPUT_ROOT: &str = "crates/ssx-source-codecs/provenance/idna2008/";
+const IDNA_INPUT_NAMES: [&str; 16] = [
+    "inputs/CPython-LICENSE",
+    "inputs/CPython16-whitespace.c.txt",
+    "inputs/HTTPX2-LICENSE.md",
+    "inputs/IDNA-LICENSE.md",
+    "inputs/Include__patchlevel.h.txt",
+    "inputs/Objects__unicodetype_db.h.txt",
+    "inputs/httpx2_config.py.txt",
+    "inputs/httpx2_urlparse.py.txt",
+    "inputs/httpx2_utils.py.txt",
+    "inputs/idna_core.py.txt",
+    "inputs/idna_package_data.py.txt",
+    "inputs/idnadata.py.txt",
+    "inputs/pycore_long.h",
+    "inputs/unicodedata.c",
+    "inputs/unicodedata_db.h",
+    "inputs/unicodename_db.h",
+];
+const IDNA_GENERATED_OUTPUT: &str = "crates/ssx-source-codecs/src/idna2008_data.rs";
+const IDNA_GENERATED_BYTES: u64 = 728_699;
+const IDNA_GENERATED_SHA256: &str =
+    "bb9d2bb19b3bb517d04c9e94b323545fd7d27c16e8955686daabc4ffa7021c75";
+fn idna_regular_file(root: &Path, relative: &str) -> Result<()> {
+    let mut path = root.to_path_buf();
+    let components = relative.split('/').collect::<Vec<_>>();
+    for (index, part) in components.iter().enumerate() {
+        ensure(!matches!(*part, "" | "." | ".."), "invalid IDNA asset path")?;
+        path.push(part);
+        let metadata = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
+        ensure(!metadata.file_type().is_symlink(), "IDNA asset symlink")?;
+        if index + 1 == components.len() {
+            ensure(metadata.is_file(), "IDNA asset must be regular")?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt as _;
+                ensure(
+                    metadata.permissions().mode() & 0o7777 == 0o644,
+                    "IDNA asset mode drift",
+                )?;
+            }
+        } else {
+            ensure(metadata.is_dir(), "IDNA asset parent must be directory")?;
+        }
+    }
+    Ok(())
+}
+fn idna_asset(path: String, bytes: u64, sha256: String, text_rules: AssetTextRules) -> SourceAsset {
+    SourceAsset {
+        path,
+        bytes,
+        sha256,
+        text_rules,
+        encoding: "utf8".into(),
+        kind: "licensed upstream source/notice".into(),
+        provenance: "exact IDNA input manifest or reviewed generated output".into(),
+    }
+}
+fn read_idna_asset(root: &Path, asset: &SourceAsset) -> Result<String> {
+    idna_regular_file(root, &asset.path)?;
+    read_source_asset(root, asset)?.ok_or_else(|| "IDNA text asset is not UTF8".into())
+}
+fn idna_input_rows(manifest: &Value) -> Result<std::collections::BTreeMap<String, SourceAsset>> {
+    ensure(
+        manifest["source_profile"] == "python-idna3.18/IDNA17/CPython16",
+        "IDNA source profile drift",
+    )?;
+    let inputs = manifest["inputs"].as_array().ok_or("IDNA input array")?;
+    ensure(
+        inputs.len() == IDNA_INPUT_NAMES.len(),
+        "IDNA input count drift",
+    )?;
+    let mut assets = std::collections::BTreeMap::new();
+    for input in inputs {
+        let name = input["path"].as_str().ok_or("IDNA input path")?;
+        ensure(
+            IDNA_INPUT_NAMES.contains(&name),
+            "unknown IDNA input identity",
+        )?;
+        ensure(
+            input["original_path"]
+                .as_str()
+                .is_some_and(|p| !p.is_empty()),
+            "IDNA input provenance",
+        )?;
+        let bytes = input["bytes"].as_u64().ok_or("IDNA input bytes")?;
+        let hash = input["sha256"].as_str().ok_or("IDNA input digest")?;
+        ensure(
+            bytes > 0
+                && bytes <= 1_417_522
+                && hash.len() == 64
+                && hash
+                    .bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)),
+            "IDNA input size/digest shape",
+        )?;
+        let rules = AssetTextRules {
+            license_separator: name == "inputs/CPython-LICENSE",
+            preserve_final_newline: matches!(
+                name,
+                "inputs/Objects__unicodetype_db.h.txt" | "inputs/unicodedata_db.h"
+            ),
+            ..AssetTextRules::default()
+        };
+        let asset = idna_asset(
+            format!("{IDNA_INPUT_ROOT}{name}"),
+            bytes,
+            hash.into(),
+            rules,
+        );
+        ensure(
+            assets.insert(asset.path.clone(), asset).is_none(),
+            "duplicate IDNA input identity",
+        )?;
+    }
+    ensure(
+        assets.len() == IDNA_INPUT_NAMES.len(),
+        "missing IDNA input identity",
+    )?;
+    Ok(assets)
+}
+fn idna_source_assets(root: &Path) -> Result<std::collections::BTreeMap<String, SourceAsset>> {
+    let manifest = idna_asset(
+        IDNA_INPUT_MANIFEST.into(),
+        IDNA_INPUT_MANIFEST_BYTES,
+        IDNA_INPUT_MANIFEST_SHA256.into(),
+        AssetTextRules::default(),
+    );
+    // Fixed bytes/hash and physical custody are verified before parsing any
+    // path, length, digest or whitespace policy from this retained manifest.
+    let raw = read_idna_asset(root, &manifest)?;
+    let value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
+    let mut assets = idna_input_rows(&value)?;
+    let mut generated = idna_asset(
+        IDNA_GENERATED_OUTPUT.into(),
+        IDNA_GENERATED_BYTES,
+        IDNA_GENERATED_SHA256.into(),
+        AssetTextRules::default(),
+    );
+    generated.kind = "generated Rust table".into();
+    assets.insert(generated.path.clone(), generated);
+    Ok(assets)
+}
+
 fn hygiene(root: &Path) -> Result<()> {
-    hygiene_with_policy(
+    hygiene_with_idna_inputs(
         root,
         AssetPolicy {
             path: A05_ASSET_MANIFEST,
@@ -635,8 +786,21 @@ fn hygiene(root: &Path) -> Result<()> {
         },
     )
 }
+fn hygiene_with_idna_inputs(root: &Path, policy: AssetPolicy<'_>) -> Result<()> {
+    let idna = idna_source_assets(root)?;
+    hygiene_with_inputs(root, policy, &idna)
+}
+#[cfg(test)]
 fn hygiene_with_policy(root: &Path, policy: AssetPolicy<'_>) -> Result<()> {
+    hygiene_with_inputs(root, policy, &std::collections::BTreeMap::new())
+}
+fn hygiene_with_inputs(
+    root: &Path,
+    policy: AssetPolicy<'_>,
+    idna: &std::collections::BTreeMap<String, SourceAsset>,
+) -> Result<()> {
     let assets = source_assets(root, policy)?;
+    let mut idna_seen = BTreeSet::new();
     let mut seen = BTreeSet::new();
     let files = command(
         root,
@@ -666,6 +830,13 @@ fn hygiene_with_policy(root: &Path, policy: AssetPolicy<'_>) -> Result<()> {
                 hygiene_text_with_rules(file, &raw, asset.text_rules)
                     .map_err(|e| format!("{file}: {e}"))?;
             }
+        } else if let Some(asset) = idna.get(file) {
+            // No size/style exemption is reached until the exact reviewed
+            // bytes, length, regular-file custody and mode have been checked.
+            let raw = read_idna_asset(root, asset).map_err(|e| format!("{file}: {e}"))?;
+            hygiene_text_with_rules(file, &raw, asset.text_rules)
+                .map_err(|e| format!("{file}: {e}"))?;
+            idna_seen.insert(file.to_string());
         } else {
             ensure(
                 !file.ends_with(".bin") && !file.ends_with(".zlib") && !file.ends_with(".gz"),
@@ -687,6 +858,10 @@ fn hygiene_with_policy(root: &Path, policy: AssetPolicy<'_>) -> Result<()> {
     ensure(
         seen.len() == assets.len(),
         "declared source asset absent from source inventory",
+    )?;
+    ensure(
+        idna_seen.len() == idna.len(),
+        "declared IDNA asset absent from source inventory",
     )
 }
 pub fn helper(root: &Path, args: &[String]) -> Result<()> {
@@ -796,7 +971,36 @@ mod tests {
         fn write(&self, path: &str, raw: &[u8]) {
             let path = self.0.join(path);
             fs::create_dir_all(path.parent().unwrap()).unwrap();
-            fs::write(path, raw).unwrap();
+            fs::write(&path, raw).unwrap();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt as _;
+                fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+            }
+        }
+        fn write_actual_idna(&self) {
+            let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+            self.write(
+                IDNA_INPUT_MANIFEST,
+                &fs::read(source.join(IDNA_INPUT_MANIFEST)).unwrap(),
+            );
+            let assets = idna_source_assets(&source).unwrap();
+            assert_eq!(assets.len(), 17);
+            for asset in assets.values() {
+                self.write(&asset.path, &fs::read(source.join(&asset.path)).unwrap());
+            }
+        }
+        fn check_idna(&self) -> Result<()> {
+            let raw = serde_json::to_string(&json!({"schema_version":1,"assets":[]})).unwrap();
+            self.write(A05_ASSET_MANIFEST, raw.as_bytes());
+            hygiene_with_idna_inputs(
+                &self.0,
+                AssetPolicy {
+                    path: A05_ASSET_MANIFEST,
+                    digest: &asset_digest(raw.as_bytes()),
+                    count: 0,
+                },
+            )
         }
         fn check(&self, assets: Vec<Value>) -> Result<()> {
             let count = assets.len();
@@ -947,6 +1151,171 @@ mod tests {
                 .unwrap_err()
                 .contains("merge conflict marker")
         );
+    }
+    #[test]
+    fn exact_idna_seventeen_assets_pass_with_only_reviewed_style_allowances() {
+        let fixture = AssetFixture::new();
+        fixture.write_actual_idna();
+        let assets = idna_source_assets(&fixture.0).unwrap();
+        assert_eq!(assets.len(), 17);
+        assert_eq!(
+            assets
+                .values()
+                .filter(|a| a.text_rules.license_separator)
+                .count(),
+            1
+        );
+        assert_eq!(
+            assets
+                .values()
+                .filter(|a| a.text_rules.preserve_final_newline)
+                .count(),
+            2
+        );
+        assert!(
+            assets
+                .values()
+                .all(|a| !a.text_rules.preserve_cr && !a.text_rules.preserve_trailing)
+        );
+        let generated = &assets[IDNA_GENERATED_OUTPUT];
+        assert!(
+            !generated.text_rules.license_separator && !generated.text_rules.preserve_final_newline
+        );
+        fixture.check_idna().unwrap();
+    }
+    #[test]
+    fn idna_manifest_authentication_and_closed_input_membership_reject_drift() {
+        let fixture = AssetFixture::new();
+        fixture.write_actual_idna();
+        let raw = fs::read(fixture.0.join(IDNA_INPUT_MANIFEST)).unwrap();
+        let original: Value = serde_json::from_slice(&raw).unwrap();
+        for (pointer, value) in [
+            ("/inputs/0/path", json!("inputs/unreviewed.txt")),
+            ("/inputs/0/bytes", json!(13805)),
+            (
+                "/inputs/0/sha256",
+                json!("0000000000000000000000000000000000000000000000000000000000000000"),
+            ),
+            ("/source_profile", json!("unreviewed")),
+        ] {
+            let mut changed = original.clone();
+            *changed.pointer_mut(pointer).unwrap() = value;
+            fixture.write(IDNA_INPUT_MANIFEST, &serde_json::to_vec(&changed).unwrap());
+            assert!(fixture.check_idna().is_err(), "{pointer}");
+        }
+        // Membership is independently closed even after the fixed manifest
+        // authentication boundary: no duplicate, missing or extra identity.
+        for kind in ["duplicate", "missing", "extra", "path"] {
+            let mut changed = original.clone();
+            let inputs = changed["inputs"].as_array_mut().unwrap();
+            match kind {
+                "duplicate" => inputs[1] = inputs[0].clone(),
+                "missing" => {
+                    inputs.pop();
+                }
+                "extra" => inputs.push(inputs[0].clone()),
+                _ => inputs[0]["path"] = json!("inputs/../escape"),
+            }
+            assert!(idna_input_rows(&changed).is_err(), "{kind}");
+        }
+        fs::remove_file(fixture.0.join(IDNA_INPUT_MANIFEST)).unwrap();
+        assert!(fixture.check_idna().is_err());
+        fixture.write(IDNA_INPUT_MANIFEST, &raw);
+        fixture.check_idna().unwrap();
+    }
+    #[test]
+    fn idna_inputs_and_generated_output_reject_byte_length_mode_and_link_drift() {
+        let fixture = AssetFixture::new();
+        fixture.write_actual_idna();
+        for relative in [IDNA_CPYTHON_LICENSE_COPY, IDNA_GENERATED_OUTPUT] {
+            let path = fixture.0.join(relative);
+            let raw = fs::read(&path).unwrap();
+            let mut changed = raw.clone();
+            changed[0] ^= 1;
+            fixture.write(relative, &changed);
+            assert!(fixture.check_idna().unwrap_err().contains("digest"));
+            fixture.write(relative, &raw[..raw.len() - 1]);
+            assert!(fixture.check_idna().unwrap_err().contains("length"));
+            fixture.write(relative, &raw);
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::{PermissionsExt as _, symlink};
+                fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+                assert!(fixture.check_idna().unwrap_err().contains("mode"));
+                fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+                fs::remove_file(&path).unwrap();
+                let target = fixture.0.join("same-bytes.txt");
+                fs::write(&target, &raw).unwrap();
+                symlink(&target, &path).unwrap();
+                assert!(fixture.check_idna().unwrap_err().contains("symlink"));
+                fs::remove_file(&path).unwrap();
+                fs::remove_file(target).unwrap();
+                fixture.write(relative, &raw);
+            }
+        }
+        let path = fixture.0.join(IDNA_CPYTHON_LICENSE_COPY);
+        let relocated = fixture.0.join("relocated-IDNA-input.txt");
+        fs::rename(&path, &relocated).unwrap();
+        assert!(fixture.check_idna().unwrap_err().contains("absent"));
+        fs::rename(&relocated, &path).unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+            let inputs = fixture.0.join(format!("{IDNA_INPUT_ROOT}inputs"));
+            let retained = fixture.0.join("retained-inputs");
+            fs::rename(&inputs, &retained).unwrap();
+            symlink(&retained, &inputs).unwrap();
+            let assets = idna_source_assets(&fixture.0).unwrap();
+            assert!(
+                read_idna_asset(&fixture.0, &assets[IDNA_CPYTHON_LICENSE_COPY])
+                    .unwrap_err()
+                    .contains("symlink")
+            );
+            fs::remove_file(&inputs).unwrap();
+            fs::rename(&retained, &inputs).unwrap();
+        }
+        fs::remove_file(&path).unwrap();
+        fs::create_dir(&path).unwrap();
+        let assets = idna_source_assets(&fixture.0).unwrap();
+        assert!(
+            read_idna_asset(&fixture.0, &assets[IDNA_CPYTHON_LICENSE_COPY])
+                .unwrap_err()
+                .contains("regular")
+        );
+        assert!(fixture.check_idna().unwrap_err().contains("absent"));
+    }
+    #[test]
+    fn idna_allowances_do_not_relax_ordinary_source_or_new_family_members() {
+        let fixture = AssetFixture::new();
+        fixture.write_actual_idna();
+        for relative in [
+            "crates/plain.rs",
+            "crates/ssx-source-codecs/provenance/idna2008/inputs/new.rs",
+        ] {
+            for (raw, reason) in [
+                ("<<<<<<< branch\n".into(), "merge conflict"),
+                ("=======\n".into(), "merge conflict"),
+                ("value \n".into(), "trailing"),
+                ("value\r\n".into(), "line endings"),
+                ("value\n\n".into(), "final newline"),
+                ("//x\n".repeat(130_000), "500 KiB"),
+            ] {
+                fixture.write(relative, raw.as_bytes());
+                assert!(
+                    fixture.check_idna().unwrap_err().contains(reason),
+                    "{relative}: {reason}"
+                );
+            }
+            fs::remove_file(fixture.0.join(relative)).unwrap();
+        }
+        // The reviewed generated output has only a size allowance: whitespace
+        // and marker validation still reject malformed bytes with its rules.
+        let assets = idna_source_assets(&fixture.0).unwrap();
+        let rules = assets[IDNA_GENERATED_OUTPUT].text_rules;
+        for raw in ["<<<<<<< branch\n", "=======\n", "x \n", "x\r\n", "x\n\n"] {
+            assert!(hygiene_text_with_rules(IDNA_GENERATED_OUTPUT, raw, rules).is_err());
+        }
+        fixture.check_idna().unwrap();
     }
     #[test]
     fn pinned_text_keeps_semantic_validation_and_only_named_whitespace_waivers() {
