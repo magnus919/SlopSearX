@@ -2020,8 +2020,6 @@
           "env": {
             "CARGO_TERM_COLOR": "always",
             "RUST_BACKTRACE": 1,
-            "SLOPSEARX_INSTALL_TEST_ROOT": "${{ runner.temp }}/ssx-gateway-install",
-            "SLOPSEARX_T07_UNIT_TEST_ROOT": "${{ runner.temp }}/ssx-t07-unit-tests",
             "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER": "/usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR",
             "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER": "/usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR"
           },
@@ -2031,6 +2029,14 @@
               "with": {
                 "fetch-depth": 0
               }
+            },
+            {
+              "env": {
+                "SLOPSEARX_INSTALL_TEST_ROOT": "${{ runner.temp }}/ssx-gateway-install",
+                "SLOPSEARX_T07_UNIT_TEST_ROOT": "${{ runner.temp }}/ssx-t07-unit-tests"
+              },
+              "name": "Configure private gateway fixture roots",
+              "run": "printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\nprintf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n"
             },
             {
               "name": "Prepare private gateway package fixtures",
@@ -2168,9 +2174,7 @@
           },
           "env": {
             "CARGO_TERM_COLOR": "always",
-            "RUST_BACKTRACE": 1,
-            "SLOPSEARX_INSTALL_TEST_ROOT": "${{ runner.temp }}/ssx-gateway-install",
-            "SLOPSEARX_T07_UNIT_TEST_ROOT": "${{ runner.temp }}/ssx-t07-unit-tests"
+            "RUST_BACKTRACE": 1
           },
           "steps": [
             {
@@ -2178,6 +2182,14 @@
               "with": {
                 "fetch-depth": 0
               }
+            },
+            {
+              "env": {
+                "SLOPSEARX_INSTALL_TEST_ROOT": "${{ runner.temp }}/ssx-gateway-install",
+                "SLOPSEARX_T07_UNIT_TEST_ROOT": "${{ runner.temp }}/ssx-t07-unit-tests"
+              },
+              "name": "Configure private gateway fixture roots",
+              "run": "printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\nprintf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n"
             },
             {
               "name": "Prepare private gateway package fixtures",
@@ -2575,6 +2587,169 @@
       "owner": "F03",
       "state": "additive",
       "successor": "Mandatory adapters partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates."
+    },
+    "rust-client-platforms.yml:client-platform": {
+      "source": {
+        "job": {
+          "defaults": {
+            "run": {
+              "shell": "bash"
+            }
+          },
+          "env": {
+            "CARGO_BUILD_JOBS": 2,
+            "CARGO_INCREMENTAL": 0,
+            "CARGO_PROFILE_DEV_DEBUG": 0,
+            "CARGO_PROFILE_TEST_DEBUG": 0,
+            "CARGO_TERM_COLOR": "always",
+            "RUST_BACKTRACE": 1
+          },
+          "name": "Client install and security (${{ matrix.target }})",
+          "runs-on": "${{ matrix.runner }}",
+          "steps": [
+            {
+              "uses": "actions/checkout@v7"
+            },
+            {
+              "env": {
+                "CARGO_TARGET_DIR": "${{ runner.temp }}/ssx-client-target",
+                "SLOPSEARX_INSTALL_TEST_ROOT": "${{ runner.temp }}/ssx-client-install",
+                "SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST": "${{ runner.temp }}/ssx-client-evidence/production-artifacts.json",
+                "SLOPSEARX_T07_UNIT_TEST_ROOT": "${{ runner.temp }}/ssx-client-unit"
+              },
+              "name": "Configure private client fixture and artifact paths",
+              "run": "$ErrorActionPreference = 'Stop'\n$entries = @(\n  \"CARGO_TARGET_DIR=$env:CARGO_TARGET_DIR\",\n  \"SLOPSEARX_INSTALL_TEST_ROOT=$env:SLOPSEARX_INSTALL_TEST_ROOT\",\n  \"SLOPSEARX_T07_UNIT_TEST_ROOT=$env:SLOPSEARX_T07_UNIT_TEST_ROOT\",\n  \"SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST=$env:SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST\"\n)\n[System.IO.File]::AppendAllText($env:GITHUB_ENV, (($entries -join \"`n\") + \"`n\"), [System.Text.UTF8Encoding]::new($false))\n",
+              "shell": "pwsh"
+            },
+            {
+              "name": "Record actual native host and pinned inputs",
+              "run": "set -euo pipefail\nmkdir -p \"$RUNNER_TEMP/ssx-client-evidence\"\nrustc --version --verbose | tee \"$RUNNER_TEMP/ssx-client-evidence/toolchain.txt\"\ntest \"$(rustc --version --verbose | sed -n 's/^host: //p')\" = '${{ matrix.target }}'\ngit rev-parse HEAD | tee \"$RUNNER_TEMP/ssx-client-evidence/head.txt\"\ngit diff --exit-code\n"
+            },
+            {
+              "if": "runner.os != 'Windows'",
+              "name": "Prepare private Unix fixture roots",
+              "run": "mkdir -m 700 \"$SLOPSEARX_INSTALL_TEST_ROOT\" \"$SLOPSEARX_T07_UNIT_TEST_ROOT\""
+            },
+            {
+              "if": "runner.os == 'Windows'",
+              "name": "Prepare protected Windows fixture roots",
+              "run": "$ErrorActionPreference = 'Stop'\n$sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User\nforeach ($path in @($env:SLOPSEARX_INSTALL_TEST_ROOT, $env:SLOPSEARX_T07_UNIT_TEST_ROOT)) {\n  if (Test-Path -LiteralPath $path) { throw 'Refuse to adopt a preexisting fixture root' }\n  New-Item -ItemType Directory -Path $path | Out-Null\n  $acl = [System.Security.AccessControl.DirectorySecurity]::new()\n  $acl.SetOwner($sid)\n  $acl.SetAccessRuleProtection($true, $false)\n  foreach ($principal in @($sid, [System.Security.Principal.SecurityIdentifier]::new('S-1-5-18'), [System.Security.Principal.SecurityIdentifier]::new('S-1-5-32-544'))) {\n    $rule = [System.Security.AccessControl.FileSystemAccessRule]::new($principal, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow')\n    $acl.AddAccessRule($rule)\n  }\n  Set-Acl -LiteralPath $path -AclObject $acl\n}\n",
+              "shell": "pwsh"
+            },
+            {
+              "name": "Prove default client dependency boundary and production executables",
+              "run": "set -euo pipefail\ncargo tree --locked -p ssx-gateway --no-default-features --edges normal > \"$RUNNER_TEMP/ssx-client-evidence/client-tree.txt\"\nif grep -E 'ssx-(application|infra|http|registry|config|worker) v' \"$RUNNER_TEMP/ssx-client-evidence/client-tree.txt\"; then\n  echo 'Server dependency entered client-only graph' >&2\n  exit 1\nfi\ncargo build --locked -p ssx-gateway --no-default-features --bin ssx-gateway --bin ssx-gateway-dns --bin ssx-gateway-input --message-format=json > \"$RUNNER_TEMP/ssx-client-evidence/client-build.jsonl\"\n"
+            },
+            {
+              "name": "Preserve exact default production artifacts before feature builds",
+              "run": "./crates/ssx-gateway/tests/platform_support/seal-production.ps1 -BuildJson \"$env:RUNNER_TEMP/ssx-client-evidence/client-build.jsonl\" -OutputRoot \"$env:RUNNER_TEMP/ssx-client-shipping\" -Manifest $env:SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST -Target '${{ matrix.target }}'\n",
+              "shell": "pwsh"
+            },
+            {
+              "name": "Assert compiled platform test inventory before execution",
+              "run": "set -euo pipefail\ncargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_install --test t07_platform_tls --test t07_runtime --test t07_windows_owner --test t07_windows_security -- --list 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt\"\n"
+            },
+            {
+              "name": "Verify required named native cases are present exactly once",
+              "run": "./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory \"$env:RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt\"\n",
+              "shell": "pwsh"
+            },
+            {
+              "name": "Native installed client and private TLS witnesses",
+              "run": "set -euo pipefail\nfeatures=source-endpoint-test-fixtures,windows-owner-test-fixtures\ncargo test --locked -p ssx-gateway --no-default-features --features \"$features\" --test t07_platform_install --test t07_platform_tls --test t07_runtime --test t07_windows_owner --test t07_windows_security -- --nocapture 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/runtime.txt\"\n"
+            },
+            {
+              "name": "Assert exact ignored hosted trust-store inventory",
+              "run": "set -euo pipefail\ncargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --list 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/store-inventory.txt\"\n"
+            },
+            {
+              "name": "Verify nonzero exact hosted trust-store case",
+              "run": "./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory \"$env:RUNNER_TEMP/ssx-client-evidence/store-inventory.txt\" -IgnoredOnly\n",
+              "shell": "pwsh"
+            },
+            {
+              "env": {
+                "SLOPSEARX_PLATFORM_TRUST_FIXTURE": "1"
+              },
+              "name": "Dedicated ephemeral platform trust-store witness",
+              "run": "set -euo pipefail\n# This runner is disposable. Exact CA cleanup also runs in the finalizer.\ntrap 'for case_root in \"$SLOPSEARX_INSTALL_TEST_ROOT\"/platform-tls-store-*; do if [[ -f \"$case_root/trust-active\" ]]; then bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove \"$case_root\"; fi; done' EXIT\ncargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --nocapture 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/platform-store.txt\"\n"
+            },
+            {
+              "env": {
+                "SLOPSEARX_PLATFORM_TRUST_FIXTURE": "1"
+              },
+              "if": "always()",
+              "name": "Always remove exact owned CI trust fixtures",
+              "run": "set -euo pipefail\nfor case_root in \"$SLOPSEARX_INSTALL_TEST_ROOT\"/platform-tls-store-*; do\n  if [[ -f \"$case_root/trust-active\" ]]; then\n    bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove \"$case_root\"\n  fi\ndone\n"
+            },
+            {
+              "if": "always()",
+              "name": "Retain exact host receipts",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "if-no-files-found": "error",
+                "name": "rust-client-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/ssx-client-evidence"
+              }
+            },
+            {
+              "if": "always()",
+              "name": "Remove this job's reproducible target and fixture roots",
+              "run": "set -euo pipefail\n# Only fixed directories owned by this ephemeral job, never a cache.\nfor case_root in \"$SLOPSEARX_INSTALL_TEST_ROOT\"/platform-tls-store-*; do\n  test ! -f \"$case_root/trust-active\"\ndone\nrm -rf -- \"$CARGO_TARGET_DIR\" \"$SLOPSEARX_INSTALL_TEST_ROOT\" \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" \"$RUNNER_TEMP/ssx-client-shipping\"\n"
+            }
+          ],
+          "strategy": {
+            "fail-fast": false,
+            "matrix": {
+              "include": [
+                {
+                  "runner": "ubuntu-24.04",
+                  "target": "x86_64-unknown-linux-gnu"
+                },
+                {
+                  "runner": "ubuntu-24.04-arm",
+                  "target": "aarch64-unknown-linux-gnu"
+                },
+                {
+                  "runner": "macos-15-intel",
+                  "target": "x86_64-apple-darwin"
+                },
+                {
+                  "runner": "macos-15",
+                  "target": "aarch64-apple-darwin"
+                },
+                {
+                  "runner": "windows-2025",
+                  "target": "x86_64-pc-windows-msvc"
+                }
+              ]
+            }
+          },
+          "timeout-minutes": 60
+        },
+        "workflow": {
+          "name": "Rust client platforms",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
+            },
+            "push": {
+              "branches": [
+                "main"
+              ]
+            },
+            "workflow_dispatch": null
+          },
+          "permissions": {
+            "contents": "read"
+          }
+        }
+      },
+      "owner": "T07",
+      "state": "additive",
+      "successor": "Retain this additive five-native-runner client install and security lane. T07 owns per-target install, TLS/trust-store, source-stage and runtime evidence; hosted acceptance on every listed native target remains pending. O04 separately owns release signing, authenticated distribution and promotion; O09 owns activation and architecture/security acceptance. This source inventory entry is a handoff, not hosted execution or release acceptance evidence."
     }
   },
   "precommit_source": {
@@ -2585,11 +2760,11 @@
         "hooks": [
           {
             "id": "trailing-whitespace",
-            "exclude": "^docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^docs/rust-rewrite/o01/evidence/original53-v[12]-stdout\\.log$"
+            "exclude": "^docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^docs/rust-rewrite/o01/evidence/original53-v[12]-stdout\\.log$|^(?:vendor/ssx\\-http\\-source/httparse/build\\.rs|vendor/ssx\\-http\\-source/httparse/src/simd/mod\\.rs|vendor/ssx\\-http\\-source/httparse/src/simd/neon\\.rs|vendor/ssx\\-http\\-source/patches/hyper\\.patch|vendor/ssx\\-http\\-source/patches/reqwest\\.patch|vendor/ssx\\-sdk\\-auth/patches/rmcp\\-native\\-dev\\-fixtures\\.patch|vendor/ssx\\-sdk\\-auth/patches/rmcp\\-source\\-policy\\.patch|vendor/ssx\\-sdk\\-auth/patches/rmcp\\.patch|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_json_schema_detection\\.rs)$"
           },
           {
             "id": "end-of-file-fixer",
-            "exclude": "^(docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)|crates/xtask/fixtures/f13/native-record\\.json|docs/rust-rewrite/t06/validation\\.json)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^(?:contracts/unicode/python-text-source/Objects__unicodectype\\.c\\.txt|contracts/unicode/python-text-source/Objects__unicodetype_db\\.h\\.txt|contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap\\.rs\\.frozen$|^docs/rust-rewrite/a07/qualification/pubchem-owner-clock-negative\\.stdout$|^logs/a05-codec-donor-final-alias-regression\\.log$"
+            "exclude": "^(docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)|crates/xtask/fixtures/f13/native-record\\.json|docs/rust-rewrite/t06/validation\\.json)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^(?:contracts/unicode/python-text-source/Objects__unicodectype\\.c\\.txt|contracts/unicode/python-text-source/Objects__unicodetype_db\\.h\\.txt|contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap\\.rs\\.frozen$|^docs/rust-rewrite/a07/qualification/pubchem-owner-clock-negative\\.stdout$|^logs/a05-codec-donor-final-alias-regression\\.log$|^(?:docs/rust\\-rewrite/t07/source\\-inputs/CPYTHON\\-unicodectype\\.c\\.txt|docs/rust\\-rewrite/t07/source\\-inputs/CPYTHON\\-unicodetype_db\\.h\\.txt|docs/rust\\-rewrite/t07/source\\-inputs/fastmcp\\-4\\.0\\.11\\.dist\\-info__LICENSE\\.txt|vendor/ssx\\-http\\-source/httparse/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/httparse/LICENSE\\-MIT|vendor/ssx\\-http\\-source/hyper\\-util/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/hyper/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/reqwest/\\.cargo_vcs_info\\.json|vendor/ssx\\-http\\-source/reqwest/LICENSE\\-MIT|vendor/ssx\\-http\\-source/reqwest/src/source_pool/python\\-text\\-source/Modules__unicodedata_db\\.h\\.txt|vendor/ssx\\-http\\-source/reqwest/src/source_pool/python\\-text\\-source/Objects__unicodectype\\.c\\.txt|vendor/ssx\\-http\\-source/reqwest/src/source_pool/python\\-text\\-source/Objects__unicodetype_db\\.h\\.txt|vendor/ssx\\-sdk\\-auth/patches/rmcp\\-native\\-dev\\-fixtures\\.patch|vendor/ssx\\-sdk\\-auth/rmcp/\\.cargo_vcs_info\\.json|vendor/ssx\\-sdk\\-auth/rmcp/src/handler/server/resource\\.rs|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_deserialization/tool_list_result\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/client_json_rpc_message_schema_current\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_message_schema/server_json_rpc_message_schema_current\\.json|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_tool_handler\\.rs|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/\\.gitignore|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/client\\.js|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/server\\.js|vendor/ssx\\-sdk\\-auth/rmcp/tests/test_with_js/streamable_server\\.js)$|^(?:crates/ssx\\-source\\-codecs/provenance/idna2008/inputs/Objects__unicodetype_db\\.h\\.txt|crates/ssx\\-source\\-codecs/provenance/idna2008/inputs/unicodedata_db\\.h)$"
           },
           {
             "id": "check-yaml"
@@ -2615,7 +2790,7 @@
           },
           {
             "id": "check-added-large-files",
-            "exclude": "^docs/rust-rewrite/t06/(entities|validation)\\.json$|^docs/rust-rewrite/w06/(source\\.json|evidence/source-before-(composite-id-correction|unique-snapshot-ids)\\.json|evidence/review-public-source-outcomes\\.json)$|^docs/rust-rewrite/a10/(source-boundaries-v2\\.json|native-differences-v1\\.json)$|^docs/rust-rewrite/a11/(source-boundaries-v2|native-differences-v1)\\.json$|^(?:contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$",
+            "exclude": "^docs/rust-rewrite/t06/(entities|validation)\\.json$|^docs/rust-rewrite/w06/(source\\.json|evidence/source-before-(composite-id-correction|unique-snapshot-ids)\\.json|evidence/review-public-source-outcomes\\.json)$|^docs/rust-rewrite/a10/(source-boundaries-v2\\.json|native-differences-v1\\.json)$|^docs/rust-rewrite/a11/(source-boundaries-v2|native-differences-v1)\\.json$|^(?:contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^(?:crates/ssx\\-source\\-codecs/provenance/idna2008/inputs/unicodedata_db\\.h|crates/ssx\\-source\\-codecs/provenance/idna2008/inputs/unicodename_db\\.h|crates/ssx\\-source\\-codecs/src/idna2008_data\\.rs)$",
             "args": [
               "--maxkb=500"
             ]
