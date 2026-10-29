@@ -292,7 +292,7 @@
     },
     {
       "path": "crates/ssx-mcp/tests/t06_source_bindings.rs",
-      "sha256": "4e32ad700a69b138948689c8bb95c4b0c0cfd0f7c2ee7145102b6b78150dcde1"
+      "sha256": "504945b343195fbfeee0ed81b2c8fa40adb775d569b1240e5d99018414da6ae4"
     },
     {
       "path": "crates/ssx-mcp/tests/t06_support/deadline_clock.rs",
@@ -304,7 +304,7 @@
     },
     {
       "path": "crates/ssx-mcp/tests/t06_support/server.rs",
-      "sha256": "8484b90d50c711f81cb5852054b40d16338d2e2b8d4cf27838ed5a47fd9a2205"
+      "sha256": "b72e6b97c4e5cff2b763ba1eb3cd2f1547a3b60dcda8a02ab664bef383d9cb21"
     },
     {
       "path": "crates/ssx-mcp/tests/t06_transport.rs",
@@ -479,12 +479,16 @@
       "sha256": "12e8cdab4eafce5f419d6a6c4527ad67230d6473c96532b6f42c4fbd5a823ce3"
     },
     {
+      "path": "crates/xtask/src/t06.rs",
+      "sha256": "45c2f8ddbf8b8b16cd90cc9958893f6cd0e58f1731f9785dd1fff92867212a1e"
+    },
+    {
       "path": "crates/xtask/src/t07_unit_profile.rs",
       "sha256": "0e0a19f94a3c50c36120bfeaed46f6a0d5e41c84f273bb674359b513adb365ec"
     },
     {
       "path": "crates/xtask/src/w07.rs",
-      "sha256": "2ecb673377d0826a36b118ae861daa89ab472f740f8db0787bb4225bd739d777"
+      "sha256": "23a1a06870fe2dc8d20562cdc15b7b1ad181f31106edcc8338ffba2881077c23"
     },
     {
       "path": "docs/rust-rewrite/a04/source-amendments/scoped-successor.rs",
@@ -501,6 +505,18 @@
     {
       "path": "docs/rust-rewrite/t06/coverage.json",
       "sha256": "38754e14b0b5020a98b80306c4607f218b68c91f81cb2e8245f9a40acbf3e714"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs",
+      "sha256": "9c9ae2b2def2310f68811ec4235c8bf859085d5ffc1448c1cadb88d356d42ceb"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/receipt-control-successor.json",
+      "sha256": "d6fb5b119b7a20b810a5cf2f45bb523d882bce928329ec9b417ae804aeb728b0"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs",
+      "sha256": "792876948f3885663a72373a733e7b6c312a45de0b3c2cda431fbf9fae1cbef1"
     },
     {
       "path": "docs/rust-rewrite/t06/source.json",
@@ -641,6 +657,14 @@
     {
       "path": "docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs",
       "sha256": "b46c1df9b2d1a547475d1a6d4fbfc14f679ae631ec1c034f752dee7a15657f6c"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs",
+      "sha256": "96860f0a66a173ba84d69943041eeeaae4e8f92c376626d607e9de92915a97b5"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/main-receipt-control-composition-v1.json",
+      "sha256": "6f6e31157689b2cba62dbcfe4ecb33bb641c5719f8d98c2ac6f419a4a943a66e"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-current-operand-v1.json",
@@ -2951,5 +2975,46 @@
       "private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries"
     ],
     "diagnostic_inventory_scope": "client runtime target:12 process cases plus3 private observer controls; server-enabled target adds existing T06 case; Windows retains its platform cfg exclusions"
+  },
+  "main_receipt_control_integration": {
+    "gateway_parent": "f11a2eae90116903c3d5c9364f611db345cc68f5",
+    "merged_main": "bf6aebe324de58b3d0f68b2241bc88c0e388a125",
+    "parent_bindings_sha256": "e7c40df71f46316d844ae69e55811ab653a1abb040c60425f12e07a620da1edf",
+    "changed_existing_rows": [
+      "crates/ssx-mcp/tests/t06_source_bindings.rs",
+      "crates/ssx-mcp/tests/t06_support/server.rs",
+      "crates/xtask/src/w07.rs"
+    ],
+    "new_causal_paths": [
+      "crates/xtask/src/t06.rs",
+      "docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs",
+      "docs/rust-rewrite/t06/source-amendments/receipt-control-successor.json",
+      "docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs",
+      "docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs",
+      "docs/rust-rewrite/t07/source-amendments/main-receipt-control-composition-v1.json"
+    ],
+    "immutable_main_assets": [
+      {
+        "path": "docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs",
+        "sha256": "792876948f3885663a72373a733e7b6c312a45de0b3c2cda431fbf9fae1cbef1",
+        "bytes": 8372,
+        "mode": 420
+      },
+      {
+        "path": "docs/rust-rewrite/t06/source-amendments/receipt-control-successor.json",
+        "sha256": "d6fb5b119b7a20b810a5cf2f45bb523d882bce928329ec9b417ae804aeb728b0",
+        "bytes": 9067,
+        "mode": 420
+      },
+      {
+        "path": "docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs",
+        "sha256": "9c9ae2b2def2310f68811ec4235c8bf859085d5ffc1448c1cadb88d356d42ceb",
+        "bytes": 2646,
+        "mode": 420
+      }
+    ],
+    "scope": "Finite physical adapter authenticates complete combined generation first and proves exact ordered inverses to both accepted Git boundaries; original main receipt proof assets and every historical operand remain unchanged.",
+    "declared_ordinary_gate_total": 221,
+    "qualification": "source-only integration; combined native/hosted acceptance recorded separately"
   }
 }

@@ -71,6 +71,17 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         return proven;
     }
     if sha(&bytes) != expected {
+        if matches!(
+            path,
+            "crates/xtask/src/t06.rs" | "crates/ssx-mcp/tests/t06_source_bindings.rs"
+        ) {
+            crate::t06::receipt_control_closure::verify(root)?;
+            if let Some(prior) =
+                crate::t06::receipt_control::reader_parent(root, path, expected, &bytes)?
+            {
+                return Ok(prior);
+            }
+        }
         if path == "crates/xtask/src/main.rs" && expected == w07_t02_joint::MAIN_SHA {
             let accepted = crate::a13::a06_source_successor::main_isolation_current::parent(
                 root,
@@ -113,6 +124,8 @@ pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
     for path in [
         "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
         "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "crates/xtask/src/t06.rs",
+        "crates/ssx-mcp/tests/t06_source_bindings.rs",
     ] {
         let expected = registry["sources"][path]
             .as_str()
