@@ -9,6 +9,43 @@ use ssx_windows_owner::{
 use std::{io::Write, sync::Arc, time::Instant};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
+#[test]
+fn windows_package_lock_contenders_share_open_but_serialize_and_reject_identity_drift() {
+    use std::os::windows::fs::OpenOptionsExt;
+    let root = root("package-lock");
+    let path = root.join(".gateway-package.lock");
+    let first = ssx_windows_owner::package_lock(&path).unwrap();
+    // FILE_SHARE_READ | FILE_SHARE_WRITE, without FILE_SHARE_DELETE. Opening
+    // while the creator is alive deterministically rejects the old share=0.
+    let second = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .share_mode(0x00000001 | 0x00000002)
+        .open(&path)
+        .unwrap();
+    assert!(matches!(
+        second.try_lock(),
+        Err(std::fs::TryLockError::WouldBlock)
+    ));
+    assert!(
+        std::fs::remove_file(&path).is_err(),
+        "live lock cannot be deleted"
+    );
+    drop(first);
+    second.try_lock().unwrap();
+    drop(second);
+    drop(ssx_windows_owner::package_lock(&path).unwrap());
+    std::fs::write(&path, b"not an empty lock").unwrap();
+    assert!(ssx_windows_owner::package_lock(&path).is_err());
+    std::fs::write(&path, b"").unwrap();
+    let alias = root.join("lock-alias");
+    std::fs::hard_link(&path, &alias).unwrap();
+    assert!(ssx_windows_owner::package_lock(&path).is_err());
+    std::fs::remove_file(&alias).unwrap();
+    fixture_public_access(&path, true).unwrap();
+    assert!(ssx_windows_owner::package_lock(&path).is_err());
+}
+
 #[tokio::test]
 async fn windows_token_storage_confidentiality_atomic_replacement_and_collision_ownership() {
     use ssx_mcp::gateway_client::{

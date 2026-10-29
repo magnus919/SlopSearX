@@ -14,6 +14,9 @@ if ($IgnoredOnly) { $expected = @($store) } else {
       'actual_native_two_instances_keep_remote_sessions_and_catalogs_independent',
       'actual_native_stdio_eof_cancels_inflight_rpc_before_owned_shutdown',
       'actual_native_oauth_non200_refresh_falls_back_to_authorization_without_second_registration',
+      'private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer',
+      'private_refresh_stderr_exact_cap_accounts_for_every_delimiter',
+      'private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries',
       'actual_native_static_userinfo_basic_precedes_bearer_and_fragment_never_reaches_http',
       'actual_native_oauth_status_matrix_preserves_registration_code_200_201_and_rejects_202_without_token_persistence',
       'actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch'
@@ -25,6 +28,7 @@ if ($IgnoredOnly) { $expected = @($store) } else {
         'windows_dropped_close_future_retains_registered_original_owner_for_retry',
         'windows_protocol_failure_and_inherited_descendant_do_not_escape_job_retirement',
         'windows_actual_input_idle_eof_backpressure_and_dropped_close_join_original_job',
+        'windows_package_lock_contenders_share_open_but_serialize_and_reject_identity_drift',
         'windows_token_storage_confidentiality_atomic_replacement_and_collision_ownership',
         'windows_token_reparse_hardlink_and_untrusted_writer_parent_are_rejected',
         'windows_installed_digest_reparse_and_writer_acl_fail_before_helper_admission',

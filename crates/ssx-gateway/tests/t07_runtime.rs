@@ -358,6 +358,111 @@ impl Fixture {
         self.task.await.unwrap().unwrap();
     }
 }
+// The private refresh observer bounds both line assembly and retained bytes.
+// It drains overflow to newline/EOF so its writer can still retire.
+async fn read_refresh_stderr(
+    mut input: impl tokio::io::AsyncRead + Unpin,
+    client: reqwest::Client,
+    diagnostic: Arc<Mutex<Vec<u8>>>,
+) -> ssx_mcp::Result<usize> {
+    use tokio::io::AsyncReadExt;
+    let mut chunk = [0u8; 1024];
+    let mut line = Vec::new();
+    let mut overflow = false;
+    let mut reader_error = None;
+    let mut authorizations = 0;
+    loop {
+        let count = input.read(&mut chunk).await?;
+        if count == 0 {
+            if line.is_empty() && !overflow {
+                break;
+            }
+            // Classify the final unterminated bounded line once.
+            chunk[0] = b'\n';
+        }
+        for byte in &chunk[..count.max(1)] {
+            if *byte != b'\n' {
+                if line.len() < 16384 {
+                    line.push(*byte);
+                } else {
+                    overflow = true;
+                    reader_error.get_or_insert("private gateway stderr line exceeded cap");
+                }
+                continue;
+            }
+            if !overflow {
+                match std::str::from_utf8(&line) {
+                    Err(_) => {
+                        reader_error.get_or_insert("private gateway stderr was not UTF-8");
+                    }
+                    Ok(text) => {
+                        if [
+                            "loopback-access",
+                            "loopback-refresh",
+                            "refresh201-rejected",
+                            "private-code",
+                            "static-sentinel",
+                        ]
+                        .iter()
+                        .any(|token| text.contains(token))
+                        {
+                            reader_error.get_or_insert(
+                                "private gateway stderr disclosed a fixture credential",
+                            );
+                        } else if text.trim_start().starts_with("http://") {
+                            // Complete bounded URLs still drive both private
+                            // callbacks; their queries never enter diagnostics.
+                            match client.get(text.trim()).send().await {
+                                Ok(response) if response.status().is_success() => {
+                                    authorizations += 1;
+                                }
+                                Ok(_) => {
+                                    reader_error.get_or_insert(
+                                        "private authorization callback response failed",
+                                    );
+                                }
+                                Err(_) => {
+                                    reader_error.get_or_insert(
+                                        "private authorization callback request failed",
+                                    );
+                                }
+                            }
+                        } else {
+                            let safe = if text.contains("http://") || text.contains("https://") {
+                                b"[private URL line redacted]".as_slice()
+                            } else {
+                                line.as_slice()
+                            };
+                            let mut retained = diagnostic.lock().await;
+                            let room = 16384usize.saturating_sub(retained.len());
+                            let take = safe.len().min(room);
+                            retained.extend_from_slice(&safe[..take]);
+                            let delimiter_omitted = count != 0 && retained.len() == 16384;
+                            if count != 0 && !delimiter_omitted {
+                                retained.push(b'\n');
+                            }
+                            if take != safe.len() || delimiter_omitted {
+                                reader_error
+                                    .get_or_insert("private gateway retained stderr exceeded cap");
+                            }
+                        }
+                    }
+                }
+            }
+            // Overflow never grows the assembly or stops pipe drainage.
+            line.clear();
+            overflow = false;
+        }
+        if count == 0 {
+            break;
+        }
+    }
+    if let Some(error) = reader_error {
+        return Err(error.into());
+    }
+    Ok::<_, ssx_mcp::Error>(authorizations)
+}
+
 // No spawned/detached assertion task and no new dependency. A panic from any
 // polled await/assert/unwrap is retained until the caller retires its real child,
 // stderr reader, loopback fixture and owned temporary directory.
@@ -416,6 +521,12 @@ impl Process {
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .kill_on_drop(true);
+        // Windows executable verification and process creation require the OS
+        // directory even in this otherwise empty fixture environment.
+        #[cfg(windows)]
+        if let Some(root) = std::env::var_os("SystemRoot") {
+            command.env("SystemRoot", root);
+        }
         if let Some((bin, record)) = browser {
             command
                 .env("PATH", bin)
@@ -474,6 +585,141 @@ impl Process {
         assert!(!stderr.contains("loopback-access"));
     }
 }
+#[tokio::test]
+async fn private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer() {
+    for newline in [false, true] {
+        let (mut writer, reader) = tokio::io::duplex(1024);
+        let writing = tokio::spawn(async move {
+            for _ in 0..20 {
+                writer.write_all(&[b'x'; 1024]).await.unwrap();
+            }
+            if newline {
+                writer.write_all(b"\nafter-overflow\n").await.unwrap();
+            }
+            writer.shutdown().await.unwrap();
+        });
+        let diagnostic = Arc::new(Mutex::new(Vec::new()));
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let reading = tokio::spawn(read_refresh_stderr(reader, client, diagnostic.clone()));
+        let error = tokio::time::timeout(Duration::from_secs(5), reading)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "private gateway stderr line exceeded cap"
+        );
+        tokio::time::timeout(Duration::from_secs(5), writing)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            diagnostic.lock().await.as_slice(),
+            if newline {
+                b"after-overflow\n".as_slice()
+            } else {
+                b""
+            }
+        );
+    }
+}
+
+#[tokio::test]
+async fn private_refresh_stderr_exact_cap_accounts_for_every_delimiter() {
+    for extra_delimiter in [false, true] {
+        let (mut writer, reader) = tokio::io::duplex(1024);
+        let writing = tokio::spawn(async move {
+            writer.write_all(&vec![b'x'; 16383]).await.unwrap();
+            writer.write_all(b"\n").await.unwrap();
+            if extra_delimiter {
+                writer.write_all(b"\n").await.unwrap();
+            }
+            writer.shutdown().await.unwrap();
+        });
+        let diagnostic = Arc::new(Mutex::new(Vec::new()));
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let result = tokio::time::timeout(
+            Duration::from_secs(5),
+            read_refresh_stderr(reader, client, diagnostic.clone()),
+        )
+        .await
+        .unwrap();
+        if extra_delimiter {
+            assert_eq!(
+                result.unwrap_err().to_string(),
+                "private gateway retained stderr exceeded cap"
+            );
+        } else {
+            assert_eq!(result.unwrap(), 0);
+        }
+        tokio::time::timeout(Duration::from_secs(5), writing)
+            .await
+            .unwrap()
+            .unwrap();
+        let retained = diagnostic.lock().await;
+        assert_eq!(retained.len(), 16384);
+        assert_eq!(retained.last(), Some(&b'\n'));
+        assert!(retained[..16383].iter().all(|byte| *byte == b'x'));
+    }
+}
+
+#[tokio::test]
+async fn private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let visits = Arc::new(AtomicUsize::new(0));
+    let counted = visits.clone();
+    let app = axum::Router::new().route(
+        "/authorize",
+        axum::routing::get(move || {
+            let visits = counted.clone();
+            async move {
+                visits.fetch_add(1, Ordering::SeqCst);
+                "private callback complete"
+            }
+        }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let stop = CancellationToken::new();
+    let stopped = stop.clone();
+    let server = tokio::spawn(async move {
+        axum::serve(listener, app)
+            .with_graceful_shutdown(stopped.cancelled_owned())
+            .await
+            .unwrap();
+    });
+    let url = format!("http://{address}/authorize?state=private-query-sentinel");
+    let (mut writer, reader) = tokio::io::duplex(1024);
+    let writing = tokio::spawn(async move {
+        writer
+            .write_all(format!("safe diagnostic\n  {url}\nembedded {url}\n  {url}\n").as_bytes())
+            .await
+            .unwrap();
+        writer.shutdown().await.unwrap();
+    });
+    let diagnostic = Arc::new(Mutex::new(Vec::new()));
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let result = tokio::time::timeout(
+        Duration::from_secs(5),
+        read_refresh_stderr(reader, client, diagnostic.clone()),
+    )
+    .await;
+    let writer_result = tokio::time::timeout(Duration::from_secs(5), writing).await;
+    stop.cancel();
+    tokio::time::timeout(Duration::from_secs(5), server)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(result.unwrap().unwrap(), 2);
+    writer_result.unwrap().unwrap();
+    assert_eq!(visits.load(Ordering::SeqCst), 2);
+    assert_eq!(
+        diagnostic.lock().await.as_slice(),
+        b"safe diagnostic\n[private URL line redacted]\n"
+    );
+}
+
 #[tokio::test]
 async fn actual_native_static_process_preserves_signature_schema_projection_error_channels_and_eof_cleanup()
  {
@@ -693,7 +939,7 @@ async fn actual_native_sigterm_during_initialization_joins_http_owner() {
 
 #[tokio::test]
 async fn actual_native_oauth_non200_refresh_falls_back_to_authorization_without_second_registration()
- {
+-> ssx_mcp::Result<()> {
     for refresh_status in [StatusCode::BAD_REQUEST, StatusCode::CREATED] {
         let fixture = Fixture::start_status_profile(
             true,
@@ -723,49 +969,72 @@ async fn actual_native_oauth_non200_refresh_falls_back_to_authorization_without_
             ],
         );
         let stderr = process.child.stderr.take().unwrap();
-        let agent = tokio::spawn(async move {
-            let mut lines = BufReader::new(stderr).lines();
-            let client = reqwest::Client::builder().no_proxy().build().unwrap();
-            let mut authorizations = 0;
-            while let Some(line) = lines.next_line().await.unwrap() {
-                assert!(!line.contains("loopback-access"));
-                assert!(!line.contains("refresh201-rejected"));
-                if line.trim_start().starts_with("http://") {
-                    client
-                        .get(line.trim())
-                        .send()
-                        .await
-                        .unwrap()
-                        .error_for_status()
-                        .unwrap();
-                    authorizations += 1;
-                }
-            }
-            authorizations
-        });
-        process.initialize().await;
+        let diagnostic = Arc::new(Mutex::new(Vec::new()));
+        let captured = diagnostic.clone();
+        let client = reqwest::Client::builder().no_proxy().build()?;
+        let mut agent = tokio::spawn(read_refresh_stderr(stderr, client, captured));
+        let stage = std::cell::Cell::new("stdio initialization and refresh fallback");
+        let outcome = catch_process_case(async {
+            process.initialize().await;
+            stage.set("owned exit after initialized EOF");
+            process.input.take();
+            let status =
+                tokio::time::timeout(Duration::from_secs(20), process.child.wait()).await??;
+            assert!(status.success());
+            let observed = fixture.app.state.lock().await;
+            assert_eq!(observed.token_forms.len(), 3);
+            assert_eq!(observed.registrations, 1);
+            assert_eq!(observed.token_forms[0]["grant_type"], "authorization_code");
+            assert_eq!(observed.token_forms[1]["grant_type"], "refresh_token");
+            assert_eq!(observed.token_forms[2]["grant_type"], "authorization_code");
+            drop(observed);
+            let tokens: Value = serde_json::from_slice(&std::fs::read(&path)?)?;
+            assert_eq!(tokens["tokens"]["expires_in"], 3600);
+            assert_eq!(tokens["tokens"]["access_token"], "loopback-access");
+            Ok::<(), ssx_mcp::Error>(())
+        })
+        .await;
+        // Retain the real child and reader even if the oracle panics on EOF.
+        // This keeps status/fixture diagnostics and retires every owned task.
+        let initial_exit = process.child.try_wait()?;
+        if initial_exit.is_none() {
+            process.child.start_kill()?;
+        }
+        let retired_exit =
+            tokio::time::timeout(Duration::from_secs(5), process.child.wait()).await??;
         process.input.take();
-        assert!(
-            tokio::time::timeout(Duration::from_secs(20), process.child.wait())
-                .await
-                .unwrap()
-                .unwrap()
-                .success()
-        );
-        assert_eq!(agent.await.unwrap(), 2);
+        let agent_result: ssx_mcp::Result<usize> =
+            match tokio::time::timeout(Duration::from_secs(5), &mut agent).await {
+                Ok(joined) => joined
+                    .map_err(|e| -> ssx_mcp::Error { e.into() })
+                    .and_then(|value| value),
+                Err(_) => {
+                    agent.abort();
+                    let _ = agent.await;
+                    Err("private authorization reader did not retire".into())
+                }
+            };
         let observed = fixture.app.state.lock().await;
-        assert_eq!(observed.token_forms.len(), 3);
-        assert_eq!(observed.registrations, 1);
-        assert_eq!(observed.token_forms[0]["grant_type"], "authorization_code");
-        assert_eq!(observed.token_forms[1]["grant_type"], "refresh_token");
-        assert_eq!(observed.token_forms[2]["grant_type"], "authorization_code");
+        let fixture_counts = (
+            observed.registrations,
+            observed.authorization_visits,
+            observed.token_forms.len(),
+            observed.deletes,
+        );
         drop(observed);
-        let tokens: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
-        assert_eq!(tokens["tokens"]["expires_in"], 3600);
-        assert_eq!(tokens["tokens"]["access_token"], "loopback-access");
         fixture.close().await;
-        std::fs::remove_dir_all(directory).unwrap();
+        std::fs::remove_dir_all(directory)?;
+        if !matches!(&outcome, Ok(Ok(()))) || !matches!(&agent_result, Ok(2)) {
+            eprintln!(
+                "T07_PRIVATE_REFRESH_FAILURE refresh_status={refresh_status} stage={} initial_exit={initial_exit:?} retired_exit={retired_exit:?} fixture_counts={fixture_counts:?} agent={agent_result:?} stderr={:?}",
+                stage.get(),
+                String::from_utf8_lossy(&diagnostic.lock().await)
+            );
+        }
+        finish_process_case(outcome)?;
+        assert_eq!(agent_result?, 2);
     }
+    Ok(())
 }
 
 #[tokio::test]

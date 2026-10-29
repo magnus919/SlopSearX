@@ -76,7 +76,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
-      "sha256": "fb8aeaba07cee7aee8733723c5ba19296ac465729d5bc091ac11429c41305e3b"
+      "sha256": "c7fc229c85ae010342e861d4735afc01d7004548671eb9e347e80c6869094689"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
@@ -92,7 +92,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
-      "sha256": "0688e86b814dd48ee46b5c8bfd383502570b9d1ab0d9e8ffa7494a78e90d008c"
+      "sha256": "0e38b088a957b5dca2c0e0aa97a71434714827b65acff0f2e53af5c869d724ed"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_source_stages.rs",
@@ -104,7 +104,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/t07_windows_security.rs",
-      "sha256": "931befa468735d0ff072710d97a163d2ebaa7060e01464b2b70f4823cbcb6250"
+      "sha256": "1ce88e559a0dd8c4479a36ff38c7c7a6c39793377ad5c25116444ab0d618e838"
     },
     {
       "path": "crates/ssx-infra/src/adapters/source_json.rs",
@@ -2576,7 +2576,7 @@
     },
     {
       "path": "vendor/ssx-windows-owner/src/trust.rs",
-      "sha256": "840574ce81a40635cd0a7ac0dec4e7001c1b73d54d3b38ec81ed0a913c9ab157"
+      "sha256": "d224502f049aa4f1304eddee6d4b21b99b3bc14a1b98b578c339b8f2abaa917e"
     }
   ],
   "library_tests": [
@@ -2721,7 +2721,10 @@
     "actual_native_current_t06_eleven_tool_catalog_and_discovery_match_direct_http",
     "actual_native_oauth_denied_delete_on_eof_and_sigterm_never_reauthorizes_or_refreshes_and_retires_owners",
     "actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners",
-    "actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch"
+    "actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch",
+    "private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer",
+    "private_refresh_stderr_exact_cap_accounts_for_every_delimiter",
+    "private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries"
   ],
   "stdio_owner_tests": [
     "opaque::tests::owned_stdio_outer_abort_drops_held_sdk_initialization",
@@ -2851,7 +2854,7 @@
   "opaque_current_operand_successor": {
     "parent_bindings_sha256": "8d486b5f22994c4cfaf56c6a4436c309f44cdd9c0d056b237bfa70674195a4a3",
     "source_head": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
-    "reason": "exactsamephysicalbuffer bcd6\u21923fe5\u2192sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
+    "reason": "exactsamephysicalbuffer bcd6→3fe5→sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
     "current_source_rows": 608,
     "native_identities_unchanged": 215
   },
@@ -2887,6 +2890,7 @@
         "installed_tls_cross_origin_redirect_is_rejected_without_destination_request"
       ],
       "crates/ssx-gateway/tests/t07_windows_security.rs": [
+        "windows_package_lock_contenders_share_open_but_serialize_and_reject_identity_drift",
         "windows_token_storage_confidentiality_atomic_replacement_and_collision_ownership",
         "windows_token_reparse_hardlink_and_untrusted_writer_parent_are_rejected",
         "windows_installed_digest_reparse_and_writer_acl_fail_before_helper_admission",
@@ -2895,7 +2899,7 @@
         "windows_held_confidential_read_atomic_replace_and_parent_rename_have_coherent_kernel_outcomes"
       ]
     },
-    "supplemental_count": 11,
+    "supplemental_count": 12,
     "runtime_state": "source declarations only; currentc213215 remains separate accepted component; platform/Windows and integrated217 unexecuted",
     "default_shipping_identity": "exact default3 compiler artifacts sealed before featurefixtures; runtime fallback is component-only",
     "redirect_witness_correction": {
@@ -2931,5 +2935,21 @@
     ],
     "hosted_cleanup_finalizer": "finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children",
     "hosted_scope": "Existing dedicated ephemeral trust witness and exact cleanup remain ignored locally; nine Unix fake-process controls are supplemental platform owner tests, separate from ordinary218."
+  },
+  "hosted_failure_repair_successor": {
+    "source_parent": "26828d2c04c68d7a01aec9f9492476f1a66f2c38",
+    "parent_bindings_sha256": "75ca72861f8c580e3cce9ef0788109e4dfe43178c23eab08adc7d5d6e3108465",
+    "scope": "Windows package-lock handle sharing preserves private custody and actual kernel serialization; runtime fixture retains only required SystemRoot; failed refresh-case ownership and bounded redacted child diagnostics. No Linux runtime-cause or hosted acceptance claim.",
+    "supplemental_windows_identity_additions": [
+      "windows_package_lock_contenders_share_open_but_serialize_and_reject_identity_drift"
+    ],
+    "declared_ordinary_gate_total": 221,
+    "qualification": "source declarations only; native Windows execution and hosted platform acceptance pending",
+    "diagnostic_fixture_identity_additions": [
+      "private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer",
+      "private_refresh_stderr_exact_cap_accounts_for_every_delimiter",
+      "private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries"
+    ],
+    "diagnostic_inventory_scope": "client runtime target:12 process cases plus3 private observer controls; server-enabled target adds existing T06 case; Windows retains its platform cfg exclusions"
   }
 }

@@ -512,16 +512,23 @@ pub fn package_lock(path: &Path) -> io::Result<File> {
     if path.file_name() != Some(OsStr::new(".gateway-package.lock")) {
         return Err(io::ErrorKind::InvalidInput.into());
     }
-    let file = match create_private_file(path) {
-        Ok(file) => file,
-        Err(error) if error.kind() == io::ErrorKind::AlreadyExists => OpenOptions::new()
-            .read(true)
-            .write(true)
-            .share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
-            .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT)
-            .open(path)?,
-        Err(error) => return Err(error),
-    };
+    // Every contender must be able to open the same lock identity before
+    // File::lock serializes staging. Keep deletion sharing disabled and use
+    // the private security descriptor atomically when the lock is first made.
+    let name = wide(path.as_os_str())?;
+    let security = PrivateSecurity::new()?;
+    let owned = handle(unsafe {
+        CreateFileW(
+            name.as_ptr(),
+            FILE_GENERIC_READ | FILE_GENERIC_WRITE | READ_CONTROL,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            &security.attributes,
+            OPEN_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+            ptr::null_mut(),
+        )
+    })?;
+    let file = File::from(owned);
     identity(&file, false)?;
     check_acl(&file)?;
     if file.metadata()?.len() != 0 {
