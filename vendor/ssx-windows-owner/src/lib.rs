@@ -47,7 +47,7 @@ pub use process::FixtureInput;
 #[cfg(feature = "fixtures")]
 pub use process::FixtureProcessWitness;
 #[cfg(feature = "fixtures")]
-pub use trust::fixture_public_access;
+pub use trust::{fixture_build_file_link_count, fixture_public_access};
 
 #[cfg(feature = "fixtures")]
 pub use confidential::FixtureConfidentialRead;

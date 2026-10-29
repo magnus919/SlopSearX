@@ -1,7 +1,38 @@
 #![cfg(all(windows, feature = "dns-test-fixtures"))]
 #![forbid(unsafe_code)]
 use ssx_mcp::gateway_client::resolver::{SourceResolveStage, SourceRuntime};
-use std::{future::Future, path::PathBuf, pin::Pin, time::Duration};
+#[cfg(feature = "windows-owner-test-fixtures")]
+use std::io::Write;
+use std::{
+    future::Future,
+    path::{Path, PathBuf},
+    pin::Pin,
+    time::Duration,
+};
+fn stage_case(case: &Path, helper: &Path) -> PathBuf {
+    let gateway = Path::new(env!("CARGO_BIN_EXE_ssx-gateway"));
+    let input = Path::new(env!("CARGO_BIN_EXE_ssx-gateway-input"));
+    #[cfg(feature = "windows-owner-test-fixtures")]
+    for (role, path) in [("gateway", gateway), ("dns", helper), ("input", input)] {
+        match ssx_windows_owner::fixture_build_file_link_count(path) {
+            Ok(links) => {
+                let _ = writeln!(
+                    std::io::stderr().lock(),
+                    "T07_WINDOWS_BUILD_INPUT role={role} links={links}"
+                );
+            }
+            Err(error) => {
+                let _ = writeln!(
+                    std::io::stderr().lock(),
+                    "T07_WINDOWS_BUILD_INPUT role={role} io_kind={:?} os_code={:?}",
+                    error.kind(),
+                    error.raw_os_error()
+                );
+            }
+        }
+    }
+    ssx_mcp::gateway_client::resolver::install::stage(gateway, helper, input, case).unwrap()
+}
 fn runtime(label: &str) -> SourceRuntime {
     let root = PathBuf::from(
         std::env::var_os("SLOPSEARX_INSTALL_TEST_ROOT")
@@ -9,13 +40,10 @@ fn runtime(label: &str) -> SourceRuntime {
     );
     let case = root.join(format!("windows-{label}-{}", std::process::id()));
     ssx_mcp::gateway_client::resolver::install::prepare_output_root(&case).unwrap();
-    let installed = ssx_mcp::gateway_client::resolver::install::stage(
-        std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway")),
-        std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns-fixture")),
-        std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-input")),
+    let installed = stage_case(
         &case,
-    )
-    .unwrap();
+        Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns-fixture")),
+    );
     let helper = ssx_mcp::gateway_client::resolver::install::discover(&installed).unwrap();
     SourceRuntime::new(helper)
 }
@@ -134,13 +162,7 @@ async fn windows_actual_input_idle_eof_backpressure_and_dropped_close_join_origi
     );
     let case = root.join(format!("windows-input-{}", std::process::id()));
     ssx_mcp::gateway_client::resolver::install::prepare_output_root(&case).unwrap();
-    let executable = ssx_mcp::gateway_client::resolver::install::stage(
-        std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway")),
-        std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns")),
-        std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway-input")),
-        &case,
-    )
-    .unwrap();
+    let executable = stage_case(&case, Path::new(env!("CARGO_BIN_EXE_ssx-gateway-dns")));
     let prefix = executable.parent().unwrap().parent().unwrap();
     let record: serde_json::Value = serde_json::from_slice(
         &std::fs::read(prefix.join("share/slopsearx/native-install.json")).unwrap(),

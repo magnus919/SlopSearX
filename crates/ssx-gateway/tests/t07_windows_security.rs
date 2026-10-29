@@ -134,7 +134,43 @@ fn windows_token_reparse_hardlink_and_untrusted_writer_parent_are_rejected() {
 
 #[test]
 fn windows_installed_digest_reparse_and_writer_acl_fail_before_helper_admission() {
-    for mode in ["digest", "writer", "junction"] {
+    // Exercise the actual Cargo artifact as well as an explicit two-link
+    // object. Build admission and installed execution custody are distinct.
+    let cargo = std::path::Path::new(env!("CARGO_BIN_EXE_ssx-gateway"));
+    assert!(ssx_windows_owner::fixture_build_file_link_count(cargo).unwrap() >= 1);
+    build_file_digest(cargo).unwrap();
+    let build = root("build-input-links");
+    let source = build.join("build-image.exe");
+    let mut input = std::fs::File::open(cargo).unwrap();
+    let mut output = ssx_windows_owner::create_private_file(&source).unwrap();
+    std::io::copy(&mut input, &mut output).unwrap();
+    output.sync_all().unwrap();
+    drop(output);
+    let expected = build_file_digest(&source).unwrap();
+    assert_eq!(
+        ssx_windows_owner::package_file_digest(&source).unwrap(),
+        expected
+    );
+    let alias = build.join("build-image-alias.exe");
+    std::fs::hard_link(&source, &alias).unwrap();
+    assert_eq!(
+        ssx_windows_owner::fixture_build_file_link_count(&source).unwrap(),
+        2
+    );
+    assert_eq!(build_file_digest(&source).unwrap(), expected);
+    assert_eq!(build_file_digest(&alias).unwrap(), expected);
+    assert_eq!(
+        ssx_windows_owner::package_file_digest(&source)
+            .unwrap_err()
+            .kind(),
+        std::io::ErrorKind::InvalidData
+    );
+    std::fs::remove_file(&alias).unwrap();
+    assert_eq!(
+        ssx_windows_owner::package_file_digest(&source).unwrap(),
+        expected
+    );
+    for mode in ["digest", "writer", "junction", "hardlink"] {
         let root = root(&format!("package-{mode}"));
         let executable = stage(&root, false);
         assert!(ssx_mcp::gateway_client::resolver::install::discover(&executable).is_ok());
@@ -146,6 +182,7 @@ fn windows_installed_digest_reparse_and_writer_acl_fail_before_helper_admission(
                 f.write_all(b"tampered").unwrap();
             }
             "writer" => fixture_public_access(&dns, true).unwrap(),
+            "hardlink" => std::fs::hard_link(&dns, root.join("dns-alias.exe")).unwrap(),
             "junction" => {
                 let directory = prefix.join("libexec/slopsearx");
                 let moved = root.join("moved-helper");

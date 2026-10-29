@@ -263,15 +263,27 @@ pub(crate) struct Identity {
     size_lo: u32,
     write_hi: u32,
     write_lo: u32,
+    links: u32,
 }
 pub(crate) fn identity(file: &File, directory: bool) -> io::Result<Identity> {
+    identity_with_link_policy(file, directory, true)
+}
+fn build_identity(file: &File) -> io::Result<Identity> {
+    identity_with_link_policy(file, false, false)
+}
+fn identity_with_link_policy(
+    file: &File,
+    directory: bool,
+    single_link: bool,
+) -> io::Result<Identity> {
     let mut info: BY_HANDLE_FILE_INFORMATION = unsafe { mem::zeroed() };
     if unsafe { GetFileInformationByHandle(file.as_raw_handle().cast(), &mut info) } == 0 {
         return Err(io::Error::last_os_error());
     }
     if info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT != 0
         || (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY != 0) != directory
-        || info.nNumberOfLinks != 1
+        || info.nNumberOfLinks == 0
+        || (single_link && info.nNumberOfLinks != 1)
     {
         return Err(io::ErrorKind::InvalidData.into());
     }
@@ -283,6 +295,7 @@ pub(crate) fn identity(file: &File, directory: bool) -> io::Result<Identity> {
         size_lo: info.nFileSizeLow,
         write_hi: info.ftLastWriteTime.dwHighDateTime,
         write_lo: info.ftLastWriteTime.dwLowDateTime,
+        links: info.nNumberOfLinks,
     })
 }
 pub(crate) fn opened(path: &Path, directory: bool) -> io::Result<File> {
@@ -426,15 +439,18 @@ pub struct FileDigest {
     pub bytes: u64,
     pub sha256: [u8; 32],
 }
-pub fn build_file_digest(path: &Path) -> io::Result<FileDigest> {
-    // Build paths are explicit Cargo-emitted artifacts, not installed command
-    // admission. Installed copies still require strict ACL/digest validation.
-    let mut file = OpenOptions::new()
+fn open_build_input(path: &Path) -> io::Result<File> {
+    OpenOptions::new()
         .read(true)
         .share_mode(FILE_SHARE_READ)
         .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT)
-        .open(path)?;
-    let before = identity(&file, false)?;
+        .open(path)
+}
+/// Build artifacts may have Cargo's hard-linked output/deps names. This does
+/// not admit an installed image: stage copies and revalidates all fixed roles.
+pub fn build_file_digest(path: &Path) -> io::Result<FileDigest> {
+    let mut file = open_build_input(path)?;
+    let before = build_identity(&file)?;
     let mut hash = Sha256::new();
     let mut bytes = 0u64;
     let mut block = [0u8; 65536];
@@ -451,13 +467,20 @@ pub fn build_file_digest(path: &Path) -> io::Result<FileDigest> {
         }
         hash.update(&block[..n]);
     }
-    if bytes == 0 || identity(&file, false)? != before {
+    if bytes == 0 || build_identity(&file)? != before {
         return Err(io::ErrorKind::InvalidData.into());
     }
     Ok(FileDigest {
         bytes,
         sha256: hash.finalize().into(),
     })
+}
+
+/// Finite build-input metadata for actual native fixture failure receipts.
+#[cfg(feature = "fixtures")]
+pub fn fixture_build_file_link_count(path: &Path) -> io::Result<u32> {
+    let file = open_build_input(path)?;
+    Ok(build_identity(&file)?.links)
 }
 
 pub fn package_file_digest(path: &Path) -> io::Result<FileDigest> {

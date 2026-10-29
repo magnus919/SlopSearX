@@ -20,6 +20,15 @@ CREATE_SUSPENDED plus atomic PROC_THREAD_ATTRIBUTE_JOB_LIST assigns the child to
 
 Installed paths are fixed roles in a three-artifact record. Reparse points, wrong types, unexpected link counts, digest/identity changes, untrusted write/delete/ownership DACLs, noncanonical records and guessed helper paths fail closed. Trusted executable handles deny replacement/write sharing through launch. Current user, SYSTEM and Administrators are the explicit trusted owner/writer principals. This is local package custody, not protection from a malicious trusted principal.
 
+Explicit Cargo build-input digest reads permit a positive link count: Cargo may
+hard-link its output and deps names on Windows. This narrow read role retains
+non-reparse regular-file admission, the original opened object, byte/hash/size/
+write-time checks, read-only sharing and a stable link count throughout hashing.
+Staging copies those bytes into new private files; every installed package,
+trusted image, lock and confidential-object role still requires exactly one
+link. Build-input hashing never grants execution admission. The fixture-only
+link-count reader exposes only finite metadata for the three explicit roles.
+
 ## Required actual qualification (not performed by this patch)
 
 Pinned Windows x86_64 compile/link, strict lints/format, installed distribution without Cargo, console and redirected input bytes/EOF, actual overlapped IO completion, idle/backpressured input cancellation and dropped-close retry; DNS cancellation/deadline/protocol faults/descendants; atomic-job failure injection, unsupported/nested-job rejection and parent-death kill-on-close witnesses. Verify suspended child cannot execute before owner registration and inherited handles remain exactly bounded. Verify denied ACL/reparse/hash/rename controls and package lock contention. Windows 10+ client floor follows the retained Rust/MS source policy; an actual minimum-OS installation witness remains O04 work. Source AST parsing is not Windows compile/link/runtime proof.
