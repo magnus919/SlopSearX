@@ -1,5 +1,8 @@
 //! Private installed-client TLS, proxy and redirect witnesses. No live providers.
 #![cfg(feature = "dns-test-fixtures")]
+#[cfg(unix)]
+#[path = "platform_support/mac_trust.rs"]
+mod mac_trust;
 mod platform_support;
 #[path = "platform_support/tls.rs"]
 mod tls;
@@ -16,6 +19,7 @@ struct TrustGuard {
     active: bool,
 }
 impl TrustGuard {
+    #[cfg(not(target_os = "macos"))]
     fn command(root: &Path, mode: &str) -> std::io::Result<std::process::ExitStatus> {
         std::process::Command::new("bash")
             .arg(
@@ -25,7 +29,7 @@ impl TrustGuard {
             .arg(root)
             .status()
     }
-    fn install(root: &Path) -> Self {
+    async fn install(root: &Path) -> Self {
         assert_eq!(
             std::env::var("GITHUB_ACTIONS").as_deref(),
             Ok("true"),
@@ -39,10 +43,20 @@ impl TrustGuard {
             root: root.into(),
             active: true,
         };
+        #[cfg(target_os = "macos")]
+        mac_trust::install(root)
+            .await
+            .expect("bounded owned macOS trust install");
+        #[cfg(not(target_os = "macos"))]
         assert!(Self::command(root, "install").unwrap().success());
         guard
     }
-    fn close(mut self) {
+    async fn close(mut self) {
+        #[cfg(target_os = "macos")]
+        mac_trust::remove(&self.root)
+            .await
+            .expect("bounded exact macOS trust cleanup");
+        #[cfg(not(target_os = "macos"))]
         assert!(Self::command(&self.root, "remove").unwrap().success());
         self.active = false;
     }
@@ -50,12 +64,29 @@ impl TrustGuard {
 impl Drop for TrustGuard {
     fn drop(&mut self) {
         if self.active {
-            let status = Self::command(&self.root, "remove");
-            if !status.is_ok_and(|status| status.success()) {
-                eprintln!("owned CI certificate cleanup failed; workflow finalizer must retry");
+            #[cfg(target_os = "macos")]
+            eprintln!(
+                "owned CI certificate cleanup pending at {}; bounded Rust workflow finalizer must retry",
+                self.root.display()
+            );
+            #[cfg(not(target_os = "macos"))]
+            {
+                let status = Self::command(&self.root, "remove");
+                if !status.is_ok_and(|status| status.success()) {
+                    eprintln!("owned CI certificate cleanup failed; workflow finalizer must retry");
+                }
             }
         }
     }
+}
+
+#[cfg(target_os = "macos")]
+#[tokio::test(flavor = "current_thread")]
+#[ignore = "exact hosted macOS trust cleanup only; never run on personal hosts"]
+async fn finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children() {
+    mac_trust::finalize()
+        .await
+        .expect("all exact owned macOS trust fixtures retired");
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -72,7 +103,7 @@ async fn installed_platform_verifier_rejects_private_ca_then_accepts_exact_syste
     assert!(negative.initialize().await.is_none());
     negative.close(false).await;
     assert!(correct.observed.lock().unwrap().is_empty());
-    let trust = TrustGuard::install(&root);
+    let trust = TrustGuard::install(&root).await;
     let unrelated = Ca::new();
     let additive = root.join("unrelated.pem");
     std::fs::write(&additive, unrelated.certificate.pem()).unwrap();
@@ -92,7 +123,7 @@ async fn installed_platform_verifier_rejects_private_ca_then_accepts_exact_syste
     assert!(negative.initialize().await.is_none());
     negative.close(false).await;
     assert!(wrong.observed.lock().unwrap().is_empty());
-    trust.close();
+    trust.close().await;
     let mut removed = Process::spawn(&executable, &correct.url, &[]);
     assert!(removed.initialize().await.is_none());
     removed.close(false).await;

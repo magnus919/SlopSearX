@@ -116,7 +116,7 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
             &cancel,
         )
         .await?;
-        Network::create(settings.oauth, roots)
+        Network::create(settings.oauth, roots, &io, end, &cancel).await
     }
     .await
     {

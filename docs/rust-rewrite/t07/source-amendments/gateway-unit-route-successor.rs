@@ -153,8 +153,10 @@ fn config_spec(
 // Exact runner.temp context repair. Only these four spans reconstruct the
 // accepted e511 workflow operand; the older capsule inverse stays unchanged.
 const WORKFLOW_ENV_INVERSE: &str = r###"[{"at":569,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":850,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""},{"at":20995,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":21079,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""}]"###;
+// Exact debug0/jobs2 profile used by the shipping client prerequisite.
+const WORKFLOW_PROFILE_INVERSE: &str = r###"[{"at":545,"remove_utf8":"      CARGO_BUILD_JOBS: 2\n      CARGO_PROFILE_DEV_DEBUG: 0\n      CARGO_PROFILE_TEST_DEBUG: 0\n      CARGO_INCREMENTAL: 0\n","insert_utf8":""}]"###;
 fn workflow_env_claim() -> Value {
-    json!({"bytes":54542,"git_blob":"8fcc18490bc846f66ef4a6aff3989760cb20a980","mode":"0644","path":".github/workflows/rust.yml","sha256":"3f4ba10fed18916af8fc390c2e755a6a3c144f014d561d03c103cd674df542c3"})
+    json!({"bytes":54662,"git_blob":"41d99eeb347b9a3ee5e84d5127118fdd43eab4eb","mode":"0644","path":".github/workflows/rust.yml","sha256":"286ad08324da3b982b08fa1cb8ce57e0e244eed5834633241316f21fce91df4d"})
 }
 fn workflow_env_frame(
     expected: &Value,
@@ -167,6 +169,20 @@ fn workflow_env_frame(
         "T07 workflow env exact current caller differs",
     )?;
     material(expected, physical, mode)?;
+    let profile_inverse: Value =
+        serde_json::from_str(WORKFLOW_PROFILE_INVERSE).map_err(|e| e.to_string())?;
+    need(
+        digest(&serde_json::to_vec(&profile_inverse).map_err(|e| e.to_string())?)
+            == "12b31d34b42fce5b2f7550e71ce9fb91831d4a1706ec4956ab2afc8b06071851",
+        "T07 workflow profile closed one-span inverse differs",
+    )?;
+    let accepted = edits(physical, &profile_inverse)?;
+    material(
+        &json!({"bytes":54542,"git_blob":"8fcc18490bc846f66ef4a6aff3989760cb20a980","mode":"0644","path":".github/workflows/rust.yml","sha256":"3f4ba10fed18916af8fc390c2e755a6a3c144f014d561d03c103cd674df542c3"}),
+        &accepted,
+        "0644",
+    )?;
+    let physical = accepted.as_slice();
     need(
         digest(&serde_json::to_vec(inverse).map_err(|e| e.to_string())?)
             == "2c9c1976e655cd84e1162b232a30704cde75e6911ab224b87c9988206306da45",

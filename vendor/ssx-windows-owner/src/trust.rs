@@ -19,6 +19,7 @@ use windows_sys::Win32::{
     Storage::FileSystem::*,
     System::{
         Console::{GetStdHandle, STD_INPUT_HANDLE},
+        SystemServices::{ACCESS_ALLOWED_ACE_TYPE, ACCESS_DENIED_ACE_TYPE},
         Threading::*,
     },
 };

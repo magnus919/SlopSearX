@@ -4,11 +4,11 @@
   "files": [
     {
       "path": ".github/workflows/rust-client-platforms.yml",
-      "sha256": "57b099979a4c6e06aba4ddb6acbda814875cebb7e9a42dc1faef5951ebf41c89"
+      "sha256": "fe37b380e6a3af5f6ea63f040c7b8027f19808ef0f004c77e4cfd8058d743186"
     },
     {
       "path": ".github/workflows/rust.yml",
-      "sha256": "3f4ba10fed18916af8fc390c2e755a6a3c144f014d561d03c103cd674df542c3"
+      "sha256": "286ad08324da3b982b08fa1cb8ce57e0e244eed5834633241316f21fce91df4d"
     },
     {
       "path": ".pre-commit-config.yaml",
@@ -47,6 +47,10 @@
       "sha256": "be5bd0d82c3216d64a3ab459e834c75581fd6ae167ed3cf82000517515718301"
     },
     {
+      "path": "crates/ssx-gateway/tests/platform_support/mac_trust.rs",
+      "sha256": "b8a209831146084cea84f2c46b9bb8ca0eaaed0433e506fe43b86e8bc6a70822"
+    },
+    {
       "path": "crates/ssx-gateway/tests/platform_support/mod.rs",
       "sha256": "d98df669fa7ca80453457fcfb926ad0ca9b945f4e54eebc8eedad1453fedfffc"
     },
@@ -68,11 +72,11 @@
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/trust-store.sh",
-      "sha256": "acf199723fd98ed169304c0c0f84fae30c630571ae6401163c6b53f2b87793c1"
+      "sha256": "c9652836127a4e64aab3af141ddf3f146e9929dbcaa9b07ca6cc4972707f8373"
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
-      "sha256": "ebed01998291d50be3b8bf04d049622a3f9263e8c9590935f902903dd3c86007"
+      "sha256": "fb8aeaba07cee7aee8733723c5ba19296ac465729d5bc091ac11429c41305e3b"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
@@ -84,7 +88,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/t07_platform_tls.rs",
-      "sha256": "b3e982a7fe540b80c56c31b3f700e3e7df9182820f44be33eee6f0de4256205e"
+      "sha256": "e26806147228d3442616422372bfd85da9c3815c2b3279dcb788601434ae8a58"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
@@ -144,7 +148,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/network.rs",
-      "sha256": "4cd9e21c488e0a92d720ab7332c261e6daf359b0ec4c3d84bdd917858cd525f6"
+      "sha256": "7197fd8239fd30c65df34da4ae3d06267918f76f3e2e93e7069e60b229900b2d"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/network_cookie_tests.rs",
@@ -204,7 +208,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/runtime.rs",
-      "sha256": "788624a0f8606153b843cb4571d57d3e07a3531ea34b2f9eb3afc234974567de"
+      "sha256": "59ff9ba8540d66efe8f08d9e79e120b3e8c6145f1731c91f2a8bebd576bd42c5"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/settings.rs",
@@ -476,7 +480,7 @@
     },
     {
       "path": "crates/xtask/src/t07_unit_profile.rs",
-      "sha256": "e171997a6b333ecc3102da8a46336c6d54f974e8fa988cbf119e529af79c6383"
+      "sha256": "0e0a19f94a3c50c36120bfeaed46f6a0d5e41c84f273bb674359b513adb365ec"
     },
     {
       "path": "crates/xtask/src/w07.rs",
@@ -616,7 +620,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor.rs",
-      "sha256": "1beb0393148429ff822b1f103d23cfc4850a0a2a5d9013e75015632035a02680"
+      "sha256": "805c69910ecff22bc118b9a25d4229b0c00d746b6ae55bd3c37575f8538a0dff"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-predecessor-v1/main.rs",
@@ -792,7 +796,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/unit-profile/current-declaration.json",
-      "sha256": "8cfe682872b809c1bda17848bb70bbceba224d73e84cc0bf1eca89f65905eef4"
+      "sha256": "b0e5bcb5f5cd46778ef2366e757a2a379837990ae73512bad1c90afbf6f57e35"
     },
     {
       "path": "docs/rust-rewrite/t07/unit-profile/declaration.json",
@@ -804,7 +808,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/unit-profile/sdk-current-declaration.json",
-      "sha256": "a2d39ba33de7d919b35a0d3bf11c8c4a5ffc206c83c625a7e3f1310ce583ac77"
+      "sha256": "38ef93dd9bca6142ab1770f377562ddc9ad550256508bc5173ba9a721591fe7c"
     },
     {
       "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
@@ -829,6 +833,10 @@
     {
       "path": "vendor/ssx-http-source/PROVENANCE.json",
       "sha256": "ff631b467b301a20f49d84815f44727f364ee747f0d06ab7e34adf3b643e6987"
+    },
+    {
+      "path": "vendor/ssx-http-source/ci-manifest-version-amendment-v1.json",
+      "sha256": "5502bb052c81c0220d2f03265cac60def2ca5546b91a81aab86391f360ff6ce3"
     },
     {
       "path": "vendor/ssx-http-source/current-stack-amendment-v1.json",
@@ -1516,7 +1524,7 @@
     },
     {
       "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
-      "sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc"
+      "sha256": "0552db576a6950355c3c6a4eca3dbd3915765b54cae1c8f620245bb6f64f2c4a"
     },
     {
       "path": "vendor/ssx-http-source/reqwest/Cargo.toml.orig",
@@ -2544,7 +2552,7 @@
     },
     {
       "path": "vendor/ssx-windows-owner/Cargo.toml",
-      "sha256": "d073cd7e6cb384adeb5f175694029548d09ba0d37a04475534586ec9c9a7aa5c"
+      "sha256": "670924b8dce630180950b593a99b27af220bb2fa7f1965497b24fb15e429befb"
     },
     {
       "path": "vendor/ssx-windows-owner/SAFETY.md",
@@ -2564,11 +2572,11 @@
     },
     {
       "path": "vendor/ssx-windows-owner/src/process.rs",
-      "sha256": "37eb9589d85ff075cbc2fdaa685a79261a2e8c69f27b9b306e0bcb75ccf541e5"
+      "sha256": "4960950ee51a0cc8584d6f799aef233f2476a41553f61ce36e381da2273b578b"
     },
     {
       "path": "vendor/ssx-windows-owner/src/trust.rs",
-      "sha256": "c69c036335f2fcbd94b8921f5de4919bae7d932581879ef7beea87f1386a1b7a"
+      "sha256": "840574ce81a40635cd0a7ac0dec4e7001c1b73d54d3b38ec81ed0a913c9ab157"
     }
   ],
   "library_tests": [
@@ -2601,6 +2609,7 @@
     "gateway_client::network::cookie_wire_tests::unfollowed_redirect_prepares_cookie_before_origin_method_and_budget_gates",
     "gateway_client::network::cookie_wire_tests::uppercase_configured_https_returns_secure_cookie_on_next_initial_request",
     "gateway_client::network::cookie_wire_tests::zero_redirect_budget_still_prepares_same_origin_get_307_cookie",
+    "gateway_client::network::discovery_tests::helper_discovery_interruption_retains_worker_without_blocking_executor",
     "gateway_client::oauth::registration_review_controls::wire_issuer_is_discarded_before_model_validation_for_any_json_type",
     "gateway_client::oauth::source_gate_tests::source_gate_credentials_keep_unbound_and_reject_other_issuer_url_shaped_id",
     "gateway_client::oauth::source_gate_tests::source_gate_pending_cancel_and_error_cannot_change_prior_policy",
@@ -2895,5 +2904,32 @@
       "primary_sha256": "f758208d93eb85d6061650d3257f2fc072fae1d04f871257e9cc4464d33b3e1c",
       "reason": "MCP origin predicate refuses cross-port redirect; paired ordinary TLSpositive and zeroDestination negative; no production policy change"
     }
+  },
+  "ci_repair_successor": {
+    "source_parent": "ace46808a94fa56dd7b5a543a770f40383b8269f",
+    "parent_bindings_sha256": "571aaeeca09f6a0b6bcb4914efb42c36053b0bade8027e246d0d97a911eb223e",
+    "scope": "Exact local dependency version, Windows compile boundary, retained asynchronous installed-helper discovery and bounded hosted prerequisites; no frozen corpus, lock, runtime policy, test deadline or acceptance weakening.",
+    "new_causal_paths": [
+      "vendor/ssx-http-source/ci-manifest-version-amendment-v1.json",
+      "crates/ssx-gateway/tests/platform_support/mac_trust.rs"
+    ],
+    "ordinary_native_identity_additions": [
+      "gateway_client::network::discovery_tests::helper_discovery_interruption_retains_worker_without_blocking_executor"
+    ],
+    "declared_ordinary_gate_total": 218,
+    "qualification": "source declarations only; actual native and hosted validation recorded separately",
+    "platform_fake_controls": [
+      "mac_trust::tests::bounded_security_drains_both_streams_and_caps_diagnostics",
+      "mac_trust::tests::bounded_security_successful_leader_retires_remaining_descendant_before_success",
+      "mac_trust::tests::bounded_security_timeout_reaps_leader_and_retires_descendant_group",
+      "mac_trust::tests::cleanup_continues_after_unknown_missing_item_and_timeout_errors",
+      "mac_trust::tests::cleanup_overall_deadline_bounds_later_stages_and_preserves_marker",
+      "mac_trust::tests::cleanup_success_requires_exact_store_absence_and_clears_ownership",
+      "mac_trust::tests::finalizer_continues_all_owned_roots_and_preserves_failed_marker",
+      "mac_trust::tests::install_interruption_preserves_ownership_and_stops_later_mutations",
+      "mac_trust::tests::ownership_rejection_never_invokes_a_command"
+    ],
+    "hosted_cleanup_finalizer": "finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children",
+    "hosted_scope": "Existing dedicated ephemeral trust witness and exact cleanup remain ignored locally; nine Unix fake-process controls are supplemental platform owner tests, separate from ordinary218."
   }
 }

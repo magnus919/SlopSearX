@@ -195,7 +195,7 @@ impl PipePair {
                 .out_buffer_size(4096)
                 .create_with_security_attributes_raw(
                     &name,
-                    (&mut security.attributes as *mut _).cast(),
+                    ptr::from_mut(&mut security.attributes).cast(),
                 )
         }?;
         let wide = trust::wide(OsStr::new(&name))?;

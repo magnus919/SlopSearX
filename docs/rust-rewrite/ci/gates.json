@@ -2021,7 +2021,11 @@
             "CARGO_TERM_COLOR": "always",
             "RUST_BACKTRACE": 1,
             "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER": "/usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR",
-            "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER": "/usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR"
+            "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER": "/usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR",
+            "CARGO_BUILD_JOBS": 2,
+            "CARGO_INCREMENTAL": 0,
+            "CARGO_PROFILE_DEV_DEBUG": 0,
+            "CARGO_PROFILE_TEST_DEBUG": 0
           },
           "steps": [
             {
@@ -2650,6 +2654,17 @@
               "run": "set -euo pipefail\ncargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_install --test t07_platform_tls --test t07_runtime --test t07_windows_owner --test t07_windows_security -- --list 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt\"\n"
             },
             {
+              "if": "runner.os == 'macOS'",
+              "name": "Capture already built macOS trust finalizer executable",
+              "run": "set -euo pipefail\ncargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls --no-run --message-format=json > \"$RUNNER_TEMP/ssx-client-evidence/platform-tls-build.jsonl\"\n"
+            },
+            {
+              "if": "runner.os == 'macOS'",
+              "name": "Register exact compiled macOS trust finalizer",
+              "run": "$ErrorActionPreference = 'Stop'\n$artifacts = @(Get-Content -LiteralPath \"$env:RUNNER_TEMP/ssx-client-evidence/platform-tls-build.jsonl\" | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.reason -eq 'compiler-artifact' -and $_.target.name -eq 't07_platform_tls' -and $_.profile.test -and $_.executable })\nif ($artifacts.Count -ne 1) { throw 'Exact compiled macOS trust finalizer executable missing or duplicated' }\n$executable = $artifacts[0].executable\nif (-not (Test-Path -LiteralPath $executable -PathType Leaf)) { throw 'Compiled macOS finalizer is missing' }\n$targetRoot = [System.IO.Path]::GetFullPath($env:CARGO_TARGET_DIR).TrimEnd('/') + '/'\n$executable = [System.IO.Path]::GetFullPath($executable)\nif (-not $executable.StartsWith($targetRoot, [System.StringComparison]::Ordinal) -or [System.IO.Path]::GetFileName($executable) -cnotmatch '^t07_platform_tls-[0-9a-f]+$') { throw 'Finalizer executable is outside the exact owned target' }\n$sha256 = (Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash.ToLowerInvariant()\n@{ executable = $executable; sha256 = $sha256; target = '${{ matrix.target }}'; head = '${{ github.sha }}' } | ConvertTo-Json | Set-Content -LiteralPath \"$env:RUNNER_TEMP/ssx-client-evidence/platform-tls-image.json\"\n& $executable finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children --exact --ignored --list | Tee-Object -FilePath \"$env:RUNNER_TEMP/ssx-client-evidence/finalizer-inventory.txt\"\nif ($LASTEXITCODE -ne 0) { throw 'Finalizer inventory failed' }\n$cases = @(Get-Content -LiteralPath \"$env:RUNNER_TEMP/ssx-client-evidence/finalizer-inventory.txt\" | Where-Object { $_ -match ': test$' })\nif ($cases.Count -ne 1 -or $cases[0] -cne 'finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children: test') { throw 'Exact compiled finalizer inventory differs' }\n[System.IO.File]::AppendAllText($env:GITHUB_ENV, \"SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE=$executable`nSLOPSEARX_PLATFORM_TLS_TEST_SHA256=$sha256`n\", [System.Text.UTF8Encoding]::new($false))\n",
+              "shell": "pwsh"
+            },
+            {
               "name": "Verify required named native cases are present exactly once",
               "run": "./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory \"$env:RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt\"\n",
               "shell": "pwsh"
@@ -2672,13 +2687,22 @@
                 "SLOPSEARX_PLATFORM_TRUST_FIXTURE": "1"
               },
               "name": "Dedicated ephemeral platform trust-store witness",
-              "run": "set -euo pipefail\n# This runner is disposable. Exact CA cleanup also runs in the finalizer.\ntrap 'for case_root in \"$SLOPSEARX_INSTALL_TEST_ROOT\"/platform-tls-store-*; do if [[ -f \"$case_root/trust-active\" ]]; then bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove \"$case_root\"; fi; done' EXIT\ncargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --nocapture 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/platform-store.txt\"\n"
+              "run": "set -euo pipefail\n# This runner is disposable. Exact CA cleanup also runs in the finalizer.\nif [[ \"$RUNNER_OS\" != macOS ]]; then\n  trap 'for case_root in \"$SLOPSEARX_INSTALL_TEST_ROOT\"/platform-tls-store-*; do if [[ -f \"$case_root/trust-active\" ]]; then bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove \"$case_root\"; fi; done' EXIT\nfi\ncargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --nocapture 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/platform-store.txt\"\n"
             },
             {
               "env": {
                 "SLOPSEARX_PLATFORM_TRUST_FIXTURE": "1"
               },
-              "if": "always()",
+              "if": "always() && runner.os == 'macOS'",
+              "name": "Always retire exact owned macOS trust fixtures with bounded Rust owner",
+              "run": "set -euo pipefail\nif [[ -n \"${SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE:-}\" ]]; then\n  [[ \"$SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE\" == \"$CARGO_TARGET_DIR\"/debug/deps/t07_platform_tls-* ]]\n  actual_sha256=\"$(shasum -a 256 \"$SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE\" | cut -d ' ' -f1)\"\n  test \"$actual_sha256\" = \"$SLOPSEARX_PLATFORM_TLS_TEST_SHA256\"\n  \"$SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE\" finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children --exact --ignored --nocapture 2>&1 | tee \"$RUNNER_TEMP/ssx-client-evidence/platform-store-finalizer.txt\"\nelse\n  # No mutation is possible before the exact binary is registered.\n  for case_root in \"$SLOPSEARX_INSTALL_TEST_ROOT\"/platform-tls-store-*; do\n    test ! -e \"$case_root/trust-active\"\n  done\nfi\n",
+              "timeout-minutes": 3
+            },
+            {
+              "env": {
+                "SLOPSEARX_PLATFORM_TRUST_FIXTURE": "1"
+              },
+              "if": "always() && runner.os != 'macOS'",
               "name": "Always remove exact owned CI trust fixtures",
               "run": "set -euo pipefail\nfor case_root in \"$SLOPSEARX_INSTALL_TEST_ROOT\"/platform-tls-store-*; do\n  if [[ -f \"$case_root/trust-active\" ]]; then\n    bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove \"$case_root\"\n  fi\ndone\n"
             },

@@ -17,9 +17,9 @@
     },
     {
       "path": "Cargo.toml",
-      "bytes": 14131,
+      "bytes": 14150,
       "mode": "0o644",
-      "sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc"
+      "sha256": "0552db576a6950355c3c6a4eca3dbd3915765b54cae1c8f620245bb6f64f2c4a"
     },
     {
       "path": "Cargo.toml.orig",
@@ -730,7 +730,8 @@
         "optional": true,
         "features": [
           "source-idna2008"
-        ]
+        ],
+        "version": "=0.1.0"
       }
     },
     "dev-dependencies": {
@@ -1211,7 +1212,7 @@
     {
       "name": "ssx-source-codecs",
       "source": null,
-      "req": "*",
+      "req": "=0.1.0",
       "kind": null,
       "rename": null,
       "optional": true,
@@ -2119,7 +2120,7 @@
     {
       "name": "reqwest",
       "root": "vendor/ssx-http-source/reqwest",
-      "manifest_sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc",
+      "manifest_sha256": "0552db576a6950355c3c6a4eca3dbd3915765b54cae1c8f620245bb6f64f2c4a",
       "files": [
         {
           "path": "vendor/ssx-http-source/reqwest/.cargo_vcs_info.json",
@@ -2135,9 +2136,9 @@
         },
         {
           "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
-          "bytes": 14131,
+          "bytes": 14150,
           "mode": "0o644",
-          "sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc"
+          "sha256": "0552db576a6950355c3c6a4eca3dbd3915765b54cae1c8f620245bb6f64f2c4a"
         },
         {
           "path": "vendor/ssx-http-source/reqwest/Cargo.toml.orig",
@@ -6888,5 +6889,14 @@
         }
       }
     ]
+  },
+  "ci_manifest_version_successor": {
+    "parent_declaration_sha256": "8cfe682872b809c1bda17848bb70bbceba224d73e84cc0bf1eca89f65905eef4",
+    "source_parent": "ace46808a94fa56dd7b5a543a770f40383b8269f",
+    "amendment": {
+      "path": "vendor/ssx-http-source/ci-manifest-version-amendment-v1.json",
+      "sha256": "5502bb052c81c0220d2f03265cac60def2ca5546b91a81aab86391f360ff6ce3"
+    },
+    "scope": "Exact local dependency version and current file custody only; historical declarations, locks, membership, defaults and test inventories preserved."
   }
 }

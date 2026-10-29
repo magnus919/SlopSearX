@@ -105,18 +105,46 @@ fn prepare_initial_headers(
     }
     Ok(())
 }
+// Installation custody hashes can read three large executable images. Run only
+// that filesystem discovery on the retained lane: cancellation/deadline stays
+// responsive, and runtime shutdown still joins its actual worker. No network
+// owner is constructed in a worker whose result could be abandoned.
+#[cfg(any(unix, windows))]
+async fn discover_helper<T: Send + 'static>(
+    io: &super::io_owner::IoOwner,
+    deadline: std::time::Instant,
+    cancel: &CancellationToken,
+    discover: impl FnOnce() -> std::io::Result<T> + Send + 'static,
+) -> Result<T> {
+    io.run(deadline, cancel, discover)
+        .await
+        .map_err(|_| "gateway helper discovery interrupted")?
+        .map_err(Into::into)
+}
 impl Network {
-    pub fn create(oauth: bool, roots: Vec<reqwest::Certificate>) -> Result<Arc<Self>> {
+    pub async fn create(
+        oauth: bool,
+        roots: Vec<reqwest::Certificate>,
+        io: &super::io_owner::IoOwner,
+        deadline: std::time::Instant,
+        cancel: &CancellationToken,
+    ) -> Result<Arc<Self>> {
         #[cfg(not(any(unix, windows)))]
         {
-            let _ = (oauth, roots);
+            let _ = (oauth, roots, io, deadline, cancel);
             Err("gateway DNS owner is unavailable on this platform".into())
         }
         #[cfg(any(unix, windows))]
         {
             let connect = Duration::from_secs(if oauth { 30 } else { 60 });
             let resolver = super::resolver::GatewayResolver::new(
-                super::resolver::install::current_helper()?,
+                discover_helper(
+                    io,
+                    deadline,
+                    cancel,
+                    super::resolver::install::current_helper,
+                )
+                .await?,
                 connect,
             );
             // Only this gateway client opts in. Existing Reqwest clients and
@@ -337,4 +365,50 @@ pub(super) fn oauth_loopback_test_network() -> Arc<Network> {
         .expect("unique test Network owner")
         .oauth = true;
     network
+}
+
+#[cfg(all(test, any(unix, windows)))]
+mod discovery_tests {
+    use super::*;
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn helper_discovery_interruption_retains_worker_without_blocking_executor() {
+        for cancelled in [true, false] {
+            let io = Arc::new(super::super::io_owner::IoOwner::new());
+            let cancel = CancellationToken::new();
+            let (started, ready) = tokio::sync::oneshot::channel();
+            let (release, held) = std::sync::mpsc::channel();
+            let (worker_io, worker_cancel) = (io.clone(), cancel.clone());
+            let deadline =
+                std::time::Instant::now() + Duration::from_secs(if cancelled { 10 } else { 1 });
+            let waiter = tokio::spawn(async move {
+                discover_helper(&worker_io, deadline, &worker_cancel, move || {
+                    let _ = started.send(());
+                    held.recv().unwrap();
+                    Ok(())
+                })
+                .await
+            });
+            tokio::time::timeout(Duration::from_secs(3), ready)
+                .await
+                .unwrap()
+                .unwrap();
+            if cancelled {
+                cancel.cancel();
+            }
+            let result = tokio::time::timeout(Duration::from_secs(3), waiter).await;
+            // Release before assertions so a failure cannot strand blocking work.
+            let mut drain = Box::pin(io.shutdown());
+            let still_owned = tokio::time::timeout(Duration::from_millis(20), drain.as_mut())
+                .await
+                .is_err();
+            release.send(()).unwrap();
+            tokio::time::timeout(Duration::from_secs(3), drain)
+                .await
+                .unwrap()
+                .unwrap();
+            assert!(result.unwrap().unwrap().is_err());
+            assert!(still_owned, "shutdown must retain the actual discovery job");
+        }
+    }
 }

@@ -36,8 +36,18 @@ if ($IgnoredOnly) { $expected = @($store) } else {
       $expected += @(
         'actual_native_sigterm_during_initialization_joins_http_owner',
         'actual_native_oauth_denied_delete_on_eof_and_sigterm_never_reauthorizes_or_refreshes_and_retires_owners',
-        'actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners'
+        'actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners',
+        'mac_trust::tests::bounded_security_drains_both_streams_and_caps_diagnostics',
+        'mac_trust::tests::bounded_security_successful_leader_retires_remaining_descendant_before_success',
+        'mac_trust::tests::bounded_security_timeout_reaps_leader_and_retires_descendant_group',
+        'mac_trust::tests::cleanup_continues_after_unknown_missing_item_and_timeout_errors',
+        'mac_trust::tests::cleanup_overall_deadline_bounds_later_stages_and_preserves_marker',
+        'mac_trust::tests::cleanup_success_requires_exact_store_absence_and_clears_ownership',
+        'mac_trust::tests::finalizer_continues_all_owned_roots_and_preserves_failed_marker',
+        'mac_trust::tests::install_interruption_preserves_ownership_and_stops_later_mutations',
+        'mac_trust::tests::ownership_rejection_never_invokes_a_command'
       )
+      if ($IsMacOS) { $expected += 'finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children' }
     }
 }
 foreach ($name in $expected) {

@@ -29,41 +29,10 @@ case "$(uname -s)" in
     else exit 2; fi
     ;;
   Darwin)
-    fingerprint="$(shasum -a 1 "$case_root/ca.der" | cut -d ' ' -f1)"
-    [[ "$fingerprint" =~ ^[0-9a-f]{40}$ ]]
-    keychain="$case_root/platform-fixture.keychain-db"
-    if [[ "$mode" == install ]]; then
-      [[ ! -e "$keychain" ]]
-      security list-keychains -d user > "$case_root/original-keychains"
-      printf '%s\n' "$fingerprint" > "$case_root/trust-active"
-      security create-keychain -p ephemeral-platform-fixture "$keychain"
-      security unlock-keychain -p ephemeral-platform-fixture "$keychain"
-      # Preserve the existing search list; append only this owned keychain.
-      keychains=()
-      while IFS= read -r line; do
-        line="${line#*\"}"; line="${line%\"*}"
-        [[ -n "$line" ]] && keychains+=("$line")
-      done < "$case_root/original-keychains"
-      security list-keychains -d user -s "${keychains[@]}" "$keychain"
-      security add-trusted-cert -r trustRoot -k "$keychain" "$case_root/ca.pem"
-    elif [[ "$mode" == remove ]]; then
-      if [[ -f "$case_root/trust-active" ]]; then
-        [[ "$(cat "$case_root/trust-active")" == "$fingerprint" ]]
-        # Remove trust for the exact certificate, then the exclusively owned store.
-        # Attempt all cleanup stages even when an earlier one fails.
-        cleanup_status=0
-        security remove-trusted-cert "$case_root/ca.pem" || cleanup_status=1
-        keychains=()
-        while IFS= read -r line; do
-          line="${line#*\"}"; line="${line%\"*}"
-          [[ -n "$line" ]] && keychains+=("$line")
-        done < "$case_root/original-keychains"
-        security list-keychains -d user -s "${keychains[@]}" || cleanup_status=1
-        if [[ -f "$keychain" ]]; then security delete-keychain "$keychain" || cleanup_status=1; fi
-        [[ "$cleanup_status" == 0 ]]
-        rm -- "$case_root/trust-active"
-      fi
-    else exit 2; fi
+    # Every Darwin security child is owned by the bounded Rust helper, including
+    # cleanup retries. Never bypass it from an EXIT trap or this shell adapter.
+    echo 'Darwin trust fixtures require the bounded t07_platform_tls Rust owner' >&2
+    exit 2
     ;;
   *) exit 2 ;;
 esac

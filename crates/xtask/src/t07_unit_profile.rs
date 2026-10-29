@@ -11,10 +11,10 @@ use std::{
     time::{Duration, Instant},
 };
 const DECLARATION: &str = "docs/rust-rewrite/t07/unit-profile/current-declaration.json";
-const DECLARATION_SHA: &str = "8cfe682872b809c1bda17848bb70bbceba224d73e84cc0bf1eca89f65905eef4";
+const DECLARATION_SHA: &str = "b0e5bcb5f5cd46778ef2366e757a2a379837990ae73512bad1c90afbf6f57e35";
 const SDK_DECLARATION: &str = "docs/rust-rewrite/t07/unit-profile/sdk-current-declaration.json";
 const SDK_DECLARATION_SHA: &str =
-    "a2d39ba33de7d919b35a0d3bf11c8c4a5ffc206c83c625a7e3f1310ce583ac77";
+    "38ef93dd9bca6142ab1770f377562ddc9ad550256508bc5173ba9a721591fe7c";
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Kind {
     Reqwest,
