@@ -163,10 +163,10 @@
     {
       "current": {
         "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-        "sha256": "30aee2dc3cd290a49ab56f7b670baa08a25827d624925c2aeacdc21862cb07eb",
-        "bytes": 35894,
+        "sha256": "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6",
+        "bytes": 35959,
         "mode": "0644",
-        "git_blob": "56d0852c2ec106b7671001f8eafd4430ac0f5685"
+        "git_blob": "cb8fcef7de1199e15ab66fa0cd41abd9c2035bfa"
       },
       "w08": {
         "prior": {
@@ -178,10 +178,10 @@
         },
         "current": {
           "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-          "sha256": "30aee2dc3cd290a49ab56f7b670baa08a25827d624925c2aeacdc21862cb07eb",
-          "bytes": 35894,
+          "sha256": "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6",
+          "bytes": 35959,
           "mode": "0644",
-          "git_blob": "56d0852c2ec106b7671001f8eafd4430ac0f5685"
+          "git_blob": "cb8fcef7de1199e15ab66fa0cd41abd9c2035bfa"
         },
         "edits": [
           {
@@ -200,6 +200,11 @@
             "insert_utf8": "}\n/// Ordinary controls retained in the existing xtask-owned source test.\n#[cfg(test)]\n#[allow(dead_code)]\npub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {\n    snapshot_fixture_main::controls(root)\n"
           },
           {
+            "at": 24573,
+            "remove_utf8": "",
+            "insert_utf8": "    #[cfg(test)]\n    snapshot_helper_amendment::controls(root)?;\n"
+          },
+          {
             "at": 31310,
             "remove_utf8": "",
             "insert_utf8": "            let old_joint = w08_source_successor::parent(root, r.path, &actual)?;\n            fs::write(&path, &old_joint).map_err(|e| e.to_string())?;\n            need(\n                fixture_parent(r.path, &old_joint, Parent::W07).is_err(),\n                \"old joint physically substituted for current W08/snapshot source\",\n            )?;\n            fs::write(&path, &actual).map_err(|e| e.to_string())?;\n"
@@ -216,10 +221,10 @@
         },
         "current": {
           "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-          "sha256": "30aee2dc3cd290a49ab56f7b670baa08a25827d624925c2aeacdc21862cb07eb",
-          "bytes": 35894,
+          "sha256": "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6",
+          "bytes": 35959,
           "mode": "0644",
-          "git_blob": "56d0852c2ec106b7671001f8eafd4430ac0f5685"
+          "git_blob": "cb8fcef7de1199e15ab66fa0cd41abd9c2035bfa"
         },
         "edits": [
           {
@@ -261,6 +266,11 @@
             "at": 21925,
             "remove_utf8": "/// Ordinary controls for the shared owner's test wrapper, without discovered tests.\n",
             "insert_utf8": "/// Ordinary controls retained in the existing xtask-owned source test.\n"
+          },
+          {
+            "at": 23423,
+            "remove_utf8": "",
+            "insert_utf8": "    #[cfg(test)]\n    snapshot_helper_amendment::controls(root)?;\n"
           },
           {
             "at": 23596,

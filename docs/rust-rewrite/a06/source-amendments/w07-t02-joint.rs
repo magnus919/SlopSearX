@@ -483,6 +483,8 @@ pub(crate) fn parent_git_blob(
 }
 /// Real Git parents and both exact inverses, plus rejection controls. No new test identity.
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    #[cfg(test)]
+    snapshot_helper_amendment::controls(root)?;
     need(
         row("crates/xtask/src/main.rs")?.sha == MAIN_SHA && row("Cargo.lock")?.sha == LOCK_SHA,
         "current admission constants",
