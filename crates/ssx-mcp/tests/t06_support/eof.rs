@@ -12,12 +12,13 @@ pub(super) enum Fault {
     AfterProviderReady,
     InvalidInitialize,
     EarlyExit,
+    ClosedStdout,
 }
 struct Outcome {
     primary: Option<String>,
     cleanup: Vec<String>,
     child_status: Option<ExitStatus>,
-    provider_joined: bool,
+    provider_retirement_ok: bool,
     store_removed: bool,
     endpoint: String,
     stderr_bytes: usize,
@@ -28,9 +29,9 @@ impl Outcome {
             return Ok(());
         }
         Err(format!(
-            "T06 tool={name}; primary={}; cleanup={:?}; child_status={:?}; provider_joined={}; store_removed={}; stderr_bytes={}",
+            "T06 tool={name}; primary={}; cleanup={:?}; child_status={:?}; provider_retirement_ok={}; store_removed={}; stderr_bytes={}",
             self.primary.as_deref().unwrap_or("none"), self.cleanup, self.child_status,
-            self.provider_joined, self.store_removed, self.stderr_bytes,
+            self.provider_retirement_ok, self.store_removed, self.stderr_bytes,
         ).into())
     }
 }
@@ -57,11 +58,11 @@ async fn initialize(
                 .map_err(|e| phase(name, "initialize-read", format!("{:?}", e.kind())))?,
         };
         if n == 0 {
-            let status = child
-                .wait()
-                .await
-                .map_err(|e| phase(name, "initialize-child-status", format!("{:?}", e.kind())))?;
-            return Err(phase(name, "initialize-early-child-exit", status));
+            return match child.try_wait() {
+                Ok(Some(status)) => Err(phase(name, "initialize-early-child-exit", status)),
+                Ok(None) => Err(phase(name, "initialize-stdout-EOF", "child still running")),
+                Err(e) => Err(phase(name, "initialize-child-status", format!("{:?}", e.kind()))),
+            };
         }
         if n as u64 > LINE_CAP || line.last() != Some(&b'\n') {
             return Err(phase(
@@ -107,6 +108,12 @@ async fn exercise(
         ));
     }
     if fault == Fault::EarlyExit {
+        // Establish actual child completion before asking the classifier to
+        // distinguish it from the separate live-child stdout-EOF control.
+        tokio::time::timeout(Duration::from_secs(1), child.wait())
+            .await
+            .map_err(|_| phase(name, "early-exit-control-setup", "timeout (1s)"))?
+            .map_err(|e| phase(name, "early-exit-control-setup", format!("{:?}", e.kind())))?;
         return initialize(name, child, output).await;
     }
     // A valid request with the wrong identity makes the real child reply
@@ -213,8 +220,16 @@ async fn attempt(name: &str, fault: Fault) -> Result<Outcome> {
     let mut input = None;
     let mut stderr = None;
     let primary = async {
-        let process = tokio::process::Command::new(env!("CARGO_BIN_EXE_search-qualification"))
-            .args([
+        let mut command = if fault == Fault::ClosedStdout {
+            // Real owned process with closed stdout and live stdin. Shell
+            // built-ins keep it alive without a sleep or a descendant process.
+            let mut command = tokio::process::Command::new("/bin/sh");
+            command.args(["-c", "exec 1>&-; while IFS= read -r line; do :; done"]);
+            command
+        } else {
+            let mut command =
+                tokio::process::Command::new(env!("CARGO_BIN_EXE_search-qualification"));
+            command.args([
                 if fault == Fault::EarlyExit {
                     "invalid-mode"
                 } else {
@@ -222,7 +237,10 @@ async fn attempt(name: &str, fault: Fault) -> Result<Outcome> {
                 },
                 server.url(),
                 &endpoint,
-            ])
+            ]);
+            command
+        };
+        let process = command
             .env_clear()
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
@@ -290,7 +308,7 @@ async fn attempt(name: &str, fault: Fault) -> Result<Outcome> {
             }
         }
     }
-    let provider_joined = match provider.close().await {
+    let provider_retirement_ok = match provider.close().await {
         Ok(()) => true,
         Err(e) => {
             cleanup.push(format!("provider-retirement: {e}"));
@@ -318,7 +336,7 @@ async fn attempt(name: &str, fault: Fault) -> Result<Outcome> {
         primary,
         cleanup,
         child_status,
-        provider_joined,
+        provider_retirement_ok,
         store_removed,
         endpoint,
         stderr_bytes,
@@ -342,7 +360,7 @@ pub(super) async fn early_failure_controls() -> Result<()> {
             assert!(outcome.primary.as_deref().unwrap().contains(expected));
             assert!(outcome.cleanup.is_empty(), "{:?}", outcome.cleanup);
             assert!(outcome.child_status.is_some(), "child was not reaped");
-            assert!(outcome.provider_joined && outcome.store_removed);
+            assert!(outcome.provider_retirement_ok && outcome.store_removed);
             let url = url::Url::parse(&outcome.endpoint)?;
             assert!(
                 tokio::net::TcpStream::connect(("127.0.0.1", url.port().unwrap()))
@@ -359,6 +377,7 @@ pub(super) async fn initialization_controls() -> Result<()> {
     for (fault, expected) in [
         (Fault::InvalidInitialize, "initialize-protocol"),
         (Fault::EarlyExit, "initialize-early-child-exit"),
+        (Fault::ClosedStdout, "initialize-stdout-EOF"),
     ] {
         let outcome = attempt("slopsearx_search", fault).await?;
         assert!(
@@ -368,7 +387,7 @@ pub(super) async fn initialization_controls() -> Result<()> {
         );
         assert!(outcome.cleanup.is_empty(), "{:?}", outcome.cleanup);
         assert!(outcome.child_status.is_some());
-        assert!(outcome.provider_joined && outcome.store_removed);
+        assert!(outcome.provider_retirement_ok && outcome.store_removed);
     }
     Ok(())
 }
@@ -383,15 +402,25 @@ pub(super) async fn incomplete_readiness_controls() -> Result<()> {
         vec![b'x'; 8 * 1024 + 1],
     ] {
         let provider = Provider::new().await?;
-        let url = url::Url::parse(&provider.endpoint)?;
-        let mut socket = tokio::net::TcpStream::connect(("127.0.0.1", url.port().unwrap())).await?;
-        socket.write_all(&bytes).await?;
-        socket.shutdown().await?;
-        let ready = provider.observed().await;
-        let permits = provider.started.available_permits();
+        let observation: Result<_> = async {
+            let url = url::Url::parse(&provider.endpoint)?;
+            let mut socket =
+                tokio::net::TcpStream::connect(("127.0.0.1", url.port().unwrap())).await?;
+            socket.write_all(&bytes).await?;
+            socket.shutdown().await?;
+            let ready = provider.observed().await;
+            Ok((ready.is_err(), provider.started.available_permits()))
+        }
+        .await;
         let retired = provider.close().await;
+        let (rejected, permits) = observation.map_err(|primary| {
+            format!(
+                "incomplete-control setup primary={primary}; cleanup={:?}",
+                retired.as_ref().err().map(|e| e.to_string()),
+            )
+        })?;
         assert!(
-            ready.is_err(),
+            rejected,
             "incomplete/malformed input falsely announced readiness"
         );
         assert_eq!(permits, 0, "invalid input created readiness permit");
@@ -402,14 +431,26 @@ pub(super) async fn incomplete_readiness_controls() -> Result<()> {
     }
     // A connected, incomplete peer must also be cancellable without peer EOF.
     let provider = Provider::new().await?;
-    let url = url::Url::parse(&provider.endpoint)?;
-    let mut socket = tokio::net::TcpStream::connect(("127.0.0.1", url.port().unwrap())).await?;
-    socket.write_all(b"POST /v1/systemone HTTP/1.1\r\n").await?;
-    let read = tokio::time::timeout(Duration::from_secs(1), provider.request_read.acquire()).await;
-    // Teardown precedes assertions even if the read observation failed.
-    let read_observed = matches!(&read, Ok(Ok(_)));
-    drop(read);
-    provider.close().await?;
+    let setup: Result<_> = async {
+        let url = url::Url::parse(&provider.endpoint)?;
+        let mut socket = tokio::net::TcpStream::connect(("127.0.0.1", url.port().unwrap())).await?;
+        socket.write_all(b"POST /v1/systemone HTTP/1.1\r\n").await?;
+        let read =
+            tokio::time::timeout(Duration::from_secs(1), provider.request_read.acquire()).await;
+        let read_observed = matches!(&read, Ok(Ok(_)));
+        drop(read);
+        Ok((socket, read_observed))
+    }
+    .await;
+    let retired = provider.close().await;
+    // Teardown precedes returns/assertions even when setup or observation failed.
+    let (mut socket, read_observed) = setup.map_err(|primary| {
+        format!(
+            "incomplete-read cancellation setup primary={primary}; cleanup={:?}",
+            retired.as_ref().err().map(|e| e.to_string()),
+        )
+    })?;
+    retired?;
     assert!(
         read_observed,
         "incomplete-read cancellation control never reached actual reader"

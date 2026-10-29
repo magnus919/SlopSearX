@@ -147,11 +147,13 @@ impl Provider {
             Err(_) => {
                 self.task.abort();
                 // Aborting is followed by a join; dropping a JoinHandle detaches it.
-                let joined = self.task.await;
-                if !matches!(joined, Err(ref e) if e.is_cancelled()) {
-                    return Err("provider abort did not retire task".into());
-                }
-                Err("provider cooperative retirement timeout (2s); aborted and joined".into())
+                let disposition = match self.task.await {
+                    Err(e) if e.is_cancelled() => "aborted and joined",
+                    Err(_) => "joined after task failure",
+                    Ok(Ok(())) => "completed and joined after guard",
+                    Ok(Err(_)) => "joined after protocol failure",
+                };
+                Err(format!("provider cooperative retirement timeout (2s); {disposition}").into())
             }
         }
     }
@@ -738,27 +740,21 @@ async fn actual_stateless_http_disconnect_drains_inflight_optional_request() -> 
 
 #[tokio::test]
 async fn actual_stdio_eof_during_optional_prepare_and_preview_drains_owned_process() -> Result<()> {
+    eprintln!("T06 EOF control=incomplete-http phase=start");
+    eof::incomplete_readiness_controls().await?;
+    eprintln!("T06 EOF control=incomplete-http phase=passed");
+    eprintln!("T06 EOF control=early-error-cleanup phase=start");
+    eof::early_failure_controls().await?;
+    eprintln!("T06 EOF control=early-error-cleanup phase=passed");
+    eprintln!("T06 EOF control=protocol-and-child-status phase=start");
+    eof::initialization_controls().await?;
+    eprintln!("T06 EOF control=protocol-and-child-status phase=passed");
     for name in ["slopsearx_search", "slopsearx_explain_search_scope"] {
+        eprintln!("T06 EOF positive tool={name} phase=start");
         eof::run(name, eof::Fault::None).await?;
+        eprintln!("T06 EOF positive tool={name} phase=passed");
     }
     Ok(())
-}
-
-#[tokio::test]
-async fn provider_readiness_rejects_incomplete_malformed_and_oversized_http_requests() -> Result<()>
-{
-    eof::incomplete_readiness_controls().await
-}
-
-#[tokio::test]
-async fn stdio_eof_early_failures_reap_child_join_provider_and_retire_private_store() -> Result<()>
-{
-    eof::early_failure_controls().await
-}
-
-#[tokio::test]
-async fn stdio_eof_initialization_diagnoses_protocol_failure_and_early_child_exit() -> Result<()> {
-    eof::initialization_controls().await
 }
 
 /// Execute the real MCP handler and its production opaque output projection,
