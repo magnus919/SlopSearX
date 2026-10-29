@@ -72,3 +72,20 @@ extra/missing/duplicate inverse spans, row/path/hash/mode/manifest/Git controls,
 and missing proof material. The existing exact inventory/count checks remain
 fail-closed. This proof changes qualification only; no portal request, response,
 rendering, policy or engine behavior changes.
+
+The additive [receipt-control successor](source-amendments/receipt-control-successor.json)
+replaces an elapsed-time publication assertion with suspension of the fixture's
+owned Valkey child and explicit resume. The original provider timeout, first-poll
+readiness and receipt-key assertions remain. A guard resumes the borrowed child
+on early exit. Four exact afterimages recover the two original test files and
+their two source readers at `e9c5911a`; original binding containers and archives
+remain unchanged. Existing T06 and W07 readers reject altered bodies, modes,
+caller tuples and missing or duplicate inverse spans. This qualification-only
+repair does not change backend or portal behavior.
+
+The reviewed current gate root `source-amendments/receipt-control-closure.rs`
+independently pins the complete helper and capsule bytes and modes before either
+T06 reader or the W07 reader delegates to that helper. Its literal expectations
+sit outside the four inverse rows, avoiding a hash cycle. The outer closure's
+own source is explicit current gate code, retained in the final source seal;
+mutating only the executable helper or capsule cannot self-certify an old frame.
