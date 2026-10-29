@@ -659,29 +659,64 @@
       "handoff": "Native gateway executable, OAuth client tests and installation/config migration notes."
     },
     {
+      "id": "T08A",
+      "title": "Implement native ssx against the frozen external HTTP contract",
+      "lane": "clients",
+      "depends_on": [
+        "F04"
+      ],
+      "problem": "A standalone external HTTP client can be implemented against the pinned ssx wire contract while complete native HTTP acceptance remains a separate prerequisite for T08 integration.",
+      "scope": [
+        "Start only after the reviewed CLI_AUTHORING_SPLIT decision is accepted and merged, accepted F02/F03/F04 handoffs are available and freshly fetched main contains merged PR1007 e12744511013bd05370173e777daaef471bf9527",
+        "Implement all native ssx commands, flags, environment defaults, request encoding, response projections and source-derived failure behavior without server implementation imports or shared page/domain changes",
+        "Own crates/ssx-cli, deterministic external-child HTTP fixtures, t08a evidence/install documentation and coordinated native T08A gate/CI registration; preserve exact arbitrary integer requests, output semantics, redirect/order and proxy/CA behavior or explicitly review differences",
+        "Provide supported-target native build/install commands and Python-free client/runtime/dependency evidence without replacing deployment/required gates or adding an O04 reverse dependency"
+      ],
+      "acceptance": [
+        "Source-bound golden argv/stdout/stderr/exit and ordered request corpus passes in real native external children, including every command/format, Unicode, arbitrary page integers, unavailable server, redirects, non-2xx, invalid UTF-8, malformed JSON and wrong shapes",
+        "Native T08A xtask check executes its finite inventory, rejects missing/changed cases and binds final source/binary/raw outcomes/cleanup; locked build, formatting, strict Clippy and scoped tests pass",
+        "Supported-target source-build/install instructions produce a working executable without Python/PyPy/libpython, backend imports, embedded server, FFI bridge, sidecar or remote fallback; optional Python-client separation is audited",
+        "Reviewed component PR hands exact native source/binary/corpus/install identities to T08; it does not establish actual native-server integration, close T08/T02 or switch deployment/mandatory gates"
+      ],
+      "sources": [
+        "ssx",
+        "crates/ssx-cli",
+        "README.md",
+        "tests/test_packaging.py",
+        "docs/rust-rewrite/inventory/surface-contracts.md",
+        "crates/xtask/src/main.rs",
+        "docs/rust-rewrite/ci/gates.json",
+        "docs/rust-rewrite/CLI_AUTHORING_SPLIT.md"
+      ],
+      "handoff": "Accepted native wire-only ssx executable, external-child compatibility corpus, native component gate and supported-target Python-free installation evidence for T08 integration."
+    },
+    {
       "id": "T08",
       "title": "Replace ssx with a native Rust CLI",
       "lane": "clients",
       "depends_on": [
-        "T02"
+        "T02",
+        "T08A"
       ],
-      "problem": "The shipping CLI is small enough to remove its interpreter dependency while retaining user workflows.",
+      "problem": "Native wire-client qualification does not establish integration with the accepted Rust HTTP service or final CLI delivery.",
       "scope": [
-        "Inventory ssx commands/flags/env defaults, URL encoding, output formats, errors and exit codes",
-        "Implement native HTTP client with existing compatibility surface and documented executable name",
-        "Test against deterministic external HTTP server; no server implementation imports"
+        "Consume accepted T08A source/binary, black-box argv/request/output/error corpus, native gate and supported-target installation handoff; retain every original compatibility obligation",
+        "Integrate native ssx against an actual separately launched native HTTP service after accepted T02 and lossless-page restoration #1049; keep server implementation imports out of the client",
+        "Verify ordinary and arbitrary-precision page requests end to end through native HTTP/service/adapter paths, distinct high-page cache identities and repeat-hit behavior without provider calls",
+        "Requalify final clean client/server identities, supported-target install/runtime separation and cargo xtask check T08; deliver the accepted CLI handoff to O04"
       ],
       "acceptance": [
         "Golden argv/stdout/stderr/exit status corpus passes including Unicode, unavailable server and malformed replies",
         "Native CLI works in an environment without Python; installation instructions cover supported platforms",
-        "Any optional Python client remains a separately packaged thin wire client and is never required by server or CLI"
+        "Any optional Python client remains a separately packaged thin wire client and is never required by server or CLI",
+        "Accepted T08A artifacts pass actual native-server integration for all commands/formats and relevant failures, exact high-page propagation and distinct cache/repeat-hit behavior; final T08 gate/install evidence and O04 handoff are complete, not inferred from external-fixture success"
       ],
       "sources": [
         "ssx",
         "README.md",
         "tests/test_packaging.py"
       ],
-      "handoff": "Native ssx executable and black-box compatibility corpus."
+      "handoff": "Native ssx executable and black-box corpus qualified against accepted native HTTP, with final source/binary/install identities and O04 delivery handoff."
     },
     {
       "id": "T09",
