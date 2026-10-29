@@ -72,3 +72,7 @@ extra/missing/duplicate inverse spans, row/path/hash/mode/manifest/Git controls,
 and missing proof material. The existing exact inventory/count checks remain
 fail-closed. This proof changes qualification only; no portal request, response,
 rendering, policy or engine behavior changes.
+
+The [EOF fixture follow-up](EOF_FOLLOW_UP.md) records #1070's causal readiness,
+phase diagnostics, unconditional error teardown and additional negative controls.
+Its existing execution and EOF retirement deadlines remain unchanged.

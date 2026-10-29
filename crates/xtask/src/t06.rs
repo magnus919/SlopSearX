@@ -104,6 +104,9 @@ const T06_SERVICE: &[&str] = &[
     "captured_snapshot_is_service_bound_full_include_independent_and_not_reexecuted",
     "pre_cancelled_prepare_and_preview_never_contact_provider_or_dispatch",
     "preview_rejects_sensitive_and_disabled_before_optional_provider_and_never_dispatches",
+    "provider_readiness_rejects_incomplete_malformed_and_oversized_http_requests",
+    "stdio_eof_early_failures_reap_child_join_provider_and_retire_private_store",
+    "stdio_eof_initialization_diagnoses_protocol_failure_and_early_child_exit",
     "preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership",
     "runtime_scope_warning_survives_native_mcp_and_snapshot_without_cache_admission",
 ];
