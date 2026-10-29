@@ -130,6 +130,16 @@ const T06_TRANSPORT: &[&str] = &[
     "outer_scalar_array_prompt_params_are_rejected_before_dispatch_with_explicit_framework_difference",
     "source_specialist_success_and_failure_envelopes_use_actual_pipeline",
 ];
+const SCIENCE_OPENALEX: &[&str] = &[
+    "authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cache",
+    "science_date_denials_never_reach_real_adapter_or_shared_acquisition",
+    "science_real_openalex_empty_and_http_failure_remain_distinct",
+];
+const SCIENCE_HTTP: &[&str] = &[
+    "native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition",
+    "native_http_date_denials_have_zero_real_acquisition",
+    "native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes",
+];
 const T06_WIRE: &[&str] = &[
     "actual_http_native_large_output_and_one_over_profile_fail_closed",
     "actual_legacy_native_large_output_releases_aggregate_budget_on_disconnect",
@@ -285,6 +295,19 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         records,
     )?;
     run_suite(root, &["--test", "t06_transport"], T06_TRANSPORT, records)?;
+    run_suite(
+        root,
+        &["--test", "science_openalex"],
+        SCIENCE_OPENALEX,
+        records,
+    )?;
+    run_suite_for(
+        root,
+        "ssx-http",
+        &["--test", "science_openalex"],
+        SCIENCE_HTTP,
+        records,
+    )?;
     run_suite(root, &["--test", "t06_wire"], T06_WIRE, records)?;
     run_suite_for(
         root,

@@ -95,6 +95,60 @@ fn document(root: &Path) -> Result<Value> {
     )?;
     Ok(doc)
 }
+// Only #984's current T06 registration differs from the original caller container.
+// This closed adapter authenticates physical material before the old caller proof.
+const REGISTRY_EDITS: &[(usize, &str, &str)] = &[(
+    19299,
+    "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n",
+    "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n",
+)];
+fn registry_inverse(
+    frame: &Value,
+    current: &[u8],
+    mode: &str,
+    edits: &[(usize, &str, &str)],
+) -> Result<Vec<u8>> {
+    need(
+        mode == "0644"
+            && current.len() == 21848
+            && sha(current) == "99c9a0bad80804a64f6934c4e3e09afb12ae41146c8b7d040cd2c69a8c196883",
+        "exact #984 physical caller container",
+    )?;
+    need(
+        *frame
+            == serde_json::json!({"path":CONTAINER,"sha256":CONTAINER_SHA,"bytes":21848,"mode":"0644","git_blob":"f8326efbc96af5f884d0321bd5714923ab036b5e"}),
+        "exact original caller container frame",
+    )?;
+    need(edits.len() == 1, "exact one T06 registration edit")?;
+    let (at, before, after) = edits[0];
+    let end = at
+        .checked_add(after.len())
+        .ok_or("registry span overflow")?;
+    need(
+        !before.is_empty()
+            && before.len() == after.len()
+            && current.get(at..end) == Some(after.as_bytes()),
+        "exact T06 registration replacement span",
+    )?;
+    let mut prior = current.to_vec();
+    prior
+        .get_mut(at..end)
+        .ok_or("registry prior span")?
+        .copy_from_slice(before.as_bytes());
+    material(frame, &prior, "0644")?;
+    let mut forward = prior.clone();
+    forward[at..end].copy_from_slice(after.as_bytes());
+    need(forward == current, "registry forward reconstruction")?;
+    Ok(prior)
+}
+fn registry_parent(root: &Path, frame: &Value, supplied: &[u8]) -> Result<Vec<u8>> {
+    let physical = regular(root, CONTAINER)?;
+    need(
+        physical == supplied,
+        "supplied container is not physical current",
+    )?;
+    registry_inverse(frame, &physical, "0644", REGISTRY_EDITS)
+}
 fn caller(root: &Path, doc: &Value, row: &Value, path: &str, expected: &str) -> Result<()> {
     need(
         SOURCES.contains(&path)
@@ -103,7 +157,8 @@ fn caller(root: &Path, doc: &Value, row: &Value, path: &str, expected: &str) -> 
             && row["caller_entry"] == serde_json::json!({path:expected}),
         "exact caller path/pin/full entry",
     )?;
-    let raw = regular(root, CONTAINER)?;
+    let physical = regular(root, CONTAINER)?;
+    let raw = registry_parent(root, &doc["container"], &physical)?;
     material(&doc["container"], &raw, "0644")?;
     let frozen: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     let pointer = format!("/sources/{}", path.replace('~', "~0").replace('/', "~1"));
@@ -196,10 +251,92 @@ pub(crate) fn verify(
         inverse(row, &baseline, "0644")
     })())
 }
+#[cfg(test)]
+fn registry_controls(root: &Path, frame: &Value) -> Result<()> {
+    let physical = regular(root, CONTAINER)?;
+    let prior = registry_parent(root, frame, &physical)?;
+    need(
+        registry_inverse(frame, &physical, "0644", REGISTRY_EDITS)? == prior,
+        "registry pure positive before mutants",
+    )?;
+    for (commit, expected, blob) in [
+        (
+            "0d4fc7dfd6cf0373722d4d27c3407c6d57b86446",
+            physical.as_slice(),
+            "4ca5b76a300562354d4e1556a2295d0f7e62ada9",
+        ),
+        (
+            "30270aaa7c459cec6404f4f015fa17077704c2a0",
+            prior.as_slice(),
+            "f8326efbc96af5f884d0321bd5714923ab036b5e",
+        ),
+    ] {
+        let git = std::process::Command::new("git")
+            .args(["show", &format!("{commit}:{CONTAINER}")])
+            .current_dir(root)
+            .output()
+            .map_err(|e| e.to_string())?;
+        need(
+            git.status.success() && git.stdout == expected,
+            "exact container parent Git bytes",
+        )?;
+        let tree = std::process::Command::new("git")
+            .args(["ls-tree", commit, "--", CONTAINER])
+            .current_dir(root)
+            .output()
+            .map_err(|e| e.to_string())?;
+        need(
+            tree.status.success()
+                && tree.stdout == format!("100644 blob {blob}\t{CONTAINER}\n").as_bytes(),
+            "exact container parent Git mode/blob",
+        )?;
+    }
+    need(
+        registry_parent(root, frame, &prior).is_err(),
+        "old supplied as physical container",
+    )?;
+    for mode in ["0600", "0755", "4644"] {
+        need(
+            registry_inverse(frame, &physical, mode, REGISTRY_EDITS).is_err(),
+            "wrong registry mode",
+        )?;
+    }
+    for field in ["path", "sha256", "bytes", "mode", "git_blob", "extra"] {
+        let mut wrong = frame.clone();
+        wrong[field] = serde_json::json!("wrong");
+        need(
+            registry_inverse(&wrong, &physical, "0644", REGISTRY_EDITS).is_err(),
+            "wrong full registry caller tuple",
+        )?;
+    }
+    for mutation in 0..5 {
+        let mut edits = REGISTRY_EDITS.to_vec();
+        match mutation {
+            0 => {
+                edits.clear();
+            }
+            1 => edits.push(edits[0]),
+            2 => edits[0].0 += 1,
+            3 => edits[0].1 = "changed",
+            _ => edits[0].2 = "changed",
+        }
+        need(
+            registry_inverse(frame, &physical, "0644", &edits).is_err(),
+            "missing/duplicate/moved/altered registry edit",
+        )?;
+    }
+    let mut changed = physical.clone();
+    changed.push(0);
+    need(
+        registry_inverse(frame, &changed, "0644", REGISTRY_EDITS).is_err(),
+        "changed registry afterimage",
+    )
+}
 /// Ordinary controls, called by an xtask owner; no frozen suite test IDs.
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = document(root)?;
+    registry_controls(root, &doc["container"])?;
     for row in doc["rows"].as_array().ok_or("rows absent")? {
         let path = text(&row["prior"], "path")?;
         let expected = text(&row["prior"], "sha256")?;
@@ -326,6 +463,56 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         fs::set_permissions(target, fs::Permissions::from_mode(0o644))
             .map_err(|e| e.to_string())?;
     }
+    let container = regular(root, CONTAINER)?;
+    let frame = &doc["container"];
+    let prior = registry_parent(&owned.0, frame, &container)?;
+    let target = owned.0.join(CONTAINER);
+    for mode in [0o600, 0o755, 0o4644] {
+        fs::set_permissions(&target, fs::Permissions::from_mode(mode))
+            .map_err(|e| e.to_string())?;
+        need(
+            registry_parent(&owned.0, frame, &container).is_err(),
+            "physical registry mode",
+        )?;
+    }
+    fs::set_permissions(&target, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
+    fs::write(&target, &prior).map_err(|e| e.to_string())?;
+    need(
+        registry_parent(&owned.0, frame, &prior).is_err(),
+        "old registry physically substituted",
+    )?;
+    fs::write(&target, &container).map_err(|e| e.to_string())?;
+    let mut changed = container.clone();
+    changed.push(0);
+    need(
+        registry_parent(&owned.0, frame, &changed).is_err(),
+        "changed supplied registry",
+    )?;
+    fs::write(&target, &changed).map_err(|e| e.to_string())?;
+    need(
+        registry_parent(&owned.0, frame, &changed).is_err(),
+        "changed physical registry",
+    )?;
+    fs::write(&target, &container).map_err(|e| e.to_string())?;
+    let backup = target.with_extension("registry-backup");
+    fs::rename(&target, &backup).map_err(|e| e.to_string())?;
+    need(
+        registry_parent(&owned.0, frame, &container).is_err(),
+        "missing registry",
+    )?;
+    symlink(&backup, &target).map_err(|e| e.to_string())?;
+    need(
+        registry_parent(&owned.0, frame, &container).is_err(),
+        "symlink registry",
+    )?;
+    fs::remove_file(&target).map_err(|e| e.to_string())?;
+    fs::create_dir(&target).map_err(|e| e.to_string())?;
+    need(
+        registry_parent(&owned.0, frame, &container).is_err(),
+        "nonregular registry",
+    )?;
+    fs::remove_dir(&target).map_err(|e| e.to_string())?;
+    fs::rename(&backup, &target).map_err(|e| e.to_string())?;
     let oversized = owned.0.join("over-bound");
     fs::write(&oversized, vec![0u8; 262145]).map_err(|e| e.to_string())?;
     fs::set_permissions(&oversized, fs::Permissions::from_mode(0o644))

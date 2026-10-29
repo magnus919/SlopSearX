@@ -72,3 +72,121 @@ extra/missing/duplicate inverse spans, row/path/hash/mode/manifest/Git controls,
 and missing proof material. The existing exact inventory/count checks remain
 fail-closed. This proof changes qualification only; no portal request, response,
 rendering, policy or engine behavior changes.
+
+## Real OpenAlex science boundary (#984)
+
+The additive `science_openalex` target composes the actual registered OpenAlex
+adapter, descriptor-derived policy declarations, shared `SearchService`, real
+private Valkey cache/snapshots and authenticated MCP HTTP transport with the
+pinned Rust SDK client. It reuses the unchanged A06 actual-date response and
+request fixtures, the existing private Valkey server and owned loopback helper.
+No fake OpenAlex engine, Python backend, gateway or external upstream is used.
+
+The three source-declared tests require these assertions before completion:
+
+- Lower-only, upper-only, equal leap-day and two-sided science calls preserve
+  exact upstream GET filter bytes, publication days, selected source, public
+  `meta.date_filter` and layer-qualified `enforcement`. Repeated calls hit the
+  real cache without another upstream request; changed bounds use a distinct
+  key. The MCP presentation bound leaves the canonical full response intact.
+  Missing or mismatched stored proof requires actual OpenAlex reacquisition and
+  typed proof/publication-day readback. Structured output must equal tool text.
+- Missing/wrong bearer tokens and denied grants, unaudited/unavailable sources,
+  invalid/reversed bounds and mixed/unsupported/sensitive scope never reach
+  adapter admission, client quota or cache I/O. The undeclared `time_range`
+  and `safesearch` arguments are refused at the MCP validation layer;
+  no upstream request or shared record is created. The science grant does not
+  confer sensitive-engine access.
+- Actual successful empty upstream JSON stays empty success, while actual
+  HTTP500 stays `all_engines_failed` with the OpenAlex error outcome.
+
+For an explicitly requested inactive OpenAlex adapter, the existing shared
+native MCP policy returns `invalid_scope` on `engines` before date-scope
+resolution. F09 already asserts this fail-closed active-engine ordering; this
+test keeps its zero-admission, zero-I/O and zero-state assertions. Python's
+configured-enabled/missing-adapter path instead reaches its later date-scope
+check and returns `invalid_input`. This records the existing surface difference,
+not whole-#984 parity or a change to policy precedence.
+
+Science's existing six-parameter API is `query`, `source_types`, `date_from`,
+`date_to`, `engines`, and `max_results`. The frozen T06 descriptor and Python
+signature do not declare `time_range` or `safesearch`. Their two negative calls
+must therefore return `isError=true`, one exact FastMCP validation text block
+(`unexpected_keyword_argument`, with the actual field/value), and no
+`structuredContent`. They do not exercise application relative-date or strict
+SafeSearch policy. The other ten cases retain `isError=false`, equal structured
+content and JSON tool text, and exact expected error codes/fields. All twelve
+retain both bearer-token refusals and zero admission, quota, cache I/O, upstream
+requests and shared keys. Case-labelled full-envelope diagnostics aggregate
+contract mismatches after each fixture is closed; successful calls retain the
+original strict helper. This changes tests and documentation only.
+
+Only the mixed OpenAlex/Brave and unsupported Brave date-scope cases register
+and instantiate the existing real Brave adapter, add its actual engine binding,
+and derive its eligibility from that registry. A synthetic fixture key and the
+owned loopback base keep configuration local. This lets those cases reach the
+explicit-OpenAlex date gate rather than an earlier inactive-engine refusal.
+Their exact expected envelope remains `invalid_input` on `engines` with
+`absolute dates require explicit engines=['openalex']`. Other fixture modes,
+including positive OpenAlex calls, do not register Brave. If a regression
+attempts Brave dispatch, the existing admission counter increments and denies
+it before the adapter creates an HTTP session; the zero-acquisition assertion
+then fails. All twelve authentication, I/O, upstream and state guards remain.
+
+The existing T06 gate runs this separate three-name target in addition to every
+original source binding, fixture and transport test. Frozen JSON, historic test
+identities and policy defaults are unchanged. Portal impact: these are additive
+contract tests, with no production request/response or browser-visible change.
+This science MCP composition is extended by the native HTTP slice below.
+T03 portal/date links, gateway and production activation remain separate work.
+Source presence is not qualification: record exact-head native commands/results
+and cleanup under the normal resource grant before claiming acceptance.
+
+
+## Native HTTP to actual OpenAlex (#984)
+
+`ssx-http/tests/science_openalex.rs` calls the accepted public native router
+through a real Rust HTTP client on a loopback socket. Its trusted composition
+uses the same registered OpenAlex adapter, descriptor-derived catalog, shared
+service and private Valkey as the three MCP tests. The neutral test fixture is
+`ssx-infra/tests/support/science_openalex.rs`; the original MCP test bodies and
+three selector names are unchanged. No production module, dependency manifest,
+lockfile, policy grant or frozen source inventory changes in this increment.
+
+The HTTP target adds three named tests to the T06 gate. Its inventory is listed
+and compared exactly before execution, alongside the unchanged MCP inventory.
+The required Rust CI workflow also runs `cargo test --locked --workspace` and
+strict Clippy over all targets, which includes this HTTP target.
+
+- `native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition`
+  requires cold acquisition for GET and form POST on both `/` and `/search`
+  for lower-only, upper-only, equal leap-day, two-sided and maximum-calendar
+  upper bounds. The fixture checks twenty exact outbound request lines and compares returned URL/day
+  pairs with the unchanged A06 date corpus. JSON and cached YAML must expose
+  identical requested/applied proof, audited `upstream:openalex` provenance and
+  OpenAlex status/identity. Separate bound keys remain in private Valkey;
+  missing and mismatched proof each require another real acquisition and typed
+  storage readback. An unbounded acquisition preserves JSON/YAML/CSV/RSS use.
+- `native_http_date_denials_have_zero_real_acquisition` requires the reference
+  HTTP 400 error/field behavior for malformed, invalid leap-day, empty or
+  reversed dates, absolute plus relative constraints, implicit/category/mixed/
+  unsupported scopes, unavailable and unaudited adapters, unknown/repeated
+  controls and bounded CSV/RSS. URI and form controls share duplicate detection.
+  Every denial must leave adapter admission, client admission, cache reads and
+  writes at zero, with no upstream requests or private shared records.
+- `native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes`
+  requires actual upstream empty JSON to remain HTTP 200 with status `ok`,
+  while HTTP 500 becomes HTTP 503 with status `error`. Both public JSON and
+  YAML retain bounded proof and engine outcomes.
+
+Portal impact: this increment adds tests of accepted native HTTP behavior;
+there is no browser-visible implementation change. Full T03 browser acceptance
+is still open: the current form loses date/scope controls on resubmission, the
+renderer does not display date enforcement, and machine-format links remain
+unimplemented. Existing pagination date retention does not satisfy that full
+journey. These finite fixtures do not close #984 or integrated parity, measure
+retrieval quality or establish provider/production availability. Exact-head
+commands, results and cleanup must be recorded before claiming local execution.
+
+The [reference regression map and local execution identity](DATE_FILTER_INTEGRATION.md)
+records covered assertions, original failures and remaining T03 acceptance.
