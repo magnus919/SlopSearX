@@ -363,6 +363,9 @@ fn research_intent_and_captured_evidence_are_revalidated() {
 }
 #[test]
 fn validated_command_preserves_specialist_values_and_pagination_truth() {
+    eprintln!("F09_HIGH_PAGE_SUBCASE start");
+    high_page_policy_preserves_exact_request_and_numeric_enforcement_value();
+    eprintln!("F09_HIGH_PAGE_SUBCASE pass");
     let mut s = service();
     s.policy.grants.insert("jobs".into());
     let mut p = proposal(&["alpha"]);
@@ -631,7 +634,6 @@ fn recovered_research_rejects_unknown_and_media_intents_before_dispatch() {
     assert_eq!(calls, 1);
 }
 
-#[test]
 fn high_page_policy_preserves_exact_request_and_numeric_enforcement_value() {
     let service = service();
     let raw = "170141183460469231731687303715884105728";

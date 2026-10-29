@@ -128,7 +128,6 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         )?;
     }
     let app = [
-        "high_page_policy_preserves_exact_request_and_numeric_enforcement_value",
         "explicit_inactive_members_reject_atomically_without_changing_http_or_preview_availability",
         "source_scope_replay",
         "source_filter_policy_date_replay",

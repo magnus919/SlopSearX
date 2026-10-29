@@ -9,8 +9,11 @@ use std::{
     process::Command,
 };
 const COVERAGE_SHA: &str = "5ce1ab45a2e2006daa03ebf4a4fcd9ed62d9d59b8490ddc8f5eb82b19fc37f28";
-#[path = "../../../docs/rust-rewrite/t02/source-amendments/current-main-two-source-v2.rs"]
+#[path = "../../../docs/rust-rewrite/t02/source-amendments/f09-inventory-composition-v1.rs"]
 mod source_successor;
+pub(crate) fn page_inventory_controls(root: &Path) -> Result<()> {
+    source_successor::f09_controls(root)
+}
 fn require(ok: bool, why: &str) -> Result<()> {
     if ok { Ok(()) } else { Err(why.into()) }
 }
