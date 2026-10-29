@@ -563,6 +563,23 @@ fn read_source_asset(root: &Path, asset: &SourceAsset) -> Result<Option<String>>
         .transpose()
 }
 
+const IDNA_CPYTHON_LICENSE_COPY: &str =
+    "crates/ssx-source-codecs/provenance/idna2008/inputs/CPython-LICENSE";
+const CPYTHON_LICENSE_ASSET: &str = "crates/ssx-source-codecs/LICENSE-PYTHON";
+fn unlisted_text_rules(
+    path: &str,
+    raw: &[u8],
+    assets: &std::collections::BTreeMap<String, SourceAsset>,
+) -> AssetTextRules {
+    let pinned_copy = path == IDNA_CPYTHON_LICENSE_COPY
+        && assets
+            .get(CPYTHON_LICENSE_ASSET)
+            .is_some_and(|pin| raw.len() as u64 == pin.bytes && asset_digest(raw) == pin.sha256);
+    AssetTextRules {
+        license_separator: pinned_copy,
+        ..AssetTextRules::default()
+    }
+}
 fn hygiene_text(path: &str, raw: &str) -> Result<()> {
     hygiene_text_with_rules(path, raw, AssetTextRules::default())
 }
@@ -659,7 +676,13 @@ fn hygiene_with_policy(root: &Path, policy: AssetPolicy<'_>) -> Result<()> {
                 raw.len() <= 500 * 1024,
                 "new native gate source exceeds 500 KiB",
             )?;
-            hygiene_text(file, &raw).map_err(|e| format!("{file}: {e}"))?;
+            let rules = unlisted_text_rules(file, raw.as_bytes(), &assets);
+            if rules.license_separator {
+                hygiene_text_with_rules(file, &raw, rules)
+                    .map_err(|e| format!("{file}: {e}"))?;
+            } else {
+                hygiene_text(file, &raw).map_err(|e| format!("{file}: {e}"))?;
+            }
         }
     }
     ensure(
@@ -888,6 +911,44 @@ mod tests {
                 .contains("unlisted binary")
         );
     }
+#[test]
+fn only_exact_pinned_idna_cpython_license_copy_gets_separator_waiver() {
+    let fixture = AssetFixture::new();
+    let license_path = CPYTHON_LICENSE_ASSET;
+    let copy_path = IDNA_CPYTHON_LICENSE_COPY;
+    let license = b"CPython license text\n================\n";
+    fixture.write(license_path, license);
+    fixture.write(copy_path, license);
+    let mut pin = test_asset(license_path, license, false);
+    pin["text_rules"]["license_separator"] = json!(true);
+    fixture.check(vec![pin.clone()]).unwrap();
+
+    for (changed, reason) in [
+        (b"<<<<<<< branch\n".as_slice(), "merge conflict marker"),
+        (b">>>>>>> branch\n".as_slice(), "merge conflict marker"),
+        (
+            b"CPython license text\n======= altered\n".as_slice(),
+            "merge conflict marker",
+        ),
+    ] {
+        fixture.write(copy_path, changed);
+        assert!(
+            fixture
+                .check(vec![pin.clone()])
+                .unwrap_err()
+                .contains(reason)
+        );
+    }
+
+    fixture.write(copy_path, license);
+    fixture.write("crates/plain.rs", license);
+    assert!(
+        fixture
+            .check(vec![pin])
+            .unwrap_err()
+            .contains("merge conflict marker")
+    );
+}
     #[test]
     fn pinned_text_keeps_semantic_validation_and_only_named_whitespace_waivers() {
         let fixture = AssetFixture::new();

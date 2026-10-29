@@ -25,14 +25,20 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: 1
-      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
-      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
       CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Configure private gateway fixture roots
+        env:
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
+        run: |
+          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\n' "$SLOPSEARX_INSTALL_TEST_ROOT" >> "$GITHUB_ENV"
+          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\n' "$SLOPSEARX_T07_UNIT_TEST_ROOT" >> "$GITHUB_ENV"
 
       - name: Prepare private gateway package fixtures
         run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"
@@ -408,12 +414,18 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: 1
-      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
-      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Configure private gateway fixture roots
+        env:
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
+        run: |
+          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\n' "$SLOPSEARX_INSTALL_TEST_ROOT" >> "$GITHUB_ENV"
+          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\n' "$SLOPSEARX_T07_UNIT_TEST_ROOT" >> "$GITHUB_ENV"
 
       - name: Prepare private gateway package fixtures
         run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"

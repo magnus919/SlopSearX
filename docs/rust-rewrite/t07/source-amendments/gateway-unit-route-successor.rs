@@ -150,6 +150,36 @@ fn config_spec(
         _ => Err("T07 unit-route unlisted configuration caller".into()),
     }
 }
+// Exact runner.temp context repair. Only these four spans reconstruct the
+// accepted e511 workflow operand; the older capsule inverse stays unchanged.
+const WORKFLOW_ENV_INVERSE: &str = r###"[{"at":569,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":850,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""},{"at":20995,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":21079,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""}]"###;
+fn workflow_env_claim() -> Value {
+    json!({"bytes":54542,"git_blob":"8fcc18490bc846f66ef4a6aff3989760cb20a980","mode":"0644","path":".github/workflows/rust.yml","sha256":"3f4ba10fed18916af8fc390c2e755a6a3c144f014d561d03c103cd674df542c3"})
+}
+fn workflow_env_frame(
+    expected: &Value,
+    physical: &[u8],
+    mode: &str,
+    inverse: &Value,
+) -> Result<Vec<u8>, String> {
+    need(
+        *expected == workflow_env_claim(),
+        "T07 workflow env exact current caller differs",
+    )?;
+    material(expected, physical, mode)?;
+    need(
+        digest(&serde_json::to_vec(inverse).map_err(|e| e.to_string())?)
+            == "2c9c1976e655cd84e1162b232a30704cde75e6911ab224b87c9988206306da45",
+        "T07 workflow env closed four-span inverse differs",
+    )?;
+    let prior = edits(physical, inverse)?;
+    material(
+        &json!({"bytes":53956,"git_blob":"e35aa9d7014ef2b3d682ca40a38b9ea31050dd03","mode":"0644","path":".github/workflows/rust.yml","sha256":"e511701afc001bbd3eb160f16cc029b7ed2a0e1f73f6d5953ad056cb21c10937"}),
+        &prior,
+        "0644",
+    )?;
+    Ok(prior)
+}
 fn config_frame(
     expected: &Value,
     physical: &[u8],
@@ -157,6 +187,14 @@ fn config_frame(
     inverse: &Value,
 ) -> Result<Vec<u8>, String> {
     let (claim, bytes, sha, inverse_sha, _) = config_spec(text(expected, "path")?)?;
+    let accepted = if expected["path"] == ".github/workflows/rust.yml" {
+        let env_inverse: Value =
+            serde_json::from_str(WORKFLOW_ENV_INVERSE).map_err(|e| e.to_string())?;
+        workflow_env_frame(&workflow_env_claim(), physical, mode, &env_inverse)?
+    } else {
+        physical.to_vec()
+    };
+    let physical = accepted.as_slice();
     need(
         *expected == claim && mode == "0644" && physical.len() == bytes && digest(physical) == sha,
         "T07 unit-route configuration current/caller differs",
@@ -237,6 +275,62 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
             let claim = &selected["current"];
             let path = text(claim, "path")?;
             let physical = std::fs::read(root.join(path)).map_err(|e| e.to_string())?;
+            if path == ".github/workflows/rust.yml" {
+                let current = workflow_env_claim();
+                let env_inverse: Value =
+                    serde_json::from_str(WORKFLOW_ENV_INVERSE).map_err(|e| e.to_string())?;
+                let parent = workflow_env_frame(&current, &physical, "0644", &env_inverse)?;
+                let (_, bytes, sha, _, _) = config_spec(path)?;
+                need(
+                    parent.len() == bytes && digest(&parent) == sha,
+                    "T07 workflow env inverse positive differs",
+                )?;
+                // The old valid historical operand is no longer a current workflow.
+                need(
+                    workflow_env_frame(&current, &parent, "0644", &env_inverse).is_err(),
+                    "T07 workflow env stale historical current accepted",
+                )?;
+                for key in ["path", "sha256", "bytes", "git_blob", "mode"] {
+                    let mut wrong = current.clone();
+                    wrong[key] = json!("unlisted");
+                    need(
+                        workflow_env_frame(&wrong, &physical, "0644", &env_inverse).is_err(),
+                        "T07 workflow env wrong current identity accepted",
+                    )?;
+                }
+                need(
+                    workflow_env_frame(&current, &physical, "0600", &env_inverse).is_err(),
+                    "T07 workflow env wrong current mode accepted",
+                )?;
+                let mut changed = physical.clone();
+                changed[0] ^= 1;
+                need(
+                    workflow_env_frame(&current, &changed, "0644", &env_inverse).is_err(),
+                    "T07 workflow env wrong current digest accepted",
+                )?;
+                for key in ["at", "remove_utf8", "insert_utf8"] {
+                    let mut wrong = env_inverse.clone();
+                    wrong[0][key] = if key == "at" {
+                        json!(1)
+                    } else {
+                        json!("unlisted")
+                    };
+                    need(
+                        workflow_env_frame(&current, &physical, "0644", &wrong).is_err(),
+                        "T07 workflow env altered span accepted",
+                    )?;
+                }
+                let mut missing = env_inverse.clone();
+                missing.as_array_mut().unwrap().pop();
+                let mut extra = env_inverse.clone();
+                extra.as_array_mut().unwrap().push(env_inverse[0].clone());
+                for wrong in [missing, extra] {
+                    need(
+                        workflow_env_frame(&current, &physical, "0644", &wrong).is_err(),
+                        "T07 workflow env missing/duplicate/extra span accepted",
+                    )?;
+                }
+            }
             let (_, _, _, _, raw) = config_spec(path)?;
             let inverse: Value = serde_json::from_str(raw).map_err(|e| e.to_string())?;
             need(

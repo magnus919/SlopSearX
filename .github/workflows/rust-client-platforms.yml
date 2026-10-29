@@ -40,13 +40,25 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: 0
       CARGO_PROFILE_TEST_DEBUG: 0
       CARGO_INCREMENTAL: 0
-      CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-client-target
-      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-client-install
-      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-client-unit
-      SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST: ${{ runner.temp }}/ssx-client-evidence/production-artifacts.json
       RUST_BACKTRACE: 1
     steps:
       - uses: actions/checkout@v7
+      - name: Configure private client fixture and artifact paths
+        shell: pwsh
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-client-target
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-client-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-client-unit
+          SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST: ${{ runner.temp }}/ssx-client-evidence/production-artifacts.json
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $entries = @(
+            "CARGO_TARGET_DIR=$env:CARGO_TARGET_DIR",
+            "SLOPSEARX_INSTALL_TEST_ROOT=$env:SLOPSEARX_INSTALL_TEST_ROOT",
+            "SLOPSEARX_T07_UNIT_TEST_ROOT=$env:SLOPSEARX_T07_UNIT_TEST_ROOT",
+            "SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST=$env:SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST"
+          )
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, (($entries -join "`n") + "`n"), [System.Text.UTF8Encoding]::new($false))
       - name: Record actual native host and pinned inputs
         run: |
           set -euo pipefail
