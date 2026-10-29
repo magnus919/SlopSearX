@@ -9,6 +9,25 @@ use ssx_windows_owner::{
 use std::{io::Write, sync::Arc, time::Instant};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
+// cmd.exe treats forward slashes in mklink operands as switches. Normalize
+// only those argument separators, keeping the exact Windows UTF-16 units and
+// the Command argument/quoting boundary; production filesystem paths are untouched.
+fn cmd_path(path: &std::path::Path) -> std::ffi::OsString {
+    use std::os::windows::ffi::{OsStrExt, OsStringExt};
+    let units: Vec<_> = path
+        .as_os_str()
+        .encode_wide()
+        .map(|unit| {
+            if unit == u16::from(b'/') {
+                u16::from(b'\\')
+            } else {
+                unit
+            }
+        })
+        .collect();
+    std::ffi::OsString::from_wide(&units)
+}
+
 #[test]
 fn windows_package_lock_contenders_share_open_but_serialize_and_reject_identity_drift() {
     use std::os::windows::fs::OpenOptionsExt;
@@ -72,13 +91,16 @@ async fn windows_token_storage_confidentiality_atomic_replacement_and_collision_
         let reloaded = FileTokenStorage::load(path.clone(), io.clone(), end, &cancel)
             .await
             .unwrap();
+        let observed = reloaded
+            .slot_json(Slot::Tokens, end, &cancel)
+            .await
+            .unwrap()
+            .unwrap();
+        // The production SourceJSON encoder pretty-prints the parsed model;
+        // this custody check compares token values, not caller whitespace.
         assert_eq!(
-            reloaded
-                .slot_json(Slot::Tokens, end, &cancel)
-                .await
-                .unwrap()
-                .unwrap(),
-            bytes
+            serde_json::from_slice::<serde_json::Value>(&observed).unwrap(),
+            serde_json::from_slice::<serde_json::Value>(bytes).unwrap()
         );
     }
     let collision = root.join(".slopsearx-oauth-00000000000000000000000000000000.tmp");
@@ -99,8 +121,18 @@ async fn windows_token_storage_confidentiality_atomic_replacement_and_collision_
 
 #[test]
 fn windows_token_reparse_hardlink_and_untrusted_writer_parent_are_rejected() {
+    use std::os::windows::ffi::{OsStrExt, OsStringExt};
+    // Spaces and unpaired surrogate units must survive this argument-only
+    // transformation. The actual junction below also exercises quoted spaces.
+    let mixed = std::ffi::OsString::from_wide(&[67, 58, 47, 32, 0xD800, 47, 0xDC00]);
+    assert_eq!(
+        cmd_path(std::path::Path::new(&mixed))
+            .encode_wide()
+            .collect::<Vec<_>>(),
+        [67, 58, 92, 32, 0xD800, 92, 0xDC00]
+    );
     let root = root("token-paths");
-    let target = root.join("target");
+    let target = root.join("target with space");
     ssx_windows_owner::create_private_directory(&target).unwrap();
     let path = target.join("oauth.json");
     ssx_windows_owner::write_confidential_file(&path, b"{}", [2; 16]).unwrap();
@@ -112,12 +144,12 @@ fn windows_token_reparse_hardlink_and_untrusted_writer_parent_are_rejected() {
     std::fs::hard_link(&path, &alias).unwrap();
     assert!(ssx_windows_owner::read_confidential_file(&path, 32).is_err());
     std::fs::remove_file(&alias).unwrap();
-    let junction = root.join("junction");
+    let junction = root.join("junction with space");
     assert!(
         std::process::Command::new("cmd.exe")
             .args(["/C", "mklink", "/J"])
-            .arg(&junction)
-            .arg(&target)
+            .arg(cmd_path(&junction))
+            .arg(cmd_path(&target))
             .status()
             .unwrap()
             .success()
@@ -185,13 +217,13 @@ fn windows_installed_digest_reparse_and_writer_acl_fail_before_helper_admission(
             "hardlink" => std::fs::hard_link(&dns, root.join("dns-alias.exe")).unwrap(),
             "junction" => {
                 let directory = prefix.join("libexec/slopsearx");
-                let moved = root.join("moved-helper");
+                let moved = root.join("moved-helper with space");
                 std::fs::rename(&directory, &moved).unwrap();
                 assert!(
                     std::process::Command::new("cmd.exe")
                         .args(["/C", "mklink", "/J"])
-                        .arg(&directory)
-                        .arg(&moved)
+                        .arg(cmd_path(&directory))
+                        .arg(cmd_path(&moved))
                         .status()
                         .unwrap()
                         .success()
