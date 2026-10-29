@@ -372,12 +372,58 @@ pub async fn fixture_control(image: TrustedImage, case: WindowsInputControl) -> 
         WindowsInputControl::Backpressure => {
             let bytes = vec![7u8; 1024 * 1024];
             let mut fill = Box::pin(writer.write_all(&bytes));
+            let mut fill_finished = false;
             let checkpoint = runtime.inner.backpressure.clone();
-            tokio::time::timeout(Duration::from_secs(3),async{loop{tokio::select!{r=&mut fill=>{r?;return Err(std::io::Error::other("input completed without actual bounded output backpressure"));},_=tokio::time::sleep(Duration::from_millis(1))=>if checkpoint.load(Ordering::Acquire){return Ok(());}}}}).await??;
-            owner.close().await?;
-            let _completion = tokio::time::timeout(Duration::from_secs(3), &mut fill).await?;
+            // Mio may accept this whole buffer into its owned overlapped-write
+            // queue. That is not proof of consumption by the input child.
+            let observed = tokio::time::timeout(Duration::from_secs(3), async {
+                loop {
+                    if checkpoint.load(Ordering::Acquire) {
+                        return Ok::<_, std::io::Error>(());
+                    }
+                    tokio::select! {
+                        result = &mut fill, if !fill_finished => {
+                            fill_finished = true;
+                            result?;
+                        }
+                        _ = tokio::time::sleep(Duration::from_millis(1)) => {}
+                    }
+                }
+            })
+            .await;
+            // Observation failure must not bypass the original child/IO owner.
+            let closed = owner.close().await;
+            let write_end = tokio::time::Instant::now() + Duration::from_secs(3);
+            let completion = if fill_finished {
+                Ok(())
+            } else {
+                // Broken input after owned child retirement is expected. Keep
+                // the original future until it returns; never repoll Ready.
+                tokio::time::timeout_at(write_end, &mut fill)
+                    .await
+                    .map(|_| ())
+            };
             drop(fill);
+            // In pinned Mio, a subsequent write cannot pass a pending write:
+            // its completion callback first removes the queued owned buffer.
+            // After successful close the original process/job is absent, so a
+            // one-byte write must return an error, not enqueue more input.
+            let retired_write = if closed.is_ok() {
+                Some(tokio::time::timeout_at(write_end, writer.write_all(&[0])).await)
+            } else {
+                None
+            };
             drop(writer);
+            closed?;
+            completion?;
+            let retired_write =
+                retired_write.expect("successful close admits writer retirement")?;
+            if retired_write.is_ok() {
+                return Err(
+                    std::io::Error::other("retired input pipe accepted another write").into(),
+                );
+            }
+            observed??;
         }
         WindowsInputControl::DroppedClose => {
             let mut close = Box::pin(owner.close());
