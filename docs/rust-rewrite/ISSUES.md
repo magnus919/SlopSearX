@@ -4,7 +4,7 @@
 
 [Case study](CASE_STUDY.md) · [Machine-readable plan](plan.json)
 
-Published 68 work packages plus the tracking epic, with 172 native blocked-by edges. All issues and relationships were read back and verified after milestone assignment. Implementation remains pending.
+The original publication contained 68 work packages plus the tracking epic and 172 native blocked-by edges, read back after milestone assignment. Those publication counts are historical. The [CLI authoring split](CLI_AUTHORING_SPLIT.md) adds T08A/#1062 and two plan edges, giving 69 plan items and 174 plan edges; later follow-up issues such as #1049 retain their separate live relationships. T08A implementation starts only after the split decision is reviewed, accepted and normally merged.
 
 Dependencies are hard finish-to-start: accepted/merged predecessor work and its evidence must exist before dependent implementation starts. Parent hierarchy is organizational. Roles and parallel lanes are defined in the case study.
 
@@ -33,7 +33,8 @@ Dependencies are hard finish-to-start: accepted/merged predecessor work and its 
 | [#900 — T05](https://github.com/magnus919/SlopSearX/issues/900) | Implement OAuth authorization endpoints and bearer enforcement | identity | [#895 — T01](https://github.com/magnus919/SlopSearX/issues/895), [#899 — T04](https://github.com/magnus919/SlopSearX/issues/899) |
 | [#901 — T06](https://github.com/magnus919/SlopSearX/issues/901) | Expose search, discovery and snapshot MCP contracts | protocol | [#900 — T05](https://github.com/magnus919/SlopSearX/issues/900), [#894 — F15](https://github.com/magnus919/SlopSearX/issues/894) |
 | [#902 — T07](https://github.com/magnus919/SlopSearX/issues/902) | Ship native MCP gateway and OAuth client | clients | [#901 — T06](https://github.com/magnus919/SlopSearX/issues/901) |
-| [#903 — T08](https://github.com/magnus919/SlopSearX/issues/903) | Replace ssx with a native Rust CLI | clients | [#897 — T02](https://github.com/magnus919/SlopSearX/issues/897) |
+| [#1062 — T08A](https://github.com/magnus919/SlopSearX/issues/1062) | Implement native ssx against the frozen external HTTP contract | clients | [#883 — F04](https://github.com/magnus919/SlopSearX/issues/883); accepted/merged [split decision](CLI_AUTHORING_SPLIT.md) and merged PR1007 baseline |
+| [#903 — T08](https://github.com/magnus919/SlopSearX/issues/903) | Replace ssx with a native Rust CLI | clients | [#897 — T02](https://github.com/magnus919/SlopSearX/issues/897), [#1062 — T08A](https://github.com/magnus919/SlopSearX/issues/1062) |
 | [#904 — T09](https://github.com/magnus919/SlopSearX/issues/904) | Port browser OIDC, sessions and tenant authorization | identity | [#886 — F07](https://github.com/magnus919/SlopSearX/issues/886), [#885 — F06](https://github.com/magnus919/SlopSearX/issues/885) |
 | [#905 — W01](https://github.com/magnus919/SlopSearX/issues/905) | Port research records and conserved budget accounting | workflows | [#886 — F07](https://github.com/magnus919/SlopSearX/issues/886), [#884 — F05](https://github.com/magnus919/SlopSearX/issues/884) |
 | [#906 — W02](https://github.com/magnus919/SlopSearX/issues/906) | Run durable research jobs and recovery in Rust | workflows | [#905 — W01](https://github.com/magnus919/SlopSearX/issues/905), [#894 — F15](https://github.com/magnus919/SlopSearX/issues/894) |
@@ -89,6 +90,7 @@ F01 is the initial implementation-planning task. Complete its capability/Python 
 - A01 proves the adapter workflow; A02–A14 then own disjoint engine batches. A13 also requires the shared policy gate.
 - W00 saved definitions, W01 research records and W11 staged admission can progress independently once their store/policy prerequisites land.
 - Machine OAuth, browser identity, public portal, native clients and tooling have separate owners; complete integration is gated explicitly.
+- T08A authors and independently qualifies the external HTTP client after the reviewed split decision; T08 retains T02 plus T08A as hard predecessors for actual native-server integration and final CLI delivery. All earlier start prohibitions remain in force until the split decision is accepted and merged.
 - G01 parity and G02 adversarial qualification feed G03 measurement; G04 state rehearsal converges through G05 runbooks before staging/cutover.
 
 ## Maintaining this index

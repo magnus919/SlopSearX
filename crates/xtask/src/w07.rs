@@ -72,6 +72,17 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         return proven;
     }
     if sha(&bytes) != expected {
+        if matches!(
+            path,
+            "crates/xtask/src/t06.rs" | "crates/ssx-mcp/tests/t06_source_bindings.rs"
+        ) {
+            crate::t06::receipt_control_closure::verify(root)?;
+            if let Some(prior) =
+                crate::t06::receipt_control::reader_parent(root, path, expected, &bytes)?
+            {
+                return Ok(prior);
+            }
+        }
         if path == crate::t06::lock_amendment::SOURCE_PATH
             && expected == crate::t06::lock_amendment::HISTORICAL_SHA256
         {
