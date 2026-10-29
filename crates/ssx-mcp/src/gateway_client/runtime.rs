@@ -1,4 +1,5 @@
 //! Executable composition. Every async owner exists before cancellable startup.
+use super::diagnostics::{Diagnostics, Stage};
 use super::{
     browser::BrowserOwner, callback::LoopbackCallback, io_owner::IoOwner, network::Network,
     oauth::OAuth, settings::Settings,
@@ -17,6 +18,7 @@ struct Http {
     oauth: Option<Arc<OAuth>>,
     auth_cancel: CancellationToken,
     last_access_token: tokio::sync::Mutex<Option<String>>,
+    diagnostics: Arc<Diagnostics>,
 }
 impl GatewayHttp for Http {
     fn open(&self, request: GatewayHttpRequest) -> GatewayOpenFuture<'_> {
@@ -91,6 +93,11 @@ impl GatewayHttp for Http {
                     .send(request.method, request.url, headers, body)
                     .await?;
             }
+            // Observe numeric status before the opaque protocol boundary maps it
+            // into a generic error. No response text or headers enter diagnostics.
+            if response.status().is_client_error() || response.status().is_server_error() {
+                self.diagnostics.record_http_status(response.status());
+            }
             Ok(Box::new(super::network::Response::new(
                 response,
                 self.network.cancellation(),
@@ -101,7 +108,8 @@ impl GatewayHttp for Http {
 /// Runtime errors intentionally never format URLs, HTTP/SDK error chains or tokens.
 /// The executable prints a fixed classification; private qualification asserts detail.
 pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
-    let io = Arc::new(IoOwner::new());
+    let diagnostics = Arc::new(Diagnostics::from_env());
+    let io = Arc::new(IoOwner::with_diagnostics(diagnostics.clone()));
     let browser = Arc::new(BrowserOwner::default());
     let auth_cancel = CancellationToken::new();
     let callback: Arc<tokio::sync::Mutex<Option<LoopbackCallback>>> = Default::default();
@@ -122,12 +130,15 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
     {
         Ok(network) => network,
         Err(error) => {
+            diagnostics.record(Stage::NetworkStartup, error.as_ref());
             io.close();
             let drained = io
                 .shutdown()
                 .await
                 .map_err(|_| "gateway file cleanup failed".into());
-            return Err::<(), _>(error).and(drained);
+            let result = Err::<(), _>(error).and(drained);
+            let _ = diagnostics.emit(&mut std::io::stderr().lock());
+            return result;
         }
     };
 
@@ -143,7 +154,8 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
                     callback.clone(),
                     browser.clone(),
                 )
-                .await?,
+                .await
+                .inspect_err(|error| diagnostics.record(Stage::OAuthStartup, error.as_ref()))?,
             )
         } else {
             None
@@ -153,23 +165,34 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
             oauth,
             auth_cancel: auth_cancel.clone(),
             last_access_token: Default::default(),
+            diagnostics: diagnostics.clone(),
         });
-        startup = Some(RawGatewayStart::new_source(
-            settings.remote_url.clone(),
-            settings.token.clone(),
-            http,
-        )?);
+        startup = Some(
+            RawGatewayStart::new_source(settings.remote_url.clone(), settings.token.clone(), http)
+                .inspect_err(|error| {
+                    diagnostics.record(Stage::RemoteConstruction, error.as_ref())
+                })?,
+        );
         let start = startup.as_mut().ok_or("gateway startup owner absent")?;
         start
             .initialize((!settings.oauth).then_some(Duration::from_secs(60)))
-            .await?;
-        start.discover_tools(Duration::from_secs(60)).await?;
-        start.install_source_projection(super::source_projection::catalogs()?)?;
+            .await
+            .inspect_err(|error| diagnostics.record(Stage::RemoteInitialization, error.as_ref()))?;
+        start
+            .discover_tools(Duration::from_secs(60))
+            .await
+            .inspect_err(|error| diagnostics.record(Stage::RemoteDiscovery, error.as_ref()))?;
+        start
+            .install_source_projection(super::source_projection::catalogs()?)
+            .inspect_err(|error| diagnostics.record(Stage::Projection, error.as_ref()))?;
         start.ready()
     };
     let prepared = tokio::select! {biased;_=cancel.cancelled()=>Ok(None),v=serving=>v.map(Some)};
     let result = match prepared {
-        Ok(Some(gateway)) => gateway.stdio_owned(cancel.clone()).await,
+        Ok(Some(gateway)) => gateway
+            .stdio_owned(cancel.clone())
+            .await
+            .inspect_err(|error| diagnostics.record(Stage::Stdio, error.as_ref())),
         Ok(None) => Ok(()),
         Err(error) => Err(error),
     };
@@ -183,24 +206,39 @@ pub async fn run(settings: Settings, cancel: CancellationToken) -> Result<()> {
     } else {
         Ok(())
     };
-    let callback_result = if let Some(cb) = callback.lock().await.as_mut() {
+    let callback_result: crate::Result<()> = if let Some(cb) = callback.lock().await.as_mut() {
         cb.shutdown()
             .await
             .map_err(|_| "gateway callback cleanup failed".into())
     } else {
         Ok(())
     };
-    let browser_result = browser.shutdown().await;
-    let network_result = network.shutdown().await;
+    if let Err(error) = &remote {
+        diagnostics.record(Stage::RemoteCleanup, error.as_ref());
+    }
+    if let Err(error) = &callback_result {
+        diagnostics.record(Stage::CallbackCleanup, error.as_ref());
+    }
+    let browser_result = browser
+        .shutdown()
+        .await
+        .inspect_err(|error| diagnostics.record(Stage::BrowserCleanup, error.as_ref()));
+    let network_result = network
+        .shutdown()
+        .await
+        .inspect_err(|error| diagnostics.record(Stage::NetworkCleanup, error.as_ref()));
     io.close();
     let files = io
         .shutdown()
         .await
-        .map_err(|_| "gateway file cleanup failed".into());
-    result
+        .map_err(|_| -> crate::Error { "gateway file cleanup failed".into() })
+        .inspect_err(|error| diagnostics.record(Stage::FileCleanup, error.as_ref()));
+    let result = result
         .and(remote)
         .and(callback_result)
         .and(browser_result)
         .and(network_result)
-        .and(files)
+        .and(files);
+    let _ = diagnostics.emit(&mut std::io::stderr().lock());
+    result
 }

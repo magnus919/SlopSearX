@@ -1,5 +1,6 @@
 //! One caller-owned filesystem lane. Cancellation never forgets its JoinHandle.
-use std::{future::Future, time::Instant};
+use super::diagnostics::Diagnostics;
+use std::{future::Future, sync::Arc, time::Instant};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -15,12 +16,20 @@ struct State {
 }
 #[derive(Default)]
 pub struct IoOwner {
+    pub(super) diagnostics: Arc<Diagnostics>,
     state: tokio::sync::Mutex<State>,
     stop: CancellationToken,
 }
 impl IoOwner {
     pub fn new() -> Self {
         Self::default()
+    }
+    pub(super) fn with_diagnostics(diagnostics: Arc<Diagnostics>) -> Self {
+        Self {
+            diagnostics,
+            state: Default::default(),
+            stop: CancellationToken::new(),
+        }
     }
     pub(super) fn check(
         &self,

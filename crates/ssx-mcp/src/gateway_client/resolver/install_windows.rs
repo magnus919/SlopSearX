@@ -196,6 +196,11 @@ pub fn stage_distribution(
     stage(gateway, helper, input, output)
 }
 
+/// Exact production custody reader for an already existing output directory.
+pub fn check_output_root(path: &Path) -> io::Result<()> {
+    ssx_windows_owner::check_private_directory(path)
+}
+
 pub fn prepare_output_root(path: &Path) -> io::Result<()> {
     create_private_directory(path)
 }

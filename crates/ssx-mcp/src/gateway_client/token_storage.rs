@@ -1,4 +1,5 @@
 //! Lossless local OAuth document storage with one explicitly supervised I/O lane.
+use super::diagnostics::Diagnostics;
 use super::{
     io_owner::{IoError, IoOwner},
     token_json::{self, JsonError},
@@ -82,7 +83,7 @@ impl Drop for Temporary {
     }
 }
 #[cfg(not(windows))]
-fn read_path(path: &Path) -> Result<Option<Vec<u8>>, StorageError> {
+fn read_path(path: &Path, _diagnostics: &Diagnostics) -> Result<Option<Vec<u8>>, StorageError> {
     let mut options = OpenOptions::new();
     options.read(true);
     #[cfg(unix)]
@@ -110,7 +111,7 @@ fn read_path(path: &Path) -> Result<Option<Vec<u8>>, StorageError> {
     Ok(Some(bytes))
 }
 #[cfg(not(windows))]
-fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
+fn atomic_write(path: &Path, bytes: &[u8], _diagnostics: &Diagnostics) -> Result<(), StorageError> {
     if bytes.len() > MAX_TOKEN_FILE_BYTES {
         return Err(StorageError::TooLarge);
     }
@@ -144,22 +145,25 @@ fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
     Ok(())
 }
 #[cfg(windows)]
-fn read_path(path: &Path) -> Result<Option<Vec<u8>>, StorageError> {
+fn read_path(path: &Path, diagnostics: &Diagnostics) -> Result<Option<Vec<u8>>, StorageError> {
     if let Ok(metadata) = fs::symlink_metadata(path)
         && !metadata.is_file()
     {
         return Err(StorageError::NotRegular);
     }
-    match ssx_windows_owner::read_confidential_file(path, MAX_TOKEN_FILE_BYTES)
-        .map_err(|_| StorageError::Io)?
-    {
+    match ssx_windows_owner::read_confidential_file(path, MAX_TOKEN_FILE_BYTES).map_err(
+        |error| {
+            diagnostics.record(super::diagnostics::Stage::TokenRead, &error);
+            StorageError::Io
+        },
+    )? {
         ssx_windows_owner::ConfidentialRead::Missing => Ok(None),
         ssx_windows_owner::ConfidentialRead::Bytes(bytes) => Ok(Some(bytes)),
         ssx_windows_owner::ConfidentialRead::TooLarge => Err(StorageError::TooLarge),
     }
 }
 #[cfg(windows)]
-fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
+fn atomic_write(path: &Path, bytes: &[u8], diagnostics: &Diagnostics) -> Result<(), StorageError> {
     if bytes.len() > MAX_TOKEN_FILE_BYTES {
         return Err(StorageError::TooLarge);
     }
@@ -168,7 +172,10 @@ fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
         .secure_random
         .fill(&mut nonce)
         .map_err(|_| StorageError::Randomness)?;
-    ssx_windows_owner::write_confidential_file(path, bytes, nonce).map_err(|_| StorageError::Io)
+    ssx_windows_owner::write_confidential_file(path, bytes, nonce).map_err(|error| {
+        diagnostics.record(super::diagnostics::Stage::TokenWrite, &error);
+        StorageError::Io
+    })
 }
 fn truthy(value: &Value) -> bool {
     match value {
@@ -249,7 +256,10 @@ impl FileTokenStorage {
         cancel: &CancellationToken,
     ) -> Result<Self, StorageError> {
         let read = path.clone();
-        let bytes = io.run(deadline, cancel, move || read_path(&read)).await??;
+        let diagnostics = io.diagnostics.clone();
+        let bytes = io
+            .run(deadline, cancel, move || read_path(&read, &diagnostics))
+            .await??;
         let data = if let Some(bytes) = bytes {
             match io
                 .bounded(deadline, cancel, token_json::parse(&bytes, deadline))
@@ -313,8 +323,11 @@ impl FileTokenStorage {
             .bounded(deadline, cancel, token_json::encode_map(&data, deadline))
             .await??;
         let path = self.path.clone();
+        let diagnostics = self.io.diagnostics.clone();
         self.io
-            .run(deadline, cancel, move || atomic_write(&path, &bytes))
+            .run(deadline, cancel, move || {
+                atomic_write(&path, &bytes, &diagnostics)
+            })
             .await??;
         Ok(())
     }
@@ -485,7 +498,12 @@ mod tests {
     async fn concurrent_atomic_writers_and_continuous_reader_have_no_partial_publication() {
         let dir = Directory::new();
         let path = dir.0.join("tokens.json");
-        atomic_write(&path, b"{\"tokens\":{\"access_token\":\"initial\"}}").unwrap();
+        atomic_write(
+            &path,
+            b"{\"tokens\":{\"access_token\":\"initial\"}}",
+            &Diagnostics::default(),
+        )
+        .unwrap();
         let done = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let (p, d) = (path.clone(), done.clone());
         let (started, ready) = tokio::sync::oneshot::channel();
@@ -535,7 +553,7 @@ mod tests {
     async fn cancelled_actual_write_retains_worker_and_has_explicit_completion() {
         let dir = Directory::new();
         let path = dir.0.join("tokens.json");
-        atomic_write(&path, b"old-complete").unwrap();
+        atomic_write(&path, b"old-complete", &Diagnostics::default()).unwrap();
         let io = Arc::new(IoOwner::new());
         let cancel = CancellationToken::new();
         let (started, ready) = tokio::sync::oneshot::channel();
@@ -545,7 +563,7 @@ mod tests {
             o.run(deadline(), &c, move || {
                 let _ = started.send(());
                 hold.recv().unwrap();
-                atomic_write(&p, b"new-complete")
+                atomic_write(&p, b"new-complete", &Diagnostics::default())
             })
             .await
         });
@@ -576,7 +594,7 @@ mod tests {
     fn special_files_are_rejected_without_waiting_for_fifo_writer() {
         if let Some(path) = std::env::var_os("SSX_T07_FIFO_CHILD") {
             assert_eq!(
-                read_path(Path::new(&path)).unwrap_err(),
+                read_path(Path::new(&path), &Diagnostics::default()).unwrap_err(),
                 StorageError::NotRegular
             );
             return;
@@ -618,12 +636,18 @@ mod tests {
             stdout.lines().any(|s| s == format!("test {name} ... ok")),
             "{stdout}"
         );
-        assert_eq!(read_path(&dir.0).unwrap_err(), StorageError::NotRegular);
+        assert_eq!(
+            read_path(&dir.0, &Diagnostics::default()).unwrap_err(),
+            StorageError::NotRegular
+        );
         let regular = dir.0.join("regular");
         fs::write(&regular, b"{}").unwrap();
         let link = dir.0.join("link");
         std::os::unix::fs::symlink(regular, &link).unwrap();
-        assert_eq!(read_path(&link).unwrap(), Some(b"{}".to_vec()));
+        assert_eq!(
+            read_path(&link, &Diagnostics::default()).unwrap(),
+            Some(b"{}".to_vec())
+        );
     }
 }
 #[cfg(test)]

@@ -26,6 +26,7 @@ struct Observed {
     token_forms: Vec<HashMap<String, String>>,
     deletes: usize,
     authorization_visits: usize,
+    private_callback_visits: usize,
     delete_authorizations: Vec<Option<String>>,
     cancel_authorizations: Vec<Option<String>>,
 }
@@ -47,6 +48,7 @@ struct App {
     token_expiry: Arc<Mutex<i64>>,
     challenge_rpc: Arc<Mutex<bool>>,
     cancel_status: Arc<Mutex<StatusCode>>,
+    private_callback_release: Arc<tokio::sync::Notify>,
 }
 async fn mcp(State(app): State<App>, headers: HeaderMap, body: axum::body::Bytes) -> Response {
     let required = app.authorization.lock().await.clone();
@@ -320,6 +322,7 @@ impl Fixture {
             token_expiry: Arc::new(Mutex::new(3600)),
             challenge_rpc: Arc::new(Mutex::new(false)),
             cancel_status: Arc::new(Mutex::new(StatusCode::ACCEPTED)),
+            private_callback_release: Default::default(),
             authorization: Arc::new(Mutex::new(
                 if oauth {
                     "Bearer loopback-access"
@@ -340,6 +343,21 @@ impl Fixture {
             .route("/metadata-real", get(oauth_metadata))
             .route("/register", post(redirect_register))
             .route("/register-real", post(register))
+            .route(
+                "/private-callback-hold",
+                get(|State(app): State<App>| async move {
+                    app.state.lock().await.private_callback_visits += 1;
+                    app.private_callback_release.notified().await;
+                    StatusCode::OK
+                }),
+            )
+            .route(
+                "/private-callback-error",
+                get(|State(app): State<App>| async move {
+                    app.state.lock().await.private_callback_visits += 1;
+                    StatusCode::INTERNAL_SERVER_ERROR
+                }),
+            )
             .route("/authorize", get(authorize))
             .route("/token", post(redirect_token))
             .route("/token-real", post(token))
@@ -358,13 +376,272 @@ impl Fixture {
         self.task.await.unwrap().unwrap();
     }
 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CallbackFailure {
+    Timeout,
+    Transport,
+    Status,
+    BodyBound,
+}
+impl CallbackFailure {
+    fn stage(self) -> &'static str {
+        match self {
+            Self::Timeout => "callback_timeout",
+            Self::Transport => "callback_transport",
+            Self::Status => "callback_status",
+            Self::BodyBound => "callback_body_bound",
+        }
+    }
+}
+async fn bounded_callback(
+    client: &reqwest::Client,
+    url: &str,
+    budget: Duration,
+) -> Result<(), CallbackFailure> {
+    tokio::time::timeout(budget, async {
+        let mut response = client
+            .get(url)
+            .send()
+            .await
+            .map_err(|_| CallbackFailure::Transport)?;
+        if !response.status().is_success() {
+            return Err(CallbackFailure::Status);
+        }
+        let mut bytes = 0usize;
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|_| CallbackFailure::Transport)?
+        {
+            bytes = bytes.saturating_add(chunk.len());
+            if bytes > 16384 {
+                return Err(CallbackFailure::BodyBound);
+            }
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|_| CallbackFailure::Timeout)?
+}
+struct CaseAux<'a> {
+    agent: &'a mut Option<tokio::task::JoinHandle<Result<usize, RefreshReadError>>>,
+    diagnostic: Arc<Mutex<Vec<u8>>>,
+}
+#[derive(Clone, Copy)]
+struct AclPreflight {
+    ordinary_admitted: bool,
+    io_kind: Option<std::io::ErrorKind>,
+    os_code: Option<i32>,
+}
+struct Observation {
+    failure: Option<ProcessFailure>,
+    retired: Option<std::process::ExitStatus>,
+    stderr_retired: bool,
+    truncated: bool,
+    disclosed: bool,
+    observer_state: Option<&'static str>,
+    authorization_count: Option<usize>,
+    acl: Option<AclPreflight>,
+    counts: Option<(usize, usize, usize, usize, usize)>,
+    retained: Vec<u8>,
+}
+impl Observation {
+    // Invoked only after the enclosing owned scope has finished all cleanup.
+    // These are finite typed fields plus the shared bounded whitelist buffer.
+    fn emit(
+        &self,
+        sink: &mut impl std::io::Write,
+        process: bool,
+        fixture: bool,
+        owned_path: bool,
+    ) -> bool {
+        let acl = self
+            .acl
+            .map(|acl| (acl.ordinary_admitted, acl.io_kind, acl.os_code));
+        let line = format!(
+            "T07_PRIVATE_CASE_RETIREMENT process={process} fixture={fixture} owned_path={owned_path} failure={:?} retired={:?} stderr_retired={} truncated={} disclosed={} observer_state={:?} authorization_count={:?} acl={acl:?} counts={:?} stderr={:?}\n",
+            self.failure,
+            self.retired,
+            self.stderr_retired,
+            self.truncated,
+            self.disclosed,
+            self.observer_state,
+            self.authorization_count,
+            self.counts,
+            String::from_utf8_lossy(&self.retained)
+        );
+        sink.write_all(line.as_bytes()).is_ok() && sink.flush().is_ok()
+    }
+}
+struct CaseReport {
+    observation: Observation,
+    primary: std::thread::Result<ssx_mcp::Result<()>>,
+    process_retired: bool,
+    fixture_retired: bool,
+    owned_path_retired: bool,
+    stage: Option<&'static str>,
+}
+impl CaseReport {
+    fn resume(self) {
+        let _ = self.observation.emit(
+            &mut std::io::stderr().lock(),
+            self.process_retired,
+            self.fixture_retired,
+            self.owned_path_retired,
+        );
+        let cleanup = self.process_retired && self.fixture_retired && self.owned_path_retired;
+        match self.primary {
+            Err(primary) => std::panic::resume_unwind(primary),
+            Ok(Err(_)) => panic!(
+                "private case failed after cleanup; finite stage={:?} cleanup={cleanup}",
+                self.stage
+            ),
+            Ok(Ok(())) => assert!(cleanup, "private case cleanup failed"),
+        }
+    }
+}
+async fn finish_case(
+    process: &mut Process,
+    fixture: Fixture,
+    directory: Option<std::path::PathBuf>,
+    expected_success: bool,
+    mut aux: Option<CaseAux<'_>>,
+    mut primary: std::thread::Result<ssx_mcp::Result<()>>,
+) -> CaseReport {
+    let already_retired = process.retired_status.is_some() && process.stderr_retired;
+    if !already_retired {
+        if matches!(&primary, Ok(Ok(()))) && aux.as_ref().is_none_or(|aux| aux.agent.is_none()) {
+            let closing = catch_process_case(process.finish_owned(expected_success)).await;
+            if let Err(error) = closing {
+                primary = Err(error);
+            }
+        } else {
+            let failure = process
+                .last_failure
+                .unwrap_or_else(|| ProcessFailure::plain("case_body"));
+            process.report_failure(failure, None).await;
+            if matches!(&primary, Ok(Ok(()))) {
+                primary = Ok(Err("private case left auxiliary owner active".into()));
+            }
+        }
+    }
+    if let Some(aux) = aux.as_mut() {
+        if let Some(agent) = aux.agent.as_mut() {
+            match tokio::time::timeout(Duration::from_secs(5), &mut *agent).await {
+                Ok(_) => {
+                    aux.agent.take();
+                    process.stderr_retired = true;
+                }
+                Err(_) => {
+                    agent.abort();
+                    if let Some(agent) = aux.agent.take() {
+                        let _ = agent.await;
+                    }
+                    process.stderr_retired = true;
+                    if matches!(&primary, Ok(Ok(()))) {
+                        primary = Ok(Err(
+                            "private callback observer exceeded retirement bound".into()
+                        ));
+                    }
+                }
+            }
+        }
+        process
+            .retained_stderr
+            .clone_from(&*aux.diagnostic.lock().await);
+    }
+    let process_retired = process.retired_status.is_some() && process.stderr_retired;
+    fixture.app.private_callback_release.notify_waiters();
+    fixture.stop.cancel();
+    let mut server = fixture.task;
+    let fixture_retired = match tokio::time::timeout(Duration::from_secs(5), &mut server).await {
+        Ok(Ok(Ok(()))) => true,
+        Ok(_) => false,
+        Err(_) => {
+            server.abort();
+            let _ = server.await;
+            false
+        }
+    };
+    let owned_path_retired = match directory {
+        None => true,
+        Some(path) if process_retired && fixture_retired => std::fs::remove_dir_all(path).is_ok(),
+        Some(_) => false,
+    };
+    if !matches!(&primary, Ok(Ok(()))) && process.last_failure.is_none() {
+        process.last_failure = Some(ProcessFailure::plain("case_body"));
+    }
+    let counts = tokio::time::timeout(Duration::from_secs(1), fixture.app.state.lock())
+        .await
+        .ok()
+        .map(|state| {
+            (
+                state.registrations,
+                state.authorization_visits,
+                state.token_forms.len(),
+                state.deletes,
+                state.private_callback_visits,
+            )
+        });
+    let observation = process.observation(counts);
+    CaseReport {
+        observation,
+        primary,
+        process_retired,
+        fixture_retired,
+        owned_path_retired,
+        stage: process.last_failure.map(|failure| failure.stage),
+    }
+}
+macro_rules! owned_case {
+    ($process:ident, $fixture:ident, $directory:expr, $success:expr, $aux:expr, $body:block) => {{
+        let primary = catch_process_case(async $body).await;
+        finish_case(&mut $process, $fixture, $directory, $success, $aux, primary).await
+    }};
+}
+
 // The private refresh observer bounds both line assembly and retained bytes.
 // It drains overflow to newline/EOF so its writer can still retire.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RefreshReadError {
+    Read,
+    LineBound,
+    RetentionBound,
+    Encoding,
+    Credential,
+    CallbackStatus,
+    CallbackRequest,
+    CallbackTimeout,
+    CallbackBodyBound,
+    Join,
+    Retirement,
+}
+fn refresh_agent_fields(result: &Result<usize, RefreshReadError>) -> (&'static str, Option<usize>) {
+    match result {
+        Ok(count) => ("completed", Some(*count)),
+        Err(error) => (
+            match error {
+                RefreshReadError::Read => "read",
+                RefreshReadError::LineBound => "line_bound",
+                RefreshReadError::RetentionBound => "retention_bound",
+                RefreshReadError::Encoding => "encoding",
+                RefreshReadError::Credential => "credential",
+                RefreshReadError::CallbackStatus => "callback_status",
+                RefreshReadError::CallbackRequest => "callback_request",
+                RefreshReadError::CallbackTimeout => "callback_timeout",
+                RefreshReadError::CallbackBodyBound => "callback_body_bound",
+                RefreshReadError::Join => "join",
+                RefreshReadError::Retirement => "retirement",
+            },
+            None,
+        ),
+    }
+}
 async fn read_refresh_stderr(
     mut input: impl tokio::io::AsyncRead + Unpin,
     client: reqwest::Client,
     diagnostic: Arc<Mutex<Vec<u8>>>,
-) -> ssx_mcp::Result<usize> {
+) -> Result<usize, RefreshReadError> {
     use tokio::io::AsyncReadExt;
     let mut chunk = [0u8; 1024];
     let mut line = Vec::new();
@@ -372,7 +649,10 @@ async fn read_refresh_stderr(
     let mut reader_error = None;
     let mut authorizations = 0;
     loop {
-        let count = input.read(&mut chunk).await?;
+        let count = input
+            .read(&mut chunk)
+            .await
+            .map_err(|_| RefreshReadError::Read)?;
         if count == 0 {
             if line.is_empty() && !overflow {
                 break;
@@ -386,14 +666,14 @@ async fn read_refresh_stderr(
                     line.push(*byte);
                 } else {
                     overflow = true;
-                    reader_error.get_or_insert("private gateway stderr line exceeded cap");
+                    reader_error.get_or_insert(RefreshReadError::LineBound);
                 }
                 continue;
             }
             if !overflow {
                 match std::str::from_utf8(&line) {
                     Err(_) => {
-                        reader_error.get_or_insert("private gateway stderr was not UTF-8");
+                        reader_error.get_or_insert(RefreshReadError::Encoding);
                     }
                     Ok(text) => {
                         if [
@@ -406,33 +686,33 @@ async fn read_refresh_stderr(
                         .iter()
                         .any(|token| text.contains(token))
                         {
-                            reader_error.get_or_insert(
-                                "private gateway stderr disclosed a fixture credential",
-                            );
+                            reader_error.get_or_insert(RefreshReadError::Credential);
                         } else if text.trim_start().starts_with("http://") {
                             // Complete bounded URLs still drive both private
                             // callbacks; their queries never enter diagnostics.
-                            match client.get(text.trim()).send().await {
-                                Ok(response) if response.status().is_success() => {
+                            match bounded_callback(&client, text.trim(), Duration::from_secs(20))
+                                .await
+                            {
+                                Ok(()) => {
                                     authorizations += 1;
                                 }
-                                Ok(_) => {
-                                    reader_error.get_or_insert(
-                                        "private authorization callback response failed",
-                                    );
-                                }
-                                Err(_) => {
-                                    reader_error.get_or_insert(
-                                        "private authorization callback request failed",
-                                    );
+                                Err(failure) => {
+                                    reader_error.get_or_insert(match failure {
+                                        CallbackFailure::Status => RefreshReadError::CallbackStatus,
+                                        CallbackFailure::Timeout => {
+                                            RefreshReadError::CallbackTimeout
+                                        }
+                                        CallbackFailure::BodyBound => {
+                                            RefreshReadError::CallbackBodyBound
+                                        }
+                                        CallbackFailure::Transport => {
+                                            RefreshReadError::CallbackRequest
+                                        }
+                                    });
                                 }
                             }
                         } else {
-                            let safe = if text.contains("http://") || text.contains("https://") {
-                                b"[private URL line redacted]".as_slice()
-                            } else {
-                                line.as_slice()
-                            };
+                            let safe = retained_stderr_line(text);
                             let mut retained = diagnostic.lock().await;
                             let room = 16384usize.saturating_sub(retained.len());
                             let take = safe.len().min(room);
@@ -442,8 +722,7 @@ async fn read_refresh_stderr(
                                 retained.push(b'\n');
                             }
                             if take != safe.len() || delimiter_omitted {
-                                reader_error
-                                    .get_or_insert("private gateway retained stderr exceeded cap");
+                                reader_error.get_or_insert(RefreshReadError::RetentionBound);
                             }
                         }
                     }
@@ -458,9 +737,9 @@ async fn read_refresh_stderr(
         }
     }
     if let Some(error) = reader_error {
-        return Err(error.into());
+        return Err(error);
     }
-    Ok::<_, ssx_mcp::Error>(authorizations)
+    Ok(authorizations)
 }
 
 // No spawned/detached assertion task and no new dependency. A panic from any
@@ -485,8 +764,844 @@ fn finish_process_case(outcome: std::thread::Result<ssx_mcp::Result<()>>) -> ssx
         Err(panic) => std::panic::resume_unwind(panic),
     }
 }
+
+// Only fixed classifications enter failure receipts. Authorization URLs remain
+// private transport inputs and never enter retained diagnostics.
+fn classification_line(text: &str) -> bool {
+    let fields: Vec<_> = text.split(' ').collect();
+    if fields.len() != 7 || fields[0] != "gateway-classification-v1" {
+        return false;
+    }
+    let stages = [
+        "NetworkStartup",
+        "OAuthStartup",
+        "RemoteConstruction",
+        "RemoteInitialization",
+        "RemoteHttpResponse",
+        "RemoteDiscovery",
+        "Projection",
+        "Stdio",
+        "RemoteCleanup",
+        "CallbackCleanup",
+        "BrowserCleanup",
+        "NetworkCleanup",
+        "FileCleanup",
+        "TokenRead",
+        "TokenWrite",
+    ];
+    let kinds = [
+        "none",
+        "not_found",
+        "permission_denied",
+        "connection_refused",
+        "connection_reset",
+        "connection_aborted",
+        "not_connected",
+        "addr_in_use",
+        "addr_not_available",
+        "broken_pipe",
+        "already_exists",
+        "would_block",
+        "invalid_input",
+        "invalid_data",
+        "timed_out",
+        "write_zero",
+        "interrupted",
+        "unexpected_eof",
+        "unsupported",
+        "out_of_memory",
+        "other",
+    ];
+    let optional_number = |field: &str, prefix: &str, status: bool| {
+        let Some(value) = field.strip_prefix(prefix) else {
+            return false;
+        };
+        value == "None"
+            || value
+                .strip_prefix("Some(")
+                .and_then(|value| value.strip_suffix(')'))
+                .and_then(|value| value.parse::<i32>().ok())
+                .is_some_and(|value| !status || (100..=599).contains(&value))
+    };
+    fields[1]
+        .strip_prefix("stage=")
+        .is_some_and(|v| stages.contains(&v))
+        && fields[2]
+            .strip_prefix("io_kind=")
+            .is_some_and(|v| kinds.contains(&v))
+        && optional_number(fields[3], "os_code=", false)
+        && fields[4]
+            .strip_prefix("http_flags=")
+            .and_then(|v| v.parse::<u16>().ok())
+            .is_some_and(|v| v <= 255)
+        && optional_number(fields[5], "http_status=", true)
+        && matches!(fields[6], "chain_truncated=true" | "chain_truncated=false")
+}
+fn retained_stderr_line(text: &str) -> &[u8] {
+    if text.is_empty()
+        || classification_line(text)
+        || text == "gateway connection or cleanup failed"
+    {
+        text.as_bytes()
+    } else {
+        b"[private stderr line omitted]"
+    }
+}
+struct CausalStderr<R> {
+    reader: BufReader<R>,
+    retained: Vec<u8>,
+    truncated: bool,
+    disclosed: bool,
+    authorization_seen: usize,
+    authorization_prompt_seen: bool,
+}
+impl<R: tokio::io::AsyncRead + Unpin> CausalStderr<R> {
+    fn new(reader: R) -> Self {
+        Self {
+            reader: BufReader::new(reader),
+            retained: Vec::new(),
+            truncated: false,
+            disclosed: false,
+            authorization_seen: 0,
+            authorization_prompt_seen: false,
+        }
+    }
+    async fn drain(&mut self) -> std::io::Result<()> {
+        while self.next_line().await?.is_some() {}
+        Ok(())
+    }
+    async fn next_line(&mut self) -> std::io::Result<Option<String>> {
+        use tokio::io::AsyncReadExt;
+        let mut line = Vec::new();
+        let mut overflow = false;
+        loop {
+            let mut byte = [0];
+            let count = self.reader.read(&mut byte).await?;
+            if count == 0 && line.is_empty() && !overflow {
+                return Ok(None);
+            }
+            if count == 0 || byte[0] == b'\n' {
+                break;
+            }
+            if line.len() < 16384 {
+                line.push(byte[0]);
+            } else {
+                overflow = true;
+            }
+        }
+        if overflow {
+            self.truncated = true;
+            return Ok(Some("[private stderr line exceeded cap]".into()));
+        }
+        let text = String::from_utf8(line).map_err(|_| std::io::ErrorKind::InvalidData)?;
+        self.disclosed |= [
+            "loopback-access",
+            "loopback-refresh",
+            "refresh201-rejected",
+            "private-code",
+            "static-sentinel",
+        ]
+        .iter()
+        .any(|secret| text.contains(secret));
+        self.authorization_prompt_seen |=
+            text.trim_start() == "Authorize the SlopSearX gateway by visiting:";
+        if text.trim_start().starts_with("http://") || text.trim_start().starts_with("https://") {
+            self.authorization_seen = self.authorization_seen.saturating_add(1);
+        }
+        if !text.trim_start().starts_with("http://") && !text.trim_start().starts_with("https://") {
+            let safe = retained_stderr_line(&text);
+            let room = 16384usize.saturating_sub(self.retained.len());
+            if safe.len().saturating_add(1) <= room {
+                self.retained.extend_from_slice(safe);
+                self.retained.push(b'\n');
+            } else {
+                self.truncated = true;
+            }
+        }
+        Ok(Some(text))
+    }
+}
+fn admit_oauth_directory(
+    directory: &std::path::Path,
+    _capture: &mut Option<AclPreflight>,
+) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        // This is the exact production admission reader, not an ACL approximation.
+        let ordinary = ssx_mcp::gateway_client::resolver::install::check_output_root(directory);
+        if let Err(error) = &ordinary {
+            *_capture = Some(AclPreflight {
+                ordinary_admitted: false,
+                io_kind: Some(error.kind()),
+                os_code: error.raw_os_error(),
+            });
+            // Only the empty directory created immediately above is replaced.
+            std::fs::remove_dir(directory)?;
+            ssx_mcp::gateway_client::resolver::install::prepare_output_root(directory)?;
+        } else {
+            *_capture = Some(AclPreflight {
+                ordinary_admitted: true,
+                io_kind: None,
+                os_code: None,
+            });
+        }
+        ssx_mcp::gateway_client::resolver::install::check_output_root(directory)?;
+    }
+    let _ = directory;
+    Ok(())
+}
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SetupFault {
+    CallbackBind,
+    DirectoryAfterCreate,
+    SpawnMissing,
+}
+struct SetupOwner {
+    fixture: Option<Fixture>,
+    directory: Option<std::path::PathBuf>,
+    callback: Option<tokio::net::TcpListener>,
+    callback_port: Option<u16>,
+    process: Option<Process>,
+    transient_child: Option<Child>,
+    acl: Option<AclPreflight>,
+    failure: Option<ProcessFailure>,
+}
+impl SetupOwner {
+    fn new() -> Self {
+        Self {
+            fixture: None,
+            directory: None,
+            callback: None,
+            callback_port: None,
+            process: None,
+            transient_child: None,
+            acl: None,
+            failure: None,
+        }
+    }
+    fn io_failure(&mut self, stage: &'static str, error: &std::io::Error) -> ssx_mcp::Error {
+        self.failure = Some(ProcessFailure::io(stage, error));
+        "private setup failed".into()
+    }
+    async fn retire(mut self, primary: std::thread::Result<ssx_mcp::Result<()>>) -> SetupReport {
+        self.callback.take();
+        let fixture_acquired = self.fixture.is_some();
+        let directory_created = self.directory.is_some();
+        let process_created = self.process.is_some() || self.transient_child.is_some();
+        let mut process_retired = true;
+        let mut observation = Observation {
+            failure: self.failure,
+            retired: None,
+            stderr_retired: true,
+            truncated: false,
+            disclosed: false,
+            observer_state: None,
+            authorization_count: None,
+            acl: self.acl,
+            counts: None,
+            retained: Vec::new(),
+        };
+        if let Some(mut process) = self.process.take() {
+            process
+                .report_failure(
+                    self.failure
+                        .unwrap_or_else(|| ProcessFailure::plain("setup_body")),
+                    None,
+                )
+                .await;
+            process_retired = process.retired_status.is_some() && process.stderr_retired;
+            observation = process.observation(None);
+        }
+        if let Some(mut child) = self.transient_child.take() {
+            let _ = child.start_kill();
+            let waited = tokio::time::timeout(Duration::from_secs(5), child.wait()).await;
+            process_retired &= matches!(waited, Ok(Ok(_)));
+        }
+        let fixture_retired = match self.fixture.take() {
+            None => true,
+            Some(fixture) => {
+                fixture.app.private_callback_release.notify_waiters();
+                fixture.stop.cancel();
+                let mut task = fixture.task;
+                match tokio::time::timeout(Duration::from_secs(5), &mut task).await {
+                    Ok(Ok(Ok(()))) => true,
+                    Ok(_) => false,
+                    Err(_) => {
+                        task.abort();
+                        let _ = task.await;
+                        false
+                    }
+                }
+            }
+        };
+        let owned_path_retired = match self.directory {
+            None => true,
+            Some(path) if process_retired && fixture_retired => {
+                match std::fs::symlink_metadata(&path) {
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => true,
+                    Ok(_) => {
+                        std::fs::remove_dir_all(&path).is_ok()
+                            && matches!(std::fs::symlink_metadata(&path), Err(error) if error.kind() == std::io::ErrorKind::NotFound)
+                    }
+                    Err(_) => false,
+                }
+            }
+            Some(_) => false,
+        };
+        SetupReport {
+            primary,
+            observation,
+            process_retired,
+            fixture_retired,
+            owned_path_retired,
+            fixture_acquired,
+            directory_created,
+            process_created,
+            callback_port: self.callback_port,
+        }
+    }
+}
+struct SetupReport {
+    primary: std::thread::Result<ssx_mcp::Result<()>>,
+    observation: Observation,
+    process_retired: bool,
+    fixture_retired: bool,
+    owned_path_retired: bool,
+    fixture_acquired: bool,
+    directory_created: bool,
+    process_created: bool,
+    callback_port: Option<u16>,
+}
+impl SetupReport {
+    fn resume(self) -> ! {
+        let _ = self.observation.emit(
+            &mut std::io::stderr().lock(),
+            self.process_retired,
+            self.fixture_retired,
+            self.owned_path_retired,
+        );
+        match self.primary {
+            Err(primary) => std::panic::resume_unwind(primary),
+            Ok(_) => panic!("private setup failed after owned retirement"),
+        }
+    }
+}
+// Fixture::start_status_profile spawns its sole task only after all fallible
+// listener/router setup; returning Self then storing Some contains no fallible
+// step. Before a successful spawn there is no background task to retire.
+async fn prepare_oauth_case(
+    label: &'static str,
+    reject_refresh: bool,
+    registration: StatusCode,
+    token: StatusCode,
+    refresh: StatusCode,
+    fault: Option<SetupFault>,
+) -> Result<(Process, Fixture, std::path::PathBuf, std::path::PathBuf), Box<SetupReport>> {
+    let mut owner = SetupOwner::new();
+    let primary = catch_process_case(async {
+        owner.fixture = Some(
+            Fixture::start_status_profile(
+                true,
+                false,
+                reject_refresh,
+                registration,
+                token,
+                refresh,
+            )
+            .await,
+        );
+        owner.callback = Some(
+            tokio::net::TcpListener::bind("127.0.0.1:0")
+                .await
+                .map_err(|error| owner.io_failure("setup_callback_bind", &error))?,
+        );
+        let address = owner
+            .callback
+            .as_ref()
+            .unwrap()
+            .local_addr()
+            .map_err(|error| owner.io_failure("setup_callback_address", &error))?;
+        owner.callback_port = Some(address.port());
+        if fault == Some(SetupFault::CallbackBind) {
+            match tokio::net::TcpListener::bind(address).await {
+                Err(error) => return Err(owner.io_failure("setup_callback_bind", &error)),
+                Ok(extra) => {
+                    drop(extra);
+                    return Err("private bind fault unexpectedly succeeded".into());
+                }
+            }
+        }
+        owner.callback.take();
+        let directory = std::env::temp_dir().join(format!(
+            "ssx-t07-{label}-{}-{}",
+            std::process::id(),
+            address.port()
+        ));
+        std::fs::create_dir(&directory)
+            .map_err(|error| owner.io_failure("setup_directory_create", &error))?;
+        // Record ownership immediately after successful creation, before ACL work.
+        owner.directory = Some(directory.clone());
+        if fault == Some(SetupFault::DirectoryAfterCreate) {
+            return match std::fs::File::open(directory.join("__missing_admission_control")) {
+                Err(error) => Err(owner.io_failure("setup_directory_after_create", &error)),
+                Ok(_) => Err("private directory fault unexpectedly succeeded".into()),
+            };
+        }
+        admit_oauth_directory(&directory, &mut owner.acl)
+            .map_err(|error| owner.io_failure("setup_directory_admission", &error))?;
+        if fault == Some(SetupFault::SpawnMissing) {
+            return match tokio::process::Command::new(directory.join("__missing_process_control"))
+                .stdin(std::process::Stdio::null())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .kill_on_drop(true)
+                .spawn()
+            {
+                Err(error) => Err(owner.io_failure("setup_spawn", &error)),
+                Ok(child) => {
+                    owner.transient_child = Some(child);
+                    Err("private spawn fault unexpectedly succeeded".into())
+                }
+            };
+        }
+        let path = directory.join("tokens.json");
+        owner.process = Some(Process::spawn(
+            owner.fixture.as_ref().unwrap(),
+            &[
+                "--oauth".into(),
+                "--oauth-no-browser".into(),
+                "--oauth-callback-port".into(),
+                address.port().to_string(),
+                "--oauth-token-file".into(),
+                path.to_string_lossy().into_owned(),
+            ],
+        ));
+        owner.process.as_mut().unwrap().acl_preflight = owner.acl;
+        Ok::<(), ssx_mcp::Error>(())
+    })
+    .await;
+    if matches!(&primary, Ok(Ok(())))
+        && owner.fixture.is_some()
+        && owner.process.is_some()
+        && owner.directory.is_some()
+    {
+        // Synchronous checked handoff: no await, I/O, assertion or fallible step.
+        let process = owner.process.take().unwrap();
+        let fixture = owner.fixture.take().unwrap();
+        let directory = owner.directory.take().unwrap();
+        let path = directory.join("tokens.json");
+        return Ok((process, fixture, directory, path));
+    }
+    Err(Box::new(owner.retire(primary).await))
+}
+async fn prepare_basic_case() -> Result<(Process, Fixture), Box<SetupReport>> {
+    let mut owner = SetupOwner::new();
+    let primary = catch_process_case(async {
+        owner.fixture = Some(Fixture::start(false).await);
+        let fixture = owner.fixture.as_ref().unwrap();
+        *fixture.app.authorization.lock().await = "Basic dXNlcjpwYXNz".into();
+        let remote = fixture.app.base.replacen("http://", "http://user:pass@", 1)
+            + "/mcp-redirect#private-fragment";
+        owner.process = Some(Process::spawn_url(
+            &remote,
+            &["--token".into(), "static-sentinel".into()],
+        ));
+        Ok::<(), ssx_mcp::Error>(())
+    })
+    .await;
+    if matches!(&primary, Ok(Ok(()))) && owner.fixture.is_some() && owner.process.is_some() {
+        let process = owner.process.take().unwrap();
+        let fixture = owner.fixture.take().unwrap();
+        return Ok((process, fixture));
+    }
+    Err(Box::new(owner.retire(primary).await))
+}
+
+async fn authorization_url(
+    process: &mut Process,
+    lines: &mut CausalStderr<tokio::process::ChildStderr>,
+) -> String {
+    let deadline = tokio::time::Instant::now() + process.rpc_budget;
+    loop {
+        let failure = match tokio::time::timeout_at(deadline, lines.next_line()).await {
+            Ok(Ok(Some(line))) if line.trim_start().starts_with("http://") => {
+                return line.trim().to_owned();
+            }
+            Ok(Ok(Some(_))) => continue,
+            Ok(Ok(None)) => ProcessFailure::plain("authorization_eof"),
+            Ok(Err(error)) => ProcessFailure::io("authorization_read", &error),
+            Err(_) => ProcessFailure::plain("authorization_timeout"),
+        };
+        process.report_failure(failure, Some(lines)).await;
+        panic!("private authorization failed after owned retirement");
+    }
+}
+#[tokio::test]
+async fn private_causal_stderr_accepts_only_finite_fields_and_drains_secret_overflow() {
+    use tokio::io::AsyncWriteExt;
+    let good = "gateway-classification-v1 stage=TokenWrite io_kind=permission_denied os_code=Some(5) http_flags=0 http_status=None chain_truncated=false";
+    assert!(classification_line(good));
+    for bad in [
+        good.replace(
+            "TokenWrite",
+            "https://user:secret@invalid/?code=private-code",
+        ),
+        good.replace("permission_denied", "private-secret"),
+        good.replace("Some(5)", "Some(private-secret)"),
+        format!("{good} private-secret"),
+    ] {
+        assert!(!classification_line(&bad));
+    }
+    let (mut writer, reader) = tokio::io::duplex(1024);
+    let expected = good.to_owned();
+    let task = tokio::spawn(async move {
+        writer.write_all(&vec![b'x'; 65536]).await.unwrap();
+        writer
+            .write_all(b"\nhttps://user:private-secret@invalid/?code=private-code\n")
+            .await
+            .unwrap();
+        writer.write_all(b"gateway-classification-v1 stage=Stdio io_kind=private-secret os_code=None http_flags=0 http_status=None chain_truncated=false\n").await.unwrap();
+        writer.write_all(expected.as_bytes()).await.unwrap();
+        writer.write_all(b"\n").await.unwrap();
+        writer.shutdown().await.unwrap();
+    });
+    let mut lines = CausalStderr::new(reader);
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while lines.next_line().await.unwrap().is_some() {}
+        task.await.unwrap();
+    })
+    .await
+    .unwrap();
+    assert!(lines.truncated && lines.disclosed);
+    assert_eq!(
+        lines.retained,
+        format!("[private stderr line omitted]\n{good}\n").as_bytes()
+    );
+    assert!(!String::from_utf8_lossy(&lines.retained).contains("private-secret"));
+    assert!(lines.retained.len() <= 16384);
+    let (mut writer, reader) = tokio::io::duplex(1024);
+    let expected = good.to_owned();
+    let writer = tokio::spawn(async move {
+        writer
+            .write_all(
+                b"unlisted_credential=private-unlisted token_path=/Users/private/credential.json\n",
+            )
+            .await
+            .unwrap();
+        writer.write_all(expected.as_bytes()).await.unwrap();
+        writer.write_all(b"\n").await.unwrap();
+        writer.shutdown().await.unwrap();
+    });
+    let captured = Arc::new(Mutex::new(Vec::new()));
+    let actual = tokio::time::timeout(
+        Duration::from_secs(5),
+        read_refresh_stderr(reader, reqwest::Client::new(), captured.clone()),
+    )
+    .await
+    .unwrap();
+    writer.await.unwrap();
+    assert_eq!(actual, Ok(0));
+    assert_eq!(
+        captured.lock().await.as_slice(),
+        format!("[private stderr line omitted]\n{good}\n").as_bytes()
+    );
+    struct SecretReadError;
+    impl std::fmt::Debug for SecretReadError {
+        fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            panic!("IO Debug must never run: private-unlisted /Users/private/credential.json");
+        }
+    }
+    impl std::fmt::Display for SecretReadError {
+        fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            panic!("IO Display must never run: private-unlisted /Users/private/credential.json");
+        }
+    }
+    impl std::error::Error for SecretReadError {}
+    struct FailingRead;
+    impl tokio::io::AsyncRead for FailingRead {
+        fn poll_read(
+            self: std::pin::Pin<&mut Self>,
+            _: &mut std::task::Context<'_>,
+            _: &mut tokio::io::ReadBuf<'_>,
+        ) -> std::task::Poll<std::io::Result<()>> {
+            std::task::Poll::Ready(Err(std::io::Error::other(SecretReadError)))
+        }
+    }
+    let failed = read_refresh_stderr(
+        FailingRead,
+        reqwest::Client::new(),
+        Arc::new(Mutex::new(Vec::new())),
+    )
+    .await;
+    assert_eq!(failed, Err(RefreshReadError::Read));
+    let (state, count) = refresh_agent_fields(&failed);
+    assert_eq!(
+        format!("agent_state={state} authorization_count={count:?}"),
+        "agent_state=read authorization_count=None"
+    );
+    for (fault, stage, directory_created, kind) in [
+        (
+            SetupFault::CallbackBind,
+            "setup_callback_bind",
+            false,
+            std::io::ErrorKind::AddrInUse,
+        ),
+        (
+            SetupFault::DirectoryAfterCreate,
+            "setup_directory_after_create",
+            true,
+            std::io::ErrorKind::NotFound,
+        ),
+        (
+            SetupFault::SpawnMissing,
+            "setup_spawn",
+            true,
+            std::io::ErrorKind::NotFound,
+        ),
+    ] {
+        let result = prepare_oauth_case(
+            "setup-control",
+            false,
+            StatusCode::OK,
+            StatusCode::OK,
+            StatusCode::BAD_REQUEST,
+            Some(fault),
+        )
+        .await;
+        let report = match result {
+            Err(report) => report,
+            Ok((mut process, fixture, directory, _)) => {
+                let receipt = finish_case(
+                    &mut process,
+                    fixture,
+                    Some(directory),
+                    false,
+                    None,
+                    Ok(Err("setup control unexpectedly succeeded".into())),
+                )
+                .await;
+                receipt.resume();
+                panic!("setup control did not reject");
+            }
+        };
+        assert!(report.fixture_acquired && !report.process_created);
+        assert_eq!(report.directory_created, directory_created);
+        assert!(report.process_retired && report.fixture_retired && report.owned_path_retired);
+        assert!(matches!(&report.primary, Ok(Err(_))));
+        let failure = report.observation.failure.unwrap();
+        assert_eq!(failure.stage, stage);
+        assert_eq!(failure.io_kind, Some(kind));
+        let port = report.callback_port.unwrap();
+        let listener = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port))
+            .await
+            .unwrap();
+        drop(listener); // Exact reserved callback socket is physically released.
+        let propagated =
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> () { report.resume() }));
+        assert!(propagated.is_err());
+    }
+}
+
+#[cfg(unix)]
+async fn causal_process(script: &'static str) -> Process {
+    use tokio::io::AsyncReadExt;
+    let mut child = tokio::process::Command::new("/bin/sh")
+        .args(["-c", script])
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true)
+        .spawn()
+        .unwrap();
+    let mut ready = [0; 6];
+    let readiness = tokio::time::timeout(
+        Duration::from_secs(5),
+        child.stderr.as_mut().unwrap().read_exact(&mut ready),
+    )
+    .await;
+    if !matches!(readiness, Ok(Ok(_))) || ready != *b"ready\n" {
+        let _ = child.start_kill();
+        let retired = tokio::time::timeout(Duration::from_secs(5), child.wait()).await;
+        assert!(matches!(retired, Ok(Ok(_))), "fake child retirement failed");
+        panic!("fake child did not enter exact readiness boundary");
+    }
+    let input = child.stdin.take();
+    let output = BufReader::new(child.stdout.take().unwrap()).lines();
+    let observed_stderr = Some(CausalStderr::new(child.stderr.take().unwrap()));
+    Process {
+        child,
+        input,
+        output,
+        observed_stderr,
+        rpc_budget: Duration::from_millis(50),
+        last_failure: None,
+        retired_status: None,
+        stderr_retired: false,
+        acl_preflight: None,
+        observer_state: None,
+        authorization_count: None,
+        retained_stderr: Vec::new(),
+        stderr_truncated: false,
+        stderr_disclosed: false,
+        authorization_seen: 0,
+        authorization_prompt_seen: false,
+    }
+}
+#[cfg(unix)]
+#[tokio::test]
+async fn private_process_io_authorization_and_close_failures_retire_actual_child_and_bounded_stderr()
+ {
+    for (script, stage) in [
+        (
+            "exec 0<&-; printf 'ready\\n' >&2; exec /bin/sleep 60",
+            "write",
+        ),
+        (
+            "exec 1>&-; printf 'ready\\n' >&2; exec /bin/sleep 60",
+            "early_eof",
+        ),
+        ("printf 'ready\\n' >&2; exec /bin/sleep 60", "read_timeout"),
+    ] {
+        let mut process = causal_process(script).await;
+        let result = catch_process_case(process.rpc(json!({"probe":"private-unlisted"}))).await;
+        assert!(result.is_err());
+        assert_eq!(process.last_failure.unwrap().stage, stage);
+        assert!(process.retired_status.is_some() && process.stderr_retired);
+        assert!(matches!(process.child.try_wait(), Ok(Some(_))));
+    }
+    let mut process = causal_process("printf 'ready\\n' >&2; exec /bin/sleep 60").await;
+    let mut lines = process.observed_stderr.take().unwrap();
+    let result = catch_process_case(authorization_url(&mut process, &mut lines)).await;
+    assert!(result.is_err());
+    assert_eq!(process.last_failure.unwrap().stage, "authorization_timeout");
+    assert!(process.retired_status.is_some() && process.stderr_retired);
+    let mut process = causal_process(r#"printf 'ready\n' >&2; i=0; while [ "$i" -lt 2000 ]; do printf 'unlisted_credential=private-unlisted token_path=/Users/private/credential.json\n' >&2; i=$((i+1)); done"#).await;
+    process.rpc_budget = Duration::from_secs(5);
+    let result = catch_process_case(process.close()).await;
+    assert!(result.is_err());
+    assert_eq!(process.last_failure.unwrap().stage, "stderr_policy");
+    assert!(
+        process
+            .retired_status
+            .is_some_and(|status| status.success())
+            && process.stderr_retired
+    );
+    assert!(process.stderr_truncated && process.retained_stderr.len() <= 16384);
+    let retained = String::from_utf8_lossy(&process.retained_stderr);
+    assert!(!retained.contains("private-unlisted") && !retained.contains("/Users/private"));
+    // This ordinary Process-only scope has actually joined its child/reader;
+    // the receipt sink is exercised only after those retirement assertions.
+    struct SinkError;
+    impl std::fmt::Debug for SinkError {
+        fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            panic!("receipt Error Debug forbidden: sink-secret /private/token-path");
+        }
+    }
+    impl std::fmt::Display for SinkError {
+        fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            panic!("receipt Error Display forbidden: sink-secret /private/token-path");
+        }
+    }
+    impl std::error::Error for SinkError {}
+    struct FailingSink;
+    impl std::io::Write for FailingSink {
+        fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {
+            Err(std::io::Error::other(SinkError))
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Err(std::io::Error::other(SinkError))
+        }
+    }
+    let observation = process.observation(None);
+    let emitted = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        observation.emit(&mut FailingSink, true, true, true)
+    }));
+    assert!(matches!(emitted, Ok(false)));
+    for (endpoint, expected) in [
+        ("private-callback-error", "callback_status"),
+        ("private-callback-hold", "callback_timeout"),
+    ] {
+        use std::os::unix::fs::DirBuilderExt;
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let fixture = Fixture::start(false).await;
+        let app = fixture.app.clone();
+        let url = format!("{}/{endpoint}", fixture.app.base);
+        let root =
+            std::path::PathBuf::from(std::env::var_os("SLOPSEARX_INSTALL_TEST_ROOT").unwrap());
+        let directory = root.join(format!("causal-{endpoint}-{}", std::process::id()));
+        std::fs::DirBuilder::new()
+            .mode(0o700)
+            .create(&directory)
+            .unwrap();
+        let mut process = causal_process("printf 'ready\\n' >&2; exec /bin/sleep 60").await;
+        let report = owned_case!(process, fixture, Some(directory.clone()), false, None, {
+            process
+                .callback(&client, &url, Duration::from_millis(500))
+                .await?;
+            Ok::<(), ssx_mcp::Error>(())
+        });
+        assert!(matches!(report.primary, Ok(Err(_))));
+        assert_eq!(report.stage, Some(expected));
+        assert!(report.process_retired && report.fixture_retired && report.owned_path_retired);
+        assert_eq!(app.state.lock().await.private_callback_visits, 1);
+        assert!(!directory.exists());
+        let mut retained_receipt = Vec::new();
+        assert!(report.observation.emit(
+            &mut retained_receipt,
+            report.process_retired,
+            report.fixture_retired,
+            report.owned_path_retired
+        ));
+        assert!(retained_receipt.len() < 32768);
+        assert!(!String::from_utf8_lossy(&retained_receipt).contains("/Users/private"));
+    }
+    let fixture = Fixture::start(false).await;
+    let mut process = causal_process("printf 'ready\\n' >&2; exec /bin/sleep 60").await;
+    let report = owned_case!(process, fixture, None, false, None, {
+        assert!(std::hint::black_box(false), "owned-primary-probe");
+        Ok::<(), ssx_mcp::Error>(())
+    });
+    assert!(report.process_retired && report.fixture_retired && report.owned_path_retired);
+    assert!(report.primary.is_err());
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ProcessFailure {
+    stage: &'static str,
+    io_kind: Option<std::io::ErrorKind>,
+    os_code: Option<i32>,
+}
+impl ProcessFailure {
+    fn plain(stage: &'static str) -> Self {
+        Self {
+            stage,
+            io_kind: None,
+            os_code: None,
+        }
+    }
+    fn io(stage: &'static str, error: &std::io::Error) -> Self {
+        Self {
+            stage,
+            io_kind: Some(error.kind()),
+            os_code: error.raw_os_error(),
+        }
+    }
+}
 struct Process {
     child: Child,
+    rpc_budget: Duration,
+    last_failure: Option<ProcessFailure>,
+    retired_status: Option<std::process::ExitStatus>,
+    stderr_retired: bool,
+    acl_preflight: Option<AclPreflight>,
+    observer_state: Option<&'static str>,
+    authorization_count: Option<usize>,
+    retained_stderr: Vec<u8>,
+    stderr_truncated: bool,
+    stderr_disclosed: bool,
+    authorization_seen: usize,
+    authorization_prompt_seen: bool,
+    observed_stderr: Option<CausalStderr<tokio::process::ChildStderr>>,
     input: Option<ChildStdin>,
     output: Lines<BufReader<ChildStdout>>,
 }
@@ -514,6 +1629,7 @@ impl Process {
         command
             .env_clear()
             .env("no_proxy", "*")
+            .env("MCP_REMOTE_DIAGNOSTICS", "classification-v1")
             .arg("--remote")
             .arg(remote)
             .args(extra)
@@ -537,23 +1653,159 @@ impl Process {
         let output = BufReader::new(child.stdout.take().unwrap()).lines();
         Self {
             child,
+            observed_stderr: None,
+            rpc_budget: Duration::from_secs(20),
+            last_failure: None,
+            retired_status: None,
+            stderr_retired: false,
+            acl_preflight: None,
+            observer_state: None,
+            authorization_count: None,
+            retained_stderr: Vec::new(),
+            stderr_truncated: false,
+            stderr_disclosed: false,
+            authorization_seen: 0,
+            authorization_prompt_seen: false,
             input,
             output,
         }
     }
+    async fn callback(
+        &mut self,
+        client: &reqwest::Client,
+        url: &str,
+        budget: Duration,
+    ) -> Result<(), &'static str> {
+        bounded_callback(client, url, budget)
+            .await
+            .map_err(|failure| {
+                self.last_failure = Some(ProcessFailure::plain(failure.stage()));
+                "private callback failed"
+            })
+    }
     async fn rpc(&mut self, value: Value) -> Value {
-        let input = self.input.as_mut().unwrap();
-        input
-            .write_all(format!("{value}\n").as_bytes())
+        let result: Result<Value, ProcessFailure> = async {
+            let input = self
+                .input
+                .as_mut()
+                .ok_or_else(|| ProcessFailure::plain("input_missing"))?;
+            tokio::time::timeout(
+                self.rpc_budget,
+                input.write_all(format!("{value}\n").as_bytes()),
+            )
             .await
-            .unwrap();
-        input.flush().await.unwrap();
-        let line = tokio::time::timeout(Duration::from_secs(20), self.output.next_line())
+            .map_err(|_| ProcessFailure::plain("write_timeout"))?
+            .map_err(|error| ProcessFailure::io("write", &error))?;
+            tokio::time::timeout(self.rpc_budget, input.flush())
+                .await
+                .map_err(|_| ProcessFailure::plain("flush_timeout"))?
+                .map_err(|error| ProcessFailure::io("flush", &error))?;
+            let line = tokio::time::timeout(self.rpc_budget, self.output.next_line())
+                .await
+                .map_err(|_| ProcessFailure::plain("read_timeout"))?
+                .map_err(|error| ProcessFailure::io("read", &error))?
+                .ok_or_else(|| ProcessFailure::plain("early_eof"))?;
+            serde_json::from_str(&line).map_err(|_| ProcessFailure::plain("reply_json"))
+        }
+        .await;
+        match result {
+            Ok(value) => value,
+            Err(failure) => {
+                self.report_failure(failure, None).await;
+                panic!("private gateway RPC failed after owned retirement");
+            }
+        }
+    }
+    fn observation(&self, counts: Option<(usize, usize, usize, usize, usize)>) -> Observation {
+        Observation {
+            failure: self.last_failure,
+            retired: self.retired_status,
+            stderr_retired: self.stderr_retired,
+            truncated: self.stderr_truncated,
+            disclosed: self.stderr_disclosed,
+            observer_state: self.observer_state,
+            authorization_count: self.authorization_count,
+            acl: self.acl_preflight,
+            counts,
+            retained: self.retained_stderr.clone(),
+        }
+    }
+    fn capture_stderr(&mut self, observed: &CausalStderr<tokio::process::ChildStderr>) {
+        self.retained_stderr.clone_from(&observed.retained);
+        self.stderr_truncated = observed.truncated;
+        self.stderr_disclosed = observed.disclosed;
+        self.authorization_seen = observed.authorization_seen;
+        self.authorization_prompt_seen = observed.authorization_prompt_seen;
+    }
+    async fn finish_owned(&mut self, expected_success: bool) {
+        self.input.take();
+        let Some(mut observed) = self
+            .observed_stderr
+            .take()
+            .or_else(|| self.child.stderr.take().map(CausalStderr::new))
+        else {
+            self.report_failure(ProcessFailure::plain("stderr_owner_missing"), None)
+                .await;
+            panic!("private stderr owner absent after owned retirement");
+        };
+        let result = tokio::time::timeout(self.rpc_budget, async {
+            tokio::join!(self.child.wait(), observed.drain())
+        })
+        .await;
+        let failure = match result {
+            Ok((Ok(status), Ok(()))) => {
+                self.retired_status = Some(status);
+                self.stderr_retired = true;
+                self.capture_stderr(&observed);
+                if status.success() != expected_success {
+                    ProcessFailure::plain("exit_status")
+                } else if observed.truncated || observed.disclosed {
+                    ProcessFailure::plain("stderr_policy")
+                } else {
+                    return;
+                }
+            }
+            Ok((Err(error), _)) => ProcessFailure::io("wait", &error),
+            Ok((_, Err(error))) => ProcessFailure::io("stderr_read", &error),
+            Err(_) => ProcessFailure::plain("close_timeout"),
+        };
+        self.report_failure(failure, Some(&mut observed)).await;
+        panic!("private close failed after owned retirement");
+    }
+    async fn report_failure(
+        &mut self,
+        failure: ProcessFailure,
+        external: Option<&mut CausalStderr<tokio::process::ChildStderr>>,
+    ) {
+        self.last_failure = Some(failure);
+        self.input.take();
+        let initial = self.child.try_wait().ok().flatten();
+        if initial.is_none() {
+            let _ = self.child.start_kill();
+        }
+        self.retired_status = tokio::time::timeout(Duration::from_secs(5), self.child.wait())
             .await
-            .unwrap()
-            .unwrap()
-            .unwrap();
-        serde_json::from_str(&line).unwrap()
+            .ok()
+            .and_then(Result::ok);
+        let mut owned = self
+            .observed_stderr
+            .take()
+            .or_else(|| self.child.stderr.take().map(CausalStderr::new));
+        let observed = match external {
+            Some(observed) => Some(observed),
+            None => owned.as_mut(),
+        };
+        if let Some(observed) = observed {
+            self.stderr_retired = matches!(
+                tokio::time::timeout(Duration::from_secs(5), async {
+                    while observed.next_line().await?.is_some() {}
+                    Ok::<_, std::io::Error>(())
+                })
+                .await,
+                Ok(Ok(()))
+            );
+            self.capture_stderr(observed);
+        }
     }
     async fn initialize(&mut self) {
         let result=self.rpc(json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"independent-native-client","version":"1"}}})).await;
@@ -565,26 +1817,11 @@ impl Process {
                 .starts_with("SlopSearX remote gateway.")
         );
     }
-    async fn close(mut self) {
-        self.input.take();
-        let status = tokio::time::timeout(Duration::from_secs(20), self.child.wait())
-            .await
-            .unwrap()
-            .unwrap();
-        assert!(status.success());
-        let mut stderr = String::new();
-        use tokio::io::AsyncReadExt;
-        self.child
-            .stderr
-            .take()
-            .unwrap()
-            .read_to_string(&mut stderr)
-            .await
-            .unwrap();
-        assert!(!stderr.contains("static-sentinel"));
-        assert!(!stderr.contains("loopback-access"));
+    async fn close(&mut self) {
+        self.finish_owned(true).await;
     }
 }
+
 #[tokio::test]
 async fn private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer() {
     for newline in [false, true] {
@@ -606,10 +1843,7 @@ async fn private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_wr
             .unwrap()
             .unwrap()
             .unwrap_err();
-        assert_eq!(
-            error.to_string(),
-            "private gateway stderr line exceeded cap"
-        );
+        assert_eq!(error, RefreshReadError::LineBound);
         tokio::time::timeout(Duration::from_secs(5), writing)
             .await
             .unwrap()
@@ -617,7 +1851,7 @@ async fn private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_wr
         assert_eq!(
             diagnostic.lock().await.as_slice(),
             if newline {
-                b"after-overflow\n".as_slice()
+                b"[private stderr line omitted]\n".as_slice()
             } else {
                 b""
             }
@@ -630,8 +1864,13 @@ async fn private_refresh_stderr_exact_cap_accounts_for_every_delimiter() {
     for extra_delimiter in [false, true] {
         let (mut writer, reader) = tokio::io::duplex(1024);
         let writing = tokio::spawn(async move {
-            writer.write_all(&vec![b'x'; 16383]).await.unwrap();
-            writer.write_all(b"\n").await.unwrap();
+            let finite = "gateway-classification-v1 stage=Stdio io_kind=none os_code=None http_flags=0 http_status=None chain_truncated=false\n";
+            assert_eq!(finite.len(), 116);
+            writer
+                .write_all(finite.repeat(141).as_bytes())
+                .await
+                .unwrap();
+            writer.write_all(&[b'\n'; 28]).await.unwrap();
             if extra_delimiter {
                 writer.write_all(b"\n").await.unwrap();
             }
@@ -646,10 +1885,7 @@ async fn private_refresh_stderr_exact_cap_accounts_for_every_delimiter() {
         .await
         .unwrap();
         if extra_delimiter {
-            assert_eq!(
-                result.unwrap_err().to_string(),
-                "private gateway retained stderr exceeded cap"
-            );
+            assert_eq!(result.unwrap_err(), RefreshReadError::RetentionBound);
         } else {
             assert_eq!(result.unwrap(), 0);
         }
@@ -660,7 +1896,8 @@ async fn private_refresh_stderr_exact_cap_accounts_for_every_delimiter() {
         let retained = diagnostic.lock().await;
         assert_eq!(retained.len(), 16384);
         assert_eq!(retained.last(), Some(&b'\n'));
-        assert!(retained[..16383].iter().all(|byte| *byte == b'x'));
+        assert!(retained[16356..].iter().all(|byte| *byte == b'\n'));
+        assert!(retained.starts_with(b"gateway-classification-v1 stage=Stdio"));
     }
 }
 
@@ -716,7 +1953,7 @@ async fn private_refresh_stderr_consumes_both_urls_and_redacts_credential_querie
     assert_eq!(visits.load(Ordering::SeqCst), 2);
     assert_eq!(
         diagnostic.lock().await.as_slice(),
-        b"safe diagnostic\n[private URL line redacted]\n"
+        b"[private stderr line omitted]\n[private stderr line omitted]\n"
     );
 }
 
@@ -778,73 +2015,52 @@ async fn actual_native_static_process_preserves_signature_schema_projection_erro
 #[tokio::test]
 async fn actual_native_oauth_process_challenge_registration_pkce_callback_secure_persistence_and_cleanup()
  {
-    let fixture = Fixture::start(true).await;
-    let callback = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let port = callback.local_addr().unwrap().port();
-    drop(callback);
-    let directory =
-        std::env::temp_dir().join(format!("ssx-t07-oauth-{}-{port}", std::process::id()));
-    std::fs::create_dir(&directory).unwrap();
-    let path = directory.join("tokens.json");
-    let mut process = Process::spawn(
-        &fixture,
-        &[
-            "--oauth".into(),
-            "--oauth-no-browser".into(),
-            "--oauth-callback-port".into(),
-            port.to_string(),
-            "--oauth-token-file".into(),
-            path.to_string_lossy().into_owned(),
-        ],
-    );
-    let stderr = process.child.stderr.take().unwrap();
-    let mut lines = BufReader::new(stderr).lines();
-    let authorization = tokio::time::timeout(Duration::from_secs(20), async {
-        loop {
-            let line = lines.next_line().await.unwrap().unwrap();
-            if line.trim_start().starts_with("http://") {
-                break line.trim().to_owned();
-            }
-        }
-    })
+    let (mut process, fixture, directory, path) = prepare_oauth_case(
+        "oauth",
+        false,
+        StatusCode::OK,
+        StatusCode::OK,
+        StatusCode::BAD_REQUEST,
+        None,
+    )
     .await
-    .unwrap();
-    let client = reqwest::Client::builder().no_proxy().build().unwrap();
-    let response = client.get(authorization).send().await.unwrap();
-    assert!(response.status().is_success());
-    process.initialize().await;
-    let tokens: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
-    assert_eq!(tokens["client_info"]["client_id"], "loopback-client");
-    assert_eq!(
-        tokens["client_info"]["issuer"],
-        format!("{}/oauth", fixture.app.base)
-    );
-    assert_eq!(tokens["tokens"]["access_token"], "loopback-access");
-    assert!(tokens.get("token_response").is_none());
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
+    .unwrap_or_else(|report| report.resume());
+    owned_case!(process, fixture, Some(directory), true, None, {
+        let stderr = process.child.stderr.take().unwrap();
+        let mut lines = CausalStderr::new(stderr);
+        let authorization = authorization_url(&mut process, &mut lines).await;
+        process.observed_stderr = Some(lines);
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .map_err(|_| "private callback client failed")?;
+        process
+            .callback(&client, &authorization, Duration::from_secs(20))
+            .await?;
+        process.initialize().await;
+        let tokens: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        assert_eq!(tokens["client_info"]["client_id"], "loopback-client");
         assert_eq!(
-            std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
-            0o600
+            tokens["client_info"]["issuer"],
+            format!("{}/oauth", fixture.app.base)
         );
-    }
-    // Retain stderr's actual reader owner through process exit, then prove no token diagnostics.
-    process.input.take();
-    let status = tokio::time::timeout(Duration::from_secs(20), process.child.wait())
-        .await
-        .unwrap()
-        .unwrap();
-    assert!(status.success());
-    let mut remainder = String::new();
-    while let Some(line) = lines.next_line().await.unwrap() {
-        remainder.push_str(&line);
-    }
-    assert!(!remainder.contains("loopback-access"));
-    assert_eq!(fixture.app.state.lock().await.token_forms.len(), 1);
-    assert!(fixture.app.state.lock().await.deletes > 0);
-    fixture.close().await;
-    std::fs::remove_dir_all(directory).unwrap();
+        assert_eq!(tokens["tokens"]["access_token"], "loopback-access");
+        assert!(tokens.get("token_response").is_none());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+                0o600
+            );
+        }
+        // The actual stderr reader drains concurrently with the original child wait.
+        process.finish_owned(true).await;
+        assert_eq!(fixture.app.state.lock().await.token_forms.len(), 1);
+        assert!(fixture.app.state.lock().await.deletes > 0);
+        Ok::<(), ssx_mcp::Error>(())
+    })
+    .resume();
 }
 
 #[tokio::test]
@@ -858,7 +2074,7 @@ async fn actual_native_startup_failure_redacts_configuration_and_never_publishes
         .unwrap();
     assert!(!output.status.success());
     assert!(output.stdout.is_empty());
-    assert!(process.output.next_line().await.unwrap().is_none());
+    assert!(matches!(process.output.next_line().await, Ok(None)));
     let error = String::from_utf8(output.stderr).unwrap();
     assert!(!error.contains("wrong-private-secret"));
     assert!(!error.contains(&fixture.app.base));
@@ -941,113 +2157,115 @@ async fn actual_native_sigterm_during_initialization_joins_http_owner() {
 async fn actual_native_oauth_non200_refresh_falls_back_to_authorization_without_second_registration()
 -> ssx_mcp::Result<()> {
     for refresh_status in [StatusCode::BAD_REQUEST, StatusCode::CREATED] {
-        let fixture = Fixture::start_status_profile(
-            true,
-            false,
+        let (mut process, fixture, directory, path) = prepare_oauth_case(
+            "refresh",
             true,
             StatusCode::OK,
             StatusCode::OK,
             refresh_status,
+            None,
         )
-        .await;
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let port = listener.local_addr().unwrap().port();
-        drop(listener);
-        let directory =
-            std::env::temp_dir().join(format!("ssx-t07-refresh-{}-{port}", std::process::id()));
-        std::fs::create_dir(&directory).unwrap();
-        let path = directory.join("tokens.json");
-        let mut process = Process::spawn(
-            &fixture,
-            &[
-                "--oauth".into(),
-                "--oauth-no-browser".into(),
-                "--oauth-callback-port".into(),
-                port.to_string(),
-                "--oauth-token-file".into(),
-                path.to_string_lossy().into_owned(),
-            ],
-        );
-        let stderr = process.child.stderr.take().unwrap();
+        .await
+        .unwrap_or_else(|report| report.resume());
         let diagnostic = Arc::new(Mutex::new(Vec::new()));
-        let captured = diagnostic.clone();
-        let client = reqwest::Client::builder().no_proxy().build()?;
-        let mut agent = tokio::spawn(read_refresh_stderr(stderr, client, captured));
-        let stage = std::cell::Cell::new("stdio initialization and refresh fallback");
-        let outcome = catch_process_case(async {
-            process.initialize().await;
-            stage.set("owned exit after initialized EOF");
-            process.input.take();
-            let status =
-                tokio::time::timeout(Duration::from_secs(20), process.child.wait()).await??;
-            assert!(status.success());
-            let observed = fixture.app.state.lock().await;
-            assert_eq!(observed.token_forms.len(), 3);
-            assert_eq!(observed.registrations, 1);
-            assert_eq!(observed.token_forms[0]["grant_type"], "authorization_code");
-            assert_eq!(observed.token_forms[1]["grant_type"], "refresh_token");
-            assert_eq!(observed.token_forms[2]["grant_type"], "authorization_code");
-            drop(observed);
-            let tokens: Value = serde_json::from_slice(&std::fs::read(&path)?)?;
-            assert_eq!(tokens["tokens"]["expires_in"], 3600);
-            assert_eq!(tokens["tokens"]["access_token"], "loopback-access");
-            Ok::<(), ssx_mcp::Error>(())
-        })
-        .await;
-        // Retain the real child and reader even if the oracle panics on EOF.
-        // This keeps status/fixture diagnostics and retires every owned task.
-        let initial_exit = process.child.try_wait()?;
-        if initial_exit.is_none() {
-            process.child.start_kill()?;
-        }
-        let retired_exit =
-            tokio::time::timeout(Duration::from_secs(5), process.child.wait()).await??;
-        process.input.take();
-        let agent_result: ssx_mcp::Result<usize> =
-            match tokio::time::timeout(Duration::from_secs(5), &mut agent).await {
-                Ok(joined) => joined
-                    .map_err(|e| -> ssx_mcp::Error { e.into() })
-                    .and_then(|value| value),
-                Err(_) => {
-                    agent.abort();
-                    let _ = agent.await;
-                    Err("private authorization reader did not retire".into())
+        let mut agent = None;
+        owned_case!(
+            process,
+            fixture,
+            Some(directory),
+            true,
+            Some(CaseAux {
+                agent: &mut agent,
+                diagnostic: diagnostic.clone()
+            }),
+            {
+                let client = reqwest::Client::builder()
+                    .no_proxy()
+                    .build()
+                    .map_err(|_| "private callback client failed")?;
+                let stderr = process.child.stderr.take().unwrap();
+                let captured = diagnostic.clone();
+                agent = Some(tokio::spawn(read_refresh_stderr(stderr, client, captured)));
+                let outcome = catch_process_case(async {
+                    process.initialize().await;
+                    process.input.take();
+                    let status =
+                        tokio::time::timeout(Duration::from_secs(20), process.child.wait())
+                            .await??;
+                    assert!(status.success());
+                    let observed = fixture.app.state.lock().await;
+                    assert_eq!(observed.token_forms.len(), 3);
+                    assert_eq!(observed.registrations, 1);
+                    assert_eq!(observed.token_forms[0]["grant_type"], "authorization_code");
+                    assert_eq!(observed.token_forms[1]["grant_type"], "refresh_token");
+                    assert_eq!(observed.token_forms[2]["grant_type"], "authorization_code");
+                    drop(observed);
+                    let tokens: Value = serde_json::from_slice(&std::fs::read(&path)?)?;
+                    assert_eq!(tokens["tokens"]["expires_in"], 3600);
+                    assert_eq!(tokens["tokens"]["access_token"], "loopback-access");
+                    Ok::<(), ssx_mcp::Error>(())
+                })
+                .await;
+                // Retain the real child and reader even if the oracle panics on EOF.
+                // This keeps status/fixture diagnostics and retires every owned task.
+                let initial_exit = process.child.try_wait()?;
+                if initial_exit.is_none() {
+                    process.child.start_kill()?;
                 }
-            };
-        let observed = fixture.app.state.lock().await;
-        let fixture_counts = (
-            observed.registrations,
-            observed.authorization_visits,
-            observed.token_forms.len(),
-            observed.deletes,
-        );
-        drop(observed);
-        fixture.close().await;
-        std::fs::remove_dir_all(directory)?;
-        if !matches!(&outcome, Ok(Ok(()))) || !matches!(&agent_result, Ok(2)) {
-            eprintln!(
-                "T07_PRIVATE_REFRESH_FAILURE refresh_status={refresh_status} stage={} initial_exit={initial_exit:?} retired_exit={retired_exit:?} fixture_counts={fixture_counts:?} agent={agent_result:?} stderr={:?}",
-                stage.get(),
-                String::from_utf8_lossy(&diagnostic.lock().await)
-            );
-        }
-        finish_process_case(outcome)?;
-        assert_eq!(agent_result?, 2);
+                let retired_exit =
+                    tokio::time::timeout(Duration::from_secs(5), process.child.wait()).await??;
+                process.input.take();
+                let agent_result: Result<usize, RefreshReadError> =
+                    match tokio::time::timeout(Duration::from_secs(5), agent.as_mut().unwrap())
+                        .await
+                    {
+                        Ok(joined) => {
+                            agent.take();
+                            joined
+                                .map_err(|_| RefreshReadError::Join)
+                                .and_then(|value| value)
+                        }
+                        Err(_) => {
+                            if let Some(owned) = agent.take() {
+                                owned.abort();
+                                let _ = owned.await;
+                            }
+                            Err(RefreshReadError::Retirement)
+                        }
+                    };
+                process.retired_status = Some(retired_exit);
+                process.stderr_retired = true;
+                process
+                    .retained_stderr
+                    .clone_from(&*diagnostic.lock().await);
+                let (agent_state, authorization_count) = refresh_agent_fields(&agent_result);
+                process.observer_state = Some(agent_state);
+                process.authorization_count = authorization_count;
+                finish_process_case(outcome)?;
+                assert_eq!(
+                    agent_result.map_err(|_| "private authorization observer failed")?,
+                    2
+                );
+                Ok::<(), ssx_mcp::Error>(())
+            }
+        )
+        .resume();
     }
     Ok(())
 }
 
 #[tokio::test]
 async fn actual_native_static_userinfo_basic_precedes_bearer_and_fragment_never_reaches_http() {
-    let fixture = Fixture::start(false).await;
-    *fixture.app.authorization.lock().await = "Basic dXNlcjpwYXNz".into();
-    let remote = fixture.app.base.replacen("http://", "http://user:pass@", 1)
-        + "/mcp-redirect#private-fragment";
-    let mut process = Process::spawn_url(&remote, &["--token".into(), "static-sentinel".into()]);
-    process.initialize().await;
-    process.close().await;
-    assert!(fixture.app.state.lock().await.deletes > 0);
-    fixture.close().await;
+    let (mut process, fixture) = prepare_basic_case()
+        .await
+        .unwrap_or_else(|report| report.resume());
+    owned_case!(process, fixture, None, true, None, {
+        process.initialize().await;
+        process.close().await;
+        assert!(fixture.app.state.lock().await.deletes > 0);
+        Ok::<(), ssx_mcp::Error>(())
+    })
+    .resume();
 }
 
 #[tokio::test]
@@ -1059,92 +2277,60 @@ async fn actual_native_oauth_status_matrix_preserves_registration_code_200_201_a
         (StatusCode::OK, StatusCode::CREATED, true),
         (StatusCode::OK, StatusCode::ACCEPTED, false),
     ] {
-        let fixture =
-            Fixture::start_statuses(true, false, false, registration_status, token_status).await;
-        let callback = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let port = callback.local_addr().unwrap().port();
-        drop(callback);
-        let directory =
-            std::env::temp_dir().join(format!("ssx-t07-status-{}-{port}", std::process::id()));
-        std::fs::create_dir(&directory).unwrap();
-        let path = directory.join("tokens.json");
-        let mut process = Process::spawn(
-            &fixture,
-            &[
-                "--oauth".into(),
-                "--oauth-no-browser".into(),
-                "--oauth-callback-port".into(),
-                port.to_string(),
-                "--oauth-token-file".into(),
-                path.to_string_lossy().into_owned(),
-            ],
-        );
-        let stderr = process.child.stderr.take().unwrap();
-        let mut lines = BufReader::new(stderr).lines();
-        let mut diagnostic = String::new();
-        if registration_status != StatusCode::ACCEPTED {
-            let authorization = tokio::time::timeout(Duration::from_secs(20), async {
-                loop {
-                    let line = lines
-                        .next_line()
-                        .await
-                        .unwrap()
-                        .expect("authorization URL before exit");
-                    if line.trim_start().starts_with("http://") {
-                        break line.trim().to_owned();
-                    }
-                    diagnostic.push_str(&line)
-                }
-            })
-            .await
-            .unwrap();
-            let response = reqwest::Client::builder()
-                .no_proxy()
-                .build()
-                .unwrap()
-                .get(authorization)
-                .send()
-                .await
-                .unwrap();
-            assert!(response.status().is_success());
-        }
-        if accepted {
-            process.initialize().await;
-        }
-        process.input.take();
-        let status = tokio::time::timeout(Duration::from_secs(20), process.child.wait())
-            .await
-            .unwrap()
-            .unwrap();
-        assert_eq!(status.success(), accepted);
-        while let Some(line) = lines.next_line().await.unwrap() {
-            diagnostic.push_str(&line);
-        }
-        assert!(!diagnostic.contains("loopback-access"));
-        assert!(!diagnostic.contains("loopback-refresh"));
-        if accepted {
-            let stored: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
-            assert_eq!(stored["tokens"]["access_token"], "loopback-access");
-        } else {
-            assert!(process.output.next_line().await.unwrap().is_none());
-            if path.exists() {
-                let raw = std::fs::read(&path).unwrap();
-                let stored: Value = serde_json::from_slice(&raw).unwrap();
-                assert!(stored.get("tokens").is_none_or(Value::is_null));
-                assert!(!String::from_utf8(raw).unwrap().contains("loopback-access"));
+        let (mut process, fixture, directory, path) = prepare_oauth_case(
+            "status",
+            false,
+            registration_status,
+            token_status,
+            StatusCode::BAD_REQUEST,
+            None,
+        )
+        .await
+        .unwrap_or_else(|report| report.resume());
+        owned_case!(process, fixture, Some(directory), accepted, None, {
+            let stderr = process.child.stderr.take().unwrap();
+            process.observed_stderr = Some(CausalStderr::new(stderr));
+            if registration_status != StatusCode::ACCEPTED {
+                let mut lines = process.observed_stderr.take().unwrap();
+                let authorization = authorization_url(&mut process, &mut lines).await;
+                process.observed_stderr = Some(lines);
+                let client = reqwest::Client::builder()
+                    .no_proxy()
+                    .build()
+                    .map_err(|_| "private callback client failed")?;
+                process
+                    .callback(&client, &authorization, Duration::from_secs(20))
+                    .await?;
             }
-            assert!(fixture.app.state.lock().await.calls.is_empty());
-        }
-        if registration_status != StatusCode::ACCEPTED {
-            assert_eq!(fixture.app.state.lock().await.token_forms.len(), 1);
-        }
-        if registration_status == StatusCode::ACCEPTED {
-            assert!(!diagnostic.contains("Authorize the SlopSearX gateway"));
-            assert!(!path.exists());
-            assert!(fixture.app.state.lock().await.token_forms.is_empty());
-        }
-        fixture.close().await;
-        std::fs::remove_dir_all(directory).unwrap();
+            if accepted {
+                process.initialize().await;
+            }
+            process.finish_owned(accepted).await;
+            if accepted {
+                let stored: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+                assert_eq!(stored["tokens"]["access_token"], "loopback-access");
+            } else {
+                assert!(matches!(process.output.next_line().await, Ok(None)));
+                if path.exists() {
+                    let raw = std::fs::read(&path).unwrap();
+                    let stored: Value = serde_json::from_slice(&raw).unwrap();
+                    assert!(stored.get("tokens").is_none_or(Value::is_null));
+                    assert!(!String::from_utf8(raw).unwrap().contains("loopback-access"));
+                }
+                assert!(fixture.app.state.lock().await.calls.is_empty());
+            }
+            if registration_status != StatusCode::ACCEPTED {
+                assert_eq!(fixture.app.state.lock().await.token_forms.len(), 1);
+            }
+            if registration_status == StatusCode::ACCEPTED {
+                assert_eq!(process.authorization_seen, 0);
+                assert!(!process.authorization_prompt_seen);
+                assert!(!path.exists());
+                assert!(fixture.app.state.lock().await.token_forms.is_empty());
+            }
+            Ok::<(), ssx_mcp::Error>(())
+        })
+        .resume();
     }
 }
 

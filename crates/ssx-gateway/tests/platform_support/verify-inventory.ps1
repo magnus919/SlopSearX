@@ -17,6 +17,7 @@ if ($IgnoredOnly) { $expected = @($store) } else {
       'private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer',
       'private_refresh_stderr_exact_cap_accounts_for_every_delimiter',
       'private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries',
+      'private_causal_stderr_accepts_only_finite_fields_and_drains_secret_overflow',
       'actual_native_static_userinfo_basic_precedes_bearer_and_fragment_never_reaches_http',
       'actual_native_oauth_status_matrix_preserves_registration_code_200_201_and_rejects_202_without_token_persistence',
       'actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch'
@@ -38,6 +39,7 @@ if ($IgnoredOnly) { $expected = @($store) } else {
       )
     } else {
       $expected += @(
+        'private_process_io_authorization_and_close_failures_retire_actual_child_and_bounded_stderr',
         'actual_native_sigterm_during_initialization_joins_http_owner',
         'actual_native_oauth_denied_delete_on_eof_and_sigterm_never_reauthorizes_or_refreshes_and_retires_owners',
         'actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners',

@@ -1159,6 +1159,15 @@ For an OAuth remote, configure the installed package binary directly:
 
 The candidate accepts `--token`, `--oauth-callback-port`, `--oauth-no-browser` and
 `--oauth-token-file`, with the corresponding `MCP_REMOTE_*` variables in §3.2.
+For explicit troubleshooting, set `MCP_REMOTE_DIAGNOSTICS=classification-v1`. This
+adds finite phase classifications, I/O error kinds and OS codes, and HTTP error
+category flags/status codes to stderr. It never prints error messages, URLs,
+credentials, paths, or response payloads. Each runtime retains at most 32 finite
+events in memory; it emits them with fallible writes only after its owned cleanup
+attempts finish. Sink failures do not replace the primary result. Without this
+exact opt-in, error stderr keeps its fixed default behavior. HTTP flag bits are builder (0), connect (1),
+timeout (2), request (3), body (4), decode (5), redirect (6), and status (7).
+
 Set `MCP_REMOTE_CA_BUNDLE` to a PEM bundle when the remote endpoint uses an
 operator-managed certificate authority. The gateway requires a regular, nonempty,
 complete bundle no larger than 4 MiB; malformed or unreadable input fails startup.

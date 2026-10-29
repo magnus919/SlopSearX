@@ -44,7 +44,7 @@
     },
     {
       "path": "crates/ssx-gateway/src/main.rs",
-      "sha256": "be5bd0d82c3216d64a3ab459e834c75581fd6ae167ed3cf82000517515718301"
+      "sha256": "926ca9bd6f39430bf02cc321d9da524201844286621618d5ff86a88ce0ab7e3d"
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/mac_trust.rs",
@@ -76,7 +76,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
-      "sha256": "c7fc229c85ae010342e861d4735afc01d7004548671eb9e347e80c6869094689"
+      "sha256": "81adc0d578270a7c592b5929f6559474cd8a4ac27d37581d4da816b7ea43b02c"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
@@ -92,7 +92,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
-      "sha256": "0e38b088a957b5dca2c0e0aa97a71434714827b65acff0f2e53af5c869d724ed"
+      "sha256": "a03fc92efeffb44ff1304c4698c23fad60f498b6a50ca3910aaa6a38dbdb27e4"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_source_stages.rs",
@@ -139,12 +139,16 @@
       "sha256": "df5b75f3a8eb1d9a4849ca8b2a92fd259c73c1781f111b15961267607a5dd777"
     },
     {
+      "path": "crates/ssx-mcp/src/gateway_client/diagnostics.rs",
+      "sha256": "3d3683de170e5ec4dba65468b0efad317bd4be0be55dc00593cc06d6d9ea4bea"
+    },
+    {
       "path": "crates/ssx-mcp/src/gateway_client/io_owner.rs",
-      "sha256": "935f18b2df64ce05ef807ea51a7432fc36920eac6721b1dad11993e4191ef9e6"
+      "sha256": "969b87d4b517fb08df8bc689b01edc95de751b6e7a835d157c05c41ebb100d36"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/mod.rs",
-      "sha256": "8b988a503b6ec41b9b31cd63b753115ec5254c966ad4e26421753789e65d46fc"
+      "sha256": "3fe9cdd2417a5ddd685b0b4b9242e29e7323aea5911d0f00eca818d97b5e40f7"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/network.rs",
@@ -176,7 +180,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/resolver/install_windows.rs",
-      "sha256": "4280a3851005c1adfb35bd4daf4768dfe4ea161135b58fbcfd52a0605afd0807"
+      "sha256": "931901b661b787b01efff6451fdb368580c45b1b552504179b55b32a530e5381"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/resolver/mod.rs",
@@ -208,7 +212,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/runtime.rs",
-      "sha256": "59ff9ba8540d66efe8f08d9e79e120b3e8c6145f1731c91f2a8bebd576bd42c5"
+      "sha256": "b689e6ab8189c719c9a0c13c8a79f7d5b7971f0c61c39c57b0d7d61353595df7"
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/settings.rs",
@@ -248,7 +252,7 @@
     },
     {
       "path": "crates/ssx-mcp/src/gateway_client/token_storage.rs",
-      "sha256": "fec112aba4dd926f66fa1db85451666689aaa5ae63fb849806d5e1a96893e1d6"
+      "sha256": "c786cadd89c51506be06345fc2f97e4bd8c8fe2d372715786ff16a110489bd06"
     },
     {
       "path": "crates/ssx-mcp/src/harness.rs",
@@ -2614,6 +2618,7 @@
     "gateway_client::callback::tests::zero_timeout_rejects_received_and_unreceived_positive_wait_repeats",
     "gateway_client::client_model::tests::original_twenty_one_client_model_outcomes",
     "gateway_client::client_model::tests::pinned_client_url_model_controls",
+    "gateway_client::diagnostics::tests::explicit_classification_preserves_only_finite_fields_and_never_formats_secret_errors",
     "gateway_client::io_owner::tests::cancelled_waiter_retains_actual_job_until_shutdown_join",
     "gateway_client::io_owner::tests::deadline_queue_and_owner_close_do_not_start_second_worker",
     "gateway_client::network::cookie_wire_tests::cleared_redirect_userinfo_keeps_actual_sent_basic_header_lineage",
@@ -2733,6 +2738,10 @@
     "session_delete_grace_expires_at_sdk_budget_drops_waiter_and_retains_retry_identity"
   ],
   "process_tests": [
+    "actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch",
+    "actual_native_current_t06_eleven_tool_catalog_and_discovery_match_direct_http",
+    "actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners",
+    "actual_native_oauth_denied_delete_on_eof_and_sigterm_never_reauthorizes_or_refreshes_and_retires_owners",
     "actual_native_oauth_non200_refresh_falls_back_to_authorization_without_second_registration",
     "actual_native_oauth_process_challenge_registration_pkce_callback_secure_persistence_and_cleanup",
     "actual_native_oauth_status_matrix_preserves_registration_code_200_201_and_rejects_202_without_token_persistence",
@@ -2742,13 +2751,11 @@
     "actual_native_static_userinfo_basic_precedes_bearer_and_fragment_never_reaches_http",
     "actual_native_stdio_eof_cancels_inflight_rpc_before_owned_shutdown",
     "actual_native_two_instances_keep_remote_sessions_and_catalogs_independent",
-    "actual_native_current_t06_eleven_tool_catalog_and_discovery_match_direct_http",
-    "actual_native_oauth_denied_delete_on_eof_and_sigterm_never_reauthorizes_or_refreshes_and_retires_owners",
-    "actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth_or_deadlock_and_retire_owners",
-    "actual_native_catalog_validation_diagnostics_are_source_exact_and_never_dispatch",
-    "private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer",
+    "private_causal_stderr_accepts_only_finite_fields_and_drains_secret_overflow",
+    "private_process_io_authorization_and_close_failures_retire_actual_child_and_bounded_stderr",
+    "private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries",
     "private_refresh_stderr_exact_cap_accounts_for_every_delimiter",
-    "private_refresh_stderr_consumes_both_urls_and_redacts_credential_queries"
+    "private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer"
   ],
   "stdio_owner_tests": [
     "opaque::tests::owned_stdio_outer_abort_drops_held_sdk_initialization",
@@ -2878,7 +2885,7 @@
   "opaque_current_operand_successor": {
     "parent_bindings_sha256": "8d486b5f22994c4cfaf56c6a4436c309f44cdd9c0d056b237bfa70674195a4a3",
     "source_head": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
-    "reason": "exactsamephysicalbuffer bcd6→3fe5→sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
+    "reason": "exactsamephysicalbuffer bcd6\u21923fe5\u2192sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
     "current_source_rows": 608,
     "native_identities_unchanged": 215
   },
@@ -3016,5 +3023,49 @@
     "scope": "Finite physical adapter authenticates complete combined generation first and proves exact ordered inverses to both accepted Git boundaries; original main receipt proof assets and every historical operand remain unchanged.",
     "declared_ordinary_gate_total": 221,
     "qualification": "source-only integration; combined native/hosted acceptance recorded separately"
+  },
+  "windows_causal_diagnostics_successor": {
+    "source_parent": "39f107f7e9b8720546cc555ed4da81cdcecfb6ad",
+    "parent_bindings_sha256": "e3f745ced57a6919f807a908a92cf971440562e11d4a639b3ab0dca1ddce433b",
+    "scope": "Opt-in per-runtime fixed32 finite diagnostic events emitted fallibly after owned cleanup; finite bounded stderr retention shared by refresh and Process owners; actual RPC/authorization IO/deadline retirement and concurrent child/stderr finish; exact production ACL preflight for only newly owned OAuth fixture directories. Default diagnostics and production ACL policy unchanged. Hosted Basic/OAuth cause remains unresolved.",
+    "new_causal_paths": [
+      "crates/ssx-mcp/src/gateway_client/diagnostics.rs"
+    ],
+    "changed_existing_rows": [
+      "crates/ssx-gateway/src/main.rs",
+      "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
+      "crates/ssx-gateway/tests/t07_runtime.rs",
+      "crates/ssx-mcp/src/gateway_client/io_owner.rs",
+      "crates/ssx-mcp/src/gateway_client/mod.rs",
+      "crates/ssx-mcp/src/gateway_client/resolver/install_windows.rs",
+      "crates/ssx-mcp/src/gateway_client/runtime.rs",
+      "crates/ssx-mcp/src/gateway_client/token_storage.rs"
+    ],
+    "ordinary_native_identity_additions": [
+      "gateway_client::diagnostics::tests::explicit_classification_preserves_only_finite_fields_and_never_formats_secret_errors",
+      "private_causal_stderr_accepts_only_finite_fields_and_drains_secret_overflow",
+      "private_process_io_authorization_and_close_failures_retire_actual_child_and_bounded_stderr"
+    ],
+    "declared_ordinary_gate_total": 224,
+    "qualification": "source proposal07 only; NOT_COMPILED/NOT_EXECUTED/NOT_APPLIED; actual Rust AST profile inventories match declared selectors, compiler/native/hosted acceptance pending",
+    "peer_review_remediation": [
+      "real refresh reader shares finite retention and typed reader statuses; no boxed error formatting",
+      "actual Process write/flush/read/authorization errors and deadlines await child/stderr retirement before assertions",
+      "Basic and dynamic/status OAuth close drain bounded stderr concurrently with wait; no outer arbitrary Strings",
+      "no pre-cleanup diagnostic I/O; fixed32 events per IoOwner/runtime, fallible post-cleanup emission and failing-sink/isolation controls",
+      "entire four case bodies including callback/assertion failures use a shared catch-and-drain owner; primary failure resumes after child/readers, fixture and owned paths retire",
+      "all callback sends and response drainage use a whole20s test deadline and16KiB response bound; real callback status/deadline and owned-body panic subcases exercise the common owner",
+      "actual IO loop receives each script; flood is an exact Rust raw shell literal with syntax-only sh-n validation",
+      "Process/refresh/ACL observations remain bounded typed data; no new fixture diagnostic sink is accessed before complete case cleanup attempts; CaseReport emits once afterward through a fallible sink with actual post-retirement failing-sink control",
+      "SetupOwner catches fixture/callback/directory-creation/ACL/process acquisition; stores owned-created path before admission and retires any acquired resources before setup failure propagates. Existing cross-platform control runs real bind/directory-after-create/spawn failure subcases without new test names.",
+      "Restore original private_refresh_stderr_overflow_drains_newline_free_pipe_and_retires_writer identity and both newline=false/true real duplex overflow/drain/writer-retirement scenarios with typed LineBound and sanitized retention. Actual Rust AST inventory resolves exact Unixserver18/client17/Windowsclient13 before native admission."
+    ],
+    "mandatory_windows_reader_route": {
+      "path": "crates/ssx-mcp/src/gateway_client/resolver/install_windows.rs",
+      "before_sha256": "4280a3851005c1adfb35bd4daf4768dfe4ea161135b58fbcfd52a0605afd0807",
+      "after_sha256": "931901b661b787b01efff6451fdb368580c45b1b552504179b55b32a530e5381",
+      "function": "check_output_root",
+      "policy": "unconditional exact ssx_windows_owner::check_private_directory through mandatory existing ssx-mcp Windows dependency; no optional/default/manifest or ACL policy change"
+    }
   }
 }
