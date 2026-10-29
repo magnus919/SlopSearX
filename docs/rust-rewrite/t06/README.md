@@ -89,3 +89,7 @@ T06 reader or the W07 reader delegates to that helper. Its literal expectations
 sit outside the four inverse rows, avoiding a hash cycle. The outer closure's
 own source is explicit current gate code, retained in the final source seal;
 mutating only the executable helper or capsule cannot self-certify an old frame.
+
+The [EOF fixture follow-up](EOF_FOLLOW_UP.md) records #1070's causal readiness,
+phase diagnostics, unconditional error teardown and additional negative controls.
+Its existing execution and EOF retirement deadlines remain unchanged.
