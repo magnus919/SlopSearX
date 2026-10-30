@@ -57,13 +57,7 @@ impl Value {
         }
         // Non-string category values follow the source's admitted ordering where
         // it is a total order; unordered NaN has an explicit reviewed disposition.
-        for i in 1..values.len() {
-            let mut at = i;
-            while at > 0 && compare(&values[at], &values[at - 1])? == std::cmp::Ordering::Less {
-                values.swap(at, at - 1);
-                at -= 1;
-            }
-        }
+        fallible_stable_sort_by(&mut values, compare)?;
         Ok(values)
     }
     fn repr(&self) -> Result<String, Failure> {
@@ -89,9 +83,10 @@ impl Value {
                         out.push('\\');
                         out.push(char::from_u32(cp).expect("quote"));
                     }
-                    cp if crate::decimal::NONPRINTABLE
-                        .iter()
-                        .any(|&(a, b)| (a..=b).contains(&cp)) =>
+                    cp if !(32..127).contains(&cp)
+                        && crate::decimal::NONPRINTABLE
+                            .iter()
+                            .any(|&(a, b)| (a..=b).contains(&cp)) =>
                     {
                         out.push_str(&if cp < 256 {
                             format!("\\x{cp:02x}")
@@ -157,6 +152,60 @@ impl Value {
             self.repr()
         }
     }
+}
+
+// Sort indices first: an error leaves the input untouched. Left-run ties retain
+// source insertion order; each merge level compares at most n elements. Only
+// after every fallible comparison succeeds do we apply the index permutation.
+fn fallible_stable_sort_by<T>(
+    values: &mut [T],
+    mut compare: impl FnMut(&T, &T) -> Result<std::cmp::Ordering, Failure>,
+) -> Result<(), Failure> {
+    let n = values.len();
+    if n < 2 {
+        return Ok(());
+    }
+    let mut order: Vec<usize> = (0..n).collect();
+    let mut buffer = vec![0; n];
+    let mut width = 1usize;
+    while width < n {
+        let mut start = 0;
+        while start < n {
+            let middle = start.saturating_add(width).min(n);
+            let end = middle.saturating_add(width).min(n);
+            let (mut left, mut right, mut out) = (start, middle, start);
+            while left < middle && right < end {
+                if compare(&values[order[left]], &values[order[right]])?
+                    != std::cmp::Ordering::Greater
+                {
+                    buffer[out] = order[left];
+                    left += 1;
+                } else {
+                    buffer[out] = order[right];
+                    right += 1;
+                }
+                out += 1;
+            }
+            buffer[out..out + middle - left].copy_from_slice(&order[left..middle]);
+            out += middle - left;
+            buffer[out..out + end - right].copy_from_slice(&order[right..end]);
+            start = end;
+        }
+        std::mem::swap(&mut order, &mut buffer);
+        width = width.saturating_mul(2);
+    }
+    // order maps destination -> original; invert it before moving values.
+    for (destination, &original) in order.iter().enumerate() {
+        buffer[original] = destination;
+    }
+    for i in 0..n {
+        while buffer[i] != i {
+            let destination = buffer[i];
+            values.swap(i, destination);
+            buffer.swap(i, destination);
+        }
+    }
+    Ok(())
 }
 
 pub fn points(s: &[u32]) -> Result<String, Failure> {
@@ -713,11 +762,17 @@ impl PartialEq for Value {
                     work.extend(a.iter().zip(b))
                 }
                 (Self::Object(a), Self::Object(b)) if a.len() == b.len() => {
-                    for (k, v) in a {
-                        let Some((_, other)) = b.iter().find(|(key, _)| key == k) else {
+                    // Preserve the first matching field even for manually built
+                    // duplicate-key Values; parsed objects already have unique keys.
+                    let mut fields: HashMap<&[u32], &Value> = HashMap::with_capacity(b.len());
+                    for (key, value) in b {
+                        fields.entry(key.as_slice()).or_insert(value);
+                    }
+                    for (key, value) in a {
+                        let Some(&other) = fields.get(key.as_slice()) else {
                             return false;
                         };
-                        work.push((v, other));
+                        work.push((value, other));
                     }
                 }
                 _ => return false,
@@ -779,5 +834,96 @@ mod tests {
             };
             assert_eq!(*value, Value::Number(expected));
         }
+    }
+
+    #[test]
+    fn fallible_category_sort_is_stable_bounded_and_preserves_errors() {
+        const N: usize = 32_768;
+        let bound = N * 15; // ceil(log2(N)) merge levels, at most N comparisons each.
+        let mut values: Vec<_> = (0..N).rev().map(|i| Value::Number(i.to_string())).collect();
+        let mut comparisons = 0;
+        fallible_stable_sort_by(&mut values, |a, b| {
+            comparisons += 1;
+            assert!(comparisons <= bound, "category comparison bound exceeded");
+            compare(a, b)
+        })
+        .unwrap();
+        for (i, value) in values.iter().enumerate() {
+            assert_eq!(*value, Value::Number(i.to_string()));
+        }
+        println!("T08A category comparisons {comparisons} bound {bound}");
+
+        let ties = parse("[true,1.0,1,0]").unwrap().sorted_sequence().unwrap();
+        assert_eq!(
+            pretty(&Value::Array(ties)),
+            "[\n  0,\n  true,\n  1.0,\n  1\n]\n"
+        );
+        let rotated = parse("[2,0,1,4,3]").unwrap().sorted_sequence().unwrap();
+        assert_eq!(
+            pretty(&Value::Array(rotated)),
+            "[\n  0,\n  1,\n  2,\n  3,\n  4\n]\n"
+        );
+        let mut unchanged = vec![3, 2, 1];
+        let mut calls = 0;
+        let result = fallible_stable_sort_by(&mut unchanged, |a, b| {
+            calls += 1;
+            if calls == 2 {
+                Err(Failure::Shape)
+            } else {
+                Ok(a.cmp(b))
+            }
+        });
+        assert!(matches!(result, Err(Failure::Shape)));
+        assert_eq!(unchanged, [3, 2, 1]);
+        assert!(matches!(
+            parse("[NaN,0]").unwrap().sorted_sequence(),
+            Err(Failure::Shape)
+        ));
+        assert!(matches!(
+            parse("[{},0]").unwrap().sorted_sequence(),
+            Err(Failure::Shape)
+        ));
+        assert_eq!(parse("[NaN]").unwrap().sorted_sequence().unwrap().len(), 1);
+        assert_eq!(
+            compare(&parse("[NaN,1]").unwrap(), &parse("[NaN,2]").unwrap()).unwrap(),
+            std::cmp::Ordering::Less
+        );
+    }
+
+    #[test]
+    fn nested_object_equality_preserves_decoded_keys_and_first_match() {
+        let mut forward = Vec::new();
+        let mut reverse = Vec::new();
+        for i in 0..32_768 {
+            forward.push((text(&format!("k{i:06}")), Value::Number(i.to_string())));
+        }
+        for i in (0..32_768).rev() {
+            reverse.push((text(&format!("k{i:06}")), Value::Number(i.to_string())));
+        }
+        assert_eq!(Value::Object(forward), Value::Object(reverse));
+        assert_eq!(
+            parse(r#"{"é":NaN,"\ud800":true}"#).unwrap(),
+            parse(r#"{"\uD800":1,"\u00e9":NaN}"#).unwrap()
+        );
+        assert_ne!(
+            parse(r#"{"é":NaN}"#).unwrap(),
+            parse(r#"{"e\u0301":NaN}"#).unwrap()
+        );
+        let duplicate = || {
+            Value::Object(vec![
+                (text("x"), Value::Bool(true)),
+                (text("x"), Value::Bool(false)),
+            ])
+        };
+        let first = Value::Object(vec![
+            (text("x"), Value::Number("1".into())),
+            (text("x"), Value::Number("1".into())),
+        ]);
+        assert_eq!(first, duplicate());
+        let last = Value::Object(vec![
+            (text("x"), Value::Bool(false)),
+            (text("x"), Value::Bool(false)),
+        ]);
+        assert_ne!(last, duplicate());
     }
 }

@@ -828,7 +828,7 @@ fn execute(case: &Case) -> Result<serde_json::Value, String> {
     Ok(evidence)
 }
 // Supplemental source-grammar regression controls are separate from the immutable
-// 261-case corpus. The existing named owner runs both for default and installed images.
+// 261-case corpus. The existing named owner runs all controls for default and installed images.
 fn supplemental_json_object_controls(corpus: &Corpus) -> Vec<String> {
     use std::fmt::Write as _;
     let template = corpus
@@ -878,9 +878,77 @@ fn supplemental_json_object_controls(corpus: &Corpus) -> Vec<String> {
     )
     .into();
 
+    let config = corpus
+        .cases
+        .iter()
+        .find(|case| case.id == "reference-config-yaml")
+        .expect("frozen config YAML template");
+    let footer = config
+        .stdout
+        .split_once("\n## Engine Category Reference")
+        .expect("captured source config footer")
+        .1;
+    let mut numeric = config.clone();
+    numeric.id = "supplemental-reverse-numeric-category".into();
+    numeric.reference = "supplemental source category grammar: reverse 65536 numeric values, independent ascending output".into();
+    let mut body = String::from("{\"categories\":{\"x\":[");
+    let mut expected = String::from("---\ncategory_count: 1\ncategories:\n  x:\n");
+    for i in (0..65_536).rev() {
+        if i != 65_535 {
+            body.push(',');
+        }
+        write!(&mut body, "{i}").unwrap();
+    }
+    for i in 0..65_536 {
+        writeln!(&mut expected, "    - {i}").unwrap();
+    }
+    body.push_str("]}}");
+    expected.push_str("\n## Engine Category Reference");
+    expected.push_str(footer);
+    numeric.replies[0].body_hex = hex(body.as_bytes());
+    numeric.stdout.clear();
+    numeric.stdout_sha256 = Some(hex(&Sha256::digest(expected.as_bytes())));
+    numeric.stdout_bytes = Some(expected.len());
+
+    let mut nested = config.clone();
+    nested.id = "supplemental-wide-equal-object-categories".into();
+    nested.reference = "supplemental source nested category grammar: equal 100000-field objects in opposite insertion order, numeric tie-break".into();
+    let mut forward_json = String::from("{");
+    let mut reverse_json = String::from("{");
+    let mut forward_repr = String::from("{");
+    let mut reverse_repr = String::from("{");
+    for i in 0..100_000 {
+        if i != 0 {
+            forward_json.push(',');
+            forward_repr.push_str(", ");
+        }
+        write!(&mut forward_json, "\"k{i:06}\":{i}").unwrap();
+        write!(&mut forward_repr, "'k{i:06}': {i}").unwrap();
+    }
+    for i in (0..100_000).rev() {
+        if i != 99_999 {
+            reverse_json.push(',');
+            reverse_repr.push_str(", ");
+        }
+        write!(&mut reverse_json, "\"k{i:06}\":{i}").unwrap();
+        write!(&mut reverse_repr, "'k{i:06}': {i}").unwrap();
+    }
+    forward_json.push('}');
+    reverse_json.push('}');
+    forward_repr.push('}');
+    reverse_repr.push('}');
+    let body = format!("{{\"categories\":{{\"x\":[[{forward_json},2],[{reverse_json},1]]}}}}");
+    let expected = format!(
+        "---\ncategory_count: 1\ncategories:\n  x:\n    - [{reverse_repr}, 1]\n    - [{forward_repr}, 2]\n\n## Engine Category Reference{footer}"
+    );
+    nested.replies[0].body_hex = hex(body.as_bytes());
+    nested.stdout.clear();
+    nested.stdout_sha256 = Some(hex(&Sha256::digest(expected.as_bytes())));
+    nested.stdout_bytes = Some(expected.len());
+
     let mut errors = Vec::new();
     let mut controls = Vec::new();
-    for case in [wide, decoded] {
+    for case in [wide, decoded, numeric, nested] {
         println!("T08A supplemental start {}", case.id);
         let started = Instant::now();
         let result = execute(&case);
