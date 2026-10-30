@@ -1466,7 +1466,7 @@ async fn unsupported_request_filters_and_paging_do_not_claim_or_change_enforceme
     for kind in KINDS {
         let mut q = query(kind);
         q.language = "fr".into();
-        q.page = 9;
+        q.page = ssx_domain::SearchPage::from_u64(9).expect("positive fixture page");
         q.max_results = Some(0);
         q.time_range = Some("week".into());
         q.safesearch = 2;

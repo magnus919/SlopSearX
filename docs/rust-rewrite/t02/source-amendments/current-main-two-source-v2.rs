@@ -115,10 +115,15 @@ fn read(root: &Path, path: &str) -> Result<Material> {
     #[cfg(not(unix))]
     return Err("T02 source mode proof requires Unix".into());
     #[cfg(unix)]
-    Ok(Material {
-        bytes: fs::read(full).map_err(|e| format!("{path}:{e}"))?,
-        mode,
-    })
+    {
+        let actual = fs::read(full).map_err(|e| format!("{path}:{e}"))?;
+        let bytes = if PAGE_CHAINED.contains(&path) {
+            page_original(root, path)?.ok_or("missing chained page material")?
+        } else {
+            actual
+        };
+        Ok(Material { bytes, mode })
+    }
 }
 fn decode(raw: &[u8], pin: &str) -> Result<Capsule> {
     need(sha(raw) == pin, "T02 successor capsule digest")?;
@@ -154,6 +159,12 @@ fn decode(raw: &[u8], pin: &str) -> Result<Capsule> {
     Ok(c)
 }
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
+    if let ["hash-object", "--", path] = args
+        && PAGE_CHAINED.contains(path)
+    {
+        page_original(root, path)?.ok_or("missing chained page material")?;
+        return git(root, &["rev-parse", &format!("{PAGE_BASE}:{path}")]);
+    }
     let result = Command::new("git")
         .args(args)
         .current_dir(root)
@@ -194,7 +205,7 @@ fn load_inputs(root: &Path, c: &Capsule) -> Result<Vec<Inputs>> {
                 material.bytes = crate::a13::a06_source_successor::w07_t02_joint::parent(
                     root,
                     p,
-                    &material.bytes,
+                    &fs::read(root.join(p)).map_err(|e| e.to_string())?,
                     crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
                 )?;
             }
@@ -204,11 +215,10 @@ fn load_inputs(root: &Path, c: &Capsule) -> Result<Vec<Inputs>> {
             let old = git(root, &["cat-file", "blob", &t.baseline_blob])?;
             let tree = String::from_utf8(git(root, &["ls-tree", PR, "--", &t.path])?)
                 .map_err(|e| e.to_string())?;
-            let physical = read(root, &t.path)?;
             let parent_blob = crate::a13::a06_source_successor::w07_t02_joint::parent_git_blob(
                 root,
                 &t.path,
-                &physical.bytes,
+                &fs::read(root.join(&t.path)).map_err(|e| e.to_string())?,
                 crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
             )?;
             let proved_parent_blob_line = format!("{parent_blob}\n");
@@ -297,6 +307,7 @@ pub(super) fn verify(root: &Path, path: &str, old_sha: &str, coverage: &str) -> 
 }
 /// Mandatory production gate controls, also called by the existing unit identity.
 pub(super) fn controls(root: &Path) -> Result<()> {
+    page_controls(root)?;
     yaml_break::controls(root)?;
     let raw = read(root, CAPSULE)?;
     need(raw.mode == 0o644, "T02 capsule mode")?;
@@ -304,7 +315,10 @@ pub(super) fn controls(root: &Path) -> Result<()> {
     let good = load_inputs(root, &c)?;
     verify_materials(&c, &good)?;
     for (index, transition) in c.transitions.iter().enumerate() {
-        let physical = read(root, &transition.path)?;
+        let physical = Material {
+            bytes: fs::read(root.join(&transition.path)).map_err(|e| e.to_string())?,
+            mode: read(root, &transition.path)?.mode,
+        };
         need(
             physical.bytes != good[index].current.bytes,
             "T02 physical joint and parent operands were conflated",
@@ -335,10 +349,18 @@ pub(super) fn controls(root: &Path) -> Result<()> {
             verify_materials(&c, &wrong).is_err(),
             "T02 physical bytes accepted in projected parent slot",
         )?;
+        // This negative needs the physical blob, not git()'s exact page projection.
+        let physical_blob = String::from_utf8(git(
+            root,
+            &["hash-object", "--no-filters", "--", &transition.path],
+        )?)
+        .map_err(|e| e.to_string())?;
+        need(
+            physical_blob != good[index].current_blob,
+            "T02 physical Git negative must differ from the proved parent",
+        )?;
         let mut wrong = good.clone();
-        wrong[index].current_blob =
-            String::from_utf8(git(root, &["hash-object", "--", &transition.path])?)
-                .map_err(|e| e.to_string())?;
+        wrong[index].current_blob = physical_blob;
         need(
             verify_materials(&c, &wrong).is_err(),
             "T02 physical Git blob accepted in projected parent slot",
@@ -534,5 +556,182 @@ pub(super) fn controls(root: &Path) -> Result<()> {
     println!(
         "T02_CURRENT_MAIN_SOURCE_SUCCESSOR_CONTROLS two:archives:git:ordered-edits:modes:closed-caller"
     );
+    Ok(())
+}
+
+// #1049 is a finite source successor. The original 43 coverage rows and all
+// previous inverse controls remain immutable. Only these five current callers
+// may project their exactly proved e127 preimage into the historical checks.
+const PAGE_BASE: &str = "e12744511013bd05370173e777daaef471bf9527";
+const PAGE_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/lossless-page-1049-v1.json";
+const PAGE_CAPSULE_SHA: &str = "dfd7494b0ee42ac6a9ca702020640aaf65454b6a57f99991ae761c571dd96fcf";
+const PAGE_INTERSECTIONS: [&str; 5] = [
+    "crates/ssx-http/src/html.rs",
+    "crates/ssx-http/src/native.rs",
+    "crates/ssx-http/tests/t02_http.rs",
+    "crates/ssx-infra/src/search.rs",
+    "docs/rust-rewrite/t02/README.md",
+];
+const PAGE_CHAINED: [&str; 2] = [
+    "crates/ssx-http/tests/t02_http.rs",
+    "crates/ssx-infra/src/search.rs",
+];
+#[derive(Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PageRow {
+    path: String,
+    before_sha256: String,
+    before_bytes: usize,
+    before_blob: String,
+    after_sha256: String,
+    after_bytes: usize,
+    mode: u32,
+    inverse: Vec<Edit>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PageCapsule {
+    schema_version: u64,
+    kind: String,
+    base: String,
+    qualification: String,
+    coverage_sha256: String,
+    rows: Vec<PageRow>,
+}
+fn page_capsule(root: &Path) -> Result<PageCapsule> {
+    let full = root.join(PAGE_CAPSULE);
+    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
+    need(
+        meta.is_file() && !meta.file_type().is_symlink(),
+        "page capsule regular material",
+    )?;
+    let raw = fs::read(full).map_err(|e| e.to_string())?;
+    need(sha(&raw) == PAGE_CAPSULE_SHA, "page capsule exact digest")?;
+    let c: PageCapsule = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    need(
+        c.schema_version == 1
+            && c.kind == "T02_LOSSLESS_PAGE_1049_SOURCE_SUCCESSOR"
+            && c.base == PAGE_BASE
+            && c.coverage_sha256 == COVERAGE_SHA
+            && c.qualification == "CURRENT_SOURCE_ONLY_NATIVE_GATE_PENDING"
+            && c.rows.len() == 33,
+        "page finite causal inventory",
+    )?;
+    need(
+        c.rows.windows(2).all(|w| w[0].path < w[1].path),
+        "page rows unique ordered",
+    )?;
+    need(
+        PAGE_INTERSECTIONS
+            .iter()
+            .all(|p| c.rows.iter().any(|r| r.path == *p)),
+        "page original five intersections",
+    )?;
+    Ok(c)
+}
+fn page_inverse(row: &PageRow, current: &[u8]) -> Result<Vec<u8>> {
+    need(
+        row.mode == 0o644 && current.len() == row.after_bytes && sha(current) == row.after_sha256,
+        "page exact current whole-file proof",
+    )?;
+    let before = reconstruct(current, &row.inverse)?;
+    need(
+        before.len() == row.before_bytes && sha(&before) == row.before_sha256,
+        "page exact prior whole-file inverse",
+    )?;
+    Ok(before)
+}
+fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
+    let full = root.join(&row.path);
+    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
+    need(
+        meta.is_file() && !meta.file_type().is_symlink(),
+        "page source regular file",
+    )?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        need(
+            permission_bits(meta.permissions().mode()) == row.mode,
+            "page exact source mode",
+        )?;
+    }
+    let current = fs::read(full).map_err(|e| e.to_string())?;
+    let current = if row.path == "crates/ssx-infra/src/search.rs" {
+        crate::a13::a06_source_successor::w07_t02_joint::page_current(root, &row.path, &current)?
+    } else {
+        current
+    };
+    let before = page_inverse(row, &current)?;
+    need(
+        git(root, &["show", &format!("{PAGE_BASE}:{}", row.path)])? == before,
+        "page retained actual e127 source bytes",
+    )?;
+    need(
+        String::from_utf8(git(
+            root,
+            &["rev-parse", &format!("{PAGE_BASE}:{}", row.path)],
+        )?)
+        .map_err(|e| e.to_string())?
+        .trim()
+            == row.before_blob,
+        "page actual baseline blob",
+    )?;
+    Ok(before)
+}
+pub(super) fn page_original(root: &Path, path: &str) -> Result<Option<Vec<u8>>> {
+    if !PAGE_INTERSECTIONS.contains(&path) {
+        return Ok(None);
+    }
+    let c = page_capsule(root)?;
+    let row = c
+        .rows
+        .iter()
+        .find(|r| r.path == path)
+        .ok_or("page caller row missing")?;
+    page_row(root, row).map(Some)
+}
+fn page_controls(root: &Path) -> Result<()> {
+    let c = page_capsule(root)?;
+    for row in &c.rows {
+        page_row(root, row)?;
+        let current = fs::read(root.join(&row.path)).map_err(|e| e.to_string())?;
+        let current = if row.path == "crates/ssx-infra/src/search.rs" {
+            need(
+                page_inverse(row, &current).is_err(),
+                "merged search is not the frozen page afterimage",
+            )?;
+            crate::a13::a06_source_successor::w07_t02_joint::page_current(
+                root, &row.path, &current,
+            )?
+        } else {
+            current
+        };
+        page_inverse(row, &current)?;
+        let mut changed = current.clone();
+        changed.push(b' ');
+        need(
+            page_inverse(row, &changed).is_err(),
+            "page source weakening/removal accepted",
+        )?;
+        let mut omitted = row.clone();
+        omitted.inverse.clear();
+        need(
+            page_inverse(&omitted, &current).is_err(),
+            "page inverse omission accepted",
+        )?;
+        let mut altered = row.clone();
+        altered.inverse[0].insert.push(' ');
+        need(
+            page_inverse(&altered, &current).is_err(),
+            "page inverse changed prior assertion accepted",
+        )?;
+        let mut removed = row.clone();
+        removed.inverse.pop();
+        need(
+            page_inverse(&removed, &current).is_err(),
+            "page inverse removal accepted",
+        )?;
+    }
     Ok(())
 }

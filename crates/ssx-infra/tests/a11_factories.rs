@@ -366,7 +366,7 @@ async fn four_f06_factories_preserve_full_original_outputs_and_actual_wire_heade
         let response = e
             .search(&SearchRequest {
                 query: row["query"].as_str().unwrap().into(),
-                page: 7,
+                page: ssx_domain::SearchPage::from_u64(7).expect("positive fixture page"),
                 max_results: Some(1),
                 ..Default::default()
             })

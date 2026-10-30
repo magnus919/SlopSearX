@@ -35,11 +35,33 @@ reference producers remain temporary evidence tools and are never gate/runtime
 dependencies. Reference HTTP captures use a counted synthetic source adapter;
 no provider, paid, production or real source engine call is included.
 
-Three positive page values beyond the accepted F05 u64 domain intentionally
-return400 before dispatch; see `intentional-page-boundary.json`. Canonical U+FFFD
+The historical qualification baseline intentionally returned 400 before dispatch
+for three positive pages beyond its F05 `u64` domain; its immutable evidence is
+retained in `intentional-page-boundary.json`. Issue #1049 restores their original
+HTTP 200 and exact adapter integers using `SearchPage`; acceptance remains pending
+current-source native qualification. Ordinary cache tuple bytes stay unchanged;
+old native keys above `i64::MAX` receive an exact lossless key successor, causing
+bounded cold misses until the prior keys expire. No source response is aliased.
+The 4,300-digit input limit stays unchanged. At its HTML successor boundary,
+Rust intentionally replaces Python's formatting failure with HTTP 200 and a
+visible accessible disabled Next control, retaining exact current/previous values.
+This scoped hardening does not claim the old Python 500 passed unchanged. Canonical U+FFFD
 payload roundtrip is tested; raw lone-surrogate ingestion is an F05 typed-value
 boundary. Synthetic date proof is not actual OpenAlex integration and cannot
 close #984. T03 owns full browser/visual fidelity and its two mapped journeys.
+The frozen 421-row native inventory keeps its historical three 400/no-dispatch
+records. The current qualification layer retires those deviations by requiring
+exactly the original source-backed 200/one-dispatch observations for those three
+IDs and source hashes; the other 418 rows remain unchanged. The current layer also
+adds five real HTTP controls for fraction/exponent rejection, both last-duplicate
+branches and strict SafeSearch policy rejection, with exact dispatch counts.
+Together with the page HTML witness, these make 427 current records and 11 HTTP
+tests; the original 270 captures and 421 native inventory rows are unchanged. The actual
+`lossless_page_integer_grammar_last_duplicate_and_strict_safesearch_reach_http`
+test owns `current_strict_safesearch_policy`: integer 2 must return 400 with
+`error=invalid_filter`, `field=safesearch` and no dispatch. The frozen strict-test
+mapping to the range-invalid value 3 remains historical and does not prove this
+policy path.
 
 `crates/ssx-http/Dockerfile.t02` and the dedicated image workflow qualify the same
 offline native router/service fixture with an independent compiled Rust client.

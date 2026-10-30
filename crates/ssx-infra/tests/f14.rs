@@ -511,6 +511,7 @@ struct FixedEngine {
     active: Arc<AtomicUsize>,
     count: usize,
     content: String,
+    page_evidence: bool,
 }
 impl FixedEngine {
     fn new(name: &str) -> Self {
@@ -523,6 +524,7 @@ impl FixedEngine {
             active: Arc::new(AtomicUsize::new(0)),
             count: 3,
             content: "body".into(),
+            page_evidence: false,
         }
     }
 }
@@ -607,7 +609,11 @@ impl SearchEngine for FixedEngine {
                         .map(|i| SearchResult {
                             url: format!("https://example.test/{}/{i}", self.name),
                             title: format!("{} {i}", self.name),
-                            content: self.content.clone(),
+                            content: if self.page_evidence {
+                                format!("page:{}", request.page)
+                            } else {
+                                self.content.clone()
+                            },
                             engine: self.name.clone(),
                             ..Default::default()
                         })
@@ -1994,9 +2000,9 @@ async fn logical_generation_and_scope_order_bound_cache_identity() {
     assert_eq!(brave.calls.load(Ordering::SeqCst), 3);
     assert_eq!(server.keys("search:native:v1:*").await.len(), 3);
     p.surface = SearchSurface::Http;
-    p.request.page = i64::MAX as u64;
+    p.request.page = ssx_domain::SearchPage::new("9223372036854775807").unwrap();
     assert!(!replaced.search(p.clone()).await.unwrap().cached);
-    p.request.page += 1;
+    p.request.page = p.request.page.next_page().unwrap();
     assert!(!replaced.search(p.clone()).await.unwrap().cached);
     assert!(replaced.search(p).await.unwrap().cached);
     assert_eq!(brave.calls.load(Ordering::SeqCst), 5);
@@ -2352,4 +2358,77 @@ async fn context_full_service_deadline_retains_synthetic_timeout_health() {
     assert_eq!(health["last_observed_latency_ms"], Value::Null);
     assert_eq!(health["circuit_consecutive_errors"], json!(1));
     service.shutdown().await;
+}
+
+#[tokio::test]
+async fn lossless_high_pages_keep_distinct_valkey_views_and_canonical_snapshots() {
+    let server = PrivateValkey::start().await;
+    let store = Arc::new(Valkey::new(&server.url, Duration::from_millis(250)).unwrap());
+    let mut engine = FixedEngine::new("brave");
+    engine.page_evidence = true;
+    let engine = Arc::new(engine);
+    let mut deps = dependencies(vec![("brave", engine.clone())]);
+    deps.cache = Some(Arc::new(CanonicalCache::new(
+        Arc::new(ValkeyCache::new(store.clone())),
+        CacheTtls::default(),
+    )));
+    let service = SearchService::new(SearchConfig::default(), deps).unwrap();
+    let snapshots = SnapshotService::new(
+        Arc::new(ValkeySnapshots::new(store.clone())),
+        Arc::new(SystemSnapshotClock),
+        Arc::new(RandomSnapshotIds),
+        TenantId::new("f14-lossless-page").unwrap(),
+        SnapshotTtl::new(60).unwrap(),
+    );
+    let pages = [
+        "1",
+        "9223372036854775807",
+        "18446744073709551615",
+        "170141183460469231731687303715884105727",
+        "170141183460469231731687303715884105728",
+    ];
+    for raw in pages {
+        let mut p = proposal("page identity");
+        p.surface = SearchSurface::Http;
+        p.request.page = SearchPage::new(raw).unwrap();
+        p.request.max_results = Some(1);
+        p.request.include = ["results".into()].into_iter().collect();
+        let captured = service
+            .search_snapshot(p.clone(), &snapshots, &[])
+            .await
+            .unwrap();
+        assert!(!captured.response.cached);
+        assert_eq!(captured.response.results.len(), 1);
+        assert_eq!(captured.response.results[0].content, format!("page:{raw}"));
+        assert_eq!(captured.canonical.response().results.len(), 3);
+        let SnapshotLookup::Found(snapshot) = snapshots.read(&captured.snapshot.unwrap()).await
+        else {
+            panic!("high-page snapshot missing");
+        };
+        assert_eq!(snapshot.total(), 3);
+        assert!(
+            snapshot
+                .results()
+                .iter()
+                .all(|r| r.content == format!("page:{raw}"))
+        );
+        let hit = service.search(p).await.unwrap();
+        assert!(hit.cached);
+        assert_eq!(hit.results.len(), 1);
+        assert_eq!(hit.results[0].content, format!("page:{raw}"));
+    }
+    assert_eq!(engine.calls.load(Ordering::SeqCst), pages.len());
+    assert_eq!(
+        engine
+            .requests
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|r| r.page.as_str())
+            .collect::<Vec<_>>(),
+        pages
+    );
+    assert_eq!(server.keys("search:native:v1:*").await.len(), pages.len());
+    service.shutdown().await;
+    store.close().await;
 }

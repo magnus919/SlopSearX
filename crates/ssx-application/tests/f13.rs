@@ -24,7 +24,7 @@ fn source_base_keys_answers_ttls_and_views_replay_exactly() {
                     key.safesearch = v;
                 }
                 if let Some(v) = input["pageno"].as_i64() {
-                    key.page = v;
+                    key.page = ssx_json::Number::new(&v.to_string()).unwrap();
                 }
                 for (field, dst) in [
                     ("categories", &mut key.categories),
@@ -362,7 +362,7 @@ fn native_v1_identity_bytes_survive_tuple_encoding_change() {
             safesearch: i % 3,
             categories: vec!["news".into(), format!("z{i}"), "a".into()],
             engines: vec!["b".into(), "a".into()],
-            page: i + 1,
+            page: ssx_json::Number::new(&(i + 1).to_string()).unwrap(),
             time_range: if i % 2 == 0 {
                 Some("week".into())
             } else {

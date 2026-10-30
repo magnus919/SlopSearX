@@ -149,10 +149,15 @@ fn load(root: &Path, path: &str) -> Result<Material> {
     };
     #[cfg(not(unix))]
     let mode = 0o644;
-    Ok(Material {
-        bytes: fs::read(p).map_err(|e| e.to_string())?,
-        mode,
-    })
+    let physical = fs::read(p).map_err(|e| e.to_string())?;
+    let bytes = if path == "crates/ssx-infra/tests/a08_regulatory.rs" {
+        let frame = json!({"path":path,"sha256":"64ca51a260c2d106e63f65aae06c4a912050ab2d8814958b69816ffae4e81254","bytes":12831,"mode":"0644"});
+        crate::a13::a06_source_successor::native_search::page_prior(root, &frame, Some(&physical))?
+            .ok_or("A08 regulatory page operand not selected")?
+    } else {
+        physical
+    };
+    Ok(Material { bytes, mode })
 }
 fn str_field<'a>(v: &'a Value, key: &str) -> Result<&'a str> {
     v[key]

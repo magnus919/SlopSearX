@@ -282,7 +282,7 @@ async fn five_f06_factories_execute_exact_real_loopback_requests_and_outcomes() 
         let response = engine
             .search(&SearchRequest {
                 query: "a & b".into(),
-                page: 8,
+                page: ssx_domain::SearchPage::from_u64(8).expect("positive fixture page"),
                 max_results: Some(1),
                 ..Default::default()
             })

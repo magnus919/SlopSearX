@@ -443,7 +443,7 @@ async fn hibp_configured_max_and_request_filters_ignored() {
     let h = Harness::hibp(c, vec![Reply::json(HIBP_BODY)], AdmissionDecision::Allowed);
     let mut q = query();
     q.max_results = Some(0);
-    q.page = 7;
+    q.page = ssx_domain::SearchPage::from_u64(7).expect("positive fixture page");
     q.language = "fr".into();
     q.safesearch = 1;
     q.time_range = Some("week".into());

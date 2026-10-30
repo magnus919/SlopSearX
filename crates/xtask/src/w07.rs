@@ -20,7 +20,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64";
+const REGISTRY_SHA: &str = "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -380,6 +380,39 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     }
     expected["sources"]["crates/ssx-infra/src/observability/metrics.rs"] =
         Value::String("cccca54dc139061f691d183c0b073cb479229be0c5c3990752686ce3457bc460".into());
+    // Exact #1049 normal-merge source successors; historical registry remains frozen.
+    for (path, prior, current) in [
+        (
+            "crates/ssx-infra/src/search.rs",
+            "b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb",
+            "8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+            "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2",
+            "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+            "2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6",
+            "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+            "ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4",
+            "bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs",
+            "6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c",
+            "8ab186367b6b6e535c296ecf376fa83e9d5325a5a65b8da9fda8ce408d804aa9",
+        ),
+    ] {
+        if expected["sources"][path] != prior {
+            return Err("W07 page merge source predecessor changed".into());
+        }
+        expected["sources"][path] = Value::String(current.into());
+    }
     if expected != *current {
         return Err(
             "W07 completion inventory differs from the exact additive source/test delta".into(),
@@ -750,6 +783,8 @@ mod tests {
             "crates/ssx-mcp/src/search_surface/mod.rs",
             "crates/ssx-mcp/src/evidence/tools/tests.rs",
             "crates/ssx-mcp/tests/w07_mcp.rs",
+            "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
         ] {
             let mut missing = current.clone();
             missing["sources"].as_object_mut().unwrap().remove(source);
