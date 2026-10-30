@@ -383,7 +383,6 @@ jobs:
 
   foundation-runtime:
     name: Foundation runtime (${{ matrix.runner }})
-    needs: foundation-prerequisites
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     strategy:
@@ -623,6 +622,8 @@ jobs:
         run: cargo xtask check W11 --output target/rust-evidence/W11.json
       - name: Staged execution and retained evidence authority
         run: cargo xtask check W06 --output target/rust-evidence/W06.json
+      - name: Native dependency dossier and policy-checked composition evidence
+        run: cargo xtask check W08 --output target/rust-evidence/W08.json
       - name: Active experiment tooling inventory and native evidence contracts
         run: cargo xtask check O03 --output target/rust-evidence/O03.json
       - name: Native bounded observability and supervision evidence
@@ -663,7 +664,6 @@ jobs:
 
   foundation-adapters:
     name: Foundation adapters (${{ matrix.runner }})
-    needs: foundation-prerequisites
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     strategy:
@@ -969,6 +969,7 @@ jobs:
             target/rust-evidence/W05.json
             target/rust-evidence/W11.json
             target/rust-evidence/W06.json
+            target/rust-evidence/W08.json
             target/rust-evidence/O03.json
             target/rust-evidence/O01.json
             target/rust-evidence/F08.json
@@ -1010,7 +1011,7 @@ jobs:
           [ "${{ steps.download-prerequisites.outcome }}" = success ]
           [ "${{ steps.download-runtime.outcome }}" = success ]
           [ "${{ steps.download-adapters.outcome }}" = success ]
-          for plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
+          for plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 W08 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
           test -s target/rust-feature-graph.txt
           for partition in prerequisites runtime adapters; do
             test -s "target/rust-evidence/partitions/$partition/workspace.jsonl"

@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "main": "96f8541f18368e6ef9162b6163644a3ff0b12b73",
+  "page": "3f6329f3ecaaa425f9df0c7c2eae54aebe8aec0c",
+  "paths": [
+    "crates/xtask/src/t06.rs",
+    "crates/ssx-mcp/tests/t06_source_bindings.rs",
+    "docs/rust-rewrite/w07/qualification-completion-v1.json"
+  ],
+  "rows": [
+    {
+      "path": "crates/xtask/src/t06.rs",
+      "current": {
+        "sha256": "a05a11c2c6c336b4b18db6bb62098c820f323ea72c5fcc319fc41f4ffdfa1ae9",
+        "bytes": 18965,
+        "mode": 420
+      },
+      "main": {
+        "prior": {
+          "sha256": "e4987b20b758deab8c591875cc1f4bc81c7b7e4dc453f92655eb7fec7909fc7e",
+          "bytes": 18954,
+          "mode": 420
+        },
+        "prior_git_blob": "af55ff14bf943638474a610047b02df5726aae0b",
+        "edits": [
+          {
+            "current_offset": 302,
+            "old": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\n",
+            "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs\"]\n"
+          }
+        ]
+      },
+      "page": {
+        "prior": {
+          "sha256": "be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0",
+          "bytes": 18212,
+          "mode": 420
+        },
+        "prior_git_blob": "eb6e9e2e41752ced1e7cd8568741485f415dca06",
+        "edits": [
+          {
+            "current_offset": 302,
+            "old": "",
+            "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs\"]\npub(crate) mod receipt_control;\n#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs\"]\npub(crate) mod receipt_control_closure;\n"
+          },
+          {
+            "current_offset": 3542,
+            "old": "",
+            "new": "    receipt_control_closure::verify(root)?;\n    let prior = receipt_control::parent(\n        root,\n        row[\"file\"].as_str().ok_or(\"T06 native fixture path\")?,\n        expected.as_str().ok_or(\"T06 native fixture hash\")?,\n        bytes,\n    )?;\n    let bytes = prior.as_deref().unwrap_or(bytes);\n"
+          },
+          {
+            "current_offset": 11342,
+            "old": "",
+            "new": "    receipt_control_closure::controls(root)?;\n    receipt_control::controls(root)?;\n"
+          },
+          {
+            "current_offset": 16055,
+            "old": "",
+            "new": "        receipt_control_closure::controls(&root).unwrap();\n        receipt_control::controls(&root).unwrap();\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_source_bindings.rs",
+      "current": {
+        "sha256": "6b84c5f9d1532f4ba4a66906d3031bd0b68db32ce4593bc4c240c11df32d55bf",
+        "bytes": 5731,
+        "mode": 420
+      },
+      "main": {
+        "prior": {
+          "sha256": "1d317226f46e04e58d982bb2e8869b331f5a650c0b32b0afd843d3f1f90a1900",
+          "bytes": 5720,
+          "mode": 420
+        },
+        "prior_git_blob": "f29534f9d496a4788985a4bd30cc2c230ab9071a",
+        "edits": [
+          {
+            "current_offset": 557,
+            "old": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\n",
+            "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs\"]\n"
+          }
+        ]
+      },
+      "page": {
+        "prior": {
+          "sha256": "8d124e73da957742a86afe2d8495a23dbcf88aa5fb711c41b1a3d4fc9148a4cc",
+          "bytes": 5261,
+          "mode": 420
+        },
+        "prior_git_blob": "cf1986fcaf6e7bb8ab6c67653cdbea88e9bccbc1",
+        "edits": [
+          {
+            "current_offset": 557,
+            "old": "",
+            "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs\"]\nmod receipt_control;\n#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs\"]\nmod receipt_control_closure;\n"
+          },
+          {
+            "current_offset": 4589,
+            "old": "",
+            "new": "    receipt_control_closure::controls(&root).unwrap();\n    receipt_control::controls(&root).unwrap();\n"
+          },
+          {
+            "current_offset": 5345,
+            "old": "",
+            "new": "        } else if let Some(prior) = receipt_control::parent(&root, name, expected, &actual).unwrap()\n        {\n            prior\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+      "current": {
+        "sha256": "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80",
+        "bytes": 21848,
+        "mode": 420
+      },
+      "main": {
+        "prior": {
+          "sha256": "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64",
+          "bytes": 21848,
+          "mode": 420
+        },
+        "prior_git_blob": "f8326efbc96af5f884d0321bd5714923ab036b5e",
+        "edits": [
+          {
+            "current_offset": 14828,
+            "old": "    \"crates/ssx-infra/src/search.rs\": \"b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb\",\n",
+            "new": "    \"crates/ssx-infra/src/search.rs\": \"8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777\",\n"
+          },
+          {
+            "current_offset": 18748,
+            "old": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\",\n",
+            "new": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b\",\n"
+          },
+          {
+            "current_offset": 20567,
+            "old": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\",\n    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\": \"ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4\",\n    \"docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs\": \"6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c\",\n",
+            "new": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79\",\n    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\": \"bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c\",\n    \"docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs\": \"8ab186367b6b6e535c296ecf376fa83e9d5325a5a65b8da9fda8ce408d804aa9\",\n"
+          }
+        ]
+      },
+      "page": {
+        "prior": {
+          "sha256": "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80",
+          "bytes": 21848,
+          "mode": 420
+        },
+        "prior_git_blob": "0148b9e2b47bb6556c06a5a80d41ab6d43a4fd64",
+        "edits": []
+      }
+    }
+  ]
+}

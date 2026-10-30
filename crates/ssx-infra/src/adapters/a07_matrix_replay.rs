@@ -44,7 +44,7 @@ impl Transport for CapturedTransport {
 fn q(query: &str) -> ssx_domain::SearchRequest {
     ssx_domain::SearchRequest {
         query: query.into(),
-        page: 8,
+        page: ssx_domain::SearchPage::from_u64(8).expect("positive fixture page"),
         max_results: Some(1),
         date_from: Some("2024-01-01".into()),
         ..Default::default()

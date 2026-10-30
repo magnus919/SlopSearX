@@ -330,9 +330,8 @@ fn python_float(raw: &str) -> Option<f64> {
         _ => text.parse().ok(),
     }
 }
-/// Classify Python's integer grammar before bounded domain conversion. Values
-/// outside i128 retain their sign/range classification; no accepted value is
-/// truncated or saturated into a provider request.
+/// Classify the bounded SafeSearch/timeout scalars without changing their
+/// Python lexical/range error order. Page uses lossless classification below.
 fn integer(raw: &str) -> Option<i128> {
     let text = numeric_text(raw)?;
     let (negative, raw) = if let Some(s) = text.strip_prefix('-') {
@@ -347,6 +346,34 @@ fn integer(raw: &str) -> Option<i128> {
         n.saturating_mul(10).saturating_add(i128::from(b - b'0'))
     });
     Some(if negative { -result } else { result })
+}
+pub(crate) const MAX_PAGE_DIGITS: usize = 4300;
+enum PageInteger {
+    NonPositive,
+    Positive(ssx_domain::SearchPage),
+}
+fn page_integer(raw: &str) -> Option<PageInteger> {
+    let text = numeric_text(raw)?;
+    let (negative, digits) = if let Some(s) = text.strip_prefix('-') {
+        (true, s)
+    } else {
+        (false, text.strip_prefix('+').unwrap_or(&text))
+    };
+    // Count source lexical digits BEFORE removing leading zeroes, as int does.
+    if digits.is_empty()
+        || digits.len() > MAX_PAGE_DIGITS
+        || !digits.bytes().all(|b| b.is_ascii_digit())
+    {
+        return None;
+    }
+    let canonical = digits.trim_start_matches('0');
+    if negative || canonical.is_empty() {
+        Some(PageInteger::NonPositive)
+    } else {
+        ssx_domain::SearchPage::new(canonical)
+            .ok()
+            .map(PageInteger::Positive)
+    }
 }
 fn param<'a>(pairs: &'a [(String, String)], key: &str) -> Option<&'a str> {
     pairs
@@ -494,7 +521,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
             return early_error(Some(key), "Unknown or repeated date parameter.");
         }
     }
-    let page = integer(param(&pairs, "pageno").unwrap_or("1"));
+    let page = page_integer(param(&pairs, "pageno").unwrap_or("1"));
     let safe = integer(param(&pairs, "safesearch").unwrap_or("0"));
     let timeout = param(&pairs, "interactive_timeout_ms")
         .filter(|s| !s.is_empty())
@@ -507,7 +534,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
     }
     let timeout = timeout.flatten();
     for (field, bad) in [
-        ("pageno", page < 1),
+        ("pageno", matches!(&page, PageInteger::NonPositive)),
         ("safesearch", !(0..=2).contains(&safe)),
         (
             "interactive_timeout_ms",
@@ -596,7 +623,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
             Some(json!({"engines":restricted})),
         );
     }
-    let Ok(page) = u64::try_from(page) else {
+    let PageInteger::Positive(page) = page else {
         return fail(Some("pageno"), "Invalid value for 'pageno'.");
     };
     let request = SearchRequest {
