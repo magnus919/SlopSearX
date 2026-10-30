@@ -178,7 +178,7 @@ fn page_composition_document(root: &Path) -> Result<Value> {
     need(sha(&raw) == PAGE_JOIN_SHA, "sealed Page/snapshot join")?;
     let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     need(
-        doc["schema"] == "SNAPSHOT_PAGE_TWO_HELPER_PAGE_JOIN_V1"
+        doc["schema"] == "SNAPSHOT_PAGE_TWO_HELPER_JOIN_V1"
             && doc["parents"]
                 == serde_json::json!({"page":"ef9c5c93e4a4a57d9b835fb291e8d87410a232a8","snapshot":"8e71a83f9649d58e9a60e34810275b736e44151a"})
             && doc["unchanged_capsules"]
@@ -649,7 +649,7 @@ fn w08_composition_document(root: &Path) -> Result<Value> {
     need(sha(&raw) == W08_JOIN_SHA, "sealed W08/snapshot join")?;
     let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     need(
-        doc["schema"] == "SNAPSHOT_W08_THREE_OPERAND_W08_JOIN_V1"
+        doc["schema"] == "SNAPSHOT_W08_THREE_OPERAND_JOIN_V1"
             && doc["parents"]
                 == serde_json::json!({"w08":"3ce03032bd07e57ef42d9ed4620cd940da209072","snapshot":"30270aaa7c459cec6404f4f015fa17077704c2a0"})
             && doc["unchanged_capsules"]
