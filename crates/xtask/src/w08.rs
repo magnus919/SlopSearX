@@ -46,6 +46,10 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;
         let prior = match (path, expected) {
             (
+                "crates/xtask/src/w08/source_successor.rs",
+                "3a8699c6449e05b6b94f64ff43643af15287ad2ae4d9b5319617d8f5c38f4069",
+            ) => snapshot_helper_amendment::w08_reader_source_operand(root, path, expected, &raw)?,
+            (
                 "crates/xtask/src/w07.rs",
                 "64bbd78e5910558eae78de7e449d0488337020a814ec10cb2869e412193582ea",
             ) => snapshot_helper_amendment::w07_source_operand(root, path, expected, &raw)?,
@@ -56,7 +60,7 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
             | (
                 "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
                 "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6",
-            ) => snapshot_helper_amendment::w08_operand(root, path, &raw)?,
+            ) => snapshot_helper_amendment::w08_qualification_operand(root, path, expected, &raw)?,
             _ => return Err(format!("W08 source drift requires explicit review: {path}")),
         };
         if digest(&prior) != expected {

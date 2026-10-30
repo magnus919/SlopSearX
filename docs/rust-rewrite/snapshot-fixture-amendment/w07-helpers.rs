@@ -1135,8 +1135,281 @@ fn w07_source_controls(root: &Path) -> Result<()> {
     Ok(())
 }
 
+// One closed admission retains the immutable W08 reader source binding.
+const W08_READER_SOURCE_PATH: &str = "crates/xtask/src/w08/source_successor.rs";
+const W08_READER_SOURCE_PRIOR: &str =
+    "3a8699c6449e05b6b94f64ff43643af15287ad2ae4d9b5319617d8f5c38f4069";
+const W08_READER_SOURCE_CAPSULE: &str =
+    "docs/rust-rewrite/w08/reader-page-source-admission-v1.json";
+const W08_READER_SOURCE_CAPSULE_SHA: &str =
+    "395f90ba3d22614996515a9f5ecfb6bdaf58c1cf5d5129eba97a661ea6df17b1";
+fn w08_reader_source_scope(doc: &Value) -> Result<()> {
+    need(
+        doc["schema"] == "W08_READER_PAGE_SOURCE_ADMISSION_V1"
+            && doc["parent"] == "8c12d02ae5e7741410e41de4795a235700fc71c2"
+            && doc["caller"]
+                == serde_json::json!({"path":W08_READER_SOURCE_PATH,"expected_sha256":W08_READER_SOURCE_PRIOR})
+            && doc.as_object().is_some_and(|fields| fields.len() == 4)
+            && doc["rows"].as_array().is_some_and(|rows| rows.len() == 1),
+        "closed W08 reader source caller/parent/membership",
+    )?;
+    let row = &doc["rows"][0];
+    need(
+        row["current"]["path"] == W08_READER_SOURCE_PATH
+            && row["prior"]["path"] == W08_READER_SOURCE_PATH
+            && row["prior"]["sha256"] == W08_READER_SOURCE_PRIOR
+            && row["current"]["mode"] == "0644"
+            && row["prior"]["mode"] == "0644",
+        "closed W08 reader source path/prior/modes",
+    )
+}
+fn w08_reader_source_document(root: &Path) -> Result<Value> {
+    let raw = regular(root, W08_READER_SOURCE_CAPSULE)?;
+    need(
+        sha(&raw) == W08_READER_SOURCE_CAPSULE_SHA,
+        "sealed W08 reader source admission",
+    )?;
+    let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    w08_reader_source_scope(&doc)?;
+    Ok(doc)
+}
+pub(crate) fn w08_reader_source_operand(
+    root: &Path,
+    path: &str,
+    expected: &str,
+    supplied: &[u8],
+) -> Result<Vec<u8>> {
+    need(
+        path == W08_READER_SOURCE_PATH && expected == W08_READER_SOURCE_PRIOR,
+        "exact W08 reader frozen caller",
+    )?;
+    let doc = w08_reader_source_document(root)?;
+    let physical = regular(root, W08_READER_SOURCE_PATH)?;
+    need(
+        physical == supplied,
+        "W08 reader supplied bytes are not physical current",
+    )?;
+    let row = &doc["rows"][0];
+    let prior = inverse(row, supplied, "0644")?;
+    let git = std::process::Command::new("git")
+        .args(["cat-file", "blob", text(&row["prior"], "git_blob")?])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let tree = std::process::Command::new("git")
+        .args([
+            "ls-tree",
+            "8c12d02ae5e7741410e41de4795a235700fc71c2",
+            "--",
+            W08_READER_SOURCE_PATH,
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        git.status.success()
+            && git.stdout == prior
+            && tree.status.success()
+            && tree.stdout
+                == format!(
+                    "100644 blob {}\t{}\n",
+                    text(&row["prior"], "git_blob")?,
+                    W08_READER_SOURCE_PATH
+                )
+                .as_bytes(),
+        "W08 reader exact historical Git bytes/mode/blob",
+    )?;
+    Ok(prior)
+}
+fn w08_reader_source_controls(root: &Path) -> Result<()> {
+    let doc = w08_reader_source_document(root)?;
+    let row = &doc["rows"][0];
+    let physical = regular(root, W08_READER_SOURCE_PATH)?;
+    let prior = w08_reader_source_operand(
+        root,
+        W08_READER_SOURCE_PATH,
+        W08_READER_SOURCE_PRIOR,
+        &physical,
+    )?;
+    need(
+        sha(&prior) == W08_READER_SOURCE_PRIOR && prior != physical,
+        "nonvacuous W08 reader source positive",
+    )?;
+    need(
+        w08_reader_source_operand(
+            root,
+            W08_READER_SOURCE_PATH,
+            W08_READER_SOURCE_PRIOR,
+            &prior,
+        )
+        .is_err(),
+        "old W08 reader bytes supplied as physical",
+    )?;
+    need(
+        w08_reader_source_operand(root, "unlisted.rs", W08_READER_SOURCE_PRIOR, &physical).is_err(),
+        "wrong W08 reader source path",
+    )?;
+    need(
+        w08_reader_source_operand(root, W08_READER_SOURCE_PATH, "wrong", &physical).is_err(),
+        "wrong W08 reader expected caller",
+    )?;
+    let mut changed = physical.clone();
+    changed[0] ^= 1;
+    let mut extra = physical.clone();
+    extra.push(b' ');
+    for bad in [changed, extra] {
+        need(
+            w08_reader_source_operand(root, W08_READER_SOURCE_PATH, W08_READER_SOURCE_PRIOR, &bad)
+                .is_err(),
+            "changed W08 reader supplied source",
+        )?;
+    }
+    for mode in ["0600", "0755", "4644"] {
+        need(
+            inverse(row, &physical, mode).is_err(),
+            "changed W08 reader source mode",
+        )?;
+    }
+    let mut missing = doc.clone();
+    missing["rows"] = serde_json::json!([]);
+    let mut duplicate = doc.clone();
+    duplicate["rows"].as_array_mut().unwrap().push(row.clone());
+    let mut moved = doc.clone();
+    moved["rows"][0]["current"]["path"] = Value::String("unlisted.rs".into());
+    let mut mode = doc.clone();
+    mode["rows"][0]["current"]["mode"] = Value::String("0755".into());
+    for bad in [missing, duplicate, moved, mode] {
+        need(
+            w08_reader_source_scope(&bad).is_err(),
+            "changed W08 reader admission scope",
+        )?;
+    }
+    let mut missing = row.clone();
+    missing["edits"].as_array_mut().unwrap().remove(0);
+    let mut duplicate = row.clone();
+    let edit = duplicate["edits"][0].clone();
+    duplicate["edits"].as_array_mut().unwrap().insert(0, edit);
+    let mut moved = row.clone();
+    moved["edits"][0]["at"] = serde_json::json!(row["edits"][0]["at"].as_u64().unwrap() + 1);
+    let mut altered = row.clone();
+    altered["edits"][0]["insert_utf8"] = Value::String("changed".into());
+    for bad in [missing, duplicate, moved, altered] {
+        need(
+            inverse(&bad, &physical, "0644").is_err(),
+            "changed W08 reader inverse spans",
+        )?;
+    }
+    Ok(())
+}
+
+// Only the immutable W08 predecessor row may obtain its reviewed registry frame.
+pub(crate) fn w08_frozen_registry_operand(
+    root: &Path,
+    path: &str,
+    expected: &str,
+    supplied: &[u8],
+) -> Result<Vec<u8>> {
+    need(
+        path == CONTAINER && expected == CONTAINER_SHA,
+        "exact W08 frozen registry caller",
+    )?;
+    verify_current_registry(root, supplied)?;
+    let prior = common_snapshot(root, CONTAINER, supplied)?;
+    need(
+        sha(&prior) == expected,
+        "exact W08 frozen registry predecessor",
+    )?;
+    Ok(prior)
+}
+fn w08_frozen_registry_controls(root: &Path) -> Result<()> {
+    let current = regular(root, CONTAINER)?;
+    let prior = w08_frozen_registry_operand(root, CONTAINER, CONTAINER_SHA, &current)?;
+    need(prior != current, "nonvacuous W08 frozen registry positive")?;
+    need(
+        w08_frozen_registry_operand(root, CONTAINER, CONTAINER_SHA, &prior).is_err()
+            && w08_frozen_registry_operand(root, "unlisted.json", CONTAINER_SHA, &current).is_err()
+            && w08_frozen_registry_operand(root, CONTAINER, "wrong", &current).is_err(),
+        "W08 frozen registry old/path/caller controls",
+    )?;
+    let mut changed = current.clone();
+    changed[0] ^= 1;
+    let mut extra = current.clone();
+    extra.push(b' ');
+    for bad in [changed, extra] {
+        need(
+            w08_frozen_registry_operand(root, CONTAINER, CONTAINER_SHA, &bad).is_err(),
+            "W08 frozen registry modified supplied bytes",
+        )?;
+    }
+    Ok(())
+}
+
+// Qualification pins the later W08 endpoint, not its older source-row frame.
+pub(crate) fn w08_qualification_operand(
+    root: &Path,
+    path: &str,
+    expected: &str,
+    supplied: &[u8],
+) -> Result<Vec<u8>> {
+    need(
+        matches!(
+            (path, expected),
+            (
+                "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+                "013f8448379ef92ea059cf2d48981742635d7433931a6e0973f781139bb9d612"
+            ) | (
+                "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+                "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6"
+            )
+        ),
+        "exact W08 qualification source caller",
+    )?;
+    common_snapshot(root, path, supplied)?;
+    let prior = outer_endpoint(root, path, supplied, "w08")?;
+    need(
+        sha(&prior) == expected,
+        "exact W08 qualification source endpoint",
+    )?;
+    Ok(prior)
+}
+fn w08_qualification_controls(root: &Path) -> Result<()> {
+    for (path, expected) in [
+        (
+            SOURCES[0],
+            "013f8448379ef92ea059cf2d48981742635d7433931a6e0973f781139bb9d612",
+        ),
+        (
+            SOURCES[1],
+            "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6",
+        ),
+    ] {
+        let current = regular(root, path)?;
+        let prior = w08_qualification_operand(root, path, expected, &current)?;
+        need(
+            current != prior,
+            "nonvacuous W08 qualification source positive",
+        )?;
+        need(
+            w08_qualification_operand(root, path, expected, &prior).is_err()
+                && w08_qualification_operand(root, path, "wrong", &current).is_err()
+                && w08_qualification_operand(root, "unlisted.rs", expected, &current).is_err(),
+            "W08 qualification old/path/caller controls",
+        )?;
+        let mut changed = current.clone();
+        changed[0] ^= 1;
+        need(
+            w08_qualification_operand(root, path, expected, &changed).is_err(),
+            "W08 qualification changed supplied bytes",
+        )?;
+    }
+    Ok(())
+}
+
 pub(crate) fn composition_controls(root: &Path) -> Result<()> {
     w07_source_controls(root)?;
+    w08_reader_source_controls(root)?;
+    w08_frozen_registry_controls(root)?;
+    w08_qualification_controls(root)?;
     outer_controls(root)?;
     verify_current_registry(root, &regular(root, CONTAINER)?)?;
     w08_composition_controls(root)?;

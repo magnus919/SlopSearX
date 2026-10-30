@@ -234,6 +234,18 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     super::snapshot_helper_amendment::composition_controls(root)?;
     for frozen in &doc.frozen_predecessors {
         let (raw, mode) = regular(root, &frozen.path)?;
+        let raw = if frozen.path == "docs/rust-rewrite/w07/qualification-completion-v1.json"
+            && frozen.sha256 == "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64"
+        {
+            super::snapshot_helper_amendment::w08_frozen_registry_operand(
+                root,
+                &frozen.path,
+                &frozen.sha256,
+                &raw,
+            )?
+        } else {
+            raw
+        };
         need(
             mode == 0o644 && digest(&raw) == frozen.sha256,
             "W08 changed a frozen predecessor artifact",
