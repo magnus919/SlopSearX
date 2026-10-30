@@ -153,13 +153,13 @@ fn config_spec(
 // Exact runner.temp context repair. Only these four spans reconstruct the
 // accepted e511 workflow operand; the older capsule inverse stays unchanged.
 const WORKFLOW_ENV_INVERSE: &str = r###"[{"at":569,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":850,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""},{"at":20995,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":21079,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""}]"###;
-// Exact debug0/jobs2 profile used by the shipping client prerequisite.
-const WORKFLOW_PROFILE_INVERSE: &str = r###"[{"at":545,"remove_utf8":"      CARGO_BUILD_JOBS: 2\n      CARGO_PROFILE_DEV_DEBUG: 0\n      CARGO_PROFILE_TEST_DEBUG: 0\n      CARGO_INCREMENTAL: 0\n","insert_utf8":""}]"###;
+// Exact shipping-prerequisite profile and runtime debug0-only profile; tests and deadlines are unchanged.
+const WORKFLOW_PROFILE_INVERSE: &str = r###"[{"at":545,"remove_utf8":"      CARGO_BUILD_JOBS: 2\n      CARGO_PROFILE_DEV_DEBUG: 0\n      CARGO_PROFILE_TEST_DEBUG: 0\n      CARGO_INCREMENTAL: 0\n","insert_utf8":""},{"at":21091,"remove_utf8":"      CARGO_PROFILE_DEV_DEBUG: 0\n      CARGO_PROFILE_TEST_DEBUG: 0\n","insert_utf8":""}]"###;
 fn workflow_env_claim() -> Value {
-    json!({"bytes":54590,"git_blob":"f3cee20faa7ca70b29c5429f373ad78ea6677ef5","mode":"0644","path":".github/workflows/rust.yml","sha256":"15b80f4dffe5bba9b583a7bb37434d16f774bbb633575c254f9e40b64d2be438"})
+    json!({"bytes":54657,"git_blob":"88c8316361219d8a49261e955d285e7da1afeba3","mode":"0644","path":".github/workflows/rust.yml","sha256":"cac3e563ffb7a9b8d1bb83d40e992c585cbe0f7b7a93bfdbf951b6127a839e7a"})
 }
 // Only the two accepted producer scheduling edges reconstruct the prior workflow.
-const WORKFLOW_CONCURRENCY_INVERSE: &str = r###"[{"at":20727,"remove_utf8":"","insert_utf8":"    needs: foundation-prerequisites\n"},{"at":36244,"remove_utf8":"","insert_utf8":"    needs: foundation-prerequisites\n"}]"###;
+const WORKFLOW_CONCURRENCY_INVERSE: &str = r###"[{"at":20727,"remove_utf8":"","insert_utf8":"    needs: foundation-prerequisites\n"},{"at":36311,"remove_utf8":"","insert_utf8":"    needs: foundation-prerequisites\n"}]"###;
 fn workflow_concurrency_frame(
     expected: &Value,
     physical: &[u8],
@@ -173,12 +173,12 @@ fn workflow_concurrency_frame(
     material(expected, physical, mode)?;
     need(
         digest(&serde_json::to_vec(inverse).map_err(|e| e.to_string())?)
-            == "84cfe6780b5d0bde77ee372ea8cf0e9e450bdbf067148320dbbb311245ea583b",
+            == "2aca024bc8680336a8c999b8bf717206c4acdf877c22d8724cf18df5b5e22c6f",
         "T07 workflow concurrency closed two-span inverse differs",
     )?;
     let prior = edits(physical, inverse)?;
     material(
-        &json!({"bytes":54662,"git_blob":"41d99eeb347b9a3ee5e84d5127118fdd43eab4eb","mode":"0644","path":".github/workflows/rust.yml","sha256":"286ad08324da3b982b08fa1cb8ce57e0e244eed5834633241316f21fce91df4d"}),
+        &json!({"bytes":54729,"git_blob":"3a891815bacaef9c6e7641b8fbc409a17977680a","mode":"0644","path":".github/workflows/rust.yml","sha256":"77be83db798fa612007a608718d90f24c03deda36944de34f346c3a9c8cf76ad"}),
         &prior,
         "0644",
     )?;
@@ -204,8 +204,8 @@ fn workflow_env_frame(
         serde_json::from_str(WORKFLOW_PROFILE_INVERSE).map_err(|e| e.to_string())?;
     need(
         digest(&serde_json::to_vec(&profile_inverse).map_err(|e| e.to_string())?)
-            == "12b31d34b42fce5b2f7550e71ce9fb91831d4a1706ec4956ab2afc8b06071851",
-        "T07 workflow profile closed one-span inverse differs",
+            == "f8e6b8a17efbe18c3cdc503055b2e54e7e809bcbe8144fc4884cb263f3ce6b7f",
+        "T07 workflow profile closed two-span inverse differs",
     )?;
     let accepted = edits(physical, &profile_inverse)?;
     material(
@@ -363,6 +363,30 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
                     need(
                         workflow_concurrency_frame(&current, &physical, "0644", &wrong).is_err(),
                         "T07 workflow concurrency missing/duplicate/extra span accepted",
+                    )?;
+                }
+                let profile_inverse: Value =
+                    serde_json::from_str(WORKFLOW_PROFILE_INVERSE).map_err(|e| e.to_string())?;
+                need(
+                    edits(&concurrency_prior, &profile_inverse)?
+                        == std::process::Command::new("git")
+                            .args([
+                                "cat-file",
+                                "blob",
+                                "8fcc18490bc846f66ef4a6aff3989760cb20a980",
+                            ])
+                            .current_dir(root)
+                            .output()
+                            .map_err(|e| e.to_string())?
+                            .stdout,
+                    "T07 runtime profile exact accepted workflow Git bytes differ",
+                )?;
+                for selected in 0..2 {
+                    let mut wrong = profile_inverse.clone();
+                    wrong[selected]["at"] = json!(1);
+                    need(
+                        edits(&concurrency_prior, &wrong).is_err(),
+                        "T07 runtime profile moved span accepted",
                     )?;
                 }
                 let parent = workflow_env_frame(&current, &physical, "0644", &env_inverse)?;
