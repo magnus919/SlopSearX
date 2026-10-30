@@ -296,7 +296,7 @@
     },
     {
       "path": "crates/ssx-mcp/tests/t06_source_bindings.rs",
-      "sha256": "504945b343195fbfeee0ed81b2c8fa40adb775d569b1240e5d99018414da6ae4"
+      "sha256": "f032c7b56b1e163f6a676387f5eb9ab403649d6b5107e7ae8cb27396e5e1ec59"
     },
     {
       "path": "crates/ssx-mcp/tests/t06_support/deadline_clock.rs",
@@ -484,7 +484,7 @@
     },
     {
       "path": "crates/xtask/src/t06.rs",
-      "sha256": "45c2f8ddbf8b8b16cd90cc9958893f6cd0e58f1731f9785dd1fff92867212a1e"
+      "sha256": "231a5ca6db79e2da8fdeeb100990abc610925250f1337e4ab4b5481479e06150"
     },
     {
       "path": "crates/xtask/src/t07_unit_profile.rs",
@@ -492,7 +492,7 @@
     },
     {
       "path": "crates/xtask/src/w07.rs",
-      "sha256": "23a1a06870fe2dc8d20562cdc15b7b1ad181f31106edcc8338ffba2881077c23"
+      "sha256": "cf4676e762f38d503fc47710c31bed2673362c94ad3048c7bb81ef633231385f"
     },
     {
       "path": "docs/rust-rewrite/a04/source-amendments/scoped-successor.rs",
@@ -500,15 +500,43 @@
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
-      "sha256": "38a380da7a97a5b27c9251c0ab7aff3e008e15b66f4432b0d31021a1b2d5ffa5"
+      "sha256": "fde467c22e12d3441352eb959a1be0370e8b7fbefe3b078a86357d145c33eada"
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-      "sha256": "2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba"
+      "sha256": "4e072aa43f9dd856a9fa17304f2b5661215ccd273655b5cb0ed022502f369868"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-join-v1.json",
+      "sha256": "f826b89eed90510bf15526e243781bfb048dbb60b1d60d753cee683091abac9c"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-page-join-v1.json",
+      "sha256": "97ecad427bfebc5aafbe969e82bc2be727c922d10019d838eb51902fd9d162b2"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/page-join-v1.json",
+      "sha256": "fc345b654e18cbc81f79802e70c363621a3050476b3936be85dfee20b0147704"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.json",
+      "sha256": "8889f54d073bc27811febf1bbc6bafdbea1c25303a0f1c0dfff8bff04daaa831"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs",
+      "sha256": "77dacd3c72d1df1f0cb141bd64435d1404f7aa8402f6324ce988e5536624a2e5"
     },
     {
       "path": "docs/rust-rewrite/t06/coverage.json",
       "sha256": "38754e14b0b5020a98b80306c4607f218b68c91f81cb2e8245f9a40acbf3e714"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs",
+      "sha256": "35433668bc7f4929602e2c2670d04f099cb832601149941be41186c91c54a337"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-composition-v1.json",
+      "sha256": "06908948e7fba37ac52d68489e8c110c4dede6e96da6e8ee2bd07d740c41df24"
     },
     {
       "path": "docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs",
@@ -669,6 +697,14 @@
     {
       "path": "docs/rust-rewrite/t07/source-amendments/main-receipt-control-composition-v1.json",
       "sha256": "6f6e31157689b2cba62dbcfe4ecb33bb641c5719f8d98c2ac6f419a4a943a66e"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs",
+      "sha256": "3a3f4b5b8d9eccd47d3af45c614a1409e58c22de141dd9a383d650233d5b1064"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-composition-v2.json",
+      "sha256": "6522ec0489a170c90c7569e214116ef477002776c4e65328612ea363a9a56c23"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/t06-opaque-current-operand-v1.json",
@@ -840,7 +876,7 @@
     },
     {
       "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
-      "sha256": "04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d"
+      "sha256": "dea97d038759d08c5de510d531db907fba7b52d59cb981d62f7148fe7b9ce1b0"
     },
     {
       "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
@@ -3067,5 +3103,32 @@
       "function": "check_output_root",
       "policy": "unconditional exact ssx_windows_owner::check_private_directory through mandatory existing ssx-mcp Windows dependency; no optional/default/manifest or ACL policy change"
     }
+  },
+  "page_main_merge_successor": {
+    "gateway_parent": "de2f8a6da32e413c5b40f32c49d044ef0bc2d102",
+    "main_parent": "e763c77397cad717d47de690a0dcbba4d0420aa3",
+    "prior_current_bindings_sha256": "c8e2d97c114b7d74c06abb0523479ba14d715932c370d05382b4fae4193355f4",
+    "changed_existing_rows": [
+      "crates/ssx-mcp/tests/t06_source_bindings.rs",
+      "crates/xtask/src/t06.rs",
+      "crates/xtask/src/w07.rs",
+      "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+      "docs/rust-rewrite/w07/qualification-completion-v1.json"
+    ],
+    "new_explicit_rows": [
+      "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs",
+      "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.json",
+      "docs/rust-rewrite/snapshot-fixture-amendment/gateway-join-v1.json",
+      "docs/rust-rewrite/snapshot-fixture-amendment/page-join-v1.json",
+      "docs/rust-rewrite/snapshot-fixture-amendment/gateway-page-join-v1.json",
+      "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs",
+      "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-composition-v1.json",
+      "docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs",
+      "docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-composition-v2.json"
+    ],
+    "scope": "Normal main merge preserves accepted Page production and immutable proof capsules; additive current readers authenticate physical union first, reconstruct exact accepted gateway/Page Git endpoints, and require both old W07 joins to agree on common snapshot. Prior main/Gateway receipt artifacts stay immutable.",
+    "test_inventory": "Existing identities retained; additional controls inside existing owners. No native/hosted acceptance implied.",
+    "qualification": "Source-only merged proposal; affected shared-type/caller/native qualification pending independent source review and compiler handoff."
   }
 }

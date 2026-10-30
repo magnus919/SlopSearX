@@ -19,7 +19,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d";
+const REGISTRY_SHA: &str = "dea97d038759d08c5de510d531db907fba7b52d59cb981d62f7148fe7b9ce1b0";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -522,6 +522,49 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         }
         expected["sources"][path] = Value::String(after.into());
     }
+    // Exact additive Page/gateway physical composition; all accepted capsules remain frozen.
+    for (path, prior, after) in [
+        (
+            "crates/ssx-infra/src/search.rs",
+            "b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb",
+            "8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+            "38a380da7a97a5b27c9251c0ab7aff3e008e15b66f4432b0d31021a1b2d5ffa5",
+            "fde467c22e12d3441352eb959a1be0370e8b7fbefe3b078a86357d145c33eada",
+        ),
+        (
+            "crates/ssx-mcp/tests/t06_source_bindings.rs",
+            "4e32ad700a69b138948689c8bb95c4b0c0cfd0f7c2ee7145102b6b78150dcde1",
+            "f032c7b56b1e163f6a676387f5eb9ab403649d6b5107e7ae8cb27396e5e1ec59",
+        ),
+        (
+            "crates/xtask/src/t06.rs",
+            "f80723bbdf22b87b757f87651c3fa9e9a5d090e3a6a9a55f086c6001a00c76ca",
+            "231a5ca6db79e2da8fdeeb100990abc610925250f1337e4ab4b5481479e06150",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+            "2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba",
+            "4e072aa43f9dd856a9fa17304f2b5661215ccd273655b5cb0ed022502f369868",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+            "ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4",
+            "bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs",
+            "6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c",
+            "8ab186367b6b6e535c296ecf376fa83e9d5325a5a65b8da9fda8ce408d804aa9",
+        ),
+    ] {
+        if expected["sources"][path] != prior {
+            return Err("W07 Page/gateway source predecessor differs".into());
+        }
+        expected["sources"][path] = Value::String(after.into());
+    }
     if expected != *current {
         return Err(
             "W07 completion inventory differs from the exact additive source/test delta".into(),
@@ -893,6 +936,7 @@ mod tests {
             "crates/ssx-mcp/src/evidence/tools/tests.rs",
             "crates/ssx-mcp/tests/w07_mcp.rs",
             "Cargo.lock",
+            "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
             "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
             "docs/rust-rewrite/t07/client-dependency-relocation.json",
             "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json",

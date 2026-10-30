@@ -3,7 +3,7 @@ use crate::a13::a06_source_successor::{native_search, w07_evidence_successor};
 use crate::{Result, command};
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 pub(crate) mod lock_amendment;
-#[path = "../../../docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs"]
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs"]
 pub(crate) mod receipt_control;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs"]
 pub(crate) mod receipt_control_closure;

@@ -82,7 +82,7 @@ async fn registry_factories_execute_search_via_f08_loopback_transport() {
     let npm_response = npm_engine
         .search(&SearchRequest {
             query: "typescript & types".into(),
-            page: 7,
+            page: ssx_domain::SearchPage::from_u64(7).expect("positive fixture page"),
             categories: Some(vec!["packages".into()]),
             media_type: Some("image".into()),
             language: "fr".into(),
@@ -123,7 +123,7 @@ async fn registry_factories_execute_search_via_f08_loopback_transport() {
     let crates_response = crates_engine
         .search(&SearchRequest {
             query: "serde & rust".into(),
-            page: 9,
+            page: ssx_domain::SearchPage::from_u64(9).expect("positive fixture page"),
             categories: Some(vec!["packages".into()]),
             media_type: Some("video".into()),
             language: "de".into(),

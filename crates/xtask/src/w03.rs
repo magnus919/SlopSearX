@@ -305,6 +305,7 @@ fn original_source(root: &Path, row: &Value) -> Result<Vec<u8>> {
     }
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
+    crate::t02::page_inventory_controls(root)?;
     for (path, expected) in EVIDENCE {
         if digest(&fs::read(root.join(path)).map_err(|e| e.to_string())?) != *expected {
             return Err(format!("W03 frozen evidence changed: {path}"));
@@ -365,6 +366,29 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         return Err("W03 missing/duplicate test control accepted".into());
     }
     finite_negative_controls += 2;
+    // Exercise the same closed consumer against the frozen original F09 names.
+    // The positive list comes from immutable evidence, never current discovery.
+    let f09 = array(&inventory, "suites")?
+        .iter()
+        .find(|suite| suite["package"] == "ssx-application" && suite["target"] == "f09")
+        .ok_or("W03 frozen F09 suite missing")?;
+    let f09 = array(f09, "tests")?;
+    let complete = f09
+        .iter()
+        .map(|name| name.as_str().map(|name| format!("{name}: test\n")))
+        .collect::<Option<Vec<_>>>()
+        .ok_or("W03 frozen F09 name invalid")?
+        .concat();
+    validate_listing(&complete, f09)?;
+    let missing = complete.lines().skip(1).collect::<Vec<_>>().join("\n");
+    let extra = format!("{complete}unexpected_f09_inventory_case: test\n");
+    let duplicate = format!("{complete}{}: test\n", f09[0].as_str().unwrap());
+    for bad in [missing, extra, duplicate] {
+        if validate_listing(&bad, f09).is_ok() {
+            return Err("W03 missing/extra/duplicate F09 inventory control accepted".into());
+        }
+        finite_negative_controls += 1;
+    }
     let pins = read(root, &format!("{directory}/oracle-pins.json"))?;
     if pins["baseline"] != BASELINE || array(&pins, "sources")?.len() != 315 {
         return Err("W03 oracle source provenance mismatch".into());

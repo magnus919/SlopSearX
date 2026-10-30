@@ -89,7 +89,7 @@ fn engine(
 fn q(query: &str) -> SearchRequest {
     SearchRequest {
         query: query.into(),
-        page: 8,
+        page: ssx_domain::SearchPage::from_u64(8).expect("positive fixture page"),
         max_results: Some(1),
         date_from: Some("2024-01-01".into()),
         ..SearchRequest::default()

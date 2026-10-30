@@ -12,7 +12,7 @@ use std::path::Path;
 mod lock_amendment;
 #[path = "../../../docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"]
 mod native_search;
-#[path = "../../../docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs"]
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs"]
 mod receipt_control;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs"]
 mod receipt_control_closure;

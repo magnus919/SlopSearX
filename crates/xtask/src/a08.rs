@@ -268,6 +268,23 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 records.push(json!({"A08_pin":path,"kind":"exact original document archive plus reviewed storage-policy successor","sha256":digest(&bytes)}));
                 continue;
             }
+            if kind == "source_inventory" && path == "docs/rust-rewrite/CASE_STUDY.md" {
+                require(
+                    *pin == json!({"path":path,"sha256":"da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39","git_blob":"d609376fa8a8dba26de1d941a60351915f2b1687"}),
+                    "A08 exact Page document caller changed",
+                )?;
+                crate::a13::a06_source_successor::try_verify(
+                    root,
+                    "docs/rust-rewrite/a08/coverage.json",
+                    COVERAGE_SHA,
+                    path,
+                    pin["sha256"].as_str().unwrap(),
+                    None,
+                )
+                .ok_or("A08 Page document route absent")??;
+                records.push(json!({"A08_pin":path,"kind":"exact frozen source tuple plus authenticated Page inverse","sha256":digest(&bytes)}));
+                continue;
+            }
             require(
                 pin["sha256"].as_str() == Some(digest(&bytes).as_str()),
                 &format!("A08 source/artifact changed: {path}"),
@@ -579,6 +596,8 @@ mod tests {
                 crate::a13::a06_source_successor::user_agent_manifest_prior(&root, &wrong).is_err()
             );
         }
+        crate::a13::a06_source_successor::native_search::page_controls(&root).unwrap();
+        crate::a13::a06_source_successor::page_proof_controls(&root).unwrap();
         let row = json!({"id":"one","responses":[],"requests":[],"output":{}});
         assert!(ids(&json!({"records":[]})).is_err());
         assert!(ids(&json!({"records":[row.clone(),row.clone()]})).is_err());

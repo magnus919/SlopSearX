@@ -1148,7 +1148,7 @@ mod tests {
     fn request(query: &str) -> SearchRequest {
         SearchRequest {
             query: query.into(),
-            page: 4,
+            page: ssx_domain::SearchPage::from_u64(4).expect("positive fixture page"),
             // Deliberately conflicts with provider config to prove that the
             // source adapter's configured max_results, not request filters,
             // sets upstream and local result bounds.

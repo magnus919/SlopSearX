@@ -967,6 +967,21 @@ fn validate_cold_relocation(coverage: &Value, amendment: &Value, frozen: &[u8]) 
     }
     Ok(())
 }
+// Identity-only input to the frozen cold relocation proof; execution stays current.
+fn cold_source(root: &Path, binding: &Value, physical: &[u8]) -> Result<Vec<u8>> {
+    if binding["path"] != "crates/ssx-infra/tests/a05_html.rs" {
+        return Ok(physical.to_vec());
+    }
+    if *binding
+        != json!({"path":"crates/ssx-infra/tests/a05_html.rs","sha256":"f362f6cc76018afcda82558650861916e7a3430988bf2b8b82c63bdf03aea700","bytes":30114})
+    {
+        return Err("A05 exact cold source caller differs".into());
+    }
+    let mut frame = binding.clone();
+    frame["mode"] = json!("0644");
+    crate::a13::a06_source_successor::native_search::page_prior(root, &frame, Some(physical))?
+        .ok_or("A05 cold page operand not selected".into())
+}
 fn cold_relocation(root: &Path, coverage: &Value) -> Result<Value> {
     let amendment = pinned(
         root,
@@ -991,7 +1006,8 @@ fn cold_relocation(root: &Path, coverage: &Value) -> Result<Value> {
     let mut paths = BTreeSet::new();
     for binding in bindings {
         let path = binding["path"].as_str().ok_or("missing cold source path")?;
-        let bytes = std::fs::read(root.join(path)).map_err(|error| error.to_string())?;
+        let physical = std::fs::read(root.join(path)).map_err(|error| error.to_string())?;
+        let bytes = cold_source(root, binding, &physical)?;
         if !paths.insert(path)
             || binding["sha256"].as_str() != Some(digest(&bytes).as_str())
             || binding["bytes"].as_u64() != Some(bytes.len() as u64)
@@ -1021,6 +1037,21 @@ mod cold_relocation_tests {
             "../../../docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap.rs.frozen"
         );
         validate_cold_relocation(&coverage, &amendment, frozen).unwrap();
+        let root = &Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        assert_eq!(cold_relocation(root, &coverage).unwrap(), amendment);
+        let binding = &amendment["source_bindings"][0];
+        let physical = std::fs::read(root.join(binding["path"].as_str().unwrap())).unwrap();
+        let historical = cold_source(root, binding, &physical).unwrap();
+        assert_eq!(digest(&historical), binding["sha256"].as_str().unwrap());
+        assert!(cold_source(root, binding, &historical).is_err());
+        let mut altered = physical.clone();
+        altered.push(0);
+        assert!(cold_source(root, binding, &altered).is_err());
+        for field in ["sha256", "bytes"] {
+            let mut changed = binding.clone();
+            changed[field] = json!("wrong");
+            assert!(cold_source(root, &changed, &physical).is_err());
+        }
         for variant in 0..5 {
             let mut changed = amendment.clone();
             match variant {
