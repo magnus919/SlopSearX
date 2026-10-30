@@ -4,6 +4,11 @@ const MODE: &str = "classification-v1";
 #[derive(Clone, Copy, Debug)]
 pub(super) enum Stage {
     NetworkStartup,
+    SourcePoolTimedOut,
+    SourceDnsTcpTimedOut,
+    SourceProxyTlsTimedOut,
+    SourceOriginTlsTimedOut,
+    SourceProxyRefused,
     OAuthStartup,
     OAuthCallbackPortFailed,
     OAuthCallbackBindFailed,
@@ -94,6 +99,35 @@ struct Classification {
     http_flags: u16,
     http_status: Option<u16>,
     chain_truncated: bool,
+}
+// Only already-public typed source causes are recognized; no error text is read.
+fn source_stage(mut error: &(dyn Error + 'static)) -> Option<Stage> {
+    for _ in 0..8 {
+        if error.is::<reqwest::source_pool::SourcePoolTimedOut>() {
+            return Some(Stage::SourcePoolTimedOut);
+        }
+        if let Some(timeout) = error.downcast_ref::<reqwest::SourceHttp1ConnectTimedOut>() {
+            return Some(match timeout.0 {
+                reqwest::SourceHttp1ConnectPhase::DnsTcp => Stage::SourceDnsTcpTimedOut,
+                reqwest::SourceHttp1ConnectPhase::ProxyTls => Stage::SourceProxyTlsTimedOut,
+                reqwest::SourceHttp1ConnectPhase::OriginTls => Stage::SourceOriginTlsTimedOut,
+            });
+        }
+        if error.is::<reqwest::SourceHttp1ProxyRefused>() {
+            return Some(Stage::SourceProxyRefused);
+        }
+        // io::Error::source can skip the concrete custom payload. Inspect that
+        // existing public wrapper explicitly, counting it within the same8steps.
+        if let Some(io) = error.downcast_ref::<std::io::Error>()
+            && let Some(inner) = io.get_ref()
+        {
+            error = inner;
+            continue;
+        }
+        let Some(source) = error.source() else { break };
+        error = source;
+    }
+    None
 }
 fn classify(mut error: &(dyn Error + 'static)) -> Classification {
     let mut out = Classification::default();
@@ -225,7 +259,11 @@ impl Diagnostics {
     }
     pub(super) fn record(&self, stage: Stage, error: &(dyn Error + 'static)) {
         if self.enabled {
-            self.record_class(stage, classify(error));
+            let class = classify(error);
+            self.record_class(stage, class);
+            if let Some(cause) = source_stage(error) {
+                self.record_class(cause, class);
+            }
         }
     }
     pub(super) fn checkpoint(&self, stage: Stage) {
@@ -350,6 +388,49 @@ mod tests {
     #[test]
     fn explicit_classification_preserves_only_finite_fields_and_never_formats_secret_errors() {
         let secret = SecretError;
+        assert!(source_stage(&secret).is_none());
+        let source_causes: [(Box<dyn Error>, &str); 4] = [
+            (
+                Box::new(reqwest::source_pool::SourcePoolTimedOut),
+                "SourcePoolTimedOut",
+            ),
+            (
+                Box::new(std::io::Error::new(
+                    ErrorKind::TimedOut,
+                    reqwest::SourceHttp1ConnectTimedOut(reqwest::SourceHttp1ConnectPhase::DnsTcp),
+                )),
+                "SourceDnsTcpTimedOut",
+            ),
+            (
+                Box::new(std::io::Error::new(
+                    ErrorKind::TimedOut,
+                    reqwest::SourceHttp1ConnectTimedOut(reqwest::SourceHttp1ConnectPhase::ProxyTls),
+                )),
+                "SourceProxyTlsTimedOut",
+            ),
+            (
+                Box::new(std::io::Error::other(std::io::Error::new(
+                    ErrorKind::TimedOut,
+                    reqwest::SourceHttp1ConnectTimedOut(
+                        reqwest::SourceHttp1ConnectPhase::OriginTls,
+                    ),
+                ))),
+                "SourceOriginTlsTimedOut",
+            ),
+        ];
+        let source_events = Diagnostics::new(Some(OsStr::new(MODE)));
+        for (error, _) in &source_causes {
+            source_events.record(Stage::NetworkStartup, error.as_ref());
+        }
+        let mut source_output = Vec::new();
+        let emission = source_events.emit(&mut source_output);
+        assert_eq!(emission.written, 8);
+        assert!(!emission.failed && !emission.overflowed);
+        let source_output = String::from_utf8(source_output).unwrap();
+        for (_, expected) in source_causes {
+            assert!(source_output.contains(&format!("stage={expected} ")));
+        }
+        assert!(!source_output.contains("private-secret"));
         assert!(line(None, Stage::Stdio, &secret).is_none());
         assert!(line(Some(OsStr::new("private-secret")), Stage::Stdio, &secret).is_none());
         let io = std::io::Error::new(ErrorKind::PermissionDenied, secret);

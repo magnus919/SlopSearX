@@ -69,6 +69,29 @@ async fn capture(mut pipe: impl AsyncRead + Unpin) -> std::io::Result<Capture> {
     }
 }
 
+// Darwin can report EPERM for an extant group containing only zombies.
+// Keep observing the same owned group within its original fixed budget.
+async fn wait_for_group_absence(
+    pid: Pid,
+    budget: Duration,
+    mut observe: impl FnMut() -> nix::Result<()>,
+) -> Result<(), String> {
+    let deadline = Instant::now() + budget;
+    loop {
+        match observe() {
+            Err(Errno::ESRCH) => return Ok(()),
+            Ok(()) | Err(Errno::EPERM) => {}
+            Err(error) => return Err(format!("owned process group absence query: {error}")),
+        }
+        if Instant::now() >= deadline {
+            return Err(format!(
+                "owned process group {pid} absence unproven after bounded retirement"
+            ));
+        }
+        tokio::time::sleep_until(deadline.min(Instant::now() + Duration::from_millis(10))).await;
+    }
+}
+
 struct Group {
     pid: Pid,
     armed: bool,
@@ -82,26 +105,11 @@ impl Group {
     }
     async fn retire(&mut self, budget: Duration) -> Result<(), String> {
         self.signal(Signal::SIGKILL)?;
-        let deadline = Instant::now() + budget;
-        loop {
-            match killpg(self.pid, None) {
-                Err(Errno::ESRCH) => {
-                    // Ownership is retired; Drop must never signal this numeric ID again.
-                    self.armed = false;
-                    return Ok(());
-                }
-                Err(error) => return Err(format!("owned process group absence query: {error}")),
-                Ok(()) => {}
-            }
-            if Instant::now() >= deadline {
-                return Err(format!(
-                    "owned process group {} still exists after bounded retirement",
-                    self.pid
-                ));
-            }
-            tokio::time::sleep_until(deadline.min(Instant::now() + Duration::from_millis(10)))
-                .await;
-        }
+        let pid = self.pid;
+        wait_for_group_absence(pid, budget, || killpg(pid, None)).await?;
+        // Ownership retires only after ESRCH, never after an EPERM observation.
+        self.armed = false;
+        Ok(())
     }
 }
 impl Drop for Group {
@@ -591,6 +599,20 @@ printf '%s\n' "$1" >> calls
 
     #[tokio::test]
     async fn bounded_security_timeout_reaps_leader_and_retires_descendant_group() {
+        // A persistent permission observation is unresolved, not absence.
+        let queries = std::cell::Cell::new(0);
+        let budget = Duration::from_millis(20);
+        let pending_at = Instant::now();
+        let error = wait_for_group_absence(Pid::from_raw(0), budget, || {
+            queries.set(queries.get() + 1);
+            Err(Errno::EPERM)
+        })
+        .await
+        .unwrap_err();
+        assert!(error.contains("absence unproven"));
+        assert!(queries.get() >= 2);
+        assert!(pending_at.elapsed() >= budget);
+        assert!(pending_at.elapsed() < Duration::from_secs(1));
         let fake = Fake::new(
             r#"printf '%s' "$$" > leader
 sleep 30 &
@@ -627,6 +649,15 @@ wait "$child""#,
     }
     #[tokio::test]
     async fn bounded_security_successful_leader_retires_remaining_descendant_before_success() {
+        // This pure observation seam sends no signal to the synthetic numeric ID.
+        let mut observations =
+            std::collections::VecDeque::from([Ok(()), Err(Errno::EPERM), Err(Errno::ESRCH)]);
+        wait_for_group_absence(Pid::from_raw(0), Duration::from_millis(250), || {
+            observations.pop_front().expect("no query after ESRCH")
+        })
+        .await
+        .unwrap();
+        assert!(observations.is_empty());
         let fake = Fake::new(
             r#"printf '%s' "$$" > leader
 sleep 30 &

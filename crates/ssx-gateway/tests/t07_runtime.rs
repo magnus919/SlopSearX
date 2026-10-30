@@ -24,6 +24,7 @@ struct Observed {
     registrations: usize,
     challenge: Option<String>,
     token_forms: Vec<HashMap<String, String>>,
+    token_redirect_visits: usize,
     deletes: usize,
     authorization_visits: usize,
     private_callback_visits: usize,
@@ -166,7 +167,8 @@ async fn redirect_register() -> Response {
     )
         .into_response()
 }
-async fn redirect_token() -> Response {
+async fn redirect_token(State(app): State<App>) -> Response {
+    app.state.lock().await.token_redirect_visits += 1;
     (
         StatusCode::TEMPORARY_REDIRECT,
         [("location", "/token-real")],
@@ -774,6 +776,11 @@ fn classification_line(text: &str) -> bool {
     }
     let stages = [
         "NetworkStartup",
+        "SourcePoolTimedOut",
+        "SourceDnsTcpTimedOut",
+        "SourceProxyTlsTimedOut",
+        "SourceOriginTlsTimedOut",
+        "SourceProxyRefused",
         "OAuthStartup",
         "OAuthCallbackPortFailed",
         "OAuthCallbackBindFailed",
@@ -2861,6 +2868,7 @@ async fn actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth
                 assert!(client.get(first).send().await?.status().is_success());
                 stage.set("stdio initialization");
                 process.initialize().await;
+                assert_eq!(fixture.app.state.lock().await.token_redirect_visits, 1);
                 let before_file = std::fs::read(&token_file)?;
                 let call = json!({"jsonrpc":"2.0","id":99,"method":"tools/call","params":{"name":"echo","arguments":{"query":99}}});
                 stage.set("first browser helper exit before held challenge");
@@ -2984,6 +2992,7 @@ async fn actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth
                         Err("private stderr reader did not retire".into())
                     }
                 };
+            let process_failure = process.last_failure;
             let mut stdout = String::new();
             let mut output = process.output.into_inner();
             let stdout_result =
@@ -2991,6 +3000,7 @@ async fn actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth
                     .await;
             let browser_record = std::fs::read_to_string(&record).ok();
             let observed = fixture.app.state.lock().await;
+            let token_redirect_visits = observed.token_redirect_visits;
             let fixture_counts = (
                 observed.registrations,
                 observed.authorization_visits,
@@ -3003,7 +3013,7 @@ async fn actual_native_held_oauth_request_cancel_eof_sigterm_do_not_reenter_auth
             std::fs::remove_dir_all(&directory)?;
             if !matches!(&outcome, Ok(Ok(()))) {
                 eprintln!(
-                    "T07_PRIVATE_CASE_FAILURE cancel_status={cancel_status:?} stop_mode={stop_mode} stage={} fixture_counts={fixture_counts:?} stderr={stderr_result:?} browser_record={browser_record:?} stdout={stdout:?}",
+                    "T07_PRIVATE_CASE_FAILURE cancel_status={cancel_status:?} stop_mode={stop_mode} stage={} process_failure={process_failure:?} token_redirect_visits={token_redirect_visits} fixture_counts={fixture_counts:?} stderr={stderr_result:?} browser_record={browser_record:?} stdout={stdout:?}",
                     stage.get()
                 );
             }

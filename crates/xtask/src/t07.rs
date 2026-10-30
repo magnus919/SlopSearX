@@ -3,7 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
-const BINDINGS: &str = "90ac6cf8e84b09a6173b183e64f8e3dbb87a1624edabf20a5b693cacaacaa65a";
+const BINDINGS: &str = "29dc237e98babd60deae1b54cf8479270c14198d3c7c6b8dc0748a3f1daa7d2a";
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
