@@ -40,10 +40,6 @@ jobs:
       OPENSSL_NO_VENDOR: "0"
       OPENSSL_STATIC: "1"
       EXPECTED_TARGET: ${{ matrix.target }}
-      CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-cli-target
-      TMPDIR: ${{ runner.temp }}/ssx-cli-tmp
-      TMP: ${{ runner.temp }}/ssx-cli-tmp
-      TEMP: ${{ runner.temp }}/ssx-cli-tmp
     steps:
       - name: Preserve literal source bytes on Windows
         if: ${{ runner.os == 'Windows' }}
@@ -56,6 +52,15 @@ jobs:
       - name: Confirm native bootstrap and source identity
         run: |
           set -euo pipefail
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/ssx-cli-target"
+          export TMPDIR="$RUNNER_TEMP/ssx-cli-tmp"
+          export TMP="$TMPDIR" TEMP="$TMPDIR"
+          {
+            printf 'CARGO_TARGET_DIR=%s\n' "$CARGO_TARGET_DIR"
+            printf 'TMPDIR=%s\n' "$TMPDIR"
+            printf 'TMP=%s\n' "$TMP"
+            printf 'TEMP=%s\n' "$TEMP"
+          } >> "$GITHUB_ENV"
           mkdir -p "$TMPDIR" "$CARGO_TARGET_DIR/rust-evidence"
           rustc --version --verbose | tee "$CARGO_TARGET_DIR/rust-evidence/rustc.txt"
           grep -Fx "host: $EXPECTED_TARGET" "$CARGO_TARGET_DIR/rust-evidence/rustc.txt"

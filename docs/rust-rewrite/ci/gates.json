@@ -2584,11 +2584,7 @@
             "OPENSSL_NO_ASM": "1",
             "OPENSSL_NO_VENDOR": "0",
             "OPENSSL_STATIC": "1",
-            "EXPECTED_TARGET": "${{ matrix.target }}",
-            "CARGO_TARGET_DIR": "${{ runner.temp }}/ssx-cli-target",
-            "TMPDIR": "${{ runner.temp }}/ssx-cli-tmp",
-            "TMP": "${{ runner.temp }}/ssx-cli-tmp",
-            "TEMP": "${{ runner.temp }}/ssx-cli-tmp"
+            "EXPECTED_TARGET": "${{ matrix.target }}"
           },
           "steps": [
             {
@@ -2606,7 +2602,7 @@
             },
             {
               "name": "Confirm native bootstrap and source identity",
-              "run": "set -euo pipefail\nmkdir -p \"$TMPDIR\" \"$CARGO_TARGET_DIR/rust-evidence\"\nrustc --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ngrep -Fx \"host: $EXPECTED_TARGET\" \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ncargo --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/cargo.txt\"\nperl -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\ngit rev-parse HEAD > \"$CARGO_TARGET_DIR/rust-evidence/head.txt\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\"\ngit status --porcelain=v1 --untracked-files=all > \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\ntest ! -s \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\n"
+              "run": "set -euo pipefail\nexport CARGO_TARGET_DIR=\"$RUNNER_TEMP/ssx-cli-target\"\nexport TMPDIR=\"$RUNNER_TEMP/ssx-cli-tmp\"\nexport TMP=\"$TMPDIR\" TEMP=\"$TMPDIR\"\n{\n  printf 'CARGO_TARGET_DIR=%s\\n' \"$CARGO_TARGET_DIR\"\n  printf 'TMPDIR=%s\\n' \"$TMPDIR\"\n  printf 'TMP=%s\\n' \"$TMP\"\n  printf 'TEMP=%s\\n' \"$TEMP\"\n} >> \"$GITHUB_ENV\"\nmkdir -p \"$TMPDIR\" \"$CARGO_TARGET_DIR/rust-evidence\"\nrustc --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ngrep -Fx \"host: $EXPECTED_TARGET\" \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ncargo --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/cargo.txt\"\nperl -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\ngit rev-parse HEAD > \"$CARGO_TARGET_DIR/rust-evidence/head.txt\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\"\ngit status --porcelain=v1 --untracked-files=all > \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\ntest ! -s \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\n"
             },
             {
               "name": "Locked format and strict standalone client lint",
