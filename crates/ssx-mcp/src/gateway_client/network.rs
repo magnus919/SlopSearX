@@ -358,7 +358,7 @@ impl Network {
 #[path = "network_cookie_tests.rs"]
 mod cookie_wire_tests;
 
-#[cfg(all(test, unix))]
+#[cfg(all(test, unix, feature = "gateway-source-endpoints"))]
 pub(super) fn oauth_loopback_test_network() -> Arc<Network> {
     let mut network = cookie_wire_tests::direct(Arc::new(SourceCookieJar::default()));
     Arc::get_mut(&mut network)
