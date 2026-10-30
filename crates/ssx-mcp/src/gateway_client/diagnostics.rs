@@ -5,6 +5,25 @@ const MODE: &str = "classification-v1";
 pub(super) enum Stage {
     NetworkStartup,
     OAuthStartup,
+    OAuthCallbackPortFailed,
+    OAuthCallbackBindFailed,
+    OAuthCallbackBindDeadline,
+    OAuthCallbackAddressFailed,
+    OAuthAuthorizationUrlFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthRegistrationFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthRegistrationModelMissing,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthRegistrationDecodeFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthRegistrationShapeFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthRegistrationClientFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthRegistrationEncodeFailed,
+    #[cfg(feature = "gateway-source-endpoints")]
+    OAuthClientPersistenceFailed,
     OAuthCallbackComplete,
     OAuthCallbackStateMissing,
     OAuthExchangeFailed,
@@ -179,7 +198,7 @@ pub(super) struct Emission {
     pub overflowed: bool,
 }
 impl Diagnostics {
-    fn new(mode: Option<&OsStr>) -> Self {
+    pub(super) fn new(mode: Option<&OsStr>) -> Self {
         Self {
             enabled: selected(mode),
             events: Default::default(),
@@ -370,6 +389,27 @@ mod tests {
             auth_events.record_code_status(reqwest::StatusCode::BAD_REQUEST);
             auth_events.checkpoint(Stage::OAuthCodeBodyComplete);
         }
+        for stage in [
+            Stage::OAuthCallbackPortFailed,
+            Stage::OAuthCallbackBindFailed,
+            Stage::OAuthCallbackBindDeadline,
+            Stage::OAuthCallbackAddressFailed,
+            Stage::OAuthAuthorizationUrlFailed,
+        ] {
+            auth_events.record(stage, &secret);
+        }
+        #[cfg(feature = "gateway-source-endpoints")]
+        for stage in [
+            Stage::OAuthRegistrationFailed,
+            Stage::OAuthRegistrationModelMissing,
+            Stage::OAuthRegistrationDecodeFailed,
+            Stage::OAuthRegistrationShapeFailed,
+            Stage::OAuthRegistrationClientFailed,
+            Stage::OAuthRegistrationEncodeFailed,
+            Stage::OAuthClientPersistenceFailed,
+        ] {
+            auth_events.record(stage, &secret);
+        }
         let mut auth_output = Vec::new();
         let emission = auth_events.emit(&mut auth_output);
         assert!(!emission.failed && !emission.overflowed);
@@ -386,6 +426,27 @@ mod tests {
         {
             assert!(auth_output.contains("stage=AuthSourceOperation "));
             assert!(auth_output.contains("stage=OAuthCodeStatus io_kind=none os_code=None http_flags=128 http_status=Some(400)"));
+        }
+        for stage in [
+            "OAuthCallbackPortFailed",
+            "OAuthCallbackBindFailed",
+            "OAuthCallbackBindDeadline",
+            "OAuthCallbackAddressFailed",
+            "OAuthAuthorizationUrlFailed",
+        ] {
+            assert!(auth_output.contains(&format!("stage={stage} ")));
+        }
+        #[cfg(feature = "gateway-source-endpoints")]
+        for stage in [
+            "OAuthRegistrationFailed",
+            "OAuthRegistrationModelMissing",
+            "OAuthRegistrationDecodeFailed",
+            "OAuthRegistrationShapeFailed",
+            "OAuthRegistrationClientFailed",
+            "OAuthRegistrationEncodeFailed",
+            "OAuthClientPersistenceFailed",
+        ] {
+            assert!(auth_output.contains(&format!("stage={stage} ")));
         }
         for forbidden in [
             "private-secret",

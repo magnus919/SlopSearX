@@ -1,4 +1,5 @@
 //! Owned loopback callback. Explicit shutdown joins; Drop only requests cleanup.
+use super::diagnostics::{Diagnostics, Stage};
 use axum::{
     Router,
     extract::{RawQuery, State},
@@ -66,15 +67,36 @@ impl LoopbackCallback {
     /// Binds before returning, so callers cannot open the authorization URL
     /// before the callback listener exists. No browser is opened by this module.
     pub async fn start(port: &str, timeout: Duration) -> Result<Self, CallbackError> {
-        let configured_port = port.parse().map_err(|_| CallbackError::InvalidPort)?;
+        Self::start_observed(port, timeout, &Diagnostics::default()).await
+    }
+    /// Collect finite fields before callback conversion drops the I/O kind/code.
+    /// The runtime emits diagnostics only after owned cleanup.
+    pub(super) async fn start_observed(
+        port: &str,
+        timeout: Duration,
+        diagnostics: &Diagnostics,
+    ) -> Result<Self, CallbackError> {
+        let configured_port = port.parse().map_err(|error| {
+            diagnostics.record(Stage::OAuthCallbackPortFailed, &error);
+            CallbackError::InvalidPort
+        })?;
         let listener = tokio::time::timeout(
             Duration::from_secs(15),
             TcpListener::bind((Ipv4Addr::LOCALHOST, configured_port)),
         )
         .await
-        .map_err(|_| CallbackError::Deadline)?
-        .map_err(|_| CallbackError::Bind)?;
-        let actual_address = listener.local_addr().map_err(|_| CallbackError::Bind)?;
+        .map_err(|error| {
+            diagnostics.record(Stage::OAuthCallbackBindDeadline, &error);
+            CallbackError::Deadline
+        })?
+        .map_err(|error| {
+            diagnostics.record(Stage::OAuthCallbackBindFailed, &error);
+            CallbackError::Bind
+        })?;
+        let actual_address = listener.local_addr().map_err(|error| {
+            diagnostics.record(Stage::OAuthCallbackAddressFailed, &error);
+            CallbackError::Bind
+        })?;
         let (state, result) = watch::channel(None);
         let stop = CancellationToken::new();
         let stopped = stop.clone();
@@ -203,6 +225,42 @@ mod tests {
         callback.shutdown().await.unwrap();
         assert!(callback.task.is_none());
         assert!(tokio::net::TcpStream::connect(address).await.is_err());
+
+        let diagnostics = Diagnostics::new(Some(std::ffi::OsStr::new("classification-v1")));
+        let occupied = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+        let address = occupied.local_addr().unwrap();
+        // Windows exclusive-address binding may report access denied rather
+        // than address-in-use. Compare the actual same-address OS error code.
+        let conflict = TcpListener::bind(address).await.unwrap_err();
+        let expected_code = conflict.raw_os_error().unwrap();
+        assert!(matches!(
+            LoopbackCallback::start_observed(
+                &address.port().to_string(),
+                Duration::from_secs(2),
+                &diagnostics
+            )
+            .await,
+            Err(CallbackError::Bind)
+        ));
+        let mut report = Vec::new();
+        let emitted = diagnostics.emit(&mut report);
+        assert!(!emitted.failed && !emitted.overflowed);
+        let report = String::from_utf8(report).unwrap();
+        assert!(report.contains("stage=OAuthCallbackBindFailed "));
+        assert!(!report.contains("io_kind=none "));
+        assert!(report.contains(&format!("os_code=Some({expected_code}) ")));
+        assert!(!report.contains(&address.to_string()));
+        drop(occupied);
+        let mut rebound = LoopbackCallback::start_observed(
+            &address.port().to_string(),
+            Duration::from_secs(2),
+            &diagnostics,
+        )
+        .await
+        .unwrap();
+        rebound.shutdown().await.unwrap();
+        assert!(rebound.task.is_none());
+        assert_eq!(diagnostics.emit(&mut Vec::new()).written, 0);
     }
     #[tokio::test]
     async fn actual_callback_deadline_joins_and_releases_listener() {

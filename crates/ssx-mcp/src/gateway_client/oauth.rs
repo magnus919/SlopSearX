@@ -1012,7 +1012,7 @@ impl OAuth {
         *callback = None;
         if callback.is_none() {
             *callback = Some(
-                LoopbackCallback::start(&self.port, AUTH_BUDGET)
+                LoopbackCallback::start_observed(&self.port, AUTH_BUDGET, &self.diagnostics)
                     .await
                     .map_err(|_| "OAuth callback startup failed")?,
             )
@@ -1028,6 +1028,10 @@ impl OAuth {
         let url = manager
             .get_authorization_url(&refs)
             .await
+            .inspect_err(|error| {
+                self.diagnostics
+                    .record_auth_failure(Stage::OAuthAuthorizationUrlFailed, error)
+            })
             .map_err(|_| "OAuth authorization URL failed")?;
         #[cfg(not(feature = "gateway-source-endpoints"))]
         let url = {
@@ -1169,31 +1173,52 @@ impl OAuth {
                     credential_issuer.clone(),
                 )
                 .await
+                .inspect_err(|error| {
+                    self.diagnostics
+                        .record_auth_failure(Stage::OAuthRegistrationFailed, error)
+                })
                 .map_err(|_| "OAuth source registration failed")?;
             // execute_source discarded wire issuer and validated this entire model.
-            let bytes = self
-                .registration
-                .lock()
-                .await
-                .take()
-                .ok_or("OAuth source registration model missing")?;
+            let bytes = self.registration.lock().await.take().ok_or_else(|| {
+                self.diagnostics
+                    .checkpoint(Stage::OAuthRegistrationModelMissing);
+                "OAuth source registration model missing"
+            })?;
             use ssx_source_json::{Text, Value};
             let mut record = match super::token_json::parse_http(&bytes, self.store.deadline())
                 .await
+                .inspect_err(|_| {
+                    self.diagnostics
+                        .checkpoint(Stage::OAuthRegistrationDecodeFailed)
+                })
                 .map_err(|_| "OAuth canonical registration invalid")?
             {
                 Value::Object(record) => record,
-                _ => return Err("OAuth canonical registration shape invalid".into()),
+                _ => {
+                    self.diagnostics
+                        .checkpoint(Stage::OAuthRegistrationShapeFailed);
+                    return Err("OAuth canonical registration shape invalid".into());
+                }
             };
             if let Some(issuer) = credential_issuer {
                 record.insert(Text::from("issuer"), Value::String(Text::from(issuer)));
             }
             let record = Value::Object(record);
-            let client = Client::from_source_record(&record)?;
+            let client = Client::from_source_record(&record).inspect_err(|error| {
+                self.diagnostics
+                    .record(Stage::OAuthRegistrationClientFailed, error.as_ref())
+            })?;
             let bytes = super::token_json::encode(&record, self.store.deadline())
                 .await
+                .inspect_err(|_| {
+                    self.diagnostics
+                        .checkpoint(Stage::OAuthRegistrationEncodeFailed)
+                })
                 .map_err(|_| "OAuth canonical registration encoding failed")?;
-            client.usable_registration()?;
+            client.usable_registration().inspect_err(|error| {
+                self.diagnostics
+                    .record(Stage::OAuthRegistrationClientFailed, error.as_ref())
+            })?;
             self.store
                 .file
                 .set_slot_json(
@@ -1203,6 +1228,10 @@ impl OAuth {
                     &self.cancel,
                 )
                 .await
+                .inspect_err(|_| {
+                    self.diagnostics
+                        .checkpoint(Stage::OAuthClientPersistenceFailed)
+                })
                 .map_err(|_| "OAuth source client persistence failed")?;
             self.policy.lock().await.client = Some(client);
         }
