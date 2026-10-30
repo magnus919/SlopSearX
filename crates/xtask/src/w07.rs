@@ -249,6 +249,19 @@ fn reference(root: &Path, binding: &Reference, packaging: &str) -> Result<Value>
     }
     Ok(packet)
 }
+// The exact two post-Page reader successors in the reviewed W08 normal merge.
+const W08_PAGE_READERS: [(&str, &str, &str); 2] = [
+    (
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+        "8a9bb7b1894e84b8de2673c25f5091a61eb4cf8d77d1c0b8f191edf866b2748c",
+    ),
+    (
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+        "f5736b78c04437056c5bf12b3637e2fa6b53c9b654b1cb28087fe4de22187a86",
+    ),
+];
 fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     let mut expected = original.clone();
     expected["suites"][0]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"receipts::service::service_contract_tests::receipt_telemetry_preserves_source_branch_order_and_terminal_status\", \"receipts::service::service_contract_tests::receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion\", \"receipts::service::service_contract_tests::receipt_read_expiry_metrics_require_expired_source_and_empty_retained_receipts\"]").map_err(|e|e.to_string())?);
@@ -417,6 +430,14 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
             return Err("W07 page merge source predecessor changed".into());
         }
         expected["sources"][path] = Value::String(current.into());
+    }
+    // Keep the five exact Page predecessor guards above, then admit only this
+    // closed W08 two-reader transition. All remaining registry fields stay exact.
+    for (path, page, joined) in W08_PAGE_READERS {
+        if expected["sources"][path] != page {
+            return Err("W07 exact Page reader predecessor changed".into());
+        }
+        expected["sources"][path] = Value::String(joined.into());
     }
     if expected != *current {
         return Err(
@@ -771,7 +792,24 @@ mod tests {
             "../../../docs/rust-rewrite/w07/qualification-completion-v1.json"
         ))
         .unwrap();
+        snapshot_helper_amendment::verify_current_registry(
+            &root,
+            include_bytes!("../../../docs/rust-rewrite/w07/qualification-completion-v1.json"),
+        )
+        .unwrap();
         preserve_registry(&original, &current).unwrap();
+        for (path, page, joined) in W08_PAGE_READERS {
+            assert_eq!(current["sources"][path], joined);
+            let mut prior = current.clone();
+            prior["sources"][path] = Value::String(page.into());
+            assert!(preserve_registry(&original, &prior).is_err());
+            let mut changed = current.clone();
+            changed["sources"][path] = Value::String("0".repeat(64));
+            assert!(preserve_registry(&original, &changed).is_err());
+            let mut missing = current.clone();
+            missing["sources"].as_object_mut().unwrap().remove(path);
+            assert!(preserve_registry(&original, &missing).is_err());
+        }
         let mut removed = current.clone();
         removed["suites"][0]["tests"]
             .as_array_mut()

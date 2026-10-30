@@ -981,7 +981,162 @@ pub(crate) fn verify_current_registry(root: &Path, supplied: &[u8]) -> Result<()
     }
     Ok(())
 }
+
+// One closed source-only admission for W08's immutable W07 source binding.
+const W07_SOURCE_PATH: &str = "crates/xtask/src/w07.rs";
+const W07_SOURCE_PRIOR: &str = "64bbd78e5910558eae78de7e449d0488337020a814ec10cb2869e412193582ea";
+const W07_SOURCE_CAPSULE: &str = "docs/rust-rewrite/w08/w07-page-source-admission-v1.json";
+const W07_SOURCE_CAPSULE_SHA: &str =
+    "7db2d39f8c2e0fe49211a3cfdc1ef4e35c755a4b66b8d893f717643677f28b57";
+fn w07_source_scope(doc: &Value) -> Result<()> {
+    need(
+        doc["schema"] == "W08_W07_PAGE_SOURCE_ADMISSION_V1"
+            && doc["parent"] == "8c12d02ae5e7741410e41de4795a235700fc71c2"
+            && doc["caller"]
+                == serde_json::json!({"path":W07_SOURCE_PATH,"expected_sha256":W07_SOURCE_PRIOR})
+            && doc.as_object().is_some_and(|fields| fields.len() == 4)
+            && doc["rows"].as_array().is_some_and(|rows| rows.len() == 1),
+        "closed W07 source caller/parent/membership",
+    )?;
+    let row = &doc["rows"][0];
+    need(
+        row["current"]["path"] == W07_SOURCE_PATH
+            && row["prior"]["path"] == W07_SOURCE_PATH
+            && row["prior"]["sha256"] == W07_SOURCE_PRIOR
+            && row["current"]["mode"] == "0644"
+            && row["prior"]["mode"] == "0644",
+        "closed W07 source path/prior/modes",
+    )
+}
+fn w07_source_document(root: &Path) -> Result<Value> {
+    let raw = regular(root, W07_SOURCE_CAPSULE)?;
+    need(
+        sha(&raw) == W07_SOURCE_CAPSULE_SHA,
+        "sealed W07 source admission",
+    )?;
+    let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    w07_source_scope(&doc)?;
+    Ok(doc)
+}
+pub(crate) fn w07_source_operand(
+    root: &Path,
+    path: &str,
+    expected: &str,
+    supplied: &[u8],
+) -> Result<Vec<u8>> {
+    need(
+        path == W07_SOURCE_PATH && expected == W07_SOURCE_PRIOR,
+        "exact W07 frozen caller",
+    )?;
+    let doc = w07_source_document(root)?;
+    let physical = regular(root, W07_SOURCE_PATH)?;
+    need(
+        physical == supplied,
+        "W07 supplied bytes are not physical current",
+    )?;
+    let row = &doc["rows"][0];
+    let prior = inverse(row, supplied, "0644")?;
+    let git = std::process::Command::new("git")
+        .args(["cat-file", "blob", text(&row["prior"], "git_blob")?])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let tree = std::process::Command::new("git")
+        .args([
+            "ls-tree",
+            "8c12d02ae5e7741410e41de4795a235700fc71c2",
+            "--",
+            W07_SOURCE_PATH,
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        git.status.success()
+            && git.stdout == prior
+            && tree.status.success()
+            && tree.stdout
+                == format!(
+                    "100644 blob {}\t{}\n",
+                    text(&row["prior"], "git_blob")?,
+                    W07_SOURCE_PATH
+                )
+                .as_bytes(),
+        "W07 exact historical Git bytes/mode/blob",
+    )?;
+    Ok(prior)
+}
+fn w07_source_controls(root: &Path) -> Result<()> {
+    let doc = w07_source_document(root)?;
+    let row = &doc["rows"][0];
+    let physical = regular(root, W07_SOURCE_PATH)?;
+    let prior = w07_source_operand(root, W07_SOURCE_PATH, W07_SOURCE_PRIOR, &physical)?;
+    need(
+        sha(&prior) == W07_SOURCE_PRIOR && prior != physical,
+        "nonvacuous W07 source positive",
+    )?;
+    need(
+        w07_source_operand(root, W07_SOURCE_PATH, W07_SOURCE_PRIOR, &prior).is_err(),
+        "old W07 bytes supplied as physical",
+    )?;
+    need(
+        w07_source_operand(root, "unlisted.rs", W07_SOURCE_PRIOR, &physical).is_err(),
+        "wrong W07 source path",
+    )?;
+    need(
+        w07_source_operand(root, W07_SOURCE_PATH, "wrong", &physical).is_err(),
+        "wrong W07 expected caller",
+    )?;
+    let mut changed = physical.clone();
+    changed[0] ^= 1;
+    let mut extra = physical.clone();
+    extra.push(b' ');
+    for bad in [changed, extra] {
+        need(
+            w07_source_operand(root, W07_SOURCE_PATH, W07_SOURCE_PRIOR, &bad).is_err(),
+            "changed W07 supplied source",
+        )?;
+    }
+    for mode in ["0600", "0755", "4644"] {
+        need(
+            inverse(row, &physical, mode).is_err(),
+            "changed W07 source mode",
+        )?;
+    }
+    let mut missing = doc.clone();
+    missing["rows"] = serde_json::json!([]);
+    let mut duplicate = doc.clone();
+    duplicate["rows"].as_array_mut().unwrap().push(row.clone());
+    let mut moved = doc.clone();
+    moved["rows"][0]["current"]["path"] = Value::String("unlisted.rs".into());
+    let mut mode = doc.clone();
+    mode["rows"][0]["current"]["mode"] = Value::String("0755".into());
+    for bad in [missing, duplicate, moved, mode] {
+        need(
+            w07_source_scope(&bad).is_err(),
+            "changed W07 admission scope",
+        )?;
+    }
+    let mut missing = row.clone();
+    missing["edits"].as_array_mut().unwrap().remove(0);
+    let mut duplicate = row.clone();
+    let edit = duplicate["edits"][0].clone();
+    duplicate["edits"].as_array_mut().unwrap().insert(0, edit);
+    let mut moved = row.clone();
+    moved["edits"][0]["at"] = serde_json::json!(row["edits"][0]["at"].as_u64().unwrap() + 1);
+    let mut altered = row.clone();
+    altered["edits"][0]["insert_utf8"] = Value::String("changed".into());
+    for bad in [missing, duplicate, moved, altered] {
+        need(
+            inverse(&bad, &physical, "0644").is_err(),
+            "changed W07 inverse spans",
+        )?;
+    }
+    Ok(())
+}
+
 pub(crate) fn composition_controls(root: &Path) -> Result<()> {
+    w07_source_controls(root)?;
     outer_controls(root)?;
     verify_current_registry(root, &regular(root, CONTAINER)?)?;
     w08_composition_controls(root)?;

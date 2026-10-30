@@ -1,0 +1,113 @@
+{
+  "schema": "W08_W07_PAGE_SOURCE_ADMISSION_V1",
+  "parent": "8c12d02ae5e7741410e41de4795a235700fc71c2",
+  "caller": {
+    "path": "crates/xtask/src/w07.rs",
+    "expected_sha256": "64bbd78e5910558eae78de7e449d0488337020a814ec10cb2869e412193582ea"
+  },
+  "rows": [
+    {
+      "current": {
+        "path": "crates/xtask/src/w07.rs",
+        "sha256": "9aa2467100b7607723982b92b8eaa6850147cfcac1176300ba32d0be251eb90b",
+        "bytes": 40149,
+        "mode": "0644",
+        "git_blob": "8266e1c29d2c258d084fa38be9c31fce8ed3ba20"
+      },
+      "prior": {
+        "path": "crates/xtask/src/w07.rs",
+        "sha256": "64bbd78e5910558eae78de7e449d0488337020a814ec10cb2869e412193582ea",
+        "bytes": 36033,
+        "mode": "0644",
+        "git_blob": "3d42ba9549c5c510787c8c097a0c1d704342315b"
+      },
+      "edits": [
+        {
+          "at": 882,
+          "remove_utf8": "",
+          "insert_utf8": "a6"
+        },
+        {
+          "at": 883,
+          "remove_utf8": "be08",
+          "insert_utf8": "1a"
+        },
+        {
+          "at": 888,
+          "remove_utf8": "78822440ec7bece674b13647c6337eaa46",
+          "insert_utf8": "d"
+        },
+        {
+          "at": 925,
+          "remove_utf8": "",
+          "insert_utf8": "1d5409edb"
+        },
+        {
+          "at": 926,
+          "remove_utf8": "2",
+          "insert_utf8": "b7d79a44ac599468ca49"
+        },
+        {
+          "at": 928,
+          "remove_utf8": "2a1622",
+          "insert_utf8": "fdd"
+        },
+        {
+          "at": 936,
+          "remove_utf8": "",
+          "insert_utf8": "59"
+        },
+        {
+          "at": 937,
+          "remove_utf8": "a",
+          "insert_utf8": "2bb1d18"
+        },
+        {
+          "at": 939,
+          "remove_utf8": "0ac",
+          "insert_utf8": "4e446"
+        },
+        {
+          "at": 943,
+          "remove_utf8": "b64",
+          "insert_utf8": "d"
+        },
+        {
+          "at": 2802,
+          "remove_utf8": "",
+          "insert_utf8": "\n        if matches!(\n            path,\n            \"crates/xtask/src/t06.rs\" | \"crates/ssx-mcp/tests/t06_source_bindings.rs\"\n        ) {\n            crate::t06::receipt_control_closure::verify(root)?;\n            if let Some(prior) =\n                crate::t06::receipt_control::reader_parent(root, path, expected, &bytes)?\n            {\n                return Ok(prior);\n            }\n        }"
+        },
+        {
+          "at": 8867,
+          "remove_utf8": "",
+          "insert_utf8": "\n// The exact two post-Page reader successors in the reviewed W08 normal merge.\nconst W08_PAGE_READERS: [(&str, &str, &str); 2] = [\n    (\n        \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\",\n        \"fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b\",\n        \"8a9bb7b1894e84b8de2673c25f5091a61eb4cf8d77d1c0b8f191edf866b2748c\",\n    ),\n    (\n        \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\",\n        \"2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79\",\n        \"f5736b78c04437056c5bf12b3637e2fa6b53c9b654b1cb28087fe4de22187a86\",\n    ),\n];"
+        },
+        {
+          "at": 17434,
+          "remove_utf8": "",
+          "insert_utf8": "// Exact #1049 normal-merge source successors; historical registry remains frozen.\n    for (path, prior, current) in [\n        (\n            \"crates/ssx-infra/src/search.rs\",\n            \"b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb\",\n            \"8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777\",\n        ),\n        (\n            \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\",\n            \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\",\n            \"fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b\",\n        ),\n        (\n            \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\",\n            \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\",\n            \"2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79\",\n        ),\n        (\n            \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\",\n            \"ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4\",\n            \"bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c\",\n        ),\n        (\n            \"docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs\",\n            \"6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c\",\n            \"8ab186367b6b6e535c296ecf376fa83e9d5325a5a65b8da9fda8ce408d804aa9\",\n        ),\n    ] {\n        if expected[\"sources\"][path] != prior {\n            return Err(\"W07 page merge source predecessor changed\".into());\n        }\n        expected[\"sources\"][path] = Value::String(current.into());\n    }\n    // Keep the five exact Page predecessor guards above, then admit only this\n    // closed W08 two-reader transition. All remaining registry fields stay exact.\n    for (path, page, joined) in W08_PAGE_READERS {\n        if expected[\"sources\"][path] != page {\n            return Err(\"W07 exact Page reader predecessor changed\".into());\n        }\n        expected[\"sources\"][path] = Value::String(joined.into());\n    }\n    "
+        },
+        {
+          "at": 17936,
+          "remove_utf8": "",
+          "insert_utf8": ")?;\n    snapshot_helper_amendment::verify_current_registry(root, &registry"
+        },
+        {
+          "at": 32348,
+          "remove_utf8": "",
+          "insert_utf8": "snapshot_helper_amendment::verify_current_registry(\n            &root,\n            include_bytes!(\"../../../docs/rust-rewrite/w07/qualification-completion-v1.json\"),\n        )\n        .unwrap();\n        "
+        },
+        {
+          "at": 32396,
+          "remove_utf8": "",
+          "insert_utf8": "\n        for (path, page, joined) in W08_PAGE_READERS {\n            assert_eq!(current[\"sources\"][path], joined);\n            let mut prior = current.clone();\n            prior[\"sources\"][path] = Value::String(page.into());\n            assert!(preserve_registry(&original, &prior).is_err());\n            let mut changed = current.clone();\n            changed[\"sources\"][path] = Value::String(\"0\".repeat(64));\n            assert!(preserve_registry(&original, &changed).is_err());\n            let mut missing = current.clone();\n            missing[\"sources\"].as_object_mut().unwrap().remove(path);\n            assert!(preserve_registry(&original, &missing).is_err());\n        }"
+        },
+        {
+          "at": 34518,
+          "remove_utf8": "",
+          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\",\n            \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\",\n        "
+        }
+      ]
+    }
+  ]
+}

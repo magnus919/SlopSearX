@@ -43,7 +43,26 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     }
     let raw = fs::read(root.join(path)).map_err(|e| e.to_string())?;
     if digest(&raw) != expected {
-        return Err(format!("W08 source drift requires explicit review: {path}"));
+        use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;
+        let prior = match (path, expected) {
+            (
+                "crates/xtask/src/w07.rs",
+                "64bbd78e5910558eae78de7e449d0488337020a814ec10cb2869e412193582ea",
+            ) => snapshot_helper_amendment::w07_source_operand(root, path, expected, &raw)?,
+            (
+                "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+                "013f8448379ef92ea059cf2d48981742635d7433931a6e0973f781139bb9d612",
+            )
+            | (
+                "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+                "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6",
+            ) => snapshot_helper_amendment::w08_operand(root, path, &raw)?,
+            _ => return Err(format!("W08 source drift requires explicit review: {path}")),
+        };
+        if digest(&prior) != expected {
+            return Err(format!("W08 exact frozen source inverse differs: {path}"));
+        }
+        return Ok(prior);
     }
     Ok(raw)
 }
