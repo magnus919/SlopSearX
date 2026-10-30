@@ -192,10 +192,33 @@ fn sources(root: &Path) -> Result<Value> {
     }
     Ok(embedded)
 }
+// Windows completed250 consecutive cases in298s before the old300s suite cap.
+// Full261+4 suites get a fixed900s ceiling; metadata/help retain300s. Each
+// child still has its25s contract, and the whole hosted job remains60minutes.
+#[derive(Clone, Copy)]
+enum NativeChildScope {
+    Metadata,
+    FullCorpus,
+}
+impl NativeChildScope {
+    const fn deadline(self) -> Duration {
+        Duration::from_secs(match self {
+            Self::Metadata => 300,
+            Self::FullCorpus => 900,
+        })
+    }
+    const fn name(self) -> &'static str {
+        match self {
+            Self::Metadata => "metadata",
+            Self::FullCorpus => "full-corpus",
+        }
+    }
+}
 fn bounded(
     root: &Path,
     image: &Path,
     args: &[&str],
+    scope: NativeChildScope,
     env: &[(&str, &Path)],
     records: &mut Vec<Value>,
 ) -> Result<String> {
@@ -208,8 +231,8 @@ fn bounded(
         c.env(k, v);
     }
     t08a_child::windows_system_environment(&mut c);
-    let captured = t08a_child::capture(c, Duration::from_secs(300), 8 * 1024 * 1024, 128 * 1024)?;
-    records.push(json!({"program":image,"argv":args,"pid":captured.pid,"status":captured.status,"stdout":String::from_utf8_lossy(&captured.stdout),"stderr":String::from_utf8_lossy(&captured.stderr),"error":captured.error,"cleanup":captured.cleanup,"image_sha256":hash(&fs::read(image).map_err(|e|e.to_string())?)}));
+    let captured = t08a_child::capture(c, scope.deadline(), 8 * 1024 * 1024, 128 * 1024)?;
+    records.push(json!({"program":image,"argv":args,"capture_scope":scope.name(),"deadline_seconds":scope.deadline().as_secs(),"pid":captured.pid,"status":captured.status,"stdout":String::from_utf8_lossy(&captured.stdout),"stderr":String::from_utf8_lossy(&captured.stderr),"error":captured.error,"cleanup":captured.cleanup,"image_sha256":hash(&fs::read(image).map_err(|e|e.to_string())?)}));
     ensure(
         captured.error.is_none() && captured.status == Some(0),
         "T08A native child/output/cleanup failed",
@@ -772,7 +795,14 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         ("SSX_T08A_EVIDENCE", output.as_path()),
         ("TMPDIR", tmp.as_path()),
     ];
-    let listing = bounded(root, &test, &["--list", "--format", "terse"], &env, records)?;
+    let listing = bounded(
+        root,
+        &test,
+        &["--list", "--format", "terse"],
+        NativeChildScope::Metadata,
+        &env,
+        records,
+    )?;
     ensure(
         listing
             .lines()
@@ -788,6 +818,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         root,
         &test,
         &["--test-threads=1", "--nocapture"],
+        NativeChildScope::FullCorpus,
         &env,
         records,
     )?;
@@ -816,7 +847,14 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let installed = install
         .join("bin")
         .join(if cfg!(windows) { "ssx.exe" } else { "ssx" });
-    bounded(root, &installed, &["--help"], &[], records)?;
+    bounded(
+        root,
+        &installed,
+        &["--help"],
+        NativeChildScope::Metadata,
+        &[],
+        records,
+    )?;
     runtime_audit(root, &installed, records)?;
     let installed_evidence = output.join("installed");
     let installed_env = [
@@ -833,6 +871,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "--exact",
             "--test-threads=1",
         ],
+        NativeChildScope::FullCorpus,
         &installed_env,
         records,
     )?;

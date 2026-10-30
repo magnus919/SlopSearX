@@ -43,6 +43,7 @@ impl std::fmt::Display for Failure {
 #[derive(Parser)]
 #[command(
     name = "ssx",
+    bin_name = "ssx",
     about = "SlopSearX CLI — AI-agent-native meta search client",
     after_help = "Environment: SSX_URL, SSX_FORMAT (yaml|json). See docs/rust-rewrite/t08a/README.md.",
     infer_long_args = true,

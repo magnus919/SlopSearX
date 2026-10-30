@@ -271,21 +271,27 @@ impl Fixture {
                         trait Io: Read + Write {}
                         impl<T: Read + Write> Io for T {}
                         let mut stream: Box<dyn Io> = if let Some(a) = &acceptor {
+                            let handshake_started = Instant::now();
                             match a.accept(stream) {
                                 Ok(s) => Box::new(s),
                                 Err(error) => {
-                                    let kind = match error {
+                                    let (kind, io_kind, raw_os_error) = match error {
                                         openssl::ssl::HandshakeError::SetupFailure(_) => {
-                                            "setup".into()
+                                            ("setup".into(), None, None)
                                         }
                                         openssl::ssl::HandshakeError::Failure(mid) => {
-                                            format!("tls-code-{}", mid.error().code().as_raw())
+                                            let io = mid.error().io_error();
+                                            (
+                                                format!("tls-code-{}", mid.error().code().as_raw()),
+                                                io.map(|error| fixture_io_kind(error.kind())),
+                                                io.and_then(std::io::Error::raw_os_error),
+                                            )
                                         }
                                         openssl::ssl::HandshakeError::WouldBlock(_) => {
-                                            "would-block".into()
+                                            ("would-block".into(), Some("would_block"), None)
                                         }
                                     };
-                                    producer_events.lock().unwrap().push(serde_json::json!({"stage":"tls-handshake","ok":false,"kind":kind}));
+                                    producer_events.lock().unwrap().push(serde_json::json!({"stage":"tls-handshake","ok":false,"kind":kind,"io_kind":io_kind,"raw_os_error":raw_os_error,"elapsed_ms":handshake_started.elapsed().as_millis()}));
                                     continue;
                                 }
                             }
@@ -556,6 +562,101 @@ impl OwnedCa {
         path
     }
 }
+// Compose only the frozen $TLS path entries through native PathBuf operations.
+// In particular, a Windows verbatim prefix must never acquire a literal '/'.
+// OsString retains the prefix, Unicode and UTF16 units; path-list separators are
+// copied as separators, not parsed as drive-letter colons or quoted by join_paths.
+fn native_tls_fixture_value(
+    value: &str,
+    directory: &std::path::Path,
+) -> Option<std::ffi::OsString> {
+    let mut output = std::ffi::OsString::new();
+    for (i, entry) in value.split("$PATHSEP").enumerate() {
+        let relative = entry.strip_prefix("$TLS/")?;
+        if i != 0 {
+            output.push(if cfg!(windows) { ";" } else { ":" });
+        }
+        let mut path = directory.to_path_buf();
+        for component in relative.split('/') {
+            path.push(component);
+        }
+        output.push(path);
+    }
+    Some(output)
+}
+fn native_tls_fixture_path_controls() {
+    let root = std::env::var_os("SSX_T08A_ROOT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."))
+        .canonicalize()
+        .expect("current fixture root");
+    let directory = root
+        .join("docs")
+        .join("rust-rewrite")
+        .join("t08a")
+        .join("tls");
+    let file = native_tls_fixture_value("$TLS/ca.pem", &directory).unwrap();
+    assert_eq!(PathBuf::from(&file), directory.join("ca.pem"));
+    assert_eq!(
+        fs::read(&file).expect("owned source CA readable"),
+        include_bytes!("../../../docs/rust-rewrite/t08a/tls/ca.pem")
+    );
+    // This goes through the actual narrow OpenSSL file API used by the client,
+    // without importing OS trust. Windows proves the old mixed operand fails
+    // before the correctly joined existing CA loads into a fresh owned store.
+    #[cfg(windows)]
+    {
+        let mut mixed = directory.as_os_str().to_os_string();
+        mixed.push("/ca.pem");
+        let mut old_store = openssl::x509::store::X509StoreBuilder::new().unwrap();
+        assert!(
+            ssx_cli_openssl_store::load_source_file(&mut old_store, &mixed).is_err(),
+            "old mixed verbatim fixture path must be rejected"
+        );
+        assert_eq!(old_store.build().all_certificates().len(), 0);
+    }
+    let mut store = openssl::x509::store::X509StoreBuilder::new().unwrap();
+    assert!(
+        ssx_cli_openssl_store::load_source_file(&mut store, &file).is_ok(),
+        "native source CA path must load"
+    );
+    assert_eq!(store.build().all_certificates().len(), 1);
+    let list = native_tls_fixture_value("$TLS/empty$PATHSEP$TLS/hashed", &directory).unwrap();
+    let mut expected = directory.join("empty").into_os_string();
+    expected.push(if cfg!(windows) { ";" } else { ":" });
+    expected.push(directory.join("hashed"));
+    assert_eq!(list, expected);
+    assert!(native_tls_fixture_value("raw unchanged", &directory).is_none());
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::{OsStrExt, OsStringExt};
+        let mut units: Vec<_> = r"\\?\C:\owned space ☃\".encode_utf16().collect();
+        units.push(0xd800);
+        let raw = PathBuf::from(std::ffi::OsString::from_wide(&units));
+        let actual = native_tls_fixture_value("$TLS/ca.pem", &raw).unwrap();
+        assert_eq!(
+            actual.encode_wide().collect::<Vec<_>>(),
+            raw.join("ca.pem")
+                .as_os_str()
+                .encode_wide()
+                .collect::<Vec<_>>()
+        );
+        assert!(actual.encode_wide().any(|unit| unit == 0xd800));
+        assert!(!actual.encode_wide().any(|unit| unit == u16::from(b'/')));
+    }
+    println!("T08A native CA path controls passed");
+}
+fn fixture_io_kind(kind: std::io::ErrorKind) -> &'static str {
+    match kind {
+        std::io::ErrorKind::TimedOut => "timed_out",
+        std::io::ErrorKind::WouldBlock => "would_block",
+        std::io::ErrorKind::ConnectionReset => "connection_reset",
+        std::io::ErrorKind::ConnectionAborted => "connection_aborted",
+        std::io::ErrorKind::UnexpectedEof => "unexpected_eof",
+        _ => "other",
+    }
+}
+
 fn execute(case: &Case) -> Result<serde_json::Value, String> {
     let mut fixture = Fixture::start(case.replies.clone(), &case.tls, &case.tls_protocol, None);
     let mut proxy_fixture = case.proxy.as_ref().map(|p| {
@@ -603,22 +704,38 @@ fn execute(case: &Case) -> Result<serde_json::Value, String> {
         .map(|(k, v)| {
             (
                 k.clone(),
-                v.replace(
-                    "$TLS",
-                    &root.join("docs/rust-rewrite/t08a/tls").to_string_lossy(),
-                )
-                .replace("$BASE", &base)
-                .replace("$ADDRESS", &fixture.address.to_string())
-                .replace("$PATHSEP", if cfg!(windows) { ";" } else { ":" })
-                .replace("$PORT", &fixture.address.port().to_string())
-                .replace("$TARGETPORT", &fixture.address.port().to_string())
-                .replace(
-                    "$PROXYPORT",
-                    &proxy_fixture
-                        .as_ref()
-                        .map_or(0, |f| f.address.port())
-                        .to_string(),
-                ),
+                if matches!(k.as_str(), "SSL_CERT_FILE" | "SSL_CERT_DIR") {
+                    native_tls_fixture_value(
+                        v,
+                        &root
+                            .join("docs")
+                            .join("rust-rewrite")
+                            .join("t08a")
+                            .join("tls"),
+                    )
+                } else {
+                    None
+                }
+                .unwrap_or_else(|| {
+                    std::ffi::OsString::from(
+                        v.replace(
+                            "$TLS",
+                            &root.join("docs/rust-rewrite/t08a/tls").to_string_lossy(),
+                        )
+                        .replace("$BASE", &base)
+                        .replace("$ADDRESS", &fixture.address.to_string())
+                        .replace("$PATHSEP", if cfg!(windows) { ";" } else { ":" })
+                        .replace("$PORT", &fixture.address.port().to_string())
+                        .replace("$TARGETPORT", &fixture.address.port().to_string())
+                        .replace(
+                            "$PROXYPORT",
+                            &proxy_fixture
+                                .as_ref()
+                                .map_or(0, |f| f.address.port())
+                                .to_string(),
+                        ),
+                    )
+                }),
             )
         })
         .collect::<BTreeMap<_, _>>();
@@ -994,6 +1111,7 @@ fn native_external_child_executes_complete_frozen_contract() {
 }
 #[test]
 fn missing_case_and_mutated_native_reply_are_rejected() {
+    native_tls_fixture_path_controls();
     let mut corpus: Corpus = serde_json::from_slice(CASES).unwrap();
     validate(&corpus).unwrap();
     corpus.cases.pop();
