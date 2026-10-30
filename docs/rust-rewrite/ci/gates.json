@@ -2133,7 +2133,6 @@
         },
         "job": {
           "name": "Foundation runtime (${{ matrix.runner }})",
-          "needs": "foundation-prerequisites",
           "runs-on": "${{ matrix.runner }}",
           "timeout-minutes": 120,
           "strategy": {
@@ -2381,7 +2380,6 @@
         },
         "job": {
           "name": "Foundation adapters (${{ matrix.runner }})",
-          "needs": "foundation-prerequisites",
           "runs-on": "${{ matrix.runner }}",
           "timeout-minutes": 120,
           "strategy": {
