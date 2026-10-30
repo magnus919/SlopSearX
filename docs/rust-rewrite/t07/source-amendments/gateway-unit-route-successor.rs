@@ -156,7 +156,33 @@ const WORKFLOW_ENV_INVERSE: &str = r###"[{"at":569,"remove_utf8":"","insert_utf8
 // Exact debug0/jobs2 profile used by the shipping client prerequisite.
 const WORKFLOW_PROFILE_INVERSE: &str = r###"[{"at":545,"remove_utf8":"      CARGO_BUILD_JOBS: 2\n      CARGO_PROFILE_DEV_DEBUG: 0\n      CARGO_PROFILE_TEST_DEBUG: 0\n      CARGO_INCREMENTAL: 0\n","insert_utf8":""}]"###;
 fn workflow_env_claim() -> Value {
-    json!({"bytes":54662,"git_blob":"41d99eeb347b9a3ee5e84d5127118fdd43eab4eb","mode":"0644","path":".github/workflows/rust.yml","sha256":"286ad08324da3b982b08fa1cb8ce57e0e244eed5834633241316f21fce91df4d"})
+    json!({"bytes":54590,"git_blob":"f3cee20faa7ca70b29c5429f373ad78ea6677ef5","mode":"0644","path":".github/workflows/rust.yml","sha256":"15b80f4dffe5bba9b583a7bb37434d16f774bbb633575c254f9e40b64d2be438"})
+}
+// Only the two accepted producer scheduling edges reconstruct the prior workflow.
+const WORKFLOW_CONCURRENCY_INVERSE: &str = r###"[{"at":20727,"remove_utf8":"","insert_utf8":"    needs: foundation-prerequisites\n"},{"at":36244,"remove_utf8":"","insert_utf8":"    needs: foundation-prerequisites\n"}]"###;
+fn workflow_concurrency_frame(
+    expected: &Value,
+    physical: &[u8],
+    mode: &str,
+    inverse: &Value,
+) -> Result<Vec<u8>, String> {
+    need(
+        *expected == workflow_env_claim(),
+        "T07 workflow concurrency exact current caller differs",
+    )?;
+    material(expected, physical, mode)?;
+    need(
+        digest(&serde_json::to_vec(inverse).map_err(|e| e.to_string())?)
+            == "84cfe6780b5d0bde77ee372ea8cf0e9e450bdbf067148320dbbb311245ea583b",
+        "T07 workflow concurrency closed two-span inverse differs",
+    )?;
+    let prior = edits(physical, inverse)?;
+    material(
+        &json!({"bytes":54662,"git_blob":"41d99eeb347b9a3ee5e84d5127118fdd43eab4eb","mode":"0644","path":".github/workflows/rust.yml","sha256":"286ad08324da3b982b08fa1cb8ce57e0e244eed5834633241316f21fce91df4d"}),
+        &prior,
+        "0644",
+    )?;
+    Ok(prior)
 }
 fn workflow_env_frame(
     expected: &Value,
@@ -169,6 +195,11 @@ fn workflow_env_frame(
         "T07 workflow env exact current caller differs",
     )?;
     material(expected, physical, mode)?;
+    let concurrency_inverse: Value =
+        serde_json::from_str(WORKFLOW_CONCURRENCY_INVERSE).map_err(|e| e.to_string())?;
+    let concurrency_prior =
+        workflow_concurrency_frame(expected, physical, mode, &concurrency_inverse)?;
+    let physical = concurrency_prior.as_slice();
     let profile_inverse: Value =
         serde_json::from_str(WORKFLOW_PROFILE_INVERSE).map_err(|e| e.to_string())?;
     need(
@@ -295,6 +326,45 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
                 let current = workflow_env_claim();
                 let env_inverse: Value =
                     serde_json::from_str(WORKFLOW_ENV_INVERSE).map_err(|e| e.to_string())?;
+                let concurrency_inverse: Value = serde_json::from_str(WORKFLOW_CONCURRENCY_INVERSE)
+                    .map_err(|e| e.to_string())?;
+                let concurrency_prior =
+                    workflow_concurrency_frame(&current, &physical, "0644", &concurrency_inverse)?;
+                need(
+                    workflow_concurrency_frame(
+                        &current,
+                        &concurrency_prior,
+                        "0644",
+                        &concurrency_inverse,
+                    )
+                    .is_err(),
+                    "T07 workflow concurrency historical current accepted",
+                )?;
+                for key in ["at", "remove_utf8", "insert_utf8"] {
+                    let mut wrong = concurrency_inverse.clone();
+                    wrong[0][key] = if key == "at" {
+                        json!(1)
+                    } else {
+                        json!("unlisted")
+                    };
+                    need(
+                        workflow_concurrency_frame(&current, &physical, "0644", &wrong).is_err(),
+                        "T07 workflow concurrency altered span accepted",
+                    )?;
+                }
+                let mut missing = concurrency_inverse.clone();
+                missing.as_array_mut().unwrap().pop();
+                let mut extra = concurrency_inverse.clone();
+                extra
+                    .as_array_mut()
+                    .unwrap()
+                    .push(concurrency_inverse[0].clone());
+                for wrong in [missing, extra] {
+                    need(
+                        workflow_concurrency_frame(&current, &physical, "0644", &wrong).is_err(),
+                        "T07 workflow concurrency missing/duplicate/extra span accepted",
+                    )?;
+                }
                 let parent = workflow_env_frame(&current, &physical, "0644", &env_inverse)?;
                 let (_, bytes, sha, _, _) = config_spec(path)?;
                 need(
