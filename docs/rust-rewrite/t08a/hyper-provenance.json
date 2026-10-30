@@ -251,8 +251,8 @@
     },
     {
       "path": "src/proto/h1/encode.rs",
-      "sha256": "eec0acd88ff2a10b3d981417b2c6daf2aef7828a9197d1b16e632a21059bf136",
-      "bytes": 21963
+      "sha256": "85d9664f93dbbf36861e8796cd037a4e22a4d53ca307b28531307f16d9344ed3",
+      "bytes": 21978
     },
     {
       "path": "src/proto/h1/io.rs",
@@ -730,10 +730,31 @@
     "src/ext/source_request_target.rs",
     "src/proto/h1/conn.rs",
     "src/proto/h1/decode.rs",
+    "src/proto/h1/encode.rs",
     "src/proto/h1/role.rs"
   ],
   "removed_files": [],
-  "derived_patch_sha256": "3928eaf048719e1df68e6268c648bf35c898034b7d7c6dc19ad99b19eca4388c",
+  "derived_patch_sha256": "5dbdb52632584cbdc884f33d87a3022f5fda4d892210fc0ede1dcae2e9382fec",
   "default_policy": "Source framing requires explicit ClientBuilder opt-in. Feature compilation alone leaves every upstream decoder default unchanged. Raw target only affects a typed checked extension; method, Host, connection and upgrade parsing remain authoritative.",
-  "format_policy": "Stable pinnedrustfmt package-local disable_all_formatting=true; all72privatefiles includingthisconfig remain underfinite missing/extra/hash guard. Allother workspace+localpath dependency formattercoverage unchanged; no upstreamRust/archive/licensebytes changed."
+  "format_policy": "Stable pinnedrustfmt package-local disable_all_formatting=true; all72privatefiles includingthisconfig remain underfinite missing/extra/hash guard. Allother workspace+localpath dependency formattercoverage unchanged; no upstreamRust/archive/licensebytes changed.",
+  "qualification_lint_roles": {
+    "workspace": "cargo clippy --locked --workspace --all-targets --exclude ssx-cli-hyper -- -D warnings",
+    "private_library": "cargo clippy --locked -p ssx-cli-hyper --features full,source-client-framing --lib -- -D warnings",
+    "private_full_unit": "Unchanged unfiltered cargo test --locked -p ssx-cli-hyper --features full,source-client-framing --lib -- --test-threads=1; original upstream cfg(test,full) deny(warnings) retained.",
+    "Cargo48_constraint": "The excluded member cannot be named by workspace --features. Remove only the CLI-added private features from that Clippy role; all accepted-main original flags and other targets remain. Six full-unit build/test owners retain the feature floor.",
+    "actual_gate_controls": "Validate actual successful LIB/full-test records FIRST; omit one actual role record at a time; require its exact named rejection and unchanged remaining records. Require all ten reviewed private controls actually passed.",
+    "scope": "Qualification role change plus the single behavior-equivalent Encoder branch rewrite required by minimal-client production Clippy; no global lint allow, new ignore, dropped test or shipping feature change."
+  },
+  "production_lint_compatibility": {
+    "source_failure": "Actual native49 minimal-client dependency Clippy: match_wildcard_for_single_variants at encode.rs:86; server feature omits the third enum variant.",
+    "function": "Encoder::into_chunked_with_trailing_fields",
+    "change": "if matches!(self.kind, Kind::Chunked(_)) creates the exact prior Encoder with Some(trailers) and unchanged is_last; all other kinds return self.",
+    "preserved": "All surrounding production bytes and existing full upstream tests remain unchanged; pristine archive and license unchanged. Minimal and full production lint and existing encoded-wire/full-unit evidence must execute on new bytes."
+  },
+  "patch_representation": {
+    "format": "Unified diff with zero context; exact pristine70\u2192samefork72 bytes",
+    "apply_command": "git apply --unidiff-zero docs/rust-rewrite/t08a/private-hyper.patch",
+    "check_command": "git apply --check --unidiff-zero docs/rust-rewrite/t08a/private-hyper.patch",
+    "reason": "Blank unified-diff context markers are trailing whitespace; zero context avoids whitespace hook rewriting without excluding files or changing runtime source."
+  }
 }

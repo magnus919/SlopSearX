@@ -78,12 +78,13 @@ impl Encoder {
     }
 
     pub(crate) fn into_chunked_with_trailing_fields(self, trailers: Vec<HeaderName>) -> Encoder {
-        match self.kind {
-            Kind::Chunked(_) => Encoder {
+        if matches!(self.kind, Kind::Chunked(_)) {
+            Encoder {
                 kind: Kind::Chunked(Some(trailers)),
                 is_last: self.is_last,
-            },
-            _ => self,
+            }
+        } else {
+            self
         }
     }
 

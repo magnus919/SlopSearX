@@ -14,6 +14,108 @@ use std::{
     time::Duration,
 };
 const BINDINGS: &str = include_str!("../../../docs/rust-rewrite/t08a/bindings.json");
+const PRIVATE_LIB_LINT_ARGS: &[&str] = &[
+    "clippy",
+    "--locked",
+    "-p",
+    "ssx-cli-hyper",
+    "--features",
+    "full,source-client-framing",
+    "--lib",
+    "--",
+    "-D",
+    "warnings",
+];
+const PRIVATE_FULL_UNIT_ARGS: &[&str] = &[
+    "test",
+    "--locked",
+    "-p",
+    "ssx-cli-hyper",
+    "--features",
+    "full,source-client-framing",
+    "--lib",
+    "--",
+    "--test-threads=1",
+];
+const PRIVATE_LIB_ROLE_ERROR: &str = "T08A private LIB Clippy role missing, duplicate or failed";
+const PRIVATE_UNIT_ROLE_ERROR: &str = "T08A full private unit role missing, duplicate or failed";
+fn private_role_positions(records: &[Value]) -> Result<[usize; 2]> {
+    let mut positions = [0; 2];
+    for (index, (args, reason)) in [
+        (PRIVATE_LIB_LINT_ARGS, PRIVATE_LIB_ROLE_ERROR),
+        (PRIVATE_FULL_UNIT_ARGS, PRIVATE_UNIT_ROLE_ERROR),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let expected_args = json!(args);
+        let mut selected = records
+            .iter()
+            .enumerate()
+            .filter(|(_, record)| record["program"] == "cargo" && record["args"] == expected_args);
+        let (position, record) = selected.next().ok_or_else(|| reason.to_owned())?;
+        ensure(
+            selected.next().is_none() && record["exit_code"] == 0,
+            reason,
+        )?;
+        positions[index] = position;
+    }
+    let stdout = records[positions[1]]["stdout"]
+        .as_str()
+        .ok_or(PRIVATE_UNIT_ROLE_ERROR)?;
+    for name in include_str!("../../../docs/rust-rewrite/t08a/private-http-controls.txt").lines() {
+        let passed = format!("test {name} ... ok");
+        ensure(
+            stdout
+                .lines()
+                .filter(|line| *line == passed.as_str())
+                .count()
+                == 1,
+            "T08A private HTTP control did not execute exactly once",
+        )?;
+    }
+    Ok(positions)
+}
+fn private_qualification_controls(records: &mut Vec<Value>) -> Result<()> {
+    let successful = records.clone();
+    // Real successful LIB + full-test records pass FIRST. Each control removes
+    // one actual record; no synthetic successful producer transcript is made.
+    let positions = private_role_positions(&successful)?;
+    let positive_sha256 = hash(&serde_json::to_vec(&successful).map_err(|e| e.to_string())?);
+    let mut controls = Vec::new();
+    for (role, position, reason) in [
+        ("private-lib", positions[0], PRIVATE_LIB_ROLE_ERROR),
+        ("private-full-unit", positions[1], PRIVATE_UNIT_ROLE_ERROR),
+    ] {
+        let mut omitted = successful.clone();
+        let removed = omitted.remove(position);
+        let rest = successful
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| *index != position)
+            .map(|(_, record)| record.clone())
+            .collect::<Vec<_>>();
+        ensure(
+            omitted == rest,
+            "T08A role control changed another actual record",
+        )?;
+        let rejection = private_role_positions(&omitted).err();
+        ensure(
+            rejection.as_deref() == Some(reason),
+            "T08A omitted role was not rejected for its exact reason",
+        )?;
+        controls.push(json!({"role":role,"removed_actual_record_index":position,
+            "removed_actual_record_sha256":hash(&serde_json::to_vec(&removed).map_err(|e|e.to_string())?),
+            "mutant_sha256":hash(&serde_json::to_vec(&omitted).map_err(|e|e.to_string())?),
+            "exact_rejection":reason,"all_remaining_actual_records_equal":true}));
+    }
+    records.push(json!({"plan":"T08A","private_lint_unit_roles":{
+        "positive_actual_transcript_sha256":positive_sha256,"positive_validated_before_mutants":true,
+        "actual_private_lib_record":positions[0],"actual_full_unit_record":positions[1],
+        "omission_controls":controls,"scope":"actual private LIB strict lint and unfiltered full unit test; no shipping feature authority"}}));
+    Ok(())
+}
+
 fn hash(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -564,6 +666,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         ],
         records,
     )?;
+    command(root, "cargo", PRIVATE_LIB_LINT_ARGS, records)?;
     let private_listing = command(
         root,
         "cargo",
@@ -610,6 +713,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         ],
         records,
     )?;
+    private_qualification_controls(records)?;
     let built = command(
         root,
         "cargo",

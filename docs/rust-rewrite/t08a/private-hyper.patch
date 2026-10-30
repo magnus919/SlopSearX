@@ -1,46 +1,24 @@
+--- /dev/null
++++ b/.rustfmt.toml
+@@ -0,0 +1,2 @@
++# Private upstream bytes have a separate finite SHA guard.
++disable_all_formatting = true
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -12,7 +12,8 @@
- [package]
- edition = "2021"
- rust-version = "1.63"
+@@ -15 +15,2 @@
 -name = "hyper"
 +name = "ssx-cli-hyper"
 +publish = false
- version = "1.12.0"
- authors = ["Sean McArthur <sean@seanmonstar.com>"]
- build = false
-@@ -74,6 +75,8 @@
-     "dep:smallvec",
- ]
- default = []
+@@ -76,0 +78,2 @@
 +# Exposes a CLIENT-only API; does not activate policy on any connection.
 +source-client-framing = ["client", "http1"]
- ffi = [
-     "dep:http-body-util",
-     "dep:futures-util",
 --- a/src/client/conn/http1.rs
 +++ b/src/client/conn/http1.rs
-@@ -133,6 +133,7 @@
-     h1_preserve_header_case: bool,
-     h1_max_headers: Option<usize>,
-     h1_max_header_size: Option<usize>,
+@@ -135,0 +136 @@
 +    source_framing: bool,
-     #[cfg(feature = "ffi")]
-     h1_preserve_header_order: bool,
-     h1_read_buf_exact_size: Option<usize>,
-@@ -355,6 +356,7 @@
-             h1_preserve_header_case: false,
-             h1_max_headers: None,
-             h1_max_header_size: None,
+@@ -357,0 +359 @@
 +            source_framing: false,
-             #[cfg(feature = "ffi")]
-             h1_preserve_header_order: false,
-             h1_max_buf_size: None,
-@@ -515,6 +517,18 @@
-     /// Default is `None`.
-     pub fn max_header_size(&mut self, val: usize) -> &mut Self {
-         self.h1_max_header_size = Some(val);
+@@ -517,0 +520,12 @@
 +        self
 +    }
 +
@@ -53,32 +31,17 @@
 +    #[cfg(feature = "source-client-framing")]
 +    pub fn source_framing(&mut self, enabled: bool) -> &mut Self {
 +        self.source_framing = enabled;
-         self
-     }
- 
-@@ -608,6 +622,7 @@
-             if let Some(max_header_size) = opts.h1_max_header_size {
-                 conn.set_http1_max_header_size(max_header_size);
-             }
+@@ -610,0 +625 @@
 +            conn.set_source_framing(opts.source_framing);
-             #[cfg(feature = "ffi")]
-             if opts.h1_preserve_header_order {
-                 conn.set_preserve_header_order();
 --- a/src/ext/mod.rs
 +++ b/src/ext/mod.rs
-@@ -53,6 +53,12 @@
- mod h1_reason_phrase;
- #[cfg(any(feature = "http1", feature = "ffi"))]
- pub use h1_reason_phrase::ReasonPhrase;
+@@ -55,0 +56,6 @@
 +
 +// CLI-private typed wire target; upstream public URI semantics stay unchanged.
 +#[cfg(all(feature = "http1", feature = "client"))]
 +mod source_request_target;
 +#[cfg(all(feature = "http1", feature = "client"))]
 +pub use source_request_target::{InvalidSourceRequestTarget, SourceRequestTarget};
- 
- #[cfg(all(feature = "http1", feature = "client"))]
- mod informational;
 --- /dev/null
 +++ b/src/ext/source_request_target.rs
 @@ -0,0 +1,59 @@
@@ -143,30 +106,15 @@
 +}
 --- a/src/proto/h1/conn.rs
 +++ b/src/proto/h1/conn.rs
-@@ -59,6 +59,7 @@
-                 h1_parser_config: ParserConfig::default(),
-                 h1_max_headers: None,
-                 h1_max_header_size: None,
+@@ -61,0 +62 @@
 +                source_framing: false,
-                 #[cfg(feature = "server")]
-                 h1_header_read_timeout: None,
-                 #[cfg(feature = "server")]
-@@ -146,6 +147,11 @@
-         self.state.h1_max_header_size = Some(val);
-     }
- 
+@@ -148,0 +150,5 @@
 +    #[cfg(feature = "client")]
 +    pub(crate) fn set_source_framing(&mut self, enabled: bool) {
 +        self.state.source_framing = enabled;
 +    }
 +
-     #[cfg(feature = "server")]
-     pub(crate) fn set_http1_header_read_timeout(&mut self, val: Duration) {
-         self.state.h1_header_read_timeout = Some(val);
-@@ -316,19 +322,17 @@
-             }
-         } else if msg.expect_continue && msg.head.version.gt(&Version::HTTP_10) {
-             let h1_max_header_size = self.state.h1_max_header_size;
+@@ -319,5 +325,4 @@
 -            self.state.reading = Reading::Continue(Decoder::new(
 -                msg.decode,
 -                self.state.h1_max_headers,
@@ -176,9 +124,7 @@
 +                Decoder::new(msg.decode, self.state.h1_max_headers, h1_max_header_size)
 +                    .with_source_framing(self.state.source_framing),
 +            );
-             wants = wants.add(Wants::EXPECT);
-         } else {
-             let h1_max_header_size = self.state.h1_max_header_size;
+@@ -327,5 +332,4 @@
 -            self.state.reading = Reading::Body(Decoder::new(
 -                msg.decode,
 -                self.state.h1_max_headers,
@@ -188,42 +134,17 @@
 +                Decoder::new(msg.decode, self.state.h1_max_headers, h1_max_header_size)
 +                    .with_source_framing(self.state.source_framing),
 +            );
-         }
- 
-         self.state.allow_trailer_fields = headers::te_is_trailers(&msg.head.headers);
-@@ -953,6 +957,7 @@
-     h1_parser_config: ParserConfig,
-     h1_max_headers: Option<usize>,
-     h1_max_header_size: Option<usize>,
+@@ -955,0 +960 @@
 +    source_framing: bool,
-     #[cfg(feature = "server")]
-     h1_header_read_timeout: Option<Duration>,
-     #[cfg(feature = "server")]
 --- a/src/proto/h1/decode.rs
 +++ b/src/proto/h1/decode.rs
-@@ -46,6 +46,7 @@
-         trailers_cnt: usize,
-         h1_max_headers: Option<usize>,
-         h1_max_header_size: Option<usize>,
+@@ -48,0 +49 @@
 +        source_framing: bool,
-     },
-     /// A Reader used for responses that don't indicate a length or chunked.
-     ///
-@@ -80,6 +81,7 @@
-     TrailerLf,
-     EndCr,
-     EndLf,
+@@ -82,0 +84 @@
 +    SourceTrailer { line_len: usize, previous_cr: bool },
-     End,
- }
- 
-@@ -105,8 +107,16 @@
-                 trailers_cnt: 0,
-                 h1_max_headers,
-                 h1_max_header_size,
+@@ -107,0 +110 @@
 +                source_framing: false,
-             },
-         }
+@@ -109,0 +113,7 @@
 +    }
 +
 +    pub(crate) fn with_source_framing(mut self, enabled: bool) -> Self {
@@ -231,29 +152,11 @@
 +            *source_framing = enabled;
 +        }
 +        self
-     }
- 
-     pub(crate) fn eof() -> Decoder {
-@@ -176,6 +186,7 @@
-                 trailers_cnt,
-                 h1_max_headers,
-                 h1_max_header_size,
+@@ -178,0 +189 @@
 +                source_framing,
-             } => {
-                 let h1_max_headers = h1_max_headers.unwrap_or(DEFAULT_MAX_HEADERS);
-                 let h1_max_header_size = h1_max_header_size.unwrap_or(TRAILER_LIMIT);
-@@ -193,6 +204,7 @@
-                             trailers_cnt,
-                             max_headers_cnt: h1_max_headers,
-                             max_headers_bytes: h1_max_header_size,
+@@ -195,0 +207 @@
 +                            source_framing: *source_framing,
-                         }
-                     ))?;
-                     if *state == ChunkedState::End {
-@@ -286,6 +298,31 @@
-     };
- }
- 
+@@ -288,0 +301,25 @@
 +// A policy-only adapter around the unchanged vetted size/extension parser.
 +// Each read consumes exactly the original bytes; only this source-mode reader
 +// counts the whole physical size line. No body or trailer bytes are retained.
@@ -279,28 +182,11 @@
 +    }
 +}
 +
- struct StepArgs<'args> {
-     chunk_size: &'args mut u64,
-     chunk_buf: &'args mut Option<Bytes>,
-@@ -294,6 +331,7 @@
-     trailers_cnt: &'args mut usize,
-     max_headers_cnt: usize,
-     max_headers_bytes: usize,
+@@ -296,0 +334 @@
 +    source_framing: bool,
- }
- 
- impl ChunkedState {
-@@ -312,12 +350,36 @@
-             trailers_cnt,
-             max_headers_cnt,
-             max_headers_bytes,
+@@ -314,0 +353 @@
 +            source_framing,
-         }: StepArgs<'_>,
-     ) -> Poll<Result<ChunkedState, io::Error>> {
-         use self::ChunkedState::{
-             Body, BodyCr, BodyLf, End, EndCr, EndLf, Extension, Size, SizeLf, SizeLws, Start,
-             Trailer, TrailerLf,
-         };
+@@ -320,0 +360,23 @@
 +        if source_framing && matches!(*self, Start | Size | SizeLws | Extension | SizeLf) {
 +            if *self == Start {
 +                *extensions_cnt = 0;
@@ -324,21 +210,14 @@
 +                ChunkedState::read_size_lf(cx, &mut counted, *chunk_size)
 +            };
 +        }
-         match *self {
-             Start => ChunkedState::read_start(cx, body, chunk_size),
-             Size => ChunkedState::read_size(cx, body, chunk_size),
-@@ -336,9 +398,44 @@
-                 max_headers_cnt,
-                 max_headers_bytes,
-             ),
+@@ -338,0 +401 @@
 +            EndCr if source_framing => ChunkedState::read_source_trailer(cx, body, 0, false),
-             EndCr => ChunkedState::read_end_cr(cx, body, trailers_buf, max_headers_bytes),
+@@ -339,0 +403,4 @@
 +            ChunkedState::SourceTrailer {
 +                line_len,
 +                previous_cr,
 +            } => ChunkedState::read_source_trailer(cx, body, line_len, previous_cr),
-             EndLf => ChunkedState::read_end_lf(cx, body, trailers_buf, max_headers_bytes),
-             End => Poll::Ready(Ok(ChunkedState::End)),
+@@ -341,0 +409,30 @@
 +        }
 +    }
 +
@@ -369,29 +248,11 @@
 +                line_len: length,
 +                previous_cr: byte == b'\r',
 +            }))
-         }
-     }
- 
-@@ -763,6 +860,7 @@
-                             trailers_cnt: &mut trailers_cnt,
-                             max_headers_cnt: DEFAULT_MAX_HEADERS,
-                             max_headers_bytes: TRAILER_LIMIT,
+@@ -765,0 +863 @@
 +                            source_framing: false,
-                         },
-                     )
-                 })
-@@ -795,6 +893,7 @@
-                             trailers_cnt: &mut trailers_cnt,
-                             max_headers_cnt: DEFAULT_MAX_HEADERS,
-                             max_headers_bytes: TRAILER_LIMIT,
+@@ -797,0 +896 @@
 +                            source_framing: false,
-                         },
-                     )
-                 })
-@@ -1288,3 +1387,180 @@
-         assert_eq!(err.kind(), io::ErrorKind::InvalidData);
-     }
- }
+@@ -1290,0 +1390,177 @@
 +
 +#[cfg(test)]
 +mod source_framing_tests {
@@ -569,12 +430,22 @@
 +        decode(over_trailer, false).await;
 +    }
 +}
+--- a/src/proto/h1/encode.rs
++++ b/src/proto/h1/encode.rs
+@@ -81,2 +81,2 @@
+-        match self.kind {
+-            Kind::Chunked(_) => Encoder {
++        if matches!(self.kind, Kind::Chunked(_)) {
++            Encoder {
+@@ -85,2 +85,3 @@
+-            },
+-            _ => self,
++            }
++        } else {
++            self
 --- a/src/proto/h1/role.rs
 +++ b/src/proto/h1/role.rs
-@@ -1229,7 +1229,14 @@
-         extend(dst, msg.head.subject.0.as_str().as_bytes());
-         extend(dst, b" ");
-         //TODO: add API to http::Uri to encode without std::fmt
+@@ -1232 +1232,8 @@
 -        let _ = write!(FastWrite(dst), "{} ", msg.head.subject.1);
 +        if let Some(target) = msg.head.extensions.get::<crate::ext::SourceRequestTarget>() {
 +            // The CLI owns explicit routing/Host. This validated immutable
@@ -584,13 +455,7 @@
 +        } else {
 +            let _ = write!(FastWrite(dst), "{} ", msg.head.subject.1);
 +        }
- 
-         match msg.head.version {
-             Version::HTTP_10 => extend(dst, b"HTTP/1.0"),
-@@ -3617,3 +3624,56 @@
-         })
-     }
- }
+@@ -3619,0 +3627,53 @@
 +
 +
 +#[cfg(all(test, feature = "client", feature = "http1"))]
@@ -644,8 +509,3 @@
 +        assert!(upgraded);
 +    }
 +}
---- a/.rustfmt.toml
-+++ b/.rustfmt.toml
-@@ -0,0 +1,2 @@
-+# Private upstream bytes have a separate finite SHA guard.
-+disable_all_formatting = true

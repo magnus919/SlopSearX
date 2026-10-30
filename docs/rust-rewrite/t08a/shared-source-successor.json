@@ -12,10 +12,10 @@
         "git_blob": "5fd39cfbc51dfb29e983b893b859ec105c44dab7"
       },
       "current": {
-        "sha256": "a22c44e0cb6e9157e1d1cdb7006405803601b6ecddf41927ddf7b208fa765c1b",
-        "bytes": 40990,
+        "sha256": "07907e4c32e53c4cb629b5e9ce3ca64c0c64a05235f8a5d4e11933652b597162",
+        "bytes": 41417,
         "mode": "0644",
-        "git_blob": "2692fa067739447b4fa3db211b4f3a072604d567"
+        "git_blob": "e51ba769b92e1c038641f0315daf34909d0c0aaf"
       },
       "edits": [
         {
@@ -31,7 +31,7 @@
         {
           "at": 19784,
           "remove_utf8": "",
-          "insert_utf8": "                    \"--features\",\n                    \"ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing\",\n"
+          "insert_utf8": "                    \"--exclude\",\n                    \"ssx-cli-hyper\",\n                    \"--\",\n                    \"-D\",\n                    \"warnings\",\n                ],\n                records,\n            )?;\n            command(\n                root,\n                \"cargo\",\n                &[\n                    \"clippy\",\n                    \"--locked\",\n                    \"-p\",\n                    \"ssx-cli-hyper\",\n                    \"--features\",\n                    \"full,source-client-framing\",\n                    \"--lib\",\n"
         },
         {
           "at": 20119,
