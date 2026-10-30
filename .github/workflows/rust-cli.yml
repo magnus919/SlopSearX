@@ -65,7 +65,14 @@ jobs:
           rustc --version --verbose | tee "$CARGO_TARGET_DIR/rust-evidence/rustc.txt"
           grep -Fx "host: $EXPECTED_TARGET" "$CARGO_TARGET_DIR/rust-evidence/rustc.txt"
           cargo --version --verbose | tee "$CARGO_TARGET_DIR/rust-evidence/cargo.txt"
-          perl -V > "$CARGO_TARGET_DIR/rust-evidence/perl.txt"
+          if [ "$RUNNER_OS" = Windows ]; then
+            export OPENSSL_SRC_PERL='C:/Strawberry/perl/bin/perl.exe'
+            "$OPENSSL_SRC_PERL" -MIPC::Cmd -MLocale::Maketext::Simple -e 'die "native Windows Perl required\n" unless $^O eq "MSWin32"; printf "OpenSSL native Perl: %s (%s)\n", $^X, $^V;' | tee "$CARGO_TARGET_DIR/rust-evidence/perl-selected.txt"
+            "$OPENSSL_SRC_PERL" -V > "$CARGO_TARGET_DIR/rust-evidence/perl.txt"
+            printf 'OPENSSL_SRC_PERL=%s\n' "$OPENSSL_SRC_PERL" >> "$GITHUB_ENV"
+          else
+            perl -V > "$CARGO_TARGET_DIR/rust-evidence/perl.txt"
+          fi
           git rev-parse HEAD > "$CARGO_TARGET_DIR/rust-evidence/head.txt"
           git ls-files --stage > "$CARGO_TARGET_DIR/rust-evidence/index-before.txt"
           git status --porcelain=v1 --untracked-files=all > "$CARGO_TARGET_DIR/rust-evidence/status-before.txt"
