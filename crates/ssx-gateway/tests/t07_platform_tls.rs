@@ -19,7 +19,33 @@ struct TrustGuard {
     active: bool,
 }
 impl TrustGuard {
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(windows)]
+    fn windows_command(root: &Path, mode: &str) -> std::process::Command {
+        // Match the already configured trust-store.sh Windows branch exactly,
+        // bypassing only ambiguous bash lookup (which can select the WSL launcher).
+        let mut command = std::process::Command::new("powershell.exe");
+        command
+            .args([
+                "-NoLogo",
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+            ])
+            .arg(
+                Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("tests/platform_support/trust-store.ps1"),
+            )
+            .arg(mode)
+            .arg(root);
+        command
+    }
+    #[cfg(windows)]
+    fn command(root: &Path, mode: &str) -> std::io::Result<std::process::ExitStatus> {
+        Self::windows_command(root, mode).status()
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
     fn command(root: &Path, mode: &str) -> std::io::Result<std::process::ExitStatus> {
         std::process::Command::new("bash")
             .arg(
@@ -93,7 +119,54 @@ async fn finalize_exact_owned_macos_trust_fixtures_with_bounded_security_childre
 #[ignore = "requires explicit dedicated ephemeral hosted trust-store fixture; never run on personal hosts"]
 async fn installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname()
  {
-    let root = root("tls-store");
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::{OsStrExt, OsStringExt};
+        // Inspect the real constructor without spawning PowerShell or touching
+        // a trust store. Structured arguments retain spaces and WTF-16 units.
+        let units = [67, 58, 92, 32, 0xD800, 92, 0xDC00];
+        let owned = PathBuf::from(std::ffi::OsString::from_wide(&units));
+        for mode in ["install", "remove"] {
+            let command = TrustGuard::windows_command(&owned, mode);
+            assert_eq!(
+                command.get_program(),
+                std::ffi::OsStr::new("powershell.exe")
+            );
+            let expected: Vec<std::ffi::OsString> = [
+                "-NoLogo",
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+            ]
+            .into_iter()
+            .map(Into::into)
+            .chain([
+                Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("tests/platform_support/trust-store.ps1")
+                    .into_os_string(),
+                mode.into(),
+                owned.clone().into_os_string(),
+            ])
+            .collect();
+            assert_eq!(command.get_args().collect::<Vec<_>>(), expected);
+            assert_eq!(
+                command
+                    .get_args()
+                    .last()
+                    .unwrap()
+                    .encode_wide()
+                    .collect::<Vec<_>>(),
+                units
+            );
+        }
+    }
+    let root = root(if cfg!(windows) {
+        "tls-store-command with space"
+    } else {
+        "tls-store"
+    });
     let executable = stage(&root, false);
     let ca = Ca::new();
     std::fs::write(root.join("ca.der"), ca.certificate.der()).unwrap();
