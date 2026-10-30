@@ -41,7 +41,7 @@ const DEFAULT_IDENTITY_OLD_SHA: &str =
 const DEFAULT_IDENTITY_CURRENT_SHA: &str =
     "ee1339e68e04241029c78e17711fbff5b1a7b2e6033f5f6816de80bf46ef87ec";
 const DEFAULT_IDENTITY_INSERT: &str = "    headers.insert(\n        reqwest::header::USER_AGENT,\n        reqwest::header::HeaderValue::from_static(http::DEFAULT_USER_AGENT),\n    );\n";
-fn default_identity_source(
+fn default_identity_source_historical(
     raw: &[u8],
     expected_sha: &str,
     expected_bytes: Option<usize>,
@@ -64,6 +64,30 @@ fn default_identity_source(
         digest(historical.as_bytes()) == DEFAULT_IDENTITY_OLD_SHA,
         "A12 default-identity insertion changes other original assertions",
     )
+}
+// The legacy UA proof receives e127 bytes only after physical Page authentication.
+fn default_identity_current(
+    root: &Path,
+    raw: &[u8],
+    expected_sha: &str,
+    expected_bytes: Option<usize>,
+) -> Result<Vec<u8>> {
+    require(
+        expected_sha == DEFAULT_IDENTITY_OLD_SHA && expected_bytes.is_none(),
+        "A12 exact historical default-identity source caller changed",
+    )?;
+    let frame = json!({"path":DEFAULT_IDENTITY_TEST_PATH,"sha256":DEFAULT_IDENTITY_CURRENT_SHA,"bytes":60225,"mode":"0644"});
+    crate::a13::a06_source_successor::native_search::page_prior(root, &frame, Some(raw))?
+        .ok_or("A12 default-identity page operand not selected".into())
+}
+fn default_identity_source(
+    root: &Path,
+    raw: &[u8],
+    expected_sha: &str,
+    expected_bytes: Option<usize>,
+) -> Result<()> {
+    let current = default_identity_current(root, raw, expected_sha, expected_bytes)?;
+    default_identity_source_historical(&current, expected_sha, expected_bytes)
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let bytes = fs::read(root.join("docs/rust-rewrite/a12/qualification-v1.json"))
@@ -89,6 +113,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         let expected_bytes = pin["bytes"].as_u64().map(|value| value as usize);
         if p == DEFAULT_IDENTITY_TEST_PATH {
             default_identity_source(
+                root,
                 &fs::read(root.join(p)).map_err(|e| e.to_string())?,
                 expected_sha,
                 expected_bytes,
@@ -219,20 +244,38 @@ mod tests {
     use super::one_pass;
     #[test]
     fn exact_positive_completion_is_required() {
+        let root = &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let current = include_bytes!("../../ssx-infra/tests/a12_security.rs");
         assert!(
-            super::default_identity_source(current, super::DEFAULT_IDENTITY_OLD_SHA, None).is_ok()
+            super::default_identity_source(root, current, super::DEFAULT_IDENTITY_OLD_SHA, None)
+                .is_ok()
         );
-        assert!(super::default_identity_source(current, "wrong", None).is_err());
+        assert!(super::default_identity_source(root, current, "wrong", None).is_err());
         assert!(
             super::default_identity_source(
+                root,
                 current,
                 super::DEFAULT_IDENTITY_OLD_SHA,
                 Some(current.len())
             )
             .is_err()
         );
-        let current = std::str::from_utf8(current).unwrap();
+        let logical =
+            super::default_identity_current(root, current, super::DEFAULT_IDENTITY_OLD_SHA, None)
+                .unwrap();
+        assert!(
+            super::default_identity_source(root, &logical, super::DEFAULT_IDENTITY_OLD_SHA, None)
+                .is_err()
+        );
+        let mut altered = current.to_vec();
+        altered.push(0);
+        assert!(
+            super::default_identity_source(root, &altered, super::DEFAULT_IDENTITY_OLD_SHA, None)
+                .is_err()
+        );
+        super::default_identity_source_historical(&logical, super::DEFAULT_IDENTITY_OLD_SHA, None)
+            .unwrap();
+        let current = std::str::from_utf8(&logical).unwrap();
         for mutated in [
             current.replacen(super::DEFAULT_IDENTITY_INSERT, "", 1),
             current.replace("http::DEFAULT_USER_AGENT", "\"wrong-agent\""),
@@ -247,7 +290,7 @@ mod tests {
             current.replace("synthetic-secret", "changed-secret"),
         ] {
             assert!(
-                super::default_identity_source(
+                super::default_identity_source_historical(
                     mutated.as_bytes(),
                     super::DEFAULT_IDENTITY_OLD_SHA,
                     None

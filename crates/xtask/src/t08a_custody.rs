@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/t08a/shared-source-successor.json";
-const CAPSULE_SHA: &str = "0c94eb770356d38b85c8265768fabea6458c3ef2a94c2b22ef23200cbf9cb673";
+const CAPSULE_SHA: &str = "349145f58ce2f247fff9d5fb7cee2141d1d177d75cd82228d9220972816c0ac4";
 const ROWS: [(&str, usize); 2] = [("crates/xtask/src/main.rs", 6), ("Cargo.lock", 23)];
 fn need(ok: bool, why: &str) -> Result<()> {
     if ok {
@@ -241,7 +241,7 @@ fn controls_for(
 
 // Separate closed legacy reader admission; the original main/lock ROWS remain2.
 pub(crate) const LEGACY_CAPSULE_PATH: &str = "docs/rust-rewrite/t08a/legacy-input-successor.json";
-const LEGACY_CAPSULE_SHA: &str = "6916a7c56601de6ae75bddefb50cfa440db5194b0b9bffd153381c5e295b33c9";
+const LEGACY_CAPSULE_SHA: &str = "0baa1d08654a179f2c5446ac9060b7bf9c91b39d6a765720e28358096336f507";
 const LEGACY_ROWS: [(&str, usize); 4] = [
     ("Cargo.toml", 1),
     (

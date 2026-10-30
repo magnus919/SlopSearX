@@ -138,6 +138,16 @@ deterministic fake-engine fixture, open `/`, and walk these URLs in order:
 /search?q=valkey&time_range=month&safesearch=2
 ```
 
+Search page numbers retain the full positive decimal value admitted by the HTTP
+integer grammar, including values beyond machine-word integers. Previous and
+next links preserve the search filters and use exact decimal neighbors. The HTTP
+lexical limit remains 4,300 digits. At the largest admitted page whose successor
+needs 4,301 digits, the Rust portal keeps the exact current page and Previous
+link, and displays a visible, accessible disabled Next control with “page number
+limit”. It emits no invalid, clamped or aliased next-page URL. This is deliberate
+bounded hardening over the Python formatter's conversion failure at that edge;
+it does not change JSON request admission. See issue #1049 for qualification.
+
 The browser review must repeat the walk at 1440×900 and 390×844, with a long
 title, missing publication date, mixed engine sources, an empty response, and
 a partial response. The scenario and expected assertions are maintained in

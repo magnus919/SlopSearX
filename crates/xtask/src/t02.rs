@@ -9,8 +9,11 @@ use std::{
     process::Command,
 };
 const COVERAGE_SHA: &str = "5ce1ab45a2e2006daa03ebf4a4fcd9ed62d9d59b8490ddc8f5eb82b19fc37f28";
-#[path = "../../../docs/rust-rewrite/t02/source-amendments/current-main-two-source-v2.rs"]
+#[path = "../../../docs/rust-rewrite/t02/source-amendments/f09-inventory-composition-v1.rs"]
 mod source_successor;
+pub(crate) fn page_inventory_controls(root: &Path) -> Result<()> {
+    source_successor::f09_controls(root)
+}
 fn require(ok: bool, why: &str) -> Result<()> {
     if ok { Ok(()) } else { Err(why.into()) }
 }
@@ -252,6 +255,54 @@ fn exact_tests(output: &str, expected: &Value) -> Result<()> {
         "native test missing, duplicate, extra or ignored",
     )
 }
+// The frozen native inventory deliberately records the former u64 rejection.
+// Current execution restores exactly the three original source HTTP 200/call-one
+// observations; their raw records and the original 421-row inventory stay frozen.
+fn current_records(frozen: &[Value]) -> Result<Vec<Value>> {
+    require(
+        frozen.len() == 421,
+        "T02 original native record count differs",
+    )?;
+    let mut current = frozen.to_vec();
+    for (id, pin) in [
+        (
+            "integer_pageno_01",
+            "33311f55f8e002f0fbdd47dd5dde7eedec7695fec6f9b968f1deff140dbbdde8",
+        ),
+        (
+            "integer_pageno_02",
+            "158aec28082e36f053b32463fd2637f3978af3e4477834b6ea17752d9a6ab88b",
+        ),
+        (
+            "integer_pageno_03",
+            "f6eba6fdec1a5026ac880822f8e34d1f7b3d775b16cb2b31cd609ac8ddd6dd6c",
+        ),
+    ] {
+        let indexes = frozen
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r["kind"] == "http" && r["id"] == id)
+            .map(|(i, _)| i)
+            .collect::<Vec<_>>();
+        require(
+            indexes.len() == 1,
+            "T02 restored source case missing or duplicate",
+        )?;
+        let index = indexes[0];
+        require(
+            frozen[index]
+                == json!({"kind":"http","id":id,"source_record_sha256":pin,"status":400,"engine_call_delta":0}),
+            "T02 former page-bound record drift",
+        )?;
+        current[index]["status"] = json!(200);
+        current[index]["engine_call_delta"] = json!(1);
+    }
+    Ok(current)
+}
+const PAGE_PROTOCOL_TEST: &str =
+    "lossless_page_integer_grammar_last_duplicate_and_strict_safesearch_reach_http";
+const PAGE_HTML_TEST: &str =
+    "lossless_large_page_html_links_preserve_filters_and_exact_decimal_neighbors";
 const YAML_SCALAR_TEST: &str = "successful_yaml_break_scalars_match_pinned_emitter_on_actual_http";
 const YAML_SCALAR_REFERENCE: &str = "docs/rust-rewrite/t02/yaml-break-source-controls-v1.json";
 const YAML_SCALAR_REFERENCE_SHA: &str =
@@ -277,7 +328,11 @@ fn current_tests(frozen: &Value, family: &str) -> Result<Value> {
             expected
                 .as_array_mut()
                 .ok_or("HTTP test inventory missing")?
-                .push(json!(YAML_SCALAR_TEST));
+                .extend([
+                    json!(YAML_SCALAR_TEST),
+                    json!(PAGE_HTML_TEST),
+                    json!(PAGE_PROTOCOL_TEST),
+                ]);
         }
         "formatter" | "library" => {}
         _ => return Err("unknown T02 native test family".into()),
@@ -545,12 +600,16 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
         let pin = artifact["sha256"]
             .as_str()
             .ok_or("T02 artifact digest missing")?;
+        let page_prior = source_successor::page_original(root, path)?;
         if let Some(proof) = source_successor::verify(root, path, pin, COVERAGE_SHA) {
             proof?;
         } else {
             require(
                 artifact["sha256"]
-                    == digest(&fs::read(root.join(path)).map_err(|e| format!("{path}:{e}"))?),
+                    == digest(&match page_prior {
+                        Some(prior) => prior,
+                        None => fs::read(root.join(path)).map_err(|e| format!("{path}:{e}"))?,
+                    }),
                 &format!("T02 artifact differs:{path}"),
             )?;
         }
@@ -693,7 +752,19 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
         }
         completed.extend(completions(&output)?);
     }
-    verify_records(&completed, expected, true)?;
+    let mut current_expected = current_records(expected)?;
+    current_expected.push(json!({"kind":"html","id":"lossless-pages","source_record_sha256":null}));
+    for (id, status, calls) in [
+        ("current_page_fraction", 400, 0),
+        ("current_page_exponent", 400, 0),
+        ("current_page_duplicate_valid_last", 200, 1),
+        ("current_page_duplicate_invalid_last", 400, 0),
+        ("current_strict_safesearch_policy", 400, 0),
+    ] {
+        current_expected.push(json!({"kind":"http","id":id,"source_record_sha256":null,"status":status,"engine_call_delta":calls}));
+    }
+
+    verify_records(&completed, &current_expected, true)?;
     commands.push(json!({"T02_actual_wire_receipts":archive_wire_records(&completed)?}));
     // Actually omit one pinned source case in a fresh server run. The test must fail and clean up.
     let skipped = coverage["skip_control_id"]
@@ -726,8 +797,9 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
         "actual omitted-case control failed to reject or clean up",
     )?;
     let negative_rows = completions(&stdout)?;
-    let wanted = expected
+    let wanted = current_expected
         .iter()
+        .take(expected.len())
         .filter(|r| r["kind"] == "http" && r["id"] != skipped)
         .cloned()
         .collect::<Vec<_>>();
@@ -751,11 +823,53 @@ mod tests {
     #[test]
     fn missing_duplicate_extra_and_source_drift_fail_closed() {
         source_successor::controls(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap();
-        // Current discovery is precisely the frozen eight plus one reviewed test.
+        let records = load(
+            &Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../docs/rust-rewrite/t02/coverage.json"),
+        )
+        .unwrap()["native_records"]
+            .as_array()
+            .unwrap()
+            .clone();
+        let restored = current_records(&records).unwrap();
+        assert_eq!(restored.len(), records.len());
+        assert!(current_records(&restored).is_err());
+        assert_eq!(
+            records
+                .iter()
+                .zip(&restored)
+                .filter(|(a, b)| a != b)
+                .count(),
+            3
+        );
+        for id in [
+            "integer_pageno_01",
+            "integer_pageno_02",
+            "integer_pageno_03",
+        ] {
+            let index = records
+                .iter()
+                .position(|r| r["kind"] == "http" && r["id"] == id)
+                .unwrap();
+            assert_eq!(restored[index]["status"], 200);
+            assert_eq!(restored[index]["engine_call_delta"], 1);
+            for field in ["status", "engine_call_delta", "source_record_sha256"] {
+                let mut changed = records.clone();
+                changed[index][field] = json!("drift");
+                assert!(current_records(&changed).is_err());
+            }
+            let mut omitted = records.clone();
+            omitted.remove(index);
+            assert!(current_records(&omitted).is_err());
+            let mut missing_actual = restored.clone();
+            missing_actual.remove(index);
+            assert!(verify_records(&missing_actual, &restored, false).is_err());
+        }
+        // Current discovery retains the frozen eight, the reviewed YAML test, and both additive lossless-page controls.
         let frozen = json!(FROZEN_HTTP_TESTS);
         let current = current_tests(&frozen, "http").unwrap();
         let names = current.as_array().unwrap();
-        assert_eq!(names.len(), 9);
+        assert_eq!(names.len(), 11);
         let output = names
             .iter()
             .map(|n| format!("test {} ... ok\n", n.as_str().unwrap()))

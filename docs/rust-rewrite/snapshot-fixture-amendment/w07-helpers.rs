@@ -14,6 +14,8 @@ use std::{fs, path::Path};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.json";
 const SHA: &str = "8889f54d073bc27811febf1bbc6bafdbea1c25303a0f1c0dfff8bff04daaa831";
+const JOIN: &str = "docs/rust-rewrite/snapshot-fixture-amendment/page-join-v1.json";
+const JOIN_SHA: &str = "fc345b654e18cbc81f79802e70c363621a3050476b3936be85dfee20b0147704";
 const CONTAINER: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const CONTAINER_SHA: &str = "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64";
 const SOURCES: [&str; 2] = [
@@ -111,7 +113,8 @@ fn caller(root: &Path, doc: &Value, row: &Value, path: &str, expected: &str) -> 
             && row["caller_entry"] == serde_json::json!({path:expected}),
         "exact caller path/pin/full entry",
     )?;
-    let raw = regular(root, CONTAINER)?;
+    let physical = regular(root, CONTAINER)?;
+    let raw = composition_parent(root, CONTAINER, &physical, false)?;
     material(&doc["container"], &raw, "0644")?;
     let frozen: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     let pointer = format!("/sources/{}", path.replace('~', "~0").replace('/', "~1"));
@@ -177,6 +180,79 @@ fn inverse(row: &Value, current: &[u8], mode: &str) -> Result<Vec<u8>> {
     need(forward == current, "independent forward proof")?;
     Ok(prior)
 }
+// Only this reviewed two-helper/current-registry union may precede the original proof.
+fn composition_document(root: &Path) -> Result<Value> {
+    let raw = regular(root, JOIN)?;
+    need(sha(&raw) == JOIN_SHA, "sealed Page/snapshot join")?;
+    let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    need(
+        doc["schema"] == "SNAPSHOT_PAGE_TWO_HELPER_JOIN_V1"
+            && doc["parents"]
+                == serde_json::json!({"page":"ef9c5c93e4a4a57d9b835fb291e8d87410a232a8","snapshot":"8e71a83f9649d58e9a60e34810275b736e44151a"})
+            && doc["unchanged_capsules"]
+                == serde_json::json!({"page":"dfd7494b0ee42ac6a9ca702020640aaf65454b6a57f99991ae761c571dd96fcf","snapshot":"e16ba1482b12b55a42a4372f3fd4a7116effaf0fa04c79cf5cb13f01930eea4e","helpers":SHA}),
+        "closed join parents/capsules",
+    )?;
+    let rows = doc["helpers"].as_array().ok_or("join helper rows")?;
+    need(
+        rows.len() == 2
+            && rows.iter().zip(SOURCES).all(|(row, path)| {
+                row["current"]["path"] == path
+                    && ["page", "snapshot"].iter().all(|parent| {
+                        row[parent]["current"] == row["current"]
+                            && row[parent]["prior"]["path"] == path
+                    })
+            }),
+        "closed two-helper join membership",
+    )?;
+    let row = &doc["registry"];
+    need(
+        row["current"]["path"] == CONTAINER
+            && row["snapshot"]["prior"]["sha256"] == CONTAINER_SHA
+            && ["page", "snapshot"].iter().all(|parent| {
+                row[parent]["current"] == row["current"]
+                    && row[parent]["prior"]["path"] == CONTAINER
+            }),
+        "closed registry join frame",
+    )?;
+    Ok(doc)
+}
+fn composition_row<'a>(doc: &'a Value, path: &str) -> Result<&'a Value> {
+    if path == CONTAINER {
+        return Ok(&doc["registry"]);
+    }
+    need(SOURCES.contains(&path), "unlisted join path")?;
+    doc["helpers"]
+        .as_array()
+        .ok_or("join rows")?
+        .iter()
+        .find(|row| row["current"]["path"] == path)
+        .ok_or("join source absent".into())
+}
+// The exact CLI successor is an outer frame. The Page join capsule and both
+// original parent inverses keep their original bytes, hashes and authority.
+fn cli_page_operand(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if SOURCES.contains(&path) {
+        cli_source_custody::legacy_prior(root, path, physical)
+    } else {
+        Ok(physical.to_vec())
+    }
+}
+fn composition_parent(root: &Path, path: &str, supplied: &[u8], page: bool) -> Result<Vec<u8>> {
+    let doc = composition_document(root)?;
+    let row = composition_row(&doc, path)?;
+    let physical = regular(root, path)?;
+    need(
+        physical == supplied,
+        "join supplied bytes are not physical current",
+    )?;
+    let physical = cli_page_operand(root, path, &physical)?;
+    material(&row["current"], &physical, "0644")?;
+    // Both frames must reconstruct before either one is returned to an old reader.
+    let page_prior = inverse(&row["page"], &physical, "0644")?;
+    let snapshot_prior = inverse(&row["snapshot"], &physical, "0644")?;
+    Ok(if page { page_prior } else { snapshot_prior })
+}
 pub(crate) fn verify(
     root: &Path,
     path: &str,
@@ -194,13 +270,26 @@ pub(crate) fn verify(
             .iter()
             .find(|r| r["prior"]["path"] == path)
             .ok_or("unlisted helper")?;
-        caller(root, &doc, row, path, expected)?;
         let physical = regular(root, path)?;
         need(
             physical == supplied,
             "supplied differs from physical current",
         )?;
-        let baseline = cli_source_custody::legacy_prior(root, path, &physical)?;
+        let join = composition_document(root)?;
+        let joined = composition_row(&join, path)?;
+        let baseline = composition_parent(root, path, &physical, false)?;
+        if joined["current"]["sha256"] == expected {
+            let container = regular(root, CONTAINER)?;
+            material(&join["registry"]["current"], &container, "0644")?;
+            let container: Value = serde_json::from_slice(&container).map_err(|e| e.to_string())?;
+            let pointer = format!("/sources/{}", path.replace('~', "~0").replace('/', "~1"));
+            need(
+                container.pointer(&pointer) == Some(&Value::String(expected.into())),
+                "exact union container pointer/current pin",
+            )?;
+            return cli_page_operand(root, path, &physical);
+        }
+        caller(root, &doc, row, path, expected)?;
         inverse(row, &baseline, "0644")
     })())
 }
@@ -212,8 +301,19 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let path = text(&row["prior"], "path")?;
         let expected = text(&row["prior"], "sha256")?;
         let physical = regular(root, path)?;
-        let baseline = cli_source_custody::legacy_prior(root, path, &physical)?;
+        let baseline = composition_parent(root, path, &physical, false)?;
+        let joined = composition_document(root)?;
+        let current_pin = text(&composition_row(&joined, path)?["current"], "sha256")?;
+        need(
+            verify(root, path, current_pin, &physical).ok_or("current helper absent")??
+                == cli_page_operand(root, path, &physical)?,
+            "closed current helper route positive",
+        )?;
         let prior = verify(root, path, expected, &physical).ok_or("selected helper absent")??;
+        need(
+            inverse(row, &baseline, "0644")? == prior,
+            "original pure inverse positive in snapshot frame",
+        )?;
         let git = std::process::Command::new("git")
             .args([
                 "show",
@@ -291,7 +391,88 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         verify(root, "unknown", "wrong", b"").is_none(),
         "unlisted path",
     )?;
+    composition_controls(root)?;
     filesystem_controls(root, &doc)
+}
+#[cfg(test)]
+fn composition_controls(root: &Path) -> Result<()> {
+    let doc = composition_document(root)?;
+    for path in [SOURCES[0], SOURCES[1], CONTAINER] {
+        let row = composition_row(&doc, path)?;
+        let physical = regular(root, path)?;
+        let page_operand = cli_page_operand(root, path, &physical)?;
+        for (name, page) in [("page", true), ("snapshot", false)] {
+            let prior = composition_parent(root, path, &physical, page)?;
+            need(
+                inverse(&row[name], &page_operand, "0644")? == prior,
+                "join pure positive frame",
+            )?;
+            let commit = text(&doc["parents"], name)?;
+            let git = std::process::Command::new("git")
+                .args(["show", &format!("{commit}:{path}")])
+                .current_dir(root)
+                .output()
+                .map_err(|e| e.to_string())?;
+            need(
+                git.status.success() && git.stdout == prior,
+                "exact Page/snapshot parent Git bytes",
+            )?;
+            let tree = std::process::Command::new("git")
+                .args(["ls-tree", commit, "--", path])
+                .current_dir(root)
+                .output()
+                .map_err(|e| e.to_string())?;
+            need(
+                tree.status.success()
+                    && tree.stdout
+                        == format!(
+                            "100644 blob {}\t{path}\n",
+                            text(&row[name]["prior"], "git_blob")?
+                        )
+                        .as_bytes(),
+                "exact join parent Git mode/blob",
+            )?;
+            need(
+                composition_parent(root, path, &prior, page).is_err(),
+                "either join parent supplied as physical",
+            )?;
+            for mode in ["0600", "0755", "4644"] {
+                need(
+                    inverse(&row[name], &page_operand, mode).is_err(),
+                    "join wrong mode",
+                )?;
+            }
+            for mutation in 0..3 {
+                let mut bad = row[name].clone();
+                let edits = bad["edits"].as_array_mut().ok_or("join changes")?;
+                match mutation {
+                    0 => {
+                        edits.pop();
+                    }
+                    1 => {
+                        edits.push(edits[0].clone());
+                    }
+                    _ => {
+                        edits[0]["at"] = serde_json::json!(0);
+                    }
+                }
+                need(
+                    inverse(&bad, &page_operand, "0644").is_err(),
+                    "join missing/duplicate/moved edit",
+                )?;
+            }
+        }
+        let mut altered = physical.clone();
+        altered.push(0);
+        need(
+            composition_parent(root, path, &altered, false).is_err(),
+            "altered supplied union",
+        )?;
+    }
+    need(
+        composition_parent(root, "wrong", b"", false).is_err(),
+        "unlisted union path",
+    )
 }
 #[cfg(all(test, unix))]
 fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
@@ -330,6 +511,7 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
     )?;
     for path in [
         CAPSULE,
+        JOIN,
         CONTAINER,
         SOURCES[0],
         SOURCES[1],
@@ -392,13 +574,69 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         )?;
         fs::remove_dir(&target).map_err(|e| e.to_string())?;
         fs::rename(&backup, &target).map_err(|e| e.to_string())?;
-        let prior = inverse(row, &physical, "0644")?;
+        let page_current = cli_page_operand(root, path, &physical)?;
+        fs::write(&target, &page_current).map_err(|e| e.to_string())?;
+        need(
+            verify(&owned.0, path, expected, &page_current)
+                .unwrap()
+                .is_err(),
+            "accepted Page helper substituted for physical CLI successor",
+        )?;
+        fs::write(&target, &physical).map_err(|e| e.to_string())?;
+        for page in [true, false] {
+            let parent = composition_parent(root, path, &physical, page)?;
+            fs::write(&target, &parent).map_err(|e| e.to_string())?;
+            need(
+                verify(&owned.0, path, expected, &parent).unwrap().is_err(),
+                "either parent physically substituted",
+            )?;
+            let joined = composition_document(root)?;
+            let current_pin = text(&composition_row(&joined, path)?["current"], "sha256")?;
+            need(
+                verify(&owned.0, path, current_pin, &parent)
+                    .unwrap()
+                    .is_err(),
+                "old parent with current pin",
+            )?;
+        }
+        let baseline = composition_parent(root, path, &physical, false)?;
+        let prior = inverse(row, &baseline, "0644")?;
         fs::write(&target, &prior).map_err(|e| e.to_string())?;
         need(
             verify(&owned.0, path, expected, &prior).unwrap().is_err(),
             "old physically substituted source",
         )?;
         fs::write(target, physical).map_err(|e| e.to_string())?;
+    }
+    // Registry custody is independent of which source pin the caller presents.
+    let joined = composition_document(root)?;
+    let source = SOURCES[0];
+    let physical = regular(root, source)?;
+    let original_pin = text(&doc["rows"][0]["prior"], "sha256")?;
+    let current_pin = text(&composition_row(&joined, source)?["current"], "sha256")?;
+    let container = regular(root, CONTAINER)?;
+    let target = owned.0.join(CONTAINER);
+    for pin in [original_pin, current_pin] {
+        verify(&owned.0, source, pin, &physical).ok_or("registry positive route")??;
+        for page in [true, false] {
+            let parent = composition_parent(root, CONTAINER, &container, page)?;
+            fs::write(&target, &parent).map_err(|e| e.to_string())?;
+            need(
+                verify(&owned.0, source, pin, &physical).unwrap().is_err(),
+                "old registry physically substituted",
+            )?;
+            fs::write(&target, &container).map_err(|e| e.to_string())?;
+        }
+        for mode in [0o600, 0o755, 0o4644] {
+            fs::set_permissions(&target, fs::Permissions::from_mode(mode))
+                .map_err(|e| e.to_string())?;
+            need(
+                verify(&owned.0, source, pin, &physical).unwrap().is_err(),
+                "physical registry wrong mode",
+            )?;
+        }
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o644))
+            .map_err(|e| e.to_string())?;
     }
     Ok(())
 }

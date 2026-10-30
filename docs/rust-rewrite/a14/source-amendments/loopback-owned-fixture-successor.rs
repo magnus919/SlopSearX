@@ -47,7 +47,13 @@ fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         meta.is_file() && meta.nlink() == 1 && meta.permissions().mode() & 0o7777 == 0o644,
         "A14 fixture file/mode",
     )?;
-    let raw = fs::read(path).map_err(|e| e.to_string())?;
+    let physical = fs::read(path).map_err(|e| e.to_string())?;
+    let raw = if relative == SOURCE {
+        crate::a13::a06_source_successor::native_search::page_prior(root, row, Some(&physical))?
+            .ok_or("A14 current jobs page operand not selected")?
+    } else {
+        physical
+    };
     material(row, &raw, "0644")?;
     Ok(raw)
 }
