@@ -1,4 +1,6 @@
 //! Backend-free developer runner for the exact shared T08A gate. Never a runtime sidecar.
+#[path = "../../xtask/src/t08a_custody.rs"]
+pub(crate) mod cli_source_custody;
 #[path = "../../xtask/src/t08a.rs"]
 mod t08a;
 #[path = "../../xtask/src/t08a_child.rs"]

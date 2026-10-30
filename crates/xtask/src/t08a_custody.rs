@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/t08a/shared-source-successor.json";
-const CAPSULE_SHA: &str = "5cb976646459d885bf056889d24cec52ad9a671dd54b1a7b6b85c0131e9de6cc";
+const CAPSULE_SHA: &str = "1450fe44b0fe8ac6ba1c8170c8ef0582f4ec87e370a113b08c8554514807830a";
 const ROWS: [(&str, usize); 2] = [("crates/xtask/src/main.rs", 6), ("Cargo.lock", 23)];
 fn need(ok: bool, why: &str) -> Result<()> {
     if ok {

@@ -1,6 +1,5 @@
 //! T08A standalone native client: source-bound real child, never Python/backend.
-#[path = "t08a_custody.rs"]
-pub(crate) mod source_custody;
+pub(crate) use crate::cli_source_custody as source_custody;
 #[path = "t08a_tls_roles.rs"]
 pub(crate) mod tls_roles;
 use crate::{Result, command, t08a_child};

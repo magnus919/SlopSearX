@@ -342,7 +342,7 @@ fn system() -> Result<Settings, Failure> {
     };
     use system_configuration::dynamic_store::SCDynamicStoreBuilder;
     fn value(dict: &CFDictionary<CFString, CFType>, key: &str) -> Option<CFType> {
-        dict.find(&CFString::new(key)).map(|v| (*v).clone())
+        dict.find(CFString::new(key)).map(|v| (*v).clone())
     }
     fn string(dict: &CFDictionary<CFString, CFType>, key: &str) -> Option<String> {
         value(dict, key)?
