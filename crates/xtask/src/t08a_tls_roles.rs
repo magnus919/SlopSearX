@@ -68,7 +68,7 @@ fn backend(root: &Path, host: &str, records: &mut Vec<Value>) -> Result<String> 
             "--prefix",
             "none",
             "--target",
-            &host,
+            host,
         ],
         records,
     )

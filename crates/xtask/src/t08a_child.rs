@@ -141,10 +141,10 @@ pub fn capture(
         #[cfg(unix)]
         let may_wait = true;
         let waited = if may_wait {
-            match tokio::time::timeout(Duration::from_secs(5), owner.child.wait()).await {
-                Ok(Ok(_)) => true,
-                _ => false,
-            }
+            matches!(
+                tokio::time::timeout(Duration::from_secs(5), owner.child.wait()).await,
+                Ok(Ok(_))
+            )
         } else { false };
         #[cfg(unix)]
         let retired = waited && if let Some(pid) = pid { tree_absent(pid).await } else { false };
