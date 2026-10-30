@@ -60,10 +60,10 @@
         "git_blob": "356b40d5915deaec9113e754deb7a9d8663ab146"
       },
       "current": {
-        "sha256": "bc39a3c3ae718514f9da60c6f36e4bdf20f205f50df85fac994e6cf35674f7fc",
-        "bytes": 94877,
+        "sha256": "f299a1e350222ac84d471b3cedf11d6b4cb61287d2b6c3723eb51988e317251c",
+        "bytes": 93989,
         "mode": "0644",
-        "git_blob": "e93f07cca757f7102c9ff53bf986f9a08bf5491b"
+        "git_blob": "a0580f354e1a86685616e7202d274da77cef20cf"
       },
       "edits": [
         {
@@ -99,7 +99,7 @@
         {
           "at": 37291,
           "remove_utf8": "",
-          "insert_utf8": "name = \"nu-ansi-term\"\nversion = \"0.46.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"77a8165726e8236064dbb45459242600304b42a5ea24ee2948e18e023bf7ba84\"\ndependencies = [\n \"overload\",\n \"winapi\",\n]\n\n[[package]]\n"
+          "insert_utf8": "name = \"nu-ansi-term\"\nversion = \"0.50.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5\"\ndependencies = [\n \"windows-sys 0.61.2\",\n]\n\n[[package]]\n"
         },
         {
           "at": 39051,
@@ -109,7 +109,7 @@
         {
           "at": 39235,
           "remove_utf8": "",
-          "insert_utf8": "\n[[package]]\nname = \"openssl-src\"\nversion = \"300.6.1+3.6.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"46eb8fb9fb3b61ce1c0f8a026c4c1a0714d3a9e138e7fbde78753ce2babc3846\"\ndependencies = [\n \"cc\",\n]\n\n[[package]]\nname = \"openssl-sys\"\nversion = \"0.9.117\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b47e7e6bb2c38cd930d25a23b40fa52e068c10e85f3e03a7f5ba5aaca5713695\"\ndependencies = [\n \"cc\",\n \"libc\",\n \"openssl-src\",\n \"pkg-config\",\n \"vcpkg\",\n]\n\n[[package]]\nname = \"overload\"\nversion = \"0.1.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39\"\n"
+          "insert_utf8": "\n[[package]]\nname = \"openssl-src\"\nversion = \"300.6.1+3.6.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"46eb8fb9fb3b61ce1c0f8a026c4c1a0714d3a9e138e7fbde78753ce2babc3846\"\ndependencies = [\n \"cc\",\n]\n\n[[package]]\nname = \"openssl-sys\"\nversion = \"0.9.117\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b47e7e6bb2c38cd930d25a23b40fa52e068c10e85f3e03a7f5ba5aaca5713695\"\ndependencies = [\n \"cc\",\n \"libc\",\n \"openssl-src\",\n \"pkg-config\",\n \"vcpkg\",\n]\n"
         },
         {
           "at": 42858,
@@ -154,22 +154,12 @@
         {
           "at": 72311,
           "remove_utf8": "",
-          "insert_utf8": " \"valuable\",\n]\n\n[[package]]\nname = \"tracing-log\"\nversion = \"0.2.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ee855f1f400bd0e5c02d150ae5de3840039a3f54b025156404e34c23c03f47c3\"\ndependencies = [\n \"log\",\n \"once_cell\",\n \"tracing-core\",\n]\n\n[[package]]\nname = \"tracing-subscriber\"\nversion = \"0.3.19\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e8189decb5ac0fa7bc8b96b7cb9b2701d60d48805aca84a238004d665fcc4008\"\ndependencies = [\n \"nu-ansi-term\",\n \"sharded-slab\",\n \"smallvec\",\n \"thread_local\",\n \"tracing-core\",\n \"tracing-log\",\n"
+          "insert_utf8": " \"valuable\",\n]\n\n[[package]]\nname = \"tracing-log\"\nversion = \"0.2.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ee855f1f400bd0e5c02d150ae5de3840039a3f54b025156404e34c23c03f47c3\"\ndependencies = [\n \"log\",\n \"once_cell\",\n \"tracing-core\",\n]\n\n[[package]]\nname = \"tracing-subscriber\"\nversion = \"0.3.23\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319\"\ndependencies = [\n \"nu-ansi-term\",\n \"sharded-slab\",\n \"smallvec\",\n \"thread_local\",\n \"tracing-core\",\n \"tracing-log\",\n"
         },
         {
           "at": 74623,
           "remove_utf8": "",
           "insert_utf8": "\n[[package]]\nname = \"valuable\"\nversion = \"0.1.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65\"\n"
-        },
-        {
-          "at": 78371,
-          "remove_utf8": "",
-          "insert_utf8": "name = \"winapi\"\nversion = \"0.3.9\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"5c839a674fcd7a98952e593242ea400abe93992746761e38641405d28b00f419\"\ndependencies = [\n \"winapi-i686-pc-windows-gnu\",\n \"winapi-x86_64-pc-windows-gnu\",\n]\n\n[[package]]\nname = \"winapi-i686-pc-windows-gnu\"\nversion = \"0.4.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6\"\n\n[[package]]\n"
-        },
-        {
-          "at": 78596,
-          "remove_utf8": "",
-          "insert_utf8": "\n[[package]]\nname = \"winapi-x86_64-pc-windows-gnu\"\nversion = \"0.4.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f\"\n"
         },
         {
           "at": 84803,
