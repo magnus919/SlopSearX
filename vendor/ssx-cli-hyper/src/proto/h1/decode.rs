@@ -301,9 +301,9 @@ macro_rules! put_u8 {
 // A policy-only adapter around the unchanged vetted size/extension parser.
 // Each read consumes exactly the original bytes; only this source-mode reader
 // counts the whole physical size line. No body or trailer bytes are retained.
-struct SourceSizeLineRead<'a, R> {
-    inner: &'a mut R,
-    bytes: &'a mut u64,
+struct SourceSizeLineRead<'source_line, R> {
+    inner: &'source_line mut R,
+    bytes: &'source_line mut u64,
 }
 impl<R: MemRead> MemRead for SourceSizeLineRead<'_, R> {
     fn read_mem(&mut self, cx: &mut Context<'_>, len: usize) -> Poll<io::Result<Bytes>> {

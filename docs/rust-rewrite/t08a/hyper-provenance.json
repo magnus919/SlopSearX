@@ -176,8 +176,8 @@
     },
     {
       "path": "src/ext/source_request_target.rs",
-      "sha256": "d94cd10bcb3380e6c03f9be96cbf3e76e11933f36cbe3866520baa37794a4763",
-      "bytes": 2572
+      "sha256": "c2bb108cc37d66b4c4c2aa7466eeade8701881963d69fc438621b1dfa4fd55fb",
+      "bytes": 2700
     },
     {
       "path": "src/ffi/body.rs",
@@ -241,8 +241,8 @@
     },
     {
       "path": "src/proto/h1/decode.rs",
-      "sha256": "96f9fc3a58606555dde7467f8df5187888ebbc3d097ecccef1444a249d147878",
-      "bytes": 54020
+      "sha256": "ab9fdf450d73a55f11cb482be9216b66e5859f6d76700fd985b15f6307575a8a",
+      "bytes": 54050
     },
     {
       "path": "src/proto/h1/dispatch.rs",
@@ -733,7 +733,7 @@
     "src/proto/h1/role.rs"
   ],
   "removed_files": [],
-  "derived_patch_sha256": "2405a805d676d7e418470888f3adac96068f3d4b63261c256970a0472aa712cd",
+  "derived_patch_sha256": "3928eaf048719e1df68e6268c648bf35c898034b7d7c6dc19ad99b19eca4388c",
   "default_policy": "Source framing requires explicit ClientBuilder opt-in. Feature compilation alone leaves every upstream decoder default unchanged. Raw target only affects a typed checked extension; method, Host, connection and upgrade parsing remain authoritative.",
   "format_policy": "Stable pinnedrustfmt package-local disable_all_formatting=true; all72privatefiles includingthisconfig remain underfinite missing/extra/hash guard. Allother workspace+localpath dependency formattercoverage unchanged; no upstreamRust/archive/licensebytes changed."
 }

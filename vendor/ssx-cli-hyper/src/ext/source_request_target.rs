@@ -9,6 +9,7 @@ pub struct SourceRequestTarget(Arc<str>);
 
 /// Invalid request target. The error never retains or exposes caller bytes.
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub struct InvalidSourceRequestTarget;
 impl fmt::Display for InvalidSourceRequestTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -24,6 +25,9 @@ impl fmt::Debug for SourceRequestTarget {
 impl SourceRequestTarget {
     /// Construct from owned ASCII graphic bytes. C0, space, DEL, non-ASCII and
     /// empty input fail before serialization, preventing request-line injection.
+    ///
+    /// # Errors
+    /// Returns an error if the input is empty or contains a non-graphic ASCII byte.
     pub fn new(value: String) -> Result<Self, InvalidSourceRequestTarget> {
         if value.is_empty() || !value.bytes().all(|b| (0x21..=0x7e).contains(&b)) {
             return Err(InvalidSourceRequestTarget);

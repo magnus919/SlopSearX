@@ -81,7 +81,7 @@
  mod informational;
 --- /dev/null
 +++ b/src/ext/source_request_target.rs
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,59 @@
 +//! CLI-private immutable source request target; never an unchecked URI API.
 +use std::{fmt, sync::Arc};
 +
@@ -93,6 +93,7 @@
 +
 +/// Invalid request target. The error never retains or exposes caller bytes.
 +#[derive(Clone, Copy, Debug)]
++#[non_exhaustive]
 +pub struct InvalidSourceRequestTarget;
 +impl fmt::Display for InvalidSourceRequestTarget {
 +    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -108,6 +109,9 @@
 +impl SourceRequestTarget {
 +    /// Construct from owned ASCII graphic bytes. C0, space, DEL, non-ASCII and
 +    /// empty input fail before serialization, preventing request-line injection.
++    ///
++    /// # Errors
++    /// Returns an error if the input is empty or contains a non-graphic ASCII byte.
 +    pub fn new(value: String) -> Result<Self, InvalidSourceRequestTarget> {
 +        if value.is_empty() || !value.bytes().all(|b| (0x21..=0x7e).contains(&b)) {
 +            return Err(InvalidSourceRequestTarget);
@@ -253,9 +257,9 @@
 +// A policy-only adapter around the unchanged vetted size/extension parser.
 +// Each read consumes exactly the original bytes; only this source-mode reader
 +// counts the whole physical size line. No body or trailer bytes are retained.
-+struct SourceSizeLineRead<'a, R> {
-+    inner: &'a mut R,
-+    bytes: &'a mut u64,
++struct SourceSizeLineRead<'source_line, R> {
++    inner: &'source_line mut R,
++    bytes: &'source_line mut u64,
 +}
 +impl<R: MemRead> MemRead for SourceSizeLineRead<'_, R> {
 +    fn read_mem(&mut self, cx: &mut Context<'_>, len: usize) -> Poll<io::Result<Bytes>> {
