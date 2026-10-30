@@ -138,5 +138,22 @@
     ],
     "boundary": "raw SSL_CERT_DIR passed unchanged once as store URI; hash_dir separately handles path-list; no custom hash/name canonicalization or broad PEM enumeration",
     "ffi": "CLI-private safe leaf, crate unsafe denied except documented synchronous X509_STORE_load_store wrapper; exact openssl0.10.81/openssl-sys0.9.117/foreign-types0.3.2"
+  },
+  "idna_host_api_adapter": {
+    "origin": "existing repository ssx-source-codecs IDNA2003/Unicode3.2 implementation",
+    "pristine_git_commit": "72987c50283eb70f70ff6d339c5d9f4ed8e00efd",
+    "pristine_git_paths": [
+      "crates/ssx-source-codecs/src/lib.rs",
+      "crates/ssx-source-codecs/src/idna.rs"
+    ],
+    "license": "repository MIT; repository LICENSE unchanged",
+    "patch": {
+      "path": "docs/rust-rewrite/t08a/idna-host-api.patch",
+      "bytes": 2531,
+      "sha256": "3bb52c8be92112c19aeeb94c42b936fa2f38d258a0e9472c735d587a408313bd",
+      "format": "zero-context unified diff; git apply --unidiff-zero required"
+    },
+    "scope": "Representation-only patch maintenance; all330 source-codec files reconstruct exact currentb615 bytes/modes; additive host encoder Rust implementation unchanged",
+    "maintenance": "Check using git apply --check --unidiff-zero; apply using git apply --unidiff-zero from matching pristine source root. Historical source observations remain immutable; no runtime acceptance inferred from patch reconstruction."
   }
 }

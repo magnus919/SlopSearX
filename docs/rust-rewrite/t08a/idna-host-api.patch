@@ -1,9 +1,6 @@
 --- a/crates/ssx-source-codecs/src/lib.rs
 +++ b/crates/ssx-source-codecs/src/lib.rs
-@@ -189,3 +189,21 @@
- pub use bounded_parameter::{
-     BoundedParameterError, lookup_http_encoding_bounded, strict_parameter_ascii_bounded,
- };
+@@ -191,0 +192,18 @@
 +
 +/// Encode a network hostname with the existing source IDNA2003/Unicode3.2
 +/// implementation. ASCII case and trailing dot follow CPython's encoder fast
@@ -24,10 +21,7 @@
 +}
 --- a/crates/ssx-source-codecs/src/idna.rs
 +++ b/crates/ssx-source-codecs/src/idna.rs
-@@ -459,6 +459,43 @@
-         }
-         punycode::Failure::Output(error) => punycode::Failure::Output(error),
-     }
+@@ -461,0 +462,37 @@
 +}
 +
 +/// Additive hostname encoder for the external HTTP client. All existing IDNA
@@ -65,6 +59,3 @@
 +        output.push(b'.');
 +    }
 +    Ok(output)
- }
- 
- #[cfg(test)]
