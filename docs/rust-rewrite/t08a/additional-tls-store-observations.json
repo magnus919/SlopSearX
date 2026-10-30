@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "openssl": "OpenSSL 3.0.16 11 Feb 2025",
+  "causality": "independent unique CA/empty FILE/source default vs explicit hash_dir corroboration under gap-independent-01; previous observations retained",
+  "captures": [
+    {
+      "native_case": {
+        "id": "tls-store-gap-empty-file",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSL_CERT_FILE": "",
+          "SSL_CERT_DIR": "$TLS/gap"
+        },
+        "tls": "server",
+        "host": "localhost",
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-tls-store-observations.json#tls-store-gap-empty-file"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "tls-store-path-list-gap",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSL_CERT_FILE": "",
+          "SSL_CERT_DIR": "$TLS/empty:$TLS/gap"
+        },
+        "tls": "server",
+        "host": "localhost",
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-tls-store-observations.json#tls-store-path-list-gap"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f72205b53534c3a2043455254494649434154455f5645524946595f4641494c45445d20636572746966696361746520766572696679206661696c65643a20756e61626c6520746f20676574206c6f63616c2069737375657220636572746966696361746520285f73736c2e633a31303335293e0a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "tls-store-path-list-correct",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSL_CERT_FILE": "",
+          "SSL_CERT_DIR": "$TLS/empty:$TLS/hashed"
+        },
+        "tls": "server",
+        "host": "localhost",
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-tls-store-observations.json#tls-store-path-list-correct"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    }
+  ]
+}

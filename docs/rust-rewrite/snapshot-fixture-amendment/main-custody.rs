@@ -171,10 +171,11 @@ pub(super) fn joint(root: &Path, supplied: &[u8]) -> Result<Vec<u8>, String> {
         supplied == current,
         "snapshot fixture supplied main is not physical current",
     )?;
-    let prior = inverse(&doc, &doc["main"]["prior"], &current, "0644")?;
+    let admitted = super::cli_source_custody::prior(root, SOURCE, &current)?;
+    let prior = inverse(&doc, &doc["main"]["prior"], &admitted, "0644")?;
     for (identity, bytes) in [
         (&doc["main"]["prior"], prior.as_slice()),
-        (&doc["main"]["current"], current.as_slice()),
+        (&doc["main"]["current"], admitted.as_slice()),
     ] {
         need(
             identity["git_blob"] == git_blob(root, bytes)?,
@@ -230,16 +231,17 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     super::parent(root, SOURCE, &current, super::Parent::T02)?;
     super::parent(root, SOURCE, &current, super::Parent::W07)?;
     assert!(inverse(&doc, expected, &historical, "0644").is_err());
+    let admitted = super::cli_source_custody::prior(root, SOURCE, &current)?;
     for mode in ["0600", "0755", "4644"] {
-        assert!(inverse(&doc, expected, &current, mode).is_err());
+        assert!(inverse(&doc, expected, &admitted, mode).is_err());
     }
     let mut bad = expected.clone();
     bad["sha256"] = serde_json::json!("wrong");
-    assert!(inverse(&doc, &bad, &current, "0644").is_err());
+    assert!(inverse(&doc, &bad, &admitted, "0644").is_err());
     bad = expected.clone();
     bad["bytes"] = serde_json::json!(0);
-    assert!(inverse(&doc, &bad, &current, "0644").is_err());
-    let mut changed = current.clone();
+    assert!(inverse(&doc, &bad, &admitted, "0644").is_err());
+    let mut changed = admitted.clone();
     changed.push(b'\n');
     let mut rehashed = doc.clone();
     rehashed["main"]["current"]["sha256"] = serde_json::json!(digest(&changed));
@@ -259,7 +261,7 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
                 edits[0]["at"] = serde_json::json!(0);
             }
         }
-        assert!(inverse(&wrong, expected, &current, "0644").is_err());
+        assert!(inverse(&wrong, expected, &admitted, "0644").is_err());
     }
     Ok(())
 }

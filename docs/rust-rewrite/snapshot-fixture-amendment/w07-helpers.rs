@@ -1,5 +1,13 @@
 //! Closed physical-current custody and finite inverse for two W07 source entries.
 //! The physical read and the pure inverse remain separate composition stages.
+// This reader intentionally borrows only the legacy API of the same leaf.
+// Owning T08A controls exercise main/lock and every otherwise-unused proof API.
+#[expect(
+    dead_code,
+    reason = "W07 reader uses legacy-only proof API; owning T08A instance exercises main/lock and controls"
+)]
+#[path = "../../../crates/xtask/src/t08a_custody.rs"]
+mod cli_source_custody;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
@@ -192,7 +200,7 @@ pub(crate) fn verify(
             physical == supplied,
             "supplied differs from physical current",
         )?;
-        let baseline = physical; // Feature composition must prove its physical successor before replacing this operand.
+        let baseline = cli_source_custody::legacy_prior(root, path, &physical)?;
         inverse(row, &baseline, "0644")
     })())
 }
@@ -204,6 +212,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let path = text(&row["prior"], "path")?;
         let expected = text(&row["prior"], "sha256")?;
         let physical = regular(root, path)?;
+        let baseline = cli_source_custody::legacy_prior(root, path, &physical)?;
         let prior = verify(root, path, expected, &physical).ok_or("selected helper absent")??;
         let git = std::process::Command::new("git")
             .args([
@@ -223,7 +232,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             "wrong pin/old supplied bytes",
         )?;
         for mode in ["0600", "0755", "4644"] {
-            need(inverse(row, &physical, mode).is_err(), "wrong mode")?;
+            need(inverse(row, &baseline, mode).is_err(), "wrong mode")?;
         }
         let mut bad = row.clone();
         bad["pointer"] = serde_json::json!("/sources/wrong");
@@ -246,10 +255,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let mut wrong_length = row.clone();
         wrong_length["current"]["bytes"] = serde_json::json!(0);
         need(
-            inverse(&wrong_length, &physical, "0644").is_err(),
+            inverse(&wrong_length, &baseline, "0644").is_err(),
             "wrong source length",
         )?;
-        let mut changed = physical.clone();
+        let mut changed = baseline.clone();
         changed.push(b'\n');
         bad = row.clone();
         bad["current"]["sha256"] = serde_json::json!(sha(&changed));
@@ -273,7 +282,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 }
             }
             need(
-                inverse(&bad, &physical, "0644").is_err(),
+                inverse(&bad, &baseline, "0644").is_err(),
                 "missing/duplicate/moved edit",
             )?;
         }
@@ -319,7 +328,13 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         fs::read(sentinel).map_err(|e| e.to_string())? == b"preexisting ownership",
         "failed acquisition deleted preexisting contents",
     )?;
-    for path in [CAPSULE, CONTAINER, SOURCES[0], SOURCES[1]] {
+    for path in [
+        CAPSULE,
+        CONTAINER,
+        SOURCES[0],
+        SOURCES[1],
+        cli_source_custody::LEGACY_CAPSULE_PATH,
+    ] {
         let target = owned.0.join(path);
         fs::create_dir_all(target.parent().ok_or("copy parent")?).map_err(|e| e.to_string())?;
         fs::copy(root.join(path), &target).map_err(|e| e.to_string())?;

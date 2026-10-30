@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "runtime": "CPython3.13.6",
+  "captures": [
+    {
+      "id": "proxy-auth-copied-into-direct-redirect",
+      "declared_environment": {
+        "SSX_URL": "http://fixture.invalid",
+        "http_proxy": "http://fixture-user:fixture-password@127.0.0.1:$PORT",
+        "no_proxy": "127.0.0.1"
+      },
+      "replies": [
+        {
+          "status": 302,
+          "headers": {
+            "Location": "$BASE/direct"
+          },
+          "body_hex": "7b7d",
+          "close": false,
+          "delay_ms": 0
+        },
+        {
+          "status": 200,
+          "headers": {},
+          "body_hex": "7b7d",
+          "close": false,
+          "delay_ms": 0
+        }
+      ],
+      "requests": [
+        {
+          "target": "http://fixture.invalid/health",
+          "host": "fixture.invalid",
+          "accept": "application/json",
+          "proxy_auth": "Basic Zml4dHVyZS11c2VyOmZpeHR1cmUtcGFzc3dvcmQ=",
+          "referer": ""
+        },
+        {
+          "target": "/direct",
+          "host": "127.0.0.1:$PORT",
+          "accept": "application/json",
+          "proxy_auth": "Basic Zml4dHVyZS11c2VyOmZpeHR1cmUtcGFzc3dvcmQ=",
+          "referer": ""
+        }
+      ],
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    },
+    {
+      "id": "proxy-user-empty-password-no-auth",
+      "declared_environment": {
+        "SSX_URL": "http://fixture.invalid",
+        "http_proxy": "http://fixture-user:@127.0.0.1:$PORT",
+        "no_proxy": "127.0.0.1"
+      },
+      "replies": [
+        {
+          "status": 302,
+          "headers": {
+            "Location": "$BASE/direct"
+          },
+          "body_hex": "7b7d",
+          "close": false,
+          "delay_ms": 0
+        },
+        {
+          "status": 200,
+          "headers": {},
+          "body_hex": "7b7d",
+          "close": false,
+          "delay_ms": 0
+        }
+      ],
+      "requests": [
+        {
+          "target": "http://fixture.invalid/health",
+          "host": "fixture.invalid",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        },
+        {
+          "target": "/direct",
+          "host": "127.0.0.1:$PORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    },
+    {
+      "id": "proxy-empty-user-password-no-auth",
+      "declared_environment": {
+        "SSX_URL": "http://fixture.invalid",
+        "http_proxy": "http://:fixture-password@127.0.0.1:$PORT",
+        "no_proxy": "127.0.0.1"
+      },
+      "replies": [
+        {
+          "status": 302,
+          "headers": {
+            "Location": "$BASE/direct"
+          },
+          "body_hex": "7b7d",
+          "close": false,
+          "delay_ms": 0
+        },
+        {
+          "status": 200,
+          "headers": {},
+          "body_hex": "7b7d",
+          "close": false,
+          "delay_ms": 0
+        }
+      ],
+      "requests": [
+        {
+          "target": "http://fixture.invalid/health",
+          "host": "fixture.invalid",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        },
+        {
+          "target": "/direct",
+          "host": "127.0.0.1:$PORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    }
+  ]
+}

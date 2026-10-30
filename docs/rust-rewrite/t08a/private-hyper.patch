@@ -1,0 +1,647 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -12,7 +12,8 @@
+ [package]
+ edition = "2021"
+ rust-version = "1.63"
+-name = "hyper"
++name = "ssx-cli-hyper"
++publish = false
+ version = "1.12.0"
+ authors = ["Sean McArthur <sean@seanmonstar.com>"]
+ build = false
+@@ -74,6 +75,8 @@
+     "dep:smallvec",
+ ]
+ default = []
++# Exposes a CLIENT-only API; does not activate policy on any connection.
++source-client-framing = ["client", "http1"]
+ ffi = [
+     "dep:http-body-util",
+     "dep:futures-util",
+--- a/src/client/conn/http1.rs
++++ b/src/client/conn/http1.rs
+@@ -133,6 +133,7 @@
+     h1_preserve_header_case: bool,
+     h1_max_headers: Option<usize>,
+     h1_max_header_size: Option<usize>,
++    source_framing: bool,
+     #[cfg(feature = "ffi")]
+     h1_preserve_header_order: bool,
+     h1_read_buf_exact_size: Option<usize>,
+@@ -355,6 +356,7 @@
+             h1_preserve_header_case: false,
+             h1_max_headers: None,
+             h1_max_header_size: None,
++            source_framing: false,
+             #[cfg(feature = "ffi")]
+             h1_preserve_header_order: false,
+             h1_max_buf_size: None,
+@@ -515,6 +517,18 @@
+     /// Default is `None`.
+     pub fn max_header_size(&mut self, val: usize) -> &mut Self {
+         self.h1_max_header_size = Some(val);
++        self
++    }
++
++    /// Opt this private HTTP1 client connection into frozen source framing.
++    ///
++    /// The default remains false even when this API's feature is compiled.
++    /// Source mode counts each chunk-size/trailer physical line up to 65536
++    /// bytes, discards trailers without aggregate/count limits, and retains
++    /// strict chunk delimiters and EOF checks. Header policy is caller-owned.
++    #[cfg(feature = "source-client-framing")]
++    pub fn source_framing(&mut self, enabled: bool) -> &mut Self {
++        self.source_framing = enabled;
+         self
+     }
+ 
+@@ -608,6 +622,7 @@
+             if let Some(max_header_size) = opts.h1_max_header_size {
+                 conn.set_http1_max_header_size(max_header_size);
+             }
++            conn.set_source_framing(opts.source_framing);
+             #[cfg(feature = "ffi")]
+             if opts.h1_preserve_header_order {
+                 conn.set_preserve_header_order();
+--- a/src/ext/mod.rs
++++ b/src/ext/mod.rs
+@@ -53,6 +53,12 @@
+ mod h1_reason_phrase;
+ #[cfg(any(feature = "http1", feature = "ffi"))]
+ pub use h1_reason_phrase::ReasonPhrase;
++
++// CLI-private typed wire target; upstream public URI semantics stay unchanged.
++#[cfg(all(feature = "http1", feature = "client"))]
++mod source_request_target;
++#[cfg(all(feature = "http1", feature = "client"))]
++pub use source_request_target::{InvalidSourceRequestTarget, SourceRequestTarget};
+ 
+ #[cfg(all(feature = "http1", feature = "client"))]
+ mod informational;
+--- /dev/null
++++ b/src/ext/source_request_target.rs
+@@ -0,0 +1,55 @@
++//! CLI-private immutable source request target; never an unchecked URI API.
++use std::{fmt, sync::Arc};
++
++/// Raw HTTP1 request target validated like the frozen source's request line.
++/// It preserves encoded dot segments, literal proxy fragments and arbitrarily
++/// long admitted queries. Routing, Host, method and version remain separate.
++#[derive(Clone)]
++pub struct SourceRequestTarget(Arc<str>);
++
++/// Invalid request target. The error never retains or exposes caller bytes.
++#[derive(Clone, Copy, Debug)]
++pub struct InvalidSourceRequestTarget;
++impl fmt::Display for InvalidSourceRequestTarget {
++    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
++        f.write_str("invalid source HTTP request target")
++    }
++}
++impl std::error::Error for InvalidSourceRequestTarget {}
++impl fmt::Debug for SourceRequestTarget {
++    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
++        f.debug_struct("SourceRequestTarget").field("bytes", &self.0.len()).finish()
++    }
++}
++impl SourceRequestTarget {
++    /// Construct from owned ASCII graphic bytes. C0, space, DEL, non-ASCII and
++    /// empty input fail before serialization, preventing request-line injection.
++    pub fn new(value: String) -> Result<Self, InvalidSourceRequestTarget> {
++        if value.is_empty() || !value.bytes().all(|b| (0x21..=0x7e).contains(&b)) {
++            return Err(InvalidSourceRequestTarget);
++        }
++        Ok(Self(Arc::from(value)))
++    }
++    /// Borrow immutable validated bytes. No unchecked or mutable constructor exists.
++    pub fn as_str(&self) -> &str { &self.0 }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn source_raw_target_rejects_controls_space_del_nonascii_and_empty() {
++        assert!(SourceRequestTarget::new(String::new()).is_err());
++        for point in (0..=0x20).chain(0x7f..=0xff) {
++            assert!(SourceRequestTarget::new(format!("/prefix{}suffix",char::from_u32(point).unwrap())).is_err());
++        }
++        assert!(SourceRequestTarget::new("/a\r\nInjected: header".into()).is_err());
++    }
++    #[test]
++    fn source_raw_target_retains_long_path_query_and_fragment_octets() {
++        for value in [format!("/{}?end", "a".repeat(66000)),format!("/?q={}","%CE%BB".repeat(11000)),format!("http://Host:00080/#{}", "x".repeat(66000)),"/a/%2e%2e/final".into(),"http://Host#fragment-without-added-slash".into()] {
++            let target=SourceRequestTarget::new(value.clone()).unwrap();
++            assert_eq!(target.as_str(),value);
++            assert!(!format!("{target:?}").contains("fragment-without-added-slash"));
++        }
++    }
++}
+--- a/src/proto/h1/conn.rs
++++ b/src/proto/h1/conn.rs
+@@ -59,6 +59,7 @@
+                 h1_parser_config: ParserConfig::default(),
+                 h1_max_headers: None,
+                 h1_max_header_size: None,
++                source_framing: false,
+                 #[cfg(feature = "server")]
+                 h1_header_read_timeout: None,
+                 #[cfg(feature = "server")]
+@@ -146,6 +147,11 @@
+         self.state.h1_max_header_size = Some(val);
+     }
+ 
++    #[cfg(feature = "client")]
++    pub(crate) fn set_source_framing(&mut self, enabled: bool) {
++        self.state.source_framing = enabled;
++    }
++
+     #[cfg(feature = "server")]
+     pub(crate) fn set_http1_header_read_timeout(&mut self, val: Duration) {
+         self.state.h1_header_read_timeout = Some(val);
+@@ -316,19 +322,17 @@
+             }
+         } else if msg.expect_continue && msg.head.version.gt(&Version::HTTP_10) {
+             let h1_max_header_size = self.state.h1_max_header_size;
+-            self.state.reading = Reading::Continue(Decoder::new(
+-                msg.decode,
+-                self.state.h1_max_headers,
+-                h1_max_header_size,
+-            ));
++            self.state.reading = Reading::Continue(
++                Decoder::new(msg.decode, self.state.h1_max_headers, h1_max_header_size)
++                    .with_source_framing(self.state.source_framing),
++            );
+             wants = wants.add(Wants::EXPECT);
+         } else {
+             let h1_max_header_size = self.state.h1_max_header_size;
+-            self.state.reading = Reading::Body(Decoder::new(
+-                msg.decode,
+-                self.state.h1_max_headers,
+-                h1_max_header_size,
+-            ));
++            self.state.reading = Reading::Body(
++                Decoder::new(msg.decode, self.state.h1_max_headers, h1_max_header_size)
++                    .with_source_framing(self.state.source_framing),
++            );
+         }
+ 
+         self.state.allow_trailer_fields = headers::te_is_trailers(&msg.head.headers);
+@@ -953,6 +957,7 @@
+     h1_parser_config: ParserConfig,
+     h1_max_headers: Option<usize>,
+     h1_max_header_size: Option<usize>,
++    source_framing: bool,
+     #[cfg(feature = "server")]
+     h1_header_read_timeout: Option<Duration>,
+     #[cfg(feature = "server")]
+--- a/src/proto/h1/decode.rs
++++ b/src/proto/h1/decode.rs
+@@ -46,6 +46,7 @@
+         trailers_cnt: usize,
+         h1_max_headers: Option<usize>,
+         h1_max_header_size: Option<usize>,
++        source_framing: bool,
+     },
+     /// A Reader used for responses that don't indicate a length or chunked.
+     ///
+@@ -80,6 +81,7 @@
+     TrailerLf,
+     EndCr,
+     EndLf,
++    SourceTrailer { line_len: usize, previous_cr: bool },
+     End,
+ }
+ 
+@@ -105,8 +107,16 @@
+                 trailers_cnt: 0,
+                 h1_max_headers,
+                 h1_max_header_size,
++                source_framing: false,
+             },
+         }
++    }
++
++    pub(crate) fn with_source_framing(mut self, enabled: bool) -> Self {
++        if let Kind::Chunked { source_framing, .. } = &mut self.kind {
++            *source_framing = enabled;
++        }
++        self
+     }
+ 
+     pub(crate) fn eof() -> Decoder {
+@@ -176,6 +186,7 @@
+                 trailers_cnt,
+                 h1_max_headers,
+                 h1_max_header_size,
++                source_framing,
+             } => {
+                 let h1_max_headers = h1_max_headers.unwrap_or(DEFAULT_MAX_HEADERS);
+                 let h1_max_header_size = h1_max_header_size.unwrap_or(TRAILER_LIMIT);
+@@ -193,6 +204,7 @@
+                             trailers_cnt,
+                             max_headers_cnt: h1_max_headers,
+                             max_headers_bytes: h1_max_header_size,
++                            source_framing: *source_framing,
+                         }
+                     ))?;
+                     if *state == ChunkedState::End {
+@@ -286,6 +298,31 @@
+     };
+ }
+ 
++// A policy-only adapter around the unchanged vetted size/extension parser.
++// Each read consumes exactly the original bytes; only this source-mode reader
++// counts the whole physical size line. No body or trailer bytes are retained.
++struct SourceSizeLineRead<'a, R> {
++    inner: &'a mut R,
++    bytes: &'a mut u64,
++}
++impl<R: MemRead> MemRead for SourceSizeLineRead<'_, R> {
++    fn read_mem(&mut self, cx: &mut Context<'_>, len: usize) -> Poll<io::Result<Bytes>> {
++        let bytes = ready!(self.inner.read_mem(cx, len))?;
++        let total = u64::try_from(bytes.len())
++            .ok()
++            .and_then(|n| self.bytes.checked_add(n))
++            .filter(|n| *n <= 65536);
++        let Some(total) = total else {
++            return Poll::Ready(Err(io::Error::new(
++                io::ErrorKind::InvalidData,
++                "source chunk-size line exceeds 65536 bytes",
++            )));
++        };
++        *self.bytes = total;
++        Poll::Ready(Ok(bytes))
++    }
++}
++
+ struct StepArgs<'args> {
+     chunk_size: &'args mut u64,
+     chunk_buf: &'args mut Option<Bytes>,
+@@ -294,6 +331,7 @@
+     trailers_cnt: &'args mut usize,
+     max_headers_cnt: usize,
+     max_headers_bytes: usize,
++    source_framing: bool,
+ }
+ 
+ impl ChunkedState {
+@@ -312,12 +350,36 @@
+             trailers_cnt,
+             max_headers_cnt,
+             max_headers_bytes,
++            source_framing,
+         }: StepArgs<'_>,
+     ) -> Poll<Result<ChunkedState, io::Error>> {
+         use self::ChunkedState::{
+             Body, BodyCr, BodyLf, End, EndCr, EndLf, Extension, Size, SizeLf, SizeLws, Start,
+             Trailer, TrailerLf,
+         };
++        if source_framing && matches!(*self, Start | Size | SizeLws | Extension | SizeLf) {
++            if *self == Start {
++                *extensions_cnt = 0;
++            }
++            let mut counted = SourceSizeLineRead {
++                inner: body,
++                bytes: extensions_cnt,
++            };
++            // The original parser's aggregate extension counter is unused in
++            // source mode. The counted reader above enforces each size line.
++            let mut ignored_aggregate = 0;
++            return if *self == Start {
++                ChunkedState::read_start(cx, &mut counted, chunk_size)
++            } else if *self == Size {
++                ChunkedState::read_size(cx, &mut counted, chunk_size)
++            } else if *self == SizeLws {
++                ChunkedState::read_size_lws(cx, &mut counted)
++            } else if *self == Extension {
++                ChunkedState::read_extension(cx, &mut counted, &mut ignored_aggregate)
++            } else {
++                ChunkedState::read_size_lf(cx, &mut counted, *chunk_size)
++            };
++        }
+         match *self {
+             Start => ChunkedState::read_start(cx, body, chunk_size),
+             Size => ChunkedState::read_size(cx, body, chunk_size),
+@@ -336,9 +398,44 @@
+                 max_headers_cnt,
+                 max_headers_bytes,
+             ),
++            EndCr if source_framing => ChunkedState::read_source_trailer(cx, body, 0, false),
+             EndCr => ChunkedState::read_end_cr(cx, body, trailers_buf, max_headers_bytes),
++            ChunkedState::SourceTrailer {
++                line_len,
++                previous_cr,
++            } => ChunkedState::read_source_trailer(cx, body, line_len, previous_cr),
+             EndLf => ChunkedState::read_end_lf(cx, body, trailers_buf, max_headers_bytes),
+             End => Poll::Ready(Ok(ChunkedState::End)),
++        }
++    }
++
++    fn read_source_trailer<R: MemRead>(
++        cx: &mut Context<'_>,
++        rdr: &mut R,
++        line_len: usize,
++        previous_cr: bool,
++    ) -> Poll<Result<ChunkedState, io::Error>> {
++        let byte = byte!(rdr, cx);
++        let Some(length) = line_len.checked_add(1).filter(|n| *n <= 65536) else {
++            return Poll::Ready(Err(io::Error::new(
++                io::ErrorKind::InvalidData,
++                "source trailer line exceeds 65536 bytes",
++            )));
++        };
++        if byte == b'\n' {
++            if length == 1 || (length == 2 && previous_cr) {
++                Poll::Ready(Ok(ChunkedState::End))
++            } else {
++                Poll::Ready(Ok(ChunkedState::SourceTrailer {
++                    line_len: 0,
++                    previous_cr: false,
++                }))
++            }
++        } else {
++            Poll::Ready(Ok(ChunkedState::SourceTrailer {
++                line_len: length,
++                previous_cr: byte == b'\r',
++            }))
+         }
+     }
+ 
+@@ -763,6 +860,7 @@
+                             trailers_cnt: &mut trailers_cnt,
+                             max_headers_cnt: DEFAULT_MAX_HEADERS,
+                             max_headers_bytes: TRAILER_LIMIT,
++                            source_framing: false,
+                         },
+                     )
+                 })
+@@ -795,6 +893,7 @@
+                             trailers_cnt: &mut trailers_cnt,
+                             max_headers_cnt: DEFAULT_MAX_HEADERS,
+                             max_headers_bytes: TRAILER_LIMIT,
++                            source_framing: false,
+                         },
+                     )
+                 })
+@@ -1288,3 +1387,180 @@
+         assert_eq!(err.kind(), io::ErrorKind::InvalidData);
+     }
+ }
++
++#[cfg(test)]
++mod source_framing_tests {
++    use super::*;
++    async fn collect(wire: Vec<u8>, source: bool) -> io::Result<(Vec<u8>, bool)> {
++        let mut input = Bytes::from(wire);
++        let mut decoder = Decoder::chunked(None, None).with_source_framing(source);
++        let mut output = Vec::new();
++        let mut trailers = false;
++        while !decoder.is_eof() {
++            let frame = decoder.decode_fut(&mut input).await?;
++            match frame.into_data() {
++                Ok(data) => output.extend_from_slice(&data),
++                Err(_) => trailers = true,
++            }
++            if source {
++                assert!(matches!(
++                    &decoder.kind,
++                    Kind::Chunked {
++                        trailers_buf: None,
++                        ..
++                    }
++                ));
++            }
++        }
++        Ok((output, trailers))
++    }
++    fn body_with_trailers(count: usize, size: usize) -> Vec<u8> {
++        let mut wire = b"2\r\n{}\r\n0\r\n".to_vec();
++        for _ in 0..count {
++            wire.extend_from_slice(b"X: ");
++            wire.extend(std::iter::repeat_n(b'a', size));
++            wire.extend_from_slice(b"\r\n");
++        }
++        wire.extend_from_slice(b"\r\n");
++        wire
++    }
++    #[tokio::test]
++    async fn source_framing_per_connection_opt_in_keeps_default_limits() {
++        let wire = body_with_trailers(101, 100);
++        assert!(collect(wire.clone(), false).await.is_err());
++        assert_eq!(
++            collect(wire.clone(), true).await.unwrap(),
++            (b"{}".to_vec(), false)
++        );
++        assert!(collect(wire, false).await.is_err());
++    }
++    #[tokio::test]
++    async fn source_framing_streams_unbounded_trailer_count_with_exact_line_limit() {
++        for (count, size) in [(1024, 100), (1, 20000), (1, 65531)] {
++            assert_eq!(
++                collect(body_with_trailers(count, size), true)
++                    .await
++                    .unwrap(),
++                (b"{}".to_vec(), false)
++            );
++        }
++        assert!(collect(body_with_trailers(1, 65532), true).await.is_err());
++    }
++    #[tokio::test]
++    async fn source_framing_extensions_are_per_size_line_not_aggregate() {
++        let mut single = b"2;".to_vec();
++        single.extend(std::iter::repeat_n(b'x', 20000));
++        single.extend_from_slice(b"\r\n{}\r\n0\r\n\r\n");
++        assert!(collect(single.clone(), false).await.is_err());
++        assert_eq!(collect(single, true).await.unwrap().0, b"{}");
++        let mut many = Vec::new();
++        for i in 0..200 {
++            many.extend_from_slice(b"1;");
++            many.extend(std::iter::repeat_n(b'x', 100));
++            many.extend_from_slice(b"\r\n");
++            many.push(if i == 0 { b'0' } else { b' ' });
++            many.extend_from_slice(b"\r\n");
++        }
++        many.extend_from_slice(b"0\r\n\r\n");
++        assert!(collect(many.clone(), false).await.is_err());
++        assert_eq!(collect(many, true).await.unwrap().0.len(), 200);
++        for zeros in [65533, 65534] {
++            let mut line = vec![b'0'; zeros];
++            line.extend_from_slice(b"2\r\n{}\r\n0\r\n\r\n");
++            assert_eq!(collect(line, true).await.is_ok(), zeros == 65533);
++        }
++    }
++    #[tokio::test]
++    async fn source_framing_retains_strict_malformed_delimiter_and_eof_rejection() {
++        for source in [false, true] {
++            assert!(collect(b"2\r\n{}XX0\r\n\r\n".to_vec(), source)
++                .await
++                .is_err());
++            assert!(collect(b"2\r\n{}\r\n0\r\n".to_vec(), source).await.is_err());
++        }
++    }
++}
++#[cfg(test)]
++mod source_framing_pending_tests {
++    use super::*;
++    struct AlternatingRead {
++        bytes: Bytes,
++        pending_next: bool,
++        pending_count: usize,
++        successful_reads: usize,
++    }
++    impl MemRead for AlternatingRead {
++        fn read_mem(&mut self, cx: &mut Context<'_>, len: usize) -> Poll<io::Result<Bytes>> {
++            if self.pending_next {
++                self.pending_next = false;
++                self.pending_count += 1;
++                cx.waker().wake_by_ref();
++                return Poll::Pending;
++            }
++            self.pending_next = true;
++            self.successful_reads += 1;
++            // A one-byte maximum splits every CR/LF, size, extension and body.
++            let n = len.min(1).min(self.bytes.len());
++            Poll::Ready(Ok(self.bytes.split_to(n)))
++        }
++    }
++    async fn decode(wire: Vec<u8>, should_pass: bool) {
++        let original_len = wire.len();
++        let mut input = AlternatingRead {
++            bytes: Bytes::from(wire),
++            pending_next: true,
++            pending_count: 0,
++            successful_reads: 0,
++        };
++        let mut decoder = Decoder::chunked(None, None).with_source_framing(true);
++        let mut output = Vec::new();
++        let mut failed = false;
++        while !decoder.is_eof() {
++            match decoder.decode_fut(&mut input).await {
++                Ok(frame) => {
++                    output.extend_from_slice(
++                        &frame.into_data().expect("source mode discards trailers"),
++                    );
++                    assert!(matches!(
++                        &decoder.kind,
++                        Kind::Chunked {
++                            trailers_buf: None,
++                            ..
++                        }
++                    ));
++                }
++                Err(error) => {
++                    assert_eq!(error.kind(), io::ErrorKind::InvalidData);
++                    failed = true;
++                    break;
++                }
++            }
++        }
++        assert_eq!(!failed, should_pass);
++        assert!(input.pending_count > 0 && input.successful_reads > 0);
++        if should_pass {
++            assert_eq!(output, b"{}");
++            assert!(input.bytes.is_empty());
++            assert_eq!(input.successful_reads, original_len);
++        }
++    }
++    #[tokio::test]
++    async fn source_framing_pending_and_partial_reads_preserve_line_counters() {
++        // Two size lines are each at the boundary: the second must reset,
++        // while Pending between bytes must never reset either counter early.
++        let mut wire = vec![b'0'; 65533];
++        wire.extend_from_slice(b"1\r\n{\r\n");
++        wire.extend(std::iter::repeat_n(b'0', 65533));
++        wire.extend_from_slice(b"1\r\n}\r\n0\r\nX: ");
++        wire.extend(std::iter::repeat_n(b'a', 65531));
++        wire.extend_from_slice(b"\r\nX: second-line\r\n\r\n");
++        decode(wire, true).await;
++        let mut over_size = vec![b'0'; 65534];
++        over_size.extend_from_slice(b"2\r\n{}\r\n0\r\n\r\n");
++        decode(over_size, false).await;
++        let mut over_trailer = b"2\r\n{}\r\n0\r\nX: ".to_vec();
++        over_trailer.extend(std::iter::repeat_n(b'a', 65532));
++        over_trailer.extend_from_slice(b"\r\n\r\n");
++        decode(over_trailer, false).await;
++    }
++}
+--- a/src/proto/h1/role.rs
++++ b/src/proto/h1/role.rs
+@@ -1229,7 +1229,14 @@
+         extend(dst, msg.head.subject.0.as_str().as_bytes());
+         extend(dst, b" ");
+         //TODO: add API to http::Uri to encode without std::fmt
+-        let _ = write!(FastWrite(dst), "{} ", msg.head.subject.1);
++        if let Some(target) = msg.head.extensions.get::<crate::ext::SourceRequestTarget>() {
++            // The CLI owns explicit routing/Host. This validated immutable
++            // extension changes only request-target emission, never parsing.
++            extend(dst, target.as_str().as_bytes());
++            extend(dst, b" ");
++        } else {
++            let _ = write!(FastWrite(dst), "{} ", msg.head.subject.1);
++        }
+ 
+         match msg.head.version {
+             Version::HTTP_10 => extend(dst, b"HTTP/1.0"),
+@@ -3617,3 +3624,56 @@
+         })
+     }
+ }
++
++
++#[cfg(all(test, feature = "client", feature = "http1"))]
++mod source_raw_target_tests {
++    use super::*;
++    fn encode(method: Method, target: Option<&str>, version: Version) -> (Vec<u8>, Option<Method>) {
++        let mut head = RequestHead::default();
++        head.subject.0 = method;
++        head.subject.1 = "/routing-neutral".parse().unwrap();
++        head.version = version;
++        head.headers.insert("host", HeaderValue::from_static("Host:00080"));
++        if let Some(target) = target {
++            head.extensions.insert(crate::ext::SourceRequestTarget::new(target.to_owned()).unwrap());
++        }
++        let mut observed = None;
++        let mut output = Vec::new();
++        Client::encode(Encode {
++            head: &mut head, body: None,
++            #[cfg(feature = "server")]
++            keep_alive: true,
++            req_method: &mut observed,
++            title_case_headers: false,
++            #[cfg(feature = "server")]
++            date_header: true,
++        }, &mut output).unwrap();
++        (output, observed)
++    }
++    #[test]
++    fn source_raw_target_actual_encoder_preserves_long_dot_fragment_and_absolute_form() {
++        for target in [format!("/?q={}","%CE%BB".repeat(11000)),"/a/%2e%2e/final".into(),"http://Host:00080/a/%2e%2e/final#literal".into(),"http://Host#fragment-without-slash".into()] {
++            let (output, observed)=encode(Method::GET, Some(&target), Version::HTTP_11);
++            assert_eq!(output,format!("GET {target} HTTP/1.1\r\nhost: Host:00080\r\n\r\n").as_bytes());
++            assert_eq!(observed,Some(Method::GET));
++        }
++    }
++    #[test]
++    fn source_raw_target_default_encoder_path_is_unchanged() {
++        let (output, observed)=encode(Method::GET,None,Version::HTTP_11);
++        assert_eq!(output,b"GET /routing-neutral HTTP/1.1\r\nhost: Host:00080\r\n\r\n");
++        assert_eq!(observed,Some(Method::GET));
++        let (output, _)=encode(Method::GET,None,Version::HTTP_10);
++        assert!(output.starts_with(b"GET /routing-neutral HTTP/1.0\r\n"));
++    }
++    #[test]
++    fn source_raw_target_connect_method_and_upgrade_decoder_remain_authoritative() {
++        let (output, mut observed)=encode(Method::CONNECT,Some("Host:443"),Version::HTTP_11);
++        assert!(output.starts_with(b"CONNECT Host:443 HTTP/1.1\r\n"));
++        assert_eq!(observed,Some(Method::CONNECT));
++        let response=MessageHead::<StatusCode>::default();
++        let (_,upgraded)=Client::decoder(&response,&mut observed).unwrap().unwrap();
++        assert!(upgraded);
++    }
++}
+--- a/.rustfmt.toml
++++ b/.rustfmt.toml
+@@ -0,0 +1,2 @@
++# Private upstream bytes have a separate finite SHA guard.
++disable_all_formatting = true

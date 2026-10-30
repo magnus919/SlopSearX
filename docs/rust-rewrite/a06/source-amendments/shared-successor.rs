@@ -570,7 +570,11 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     )?;
     let raw = fs::read(&path).map_err(|e| e.to_string())?;
     // Joint normalization is permitted only for these exact historical/current tuples.
-    let raw = if (row["path"] == "crates/xtask/src/main.rs"
+    let raw = if row["path"] == "Cargo.toml"
+        && row["sha256"] == "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3"
+    {
+        w07_t02_joint::cli_source_custody::legacy_prior(root, "Cargo.toml", &raw)?
+    } else if (row["path"] == "crates/xtask/src/main.rs"
         && row["sha256"] == "8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c")
         || (row["path"] == "Cargo.lock"
             && row["sha256"] == "96e9a7760d163fc5ea2afa23033e58cfb7e59d0f2d93f66d8847ef352e0b765d")

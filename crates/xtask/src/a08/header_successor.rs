@@ -149,10 +149,13 @@ fn load(root: &Path, path: &str) -> Result<Material> {
     };
     #[cfg(not(unix))]
     let mode = 0o644;
-    Ok(Material {
-        bytes: fs::read(p).map_err(|e| e.to_string())?,
-        mode,
-    })
+    let physical = fs::read(p).map_err(|e| e.to_string())?;
+    let bytes = if path == "Cargo.toml" {
+        crate::t08a::source_custody::legacy_prior(root, path, &physical)?
+    } else {
+        physical
+    };
+    Ok(Material { bytes, mode })
 }
 fn str_field<'a>(v: &'a Value, key: &str) -> Result<&'a str> {
     v[key]

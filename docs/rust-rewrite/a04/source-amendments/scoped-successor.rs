@@ -749,6 +749,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
     for path in [
         CAPSULE,
         "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json",
+        "docs/rust-rewrite/t08a/legacy-input-successor.json",
     ] {
         let target = owned.0.join(path);
         fs::create_dir_all(target.parent().ok_or("joint capsule parent")?)

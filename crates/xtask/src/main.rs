@@ -37,6 +37,8 @@ mod t02;
 mod t04;
 mod t05;
 mod t06;
+mod t08a;
+mod t08a_child;
 mod t09;
 mod w00;
 mod w01;
@@ -494,6 +496,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "T01" => t01::check(root, records),
         "T02" => t02::check(root, records),
         "T09" => t09::check(root, records),
+        "T08A" => t08a::check(root, records),
         "T04" => t04::check(root, records),
         "T05" => t05::check(root, records),
         "T06" => t06::check(root, records),
@@ -529,6 +532,8 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
                     "--locked",
                     "--workspace",
                     "--all-targets",
+                    "--features",
+                    "ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing",
                     "--",
                     "-D",
                     "warnings",
@@ -539,7 +544,15 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
             command(
                 root,
                 "cargo",
-                &["test", "--locked", "--workspace", "--exclude", "xtask"],
+                &[
+                    "test",
+                    "--locked",
+                    "--workspace",
+                    "--exclude",
+                    "xtask",
+                    "--features",
+                    "ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing",
+                ],
                 records,
             )?;
             command(
@@ -556,6 +569,9 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
     }
 }
 fn main() {
+    if let Some(code) = t08a_child::fixture_entry() {
+        std::process::exit(code);
+    }
     if replay::cli() {
         return;
     }
@@ -660,7 +676,9 @@ fn main() {
         }
     }
     let a08_scope = a08::report_scope(&records);
-    let scope = if id == "A12" {
+    let scope = if id == "T08A" {
+        "standalone native external-HTTP CLI; finite source-bound loopback corpus, X509/proxy/error contract and source installation; native backend integration T08/T02 and production/O04 delivery remain pending"
+    } else if id == "A12" {
         "static-source-bound infrastructure security factories and full native outputs/requests, actual private wire and finite ownership; no original execution/provider/full production composition claim"
     } else if id == "A10" {
         "source-bound five vulnerability adapters; full471 source observations/74 original test identities; exact reviewed differences and four correlated real-deadline IDs; private loopback/native helper; no production/W09/global RSS claim"

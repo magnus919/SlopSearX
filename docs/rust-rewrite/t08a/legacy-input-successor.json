@@ -1,0 +1,118 @@
+{
+  "schema": "T08A_FOUR_LEGACY_INPUTS_V1",
+  "scope": "exact workspace member plus both current W07 helpers and A13 qualification-only command frame; all original capsules/pins remain unchanged",
+  "rows": [
+    {
+      "path": "Cargo.toml",
+      "prior": {
+        "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3",
+        "bytes": 1984,
+        "mode": "0644",
+        "commit": "bb38785a9177aba1b1fa4e957e9356fed89a4e94",
+        "git_blob": "6dc332bf47713645e032e1e44d8b92ed74cdd16f"
+      },
+      "current": {
+        "sha256": "991efb05911f2e4c497b57add7772dfba1b9315a165bf02d565ec13dd258154e",
+        "bytes": 2008,
+        "mode": "0644",
+        "git_blob": "9026cd7f2327b2c8b7c06bc9cca84ef1f30cac49"
+      },
+      "edits": [
+        {
+          "at": 12,
+          "remove_utf8": "members = [\"crates/*\"]\n",
+          "insert_utf8": "members = [\"crates/*\", \"vendor/ssx-cli-hyper\"]\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "prior": {
+        "sha256": "0946408fe0f4ae154d3582a6922672dbc26da31fb468e90b5dab0285af909ce4",
+        "bytes": 74718,
+        "mode": "0644",
+        "commit": "bb38785a9177aba1b1fa4e957e9356fed89a4e94",
+        "git_blob": "7047b947cf58e5067ca3421e892f7a6285a166e0"
+      },
+      "current": {
+        "sha256": "736af5189bf366d3be6d684973e17722c6036b0d360feefdee93b36c14a81ff3",
+        "bytes": 74944,
+        "mode": "0644",
+        "git_blob": "bd70341f7a873e5041f0bb9c01a84a1b19031554"
+      },
+      "edits": [
+        {
+          "at": 21074,
+          "remove_utf8": "    let raw = if (row[\"path\"] == \"crates/xtask/src/main.rs\"\n",
+          "insert_utf8": "    let raw = if row[\"path\"] == \"Cargo.toml\"\n        && row[\"sha256\"] == \"d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3\"\n    {\n        w07_t02_joint::cli_source_custody::legacy_prior(root, \"Cargo.toml\", &raw)?\n    } else if (row[\"path\"] == \"crates/xtask/src/main.rs\"\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+      "prior": {
+        "sha256": "750cdae474caa6cd47a572c26ebc0c245125e649b71dc11679ce3962f05f1db4",
+        "bytes": 33256,
+        "mode": "0644",
+        "commit": "bb38785a9177aba1b1fa4e957e9356fed89a4e94",
+        "git_blob": "ebd4558eee6a8bbb98e0f7edc57f8b85afcc2c6d"
+      },
+      "current": {
+        "sha256": "b63d350bd6b08aa26a7b318afcc91d82dcefc490a67f0353ee2ace4300e3bf75",
+        "bytes": 34648,
+        "mode": "0644",
+        "git_blob": "6df25c22e03708c6468ce109395fabf4b2f2ace2"
+      },
+      "edits": [
+        {
+          "at": 158,
+          "remove_utf8": "",
+          "insert_utf8": "#[path = \"../../../../crates/xtask/src/t08a_custody.rs\"]\npub(crate) mod cli_source_custody;\n"
+        },
+        {
+          "at": 21697,
+          "remove_utf8": "",
+          "insert_utf8": "    } else if path == \"Cargo.lock\" {\n        cli_source_custody::prior(root, path, &actual)?\n    } else if path == \"crates/xtask/src/a13.rs\" {\n        cli_source_custody::legacy_prior(root, path, &actual)?\n"
+        },
+        {
+          "at": 23423,
+          "remove_utf8": "",
+          "insert_utf8": "    cli_source_custody::controls(root)?;\n"
+        },
+        {
+          "at": 23760,
+          "remove_utf8": "",
+          "insert_utf8": "        } else if r.path == \"Cargo.lock\" {\n            cli_source_custody::prior(root, r.path, &actual)?\n        } else if r.path == \"crates/xtask/src/a13.rs\" {\n            cli_source_custody::legacy_prior(root, r.path, &actual)?\n"
+        },
+        {
+          "at": 29155,
+          "remove_utf8": "",
+          "insert_utf8": "    let cli_capsule = \"docs/rust-rewrite/t08a/shared-source-successor.json\";\n    let cli_path = owned.0.join(cli_capsule);\n    fs::create_dir_all(cli_path.parent().ok_or(\"CLI custody fixture parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(cli_capsule), &cli_path).map_err(|e| e.to_string())?;\n    let legacy = cli_source_custody::LEGACY_CAPSULE_PATH;\n    let legacy_path = owned.0.join(legacy);\n    fs::create_dir_all(legacy_path.parent().ok_or(\"CLI legacy fixture parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(legacy), &legacy_path).map_err(|e| e.to_string())?;\n    fs::set_permissions(&legacy_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n    fs::set_permissions(&cli_path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/a13.rs",
+      "prior": {
+        "sha256": "681d6f0d1f1ec6af77bb88aa1774aa8aa8669f390dd801bf7391308db7494ff0",
+        "bytes": 57322,
+        "mode": "0644",
+        "commit": "bb38785a9177aba1b1fa4e957e9356fed89a4e94",
+        "git_blob": "3b6ed827cf06a1b68fd1a040bf34b42df4d6c893"
+      },
+      "current": {
+        "sha256": "9f0ab79ff42d6548d1c582d2532db3af1df713b0678da5c9fdb899251b4b0787",
+        "bytes": 57418,
+        "mode": "0644",
+        "git_blob": "42eabbd95b496e18852fdca9ea90710528e716f7"
+      },
+      "edits": [
+        {
+          "at": 37578,
+          "remove_utf8": "",
+          "insert_utf8": "            \"--features\",\n            \"ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing\",\n"
+        }
+      ]
+    }
+  ]
+}

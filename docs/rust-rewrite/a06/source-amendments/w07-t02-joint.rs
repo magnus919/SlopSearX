@@ -1,5 +1,7 @@
 //! Closed normal-merge composition of the reviewed W07 and T02 source parents.
 //! Physical joint identity precedes either historical parent interpretation.
+#[path = "../../../../crates/xtask/src/t08a_custody.rs"]
+pub(crate) mod cli_source_custody;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 #[path = "../../snapshot-fixture-amendment/main-custody.rs"]
@@ -384,6 +386,10 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
     }
     let joint = if path == "crates/xtask/src/main.rs" {
         snapshot_fixture_main::joint(root, &actual)?
+    } else if path == "Cargo.lock" {
+        cli_source_custody::prior(root, path, &actual)?
+    } else if path == "crates/xtask/src/a13.rs" {
+        cli_source_custody::legacy_prior(root, path, &actual)?
     } else {
         actual.clone()
     };
@@ -437,6 +443,7 @@ pub(crate) fn parent_git_blob(
 }
 /// Real Git parents and both exact inverses, plus rejection controls. No new test identity.
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    cli_source_custody::controls(root)?;
     need(
         row("crates/xtask/src/main.rs")?.sha == MAIN_SHA && row("Cargo.lock")?.sha == LOCK_SHA,
         "current admission constants",
@@ -445,6 +452,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let (actual, mode) = read(root, r)?;
         let joint = if r.path == "crates/xtask/src/main.rs" {
             snapshot_fixture_main::joint(root, &actual)?
+        } else if r.path == "Cargo.lock" {
+            cli_source_custody::prior(root, r.path, &actual)?
+        } else if r.path == "crates/xtask/src/a13.rs" {
+            cli_source_custody::legacy_prior(root, r.path, &actual)?
         } else {
             actual.clone()
         };
@@ -570,6 +581,19 @@ fn filesystem_controls(root: &Path) -> Result<()> {
     fs::copy(root.join(capsule_relative), &capsule_path).map_err(|e| e.to_string())?;
     fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))
         .map_err(|e| e.to_string())?;
+    let cli_capsule = "docs/rust-rewrite/t08a/shared-source-successor.json";
+    let cli_path = owned.0.join(cli_capsule);
+    fs::create_dir_all(cli_path.parent().ok_or("CLI custody fixture parent")?)
+        .map_err(|e| e.to_string())?;
+    fs::copy(root.join(cli_capsule), &cli_path).map_err(|e| e.to_string())?;
+    let legacy = cli_source_custody::LEGACY_CAPSULE_PATH;
+    let legacy_path = owned.0.join(legacy);
+    fs::create_dir_all(legacy_path.parent().ok_or("CLI legacy fixture parent")?)
+        .map_err(|e| e.to_string())?;
+    fs::copy(root.join(legacy), &legacy_path).map_err(|e| e.to_string())?;
+    fs::set_permissions(&legacy_path, fs::Permissions::from_mode(0o644))
+        .map_err(|e| e.to_string())?;
+    fs::set_permissions(&cli_path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
     for r in ROWS {
         let (actual, _) = read(root, r)?;
         let path = owned.0.join(r.path);

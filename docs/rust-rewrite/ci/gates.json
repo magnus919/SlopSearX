@@ -2046,7 +2046,7 @@
             {
               "name": "Fresh source-bound workspace compiler provenance",
               "shell": "bash",
-              "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/prerequisites\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=prerequisites TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual pre-gate compiler contexts and executable hashes; no immutable byte-archive or OS launch-image claim' }, null, 2) + '\\n');\nNODE\n"
+              "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/prerequisites\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=prerequisites TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst privateUnit = rows.filter(r => r.reason === 'compiler-artifact' && r.manifest_path === path.join(root, 'vendor/ssx-cli-hyper/Cargo.toml') && r.profile.test);\nneed(privateUnit.some(r => ['full', 'http1', 'http2', 'client', 'server', 'source-client-framing'].every(f => r.features.includes(f))), 'qualification private unit feature closure');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual qualification-only full-private-Hyper workspace compiler contexts and executable hashes; not standalone default-shipping CLI evidence or immutable byte/launch archive' }, null, 2) + '\\n');\nNODE\n"
             },
             {
               "name": "Formatting",
@@ -2054,7 +2054,7 @@
             },
             {
               "name": "Clippy",
-              "run": "cargo clippy --locked --workspace --all-targets -- -D warnings"
+              "run": "cargo clippy --locked --workspace --all-targets --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing -- -D warnings"
             },
             {
               "name": "Build actual-process HTTP fixture server",
@@ -2068,7 +2068,7 @@
                 "TMP": "${{ runner.temp }}/t02-sockets-workspace",
                 "TEMP": "${{ runner.temp }}/t02-sockets-workspace"
               },
-              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo test --locked --workspace\n"
+              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo test --locked --workspace --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing\n"
             },
             {
               "name": "Linux held-writer interpreter mutation control",
@@ -2086,7 +2086,7 @@
             },
             {
               "name": "Verify outbound TLS feature graph",
-              "run": "cargo tree --locked --workspace -e features > target/rust-feature-graph.txt\ngrep -q 'rustls-platform-verifier' target/rust-feature-graph.txt\nif grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then\n  echo \"unexpected native-TLS/OpenSSL backend in the locked feature graph\" >&2\n  exit 1\nfi\n"
+              "run": "cargo tree --locked --workspace --exclude ssx-cli --exclude ssx-cli-check --exclude ssx-cli-openssl-store --exclude ssx-cli-hyper -e features > target/rust-feature-graph.txt\ngrep -q 'rustls-platform-verifier' target/rust-feature-graph.txt\nif grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then\n  echo \"unexpected native-TLS/OpenSSL backend in the locked feature graph\" >&2\n  exit 1\nfi\ncargo run --locked -p ssx-cli-check -- check T08A-TLS-ROLES --output target/rust-cli-tls-roles.json\n"
             },
             {
               "name": "Verify prerequisites source and index unchanged",
@@ -2185,12 +2185,12 @@
             },
             {
               "name": "Verify outbound TLS feature graph",
-              "run": "cargo tree --locked --workspace -e features > target/rust-feature-graph.txt\ngrep -q 'rustls-platform-verifier' target/rust-feature-graph.txt\nif grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then\n  echo \"unexpected native-TLS/OpenSSL backend in the locked feature graph\" >&2\n  exit 1\nfi\n"
+              "run": "cargo tree --locked --workspace --exclude ssx-cli --exclude ssx-cli-check --exclude ssx-cli-openssl-store --exclude ssx-cli-hyper -e features > target/rust-feature-graph.txt\ngrep -q 'rustls-platform-verifier' target/rust-feature-graph.txt\nif grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then\n  echo \"unexpected native-TLS/OpenSSL backend in the locked feature graph\" >&2\n  exit 1\nfi\ncargo run --locked -p ssx-cli-check -- check T08A-TLS-ROLES --output target/rust-cli-tls-roles.json\n"
             },
             {
               "name": "Fresh source-bound workspace compiler provenance",
               "shell": "bash",
-              "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/runtime\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=runtime TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual pre-gate compiler contexts and executable hashes; no immutable byte-archive or OS launch-image claim' }, null, 2) + '\\n');\nNODE\n"
+              "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/runtime\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=runtime TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst privateUnit = rows.filter(r => r.reason === 'compiler-artifact' && r.manifest_path === path.join(root, 'vendor/ssx-cli-hyper/Cargo.toml') && r.profile.test);\nneed(privateUnit.some(r => ['full', 'http1', 'http2', 'client', 'server', 'source-client-framing'].every(f => r.features.includes(f))), 'qualification private unit feature closure');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual qualification-only full-private-Hyper workspace compiler contexts and executable hashes; not standalone default-shipping CLI evidence or immutable byte/launch archive' }, null, 2) + '\\n');\nNODE\n"
             },
             {
               "name": "Foundation lane evidence",
@@ -2433,12 +2433,12 @@
             },
             {
               "name": "Verify outbound TLS feature graph",
-              "run": "cargo tree --locked --workspace -e features > target/rust-feature-graph.txt\ngrep -q 'rustls-platform-verifier' target/rust-feature-graph.txt\nif grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then\n  echo \"unexpected native-TLS/OpenSSL backend in the locked feature graph\" >&2\n  exit 1\nfi\n"
+              "run": "cargo tree --locked --workspace --exclude ssx-cli --exclude ssx-cli-check --exclude ssx-cli-openssl-store --exclude ssx-cli-hyper -e features > target/rust-feature-graph.txt\ngrep -q 'rustls-platform-verifier' target/rust-feature-graph.txt\nif grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then\n  echo \"unexpected native-TLS/OpenSSL backend in the locked feature graph\" >&2\n  exit 1\nfi\ncargo run --locked -p ssx-cli-check -- check T08A-TLS-ROLES --output target/rust-cli-tls-roles.json\n"
             },
             {
               "name": "Fresh source-bound workspace compiler provenance",
               "shell": "bash",
-              "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/adapters\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=adapters TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual pre-gate compiler contexts and executable hashes; no immutable byte-archive or OS launch-image claim' }, null, 2) + '\\n');\nNODE\n"
+              "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/adapters\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=adapters TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst privateUnit = rows.filter(r => r.reason === 'compiler-artifact' && r.manifest_path === path.join(root, 'vendor/ssx-cli-hyper/Cargo.toml') && r.profile.test);\nneed(privateUnit.some(r => ['full', 'http1', 'http2', 'client', 'server', 'source-client-framing'].every(f => r.features.includes(f))), 'qualification private unit feature closure');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual qualification-only full-private-Hyper workspace compiler contexts and executable hashes; not standalone default-shipping CLI evidence or immutable byte/launch archive' }, null, 2) + '\\n');\nNODE\n"
             },
             {
               "name": "Native npm and crates registry pilot adapters",
@@ -2521,6 +2521,166 @@
       "owner": "F03",
       "state": "additive",
       "successor": "Mandatory adapters partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates."
+    },
+    "rust-cli.yml:native-cli": {
+      "source": {
+        "workflow": {
+          "name": "Native CLI component",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
+            },
+            "push": {
+              "branches": [
+                "main"
+              ]
+            }
+          },
+          "permissions": {
+            "contents": "read"
+          }
+        },
+        "job": {
+          "name": "Native CLI (${{ matrix.target }})",
+          "runs-on": "${{ matrix.runner }}",
+          "timeout-minutes": 60,
+          "strategy": {
+            "fail-fast": false,
+            "matrix": {
+              "include": [
+                {
+                  "runner": "ubuntu-24.04",
+                  "target": "x86_64-unknown-linux-gnu"
+                },
+                {
+                  "runner": "ubuntu-24.04-arm",
+                  "target": "aarch64-unknown-linux-gnu"
+                },
+                {
+                  "runner": "macos-15-intel",
+                  "target": "x86_64-apple-darwin"
+                },
+                {
+                  "runner": "macos-15",
+                  "target": "aarch64-apple-darwin"
+                },
+                {
+                  "runner": "windows-2025",
+                  "target": "x86_64-pc-windows-msvc"
+                }
+              ]
+            }
+          },
+          "defaults": {
+            "run": {
+              "shell": "bash"
+            }
+          },
+          "env": {
+            "CARGO_TERM_COLOR": "always",
+            "CARGO_BUILD_JOBS": 2,
+            "CARGO_PROFILE_DEV_DEBUG": 0,
+            "CARGO_INCREMENTAL": 0,
+            "OPENSSL_NO_ASM": "1",
+            "OPENSSL_NO_VENDOR": "0",
+            "OPENSSL_STATIC": "1",
+            "EXPECTED_TARGET": "${{ matrix.target }}",
+            "CARGO_TARGET_DIR": "${{ runner.temp }}/ssx-cli-target",
+            "TMPDIR": "${{ runner.temp }}/ssx-cli-tmp",
+            "TMP": "${{ runner.temp }}/ssx-cli-tmp",
+            "TEMP": "${{ runner.temp }}/ssx-cli-tmp"
+          },
+          "steps": [
+            {
+              "name": "Preserve literal source bytes on Windows",
+              "if": "${{ runner.os == 'Windows' }}",
+              "shell": "bash",
+              "run": "git config --global core.autocrlf false"
+            },
+            {
+              "uses": "actions/checkout@v7",
+              "with": {
+                "fetch-depth": 0,
+                "persist-credentials": false
+              }
+            },
+            {
+              "name": "Confirm native bootstrap and source identity",
+              "run": "set -euo pipefail\nmkdir -p \"$TMPDIR\" \"$CARGO_TARGET_DIR/rust-evidence\"\nrustc --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ngrep -Fx \"host: $EXPECTED_TARGET\" \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ncargo --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/cargo.txt\"\nperl -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\ngit rev-parse HEAD > \"$CARGO_TARGET_DIR/rust-evidence/head.txt\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\"\ngit status --porcelain=v1 --untracked-files=all > \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\ntest ! -s \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\n"
+            },
+            {
+              "name": "Locked format and strict standalone client lint",
+              "run": "set -euo pipefail\ncargo fmt --all --check\ncargo clippy --locked -p ssx-cli -p ssx-cli-check -p ssx-cli-openssl-store -p ssx-source-codecs --all-targets -- -D warnings\n"
+            },
+            {
+              "name": "Native external-child corpus and source installation",
+              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\ntest -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\ncmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\ntest -z \"$(git status --porcelain=v1 --untracked-files=all)\"\n"
+            },
+            {
+              "name": "Retain native CLI evidence",
+              "if": "${{ always() }}",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "name": "native-cli-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/ssx-cli-target/rust-evidence/",
+                "if-no-files-found": "error"
+              }
+            },
+            {
+              "name": "Retire reproducible native artifacts",
+              "if": "${{ always() }}",
+              "run": "set -euo pipefail\nrm -rf \"$CARGO_TARGET_DIR\" \"$TMPDIR\"\n"
+            }
+          ]
+        }
+      },
+      "owner": "T08A",
+      "state": "additive",
+      "successor": "cargo xtask check T08A; real native external-child CLI/TLS/proxy corpus and source install on five supported client targets; fail closed aggregate, no Python runtime/backend fallback"
+    },
+    "rust-cli.yml:native-cli-acceptance": {
+      "source": {
+        "workflow": {
+          "name": "Native CLI component",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
+            },
+            "push": {
+              "branches": [
+                "main"
+              ]
+            }
+          },
+          "permissions": {
+            "contents": "read"
+          }
+        },
+        "job": {
+          "name": "Native CLI component acceptance",
+          "if": "${{ always() }}",
+          "needs": [
+            "native-cli"
+          ],
+          "runs-on": "ubuntu-24.04",
+          "steps": [
+            {
+              "name": "Require every supported native client target",
+              "env": {
+                "MATRIX_RESULT": "${{ needs.native-cli.result }}"
+              },
+              "run": "test \"$MATRIX_RESULT\" = success"
+            }
+          ]
+        }
+      },
+      "owner": "T08A",
+      "state": "additive",
+      "successor": "cargo xtask check T08A; real native external-child CLI/TLS/proxy corpus and source install on five supported client targets; fail closed aggregate, no Python runtime/backend fallback"
     }
   },
   "precommit_source": {
@@ -2535,7 +2695,7 @@
           },
           {
             "id": "end-of-file-fixer",
-            "exclude": "^(docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)|crates/xtask/fixtures/f13/native-record\\.json|docs/rust-rewrite/t06/validation\\.json)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^(?:contracts/unicode/python-text-source/Objects__unicodectype\\.c\\.txt|contracts/unicode/python-text-source/Objects__unicodetype_db\\.h\\.txt|contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap\\.rs\\.frozen$|^docs/rust-rewrite/a07/qualification/pubchem-owner-clock-negative\\.stdout$|^logs/a05-codec-donor-final-alias-regression\\.log$"
+            "exclude": "^(docs/experiments/evidence/(.*\\.(json|txt)|EXP-003/reproduce\\.md)|crates/xtask/fixtures/f13/native-record\\.json|docs/rust-rewrite/t06/validation\\.json)$|^(?:crates/ssx\\-domain/tests/fixtures/a05_previous_media_sanitizer\\.rs|crates/ssx\\-source\\-codecs/MAPPING\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/MAPPING\\-UPSTREAM\\-SINGLEBYTE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/PYTHON\\-SOURCE\\-NOTICES\\.txt|crates/ssx\\-source\\-codecs/UNICODE\\-SOURCE\\-HEADERS\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/RFC3454\\-ORIGINAL\\-NOTICE\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/UNICODE\\-3\\.2\\-ORIGINAL\\-NOTICE\\.html|crates/ssx\\-source\\-codecs/provenance/idna/UnicodeCharacterDatabase\\-3\\.2\\.0\\.html|crates/ssx\\-source\\-codecs/provenance/idna/idna\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/CompositionExclusions\\-3\\.2\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/SpecialCasing\\-16\\.0\\.0\\.txt|crates/ssx\\-source\\-codecs/provenance/idna/inputs/aliases\\.py|crates/ssx\\-source\\-codecs/provenance/idna/inputs/stringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/mkstringprep\\.py|crates/ssx\\-source\\-codecs/provenance/idna/rfc3454\\.txt|crates/ssx\\-source\\-codecs/provenance/singlebyte\\-icu/koi8\\-t\\.ucm|docs/rust\\-rewrite/a05/libxml\\-safe\\-api\\-proposal\\.patch|docs/rust\\-rewrite/a05/surrogate\\-iconv\\-version\\-comparison\\.json|vendor/libxml/\\.cargo_vcs_info\\.json|vendor/libxml/\\.rustfmt\\.toml|vendor/libxml/CHANGELOG\\.md|vendor/libxml/README\\.md|vendor/libxml/appveyor\\.yml|vendor/libxml/src/wrapper\\.h|vendor/libxml/tests/VALGRIND\\.md|vendor/libxml/tests/resources/canonical_1_1/3_1_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_1_output_no_comment\\.xml|vendor/libxml/tests/resources/canonical_1_1/3_2_input\\.xml|vendor/libxml/tests/resources/canonical_1_1/Readme\\.md|vendor/libxml/tests/resources/canonical_exclusive/1_input\\.xml|vendor/libxml/tests/resources/canonical_exclusive/1_output\\.xml|vendor/libxml/tests/resources/example\\.html|vendor/libxml/tests/resources/file01_utf16le\\.xml|vendor/libxml/tests/resources/file01_utf16le_bom\\.xml|vendor/libxml/tests/resources/ids\\.xml|vendor/libxml/tests/resources/staff\\.xml|vendor/libxml/tests/resources/unformatted\\.xml|vendor/libxml2/a05\\-normal\\-data\\-nul\\.patch)$|^(?:contracts/unicode/python-text-source/Objects__unicodectype\\.c\\.txt|contracts/unicode/python-text-source/Objects__unicodetype_db\\.h\\.txt|contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap\\.rs\\.frozen$|^docs/rust-rewrite/a07/qualification/pubchem-owner-clock-negative\\.stdout$|^logs/a05-codec-donor-final-alias-regression\\.log$|^(?:vendor/ssx\\-cli\\-hyper/\\.cargo_vcs_info\\.json)$"
           },
           {
             "id": "check-yaml"
@@ -2561,7 +2721,7 @@
           },
           {
             "id": "check-added-large-files",
-            "exclude": "^docs/rust-rewrite/t06/(entities|validation)\\.json$|^docs/rust-rewrite/w06/(source\\.json|evidence/source-before-(composite-id-correction|unique-snapshot-ids)\\.json|evidence/review-public-source-outcomes\\.json)$|^docs/rust-rewrite/a10/(source-boundaries-v2\\.json|native-differences-v1\\.json)$|^docs/rust-rewrite/a11/(source-boundaries-v2|native-differences-v1)\\.json$|^(?:contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$",
+            "exclude": "^docs/rust-rewrite/t06/(entities|validation)\\.json$|^docs/rust-rewrite/w06/(source\\.json|evidence/source-before-(composite-id-correction|unique-snapshot-ids)\\.json|evidence/review-public-source-outcomes\\.json)$|^docs/rust-rewrite/a10/(source-boundaries-v2\\.json|native-differences-v1\\.json)$|^docs/rust-rewrite/a11/(source-boundaries-v2|native-differences-v1)\\.json$|^(?:contracts/unicode/python-text-source/Modules__unicodedata_db\\.h\\.txt)$|^(?:docs/rust\\-rewrite/t08a/cases\\.json)$",
             "args": [
               "--maxkb=500"
             ]
