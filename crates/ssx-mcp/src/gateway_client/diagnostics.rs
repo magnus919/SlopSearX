@@ -396,7 +396,7 @@ mod tests {
             Stage::OAuthCallbackAddressFailed,
             Stage::OAuthAuthorizationUrlFailed,
         ] {
-            auth_events.record(stage, &secret);
+            auth_events.record(stage, &SecretError);
         }
         #[cfg(feature = "gateway-source-endpoints")]
         for stage in [
@@ -408,7 +408,7 @@ mod tests {
             Stage::OAuthRegistrationEncodeFailed,
             Stage::OAuthClientPersistenceFailed,
         ] {
-            auth_events.record(stage, &secret);
+            auth_events.record(stage, &SecretError);
         }
         let mut auth_output = Vec::new();
         let emission = auth_events.emit(&mut auth_output);
