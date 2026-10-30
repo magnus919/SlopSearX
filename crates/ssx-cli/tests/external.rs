@@ -827,6 +827,82 @@ fn execute(case: &Case) -> Result<serde_json::Value, String> {
     }
     Ok(evidence)
 }
+// Supplemental source-grammar regression controls are separate from the immutable
+// 261-case corpus. The existing named owner runs both for default and installed images.
+fn supplemental_json_object_controls(corpus: &Corpus) -> Vec<String> {
+    use std::fmt::Write as _;
+    let template = corpus
+        .cases
+        .iter()
+        .find(|case| case.id == "reference-health-json")
+        .expect("frozen health JSON template");
+    let mut wide = template.clone();
+    wide.id = "supplemental-wide-json-object".into();
+    wide.reference = "supplemental source object grammar: 100000 unique keys, first-position/last-value duplicates".into();
+    let mut body = String::from("{");
+    let mut expected = String::from("{\n");
+    for i in 0..100_000 {
+        if i != 0 {
+            body.push(',');
+            expected.push_str(",\n");
+        }
+        write!(&mut body, "\"k{i:06}\":{i}").unwrap();
+        let value = match i {
+            0 => "-1".to_owned(),
+            99_999 => "-2".to_owned(),
+            _ => i.to_string(),
+        };
+        write!(&mut expected, "  \"k{i:06}\": {value}").unwrap();
+    }
+    body.push_str(",\"\\u006b000000\":-1,\"k099999\":-2}");
+    expected.push_str("\n}\n");
+    wide.replies[0].body_hex = hex(body.as_bytes());
+    wide.stdout.clear();
+    wide.stdout_sha256 = Some(hex(&Sha256::digest(expected.as_bytes())));
+    wide.stdout_bytes = Some(expected.len());
+
+    let mut decoded = template.clone();
+    decoded.id = "supplemental-decoded-json-object-duplicates".into();
+    decoded.reference =
+        "supplemental source decoded-key equality/order, lone surrogate and nested-index isolation"
+            .into();
+    decoded.replies[0].body_hex = hex(
+        r#"{"first":0,"\u0066irst":1,"\ud800":2,"\uD800":3,"😀":4,"\ud83d\ude00":5,"é":6,"\u00e9":7,"e\u0301":8,"nested":{"same":1,"\u0073ame":2},"same":3,"first":10}"#
+            .as_bytes(),
+    );
+    decoded.stdout = concat!(
+        "{\n  \"first\": 10,\n  \"\\ud800\": 3,\n",
+        "  \"\\ud83d\\ude00\": 5,\n  \"\\u00e9\": 7,\n",
+        "  \"e\\u0301\": 8,\n  \"nested\": {\n    \"same\": 2\n  },\n",
+        "  \"same\": 3\n}\n"
+    )
+    .into();
+
+    let mut errors = Vec::new();
+    let mut controls = Vec::new();
+    for case in [wide, decoded] {
+        println!("T08A supplemental start {}", case.id);
+        let started = Instant::now();
+        let result = execute(&case);
+        controls.push(serde_json::json!({
+            "case":case.id,
+            "elapsed_ms":started.elapsed().as_millis(),
+            "existing_child_deadline_seconds":25,
+            "passed":result.is_ok(),
+            "error":result.as_ref().err(),
+        }));
+        match result {
+            Ok(_) => println!("T08A supplemental pass {}", case.id),
+            Err(error) => errors.push(error),
+        }
+    }
+    if let Some(dir) = std::env::var_os("SSX_T08A_EVIDENCE") {
+        let path = PathBuf::from(dir).join("supplemental-json-object-controls.json");
+        fs::write(path, serde_json::to_vec_pretty(&controls).unwrap()).unwrap();
+    }
+    errors
+}
+
 #[test]
 fn native_external_child_executes_complete_frozen_contract() {
     let bytes = std::env::var_os("SSX_T08A_CORPUS")
@@ -845,6 +921,7 @@ fn native_external_child_executes_complete_frozen_contract() {
             errors.push(e);
         }
     }
+    errors.extend(supplemental_json_object_controls(&corpus));
     assert!(errors.is_empty(), "{}", errors.join("\n"));
 }
 #[test]

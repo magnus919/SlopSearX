@@ -6,6 +6,7 @@
 //! store Unicode codepoints (including escaped surrogates), objects preserve first
 //! insertion position with last-value-wins duplicate keys, integers never use f64.
 use crate::Failure;
+use std::collections::HashMap;
 pub enum Value {
     Null,
     Bool(bool),
@@ -23,7 +24,10 @@ pub fn string(s: &str) -> Value {
 impl Value {
     pub fn get(&self, key: &str) -> Result<Option<&Self>, Failure> {
         match self {
-            Self::Object(v) => Ok(v.iter().find(|(k, _)| *k == text(key)).map(|(_, v)| v)),
+            Self::Object(v) => {
+                let key = text(key);
+                Ok(v.iter().find(|(k, _)| *k == key).map(|(_, v)| v))
+            }
             _ => Err(Failure::Shape),
         }
     }
@@ -346,7 +350,7 @@ impl Parser<'_> {
 pub fn parse(raw: &str) -> Result<Value, Failure> {
     enum Frame {
         Array(Vec<Value>),
-        Object(Vec<(Vec<u32>, Value)>, Vec<u32>),
+        Object(Vec<(Vec<u32>, Value)>, HashMap<Vec<u32>, usize>, Vec<u32>),
     }
     let mut p = Parser { s: raw, pos: 0 };
     let mut stack = Vec::new();
@@ -375,7 +379,7 @@ pub fn parse(raw: &str) -> Result<Value, Failure> {
                         if !p.take(b':') {
                             return Err(Failure::Json);
                         }
-                        stack.push(Frame::Object(Vec::new(), key));
+                        stack.push(Frame::Object(Vec::new(), HashMap::new(), key));
                         continue;
                     }
                 }
@@ -394,15 +398,16 @@ pub fn parse(raw: &str) -> Result<Value, Failure> {
                     return Err(Failure::Json);
                 }
             }
-            Some(Frame::Object(fields, key)) => {
+            Some(Frame::Object(fields, positions, key)) => {
                 let key = std::mem::take(key);
-                if let Some((_, old)) = fields.iter_mut().find(|(k, _)| *k == key) {
-                    *old = value
+                if let Some(&position) = positions.get(&key) {
+                    fields[position].1 = value;
                 } else {
-                    fields.push((key, value))
+                    positions.insert(key.clone(), fields.len());
+                    fields.push((key, value));
                 }
                 if p.take(b'}') {
-                    let Some(Frame::Object(fields, _)) = stack.pop() else {
+                    let Some(Frame::Object(fields, _, _)) = stack.pop() else {
                         unreachable!()
                     };
                     completed = Some(Value::Object(fields));
@@ -414,7 +419,7 @@ pub fn parse(raw: &str) -> Result<Value, Failure> {
                     if !p.take(b':') {
                         return Err(Failure::Json);
                     }
-                    let Some(Frame::Object(_, key)) = stack.last_mut() else {
+                    let Some(Frame::Object(_, _, key)) = stack.last_mut() else {
                         unreachable!()
                     };
                     *key = next;
@@ -724,5 +729,55 @@ impl PartialEq for Value {
 impl std::fmt::Debug for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&pretty(self))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fmt::Write as _;
+
+    #[test]
+    fn decoded_object_index_preserves_first_position_and_last_value() {
+        let parsed = parse(
+            r#"{"first":0,"\u0066irst":1,"\ud800":2,"\uD800":3,"😀":4,"\ud83d\ude00":5,"é":6,"\u00e9":7,"e\u0301":8,"nested":{"same":1,"\u0073ame":2},"same":3,"first":10}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            pretty(&parsed),
+            concat!(
+                "{\n  \"first\": 10,\n  \"\\ud800\": 3,\n",
+                "  \"\\ud83d\\ude00\": 5,\n  \"\\u00e9\": 7,\n",
+                "  \"e\\u0301\": 8,\n  \"nested\": {\n    \"same\": 2\n  },\n",
+                "  \"same\": 3\n}\n"
+            )
+        );
+        assert_eq!(parsed.object().unwrap().len(), 7);
+        assert_eq!(
+            parsed.get("first").unwrap(),
+            Some(&Value::Number("10".into()))
+        );
+        assert_eq!(parsed.get("missing").unwrap(), None);
+
+        let mut raw = String::from("{");
+        for i in 0..32_768 {
+            if i != 0 {
+                raw.push(',');
+            }
+            write!(&mut raw, "\"k{i:06}\":{i}").unwrap();
+        }
+        raw.push_str(",\"\\u006b000000\":-1,\"k032767\":-2}");
+        let wide = parse(&raw).unwrap();
+        let fields = wide.object().unwrap();
+        assert_eq!(fields.len(), 32_768);
+        for (i, (key, value)) in fields.iter().enumerate() {
+            assert_eq!(*key, text(&format!("k{i:06}")));
+            let expected = match i {
+                0 => "-1".to_owned(),
+                32_767 => "-2".to_owned(),
+                _ => i.to_string(),
+            };
+            assert_eq!(*value, Value::Number(expected));
+        }
     }
 }
