@@ -1,5 +1,9 @@
 //! Closed normal-merge composition of the reviewed W07 and T02 source parents.
 //! Physical joint identity precedes either historical parent interpretation.
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Owning joint and legacy W07 proof namespaces intentionally share this self-contained stateless leaf"
+)]
 #[path = "../../../../crates/xtask/src/t08a_custody.rs"]
 pub(crate) mod cli_source_custody;
 use sha2::{Digest, Sha256};

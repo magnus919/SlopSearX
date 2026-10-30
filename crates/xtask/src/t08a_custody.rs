@@ -241,7 +241,7 @@ fn controls_for(
 
 // Separate closed legacy reader admission; the original main/lock ROWS remain2.
 pub(crate) const LEGACY_CAPSULE_PATH: &str = "docs/rust-rewrite/t08a/legacy-input-successor.json";
-const LEGACY_CAPSULE_SHA: &str = "0baa1d08654a179f2c5446ac9060b7bf9c91b39d6a765720e28358096336f507";
+const LEGACY_CAPSULE_SHA: &str = "72da3c4e57ce68923f3dd75dbc85316244ccfd6c4245eae29c69dbf5f8b9c796";
 const LEGACY_ROWS: [(&str, usize); 4] = [
     ("Cargo.toml", 1),
     (

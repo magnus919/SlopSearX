@@ -58,16 +58,16 @@
         "git_blob": "7260ac4f2fc3ee695f8285d1ff8ed2825d176b0e"
       },
       "current": {
-        "sha256": "e8586f918d3c6876e6314d146ff30ddd578c287cf9864b02773451e28b975a12",
-        "bytes": 44222,
+        "sha256": "f932c24ac2f9d5d3c582fbf5328258cc83819d5fbfce4809a632ea0974dc419b",
+        "bytes": 44376,
         "mode": "0644",
-        "git_blob": "a097911dfbe55d436c03534ca7d9d51bb2180713"
+        "git_blob": "0fa195f91ead576a96dd44b837cc4652a846afc7"
       },
       "edits": [
         {
           "at": 158,
           "remove_utf8": "",
-          "insert_utf8": "#[path = \"../../../../crates/xtask/src/t08a_custody.rs\"]\npub(crate) mod cli_source_custody;\n"
+          "insert_utf8": "#[allow(\n    clippy::duplicate_mod,\n    reason = \"Owning joint and legacy W07 proof namespaces intentionally share this self-contained stateless leaf\"\n)]\n#[path = \"../../../../crates/xtask/src/t08a_custody.rs\"]\npub(crate) mod cli_source_custody;\n"
         },
         {
           "at": 30889,
