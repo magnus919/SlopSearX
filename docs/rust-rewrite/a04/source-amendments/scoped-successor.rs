@@ -749,7 +749,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
     for path in [
         CAPSULE,
         "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json",
-        "docs/rust-rewrite/t08a/legacy-input-successor.json",
+        w07_t02_joint::cli_source_custody::LEGACY_CAPSULE_PATH,
     ] {
         let target = owned.0.join(path);
         fs::create_dir_all(target.parent().ok_or("joint capsule parent")?)
@@ -778,6 +778,33 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
             joint_current_material(&owned.0, path, &row)? == actual,
             "joint custody must return physical bytes",
         )?;
+        if path == XTASK_A13 {
+            let current_capsule = owned
+                .0
+                .join(w07_t02_joint::cli_source_custody::LEGACY_CAPSULE_PATH);
+            let original_capsule = fs::read(&current_capsule).map_err(|e| e.to_string())?;
+            let absent = current_capsule.with_extension("held-for-missing-control");
+            fs::rename(&current_capsule, &absent).map_err(|e| e.to_string())?;
+            let missing_rejected = joint_current_material(&owned.0, path, &row).is_err();
+            fs::rename(&absent, &current_capsule).map_err(|e| e.to_string())?;
+            require(
+                missing_rejected,
+                "owned joint proof accepted a missing current legacy capsule",
+            )?;
+            let mut changed_capsule = original_capsule.clone();
+            changed_capsule.push(0);
+            fs::write(&current_capsule, changed_capsule).map_err(|e| e.to_string())?;
+            let tampered_rejected = joint_current_material(&owned.0, path, &row).is_err();
+            fs::write(&current_capsule, &original_capsule).map_err(|e| e.to_string())?;
+            require(
+                tampered_rejected,
+                "owned joint proof accepted a tampered current legacy capsule",
+            )?;
+            require(
+                joint_current_material(&owned.0, path, &row)? == actual,
+                "owned joint current capsule restoration must preserve the physical positive",
+            )?;
+        }
         for (key, value) in [
             ("path", serde_json::json!("unknown.rs")),
             ("sha256", serde_json::json!("wrong")),
