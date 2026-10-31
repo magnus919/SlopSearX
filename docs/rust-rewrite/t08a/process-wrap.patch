@@ -1,0 +1,257 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -137,0 +138 @@
++    "time",
+--- a/src/tokio/job_object.rs
++++ b/src/tokio/job_object.rs
+@@ -10 +10 @@
+-use tokio::{process::Command, task::spawn_blocking};
++use tokio::process::Command;
+@@ -21 +21,2 @@
+-		JobPort, job_creation_flags, make_job_object, resume_threads, terminate_job, wait_on_job,
++		JobPort, active_processes, job_creation_flags, make_job_object, resume_threads,
++		terminate_job,
+@@ -140,0 +142,8 @@
++	/// Return the current active process count on this child's original job.
++	///
++	/// # Errors
++	/// Returns the Windows query error if original-job accounting is unavailable.
++	pub fn active_processes(&self) -> Result<u32> {
++		active_processes(self.job_port.job)
++	}
++
+@@ -183,4 +192,4 @@
+-			const MAX_RETRY_ATTEMPT: usize = 10;
+-
+-			// always wait for parent to exit first, as by the time it does,
+-			// it's likely that all its children have already exited.
++			// Parent status alone is not completion of the job. Do not cache it
++			// until authoritative accounting reports zero active processes.
++			// Poll asynchronously: cancelling this future leaves no detached
++			// infinite completion-port waiter behind.
+@@ -188,5 +197,3 @@
+-			self.exit_status = ChildExitStatus::Exited(status);
+-
+-			// nevertheless, now try reaping all children a few times...
+-			for _ in 1..MAX_RETRY_ATTEMPT {
+-				if wait_on_job(self.job_port.completion_port, Some(Duration::ZERO))?.is_break() {
++			loop {
++				if self.active_processes()? == 0 {
++					self.exit_status = ChildExitStatus::Exited(status);
+@@ -195,9 +202,2 @@
+-			}
+-
+-			// ...finally, if there are some that are still alive,
+-			// block in the background to reap them fully.
+-			let JobPort {
+-				completion_port, ..
+-			} = self.job_port;
+-			let _ = spawn_blocking(move || wait_on_job(completion_port, None)).await??;
+-			Ok(status)
++				tokio::time::sleep(Duration::from_millis(5)).await;
++			}
+@@ -209 +209,2 @@
+-		let _ = wait_on_job(self.job_port.completion_port, Some(Duration::ZERO))?;
++		// This API observes only the leader. Never consume job notifications;
++		// final wait and callers query the retained original job explicitly.
+--- a/src/windows.rs
++++ b/src/windows.rs
+@@ -3,4 +3,12 @@
+-use std::{
+-	io::{Error, Result},
+-	ops::ControlFlow,
+-	time::Duration,
++use std::io::{Error, Result};
++#[cfg(feature = "std")]
++use std::{ops::ControlFlow, time::Duration};
++#[cfg(feature = "tokio1")]
++use windows::Win32::System::JobObjects::{
++	JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JobObjectBasicAccountingInformation,
++	QueryInformationJobObject,
++};
++#[cfg(feature = "std")]
++use windows::Win32::System::{
++	IO::{GetQueuedCompletionStatus, OVERLAPPED},
++	Threading::INFINITE,
+@@ -19 +27 @@
+-			IO::{CreateIoCompletionPort, GetQueuedCompletionStatus, OVERLAPPED},
++			IO::CreateIoCompletionPort,
+@@ -27,2 +35,2 @@
+-				CREATE_SUSPENDED, GetProcessId, INFINITE, OpenThread, PROCESS_CREATION_FLAGS,
+-				ResumeThread, THREAD_SUSPEND_RESUME,
++				CREATE_SUSPENDED, GetProcessId, OpenThread, PROCESS_CREATION_FLAGS, ResumeThread,
++				THREAD_SUSPEND_RESUME,
+@@ -242,0 +251,23 @@
++/// Query the active process count on this exact owned job handle.
++#[cfg(feature = "tokio1")]
++pub(crate) fn active_processes(job: JobHandle) -> Result<u32> {
++	let mut accounting = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
++	let bytes = std::mem::size_of_val(&accounting)
++		.try_into()
++		.map_err(Error::other)?;
++	// SAFETY: job is retained by JobPort for this call. The output points to
++	// the correctly sized live accounting structure; no process/PID lookup or
++	// ambient NULL job is used. This reads state and cannot change job limits.
++	unsafe {
++		QueryInformationJobObject(
++			Some(job.0),
++			JobObjectBasicAccountingInformation,
++			(&mut accounting as *mut JOBOBJECT_BASIC_ACCOUNTING_INFORMATION).cast(),
++			bytes,
++			None,
++		)
++	}
++	.map_err(Error::other)?;
++	Ok(accounting.ActiveProcesses)
++}
++
+@@ -243,0 +275 @@
++#[cfg(feature = "std")]
+--- a/tests/tokio_windows/mod.rs
++++ b/tests/tokio_windows/mod.rs
+@@ -29,0 +30,3 @@
++
++#[cfg(all(feature = "job-object", feature = "kill-on-drop"))]
++mod job_accounting;
+--- /dev/null
++++ b/tests/tokio_windows/job_accounting.rs
+@@ -0,0 +1,139 @@
++use std::{any::Any, io::Write, process::Command as StdCommand};
++
++use super::prelude::*;
++
++const ROLE: &str = "PROCESS_WRAP_JOB_ACCOUNTING_ROLE";
++const FIXTURE: &str = "tokio_windows::job_accounting::fixture_process";
++const BOUND: Duration = Duration::from_secs(5);
++const STDOUT_CAP: u64 = 4096;
++
++#[test]
++fn fixture_process() {
++	match std::env::var(ROLE).as_deref() {
++		Ok("exit") => {
++			println!("PW_JOB_ACCOUNTING_EXIT_READY");
++			std::io::stdout().flush().unwrap();
++		}
++		Ok("leaf") => std::thread::sleep(Duration::from_secs(30)),
++		Ok("parent") => {
++			let descendant = StdCommand::new(std::env::current_exe().unwrap())
++				.args(["--exact", FIXTURE, "--nocapture"])
++				.env(ROLE, "leaf")
++				.stdin(Stdio::null())
++				.stdout(Stdio::null())
++				.stderr(Stdio::null())
++				.spawn()
++				.unwrap();
++			println!("PW_JOB_ACCOUNTING_DESCENDANT_READY");
++			std::io::stdout().flush().unwrap();
++			// Deliberate leader exit while the original job still owns the leaf.
++			drop(descendant);
++		}
++		_ => {}
++	}
++}
++
++fn count(child: &dyn ChildWrapper) -> Result<u32> {
++	let any: &dyn Any = child;
++	any.downcast_ref::<JobObjectChild>()
++		.ok_or_else(|| std::io::Error::other("original JobObject capability missing"))?
++		.active_processes()
++}
++
++fn spawn(role: &str) -> Result<Box<dyn ChildWrapper>> {
++	CommandWrap::with_new(std::env::current_exe()?, |command| {
++		command
++			.args(["--exact", FIXTURE, "--nocapture"])
++			.env(ROLE, role)
++			.stdin(Stdio::null())
++			.stdout(Stdio::piped())
++			.stderr(Stdio::null());
++	})
++	.wrap(KillOnDrop)
++	.wrap(JobObject)
++	.spawn()
++}
++
++async fn fixture_stdout(child: &mut dyn ChildWrapper) -> Result<String> {
++	let stdout = child
++		.stdout()
++		.take()
++		.ok_or_else(|| std::io::Error::other("fixture stdout missing"))?;
++	let mut text = String::new();
++	tokio::time::timeout(BOUND, async {
++		let mut limited = stdout.take(STDOUT_CAP + 1);
++		limited.read_to_string(&mut text).await
++	})
++	.await
++	.map_err(std::io::Error::other)??;
++	if text.len() as u64 > STDOUT_CAP {
++		return Err(std::io::Error::other("fixture stdout bound"));
++	}
++	// A wrong exact selector must fail this control, even if the helper exits 0.
++	assert!(text.contains("running 1 test"));
++	assert!(text.contains("1 passed; 0 failed; 0 ignored;"));
++	Ok(text)
++}
++
++async fn leader_exited(child: &mut dyn ChildWrapper) -> Result<()> {
++	tokio::time::timeout(BOUND, async {
++		loop {
++			if let Some(status) = child.try_wait()? {
++				assert!(status.success());
++				return Ok(());
++			}
++			sleep(Duration::from_millis(5)).await;
++		}
++	})
++	.await
++	.map_err(std::io::Error::other)?
++}
++
++#[tokio::test]
++async fn try_wait_before_final_wait_preserves_original_job_completion() -> Result<()> {
++	let mut child = spawn("exit")?;
++	let text = fixture_stdout(child.as_mut()).await?;
++	assert!(text.contains("PW_JOB_ACCOUNTING_EXIT_READY"));
++	leader_exited(child.as_mut()).await?;
++	// Drain opportunities which consumed completion notifications in the old
++	// wrapper; leader observation must not invalidate the final whole-job wait.
++	for _ in 0..16 {
++		assert!(child.try_wait()?.is_some());
++	}
++	let status = tokio::time::timeout(BOUND, child.wait())
++		.await
++		.map_err(std::io::Error::other)??;
++	assert!(status.success());
++	assert_eq!(count(child.as_ref())?, 0);
++	Ok(())
++}
++
++#[tokio::test]
++async fn leader_exit_does_not_cache_success_while_descendant_is_active() -> Result<()> {
++	let mut child = spawn("parent")?;
++	let text = fixture_stdout(child.as_mut()).await?;
++	assert!(text.contains("PW_JOB_ACCOUNTING_DESCENDANT_READY"));
++	leader_exited(child.as_mut()).await?;
++	assert!(count(child.as_ref())? > 0);
++	assert!(
++		tokio::time::timeout(Duration::from_millis(100), child.wait())
++			.await
++			.is_err()
++	);
++	// Cancelling wait cannot cache leader-only success or detach a blocker.
++	assert!(count(child.as_ref())? > 0);
++	child.start_kill()?;
++	let status = tokio::time::timeout(BOUND, child.wait())
++		.await
++		.map_err(std::io::Error::other)??;
++	assert!(status.success());
++	assert_eq!(count(child.as_ref())?, 0);
++	assert!(
++		tokio::time::timeout(BOUND, child.wait())
++			.await
++			.map_err(std::io::Error::other)??
++			.success()
++	);
++	assert_eq!(count(child.as_ref())?, 0);
++	Ok(())
++}

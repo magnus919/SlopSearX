@@ -89,6 +89,13 @@ async fn tree_absent(pid: u32) -> bool {
     }
     false
 }
+#[cfg(windows)]
+fn original_job_active_processes(child: &dyn ChildWrapper) -> std::io::Result<u32> {
+    let any: &dyn std::any::Any = child;
+    any.downcast_ref::<process_wrap::tokio::JobObjectChild>()
+        .ok_or_else(|| std::io::Error::other("original JobObject capability missing"))?
+        .active_processes()
+}
 pub fn capture(
     command: Command,
     budget: Duration,
@@ -140,21 +147,47 @@ pub fn capture(
         let may_wait = killed.is_ok();
         #[cfg(unix)]
         let may_wait = true;
-        let waited = if may_wait {
-            matches!(
-                tokio::time::timeout(Duration::from_secs(5), owner.child.wait()).await,
-                Ok(Ok(_))
-            )
-        } else { false };
+        let wait_result = if may_wait {
+            Some(tokio::time::timeout(Duration::from_secs(5), owner.child.wait()).await)
+        } else { None };
+        let waited = matches!(wait_result.as_ref(), Some(Ok(Ok(_))));
         #[cfg(unix)]
         let retired = waited && if let Some(pid) = pid { tree_absent(pid).await } else { false };
         #[cfg(windows)]
-        let retired = waited && killed.is_ok(); // JobObject wait observes zero active processes.
+        let job_accounting = original_job_active_processes(owner.child.as_ref());
+        #[cfg(windows)]
+        let retired = waited
+            && killed.is_ok()
+            && job_accounting.as_ref().is_ok_and(|count| *count == 0);
         if retired { owner.armed = false; }
         let status = observed.and_then(|s|s.code());
         let mut error = run.err();
         if !retired { error = Some(format!("{}; child tree retirement unproven",error.unwrap_or_default())); }
         let cleanup = json!({"kill_attempted":true,"kill_error":kill_error,"waited":waited,"tree_retired":retired,"read_futures_dropped_before_cleanup":true,"stdout_retained":stdout.len(),"stderr_retained":stderr.len(),"stdout_cap":stdout_cap,"stderr_cap":stderr_cap,"cleanup_bounds":{"wait_seconds":5,"unix_absence_seconds":if cfg!(unix){5}else{0},"runtime_shutdown_seconds":1,"total_seconds":if cfg!(unix){11}else{6}},"parent_exit_observed_before_cleanup":observed.is_some(),"parent_exit_observed_ms":observed_ms,"stdout_eof_before_cleanup":stdout_eof,"stderr_eof_before_cleanup":stderr_eof,"containment":if cfg!(windows){"Windows JobObject"}else{"Unix process group, two absent observations"}});
+        #[cfg(windows)]
+        let cleanup = {
+            let mut cleanup = cleanup;
+            let wait_outcome = match &wait_result {
+                Some(Ok(Ok(_))) => "completed",
+                Some(Ok(Err(_))) => "io-error",
+                Some(Err(_)) => "deadline",
+                None => "not-started-kill-error",
+            };
+            let wait_error = match &wait_result {
+                Some(Ok(Err(error))) => Some(error),
+                _ => None,
+            };
+            cleanup["wait_outcome"] = json!(wait_outcome);
+            cleanup["wait_error_kind"] = json!(wait_error.map(|e| format!("{:?}", e.kind())));
+            cleanup["wait_error_raw_os"] = json!(wait_error.and_then(std::io::Error::raw_os_error));
+            cleanup["original_job_accounting"] = json!({
+                "active_processes": job_accounting.as_ref().ok(),
+                "query_error_kind": job_accounting.as_ref().err().map(|e| format!("{:?}", e.kind())),
+                "query_error_raw_os": job_accounting.as_ref().err().and_then(|e| e.raw_os_error()),
+                "scope": "retained-original-job-handle"
+            });
+            cleanup
+        };
         Ok(Captured{pid:pid.unwrap_or(0),status,stdout,stderr,error,cleanup})
     });
     // process-wrap's Windows final job wait may use spawn_blocking. A failed

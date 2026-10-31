@@ -2,6 +2,8 @@
 pub(crate) use crate::cli_source_custody as source_custody;
 #[path = "t08a_tls_roles.rs"]
 pub(crate) mod tls_roles;
+#[path = "t08a_process_wrap.rs"]
+mod process_wrap_guard;
 use crate::{Result, command, t08a_child};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -491,6 +493,7 @@ fn default_shipping_floor(root: &Path, records: &mut Vec<Value>) -> Result<(Path
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let before = sources(root)?;
     vendor_sources(root)?;
+    process_wrap_guard::sources(root)?;
     source_custody::controls(root)?;
     tls_roles::check(root, records)?;
     t08a_child::controls(
@@ -595,6 +598,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .as_str()
             .ok_or("target directory")?,
     );
+    process_wrap_guard::qualify(root, &host, &target, records)?;
     let output = target.join("rust-evidence/t08a-native");
     fs::create_dir_all(&output).map_err(|e| e.to_string())?;
     let tree = command(

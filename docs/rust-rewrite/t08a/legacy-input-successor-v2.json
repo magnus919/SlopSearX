@@ -12,16 +12,16 @@
         "git_blob": "6dc332bf47713645e032e1e44d8b92ed74cdd16f"
       },
       "current": {
-        "sha256": "991efb05911f2e4c497b57add7772dfba1b9315a165bf02d565ec13dd258154e",
-        "bytes": 2008,
+        "sha256": "8721602f2bb19541fc3c419834dcdab57b555a5b86b1051d2f7b61a1fbe4f6bc",
+        "bytes": 2039,
         "mode": "0644",
-        "git_blob": "9026cd7f2327b2c8b7c06bc9cca84ef1f30cac49"
+        "git_blob": "75dccf91ba0fba30ed44599493253fad451071fb"
       },
       "edits": [
         {
           "at": 12,
-          "remove_utf8": "members = [\"crates/*\"]\n",
-          "insert_utf8": "members = [\"crates/*\", \"vendor/ssx-cli-hyper\"]\n"
+          "remove_utf8": "members = [\"crates/*\"]\nexclude = [\"vendor/expat\", \"vendor/libxml\"]\n",
+          "insert_utf8": "members = [\"crates/*\", \"vendor/ssx-cli-hyper\"]\nexclude = [\"vendor/expat\", \"vendor/libxml\", \"vendor/ssx-cli-process-wrap\"]\n"
         }
       ]
     },

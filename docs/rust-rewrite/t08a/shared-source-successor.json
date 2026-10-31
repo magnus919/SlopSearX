@@ -60,10 +60,10 @@
         "git_blob": "356b40d5915deaec9113e754deb7a9d8663ab146"
       },
       "current": {
-        "sha256": "f299a1e350222ac84d471b3cedf11d6b4cb61287d2b6c3723eb51988e317251c",
-        "bytes": 93989,
+        "sha256": "7f64930ad5267129bcd5f750de6bba4249c8a3bfde3a3de1753a853b5e1db9d9",
+        "bytes": 94194,
         "mode": "0644",
-        "git_blob": "a0580f354e1a86685616e7202d274da77cef20cf"
+        "git_blob": "945d4abd447f532c21429f1a82a58b6f7db6565f"
       },
       "edits": [
         {
@@ -112,9 +112,19 @@
           "insert_utf8": "\n[[package]]\nname = \"openssl-src\"\nversion = \"300.6.1+3.6.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"46eb8fb9fb3b61ce1c0f8a026c4c1a0714d3a9e138e7fbde78753ce2babc3846\"\ndependencies = [\n \"cc\",\n]\n\n[[package]]\nname = \"openssl-sys\"\nversion = \"0.9.117\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b47e7e6bb2c38cd930d25a23b40fa52e068c10e85f3e03a7f5ba5aaca5713695\"\ndependencies = [\n \"cc\",\n \"libc\",\n \"openssl-src\",\n \"pkg-config\",\n \"vcpkg\",\n]\n"
         },
         {
-          "at": 42858,
+          "at": 42871,
           "remove_utf8": "",
-          "insert_utf8": "\n[[package]]\nname = \"pretty_env_logger\"\nversion = \"0.5.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"865724d4dbe39d9f3dd3b52b88d859d66bcb2d6a0acfd5ea68a65fb66d4bdc1c\"\ndependencies = [\n \"env_logger\",\n \"log\",\n]\n"
+          "insert_utf8": "name = \"pretty_env_logger\"\nversion = \"0.5.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"865724d4dbe39d9f3dd3b52b88d859d66bcb2d6a0acfd5ea68a65fb66d4bdc1c\"\ndependencies = [\n \"env_logger\",\n \"log\",\n]\n\n[[package]]\n"
+        },
+        {
+          "at": 43090,
+          "remove_utf8": "",
+          "insert_utf8": "]\n\n[[package]]\nname = \"process-wrap\"\nversion = \"10.0.1\"\ndependencies = [\n \"futures\",\n \"indexmap\",\n \"nix\",\n \"tokio\",\n \"windows\",\n"
+        },
+        {
+          "at": 49788,
+          "remove_utf8": " \"process-wrap\",\n",
+          "insert_utf8": " \"process-wrap 10.0.1 (registry+https://github.com/rust-lang/crates.io-index)\",\n"
         },
         {
           "at": 58636,
@@ -134,7 +144,7 @@
         {
           "at": 61200,
           "remove_utf8": " \"reqwest\",\n \"ssx-wire\",\n",
-          "insert_utf8": " \"core-foundation 0.9.4\",\n \"flate2\",\n \"http-body\",\n \"openssl\",\n \"quick-xml\",\n \"rustls\",\n \"rustls-platform-verifier\",\n \"serde\",\n \"serde_json\",\n \"sha2\",\n \"ssx-cli-hyper\",\n \"ssx-cli-openssl-store\",\n \"ssx-json\",\n \"ssx-source-codecs\",\n \"system-configuration\",\n \"tokio\",\n \"tokio-rustls\",\n \"url\",\n \"windows-registry\",\n]\n\n[[package]]\nname = \"ssx-cli-check\"\nversion = \"0.1.0\"\ndependencies = [\n \"nix\",\n \"process-wrap\",\n \"serde_json\",\n \"sha2\",\n \"tokio\",\n]\n\n[[package]]\nname = \"ssx-cli-hyper\"\nversion = \"1.12.0\"\ndependencies = [\n \"atomic-waker\",\n \"bytes\",\n \"form_urlencoded\",\n \"futures-channel\",\n \"futures-core\",\n \"futures-util\",\n \"h2\",\n \"http\",\n \"http-body\",\n \"http-body-util\",\n \"httparse\",\n \"httpdate\",\n \"itoa\",\n \"pin-project-lite\",\n \"pretty_env_logger\",\n \"serde\",\n \"serde_json\",\n \"smallvec\",\n \"spmc\",\n \"tokio\",\n \"tokio-test\",\n \"tokio-util\",\n \"tracing\",\n \"tracing-subscriber\",\n \"want\",\n]\n\n[[package]]\nname = \"ssx-cli-openssl-store\"\nversion = \"0.1.0\"\ndependencies = [\n \"foreign-types\",\n \"openssl\",\n \"openssl-sys\",\n"
+          "insert_utf8": " \"core-foundation 0.9.4\",\n \"flate2\",\n \"http-body\",\n \"openssl\",\n \"quick-xml\",\n \"rustls\",\n \"rustls-platform-verifier\",\n \"serde\",\n \"serde_json\",\n \"sha2\",\n \"ssx-cli-hyper\",\n \"ssx-cli-openssl-store\",\n \"ssx-json\",\n \"ssx-source-codecs\",\n \"system-configuration\",\n \"tokio\",\n \"tokio-rustls\",\n \"url\",\n \"windows-registry\",\n]\n\n[[package]]\nname = \"ssx-cli-check\"\nversion = \"0.1.0\"\ndependencies = [\n \"nix\",\n \"process-wrap 10.0.1\",\n \"serde_json\",\n \"sha2\",\n \"tokio\",\n]\n\n[[package]]\nname = \"ssx-cli-hyper\"\nversion = \"1.12.0\"\ndependencies = [\n \"atomic-waker\",\n \"bytes\",\n \"form_urlencoded\",\n \"futures-channel\",\n \"futures-core\",\n \"futures-util\",\n \"h2\",\n \"http\",\n \"http-body\",\n \"http-body-util\",\n \"httparse\",\n \"httpdate\",\n \"itoa\",\n \"pin-project-lite\",\n \"pretty_env_logger\",\n \"serde\",\n \"serde_json\",\n \"smallvec\",\n \"spmc\",\n \"tokio\",\n \"tokio-test\",\n \"tokio-util\",\n \"tracing\",\n \"tracing-subscriber\",\n \"want\",\n]\n\n[[package]]\nname = \"ssx-cli-openssl-store\"\nversion = \"0.1.0\"\ndependencies = [\n \"foreign-types\",\n \"openssl\",\n \"openssl-sys\",\n"
         },
         {
           "at": 67119,
@@ -164,7 +174,7 @@
         {
           "at": 84803,
           "remove_utf8": "",
-          "insert_utf8": " \"nix\",\n \"process-wrap\",\n"
+          "insert_utf8": " \"nix\",\n \"process-wrap 10.0.1\",\n"
         },
         {
           "at": 84957,

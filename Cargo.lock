@@ -1873,6 +1873,17 @@ dependencies = [
 [[package]]
 name = "process-wrap"
 version = "10.0.1"
+dependencies = [
+ "futures",
+ "indexmap",
+ "nix",
+ "tokio",
+ "windows",
+]
+
+[[package]]
+name = "process-wrap"
+version = "10.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f21b97672d2dc848e7b25701ab4535618b92f4861c13cc3f7f7bed52ad3c8da"
 dependencies = [
@@ -2180,7 +2191,7 @@ dependencies = [
  "indexmap",
  "pastey",
  "pin-project-lite",
- "process-wrap",
+ "process-wrap 10.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand",
  "reqwest",
  "rmcp-macros",
@@ -2696,7 +2707,7 @@ name = "ssx-cli-check"
 version = "0.1.0"
 dependencies = [
  "nix",
- "process-wrap",
+ "process-wrap 10.0.1",
  "serde_json",
  "sha2",
  "tokio",
@@ -3830,7 +3841,7 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "nix",
- "process-wrap",
+ "process-wrap 10.0.1",
  "serde",
  "serde-saphyr",
  "serde_json",
