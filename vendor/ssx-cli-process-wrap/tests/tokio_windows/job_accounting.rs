@@ -98,10 +98,12 @@ async fn fixture_ready(child: &mut dyn ChildWrapper, marker: &str) -> Result<Fix
 	.await
 	.map_err(|_| timed_out("fixture readiness timeout"))??;
 	// A wrong exact selector must fail even if its helper exits 0.
-	assert!(output
-		.bytes
-		.windows(14)
-		.any(|part| part == b"running 1 test"));
+	assert!(
+		output
+			.bytes
+			.windows(14)
+			.any(|part| part == b"running 1 test")
+	);
 	Ok(output)
 }
 
@@ -172,10 +174,12 @@ async fn leader_exit_does_not_cache_success_while_descendant_is_active() -> Resu
 		.map_err(|_| timed_out("original job retirement timeout"))??;
 	assert!(status.success());
 	assert_eq!(count(child.as_ref())?, 0);
-	assert!(tokio::time::timeout(BOUND, child.wait())
-		.await
-		.map_err(|_| timed_out("repeated original job wait timeout"))??
-		.success());
+	assert!(
+		tokio::time::timeout(BOUND, child.wait())
+			.await
+			.map_err(|_| timed_out("repeated original job wait timeout"))??
+			.success()
+	);
 	assert_eq!(count(child.as_ref())?, 0);
 	let text = fixture_stdout(output).await?;
 	assert!(text.contains("PW_JOB_ACCOUNTING_DESCENDANT_READY"));

@@ -115,7 +115,7 @@
 +mod job_accounting;
 --- /dev/null
 +++ b/tests/tokio_windows/job_accounting.rs
-@@ -0,0 +1,183 @@
+@@ -0,0 +1,187 @@
 +use std::{any::Any, io::Write, process::Command as StdCommand};
 +
 +use tokio::{
@@ -216,10 +216,12 @@
 +	.await
 +	.map_err(|_| timed_out("fixture readiness timeout"))??;
 +	// A wrong exact selector must fail even if its helper exits 0.
-+	assert!(output
-+		.bytes
-+		.windows(14)
-+		.any(|part| part == b"running 1 test"));
++	assert!(
++		output
++			.bytes
++			.windows(14)
++			.any(|part| part == b"running 1 test")
++	);
 +	Ok(output)
 +}
 +
@@ -290,10 +292,12 @@
 +		.map_err(|_| timed_out("original job retirement timeout"))??;
 +	assert!(status.success());
 +	assert_eq!(count(child.as_ref())?, 0);
-+	assert!(tokio::time::timeout(BOUND, child.wait())
-+		.await
-+		.map_err(|_| timed_out("repeated original job wait timeout"))??
-+		.success());
++	assert!(
++		tokio::time::timeout(BOUND, child.wait())
++			.await
++			.map_err(|_| timed_out("repeated original job wait timeout"))??
++			.success()
++	);
 +	assert_eq!(count(child.as_ref())?, 0);
 +	let text = fixture_stdout(output).await?;
 +	assert!(text.contains("PW_JOB_ACCOUNTING_DESCENDANT_READY"));
