@@ -35,10 +35,11 @@ flate2.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 ssx-json.workspace = true
+ssx-source-json.workspace = true
 chrono = { version = "=0.4.45", default-features = false, features = ["clock", "std"] }
 
 [dev-dependencies]
-ssx-mcp.workspace = true
+ssx-mcp = { workspace = true, features = ["server"] }
 ssx-wire.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }

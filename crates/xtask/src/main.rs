@@ -26,6 +26,8 @@ mod f12;
 mod f13;
 mod f14;
 mod f15;
+#[cfg(unix)]
+mod gateway_package;
 mod o01;
 mod o03;
 mod o06;
@@ -37,6 +39,8 @@ mod t02;
 mod t04;
 mod t05;
 mod t06;
+mod t07;
+mod t07_unit_profile;
 mod t09;
 mod w00;
 mod w01;
@@ -497,6 +501,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "T04" => t04::check(root, records),
         "T05" => t05::check(root, records),
         "T06" => t06::check(root, records),
+        "T07" => t07::check(root, records),
         "F05" => f05::check(root, records),
         "F06" => f06::check(root, records),
         "F07" => f07::check(root, records),
@@ -568,6 +573,13 @@ fn main() {
         .expect("wall clock after epoch")
         .as_millis();
     let args: Vec<_> = std::env::args().skip(1).collect();
+    #[cfg(unix)]
+    if gateway_package::cli(&root, &args) {
+        return;
+    }
+    if t07_unit_profile::cli(&root, &args) {
+        return;
+    }
     if args.len() == 2 && args[0] == "a06-source-cases" {
         if let Err(error) = a06::check_source_log(&root, Path::new(&args[1])) {
             eprintln!("{error}");
@@ -700,6 +712,8 @@ fn main() {
         "synthetic MCP registry, real stdio/streamable HTTP/legacy SSE and gateway SDK qualification; no production tool parity or OAuth authorization-server claim"
     } else if id == "T06" {
         "source-bound native search/discovery through shared authenticated HTTP, stdio and legacy with real service/snapshot authorities; exactly two accepted outer-params diagnostic differences; production startup T02/W09 separate"
+    } else if id == "T07" {
+        "source-bound native client executable, fixed gateway projection, static/OAuth loopback, invocation and owned startup/cancel/EOF/instance isolation; independent exact R1/R2/profile/SDK and inherited transport acceptance remain required"
     } else if id == "T05" {
         "OAuth wire endpoints and all-network transport authentication with real clients/private Valkey; no provider, production cutover or browser identity claim"
     } else if id == "T04" {

@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "main": "bf6aebe324de58b3d0f68b2241bc88c0e388a125",
+  "gateway": "f11a2eae90116903c3d5c9364f611db345cc68f5",
+  "paths": [
+    "crates/xtask/src/t06.rs",
+    "crates/ssx-mcp/tests/t06_source_bindings.rs",
+    "crates/xtask/src/w07.rs",
+    "docs/rust-rewrite/w07/qualification-completion-v1.json"
+  ],
+  "rows": [
+    {
+      "path": "crates/xtask/src/t06.rs",
+      "current": {
+        "sha256": "45c2f8ddbf8b8b16cd90cc9958893f6cd0e58f1731f9785dd1fff92867212a1e",
+        "bytes": 19127,
+        "mode": 420
+      },
+      "main": {
+        "prior": {
+          "sha256": "e4987b20b758deab8c591875cc1f4bc81c7b7e4dc453f92655eb7fec7909fc7e",
+          "bytes": 18954,
+          "mode": 420
+        },
+        "prior_git_blob": "af55ff14bf943638474a610047b02df5726aae0b",
+        "edits": [
+          {
+            "current_offset": 302,
+            "old": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\n",
+            "new": "#[path = \"../../../docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs\"]\n"
+          },
+          {
+            "current_offset": 12349,
+            "old": "        validate_native_file(root, row, &bytes, &storage)?;\n",
+            "new": "        if path == \"crates/ssx-mcp/src/opaque.rs\" {\n            crate::a13::a06_source_successor::t07_opaque_material(root, row, &bytes)?;\n        } else {\n            validate_native_file(root, row, &bytes, &storage)?;\n        }\n"
+          }
+        ]
+      },
+      "gateway": {
+        "prior": {
+          "sha256": "f80723bbdf22b87b757f87651c3fa9e9a5d090e3a6a9a55f086c6001a00c76ca",
+          "bytes": 18382,
+          "mode": 420
+        },
+        "prior_git_blob": "96d9392cf232e83074fac7a379e2c42010930eb8",
+        "edits": [
+          {
+            "current_offset": 302,
+            "old": "",
+            "new": "#[path = \"../../../docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs\"]\npub(crate) mod receipt_control;\n#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs\"]\npub(crate) mod receipt_control_closure;\n"
+          },
+          {
+            "current_offset": 3534,
+            "old": "",
+            "new": "    receipt_control_closure::verify(root)?;\n    let prior = receipt_control::parent(\n        root,\n        row[\"file\"].as_str().ok_or(\"T06 native fixture path\")?,\n        expected.as_str().ok_or(\"T06 native fixture hash\")?,\n        bytes,\n    )?;\n    let bytes = prior.as_deref().unwrap_or(bytes);\n"
+          },
+          {
+            "current_offset": 11334,
+            "old": "",
+            "new": "    receipt_control_closure::controls(root)?;\n    receipt_control::controls(root)?;\n"
+          },
+          {
+            "current_offset": 16217,
+            "old": "",
+            "new": "        receipt_control_closure::controls(&root).unwrap();\n        receipt_control::controls(&root).unwrap();\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "crates/ssx-mcp/tests/t06_source_bindings.rs",
+      "current": {
+        "sha256": "504945b343195fbfeee0ed81b2c8fa40adb775d569b1240e5d99018414da6ae4",
+        "bytes": 6567,
+        "mode": 420
+      },
+      "main": {
+        "prior": {
+          "sha256": "1d317226f46e04e58d982bb2e8869b331f5a650c0b32b0afd843d3f1f90a1900",
+          "bytes": 5720,
+          "mode": 420
+        },
+        "prior_git_blob": "f29534f9d496a4788985a4bd30cc2c230ab9071a",
+        "edits": [
+          {
+            "current_offset": 73,
+            "old": "",
+            "new": "#[path = \"../../../docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs\"]\nmod main_isolation_current;\n"
+          },
+          {
+            "current_offset": 672,
+            "old": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-successor.rs\"]\n",
+            "new": "#[path = \"../../../docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs\"]\n"
+          },
+          {
+            "current_offset": 903,
+            "old": "",
+            "new": "#[path = \"../../../docs/rust-rewrite/t07/source-amendments/t06-opaque-successor.rs\"]\nmod t07_opaque_successor;\n"
+          },
+          {
+            "current_offset": 1187,
+            "old": "",
+            "new": "    main_isolation_current::controls(&root).unwrap();\n"
+          },
+          {
+            "current_offset": 5066,
+            "old": "",
+            "new": "        if name == \"crates/ssx-mcp/src/opaque.rs\" {\n            t07_opaque_successor::prove(&root, row, &std::fs::read(root.join(name)).unwrap())\n                .unwrap();\n            t07_opaque_successor::controls(&root).unwrap();\n            continue;\n        }\n        if name == native_search::SOURCE {\n            native_search::verify(\n                &root,\n                name,\n                row[\"sha256\"].as_str().unwrap(),\n                &std::fs::read(root.join(name)).unwrap(),\n            )\n            .unwrap();\n            continue;\n        }\n"
+          }
+        ]
+      },
+      "gateway": {
+        "prior": {
+          "sha256": "4e32ad700a69b138948689c8bb95c4b0c0cfd0f7c2ee7145102b6b78150dcde1",
+          "bytes": 6105,
+          "mode": 420
+        },
+        "prior_git_blob": "cf900e6bc8d7505506cf59eec2535432cf66c047",
+        "edits": [
+          {
+            "current_offset": 672,
+            "old": "",
+            "new": "#[path = \"../../../docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs\"]\nmod receipt_control;\n#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs\"]\nmod receipt_control_closure;\n"
+          },
+          {
+            "current_offset": 4861,
+            "old": "",
+            "new": "    receipt_control_closure::controls(&root).unwrap();\n    receipt_control::controls(&root).unwrap();\n"
+          },
+          {
+            "current_offset": 6181,
+            "old": "",
+            "new": "        } else if let Some(prior) = receipt_control::parent(&root, name, expected, &actual).unwrap()\n        {\n            prior\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/w07.rs",
+      "current": {
+        "sha256": "23a1a06870fe2dc8d20562cdc15b7b1ad181f31106edcc8338ffba2881077c23",
+        "bytes": 42864,
+        "mode": 420
+      },
+      "main": {
+        "prior": {
+          "sha256": "87e069657cceaa829d0c86155f412dfe5adfc4af54d66b44cf5f3728bc571cf1",
+          "bytes": 34896,
+          "mode": 420
+        },
+        "prior_git_blob": "fc5ec38cc84e77d69fa07d5729f781b8affe82ee",
+        "edits": [
+          {
+            "current_offset": 277,
+            "old": "",
+            "new": "use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;\n"
+          },
+          {
+            "current_offset": 589,
+            "old": "#[path = \"../../../docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs\"]\nmod snapshot_helper_amendment;\n",
+            "new": ""
+          },
+          {
+            "current_offset": 854,
+            "old": "const REGISTRY_SHA: &str = \"5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64\";\n",
+            "new": "const REGISTRY_SHA: &str = \"04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d\";\n"
+          },
+          {
+            "current_offset": 3027,
+            "old": "        if path == crate::t06::lock_amendment::SOURCE_PATH\n",
+            "new": "        if path == \"crates/xtask/src/main.rs\" && expected == w07_t02_joint::MAIN_SHA {\n            let accepted = crate::a13::a06_source_successor::main_isolation_current::parent(\n                root,\n                path,\n                Some(&bytes),\n                crate::a13::a06_source_successor::main_isolation_current::Parent::Main,\n            )?;\n            if sha(&accepted) != expected {\n                return Err(\"W07 accepted main input differs\".into());\n            }\n        } else if path == crate::t06::lock_amendment::SOURCE_PATH\n"
+          },
+          {
+            "current_offset": 4928,
+            "old": "",
+            "new": "        \"crates/xtask/src/t06.rs\",\n        \"crates/ssx-mcp/tests/t06_source_bindings.rs\",\n"
+          },
+          {
+            "current_offset": 18237,
+            "old": "",
+            "new": "    // Exact T07 normal-main/client-isolation source successor. Original suites,\n    // original100 registry and wire22 remain byte-for-byte historical evidence.\n    if expected[\"sources\"][\"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\"]\n        != \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\"\n    {\n        return Err(\"W07 exact normal-main parent source pin differs\".into());\n    }\n    expected[\"sources\"][\"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\"] =\n        Value::String(\"7649fbaf8b9b781841124d0dccd1bb902821733816878bec0b13b08c3700f89b\".into());\n    if expected[\"sources\"][\"crates/ssx-mcp/tests/t06_source_bindings.rs\"]\n        != \"8d124e73da957742a86afe2d8495a23dbcf88aa5fb711c41b1a3d4fc9148a4cc\"\n    {\n        return Err(\"W07 exact normal-main parent source pin differs\".into());\n    }\n    expected[\"sources\"][\"crates/ssx-mcp/tests/t06_source_bindings.rs\"] =\n        Value::String(\"4e32ad700a69b138948689c8bb95c4b0c0cfd0f7c2ee7145102b6b78150dcde1\".into());\n    if expected[\"sources\"][\"crates/xtask/src/t06.rs\"]\n        != \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\"\n    {\n        return Err(\"W07 exact normal-main parent source pin differs\".into());\n    }\n    expected[\"sources\"][\"crates/xtask/src/t06.rs\"] =\n        Value::String(\"f80723bbdf22b87b757f87651c3fa9e9a5d090e3a6a9a55f086c6001a00c76ca\".into());\n    if expected[\"sources\"][\"Cargo.lock\"]\n        != \"61be734ee8259d76108383154509e8c261e2cf064dc9ebf4def23a9d2a8332dc\"\n    {\n        return Err(\"W07 exact normal-main parent source pin differs\".into());\n    }\n    expected[\"sources\"][\"Cargo.lock\"] =\n        Value::String(\"5708f639558dbaa68983d4d7af044ea2e11d5f3df4060bd761f3da5adc12ab33\".into());\n    if expected[\"sources\"][\"crates/ssx-mcp/Cargo.toml\"]\n        != \"9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b\"\n    {\n        return Err(\"W07 exact normal-main parent source pin differs\".into());\n    }\n    expected[\"sources\"][\"crates/ssx-mcp/Cargo.toml\"] =\n        Value::String(\"4533776d9d0e23235e711892d99777ce149dacfb13b69751860d22df38a174e6\".into());\n    if expected[\"sources\"][\"docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs\"]\n        != \"f2103c06807e1ba1490c1d972ebe3abaebdc09a3243845f4478fc40260608365\"\n    {\n        return Err(\"W07 exact normal-main parent source pin differs\".into());\n    }\n    expected[\"sources\"][\"docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs\"] =\n        Value::String(\"ee9fc897420f76a94d52fd7199b35a5ec58db54a2c1f75b64ea8dd3c113635c3\".into());\n    if expected[\"sources\"][\"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\"]\n        != \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\"\n    {\n        return Err(\"W07 exact normal-main parent source pin differs\".into());\n    }\n    expected[\"sources\"][\"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\"] =\n        Value::String(\"09132cc49c459cca3abb990de737b3545ce53f4f4d528ea47443e998460a41d4\".into());\n    if expected[\"sources\"]\n        .get(\"docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs\")\n        .is_some()\n    {\n        return Err(\"W07 joint-proof source duplicates parent inventory\".into());\n    }\n    expected[\"sources\"][\"docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs\"] =\n        Value::String(\"62f5a5b3f5e99ab9d49d1d1369cf9d67be14ebddd0db93ad2b192faa356139f8\".into());\n    if expected[\"sources\"]\n        .get(\"docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json\")\n        .is_some()\n    {\n        return Err(\"W07 joint-proof source duplicates parent inventory\".into());\n    }\n    expected[\"sources\"][\"docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json\"] =\n        Value::String(\"aa3af59033c65e31ac640175074ebc748048e781726ff1cc614255990295317e\".into());\n    if expected[\"sources\"]\n        .get(\"docs/rust-rewrite/t07/client-dependency-relocation.json\")\n        .is_some()\n    {\n        return Err(\"W07 joint-proof source duplicates parent inventory\".into());\n    }\n    expected[\"sources\"][\"docs/rust-rewrite/t07/client-dependency-relocation.json\"] =\n        Value::String(\"2f655b5c05e4bb3801d1870cb3dec82821ddc85bd9a7a2c106e8dfc9b227b90b\".into());\n    // Closed older material to Ready059de; original transition guards above remain intact.\n    for (path, before, after) in [\n        (\n            \"Cargo.lock\",\n            \"5708f639558dbaa68983d4d7af044ea2e11d5f3df4060bd761f3da5adc12ab33\",\n            \"8676f1c9e900522f584e63cbcc0129fbfc6e90aa64c52adefd19272d754c3543\",\n        ),\n        (\n            \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\",\n            \"7649fbaf8b9b781841124d0dccd1bb902821733816878bec0b13b08c3700f89b\",\n            \"b25c39e4bdab702c6beff60ad193d7f15acc92e9ffbbed409f6834f0f3297774\",\n        ),\n        (\n            \"docs/rust-rewrite/t07/client-dependency-relocation.json\",\n            \"2f655b5c05e4bb3801d1870cb3dec82821ddc85bd9a7a2c106e8dfc9b227b90b\",\n            \"4e0cfb7a6764fee0e768e95340a1b804402e1ab0befd1300cfec3fd3f2e159ac\",\n        ),\n        (\n            \"docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json\",\n            \"aa3af59033c65e31ac640175074ebc748048e781726ff1cc614255990295317e\",\n            \"3e5cb86a53e2060cd9782a812a3834ea23bea96fd0fb4c1f1b5652035a209e82\",\n        ),\n        (\n            \"docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs\",\n            \"62f5a5b3f5e99ab9d49d1d1369cf9d67be14ebddd0db93ad2b192faa356139f8\",\n            \"c5daa7a3486972cec5b338d458441cb90addb3d0945e49a553ec424a44fece99\",\n        ),\n    ] {\n        if expected[\"sources\"][path] != before {\n            return Err(\"W07 exact Ready059de predecessor source pin differs\".into());\n        }\n        expected[\"sources\"][path] = Value::String(after.into());\n    }\n    // Only these Ready059de source rows advance into the gateway/snapshot union.\n    for (path, before, after) in [\n        (\n            \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\",\n            \"b25c39e4bdab702c6beff60ad193d7f15acc92e9ffbbed409f6834f0f3297774\",\n            \"38a380da7a97a5b27c9251c0ab7aff3e008e15b66f4432b0d31021a1b2d5ffa5\",\n        ),\n        (\n            \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\",\n            \"09132cc49c459cca3abb990de737b3545ce53f4f4d528ea47443e998460a41d4\",\n            \"2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba\",\n        ),\n        (\n            \"docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs\",\n            \"c5daa7a3486972cec5b338d458441cb90addb3d0945e49a553ec424a44fece99\",\n            \"b46c1df9b2d1a547475d1a6d4fbfc14f679ae631ec1c034f752dee7a15657f6c\",\n        ),\n    ] {\n        if expected[\"sources\"][path] != before {\n            return Err(\"W07 exact gateway/snapshot union predecessor source pin differs\".into());\n        }\n        expected[\"sources\"][path] = Value::String(after.into());\n    }\n"
+          },
+          {
+            "current_offset": 40921,
+            "old": "",
+            "new": "            \"Cargo.lock\",\n            \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\",\n            \"docs/rust-rewrite/t07/client-dependency-relocation.json\",\n            \"docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json\",\n            \"docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs\",\n            \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\",\n"
+          }
+        ]
+      },
+      "gateway": {
+        "prior": {
+          "sha256": "2ecb673377d0826a36b118ae861daa89ab472f740f8db0787bb4225bd739d777",
+          "bytes": 42378,
+          "mode": 420
+        },
+        "prior_git_blob": "1f1614e716f77a25a612e494ddb3e7a164843455",
+        "edits": [
+          {
+            "current_offset": 2631,
+            "old": "",
+            "new": "        if matches!(\n            path,\n            \"crates/xtask/src/t06.rs\" | \"crates/ssx-mcp/tests/t06_source_bindings.rs\"\n        ) {\n            crate::t06::receipt_control_closure::verify(root)?;\n            if let Some(prior) =\n                crate::t06::receipt_control::reader_parent(root, path, expected, &bytes)?\n            {\n                return Ok(prior);\n            }\n        }\n"
+          },
+          {
+            "current_offset": 4928,
+            "old": "",
+            "new": "        \"crates/xtask/src/t06.rs\",\n        \"crates/ssx-mcp/tests/t06_source_bindings.rs\",\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+      "current": {
+        "sha256": "04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d",
+        "bytes": 22275,
+        "mode": 420
+      },
+      "main": {
+        "prior": {
+          "sha256": "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64",
+          "bytes": 21848,
+          "mode": 420
+        },
+        "prior_git_blob": "f8326efbc96af5f884d0321bd5714923ab036b5e",
+        "edits": [
+          {
+            "current_offset": 18748,
+            "old": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\",\n    \"crates/ssx-mcp/tests/t06_source_bindings.rs\": \"8d124e73da957742a86afe2d8495a23dbcf88aa5fb711c41b1a3d4fc9148a4cc\",\n",
+            "new": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"38a380da7a97a5b27c9251c0ab7aff3e008e15b66f4432b0d31021a1b2d5ffa5\",\n    \"crates/ssx-mcp/tests/t06_source_bindings.rs\": \"4e32ad700a69b138948689c8bb95c4b0c0cfd0f7c2ee7145102b6b78150dcde1\",\n"
+          },
+          {
+            "current_offset": 19299,
+            "old": "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n",
+            "new": "    \"crates/xtask/src/t06.rs\": \"f80723bbdf22b87b757f87651c3fa9e9a5d090e3a6a9a55f086c6001a00c76ca\",\n"
+          },
+          {
+            "current_offset": 19970,
+            "old": "    \"Cargo.lock\": \"61be734ee8259d76108383154509e8c261e2cf064dc9ebf4def23a9d2a8332dc\",\n    \"crates/ssx-mcp/Cargo.toml\": \"9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b\",\n    \"docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs\": \"f2103c06807e1ba1490c1d972ebe3abaebdc09a3243845f4478fc40260608365\",\n",
+            "new": "    \"Cargo.lock\": \"8676f1c9e900522f584e63cbcc0129fbfc6e90aa64c52adefd19272d754c3543\",\n    \"crates/ssx-mcp/Cargo.toml\": \"4533776d9d0e23235e711892d99777ce149dacfb13b69751860d22df38a174e6\",\n    \"docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs\": \"ee9fc897420f76a94d52fd7199b35a5ec58db54a2c1f75b64ea8dd3c113635c3\",\n"
+          },
+          {
+            "current_offset": 20567,
+            "old": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\",\n",
+            "new": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2c6f0572dab48329e5a437ecdf1d1cba3934b0b1f49cec724989302ca056e9ba\",\n"
+          },
+          {
+            "current_offset": 21345,
+            "old": "    \"crates/ssx-infra/src/observability/metrics.rs\": \"cccca54dc139061f691d183c0b073cb479229be0c5c3990752686ce3457bc460\"\n",
+            "new": "    \"crates/ssx-infra/src/observability/metrics.rs\": \"cccca54dc139061f691d183c0b073cb479229be0c5c3990752686ce3457bc460\",\n    \"docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs\": \"b46c1df9b2d1a547475d1a6d4fbfc14f679ae631ec1c034f752dee7a15657f6c\",\n    \"docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json\": \"3e5cb86a53e2060cd9782a812a3834ea23bea96fd0fb4c1f1b5652035a209e82\",\n    \"docs/rust-rewrite/t07/client-dependency-relocation.json\": \"4e0cfb7a6764fee0e768e95340a1b804402e1ab0befd1300cfec3fd3f2e159ac\"\n"
+          }
+        ]
+      },
+      "gateway": {
+        "prior": {
+          "sha256": "04ee517626ca553e200325075c17e786f1c590832a083c589855cc00d11d5d8d",
+          "bytes": 22275,
+          "mode": 420
+        },
+        "prior_git_blob": "2fefd240ff259399018741c2c7786e493e9f685f",
+        "edits": []
+      }
+    }
+  ]
+}

@@ -586,9 +586,18 @@ mod tests {
             &mut Vec::new(),
         )
         .unwrap();
-        let root = &Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        crate::a13::a06_source_successor::native_search::page_controls(root).unwrap();
-        crate::a13::a06_source_successor::page_proof_controls(root).unwrap();
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        for wrong in [
+            json!({"path":"Cargo.unlisted","sha256":"d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3","bytes":1984,"mode":420}),
+            json!({"path":"Cargo.toml","sha256":"wrong","bytes":1984,"mode":420}),
+            json!({"path":"Cargo.toml","sha256":"d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3","bytes":1984,"mode":384}),
+        ] {
+            assert!(
+                crate::a13::a06_source_successor::user_agent_manifest_prior(&root, &wrong).is_err()
+            );
+        }
+        crate::a13::a06_source_successor::native_search::page_controls(&root).unwrap();
+        crate::a13::a06_source_successor::page_proof_controls(&root).unwrap();
         let row = json!({"id":"one","responses":[],"requests":[],"output":{}});
         assert!(ids(&json!({"records":[]})).is_err());
         assert!(ids(&json!({"records":[row.clone(),row.clone()]})).is_err());

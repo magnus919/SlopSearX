@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "base": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
+  "scope": "source relocation only; AST declarations are not compiled/executed evidence",
+  "moved_sources": [
+    {
+      "old": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new": "crates/ssx-source-json/src/source_json.rs",
+      "moved_bytes": 55085,
+      "old_sha256": "f78937bacc4116a251e4fe352b597783a31de4c5b63fcbbcf8fa479810866617",
+      "after_sha256": "6d42bfdb26e53fde4c179e3b48cd5d0bf999d8e2fca4af4633c611e7b1c82e71",
+      "only_changes": "Text::from_points visibility/doc; relative fixture path and rustfmt wrapping; exact original broad_whitespace helper relocated from adapters parent and local call"
+    },
+    {
+      "old": "crates/ssx-infra/src/adapters/source_json_accounting.rs",
+      "new": "crates/ssx-source-json/src/source_json_accounting.rs",
+      "moved_bytes": 3917,
+      "old_sha256": "5e530797905d18de0184e58b5f444643f5069e2bbb25c4e8d3e690d6955e5d1b",
+      "after_sha256": "5e530797905d18de0184e58b5f444643f5069e2bbb25c4e8d3e690d6955e5d1b",
+      "only_changes": "byte-identical move"
+    },
+    {
+      "old": "crates/ssx-infra/src/adapters/source_json_future.rs",
+      "new": "crates/ssx-source-json/src/source_json_future.rs",
+      "moved_bytes": 1022,
+      "old_sha256": "38d2b45d524c6c1e3172fe1db94e6c905537317abfdf0d1886ee90a796455392",
+      "after_sha256": "38d2b45d524c6c1e3172fe1db94e6c905537317abfdf0d1886ee90a796455392",
+      "only_changes": "byte-identical move"
+    },
+    {
+      "old": "crates/ssx-infra/src/adapters/source_json_diagnostic.rs",
+      "new": "crates/ssx-source-json/src/source_json_diagnostic.rs",
+      "moved_bytes": 15540,
+      "old_sha256": "66961fba2fa9a6b53919360131c4b20f3e393e511eeb7199757f6aeb49d8c90e",
+      "after_sha256": "7439f7c603748ef180bbf991ec9bdd93d4074dffee6e412420c1477a39f7d2c6",
+      "only_changes": "relative fixture path only"
+    }
+  ],
+  "test_relocation": [
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::tests::accepted_utf16_expansion_repr_matches_complete_source_hash",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::tests::accepted_utf16_expansion_repr_matches_complete_source_hash",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "62fd66edcd877d91d50ca1986cc718d1f61aa1f8423f88d3a4c3decda915d232"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::tests::encodings_and_recursive_float_projection",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::tests::encodings_and_recursive_float_projection",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "89271df2219b3060ae87b2b7ee4f8f6af546a45498ff76909db30c3d0cca1d6e"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::tests::source_nonfinite_and_surrogates_are_data",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::tests::source_nonfinite_and_surrogates_are_data",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "ade0e4f623b65a4309ce11861d883d8928a37f47edac69873084a59b9caf1a1b"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::tests::strict_grammar_and_byte_failures",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::tests::strict_grammar_and_byte_failures",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "fa2af82303b32182b9db34764f4cc9255fe8adb333d15b74397891007023ddfc"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::tests::bounded_depth_bytes_integer_digits_and_deadline",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::tests::bounded_depth_bytes_integer_digits_and_deadline",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "593725fe5731d007e3fc3fd3a0267a5416b0286bd4cee20ca04f0a4e0d5e299d"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::budget_tests::budgeted_values_preserve_order_duplicates_scalars_and_errors",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::budget_tests::budgeted_values_preserve_order_duplicates_scalars_and_errors",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "90865ea3fd3a2156aa94ad0ec238aab28c7d87c054b73bd00848878f1d59759b"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::budget_tests::allocation_refusal_releases_partial_tree_and_scratch",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::budget_tests::allocation_refusal_releases_partial_tree_and_scratch",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "6f4c6ae8b8cf0322f59594674a17abd8ba1be5c1b0797af6aec39463eb0ee7ab"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::shift_cancel_test::cancel_at_observed_adversarial_index_shift_releases_all_charges",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::shift_cancel_test::cancel_at_observed_adversarial_index_shift_releases_all_charges",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "271880f86968d945b488f73dc82bca68156719be94a759700908907bfbfdf0bf"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::expanded_budget_test::accepted_maximum_utf16_scalar_fits_parser_only_64m_allowance",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::expanded_budget_test::accepted_maximum_utf16_scalar_fits_parser_only_64m_allowance",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "56b9a49d0822f7efa955d1b9f78e9676a29ba8aeb5e0052a55073bd4690db0d2"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::f15_numeric_tests::shared_float_normalizer_preserves_long_finite_and_nonfinite_source_policy",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::f15_numeric_tests::shared_float_normalizer_preserves_long_finite_and_nonfinite_source_policy",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "2b4d801189ef298f01eee05183704f5156349966a4ff25ad6cc4f956d8e28b2b"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::bounded_numeric_test::shared_normalizer_cancellation_value_uses_charged_scratch",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::bounded_numeric_test::shared_normalizer_cancellation_value_uses_charged_scratch",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "b93369eaa937fbed5583ad9ac8c1243d232dc3ee70d1888b4726152668e1f149"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::resource_diagnostic_tests::resource_error_is_explicit_and_legacy_message_never_panics",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::resource_diagnostic_tests::resource_error_is_explicit_and_legacy_message_never_panics",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "8388d7cffb97603fb399e486ab863df15f9f336d4f7d8774221e035a6a8c9058"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::decoded_integer_tests::decoded_json_integer_lexeme_keeps_large_values_without_widening_file_parser",
+      "old_source": "crates/ssx-infra/src/adapters/source_json.rs",
+      "new_source": "crates/ssx-source-json/src/source_json.rs",
+      "function_sha256": "21be3d481a438dd79e81ad528cc753d17ff509233b6fa89d3a5aa083589ba506"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::allocation::tests::root_tracks_replacement_and_retains_nested_buffers",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::allocation::tests::root_tracks_replacement_and_retains_nested_buffers",
+      "old_source": "crates/ssx-infra/src/adapters/source_json_accounting.rs",
+      "new_source": "crates/ssx-source-json/src/source_json_accounting.rs",
+      "function_sha256": "93c8c838d4805dee68c2d5116dac0e378fd28548b5ec19ddab6179bd0960525c"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::allocation::tests::failed_growth_preserves_old_storage_and_charge",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::allocation::tests::failed_growth_preserves_old_storage_and_charge",
+      "old_source": "crates/ssx-infra/src/adapters/source_json_accounting.rs",
+      "new_source": "crates/ssx-source-json/src/source_json_accounting.rs",
+      "function_sha256": "d2927726b30ee90153f2252932db9f5b4a9fd1e34fc593ee76e5d32acd8b05a3"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::diagnostic::tests::exact_original_full_adapter_malformed_utf8_utf16_utf32_diagnostics",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::diagnostic::tests::exact_original_full_adapter_malformed_utf8_utf16_utf32_diagnostics",
+      "old_source": "crates/ssx-infra/src/adapters/source_json_diagnostic.rs",
+      "new_source": "crates/ssx-source-json/src/source_json_diagnostic.rs",
+      "function_sha256": "da32eb61e2176d1801d9318591c7545e1410afaa4043ff2573dbd293c1e63659"
+    },
+    {
+      "old_package": "ssx-infra",
+      "old_selector": "adapters::source_json::diagnostic::tests::formatting_keeps_original_operational_class_and_charged_scratch_drops",
+      "new_package": "ssx-source-json",
+      "new_selector": "source_json::diagnostic::tests::formatting_keeps_original_operational_class_and_charged_scratch_drops",
+      "old_source": "crates/ssx-infra/src/adapters/source_json_diagnostic.rs",
+      "new_source": "crates/ssx-source-json/src/source_json_diagnostic.rs",
+      "function_sha256": "080fe5ce854a98730aeca7314334e63279f38729f108e84779fc64f25a241cd8"
+    }
+  ],
+  "preserved_adapter_api": "ssx_infra::adapters::source_json reexports the same ssx_source_json types",
+  "gates": {
+    "A04": "same five source_json::tests controls in new package",
+    "A13": "union of actual infra/shared lists maps shared prefix back to frozen identity; current decoded-integer control explicit",
+    "F15": "all17 shared parser tests execute in addition to remaining infra suite",
+    "T07": "one decoded-integer package/prefix relocation; all other selector arrays unchanged"
+  },
+  "pending": "review current source-pin successors and regenerate genuine Cargo.lock under exclusive lease before qualification"
+}

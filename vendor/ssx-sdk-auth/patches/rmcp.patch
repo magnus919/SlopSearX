@@ -1,0 +1,470 @@
+diff -ruN a/rmcp/LICENSE-APACHE b/rmcp/LICENSE-APACHE
+--- a/rmcp/LICENSE-APACHE
++++ b/rmcp/LICENSE-APACHE
+@@ -0,0 +1,201 @@
++                              Apache License
++                        Version 2.0, January 2004
++                     http://www.apache.org/licenses/
++
++TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
++
++1. Definitions.
++
++   "License" shall mean the terms and conditions for use, reproduction,
++   and distribution as defined by Sections 1 through 9 of this document.
++
++   "Licensor" shall mean the copyright owner or entity authorized by
++   the copyright owner that is granting the License.
++
++   "Legal Entity" shall mean the union of the acting entity and all
++   other entities that control, are controlled by, or are under common
++   control with that entity. For the purposes of this definition,
++   "control" means (i) the power, direct or indirect, to cause the
++   direction or management of such entity, whether by contract or
++   otherwise, or (ii) ownership of fifty percent (50%) or more of the
++   outstanding shares, or (iii) beneficial ownership of such entity.
++
++   "You" (or "Your") shall mean an individual or Legal Entity
++   exercising permissions granted by this License.
++
++   "Source" form shall mean the preferred form for making modifications,
++   including but not limited to software source code, documentation
++   source, and configuration files.
++
++   "Object" form shall mean any form resulting from mechanical
++   transformation or translation of a Source form, including but
++   not limited to compiled object code, generated documentation,
++   and conversions to other media types.
++
++   "Work" shall mean the work of authorship, whether in Source or
++   Object form, made available under the License, as indicated by a
++   copyright notice that is included in or attached to the work
++   (an example is provided in the Appendix below).
++
++   "Derivative Works" shall mean any work, whether in Source or Object
++   form, that is based on (or derived from) the Work and for which the
++   editorial revisions, annotations, elaborations, or other modifications
++   represent, as a whole, an original work of authorship. For the purposes
++   of this License, Derivative Works shall not include works that remain
++   separable from, or merely link (or bind by name) to the interfaces of,
++   the Work and Derivative Works thereof.
++
++   "Contribution" shall mean any work of authorship, including
++   the original version of the Work and any modifications or additions
++   to that Work or Derivative Works thereof, that is intentionally
++   submitted to Licensor for inclusion in the Work by the copyright owner
++   or by an individual or Legal Entity authorized to submit on behalf of
++   the copyright owner. For the purposes of this definition, "submitted"
++   means any form of electronic, verbal, or written communication sent
++   to the Licensor or its representatives, including but not limited to
++   communication on electronic mailing lists, source code control systems,
++   and issue tracking systems that are managed by, or on behalf of, the
++   Licensor for the purpose of discussing and improving the Work, but
++   excluding communication that is conspicuously marked or otherwise
++   designated in writing by the copyright owner as "Not a Contribution."
++
++   "Contributor" shall mean Licensor and any individual or Legal Entity
++   on behalf of whom a Contribution has been received by Licensor and
++   subsequently incorporated within the Work.
++
++2. Grant of Copyright License. Subject to the terms and conditions of
++   this License, each Contributor hereby grants to You a perpetual,
++   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++   copyright license to reproduce, prepare Derivative Works of,
++   publicly display, publicly perform, sublicense, and distribute the
++   Work and such Derivative Works in Source or Object form.
++
++3. Grant of Patent License. Subject to the terms and conditions of
++   this License, each Contributor hereby grants to You a perpetual,
++   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++   (except as stated in this section) patent license to make, have made,
++   use, offer to sell, sell, import, and otherwise transfer the Work,
++   where such license applies only to those patent claims licensable
++   by such Contributor that are necessarily infringed by their
++   Contribution(s) alone or by combination of their Contribution(s)
++   with the Work to which such Contribution(s) was submitted. If You
++   institute patent litigation against any entity (including a
++   cross-claim or counterclaim in a lawsuit) alleging that the Work
++   or a Contribution incorporated within the Work constitutes direct
++   or contributory patent infringement, then any patent licenses
++   granted to You under this License for that Work shall terminate
++   as of the date such litigation is filed.
++
++4. Redistribution. You may reproduce and distribute copies of the
++   Work or Derivative Works thereof in any medium, with or without
++   modifications, and in Source or Object form, provided that You
++   meet the following conditions:
++
++   (a) You must give any other recipients of the Work or
++       Derivative Works a copy of this License; and
++
++   (b) You must cause any modified files to carry prominent notices
++       stating that You changed the files; and
++
++   (c) You must retain, in the Source form of any Derivative Works
++       that You distribute, all copyright, patent, trademark, and
++       attribution notices from the Source form of the Work,
++       excluding those notices that do not pertain to any part of
++       the Derivative Works; and
++
++   (d) If the Work includes a "NOTICE" text file as part of its
++       distribution, then any Derivative Works that You distribute must
++       include a readable copy of the attribution notices contained
++       within such NOTICE file, excluding those notices that do not
++       pertain to any part of the Derivative Works, in at least one
++       of the following places: within a NOTICE text file distributed
++       as part of the Derivative Works; within the Source form or
++       documentation, if provided along with the Derivative Works; or,
++       within a display generated by the Derivative Works, if and
++       wherever such third-party notices normally appear. The contents
++       of the NOTICE file are for informational purposes only and
++       do not modify the License. You may add Your own attribution
++       notices within Derivative Works that You distribute, alongside
++       or as an addendum to the NOTICE text from the Work, provided
++       that such additional attribution notices cannot be construed
++       as modifying the License.
++
++   You may add Your own copyright statement to Your modifications and
++   may provide additional or different license terms and conditions
++   for use, reproduction, or distribution of Your modifications, or
++   for any such Derivative Works as a whole, provided Your use,
++   reproduction, and distribution of the Work otherwise complies with
++   the conditions stated in this License.
++
++5. Submission of Contributions. Unless You explicitly state otherwise,
++   any Contribution intentionally submitted for inclusion in the Work
++   by You to the Licensor shall be under the terms and conditions of
++   this License, without any additional terms or conditions.
++   Notwithstanding the above, nothing herein shall supersede or modify
++   the terms of any separate license agreement you may have executed
++   with Licensor regarding such Contributions.
++
++6. Trademarks. This License does not grant permission to use the trade
++   names, trademarks, service marks, or product names of the Licensor,
++   except as required for reasonable and customary use in describing the
++   origin of the Work and reproducing the content of the NOTICE file.
++
++7. Disclaimer of Warranty. Unless required by applicable law or
++   agreed to in writing, Licensor provides the Work (and each
++   Contributor provides its Contributions) on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++   implied, including, without limitation, any warranties or conditions
++   of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
++   PARTICULAR PURPOSE. You are solely responsible for determining the
++   appropriateness of using or redistributing the Work and assume any
++   risks associated with Your exercise of permissions under this License.
++
++8. Limitation of Liability. In no event and under no legal theory,
++   whether in tort (including negligence), contract, or otherwise,
++   unless required by applicable law (such as deliberate and grossly
++   negligent acts) or agreed to in writing, shall any Contributor be
++   liable to You for damages, including any direct, indirect, special,
++   incidental, or consequential damages of any character arising as a
++   result of this License or out of the use or inability to use the
++   Work (including but not limited to damages for loss of goodwill,
++   work stoppage, computer failure or malfunction, or any and all
++   other commercial damages or losses), even if such Contributor
++   has been advised of the possibility of such damages.
++
++9. Accepting Warranty or Additional Liability. While redistributing
++   the Work or Derivative Works thereof, You may choose to offer,
++   and charge a fee for, acceptance of support, warranty, indemnity,
++   or other liability obligations and/or rights consistent with this
++   License. However, in accepting such obligations, You may act only
++   on Your own behalf and on Your sole responsibility, not on behalf
++   of any other Contributor, and only if You agree to indemnify,
++   defend, and hold each Contributor harmless for any liability
++   incurred by, or claims asserted against, such Contributor by reason
++   of your accepting any such warranty or additional liability.
++
++END OF TERMS AND CONDITIONS
++
++APPENDIX: How to apply the Apache License to your work.
++
++   To apply the Apache License to your work, attach the following
++   boilerplate notice, with the fields enclosed by brackets "[]"
++   replaced with your own identifying information. (Don't include
++   the brackets!)  The text should be enclosed in the appropriate
++   comment syntax for the file format. We also recommend that a
++   file or class name and description of purpose be included on the
++   same "printed page" as the copyright notice for easier
++   identification within third-party archives.
++
++Copyright 2016 Sean McArthur
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++	http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
+diff -ruN a/rmcp/SSX-PATCH.md b/rmcp/SSX-PATCH.md
+--- a/rmcp/SSX-PATCH.md
++++ b/rmcp/SSX-PATCH.md
+@@ -0,0 +1,7 @@
++# Locally modified Rust MCP SDK
++
++rmcp3.5.1, https://github.com/modelcontextprotocol/rust-sdk/, is Apache-2.0 according to its checksum-verified upstream package manifest. The actual upstream archive contains no LICENSE or NOTICE file. LICENSE-APACHE is locally supplied standard Apache2.0 text from the already verified reqwest0.13.5 LICENSE-APACHE, not a file claimed to have been retained from rmcp. Original source/manifests/notices remain unchanged apart from the declared diagnostic patch.
++
++SlopSearX modifies only src/transport/auth.rs:23logging invocations retain their level/condition with constant messages instead of opaque credential/provider/URI/scope/error fields;6unused diagnostic error bindings are renamed. No OAuth protocol/state/wire/persistence behavior or SDK error API is changed. Version3.5.1 alone does not identify this fork. ../PROVENANCE.json records upstream archive checksum, every local file hash, full tree hash and retained complete ../patches/rmcp.patch identity.
++
++This is an integration proposal, not repository activation or production qualification. Before accepting an update, verify the newly pinned upstream archive, inspect all auth diagnostics and public error boundaries, rebase the smallest patch, regenerate exact patch/tree/file provenance, preserve license/attribution, rerun actual private-loopback patched/unpatched SDK sentinel and ordinary tracing/log-only transparency controls plus every affected consumer regression, and obtain independent maintainer review. Release SBOMs include upstream and local identities. The gateway still classifies returned SDK errors privately and never formats arbitrary SDK credential/config/callback Debug values.
+diff -ruN a/rmcp/src/transport/auth.rs b/rmcp/src/transport/auth.rs
+--- a/rmcp/src/transport/auth.rs
++++ b/rmcp/src/transport/auth.rs
+@@ -1306,8 +1306,8 @@
+ 
+         let url = match Url::parse(value).or_else(|_| base_url.join(value)) {
+             Ok(url) => url,
+-            Err(error) => {
+-                debug!("failed to parse resource metadata value `{value}` as URL: {error}");
++            Err(_error) => {
++                debug!("failed to parse resource metadata URL");
+                 return None;
+             }
+         };
+@@ -1315,9 +1315,7 @@
+         if Self::is_same_origin_resource_metadata_url(base_url, &url) {
+             Some(url)
+         } else {
+-            warn!(
+-                "rejecting resource metadata URL `{url}` because it is not same-origin with `{base_url}`"
+-            );
++            warn!("rejecting cross-origin resource metadata URL");
+             None
+         }
+     }
+@@ -1461,11 +1459,7 @@
+                         // A CIMD client ID is the client's metadata URL, so it is
+                         // portable across authorization servers — but the tokens
+                         // were minted by the previous AS and must not be reused.
+-                        tracing::warn!(
+-                            stored_issuer,
+-                            current_issuer,
+-                            "authorization server issuer changed; discarding tokens but keeping portable CIMD client ID"
+-                        );
++                        tracing::warn!("authorization server issuer changed; discarding tokens but keeping portable CIMD client ID");
+                         self.credential_store
+                             .save(
+                                 StoredCredentials::new(
+@@ -1481,11 +1475,7 @@
+                         return Ok(false);
+                     }
+ 
+-                    tracing::warn!(
+-                        stored_issuer,
+-                        current_issuer,
+-                        "authorization server issuer changed; clearing stored credentials bound to the previous issuer"
+-                    );
++                    tracing::warn!("authorization server issuer changed; clearing stored credentials bound to the previous issuer");
+                     self.credential_store.clear().await?;
+                     return Ok(false);
+                 }
+@@ -1604,7 +1594,7 @@
+         if scopes.is_empty() {
+             return;
+         }
+-        debug!("WWW-Authenticate challenge contains scope: {scope}");
++        debug!("WWW-Authenticate challenge contains scope");
+         *self.www_auth_scopes.write().await = scopes;
+     }
+ 
+@@ -2043,10 +2033,7 @@
+         let mut upgraded_scopes = Self::compute_scope_union(&current_scopes, required_scope);
+         self.add_offline_access_if_supported(&mut upgraded_scopes);
+ 
+-        debug!(
+-            "Requesting scope upgrade: current={:?}, required={}, union={:?}",
+-            current_scopes, required_scope, upgraded_scopes
+-        );
++        debug!("Requesting scope upgrade");
+ 
+         let scope_refs: Vec<&str> = upgraded_scopes.iter().map(|s| s.as_str()).collect();
+         self.get_authorization_url(&scope_refs).await
+@@ -2115,7 +2102,7 @@
+         csrf_token: &str,
+         received_issuer: Option<&str>,
+     ) -> Result<OAuthTokenResponse, AuthError> {
+-        debug!("start exchange code for token: {:?}", code);
++        debug!("start exchange code for token");
+         let oauth_client = self
+             .oauth_client
+             .as_ref()
+@@ -2140,7 +2127,7 @@
+         // Reconstruct the PKCE verifier
+         let pkce_verifier = stored_state.into_pkce_verifier();
+ 
+-        debug!("client_id: {:?}", oauth_client.client_id());
++        debug!("configured OAuth client for code exchange");
+ 
+         // exchange token
+         let token_result = match oauth_client
+@@ -2172,7 +2159,7 @@
+             }
+         };
+ 
+-        debug!("exchange token result: {:?}", token_result);
++        debug!("code token exchange completed");
+ 
+         // SEP-2350: an omitted `scope` means the grant equals the request (RFC 6749 §5.1).
+         let response_scopes = token_result
+@@ -2261,8 +2248,8 @@
+                 tracing::info!("Refreshed access token.");
+                 Ok(new_creds.access_token().secret().to_string())
+             }
+-            Err(e @ (AuthError::AuthorizationRequired | AuthError::TokenRefreshRejected(_))) => {
+-                tracing::warn!(error = %e, "Token refresh not possible, re-authorization required.");
++            Err(_e @ (AuthError::AuthorizationRequired | AuthError::TokenRefreshRejected(_))) => {
++                tracing::warn!("Token refresh not possible, re-authorization required.");
+                 Err(AuthError::AuthorizationRequired)
+             }
+             Err(e) => Err(e),
+@@ -2284,11 +2271,7 @@
+         // Refreshing with another client's stored token would put that token on a
+         // request authenticated as this client.
+         if stored_credentials.client_id != oauth_client.client_id().as_str() {
+-            tracing::warn!(
+-                stored_client_id = stored_credentials.client_id.as_str(),
+-                configured_client_id = oauth_client.client_id().as_str(),
+-                "stored credentials belong to a different client; reauthorization required"
+-            );
++            tracing::warn!("stored credentials belong to a different client; reauthorization required");
+             return Err(AuthError::AuthorizationRequired);
+         }
+         let current_credentials = stored_credentials
+@@ -2324,15 +2307,12 @@
+                 RequestTokenError::ServerResponse(response)
+                     if response.error() == &BasicErrorResponseType::InvalidGrant =>
+                 {
+-                    if let Err(store_error) = self
++                    if let Err(_store_error) = self
+                         .credential_store
+                         .on_refresh_token_rejected(&stored_credentials)
+                         .await
+                     {
+-                        tracing::warn!(
+-                            error = %store_error,
+-                            "Failed to handle rejected refresh token"
+-                        );
++                        tracing::warn!("Failed to handle rejected refresh token");
+                     }
+                     return Err(AuthError::TokenRefreshRejected(error.to_string()));
+                 }
+@@ -2458,7 +2438,7 @@
+         discovery_url: &Url,
+         expected_issuer: Option<&str>,
+     ) -> Result<Option<AuthorizationMetadata>, AuthError> {
+-        debug!("discovery url: {:?}", discovery_url);
++        debug!("fetching authorization server metadata");
+         let response = self
+             .discovery_get(discovery_url)
+             .await
+@@ -2478,8 +2458,8 @@
+                 )?;
+                 Ok(Some(metadata))
+             }
+-            Err(err) => {
+-                debug!("Failed to parse metadata for {}: {}", discovery_url, err);
++            Err(_err) => {
++                debug!("failed to parse authorization server metadata");
+                 Ok(None) // malformed JSON ⇒ try next candidate
+             }
+         }
+@@ -2641,9 +2621,7 @@
+         }
+ 
+         if candidates.is_empty() {
+-            debug!(
+-                "protected resource metadata at {resource_metadata_url} names no authorization server"
+-            );
++            debug!("protected resource metadata names no authorization server");
+             return Ok(None);
+         }
+ 
+@@ -2652,15 +2630,15 @@
+                 Ok(url) => url,
+                 Err(_) => match resource_metadata_url.join(candidate) {
+                     Ok(url) => url,
+-                    Err(e) => {
+-                        debug!("Failed to resolve authorization server URL `{candidate}`: {e}");
++                    Err(_e) => {
++                        debug!("failed to resolve authorization server metadata URL");
+                         continue;
+                     }
+                 },
+             };
+ 
+             if !Self::is_allowed_authorization_server_metadata_url(&self.base_url, &candidate_url) {
+-                warn!("rejecting authorization server metadata URL `{candidate_url}`");
++                warn!("rejecting authorization server metadata URL");
+                 continue;
+             }
+ 
+@@ -2885,10 +2863,7 @@
+         resource_metadata_url: &Url,
+         origin: ResourceMetadataUrlOrigin,
+     ) -> Result<Option<ResourceServerMetadata>, AuthError> {
+-        debug!(
+-            "resource metadata discovery url: {:?}",
+-            resource_metadata_url
+-        );
++        debug!("fetching resource metadata");
+         let response = self
+             .discovery_get(resource_metadata_url)
+             .await
+@@ -2917,8 +2892,8 @@
+     ) -> Result<Option<ResourceServerMetadata>, AuthError> {
+         let metadata = match serde_json::from_slice::<ResourceServerMetadata>(body) {
+             Ok(metadata) => metadata,
+-            Err(e) => {
+-                debug!("failed to parse resource metadata as JSON: {}", e);
++            Err(_e) => {
++                debug!("failed to parse resource metadata as JSON");
+                 return Ok(None);
+             }
+         };
+@@ -2942,9 +2917,7 @@
+                 // Nothing advertised this url, so its answer only rules out this
+                 // candidate.
+                 ResourceMetadataUrlOrigin::WellKnownGuess => {
+-                    debug!(
+-                        "response at {resource_metadata_url} is not a protected resource metadata document"
+-                    );
++                    debug!("response is not a protected resource metadata document");
+                     Ok(None)
+                 }
+             };
+@@ -2957,9 +2930,7 @@
+             return match origin {
+                 ResourceMetadataUrlOrigin::Advertised => Err(error),
+                 ResourceMetadataUrlOrigin::WellKnownGuess => {
+-                    debug!(
+-                        "document at {resource_metadata_url} is not this resource's metadata: {error}"
+-                    );
++                    debug!("document is not this resource's metadata");
+                     Ok(None)
+                 }
+             };
+@@ -3332,7 +3303,7 @@
+             }
+         };
+ 
+-        debug!("client credentials token result: {:?}", token_result);
++        debug!("client credentials token exchange completed");
+ 
+         let granted_scopes: Vec<String> = token_result
+             .scopes()
+@@ -3454,7 +3425,7 @@
+             AuthError::ClientCredentialsError(format!("Failed to parse token response: {e}"))
+         })?;
+ 
+-        debug!("client credentials JWT token result: {:?}", token_result);
++        debug!("client credentials JWT token exchange completed");
+ 
+         let granted_scopes: Vec<String> = token_result
+             .scopes()

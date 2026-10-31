@@ -1,0 +1,244 @@
+--- a/rmcp/Cargo.toml
++++ b/rmcp/Cargo.toml
+@@ -713,15 +713,6 @@
+     "__reqwest",
+ ]
+ 
+-[[test]]
+-name = "test_with_python"
+-path = "tests/test_with_python.rs"
+-required-features = [
+-    "reqwest",
+-    "server",
+-    "client",
+-    "transport-child-process",
+-]
+ 
+ [dependencies.async-trait]
+ version = "0.1.89"
+--- a/rmcp/Cargo.toml.orig
++++ b/rmcp/Cargo.toml.orig
+@@ -224,15 +224,6 @@
+ required-features = ["server", "client"]
+ path = "tests/test_tool_macros.rs"
+ 
+-[[test]]
+-name = "test_with_python"
+-required-features = [
+-  "reqwest",
+-  "server",
+-  "client",
+-  "transport-child-process",
+-]
+-path = "tests/test_with_python.rs"
+ 
+ [[test]]
+ name = "test_with_js"
+--- a/rmcp/SSX-PATCH.md
++++ b/rmcp/SSX-PATCH.md
+@@ -9,3 +9,23 @@
+ ## Explicit native gateway OAuth redirect profile
+ 
+ Additive source-only successor to auth SHA5a158137f05fe766bbc79be29b7130d5041ba74bdb539c3200ad923b1fecf99b. SourceWithinOrigin is selected only by explicit manager opt-in before HTTP. Original Follow and Stop defaults and all23 sanitized diagnostic sites remain. Discovery, registration, authorization-code exchange and refresh use the same method-preserving same-origin/default HTTPS-upgrade five-hop adapter profile. Default SDK HTTP adapter refuses the new variant. No qualification or production activation is claimed.
++
++
++## Native-only development-fixture packaging
++
++Before first SlopSearX publication, omit the upstream test_with_python Rust
++integration target and its unused Python client/server development package.
++These are third-party development fixtures, not the existing SlopSearX backend
++or rollback implementation. Remove only that target declaration from generated
++Cargo.toml and Cargo.toml.orig; retain every SDK feature, dependency, source API,
++license and production transport/auth byte. rmcp-native-dev-fixtures.patch
++records the exact local omission against the preceding composed SDK tree.
++
++The live FastMCP development smoke is explicitly retired from this vendor
++package. Native T01 retains all frozen Python-wire observations and existing
++tests. Its additive SDK builder test captures and bounds actual child stderr,
++checks the complete one-page tool/resource catalogs through list_all helpers,
++then awaits SDK shutdown and the stderr reader. It does not claim live Python
++interoperability, multi-page list_all equivalence, or fresh qualification of the
++separate OAuth SourceWithinOrigin/profile/privacy controls. Qualification of
++this combined source remains pending. Existing backend retirement remains G08.
+--- a/rmcp/tests/test_with_python.rs
++++ b/rmcp/tests/test_with_python.rs
+@@ -1,78 +0,0 @@
+-#![cfg(not(feature = "local"))]
+-use std::process::Stdio;
+-
+-use rmcp::{
+-    ServiceExt,
+-    transport::{ConfigureCommandExt, TokioChildProcess},
+-};
+-use tokio::io::AsyncReadExt;
+-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+-mod common;
+-
+-async fn init() -> anyhow::Result<()> {
+-    let _ = tracing_subscriber::registry()
+-        .with(
+-            tracing_subscriber::EnvFilter::try_from_default_env()
+-                .unwrap_or_else(|_| "debug".to_string().into()),
+-        )
+-        .with(tracing_subscriber::fmt::layer())
+-        .try_init();
+-    tokio::process::Command::new("uv")
+-        .args(["sync"])
+-        .current_dir("tests/test_with_python")
+-        .spawn()?
+-        .wait()
+-        .await?;
+-    Ok(())
+-}
+-
+-#[tokio::test]
+-async fn test_with_python_server() -> anyhow::Result<()> {
+-    init().await?;
+-
+-    let transport = TokioChildProcess::new(tokio::process::Command::new("uv").configure(|cmd| {
+-        cmd.arg("run")
+-            .arg("server.py")
+-            .current_dir("tests/test_with_python");
+-    }))?;
+-
+-    let client = ().serve(transport).await?;
+-    let resources = client.list_all_resources().await?;
+-    tracing::info!("{:#?}", resources);
+-    let tools = client.list_all_tools().await?;
+-    tracing::info!("{:#?}", tools);
+-    client.cancel().await?;
+-    Ok(())
+-}
+-
+-#[tokio::test]
+-async fn test_with_python_server_stderr() -> anyhow::Result<()> {
+-    init().await?;
+-
+-    let (transport, stderr) =
+-        TokioChildProcess::builder(tokio::process::Command::new("uv").configure(|cmd| {
+-            cmd.arg("run")
+-                .arg("server.py")
+-                .current_dir("tests/test_with_python");
+-        }))
+-        .stderr(Stdio::piped())
+-        .spawn()?;
+-
+-    let mut stderr = stderr.expect("stderr must be piped");
+-
+-    let stderr_task = tokio::spawn(async move {
+-        let mut buffer = String::new();
+-        stderr.read_to_string(&mut buffer).await?;
+-        Ok::<_, std::io::Error>(buffer)
+-    });
+-
+-    let client = ().serve(transport).await?;
+-    let _ = client.list_all_resources().await?;
+-    let _ = client.list_all_tools().await?;
+-    client.cancel().await?;
+-
+-    let stderr_output = stderr_task.await??;
+-    assert!(stderr_output.contains("server starting up..."));
+-
+-    Ok(())
+-}
+--- a/rmcp/tests/test_with_python/.gitignore
++++ b/rmcp/tests/test_with_python/.gitignore
+@@ -1,22 +0,0 @@
+-# Lock files
+-*.lock
+-
+-# Python build artifacts
+-*.egg-info/
+-build/
+-dist/
+-__pycache__/
+-*.py[cod]
+-*$py.class
+-
+-# Virtual environments
+-venv/
+-env/
+-.venv/
+-.env/
+-
+-# IDE
+-.vscode/
+-.idea/
+-*.swp
+-*.swo
+--- a/rmcp/tests/test_with_python/client.py
++++ b/rmcp/tests/test_with_python/client.py
+@@ -1,28 +0,0 @@
+-from mcp import ClientSession, StdioServerParameters, types
+-from mcp.client.sse import sse_client
+-import sys
+-
+-async def run():
+-    url = sys.argv[1]
+-    async with sse_client(url) as (read, write):
+-        async with ClientSession(
+-            read, write
+-        ) as session:
+-            # Initialize the connection
+-            await session.initialize()
+-
+-            # List available prompts
+-            prompts = await session.list_prompts()
+-            print(prompts)
+-            # List available resources
+-            resources = await session.list_resources()
+-            print(resources)
+-
+-            # List available tools
+-            tools = await session.list_tools()
+-            print(tools)
+-
+-if __name__ == "__main__":
+-    import asyncio
+-
+-    asyncio.run(run())
+--- a/rmcp/tests/test_with_python/pyproject.toml
++++ b/rmcp/tests/test_with_python/pyproject.toml
+@@ -1,14 +0,0 @@
+-[build-system]
+-requires = ["setuptools>=42", "wheel"]
+-build-backend = "setuptools.build_meta"
+-
+-[project]
+-name = "test_with_python"
+-version = "0.1.0"
+-description = "Test Python client for RMCP"
+-dependencies = [
+-  "fastmcp",
+-]
+-
+-[tool.setuptools]
+-py-modules = ["client", "server"]
+--- a/rmcp/tests/test_with_python/server.py
++++ b/rmcp/tests/test_with_python/server.py
+@@ -1,25 +0,0 @@
+-from fastmcp import FastMCP
+-
+-import sys
+-
+-mcp = FastMCP("Demo")
+-
+-print("server starting up...", file=sys.stderr)
+-
+-
+-@mcp.tool()
+-def add(a: int, b: int) -> int:
+-    """Add two numbers"""
+-    return a + b
+-
+-
+-# Add a dynamic greeting resource
+-@mcp.resource("greeting://{name}")
+-def get_greeting(name: str) -> str:
+-    """Get a personalized greeting"""
+-    return f"Hello, {name}!"
+-
+-
+-
+-if __name__ == "__main__":
+-    mcp.run()

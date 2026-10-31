@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "source-only unmaterialized/uncompiled inline owner correction",
+  "predecessor": {
+    "composition_path": "docs/rust-rewrite/t07/SOURCE_COMPOSITION_V5.json",
+    "composition_sha256": "b3952eaeeb34f0c245438e5ca2a387b001aa43d99e32aceb22726d15bf9cc657",
+    "source_binding_sha256": "457b9acb5deac618111d775cc6e81524fae709ad286fe30ccb79e0cd4b8c59b4",
+    "full_source_before_map_sha256": "49684626c388b5a615a995405687d592212a3be17f37267962ced541854714bf",
+    "source_files": 8296
+  },
+  "shared_author_source": {
+    "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/1010-determinism-source-v2/after/crates/ssx-mcp/src/opaque.rs",
+    "sha256": "c89e508d9d4d2c86f6d0f0f8cbf8f35690e83e63da94a4ca342c28da60526d41",
+    "transferred": "only stdio_handler_owned/private IO helper and six owner controls"
+  },
+  "opaque_successor_sha256": "4cf8faec7cb93e7f1da978fa2f3e5710c2fafa19f73fcd4aab0ca9864dd906d0",
+  "selectors": {
+    "gateway_client": 52,
+    "seam": 3,
+    "process": 9,
+    "stdio_owner": 6,
+    "total": 70
+  },
+  "stdio_owner_tests": [
+    "opaque::tests::owned_stdio_outer_abort_drops_held_sdk_initialization",
+    "opaque::tests::owned_stdio_eof_drops_held_sdk_initialization",
+    "opaque::tests::owned_stdio_explicit_cancel_drops_held_sdk_initialization",
+    "opaque::tests::owned_stdio_normal_eof_and_running_service_cancel_join",
+    "opaque::tests::owned_stdio_initialized_outer_abort_releases_idle_sdk_owner",
+    "opaque::tests::owned_stdio_pre_cancel_does_not_dispatch_initialize"
+  ],
+  "preserved": {
+    "Cargo.lock_sha256": "e18ce165acb0d4b07af362518d5a38b84838baea3ac46d89137f1a0630d406e9",
+    "Cargo.toml_sha256": "991a64bfba9ee1736aab00c84ab588142b600b34638814c17b8b4cd92d4f14c4",
+    "SDK_vendor_bytes": "unchanged; no dependency change",
+    "V5_records": "unchanged and historical",
+    "gateway_exports_and_other_opaque_behavior": "outside transferred span/insertion byte-exact",
+    "all_prior_gateway_seam_process_names": "retained"
+  },
+  "evidence_boundary": "old compiled artifacts/raw outcomes are historical V5 only; corrected source requires affected artifact rebuild, exact70 inventory and fresh qualification; no arbitrary handler-drain or synchronous SDK-drop join claim"
+}

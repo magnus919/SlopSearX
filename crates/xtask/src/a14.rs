@@ -78,6 +78,104 @@ const NATIVE_CASES: &[&str] = &[
     "adapters::jobs::tests::source_response_bytes_decode_before_only_retained_output_projection: test",
 ];
 
+// A14's accepted Git row refers to the pre-relocation logical file. The current
+// old-path reexport and reconstructed Main file have distinct Git identities.
+const RELOCATED_JSON: &str = "crates/ssx-infra/src/adapters/source_json.rs";
+const RELOCATED_JSON_GIT: &str = "9ba011fb3e2d46871cdd0d921b81c92659b861c8";
+const LOGICAL_JSON_GIT: &str = "cfdd9546f426fcd0055030f7a54e9ff3e2ee17f4";
+const ACCEPTED_JSON_GIT: &str = "e319d379590f2b9e39097a4e8ed3a309e9fc67d7";
+#[derive(Clone, Copy)]
+struct RelocatedGit<'a> {
+    container: &'a str,
+    container_sha: &'a str,
+    path: &'a str,
+    accepted: &'a str,
+    physical_git: &'a str,
+    logical_git: &'a str,
+    physical: &'a [u8],
+    logical: &'a [u8],
+    mode: u32,
+}
+fn relocated_git_identity(value: RelocatedGit<'_>) -> Result<()> {
+    require(
+        value.container == "docs/rust-rewrite/a14/cases.json"
+            && value.container_sha == CASES_SHA
+            && value.path == RELOCATED_JSON
+            && value.accepted == ACCEPTED_JSON_GIT,
+        "A14 exact relocated Git caller differs",
+    )?;
+    require(
+        value.mode == 0o644
+            && value.physical_git == RELOCATED_JSON_GIT
+            && value.physical.len() == 113
+            && digest(value.physical)
+                == "087c2013f7adf0cfc9fe0b63c5a7fd98a4517f87fd14a2d23a1716c74e5241b3",
+        "A14 exact physical reexport Git identity differs",
+    )?;
+    require(
+        value.logical_git == LOGICAL_JSON_GIT
+            && value.logical.len() == 53796
+            && digest(value.logical)
+                == "92ab8d19f5ff618c3c98924e9cea17cc9a733ea448fde2f0bab4b55737c5a0f7",
+        "A14 exact logical Main Git identity differs",
+    )
+}
+fn relocated_regular(root: &Path, path: &str) -> Result<Vec<u8>> {
+    let full = root.join(path);
+    let metadata = std::fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
+    #[cfg(unix)]
+    let mode = {
+        use std::os::unix::fs::PermissionsExt;
+        metadata.permissions().mode() & 0o7777
+    };
+    #[cfg(not(unix))]
+    let mode = 0;
+    require(
+        metadata.is_file() && !metadata.file_type().is_symlink() && mode == 0o644,
+        "A14 relocated input must be regular non-symlink 0644",
+    )?;
+    std::fs::read(full).map_err(|e| e.to_string())
+}
+fn relocated_source_json_git(
+    root: &Path,
+    path: &str,
+    accepted: &str,
+    physical_git: &str,
+) -> Result<Option<&'static str>> {
+    if path != RELOCATED_JSON {
+        return Ok(None);
+    }
+    let cases = relocated_regular(root, "docs/rust-rewrite/a14/cases.json")?;
+    require(digest(&cases) == CASES_SHA, "A14 relocated cases changed")?;
+    let cases: Value = serde_json::from_slice(&cases).map_err(|e| e.to_string())?;
+    require(
+        cases["accepted_helper_blobs"][path] == accepted,
+        "A14 relocated accepted caller row differs",
+    )?;
+    let physical = relocated_regular(root, path)?;
+    // This existing mandatory closure authenticates the sealed twelve-row
+    // capsule, actual relocated leaf, old-path state, relocation manifest,
+    // ordered inverse, and exact Main Git bytes/blob/mode before projection.
+    let logical = crate::a13::a06_source_successor::main_isolation_current::parent(
+        root,
+        path,
+        None,
+        crate::a13::a06_source_successor::main_isolation_current::Parent::Main,
+    )?;
+    relocated_git_identity(RelocatedGit {
+        container: "docs/rust-rewrite/a14/cases.json",
+        container_sha: CASES_SHA,
+        path,
+        accepted,
+        physical_git,
+        logical_git: LOGICAL_JSON_GIT,
+        physical: &physical,
+        logical: &logical,
+        mode: 0o644,
+    })?;
+    Ok(Some(LOGICAL_JSON_GIT))
+}
+
 fn validate_sources(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     command(
         root,
@@ -304,13 +402,18 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         .ok_or("A14 accepted helper pins missing")?
     {
         let actual = command(root, "git", &["hash-object", "--", path], records)?;
+        let logical_current_git =
+            relocated_source_json_git(root, path, expected.as_str().unwrap_or(""), actual.trim())?;
+        // The original A06 check compares its logical current row with the
+        // independently authenticated logical Git frame, never the shim blob.
+        let current_git_frame = logical_current_git.unwrap_or(actual.trim());
         if let Some(result) = crate::a13::a06_source_successor::try_git(
             root,
             "docs/rust-rewrite/a14/cases.json",
             CASES_SHA,
             path,
             expected.as_str().unwrap_or(""),
-            actual.trim(),
+            current_git_frame,
             |archive| command(root, "git", &["hash-object", "--", archive], records),
         ) {
             result?;
@@ -374,8 +477,247 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn relocated_git_controls() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut records = Vec::new();
+        let physical_git = command(
+            &root,
+            "git",
+            &["hash-object", "--", RELOCATED_JSON],
+            &mut records,
+        )
+        .unwrap();
+        let logical_git = relocated_source_json_git(
+            &root,
+            RELOCATED_JSON,
+            ACCEPTED_JSON_GIT,
+            physical_git.trim(),
+        )
+        .unwrap()
+        .unwrap();
+        crate::a13::a06_source_successor::try_git(
+            &root,
+            "docs/rust-rewrite/a14/cases.json",
+            CASES_SHA,
+            RELOCATED_JSON,
+            ACCEPTED_JSON_GIT,
+            logical_git,
+            |archive| command(&root, "git", &["hash-object", "--", archive], &mut records),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(
+            crate::a13::a06_source_successor::try_git(
+                &root,
+                "docs/rust-rewrite/a14/cases.json",
+                CASES_SHA,
+                RELOCATED_JSON,
+                ACCEPTED_JSON_GIT,
+                logical_git,
+                |_archive| Ok("wrong".into()),
+            )
+            .unwrap()
+            .is_err()
+        );
+        assert!(
+            crate::a13::a06_source_successor::try_git(
+                &root,
+                "docs/rust-rewrite/a14/cases.json",
+                CASES_SHA,
+                RELOCATED_JSON,
+                ACCEPTED_JSON_GIT,
+                RELOCATED_JSON_GIT,
+                |archive| command(&root, "git", &["hash-object", "--", archive], &mut records),
+            )
+            .unwrap()
+            .is_err()
+        );
+        assert!(
+            crate::a13::a06_source_successor::try_git(
+                &root,
+                "unlisted-gate.json",
+                CASES_SHA,
+                RELOCATED_JSON,
+                ACCEPTED_JSON_GIT,
+                logical_git,
+                |_archive| Ok(ACCEPTED_JSON_GIT.into()),
+            )
+            .is_none()
+        );
+        let physical = relocated_regular(&root, RELOCATED_JSON).unwrap();
+        let logical = crate::a13::a06_source_successor::main_isolation_current::parent(
+            &root,
+            RELOCATED_JSON,
+            None,
+            crate::a13::a06_source_successor::main_isolation_current::Parent::Main,
+        )
+        .unwrap();
+        let valid = RelocatedGit {
+            container: "docs/rust-rewrite/a14/cases.json",
+            container_sha: CASES_SHA,
+            path: RELOCATED_JSON,
+            accepted: ACCEPTED_JSON_GIT,
+            physical_git: physical_git.trim(),
+            logical_git,
+            physical: &physical,
+            logical: &logical,
+            mode: 0o644,
+        };
+        relocated_git_identity(valid).unwrap();
+        for invalid in [
+            RelocatedGit {
+                container: "docs/rust-rewrite/a13/cases.json",
+                ..valid
+            },
+            RelocatedGit {
+                container_sha: "wrong",
+                ..valid
+            },
+            RelocatedGit {
+                path: "crates/ssx-infra/src/adapters/source_json_future.rs",
+                ..valid
+            },
+            RelocatedGit {
+                accepted: LOGICAL_JSON_GIT,
+                ..valid
+            },
+            RelocatedGit {
+                physical_git: LOGICAL_JSON_GIT,
+                ..valid
+            },
+            RelocatedGit {
+                logical_git: RELOCATED_JSON_GIT,
+                ..valid
+            },
+            RelocatedGit {
+                mode: 0o755,
+                ..valid
+            },
+            RelocatedGit {
+                physical: &[],
+                ..valid
+            },
+            RelocatedGit {
+                logical: &[],
+                ..valid
+            },
+        ] {
+            assert!(relocated_git_identity(invalid).is_err());
+        }
+        let mut changed = physical.clone();
+        changed[0] ^= 1;
+        assert!(
+            relocated_git_identity(RelocatedGit {
+                physical: &changed,
+                ..valid
+            })
+            .is_err()
+        );
+        let mut changed = logical.clone();
+        changed[0] ^= 1;
+        assert!(
+            relocated_git_identity(RelocatedGit {
+                logical: &changed,
+                ..valid
+            })
+            .is_err()
+        );
+        assert!(
+            relocated_source_json_git(&root, "unlisted.rs", "wrong", "wrong")
+                .unwrap()
+                .is_none()
+        );
+        assert!(
+            relocated_source_json_git(&root, RELOCATED_JSON, "wrong", physical_git.trim()).is_err()
+        );
+        assert!(
+            relocated_source_json_git(&root, RELOCATED_JSON, ACCEPTED_JSON_GIT, "wrong").is_err()
+        );
+        #[cfg(unix)]
+        relocated_filesystem_controls(&root);
+    }
+    #[cfg(unix)]
+    fn relocated_filesystem_controls(root: &Path) {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let base = std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(std::env::temp_dir);
+        let fixture = base.join(format!(
+            "a14-relocated-git-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        std::fs::create_dir(&fixture).unwrap();
+        struct Retire(std::path::PathBuf);
+        impl Drop for Retire {
+            fn drop(&mut self) {
+                let _ = std::fs::remove_dir_all(&self.0);
+            }
+        }
+        let _retire = Retire(fixture.clone());
+        let mut records = Vec::new();
+        command(&fixture, "git", &["init", "--quiet"], &mut records).unwrap();
+        let objects = command(
+            root,
+            "git",
+            &[
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-path",
+                "objects",
+            ],
+            &mut records,
+        )
+        .unwrap();
+        std::fs::create_dir_all(fixture.join(".git/objects/info")).unwrap();
+        std::fs::write(fixture.join(".git/objects/info/alternates"), objects).unwrap();
+        const LEAF: &str = "crates/ssx-source-json/src/source_json.rs";
+        const CAPSULE: &str =
+            "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json";
+        const RELOCATION: &str = "docs/rust-rewrite/t07/client-dependency-relocation.json";
+        const CASES: &str = "docs/rust-rewrite/a14/cases.json";
+        for path in [RELOCATED_JSON, LEAF, CAPSULE, RELOCATION, CASES] {
+            let destination = fixture.join(path);
+            std::fs::create_dir_all(destination.parent().unwrap()).unwrap();
+            std::fs::write(&destination, std::fs::read(root.join(path)).unwrap()).unwrap();
+            std::fs::set_permissions(destination, std::fs::Permissions::from_mode(0o644)).unwrap();
+        }
+        let verify = || {
+            relocated_source_json_git(
+                &fixture,
+                RELOCATED_JSON,
+                ACCEPTED_JSON_GIT,
+                RELOCATED_JSON_GIT,
+            )
+        };
+        assert_eq!(verify().unwrap(), Some(LOGICAL_JSON_GIT));
+        for path in [RELOCATED_JSON, LEAF, CAPSULE, RELOCATION, CASES] {
+            let file = fixture.join(path);
+            let original = std::fs::read(&file).unwrap();
+            let mut changed = original.clone();
+            changed[0] ^= 1;
+            std::fs::write(&file, changed).unwrap();
+            assert!(verify().is_err(), "changed {path}");
+            std::fs::write(&file, &original).unwrap();
+            std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o755)).unwrap();
+            assert!(verify().is_err(), "mode {path}");
+            std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o644)).unwrap();
+            std::fs::remove_file(&file).unwrap();
+            assert!(verify().is_err(), "missing {path}");
+            symlink(root.join(path), &file).unwrap();
+            assert!(verify().is_err(), "symlink {path}");
+            std::fs::remove_file(&file).unwrap();
+            std::fs::write(&file, &original).unwrap();
+            std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o644)).unwrap();
+            assert_eq!(verify().unwrap(), Some(LOGICAL_JSON_GIT));
+        }
+        std::fs::remove_dir_all(&fixture).unwrap();
+        assert!(!fixture.exists());
+    }
     #[test]
     fn exact_execution_rejects_missing_ignored_duplicate_and_wrong_counts() {
+        relocated_git_controls();
         let expected = BTreeSet::from(["module::test".to_owned()]);
         let valid = "test module::test ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n";
         execution(valid, &expected).unwrap();

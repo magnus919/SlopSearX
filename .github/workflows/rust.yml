@@ -24,6 +24,10 @@ jobs:
             target: aarch64-unknown-linux-gnu
     env:
       CARGO_TERM_COLOR: always
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      CARGO_INCREMENTAL: 0
       RUST_BACKTRACE: 1
       CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
@@ -31,6 +35,17 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Configure private gateway fixture roots
+        env:
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
+        run: |
+          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\n' "$SLOPSEARX_INSTALL_TEST_ROOT" >> "$GITHUB_ENV"
+          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\n' "$SLOPSEARX_T07_UNIT_TEST_ROOT" >> "$GITHUB_ENV"
+
+      - name: Prepare private gateway package fixtures
+        run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"
 
       - name: Confirm pinned toolchain
         run: rustc --version --verbose
@@ -149,6 +164,8 @@ jobs:
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
+      - name: Prepare dedicated portable unit fixture scratch
+        run: mkdir -p "$SLOPSEARX_T07_UNIT_TEST_ROOT"
       - name: Build actual-process HTTP fixture server
         run: cargo build --locked -p ssx-http --example t02_fixture
 
@@ -381,6 +398,10 @@ jobs:
             target/rust-feature-graph.txt
           if-no-files-found: warn
 
+      - name: Retire gateway package fixtures
+        if: always()
+        run: rm -rf -- "$SLOPSEARX_INSTALL_TEST_ROOT"
+
   foundation-runtime:
     name: Foundation runtime (${{ matrix.runner }})
     runs-on: ${{ matrix.runner }}
@@ -395,11 +416,26 @@ jobs:
             target: aarch64-unknown-linux-gnu
     env:
       CARGO_TERM_COLOR: always
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
       RUST_BACKTRACE: 1
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Configure private gateway fixture roots
+        env:
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
+        run: |
+          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\n' "$SLOPSEARX_INSTALL_TEST_ROOT" >> "$GITHUB_ENV"
+          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\n' "$SLOPSEARX_T07_UNIT_TEST_ROOT" >> "$GITHUB_ENV"
+
+      - name: Prepare private gateway package fixtures
+        run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"
+      - name: Prepare dedicated portable unit fixture scratch
+        run: mkdir -p "$SLOPSEARX_T07_UNIT_TEST_ROOT"
 
       - name: Confirm pinned toolchain
         run: rustc --version --verbose
@@ -550,6 +586,20 @@ jobs:
       - name: Native search and discovery through authenticated transports
         run: cargo xtask check T06 --output target/rust-evidence/T06.json
 
+      - name: Prepare complete genuine Reqwest unit root
+        run: cargo xtask prepare-t07-unit --profile-dir "$RUNNER_TEMP/ssx-t07-unit"
+      - name: Compile exact locked unit profile before offline T07 controls
+        run: cargo xtask bootstrap-t07-unit --profile-dir "$RUNNER_TEMP/ssx-t07-unit"
+      - name: Prepare complete genuine SDK unit root
+        run: cargo xtask prepare-t07-sdk-unit --profile-dir "$RUNNER_TEMP/ssx-t07-sdk-unit"
+      - name: Compile exact locked SDK unit profile before offline T07 controls
+        run: cargo xtask bootstrap-t07-sdk-unit --profile-dir "$RUNNER_TEMP/ssx-t07-sdk-unit"
+      - name: Native gateway client and owned OAuth lifecycle
+        run: cargo xtask check T07 --output target/rust-evidence/T07.json
+        env:
+          SLOPSEARX_T07_UNIT_PROFILE_ROOT: ${{ runner.temp }}/ssx-t07-unit
+          SLOPSEARX_T07_SDK_UNIT_PROFILE_ROOT: ${{ runner.temp }}/ssx-t07-sdk-unit
+
       - name: MCP transport and gateway qualification
         run: cargo xtask check T01 --output target/rust-evidence/T01.json
 
@@ -659,6 +709,10 @@ jobs:
             target/rust-evidence/
             target/rust-feature-graph.txt
           if-no-files-found: warn
+
+      - name: Retire gateway package fixtures
+        if: always()
+        run: rm -rf -- "$SLOPSEARX_INSTALL_TEST_ROOT"
 
   foundation-adapters:
     name: Foundation adapters (${{ matrix.runner }})
@@ -954,6 +1008,7 @@ jobs:
             target/rust-evidence/T04.json
             target/rust-evidence/T05.json
             target/rust-evidence/T06.json
+            target/rust-evidence/T07.json
             target/rust-evidence/F05.json
             target/rust-evidence/F06.json
             target/rust-evidence/F09.json
@@ -1008,7 +1063,7 @@ jobs:
           [ "${{ steps.download-prerequisites.outcome }}" = success ]
           [ "${{ steps.download-runtime.outcome }}" = success ]
           [ "${{ steps.download-adapters.outcome }}" = success ]
-          for plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
+          for plan in F03 F04 T04 T05 T06 T07 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
           test -s target/rust-feature-graph.txt
           for partition in prerequisites runtime adapters; do
             test -s "target/rust-evidence/partitions/$partition/workspace.jsonl"

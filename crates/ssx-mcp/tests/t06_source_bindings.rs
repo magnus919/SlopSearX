@@ -1,4 +1,6 @@
 //! Native source-drift gate: reads frozen bytes, never executes Python.
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs"]
+mod main_isolation_current;
 #[allow(dead_code)]
 #[path = "../../../docs/rust-rewrite/a06/source-amendments/w07-evidence-successor.rs"]
 mod w07_evidence_successor;
@@ -10,13 +12,16 @@ use std::path::Path;
 mod lock_amendment;
 #[path = "../../../docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"]
 mod native_search;
-#[path = "../../../docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs"]
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs"]
 mod receipt_control;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs"]
 mod receipt_control_closure;
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/t06-opaque-successor.rs"]
+mod t07_opaque_successor;
 #[test]
 fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    main_isolation_current::controls(&root).unwrap();
     native_search::controls(&root).unwrap();
     let raw = include_bytes!("../../../docs/rust-rewrite/t06/source_bindings_v2.json");
     assert_eq!(
@@ -114,6 +119,22 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
     receipt_control::controls(&root).unwrap();
     for row in native["files"].as_array().unwrap() {
         let name = row["file"].as_str().unwrap();
+        if name == "crates/ssx-mcp/src/opaque.rs" {
+            t07_opaque_successor::prove(&root, row, &std::fs::read(root.join(name)).unwrap())
+                .unwrap();
+            t07_opaque_successor::controls(&root).unwrap();
+            continue;
+        }
+        if name == native_search::SOURCE {
+            native_search::verify(
+                &root,
+                name,
+                row["sha256"].as_str().unwrap(),
+                &std::fs::read(root.join(name)).unwrap(),
+            )
+            .unwrap();
+            continue;
+        }
         let expected = if row["file"] == storage["file"] {
             assert_eq!(row["sha256"], storage["before_sha256"]);
             storage["after_sha256"].as_str().unwrap()

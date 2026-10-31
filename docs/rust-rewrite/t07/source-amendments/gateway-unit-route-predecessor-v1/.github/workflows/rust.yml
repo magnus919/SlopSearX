@@ -1,0 +1,519 @@
+name: Rust foundation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Foundation (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_BACKTRACE: 1
+      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Prepare private gateway package fixtures
+        run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"
+
+      - name: Confirm pinned toolchain
+        run: rustc --version --verbose
+
+      - name: Install mandatory offline replay isolation
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor
+          /usr/bin/bwrap --version
+          # Same namespace/capability flags as the native runner; no candidate runs here.
+          replay_setup_probe() {
+            /usr/bin/bwrap --unshare-user --unshare-net --unshare-pid --disable-userns \
+              --cap-drop ALL --new-session --die-with-parent --ro-bind / / \
+              --proc /proc --dev /dev -- /bin/sh -c \
+              'cat /proc/self/attr/current; grep "^CapEff:" /proc/self/status; cat /proc/net/dev'
+          }
+          sudo cat /sys/kernel/security/apparmor/profiles | grep -E '^(bwrap|unpriv_bwrap)' || true
+          # Refuse an unexpected executable attachment instead of layering a second profile.
+          for policy in /etc/apparmor.d/*; do
+            if [ -f "$policy" ] && grep -Eq '^[[:space:]]*(profile[[:space:]]+[^[:space:]]+[[:space:]]+)?/usr/bin/bwrap([[:space:]]|$)' "$policy"; then
+              echo "Existing bubblewrap policy: $policy"
+              cat "$policy"
+              if ! grep -Eq '^[[:space:]]*profile[[:space:]]+bwrap[[:space:]]+/usr/bin/bwrap([[:space:]]|$)' "$policy"; then
+                echo "Unexpected bwrap attachment identity; refusing policy replacement" >&2
+                exit 1
+              fi
+            fi
+          done
+          if ! replay_setup_probe; then
+            sudo journalctl -k --no-pager -n 100 | grep -E 'apparmor|userns|bwrap' || true
+          fi
+          # Purpose-built bwrap setup profile plus capability-denied child stack.
+          # See docs/rust-rewrite/replay/README.md for upstream policy provenance.
+          sudo apparmor_parser --replace <<'PROFILE'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile bwrap /usr/bin/bwrap flags=(attach_disconnected,mediate_deleted) {
+            capability,
+            file rwlkm /{**,},
+            network,
+            unix,
+            ptrace,
+            signal,
+            userns,
+            mount,
+            umount,
+            pivot_root,
+            dbus,
+            pix /** -> &bwrap//&ssx_replay_unpriv,
+          }
+          profile ssx_replay_unpriv flags=(attach_disconnected,mediate_deleted) {
+            file rwlkm /{**,},
+            network,
+            unix,
+            ptrace,
+            signal,
+            userns,
+            mount,
+            umount,
+            pivot_root,
+            dbus,
+            pix /** -> &ssx_replay_unpriv,
+            audit deny capability,
+          }
+          PROFILE
+          replay_setup_probe
+
+      - name: Build pinned disposable native Valkey
+        timeout-minutes: 15
+        run: |
+          sh scripts/rust-valkey-build.sh "$RUNNER_TEMP/ssx-valkey/bin"
+          echo "$RUNNER_TEMP/ssx-valkey/bin" >> "$GITHUB_PATH"
+          valkey_server="$RUNNER_TEMP/ssx-valkey/bin/valkey-server"
+          {
+            printf 'SLOPSEARX_TEST_VALKEY_SERVER=%s\n' "$valkey_server"
+            printf 'SLOPSEARX_TEST_VALKEY_SERVER_SHA256=%s\n' "$(sha256sum "$valkey_server" | cut -d ' ' -f 1)"
+          } >> "$GITHUB_ENV"
+
+      - name: Formatting
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+
+      - name: Workspace tests, including xtask
+        run: cargo test --locked --workspace
+
+      - name: Linux held-writer interpreter mutation control
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +m
+          umask 077
+          export LC_ALL=C CARGO_TERM_COLOR=never CARGO_INCREMENTAL=0 CARGO_NET_OFFLINE=true
+          [ "$(uname -s)" = Linux ]
+          repo=$(git rev-parse --show-toplevel)
+          [ "$repo" = "$GITHUB_WORKSPACE" ]
+          head=$(git rev-parse HEAD)
+          [ "$head" = "$GITHUB_SHA" ]
+          [ -z "$(git status --porcelain)" ]
+          source_path=crates/ssx-infra/src/process_pool.rs
+          before_sha=48aa72c6daea89469da559ce319952fb1e7da32a798296472e8bbdaffd34fea6
+          mutant_sha=4ae74015599ad6f4e8cc6acfea2c4af1aa7f5a957162d58a658b55b9e1064f3a
+          [ "$(sha256sum "$source_path" | cut -d ' ' -f 1)" = "$before_sha" ]
+          mkdir -p target/rust-evidence
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ && "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ && "$RUNNER_ARCH" =~ ^(X64|ARM64)$ ]]
+          mkdir -p "$repo/target/rust-evidence/A10-linux-control"
+          evidence=$(mktemp -d "$repo/target/rust-evidence/A10-linux-control/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$RUNNER_ARCH.XXXXXXXX")
+          printf 'head=%s\nrunner_arch=%s\nrun_id=%s\nrun_attempt=%s\n' "$head" "$RUNNER_ARCH" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > "$evidence/identity.txt"
+          uname -a >> "$evidence/identity.txt"
+          rustc --version --verbose >> "$evidence/identity.txt"
+          cp "$source_path" "$evidence/process-pool.before.rs"
+          tracked_hashes() {
+            (cd "$1"; git ls-files -z | sort -z | xargs -0 sha256sum --zero)
+          }
+          tracked_hashes "$repo" > "$evidence/live-before.sha256z"
+          private=$(mktemp -d "$RUNNER_TEMP/ssx-a10-linux.XXXXXXXX")
+          copy="$private/checkout"
+          copy_source="$copy/$source_path"
+          active_pid=
+          active_session=
+          stop_owned() {
+            local failed=0 session=
+            if [ -n "$active_session" ] && [ -s "$active_session" ]; then
+              session=$(cat "$active_session")
+              if [[ "$session" =~ ^[1-9][0-9]*$ ]] && [ "$session" -gt 1 ]; then
+                if pgrep -s "$session" > /dev/null; then failed=1; fi
+                pkill -TERM -s "$session" 2>/dev/null || true
+                pkill -KILL -s "$session" 2>/dev/null || true
+              else
+                failed=1
+              fi
+            fi
+            if [ -n "$active_pid" ]; then
+              pkill -TERM -P "$active_pid" 2>/dev/null || true
+              pkill -KILL -P "$active_pid" 2>/dev/null || true
+              kill -TERM "$active_pid" 2>/dev/null || true
+              kill -KILL "$active_pid" 2>/dev/null || true
+              wait "$active_pid" 2>/dev/null || true
+              active_pid=
+            fi
+            if [ -n "$session" ]; then
+              for attempt in $(seq 1 40); do
+                if ! pgrep -s "$session" > /dev/null; then break; fi
+                sleep 0.05
+              done
+              if pgrep -s "$session" > /dev/null; then failed=1; fi
+            fi
+            active_session=
+            return "$failed"
+          }
+          cleanup() {
+            local result=$?
+            trap - EXIT HUP INT TERM
+            set +e
+            stop_owned || result=1
+            if [ -f "$copy_source" ]; then
+              sha256sum "$copy_source" > "$evidence/copy-before-restore.sha256"
+              cp "$evidence/process-pool.before.rs" "$copy_source" || result=1
+              if [ "$(sha256sum "$copy_source" | cut -d ' ' -f 1)" != "$before_sha" ]; then result=1; fi
+              sha256sum "$copy_source" > "$evidence/copy-restored.sha256"
+              if [ -f "$evidence/copy-before.sha256z" ]; then
+                (cd "$copy"; git -C "$repo" ls-files -z | sort -z | xargs -0 sha256sum --zero) > "$evidence/copy-restored.sha256z" || result=1
+                cmp "$evidence/copy-before.sha256z" "$evidence/copy-restored.sha256z" || result=1
+              fi
+            fi
+            tracked_hashes "$repo" > "$evidence/live-after.sha256z" || result=1
+            cmp "$evidence/live-before.sha256z" "$evidence/live-after.sha256z" || result=1
+            git -C "$repo" diff --quiet || result=1
+            git -C "$repo" diff --cached --quiet || result=1
+            rm -rf -- "$private" || result=1
+            [ ! -e "$private" ] || result=1
+            printf 'terminal_exit=%s\nprivate_copy_removed=%s\n' "$result" "$([ ! -e "$private" ] && echo yes || echo no)" > "$evidence/terminal.txt"
+            exit "$result"
+          }
+          trap cleanup EXIT
+          trap 'exit 129' HUP
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          export CARGO_TARGET_DIR="$repo/target"
+          mkdir "$private/tmp"
+          export TMPDIR="$private/tmp"
+          test_name=process_pool::cleanup_tests::held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup
+          validate_positive() {
+            [ "$1" = 0 ] || return 1
+            awk -v name="$test_name" -v marker='LINUX_ETXTBSY_CONTROL direct-rejected:interpreter-exact-protocol:reaped:released' '
+              /^[[:space:]]*$/ { next }
+              state == 0 && $0 == "running 1 test" { state=1; next }
+              state == 1 && $0 == marker { state=2; next }
+              state == 1 && $0 == "test " name " ... " marker { state=4; next }
+              state == 2 && $0 == "test " name " ... ok" { state=3; next }
+              state == 4 && $0 == "ok" { state=3; next }
+              state == 3 && /^test result: ok[.] 1 passed; 0 failed; 0 ignored; 0 measured; [0-9]+ filtered out; finished in [0-9]+[.][0-9]+s$/ { state=5; next }
+              { bad=1 }
+              END { exit !(state == 5 && !bad) }
+            ' "$2"
+          }
+          validate_mutant() {
+            [ "$1" = 101 ] || return 1
+            awk -v name="$test_name" '
+              /^[[:space:]]*$/ { next }
+              state == 0 && $0 == "running 1 test" { state=1; next }
+              state == 1 && $0 == "test " name " ... FAILED" { state=2; next }
+              state == 2 && $0 == "failures:" && headers < 2 { headers++; next }
+              state == 2 && headers > 0 && $0 == "    " name { state=3; next }
+              state == 3 && /^test result: FAILED[.] 0 passed; 1 failed; 0 ignored; 0 measured; [0-9]+ filtered out; finished in [0-9]+[.][0-9]+s$/ { state=4; next }
+              { bad=1 }
+              END { exit !(state == 4 && !bad) }
+            ' "$2" || return 1
+            awk -v name="$test_name" '
+              BEGIN { prefix="thread \047" name "\047 (" }
+              /^error(\[E[0-9]+\])?:/ && $0 != "error: test failed, to rerun pass `-p ssx-infra --lib`" { bad=1 }
+              /^thread .* panicked at / {
+                panics++
+                if (state != 0 || index($0, prefix) != 1 || $0 !~ /\) panicked at (.*\/)?src\/process_pool[.]rs:[0-9]+:[0-9]+:$/) bad=1
+                state=1; next
+              }
+              state == 1 { if ($0 != "assertion `left == right` failed") bad=1; state=2; next }
+              state == 2 { if ($0 !~ /^[[:space:]]*left: Err\(Spawn\("[^\"]*\(os error 26\)"\)\)$/) bad=1; state=3; next }
+              state == 3 { line=$0; sub(/^[[:space:]]*/, "", line); if (line != "right: Ok([111, 107])") bad=1; state=4; next }
+              END { exit !(state == 4 && panics == 1 && !bad) }
+            ' "$3"
+          }
+          run_one() {
+            local label=$1 directory=$2 status
+            active_session="$private/$label.session"
+            printf '%q ' cargo test --locked -p ssx-infra --lib "$test_name" -- --exact --nocapture > "$evidence/$label.command"
+            printf '\n' >> "$evidence/$label.command"
+            (cd "$directory"; setsid --fork --wait bash -c '
+              set -eu
+              printf "%s\n" "$$" > "$1"
+              shift
+              exec timeout --signal=TERM --kill-after=5s 240s "$@"
+            ' a10-owned "$active_session" cargo test --locked -p ssx-infra --lib "$test_name" -- --exact --nocapture) \
+              < /dev/null > "$evidence/$label.stdout" 2> "$evidence/$label.stderr" &
+            active_pid=$!
+            printf 'supervisor_pid=%s\n' "$active_pid" > "$evidence/$label.status"
+            if wait "$active_pid"; then status=0; else status=$?; fi
+            active_pid=
+            printf 'exit=%s\n' "$status" >> "$evidence/$label.status"
+            [ -s "$active_session" ] || return 1
+            cp "$active_session" "$evidence/$label.session" || return 1
+            stop_owned || return 1
+            return "$status"
+          }
+          run_one positive "$repo"
+          validate_positive 0 "$evidence/positive.stdout"
+          git archive --format=tar "$head" > "$private/source.tar"
+          sha256sum "$private/source.tar" > "$evidence/archive.sha256"
+          mkdir "$copy"
+          tar -xf "$private/source.tar" -C "$copy"
+          # Verify every archived tracked byte before mutating the private copy.
+          (cd "$copy"; git -C "$repo" ls-files -z | sort -z | xargs -0 sha256sum --zero) > "$evidence/copy-before.sha256z"
+          cmp "$evidence/live-before.sha256z" "$evidence/copy-before.sha256z"
+          [ "$(sha256sum "$copy_source" | cut -d ' ' -f 1)" = "$before_sha" ]
+          awk -v before='        let interpreted = fixture_pool(path.clone());' \
+            -v after='        let interpreted = ProcessPool::new(path.clone(), NonZeroUsize::new(1).unwrap()).unwrap();' \
+            '$0 == before { $0 = after; count++ } { print } END { if (count != 1) exit 1 }' \
+            "$copy_source" > "$private/process-pool.mutant.rs"
+          [ "$(sha256sum "$private/process-pool.mutant.rs" | cut -d ' ' -f 1)" = "$mutant_sha" ]
+          cp "$private/process-pool.mutant.rs" "$copy_source"
+          cp "$copy_source" "$evidence/process-pool.mutant.rs"
+          if diff -u "$evidence/process-pool.before.rs" "$evidence/process-pool.mutant.rs" > "$evidence/mutant.patch"; then exit 1; else [ "$?" = 1 ]; fi
+          if run_one mutant "$copy"; then mutant_status=0; else mutant_status=$?; fi
+          validate_mutant "$mutant_status" "$evidence/mutant.stdout" "$evidence/mutant.stderr"
+          printf '%s\n' 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED' > "$evidence/control-result.txt"
+      - name: Native scholarly adapters and Expat boundary qualification
+        run: cargo xtask check A06 --output target/rust-evidence/A06.json
+
+      - name: Locked workspace build
+        run: cargo build --locked --workspace --target "${{ matrix.target }}"
+
+      - name: Verify outbound TLS feature graph
+        run: |
+          cargo tree --locked --workspace -e features > target/rust-feature-graph.txt
+          grep -q 'rustls-platform-verifier' target/rust-feature-graph.txt
+          if grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then
+            echo "unexpected native-TLS/OpenSSL backend in the locked feature graph" >&2
+            exit 1
+          fi
+
+      - name: Foundation lane evidence
+        run: cargo xtask check F03 --output target/rust-evidence/F03.json
+
+      - name: Portable replay and differential evidence
+        run: cargo xtask check F04 --output target/rust-evidence/F04.json
+
+      - name: Authoritative OAuth state and atomic token transitions
+        run: cargo xtask check T04 --output target/rust-evidence/T04.json
+
+      - name: OAuth endpoints and every-network-transport authentication
+        run: cargo xtask check T05 --output target/rust-evidence/T05.json
+
+      - name: Native search and discovery through authenticated transports
+        run: cargo xtask check T06 --output target/rust-evidence/T06.json
+
+      - name: Native gateway client and owned OAuth lifecycle
+        run: cargo xtask check T07 --output target/rust-evidence/T07.json
+
+      - name: MCP transport and gateway qualification
+        run: cargo xtask check T01 --output target/rust-evidence/T01.json
+
+      - name: Typed records and stable serialization evidence
+        run: cargo xtask check F05 --output target/rust-evidence/F05.json
+
+      - name: Layered configuration and engine registry evidence
+        run: cargo xtask check F06 --output target/rust-evidence/F06.json
+
+      - name: Shared policy, filters and scope evidence
+        run: cargo xtask check F09 --output target/rust-evidence/F09.json
+
+      - name: Optional Jev routing and deterministic fallback evidence
+        run: cargo xtask check F12 --output target/rust-evidence/F12.json
+
+      - name: Deterministic ranking, scholarly grouping and retrieval evidence
+        run: cargo xtask check F11 --output target/rust-evidence/F11.json
+
+      - name: Canonical cache and immutable snapshot evidence
+        run: cargo xtask check F13 --output target/rust-evidence/F13.json
+
+      - name: Integrated search execution and cancellation evidence
+        run: cargo xtask check F14 --output target/rust-evidence/F14.json
+
+      - name: Bounded semantic reranking and read-boundary advisory evidence
+        run: cargo xtask check F15 --output target/rust-evidence/F15.json
+
+      - name: Native Valkey ownership and lifecycle evidence
+        run: cargo xtask check F07 --output target/rust-evidence/F07.json
+
+      - name: Saved definitions revisions and schedule claim evidence
+        run: cargo xtask check W00 --output target/rust-evidence/W00.json
+
+      - name: Research records and conserved budget evidence
+        run: cargo xtask check W01 --output target/rust-evidence/W01.json
+      - name: Durable research execution and recovery evidence
+        run: cargo xtask check W02 --output target/rust-evidence/W02.json
+      - name: Caller-directed adaptive research planning and admission evidence
+        run: cargo xtask check W03 --output target/rust-evidence/W03.json
+        env:
+          SLOPSEARX_TEST_VALKEY_SERVER: ${{ runner.temp }}/ssx-valkey/bin/valkey-server
+          TZ: America/New_York
+      - name: Saved execution observation and atomic publication evidence
+        run: cargo xtask check W04 --output target/rust-evidence/W04.json
+      - name: Saved event atomic publication replay acknowledgement and retention evidence
+        run: cargo xtask check W05 --output target/rust-evidence/W05.json
+        env:
+          SLOPSEARX_TEST_VALKEY_SERVER: ${{ runner.temp }}/ssx-valkey/bin/valkey-server
+
+      - name: Staged admission ownership and recovery evidence
+        run: cargo xtask check W11 --output target/rust-evidence/W11.json
+      - name: Staged execution and retained evidence authority
+        run: cargo xtask check W06 --output target/rust-evidence/W06.json
+      - name: Active experiment tooling inventory and native evidence contracts
+        run: cargo xtask check O03 --output target/rust-evidence/O03.json
+      - name: Native bounded observability and supervision evidence
+        run: cargo xtask check O01 --output target/rust-evidence/O01.json
+        env:
+          SLOPSEARX_TEST_VALKEY_SERVER: ${{ runner.temp }}/ssx-valkey/bin/valkey-server
+
+      - name: Native pooled HTTP session evidence
+        run: cargo xtask check F08 --output target/rust-evidence/F08.json
+
+      - name: Native distributed quota cooldown and observed health evidence
+        run: cargo xtask check F10 --output target/rust-evidence/F10.json
+
+      - name: Browser OIDC sessions and tenant authority evidence
+        run: cargo xtask check T09 --output target/rust-evidence/T09.json
+      - name: Native npm and crates registry pilot adapters
+        run: cargo xtask check A01 --output target/rust-evidence/A01.json
+
+      - name: Native package registry adapters
+        run: cargo xtask check A02 --output target/rust-evidence/A02.json
+
+      - name: Native developer and community adapters
+        run: cargo xtask check A03 --output target/rust-evidence/A03.json
+
+      - name: Native Brave, Wikipedia, and Reddit adapters
+        run: cargo xtask check A04 --output target/rust-evidence/A04.json
+
+      - name: Native DuckDuckGo and Google HTML adapters
+        run: cargo xtask check A05 --output target/rust-evidence/A05.json
+      - name: Native biomedical adapters
+        run: cargo xtask check A07 --output target/rust-evidence/A07.json
+
+      - name: Native regulatory financial and legal adapters
+        run: cargo xtask check A08 --output target/rust-evidence/A08.json
+
+      - name: Native catalog media geocoding and archive adapters
+        run: cargo xtask check A09 --output target/rust-evidence/A09.json
+
+      - name: Native vulnerability intelligence adapters
+        run: cargo xtask check A10 --output target/rust-evidence/A10.json
+
+      - name: Native threat intelligence adapters
+        run: cargo xtask check A11 --output target/rust-evidence/A11.json
+
+      - name: Native sensitive and async intelligence adapters
+        run: cargo xtask check A13 --output target/rust-evidence/A13.json
+
+      - name: Native jobs adapters
+        run: cargo xtask check A14 --output target/rust-evidence/A14.json
+
+      - name: Native infrastructure security adapters
+        run: cargo xtask check A12 --output target/rust-evidence/A12.json
+
+      - name: Native readiness and Python bridge smoke
+        env:
+          SSX_SERVER_BIN: target/${{ matrix.target }}/debug/ssx-server
+        run: sh scripts/rust-foundation-smoke.sh
+
+      - name: Retain source-bound foundation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-foundation-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            target/rust-evidence/F03.json
+            target/rust-evidence/F04.json
+            target/rust-evidence/T01.json
+            target/rust-evidence/T04.json
+            target/rust-evidence/T05.json
+            target/rust-evidence/T06.json
+            target/rust-evidence/T07.json
+            target/rust-evidence/F05.json
+            target/rust-evidence/F06.json
+            target/rust-evidence/F09.json
+            target/rust-evidence/F12.json
+            target/rust-evidence/F07.json
+            target/rust-evidence/W00.json
+            target/rust-evidence/W01.json
+            target/rust-evidence/W02.json
+            target/rust-evidence/W03.json
+            target/rust-evidence/W04.json
+            target/rust-evidence/W05.json
+            target/rust-evidence/W11.json
+            target/rust-evidence/W06.json
+            target/rust-evidence/O03.json
+            target/rust-evidence/O01.json
+            target/rust-evidence/F08.json
+            target/rust-evidence/F10.json
+            target/rust-evidence/F11.json
+            target/rust-evidence/F13.json
+            target/rust-evidence/F14.json
+            target/rust-evidence/F15.json
+            target/rust-evidence/T09.json
+            target/rust-evidence/A01.json
+            target/rust-evidence/A02.json
+            target/rust-evidence/A03.json
+            target/rust-evidence/A04.json
+            target/rust-evidence/A06.json
+            target/rust-evidence/A05.json
+            target/rust-evidence/A07.json
+            target/rust-evidence/A08.json
+            target/rust-evidence/A09.json
+            target/rust-evidence/A10.json
+            target/rust-evidence/A10-linux-control/${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}.*/
+            target/rust-evidence/A11.json
+            target/rust-evidence/A12.json
+            target/rust-evidence/A13.json
+            target/rust-evidence/A14.json
+            target/rust-feature-graph.txt
+          if-no-files-found: warn
+
+      - name: Retire gateway package fixtures
+        if: always()
+        run: rm -rf -- "$SLOPSEARX_INSTALL_TEST_ROOT"
+
+  supply-chain:
+    name: Supply-chain policy (cargo-deny 0.20.2)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install pinned cargo-deny
+        run: cargo install --locked --version 0.20.2 cargo-deny
+
+      - name: Check advisories, licenses, duplicate versions and registry sources
+        run: cargo deny --locked --workspace check all

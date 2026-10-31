@@ -1,0 +1,5 @@
+# T07 V7 mechanical lint amendment
+
+Additive successor to V6; historical V6 and all earlier composition records remain byte-identical. Eleven own-workspace strict Clippy diagnostics across six gateway-client files are corrected with ordered let chains and direct return of the existing fallible collect. No conditions are reordered: optional branches remain short-circuited; redirect bounds precede indexed hex decoding; tools/call precedes envelope removal; OAuth response drop/authorization/send order is unchanged. No lint allowances or narrowed gates. Opaque ownership, SDK/dependencies/Cargo.lock and all70 selectors remain byte-identical.
+
+V6 fresh70, old-spawn negative101 and fresh-restored positive receipts describe V6 only. V7 requires exact-source strict workspace Clippy and meaningful affected gateway-client/library/seam/process controls selected by root. No native work or application occurred in this packet. Full before8298/after8300 source maps and current binding closure accompany the overlay. Root reviews and authorizes application/qualification; current-main/platform/CI delivery obligations remain separate.

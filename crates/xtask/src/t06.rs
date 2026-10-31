@@ -3,7 +3,7 @@ use crate::a13::a06_source_successor::{native_search, w07_evidence_successor};
 use crate::{Result, command};
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/lock_amendment.rs"]
 pub(crate) mod lock_amendment;
-#[path = "../../../docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs"]
+#[path = "../../../docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs"]
 pub(crate) mod receipt_control;
 #[path = "../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs"]
 pub(crate) mod receipt_control_closure;
@@ -241,7 +241,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     for row in native["files"].as_array().unwrap() {
         let path = row["file"].as_str().ok_or("T06 native fixture path")?;
         let bytes = fs::read(root.join(path)).map_err(|e| format!("T06 {path}: {e}"))?;
-        validate_native_file(root, row, &bytes, &storage)?;
+        if path == "crates/ssx-mcp/src/opaque.rs" {
+            crate::a13::a06_source_successor::t07_opaque_material(root, row, &bytes)?;
+        } else {
+            validate_native_file(root, row, &bytes, &storage)?;
+        }
     }
 
     for key in ["sources", "artifacts"] {

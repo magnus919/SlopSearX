@@ -175,6 +175,92 @@ fn source_payload(root: &Path, source: &Value, current: &[u8], mode: &str) -> Re
     )?;
     Ok(prior)
 }
+// Ready059de changes exactly three F01 inventory anchors. Authenticate that
+// physical container before the original snapshot caller proof consumes its frame.
+const F01_CONTAINER: &str = "crates/xtask/fixtures/F01.json";
+const F01_CONTAINER_EDITS: [(usize, &str, &str); 3] = [
+    (
+        16292,
+        "      \"git_blob\": \"73fedcbf810ee7d8a2d0af8b115f2296f0b15008\"\n",
+        "      \"git_blob\": \"3c6f652482d0a2acef948bf6462aa9af1f324947\"\n",
+    ),
+    (
+        17121,
+        "      \"git_blob\": \"6234517809ced8386354de2140dcb41ec76cb534\"\n",
+        "      \"git_blob\": \"da94757effefc9f38fa80db8f75b3537c5c40fbc\"\n",
+    ),
+    (
+        17264,
+        "      \"git_blob\": \"f1f1666e803a55076e6892677d4f52df0a515cec\"\n",
+        "      \"git_blob\": \"a007f68f91fffc97448bf238e61d3866ec20e0ef\"\n",
+    ),
+];
+fn f01_container_inverse(
+    frame: &Value,
+    current: &[u8],
+    mode: &str,
+    edits: &[(usize, &str, &str)],
+) -> Result<Vec<u8>> {
+    need(
+        *frame
+            == json!({"path":F01_CONTAINER,"sha256":"eeb28862df43b91b1eb6d5e83255e9b1a1c1935b144b5cafcb0ed59fec3239a3","bytes":64639,"git_blob":"e0af06245b7dab8d5716005b0ddb6fcab44b8017","mode":"0644"}),
+        "snapshot F01 exact historical container frame differs",
+    )?;
+    need(
+        mode == "0644"
+            && current.len() == 64639
+            && digest(current)
+                == "b0c9e59c57c81e97619b9a3432e7ca44926bb173bc9a8b82a6cab84b9d1d585e",
+        "snapshot F01 exact Ready059de physical container differs",
+    )?;
+    need(edits.len() == 3, "snapshot F01 exact three inventory edits")?;
+    let mut prior = current.to_vec();
+    let mut end = 0;
+    for (at, before, after) in edits {
+        let next = at
+            .checked_add(after.len())
+            .ok_or("F01 container span overflow")?;
+        need(
+            *at >= end
+                && !before.is_empty()
+                && before.len() == after.len()
+                && current.get(*at..next) == Some(after.as_bytes()),
+            "snapshot F01 exact ordered replacement span differs",
+        )?;
+        prior
+            .get_mut(*at..next)
+            .ok_or("F01 container prior span")?
+            .copy_from_slice(before.as_bytes());
+        end = next;
+    }
+    material(frame, &prior, "0644")?;
+    let mut forward = prior.clone();
+    for (at, _, after) in edits {
+        forward[*at..*at + after.len()].copy_from_slice(after.as_bytes());
+    }
+    need(
+        forward == current,
+        "snapshot F01 independent forward proof differs",
+    )?;
+    Ok(prior)
+}
+fn f01_container_proof(root: &Path, frame: &Value, supplied: &[u8]) -> Result<Vec<u8>> {
+    let physical = regular(root, F01_CONTAINER)?;
+    need(
+        physical == supplied,
+        "snapshot F01 supplied container is not physical current",
+    )?;
+    need(
+        git_blob(root, &physical)? == "94a7de321d13f0efc051ab1e63f155d72207e95a",
+        "snapshot F01 current container Git blob differs",
+    )?;
+    let prior = f01_container_inverse(frame, &physical, "0644", &F01_CONTAINER_EDITS)?;
+    need(
+        frame["git_blob"] == git_blob(root, &prior)?,
+        "snapshot F01 prior container Git blob differs",
+    )?;
+    Ok(prior)
+}
 fn binding<'a>(doc: &'a Value, kind: &str) -> Result<&'a Value> {
     let rows: Vec<_> = doc["bindings"]
         .as_array()
@@ -200,6 +286,11 @@ fn prove(root: &Path, doc: &Value, kind: &str, claimed: &Value) -> Result<Vec<u8
     // The sealed A06 frame is 1,201,634 bytes; source/capsule reads retain
     // their 1 MiB ceiling while these three exact containers allow at most 2 MiB.
     let raw = regular_with_bound(root, path, 2_097_152)?;
+    let raw = if kind == "F01" {
+        f01_container_proof(root, &row["container"], &raw)?
+    } else {
+        raw
+    };
     material(&row["container"], &raw, "0644")?;
     let container: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     need(
@@ -297,6 +388,85 @@ mod tests {
         assert!(source_payload(&root, &doc["source"], &prior, "0644").is_err());
         for mode in ["0600", "0755", "4644"] {
             assert!(source_payload(&root, &doc["source"], &current, mode).is_err());
+        }
+        let frame = &binding(&doc, "F01").unwrap()["container"];
+        let physical = regular(&root, F01_CONTAINER).unwrap();
+        let historical = f01_container_proof(&root, frame, &physical).unwrap();
+        let git = Command::new("git")
+            .args([
+                "show",
+                "8e71a83f9649d58e9a60e34810275b736e44151a:crates/xtask/fixtures/F01.json",
+            ])
+            .current_dir(&root)
+            .output()
+            .unwrap();
+        assert!(git.status.success());
+        assert_eq!(historical, git.stdout);
+        assert_eq!(
+            f01_container_inverse(frame, &physical, "0644", &F01_CONTAINER_EDITS).unwrap(),
+            historical
+        );
+        assert!(f01_container_proof(&root, frame, &historical).is_err());
+        for mode in ["0600", "0755", "4644"] {
+            assert!(f01_container_inverse(frame, &physical, mode, &F01_CONTAINER_EDITS).is_err());
+        }
+        for field in ["path", "sha256", "bytes", "mode", "git_blob", "extra"] {
+            let mut wrong = frame.clone();
+            wrong[field] = json!("wrong");
+            assert!(
+                f01_container_inverse(&wrong, &physical, "0644", &F01_CONTAINER_EDITS).is_err()
+            );
+        }
+        for mutation in 0..5 {
+            let mut edits = F01_CONTAINER_EDITS.to_vec();
+            match mutation {
+                0 => {
+                    edits.remove(0);
+                }
+                1 => edits.push(edits[0]),
+                2 => edits.swap(0, 1),
+                3 => edits[0].0 += 1,
+                _ => edits[0].1 = "wrong",
+            }
+            assert!(f01_container_inverse(frame, &physical, "0644", &edits).is_err());
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let fixture = std::env::temp_dir()
+                .join(format!("ssx-snapshot-f01-container-{}", std::process::id()));
+            struct Owned(std::path::PathBuf);
+            impl Drop for Owned {
+                fn drop(&mut self) {
+                    let _ = fs::remove_dir_all(&self.0);
+                }
+            }
+            // Exclusive root acquisition precedes every write and cleanup ownership.
+            fs::create_dir(&fixture).unwrap();
+            let owned = Owned(fixture);
+            let fixture = &owned.0;
+            fs::create_dir_all(fixture.join("crates/xtask/fixtures")).unwrap();
+            let path = fixture.join(F01_CONTAINER);
+            fs::write(&path, &physical).unwrap();
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+            assert_eq!(
+                f01_container_proof(fixture, frame, &physical).unwrap(),
+                historical
+            );
+            for mode in [0o600, 0o755, 0o4644] {
+                fs::set_permissions(&path, fs::Permissions::from_mode(mode)).unwrap();
+                assert!(f01_container_proof(fixture, frame, &physical).is_err());
+            }
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+            fs::write(&path, &historical).unwrap();
+            assert!(f01_container_proof(fixture, frame, &historical).is_err());
+            fs::write(&path, &physical).unwrap();
+            let mut changed = physical.clone();
+            changed.push(0);
+            assert!(f01_container_proof(fixture, frame, &changed).is_err());
+            fs::write(&path, &changed).unwrap();
+            assert!(f01_container_proof(fixture, frame, &changed).is_err());
+            drop(owned);
         }
         for kind in ["F01", "A06", "W03"] {
             let row = &binding(&doc, kind).unwrap()["row"];

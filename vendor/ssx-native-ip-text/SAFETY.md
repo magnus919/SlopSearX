@@ -1,0 +1,3 @@
+# Narrow Unix native text boundary
+
+The ONLY foreign call is libc inet_ntop. Inputs are a typed IpAddr materialized into a live aligned in_addr/in6_addr. The46-byte output is the documented INET6_ADDRSTRLEN bound; only successful native return permits CStr, which is then copied into an owned UTF8 String. Failure captures errno immediately. No file/process/socket/DNS operation, arbitrary pointer, handle, borrowed result or unsafely constructed public value escapes. The private dependency does not inherit the application unsafe-code forbid; application/MCP/workspace remain unchanged. Native text is required by exact CPython make_ipv4_addr/make_ipv6_addr, not replaced by Rust Display or getnameinfo. This source proposal is not compile/link/runtime qualification.

@@ -9,26 +9,40 @@ publish.workspace = true
 [lints]
 workspace = true
 
+[features]
+default = ["server"]
+server = ["dep:ssx-application", "dep:ssx-infra", "dep:ssx-config", "dep:ssx-registry"]
+gateway-source-endpoints = ["reqwest/ssx-http1-source-pool", "rmcp/ssx-source-metadata", "dep:jiter"]
+gateway-dns-fixtures = ["ssx-windows-owner/fixtures"]
+
 [dependencies]
-ssx-application.workspace = true
-ssx-infra.workspace = true
-ssx-config.workspace = true
-ssx-registry.workspace = true
+# Same native-only Core-compatible parser already pinned by source SDK metadata.
+jiter = { version = "=0.14.0", optional = true, default-features = false, features = ["num-bigint"] }
+ssx-application = { workspace = true, optional = true }
+ssx-infra = { workspace = true, optional = true }
+ssx-config = { workspace = true, optional = true }
+ssx-registry = { workspace = true, optional = true }
 unicode-normalization = "=0.1.24"
 ssx-wire.workspace = true
-rmcp = { workspace = true, features = ["client", "transport-io", "transport-child-process", "transport-streamable-http-server", "transport-streamable-http-client-reqwest"] }
+rmcp = { workspace = true, features = ["auth", "client", "transport-io", "transport-child-process", "transport-streamable-http-server", "transport-streamable-http-client-reqwest"] }
 tokio.workspace = true
 axum = { workspace = true, features = ["multipart"] }
 serde.workspace = true
 serde_json = { workspace = true, features = ["raw_value"] }
-reqwest = { workspace = true, features = ["stream"] }
+reqwest = { workspace = true, features = ["stream", "ssx-http1-source-pool"] }
 tokio-util = "=0.7.20"
 futures-util = "=0.3.34"
+flate2.workspace = true
+async-trait = "=0.1.92"
+oauth2 = { version = "=5.0.0", default-features = false }
+tracing = "=0.1.44"
 uuid = { version = "=1.28.0", features = ["v4"] }
 subtle = "=2.6.1"
 sse-stream = "=0.2.6"
 ssx-domain.workspace = true
 ssx-json.workspace = true
+ssx-source-json.workspace = true
+indexmap.workspace = true
 
 # T05 protocol codecs and accepted AWS-LC credential randomness.
 base64 = "=0.23.1"
@@ -36,7 +50,50 @@ url.workspace = true
 sha2.workspace = true
 rustls.workspace = true
 
+[target.'cfg(unix)'.dependencies]
+ssx-native-ip-text = { path = "../../vendor/ssx-native-ip-text", version = "=0.1.0" }
+nix = { version = "=0.31.3", default-features = false, features = ["fs", "poll", "event", "process", "signal"] }
+libc = "=0.2.190"
+dns-lookup = "=4.0.2"
+
 [dev-dependencies]
 aws-lc-rs.workspace = true
 redis.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
+
+# Existing workspace TLS fixture stack; native qualification remains pending.
+tokio-rustls.workspace = true
+rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
+
+[target.'cfg(windows)'.dependencies]
+ssx-windows-owner = { path = "../../vendor/ssx-windows-owner", version = "=0.1.0" }
+
+[[bin]]
+name = "cancel-wire-qualification"
+path = "src/bin/cancel-wire-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "mcp-qualification"
+path = "src/bin/mcp-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "planning-qualification"
+path = "src/bin/planning-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "search-qualification"
+path = "src/bin/search-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "wire-qualification"
+path = "src/bin/wire-qualification.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "evidence-qualification"
+path = "src/bin/evidence-qualification.rs"
+required-features = ["server"]

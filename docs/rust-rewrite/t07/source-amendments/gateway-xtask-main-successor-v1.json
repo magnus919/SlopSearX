@@ -1,0 +1,56 @@
+{
+  "kind": "T07_GATEWAY_XTASK_MAIN_SUCCESSOR_V1",
+  "source_parent": "233c7934f9e2da5c2e94f0c1213945335d786502",
+  "paths": [
+    "crates/xtask/src/main.rs"
+  ],
+  "prior": {
+    "path": "crates/xtask/src/main.rs",
+    "bytes": 39672,
+    "sha256": "e695b32f8617ff35ca939b4e8f8f00831ca3465319ba3961680574db1da8a1f2",
+    "git_blob": "9851b22de93175f48d05e5da76a96600553d27ec",
+    "mode": "0644"
+  },
+  "archive": {
+    "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-predecessor-v1/main.rs",
+    "bytes": 39672,
+    "sha256": "e695b32f8617ff35ca939b4e8f8f00831ca3465319ba3961680574db1da8a1f2",
+    "git_blob": "9851b22de93175f48d05e5da76a96600553d27ec",
+    "mode": "0644",
+    "source_path": "crates/xtask/src/main.rs"
+  },
+  "current": {
+    "path": "crates/xtask/src/main.rs",
+    "bytes": 40115,
+    "sha256": "cf29f49aa50f10c39aba47e6eadb3020602821a7ef1055ce709cca644e43023d",
+    "git_blob": "4541d8acd2b18afb1751d79ad3c48ddbe7bdad9d",
+    "mode": "0644"
+  },
+  "edits": [
+    {
+      "at": 356,
+      "remove_utf8": "",
+      "insert_utf8": "#[cfg(unix)]\nmod gateway_package;\n"
+    },
+    {
+      "at": 431,
+      "remove_utf8": "",
+      "insert_utf8": "mod t07;\n"
+    },
+    {
+      "at": 18186,
+      "remove_utf8": "",
+      "insert_utf8": "        \"T07\" => t07::check(root, records),\n"
+    },
+    {
+      "at": 20651,
+      "remove_utf8": "",
+      "insert_utf8": "    #[cfg(unix)]\n    if gateway_package::cli(&root, &args) {\n        return;\n    }\n"
+    },
+    {
+      "at": 28056,
+      "remove_utf8": "",
+      "insert_utf8": "    } else if id == \"T07\" {\n        \"source-bound native client executable, fixed gateway projection, static/OAuth loopback, invocation and owned startup/cancel/EOF/instance isolation; independent exact R1/R2/profile/SDK and inherited transport acceptance remain required\"\n"
+    }
+  ]
+}

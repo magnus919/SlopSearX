@@ -163,7 +163,6 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         "rerank::strict_json::tests::deep_parser_yields_to_current_thread_heartbeat_and_deadline",
         "rerank::strict_json::tests::near_limit_finite_float_keeps_heartbeat_and_never_accepts_after_deadline",
         "rerank::strict_json::tests::long_significand_conversion_checks_deadline_without_reparsing_scores",
-        "adapters::source_json::f15_numeric_tests::shared_float_normalizer_preserves_long_finite_and_nonfinite_source_policy",
     ];
     let listing = command(
         root,
@@ -198,6 +197,19 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .iter()
             .all(|n| output.lines().any(|l| l == format!("test {n} ... ok"))),
         "F15 critical library test ignored or not executed",
+    )?;
+
+    // The shared parser has one implementation. Its complete former infra
+    // unit suite now executes in the shared crate, including the F15 control.
+    let source_output = command(
+        root,
+        "cargo",
+        &["test", "--locked", "-p", "ssx-source-json", "--lib"],
+        records,
+    )?;
+    ensure(
+        source_output.lines().any(|line| line == "test source_json::f15_numeric_tests::shared_float_normalizer_preserves_long_finite_and_nonfinite_source_policy ... ok"),
+        "F15 relocated shared source JSON control missing or ignored",
     )?;
 
     for path in [

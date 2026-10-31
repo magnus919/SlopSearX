@@ -1116,3 +1116,88 @@ proxy tools or ready session are published. This is a per-phase timeout; it is
 not an end-to-end deadline for interactive OAuth authorization. OAuth mode keeps
 its existing authorization timeout during initialization; it is excluded from
 this shorter initialization deadline, while discovery remains bounded.
+
+
+## Native Rust gateway candidate (T07)
+
+`ssx-gateway` is the Rust client candidate. It serves local MCP stdio and connects
+to a remote streamable HTTP MCP endpoint; it does not start a search backend.
+The existing `slopsearx-mcp` examples above remain the Python entry point. Native
+release installation and signed artifacts remain subject to O04 qualification.
+For a source build, configure `CARGO_TARGET_DIR` outside the checkout as described
+in [Rust build footprint](RUST_BUILD_FOOTPRINT.md), then run:
+
+```sh
+cargo xtask gateway-package
+# Use bin/ssx-gateway within the printed package prefix in your MCP client configuration.
+MCP_REMOTE_TOKEN='<remote-token>' /absolute/path/ssx-gateway --remote https://example.org/mcp
+```
+
+The package includes the digest-bound DNS helper
+in its fixed `libexec/slopsearx` role. Keep the complete package together; an
+unpackaged Cargo binary cannot discover its helper. `cargo xtask gateway -- --remote URL` builds, stages and runs the same
+package for development. Gateway DNS is cancellable and joined during shutdown;
+ordinary Reqwest clients keep their default resolver. Windows ownership/security
+and the five-target workflow are implemented and source-reviewed; hosted platform
+acceptance remains pending. See [T07 current status](rust-rewrite/t07/CURRENT_SOURCE.md).
+
+For an OAuth remote, configure the installed package binary directly:
+
+```json
+{
+  "mcpServers": {
+    "slopsearx-native-candidate": {
+      "command": "/absolute/path/ssx-gateway",
+      "args": ["--remote", "https://example.org/mcp", "--oauth"],
+      "env": {
+        "MCP_REMOTE_TOKEN_FILE": "/absolute/private/slopsearx-tokens.json"
+      }
+    }
+  }
+}
+```
+
+The candidate accepts `--token`, `--oauth-callback-port`, `--oauth-no-browser` and
+`--oauth-token-file`, with the corresponding `MCP_REMOTE_*` variables in §3.2.
+For explicit troubleshooting, set `MCP_REMOTE_DIAGNOSTICS=classification-v1`. This
+adds finite phase classifications, I/O error kinds and OS codes, and HTTP error
+category flags/status codes to stderr. It never prints error messages, URLs,
+credentials, paths, or response payloads. Each runtime retains at most 32 finite
+events in memory; it emits them with fallible writes only after its owned cleanup
+attempts finish. Sink failures do not replace the primary result. Without this
+exact opt-in, error stderr keeps its fixed default behavior. HTTP flag bits are builder (0), connect (1),
+timeout (2), request (3), body (4), decode (5), redirect (6), and status (7).
+
+Set `MCP_REMOTE_CA_BUNDLE` to a PEM bundle when the remote endpoint uses an
+operator-managed certificate authority. The gateway requires a regular, nonempty,
+complete bundle no larger than 4 MiB; malformed or unreadable input fails startup.
+Its certificates are added to the platform trust roots, and hostname verification
+remains enabled. A local component fixture verifies rejection of an invalid
+hostname. Platform trust acceptance requires ephemeral hosted CI evidence; it is
+not a personal-Mac trust test. See [T07 current status](rust-rewrite/t07/CURRENT_SOURCE.md).
+Static credentials and OAuth are separate modes. The default callback is loopback
+port 8765; remote OAuth uses HTTPS outside loopback. The authorization URL is
+intentionally printed to stderr for user interaction. `--oauth-no-browser` keeps
+the manual callback flow without launching a browser. Protect the token file and
+its private parent directory; do not check credentials into client configuration.
+
+On the local macOS ARM component fixture, EOF/SIGTERM wakes and joins the native
+input owner, cancels held requests and drains remote session, callback, browser
+and file owners. Cleanup uses only the already-held bearer; denied DELETE or
+cancellation does not register, refresh or open a new authorization flow. A denied
+session DELETE remains an explicit gateway failure. Final session DELETE has a
+five-second graceful request budget, matching the pinned Rust SDK cleanup budget;
+expiry is also a gateway failure. Cleanup then joins the retained HTTP/DNS owners,
+including the original native DNS helper if DELETE needed a held hostname lookup.
+Normal RPC transport budgets are unchanged. This cleanup/DNS increment is source
+registered; see [T07 current status](rust-rewrite/t07/CURRENT_SOURCE.md) for the
+current qualification boundary. The current T06 backend stdio owner is unchanged;
+this is a gateway ownership result.
+
+The distribution goals in [ADR 005](adr/005-rust-protocol-tls-and-platforms.md) are
+Linux x86_64/aarch64, macOS x86_64/aarch64 and Windows x86_64. Local native
+runtime evidence covers macOS aarch64. Windows ownership/security and the
+five-target workflow are implemented and source-reviewed; hosted native Windows
+ownership and system-trust acceptance remain pending. Install, TLS/CA, invocation
+and signature gates determine release qualification. No Python fallback is part
+of this binary.

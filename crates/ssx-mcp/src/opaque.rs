@@ -1082,35 +1082,298 @@ impl GatewaySse {
         Ok(None)
     }
 }
+pub type GatewayOpenFuture<'a> = std::pin::Pin<
+    Box<dyn std::future::Future<Output = Result<Box<dyn GatewayHttpResponse>>> + Send + 'a>,
+>;
+pub type GatewayChunkFuture<'a> = std::pin::Pin<
+    Box<dyn std::future::Future<Output = Result<Option<axum::body::Bytes>>> + Send + 'a>,
+>;
+/// Protected gateway executor. Implementations own their TLS/proxy/auth policy
+/// and must retain connection/admission ownership in the returned response until
+/// EOF, correlated early-stop, cancellation or drop. No adapter overrides.
+pub trait GatewayHttp: Send + Sync {
+    fn open(&self, request: GatewayHttpRequest) -> GatewayOpenFuture<'_>;
+}
+/// Authentication admission is chosen by the transport owner. Cancellation and
+/// session cleanup use only the already-held bearer and cannot acquire OAuth
+/// state, refresh tokens or start authorization while a request is being joined.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum GatewayAuthMode {
+    Interactive,
+    ExistingBearer,
+}
+/// Deliberate non-Debug descriptor: bearer, body and session can be sensitive.
+pub struct GatewayHttpRequest {
+    pub auth: GatewayAuthMode,
+    pub method: reqwest::Method,
+    pub url: String,
+    pub headers: Vec<(&'static str, String)>,
+    pub body: Option<String>,
+}
+/// Incremental response, not a buffered HTTP body. A POST SSE stream may remain
+/// open after its correlated reply. Implementations retain all body leases.
+pub trait GatewayHttpResponse: Send {
+    fn status(&self) -> reqwest::StatusCode;
+    fn headers(&self) -> &reqwest::header::HeaderMap;
+    fn content_length(&self) -> Option<u64>;
+    fn chunk(&mut self) -> GatewayChunkFuture<'_>;
+}
+struct LegacyGatewayHttp(reqwest::Client);
+struct LegacyGatewayResponse(reqwest::Response);
+impl GatewayHttpResponse for LegacyGatewayResponse {
+    fn status(&self) -> reqwest::StatusCode {
+        self.0.status()
+    }
+    fn headers(&self) -> &reqwest::header::HeaderMap {
+        self.0.headers()
+    }
+    fn content_length(&self) -> Option<u64> {
+        self.0.content_length()
+    }
+    fn chunk(&mut self) -> GatewayChunkFuture<'_> {
+        Box::pin(async move { Ok(self.0.chunk().await?) })
+    }
+}
+impl GatewayHttp for LegacyGatewayHttp {
+    fn open(&self, request: GatewayHttpRequest) -> GatewayOpenFuture<'_> {
+        Box::pin(async move {
+            let mut builder = self.0.request(request.method, request.url);
+            for (name, value) in request.headers {
+                if name == "authorization" {
+                    // Legacy only receives the same static bearer descriptor;
+                    // retain reqwest's sensitive header marking/error behavior.
+                    builder = builder.bearer_auth(
+                        value
+                            .strip_prefix("Bearer ")
+                            .ok_or("invalid legacy bearer descriptor")?,
+                    );
+                } else {
+                    builder = builder.header(name, value);
+                }
+            }
+            if let Some(body) = request.body {
+                builder = builder.body(body);
+            }
+            let response = builder.send().await?;
+            Ok(Box::new(LegacyGatewayResponse(response)) as Box<dyn GatewayHttpResponse>)
+        })
+    }
+}
+/// Final DELETE grace matches the pinned rmcp streamable-HTTP session cleanup.
+/// Normal source requests retain their independent transport/authorization budgets.
+pub const GATEWAY_SESSION_CLEANUP_TIMEOUT: Duration = Duration::from_secs(5);
+
+async fn gateway_until<T>(
+    deadline: Option<tokio::time::Instant>,
+    future: impl std::future::Future<Output = Result<T>>,
+) -> Result<T> {
+    match deadline {
+        Some(deadline) => tokio::time::timeout_at(deadline, future).await?,
+        None => future.await,
+    }
+}
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum GatewayStartPhase {
+    Cold,
+    Initialized,
+    Ready,
+    Failed,
+    Closed,
+}
+/// Construct synchronously before async startup. Keep this object and the
+/// supplied HTTP owner until explicit close/drain on every failure/EOF/signal.
+/// Drop cannot issue async DELETE or promise joined HTTP shutdown.
+pub struct RawGatewayStart {
+    gateway: RawGateway,
+    phase: GatewayStartPhase,
+}
+impl RawGatewayStart {
+    pub fn new(
+        url: String,
+        token: Option<String>,
+        http: std::sync::Arc<dyn GatewayHttp>,
+    ) -> Result<Self> {
+        Self::new_inner(url, token, http, false)
+    }
+    /// Original gateway accepts URL userinfo/fragments; the client HTTP owner
+    /// applies the original Basic-vs-OAuth precedence and strips wire fragments.
+    pub fn new_source(
+        url: String,
+        token: Option<String>,
+        http: std::sync::Arc<dyn GatewayHttp>,
+    ) -> Result<Self> {
+        Self::new_inner(url, token, http, true)
+    }
+    fn new_inner(
+        url: String,
+        token: Option<String>,
+        http: std::sync::Arc<dyn GatewayHttp>,
+        source_urls: bool,
+    ) -> Result<Self> {
+        let parsed = reqwest::Url::parse(&url)?;
+        if !source_urls
+            && (!parsed.username().is_empty()
+                || parsed.password().is_some()
+                || parsed.fragment().is_some())
+        {
+            return Err("invalid MCP remote URL".into());
+        }
+        Ok(Self {
+            gateway: RawGateway {
+                http,
+                url,
+                token,
+                catalogs: BTreeMap::new(),
+                deadline: Duration::ZERO,
+                transport_budgeted: true,
+                source_projection: false,
+                #[cfg(windows)]
+                input_runtime: Default::default(),
+                session: Default::default(),
+                initialize_result: None,
+                protocol: "2025-11-25".into(),
+            },
+            phase: GatewayStartPhase::Cold,
+        })
+    }
+    /// Static source profile supplies Some(connect_timeout); OAuth supplies
+    /// None, retaining its independent HTTP and human-authorization budgets.
+    pub async fn initialize(&mut self, limit: Option<Duration>) -> Result<()> {
+        if self.phase != GatewayStartPhase::Cold {
+            return Err("gateway initialization phase invalid".into());
+        }
+        let deadline = limit
+            .map(|d| {
+                tokio::time::Instant::now()
+                    .checked_add(d)
+                    .ok_or("gateway phase deadline overflow")
+            })
+            .transpose()?;
+        self.phase = GatewayStartPhase::Failed;
+        if limit.is_some_and(|d| d.is_zero()) {
+            return Err("gateway phase deadline exceeded".into());
+        }
+        let result = gateway_until(deadline, self.gateway.initialize_remote()).await;
+        self.phase = if result.is_ok() {
+            GatewayStartPhase::Initialized
+        } else {
+            GatewayStartPhase::Failed
+        };
+        result
+    }
+    /// Source gateway publishes tools only after complete bounded discovery;
+    /// source static resource/prompt projection is the owning client's concern.
+    pub async fn discover_tools(&mut self, limit: Duration) -> Result<()> {
+        if self.phase != GatewayStartPhase::Initialized {
+            return Err("gateway discovery phase invalid".into());
+        }
+        let deadline = tokio::time::Instant::now()
+            .checked_add(limit)
+            .ok_or("gateway phase deadline overflow")?;
+        self.phase = GatewayStartPhase::Failed;
+        if limit.is_zero() {
+            return Err("gateway phase deadline exceeded".into());
+        }
+        let result = gateway_until(
+            Some(deadline),
+            self.gateway.discover_remote(&[("tools/list", "tools")]),
+        )
+        .await;
+        self.phase = if result.is_ok() {
+            GatewayStartPhase::Ready
+        } else {
+            GatewayStartPhase::Failed
+        };
+        result
+    }
+    /// Local gateway resources/prompts are fixed source declarations. Only tools
+    /// come from remote discovery; installing this does not issue remote calls.
+    pub fn install_source_projection(&mut self, catalogs: Catalogs) -> Result<()> {
+        if self.phase != GatewayStartPhase::Ready {
+            return Err("gateway projection before discovery".into());
+        }
+        for (method, catalog) in catalogs {
+            if method == "tools/list" {
+                return Err("gateway tool catalog override refused".into());
+            }
+            self.gateway.catalogs.insert(method, catalog);
+        }
+        let tools = crate::gateway_client::source_projection::tool_catalog(
+            self.gateway.catalogs["tools/list"].get(),
+        )?;
+        self.gateway.catalogs.insert("tools/list".into(), tools);
+        self.gateway.initialize_result = Some(
+            crate::gateway_client::source_projection::initialize_info(&self.gateway.protocol)?,
+        );
+        self.gateway.source_projection = true;
+        Ok(())
+    }
+    pub fn ready(&self) -> Result<RawGateway> {
+        if self.phase != GatewayStartPhase::Ready {
+            return Err("gateway is not ready".into());
+        }
+        Ok(self.gateway.clone())
+    }
+    pub async fn close(&mut self) -> Result<()> {
+        self.phase = GatewayStartPhase::Failed;
+        let result = self.gateway.close().await;
+        if result.is_ok() {
+            self.phase = GatewayStartPhase::Closed;
+        }
+        result
+    }
+}
+
 #[derive(Clone)]
 pub struct RawGateway {
-    http: reqwest::Client,
+    http: std::sync::Arc<dyn GatewayHttp>,
     url: String,
     token: Option<String>,
     pub catalogs: Catalogs,
     deadline: Duration,
+    transport_budgeted: bool,
+    source_projection: bool,
+    #[cfg(windows)]
+    input_runtime: crate::gateway_client::stdio_input_windows::InputRuntime,
     session: std::sync::Arc<std::sync::Mutex<Option<std::sync::Arc<String>>>>,
     initialize_result: Option<Box<RawValue>>,
     protocol: String,
 }
 impl RawGateway {
     async fn exchange(&self, body: &str) -> Result<Option<String>> {
-        let deadline = tokio::time::Instant::now() + self.deadline;
-        let mut request = self
-            .http
-            .post(&self.url)
-            .header("accept", "application/json, text/event-stream")
-            .header("content-type", "application/json")
-            .header("mcp-protocol-version", self.protocol.as_str())
-            .body(body.to_owned());
+        self.exchange_with_auth(body, GatewayAuthMode::Interactive)
+            .await
+    }
+    async fn exchange_with_auth(
+        &self,
+        body: &str,
+        auth: GatewayAuthMode,
+    ) -> Result<Option<String>> {
+        let deadline =
+            (!self.transport_budgeted).then(|| tokio::time::Instant::now() + self.deadline);
+        let mut headers = vec![
+            ("accept", "application/json, text/event-stream".into()),
+            ("content-type", "application/json".into()),
+            ("mcp-protocol-version", self.protocol.clone()),
+        ];
         if let Some(token) = &self.token {
-            request = request.bearer_auth(token);
+            headers.push(("authorization", format!("Bearer {token}")));
         }
         let attempted_session = self.session.lock().unwrap().clone();
         if let Some(session) = &attempted_session {
-            request = request.header("mcp-session-id", session.as_str());
+            headers.push(("mcp-session-id", session.to_string()));
         }
-        let mut response = tokio::time::timeout_at(deadline, request.send()).await??;
+        let mut response = gateway_until(
+            deadline,
+            self.http.open(GatewayHttpRequest {
+                auth,
+                method: reqwest::Method::POST,
+                url: self.url.clone(),
+                headers,
+                body: Some(body.to_owned()),
+            }),
+        )
+        .await?;
         if let Some(id) = response.headers().get("mcp-session-id") {
             let id = id.to_str()?.to_owned();
             let mut current = self.session.lock().unwrap();
@@ -1174,7 +1437,112 @@ impl RawGateway {
             validate_reply(&fields, expected.as_deref())?;
             Ok(Some(body))
         };
-        tokio::time::timeout_at(deadline, read).await?
+        gateway_until(deadline, read).await
+    }
+    async fn initialize_remote(&mut self) -> Result<()> {
+        let initialize=self.exchange(&json!({"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"ssx-native-proxy","version":"0.1.0"}}}).to_string()).await?.ok_or("remote initialize had no result")?;
+        let mut fields: BTreeMap<String, Box<RawValue>> = serde_json::from_str(&initialize)?;
+        if !fields.contains_key("result") || fields.contains_key("error") {
+            return Err("remote initialize failed".into());
+        }
+        self.initialize_result = fields.remove("result");
+        let initialize_fields: BTreeMap<String, Box<RawValue>> = serde_json::from_str(
+            self.initialize_result
+                .as_ref()
+                .ok_or("initialize result")?
+                .get(),
+        )?;
+        let version: String = serde_json::from_str(
+            initialize_fields
+                .get("protocolVersion")
+                .ok_or("remote protocol version missing")?
+                .get(),
+        )?;
+        if !["2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"].contains(&version.as_str()) {
+            return Err("unsupported remote initialize protocol version".into());
+        }
+        self.protocol = version;
+        self.exchange(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+            .await?;
+        Ok(())
+    }
+    async fn discover_remote(&mut self, catalogs: &[(&str, &str)]) -> Result<()> {
+        let mut budget = crate::gateway::DiscoveryBudget::default();
+        for &(method, field) in catalogs {
+            let mut items: Vec<Box<RawValue>> = Vec::new();
+            let mut names = HashSet::new();
+            let mut cursors = HashSet::new();
+            let mut cursor = None;
+            let mut complete = false;
+            for page in 0..128 {
+                let params = cursor
+                    .as_ref()
+                    .map(|c| json!({"cursor":c}))
+                    .unwrap_or(json!({}));
+                let body = self
+                    .exchange(
+                        &json!({"jsonrpc":"2.0","id":page+1,"method":method,"params":params})
+                            .to_string(),
+                    )
+                    .await?
+                    .ok_or("empty catalog response")?;
+                budget.charge(body.len())?;
+                let envelope: BTreeMap<String, Box<RawValue>> = serde_json::from_str(&body)?;
+                if envelope.contains_key("error") {
+                    return Err("remote catalog error".into());
+                }
+                let result: BTreeMap<String, Box<RawValue>> = serde_json::from_str(
+                    envelope
+                        .get("result")
+                        .ok_or("catalog result missing")?
+                        .get(),
+                )?;
+                let rows: Vec<Box<RawValue>> = serde_json::from_str(
+                    result.get(field).ok_or("catalog entries missing")?.get(),
+                )?;
+                for row in rows {
+                    let data: BTreeMap<String, Box<RawValue>> = serde_json::from_str(row.get())?;
+                    let identity = crate::gateway::catalog_identity(method)?;
+                    let name: String = serde_json::from_str(
+                        data.get(identity).ok_or("catalog identity missing")?.get(),
+                    )?;
+                    if !names.insert(name) {
+                        return Err("duplicate catalog name".into());
+                    }
+                    items.push(row);
+                    if items.len() > 4096 {
+                        return Err("catalog exceeds 4096 items".into());
+                    }
+                }
+                let next: Option<String> = result
+                    .get("nextCursor")
+                    .map(|c| serde_json::from_str(c.get()))
+                    .transpose()?
+                    .flatten();
+                let Some(next) = next else {
+                    complete = true;
+                    break;
+                };
+                if !cursors.insert(next.clone()) {
+                    return Err("repeated catalog cursor".into());
+                }
+                cursor = Some(next);
+            }
+            if !complete {
+                return Err("catalog exceeds 128 pages".into());
+            }
+            let raw = RawValue::from_string(format!(
+                "{{{}:{}}}",
+                serde_json::to_string(field)?,
+                serde_json::to_string(&items)?
+            ))?;
+            self.catalogs.insert(method.into(), raw);
+        }
+        Ok(())
+    }
+    /// Raw upstream RPC for the owning source gateway projection.
+    pub async fn rpc(&self, body: &str) -> Result<Option<String>> {
+        self.exchange(body).await
     }
     pub async fn connect(url: String, token: Option<String>, deadline: Duration) -> Result<Self> {
         let parsed = reqwest::Url::parse(&url)?;
@@ -1188,49 +1556,74 @@ impl RawGateway {
             .redirect(reqwest::redirect::Policy::none())
             .build()?;
         let mut gateway = Self {
-            http,
+            http: std::sync::Arc::new(LegacyGatewayHttp(http)),
             url,
             token,
             catalogs: BTreeMap::new(),
             deadline,
+            transport_budgeted: false,
+            source_projection: false,
+            #[cfg(windows)]
+            input_runtime: Default::default(),
             session: Default::default(),
             initialize_result: None,
             protocol: "2025-11-25".into(),
         };
-        let startup=tokio::time::timeout(deadline,async {
-            let initialize=gateway.exchange(&json!({"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"ssx-native-proxy","version":"0.1.0"}}}).to_string()).await?.ok_or("remote initialize had no result")?;
-            let mut fields:BTreeMap<String,Box<RawValue>>=serde_json::from_str(&initialize)?;if !fields.contains_key("result") || fields.contains_key("error"){return Err("remote initialize failed".into());}
-            gateway.initialize_result=fields.remove("result");
-            let initialize_fields:BTreeMap<String,Box<RawValue>>=serde_json::from_str(gateway.initialize_result.as_ref().ok_or("initialize result")?.get())?;
-            let version:String=serde_json::from_str(initialize_fields.get("protocolVersion").ok_or("remote protocol version missing")?.get())?;
-            if !["2024-11-05","2025-03-26","2025-06-18","2025-11-25"].contains(&version.as_str()){return Err("unsupported remote initialize protocol version".into());}
-            gateway.protocol=version;
-            gateway.exchange(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#).await?;
-            let mut budget=crate::gateway::DiscoveryBudget::default();
-            for (method,field) in [("tools/list","tools"),("resources/list","resources"),("prompts/list","prompts"),("resources/templates/list","resourceTemplates")] {
-                let mut items:Vec<Box<RawValue>>=Vec::new();let mut names=HashSet::new();let mut cursors=HashSet::new();let mut cursor=None;let mut complete=false;
-                for page in 0..128 {
-                    let params=cursor.as_ref().map(|c|json!({"cursor":c})).unwrap_or(json!({}));
-                    let body=gateway.exchange(&json!({"jsonrpc":"2.0","id":page+1,"method":method,"params":params}).to_string()).await?.ok_or("empty catalog response")?;
-                    budget.charge(body.len())?;
-                    let envelope:BTreeMap<String,Box<RawValue>>=serde_json::from_str(&body)?;
-                    if envelope.contains_key("error"){return Err("remote catalog error".into());}
-                    let result:BTreeMap<String,Box<RawValue>>=serde_json::from_str(envelope.get("result").ok_or("catalog result missing")?.get())?;
-                    let rows:Vec<Box<RawValue>>=serde_json::from_str(result.get(field).ok_or("catalog entries missing")?.get())?;
-                    for row in rows {let data:BTreeMap<String,Box<RawValue>>=serde_json::from_str(row.get())?;let identity=crate::gateway::catalog_identity(method)?;let name:String=serde_json::from_str(data.get(identity).ok_or("catalog identity missing")?.get())?;if !names.insert(name){return Err("duplicate catalog name".into());}items.push(row);if items.len()>4096{return Err("catalog exceeds 4096 items".into());}}
-                    let next:Option<String>=result.get("nextCursor").map(|c|serde_json::from_str(c.get())).transpose()?.flatten();
-                    let Some(next)=next else{complete=true;break;};if !cursors.insert(next.clone()){return Err("repeated catalog cursor".into());}cursor=Some(next);
-                }
-                if !complete{return Err("catalog exceeds 128 pages".into());}
-                let raw=RawValue::from_string(format!("{{{}:{}}}",serde_json::to_string(field)?,serde_json::to_string(&items)?))?;gateway.catalogs.insert(method.into(),raw);
-            }
-            Ok::<(),crate::Error>(())
-        }).await.map_err(|e|->crate::Error{e.into()}).and_then(|v|v);
+        let startup = tokio::time::timeout(deadline, async {
+            gateway.initialize_remote().await?;
+            gateway
+                .discover_remote(&[
+                    ("tools/list", "tools"),
+                    ("resources/list", "resources"),
+                    ("prompts/list", "prompts"),
+                    ("resources/templates/list", "resourceTemplates"),
+                ])
+                .await?;
+            Ok::<(), crate::Error>(())
+        })
+        .await
+        .map_err(|e| -> crate::Error { e.into() })
+        .and_then(|v| v);
         if let Err(error) = startup {
             let _ = gateway.close().await;
             return Err(error);
         }
         Ok(gateway)
+    }
+    pub async fn stdio_owned(self, cancel: tokio_util::sync::CancellationToken) -> Result<()> {
+        // stdio() owns its SDK service. Cancellation is delivered through EOF
+        // below rather than dropping that service's waiting future.
+        let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();
+        let handler = RawForwarder {
+            gateway: self.clone(),
+            wire: wire.clone(),
+        };
+        #[cfg(any(unix, windows))]
+        {
+            #[cfg(unix)]
+            let mut input = crate::gateway_client::stdio_input::InputOwner::stdin()?;
+            #[cfg(windows)]
+            let mut input = self
+                .input_runtime
+                .stdin(&crate::gateway_client::resolver::install::current_input_image()?)?;
+            let result = stdio_handler_io(
+                handler,
+                std::sync::Arc::new(self.catalogs.clone()),
+                wire,
+                crate::output_limits::OutputLimits::HTTP,
+                cancel,
+                input.reader(),
+                tokio::io::stdout(),
+            )
+            .await;
+            let drained = input.close().await;
+            result.and(drained)
+        }
+        #[cfg(not(any(unix, windows)))]
+        {
+            let _ = (handler, wire, cancel);
+            Err("gateway cancellable OS input is not implemented for this platform".into())
+        }
     }
     pub async fn stdio(self) -> Result<()> {
         let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();
@@ -1258,27 +1651,60 @@ impl RawGateway {
         }
     }
     pub async fn close(&self) -> Result<()> {
-        let session = self.session.lock().unwrap().clone();
-        if let Some(session) = session {
-            let mut request = self
-                .http
-                .delete(&self.url)
-                .header("mcp-session-id", session.as_str())
-                .header("mcp-protocol-version", self.protocol.as_str());
-            if let Some(token) = &self.token {
-                request = request.bearer_auth(token);
+        #[cfg(windows)]
+        let input = self.input_runtime.close().await;
+        let session_result: Result<()> = (async {
+            let session = self.session.lock().unwrap().clone();
+            if let Some(session) = session {
+                let mut headers = vec![
+                    ("mcp-session-id", session.to_string()),
+                    ("mcp-protocol-version", self.protocol.clone()),
+                ];
+                if let Some(token) = &self.token {
+                    headers.push(("authorization", format!("Bearer {token}")));
+                }
+                // Final cleanup must reach the retained network/resolver join even
+                // when DELETE needs fresh DNS or the peer holds response headers.
+                // Match rmcp's five-second session-cleanup grace. Unlike rmcp's
+                // logged timeout, our existing fail-closed cleanup contract returns
+                // failure and retains the session identity for a possible retry.
+                let limit = if self.transport_budgeted {
+                    GATEWAY_SESSION_CLEANUP_TIMEOUT
+                } else {
+                    self.deadline
+                };
+                let deadline = Some(tokio::time::Instant::now() + limit);
+                let response = gateway_until(
+                    deadline,
+                    self.http.open(GatewayHttpRequest {
+                        auth: GatewayAuthMode::ExistingBearer,
+                        method: reqwest::Method::DELETE,
+                        url: self.url.clone(),
+                        headers,
+                        body: None,
+                    }),
+                )
+                .await?;
+                let status = response.status();
+                if status.is_success() || status == 404 {
+                    self.clear_closed_session(&session);
+                } else if status != 405 {
+                    return Err("remote session cleanup failed".into());
+                }
+                // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does
+                // not establish remote closure: retain identity for a later attempt.
             }
-            let response = tokio::time::timeout(self.deadline, request.send()).await??;
-            let status = response.status();
-            if status.is_success() || status == 404 {
-                self.clear_closed_session(&session);
-            } else if status != 405 {
-                return Err("remote session cleanup failed".into());
-            }
-            // Like rmcp, unsupported DELETE (405) is not a cleanup error. It does
-            // not establish remote closure: retain identity for a later attempt.
+            Ok(())
+        })
+        .await;
+        #[cfg(windows)]
+        {
+            input.and(session_result)
         }
-        Ok(())
+        #[cfg(not(windows))]
+        {
+            session_result
+        }
     }
 }
 
@@ -1314,6 +1740,15 @@ impl RawForwarder {
             .ok_or_else(|| {
                 rmcp::ErrorData::internal_error("original wire request missing", None)
             })?;
+        let request = if self.gateway.source_projection {
+            crate::gateway_client::source_projection::prepare_request(
+                &self.gateway.catalogs,
+                &request,
+            )
+            .map_err(|error| rmcp::ErrorData::invalid_params(error.to_string(), None))?
+        } else {
+            request
+        };
         // Retain the pending HTTP future until cancellation is delivered. Dropping
         // it first tears down the remote request's alias lease before the cancel
         // notification can correlate its original arbitrary-size ID.
@@ -1323,9 +1758,16 @@ impl RawForwarder {
             r=&mut exchange=>r.map_err(|_|rmcp::ErrorData::internal_error("remote transport unavailable",None))?.ok_or_else(||rmcp::ErrorData::internal_error("remote RPC response missing",None))?,
             _=context.ct.cancelled()=>{
                 let fields:BTreeMap<String,Box<RawValue>>=serde_json::from_str(&request).map_err(|e|rmcp::ErrorData::internal_error(e.to_string(),None))?;
-                if let Some(id)=fields.get("id"){let notification=format!("{{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\",\"params\":{{\"requestId\":{}}}}}",id.get());let _=self.gateway.exchange(&notification).await;}
+                if let Some(id)=fields.get("id"){let notification=format!("{{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\",\"params\":{{\"requestId\":{}}}}}",id.get());let _=self.gateway.exchange_with_auth(&notification, GatewayAuthMode::ExistingBearer).await;}
                 return Err(rmcp::ErrorData::internal_error("cancelled",None));
             }
+        };
+        let response = if self.gateway.source_projection {
+            crate::gateway_client::source_projection::project_reply(&request, &response).map_err(
+                |_| rmcp::ErrorData::internal_error("remote result projection failed", None),
+            )?
+        } else {
+            response
         };
         let fields: BTreeMap<String, Box<RawValue>> = serde_json::from_str(&response)
             .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
@@ -1392,27 +1834,102 @@ impl rmcp::ServerHandler for RawForwarder {
     }
     async fn call_tool(
         &self,
-        _: rmcp::model::CallToolRequestParams,
+        params: rmcp::model::CallToolRequestParams,
         c: rmcp::service::RequestContext<rmcp::RoleServer>,
     ) -> std::result::Result<rmcp::model::CallToolResponse, rmcp::ErrorData> {
-        self.forward::<rmcp::model::CallToolResult>(c)
-            .await
-            .map(Into::into)
+        if self.gateway.source_projection {
+            let catalog: BTreeMap<String, Box<RawValue>> =
+                serde_json::from_str(self.gateway.catalogs["tools/list"].get()).map_err(|_| {
+                    rmcp::ErrorData::internal_error("gateway catalog invalid", None)
+                })?;
+            let tools: Vec<BTreeMap<String, Box<RawValue>>> =
+                serde_json::from_str(catalog["tools"].get()).map_err(|_| {
+                    rmcp::ErrorData::internal_error("gateway catalog invalid", None)
+                })?;
+            let known = tools.iter().any(|tool| {
+                tool.get("name")
+                    .and_then(|name| serde_json::from_str::<String>(name.get()).ok())
+                    .is_some_and(|name| name == params.name)
+            });
+            if !known {
+                return Ok(rmcp::model::CallToolResult::error(vec![
+                    rmcp::model::ContentBlock::text(format!(
+                        "Unknown tool: {}",
+                        crate::gateway_client::source_projection::python_string_repr(&params.name)
+                            .map_err(|error| rmcp::ErrorData::internal_error(
+                                error.to_string(),
+                                None
+                            ))?
+                    )),
+                ])
+                .into());
+            }
+        }
+        match self.forward::<rmcp::model::CallToolResult>(c).await {
+            Ok(result) => Ok(result.into()),
+            Err(error) if self.gateway.source_projection && error.code.0 != -32021 => Ok(
+                rmcp::model::CallToolResult::error(vec![rmcp::model::ContentBlock::text(
+                    error.message.to_string(),
+                )])
+                .into(),
+            ),
+            Err(error) => Err(error),
+        }
     }
     async fn read_resource(
         &self,
-        _: rmcp::model::ReadResourceRequestParams,
+        params: rmcp::model::ReadResourceRequestParams,
         c: rmcp::service::RequestContext<rmcp::RoleServer>,
     ) -> std::result::Result<rmcp::model::ReadResourceResponse, rmcp::ErrorData> {
+        if self.gateway.source_projection
+            && !crate::gateway_client::source_projection::resource_allowed(&params.uri)
+        {
+            return Err(rmcp::ErrorData::invalid_params(
+                format!("Resource not found: {:?}", params.uri),
+                Some(json!({"uri":params.uri})),
+            ));
+        }
         self.forward::<rmcp::model::ReadResourceResult>(c)
             .await
             .map(Into::into)
     }
     async fn get_prompt(
         &self,
-        _: rmcp::model::GetPromptRequestParams,
+        params: rmcp::model::GetPromptRequestParams,
         c: rmcp::service::RequestContext<rmcp::RoleServer>,
     ) -> std::result::Result<rmcp::model::GetPromptResponse, rmcp::ErrorData> {
+        if self.gateway.source_projection
+            && !crate::gateway_client::source_projection::prompt_allowed(&params.name)
+        {
+            return Err(rmcp::ErrorData::invalid_params(
+                format!("Unknown prompt: {:?}", params.name),
+                None,
+            ));
+        }
+        if self.gateway.source_projection {
+            if params
+                .arguments
+                .as_ref()
+                .is_some_and(|args| args.values().any(|v| !v.is_string()))
+            {
+                return Err(rmcp::ErrorData::invalid_params(
+                    "prompt arguments must be strings",
+                    None,
+                ));
+            }
+            let arg = crate::gateway_client::source_projection::prompt_argument(&params.name)
+                .ok_or_else(|| rmcp::ErrorData::invalid_params("unknown prompt", None))?;
+            if params
+                .arguments
+                .as_ref()
+                .is_none_or(|args| !args.contains_key(arg))
+            {
+                return Err(rmcp::ErrorData::internal_error(
+                    format!("Missing required arguments: {arg}"),
+                    None,
+                ));
+            }
+        }
         self.forward::<rmcp::model::GetPromptResult>(c)
             .await
             .map(Into::into)
@@ -1831,11 +2348,15 @@ mod close_tests {
                 let _ = socket.write_all(body.as_bytes()).await;
             });
             let gateway = RawGateway {
-                http: reqwest::Client::new(),
+                http: std::sync::Arc::new(LegacyGatewayHttp(reqwest::Client::new())),
                 url: format!("http://{address}/mcp"),
                 token: None,
                 catalogs: BTreeMap::new(),
                 deadline: Duration::from_secs(1),
+                transport_budgeted: false,
+                source_projection: false,
+                #[cfg(windows)]
+                input_runtime: Default::default(),
                 session: Default::default(),
                 initialize_result: None,
                 protocol: String::new(),
@@ -1856,11 +2377,15 @@ mod close_tests {
     #[test]
     fn stale_close_cannot_clear_replaced_session_generation() {
         let gateway = RawGateway {
-            http: reqwest::Client::new(),
+            http: std::sync::Arc::new(LegacyGatewayHttp(reqwest::Client::new())),
             url: String::new(),
             token: None,
             catalogs: BTreeMap::new(),
             deadline: Duration::from_secs(1),
+            transport_budgeted: false,
+            source_projection: false,
+            #[cfg(windows)]
+            input_runtime: Default::default(),
             session: Default::default(),
             initialize_result: None,
             protocol: String::new(),
@@ -1878,6 +2403,7 @@ mod close_tests {
         // Repeated completion is harmless.
         gateway.clear_closed_session(&replacement);
     }
+    #[cfg(feature = "server")]
     #[tokio::test]
     async fn late_post_session_header_does_not_resurrect_closed_identity() -> Result<()> {
         use axum::{response::IntoResponse, routing::post};

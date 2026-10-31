@@ -1,0 +1,264 @@
+"""Generate reviewed static IDNA17 + CPython16 data from retained literal inputs.
+
+Only parses source text and Python AST literals. Does not import or execute idna,
+CPython, httpx, or any application/backend module.
+"""
+import ast
+import hashlib
+import re
+from pathlib import Path
+HERE = Path(__file__).resolve().parent
+IDNA = HERE / 'inputs/idnadata.py'
+UCD = HERE.parent / 'idna/inputs/UnicodeData-16.0.0.txt'
+DB = HERE / 'inputs/unicodedata_db.h'
+NAME_DB = HERE / 'inputs/unicodename_db.h'
+NAME_SOURCE = HERE / 'inputs/unicodedata.c'
+OUT = HERE.parent.parent / 'src/idna2008_data.rs'
+
+def sha(path):
+    h = hashlib.sha256()
+    with path.open('rb') as f:
+        for block in iter(lambda: f.read(1 << 20), b''):
+            h.update(block)
+    return h.hexdigest()
+
+def ranges(points):
+    points = sorted(points)
+    if not points:
+        return []
+    out = []
+    start = prev = points[0]
+    for cp in points[1:]:
+        if cp == prev + 1:
+            prev = cp
+        else:
+            out.append((start, prev + 1))
+            start = prev = cp
+    out.append((start, prev + 1))
+    return out
+
+def property_ranges(values):
+    out = []
+    for cp, value in sorted(values.items()):
+        if out and out[-1][1] == cp and (out[-1][2] == value):
+            out[-1] = (out[-1][0], cp + 1, value)
+        else:
+            out.append((cp, cp + 1, value))
+    return out
+
+def decode_idna():
+    tree = ast.parse(IDNA.read_text())
+    env = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            try:
+                env[node.targets[0].id] = ast.literal_eval(node.value)
+            except (ValueError, TypeError):
+                pass
+    if not env['__version__'] == '17.0.0':
+        raise RuntimeError('literal source validation failed')
+
+    def dec(vals):
+        pairs = sorted(((v >> 32, v & 4294967295) for v in vals))
+        if not all((a < b for a, b in pairs)):
+            raise RuntimeError('literal source validation failed')
+        if not all((pairs[i][1] <= pairs[i + 1][0] for i in range(len(pairs) - 1))):
+            raise RuntimeError('literal source validation failed')
+        return pairs
+    tables = {}
+    for key, vals in env['codepoint_classes'].items():
+        tables['CLASS_' + key] = dec(vals)
+    for key, vals in env['scripts'].items():
+        tables['SCRIPT_' + key.upper()] = dec(vals)
+    for key, vals in env['joining_types'].items():
+        tables['JOINING_' + key] = dec(vals)
+    return tables
+
+def parse_c_array(name, path=DB):
+    text = path.read_text()
+    m = re.search('\\b' + re.escape(name) + '\\s*\\[\\s*\\]\\s*=\\s*\\{(.*?)\\};', text, re.S)
+    if not m:
+        raise ValueError('missing C array ' + name)
+    return [int(x) for x in re.findall('(?<![A-Za-z_])\\d+', re.sub('/\\*.*?\\*/|//[^\\n]*', '', m.group(1), flags=re.S))]
+
+def parse_reindex(name):
+    text = DB.read_text()
+    m = re.search('\\b' + re.escape(name) + '\\s*\\[\\s*\\]\\s*=\\s*\\{(.*?)\\};', text, re.S)
+    if not m:
+        raise ValueError('missing C array ' + name)
+    return [tuple(map(int, x)) for x in re.findall('\\{\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\}', m.group(1))]
+
+def decode_compositions():
+    first = parse_reindex('nfc_first')
+    last = parse_reindex('nfc_last')
+    ci = parse_c_array('comp_index')
+    cd = parse_c_array('comp_data')
+    comp_shift = int(re.search('#define\\s+COMP_SHIFT\\s+(\\d+)', DB.read_text()).group(1))
+    total_last = int(re.search('#define\\s+TOTAL_LAST\\s+(\\d+)', DB.read_text()).group(1))
+    if not (comp_shift == 2 and total_last == 72):
+        raise RuntimeError('literal source validation failed')
+
+    def index_map(rows):
+        result = {}
+        for start, count, idx in rows:
+            if start == 0:
+                break
+            for delta in range(count + 1):
+                result[start + delta] = idx + delta
+        return result
+    f_map, l_map = (index_map(first), index_map(last))
+    result = []
+    for cp1, fidx in f_map.items():
+        for cp2, lidx in l_map.items():
+            ix = fidx * total_last + lidx
+            slot = ci[ix >> comp_shift]
+            composite = cd[(slot << comp_shift) + (ix & (1 << comp_shift) - 1)]
+            if composite:
+                result.append((cp1, cp2, composite))
+    result.sort()
+    if not len({(a, b) for a, b, _ in result}) == len(result):
+        raise RuntimeError('literal source validation failed')
+    if not all((0 < a <= 1114111 and 0 < b <= 1114111 and (0 < c <= 1114111) for a, b, c in result)):
+        raise RuntimeError('literal source validation failed')
+    return result
+
+def decode_name_membership():
+    """Mirror CPython name() membership without decoding any name strings."""
+    db = NAME_DB.read_text()
+    shift = int(re.search('#define\\s+DAWG_CODEPOINT_TO_POS_SHIFT\\s+(\\d+)', db).group(1))
+    missing = int(re.search('#define\\s+DAWG_CODEPOINT_TO_POS_NOTFOUND\\s+(\\d+)', db).group(1))
+    idx1 = parse_c_array('dawg_codepoint_to_pos_index1', NAME_DB)
+    idx2 = parse_c_array('dawg_codepoint_to_pos_index2', NAME_DB)
+    aliases_start = int(re.search('aliases_start\\s*=\\s*(0x[0-9a-fA-F]+|\\d+)', db).group(1), 0)
+    aliases_end = int(re.search('aliases_end\\s*=\\s*(0x[0-9a-fA-F]+|\\d+)', db).group(1), 0)
+    seq_start = int(re.search('named_sequences_start\\s*=\\s*(0x[0-9a-fA-F]+|\\d+)', db).group(1), 0)
+    seq_end = int(re.search('named_sequences_end\\s*=\\s*(0x[0-9a-fA-F]+|\\d+)', db).group(1), 0)
+    ranges = [tuple(map(lambda x: int(x, 0), row)) for row in re.findall('\\{\\s*(0x[0-9a-fA-F]+|\\d+)\\s*,\\s*(0x[0-9a-fA-F]+|\\d+)\\s*,\\s*(\\d+)\\s*\\}', re.search('derived_name_ranges\\[\\]\\s*=\\s*\\{(.*?)\\};', db, re.S).group(1))]
+    found = set()
+    for cp in range(1114112):
+        if aliases_start <= cp < aliases_end or seq_start <= cp < seq_end:
+            continue
+        prefixid = -1
+        for first, last, value in ranges:
+            if cp < first:
+                break
+            if cp <= last:
+                prefixid = value
+                break
+        if prefixid in (0, 1):
+            found.add(cp)
+        else:
+            block = idx1[cp >> shift]
+            offset = idx2[(block << shift) + (cp & (1 << shift) - 1)]
+            if offset != missing:
+                found.add(cp)
+    return found
+
+def decode_unicode_data():
+    props = {'BIDI': {}, 'CCC': {}, 'DECIMAL': {}}
+    mark_points, named_points, decomps = (set(), set(), {})
+    pending = None
+    for line in UCD.read_text().splitlines():
+        f = line.split(';')
+        cp, name, cat, ccc = (int(f[0], 16), f[1], f[2], int(f[3] or '0'))
+        bidi, decimal, decomp = (f[4], f[6], f[5])
+        if name.endswith(', First>'):
+            pending = (cp, name, cat, ccc, bidi, decimal, decomp)
+            continue
+        if name.endswith(', Last>'):
+            if not pending is not None:
+                raise RuntimeError('literal source validation failed')
+            lo, n0, c0, ccc0, bidi0, dec0, decomp0 = pending
+            if not name[:-len('Last>')] + 'First>' == n0:
+                raise RuntimeError('literal source validation failed')
+            if not (c0, ccc0, bidi0, dec0, decomp0) == (cat, ccc, bidi, decimal, decomp):
+                raise RuntimeError('literal source validation failed')
+            span = range(lo, cp + 1)
+            display_name = n0[1:-len(', First>')]
+            if display_name == 'CJK Ideograph' or display_name.startswith('CJK Ideograph Extension'):
+                named_points.update(span)
+            if cat.startswith('M'):
+                mark_points.update(span)
+            if bidi:
+                props['BIDI'].update(((x, bidi) for x in span))
+            if ccc:
+                props['CCC'].update(((x, ccc) for x in span))
+            if decimal:
+                props['DECIMAL'].update(((x, int(decimal)) for x in span))
+            pending = None
+            continue
+        if name.startswith('<'):
+            continue
+        if name:
+            named_points.add(cp)
+        if cat.startswith('M'):
+            mark_points.add(cp)
+        if bidi:
+            props['BIDI'][cp] = bidi
+        if ccc:
+            props['CCC'][cp] = ccc
+        if decimal:
+            props['DECIMAL'][cp] = int(decimal)
+        if decomp and (not decomp.startswith('<')):
+            decomps[cp] = tuple((int(x, 16) for x in decomp.split()))
+    if not pending is None:
+        raise RuntimeError('literal source validation failed')
+    named_points.update(range(44032, 55204))
+    return (props, mark_points, named_points, decomps)
+
+def hx(x):
+    return f'0x{x:X}'
+
+def emit(name, vals):
+    body = ',\n'.join((f'    Range {{ start: {hx(a)}, end: {hx(b)} }}' for a, b in vals))
+    return f'pub const {name}: &[Range] = &[\n{body}\n];\n'
+
+def emit_prop(name, vals, string=False):
+    body = ',\n'.join((f"""    PropertyRange {{ start: {hx(a)}, end: {hx(b)}, value: {(f'"{v}"' if string else v)} }}""" for a, b, v in vals))
+    return f"""pub const {name}: &[PropertyRange<{("&'static str" if string else 'u8')}>] = &[\n{body}\n];\n"""
+
+def main():
+    tables = decode_idna()
+    props, marks, ucd_named, decomps = decode_unicode_data()
+    named = decode_name_membership()
+    ucd_name_delta = ucd_named.symmetric_difference(named)
+    compositions = decode_compositions()
+    if not all((decomps.get(cp) == (a, b) for a, b, cp in compositions)):
+        raise RuntimeError('literal source validation failed')
+    visiting, depths = (set(), {})
+
+    def depth(cp):
+        if cp in depths:
+            return depths[cp]
+        if cp in visiting:
+            raise ValueError('decomposition cycle')
+        visiting.add(cp)
+        seq = decomps.get(cp, ())
+        value = 0 if not seq else 1 + max((depth(child) for child in seq))
+        visiting.remove(cp)
+        depths[cp] = value
+        return value
+    max_depth = max((depth(cp) for cp in decomps), default=0)
+    decomp_points, decomp_index = ([], [])
+    for cp, seq in sorted(decomps.items()):
+        decomp_index.append((cp, len(decomp_points), len(seq)))
+        decomp_points.extend(seq)
+    out = ['// Generated from pinned IDNA 17.0 literals and CPython/UCD 16.0 static data.\n', f'// IDNA literals SHA-256: {sha(IDNA)}\n', f'// UnicodeData 16 SHA-256: {sha(UCD)}\n', f'// CPython unicodedata_db.h SHA-256: {sha(DB)}\n', f'// CPython unicodename_db.h SHA-256: {sha(NAME_DB)}\n', '#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct Range { pub start: u32, pub end: u32 }\n', '#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct PropertyRange<T> { pub start: u32, pub end: u32, pub value: T }\n', '#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct Decomposition { pub point: u32, pub offset: usize, pub len: usize }\n', '#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct Composition { pub first: u32, pub second: u32, pub result: u32 }\n']
+    for n, vals in tables.items():
+        out.append(emit(n, vals))
+    out.append(emit_prop('BIDI', property_ranges(props['BIDI']), True))
+    out.append(emit_prop('CCC', property_ranges(props['CCC'])))
+    out.append(emit_prop('DECIMAL', property_ranges(props['DECIMAL'])))
+    out.append(emit('MARKS', ranges(marks)))
+    out.append(emit('NAMED', ranges(named)))
+    out.append('pub const DECOMPOSITIONS: &[Decomposition] = &[\n' + ',\n'.join((f'    Decomposition {{ point: {hx(cp)}, offset: {off}, len: {ln} }}' for cp, off, ln in decomp_index)) + '\n];\n')
+    out.append('pub const DECOMPOSITION_POINTS: &[u32] = &[\n' + '\n'.join(('    ' + ', '.join((hx(x) for x in decomp_points[i:i + 10])) + ',' for i in range(0, len(decomp_points), 10))) + '\n];\n')
+    out.append('pub const COMPOSITIONS: &[Composition] = &[\n' + ',\n'.join((f'    Composition {{ first: {hx(a)}, second: {hx(b)}, result: {hx(c)} }}' for a, b, c in compositions)) + '\n];\n')
+    OUT.write_text('\n'.join(out))
+    print(f'output={OUT} bytes={OUT.stat().st_size} sha256={sha(OUT)}')
+    print('literal counts:', {k: len(v) for k, v in tables.items()})
+    print('CPython16 property ranges:', {k: len(property_ranges(v)) for k, v in props.items()}, 'MARKS', len(ranges(marks)), 'NAMED', len(ranges(named)))
+    print('name_membership=', len(named), 'UCD_vs_CPython_name_membership_differences=', len(ucd_name_delta), 'first_differences=', [f'U+{x:04X}' for x in sorted(ucd_name_delta)[:12]])
+    print('decompositions=', len(decomp_index), 'decomposition_points=', len(decomp_points), 'compositions=', len(compositions), 'max_recursive_decomposition_depth=', max_depth)
+if __name__ == '__main__':
+    main()

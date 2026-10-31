@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "T07_CI_EXACT_PATH_DEPENDENCY_VERSION_SUCCESSOR",
+  "source_parent": "ace46808a94fa56dd7b5a543a770f40383b8269f",
+  "scope": "The public Reqwest local path edge explicitly requires the already selected ssx-source-codecs 0.1.0. No runtime source, feature, lock record, original archive or historical patch changes.",
+  "qualification": "source custody only; native/hosted checks are separate",
+  "prior": {
+    "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
+    "bytes": 14131,
+    "mode": "0o644",
+    "sha256": "64a920d3c09f9ffc0aba0f9f437bf7f0490e438971ab2c0102181ec1262850bc"
+  },
+  "current": {
+    "path": "vendor/ssx-http-source/reqwest/Cargo.toml",
+    "bytes": 14150,
+    "mode": "0o644",
+    "sha256": "0552db576a6950355c3c6a4eca3dbd3915765b54cae1c8f620245bb6f64f2c4a"
+  },
+  "inverse": {
+    "at": 14041,
+    "remove_utf8": "version = \"=0.1.0\"\n",
+    "insert_utf8": ""
+  },
+  "current_reqwest_tree": {
+    "root": "vendor/ssx-http-source/reqwest",
+    "file_count": 72,
+    "sha256": "2913c13a335c07c847350874193f79401fda880b3000a6d4146a433ba3e4819f",
+    "algorithm": "sorted raw UTF-8 relative path + NUL + lowercase SHA256 + LF"
+  },
+  "historical_documents_unchanged": [
+    {
+      "path": "vendor/ssx-http-source/PROVENANCE.json",
+      "sha256": "ff631b467b301a20f49d84815f44727f364ee747f0d06ab7e34adf3b643e6987"
+    },
+    {
+      "path": "vendor/ssx-http-source/patches/reqwest.patch",
+      "sha256": "02b0281af77f932c9f03ce9ed49f94e9ed5b467a237ce5c4de82e8c5518e2e99"
+    },
+    {
+      "path": "vendor/ssx-http-source/current-stack-amendment-v1.json",
+      "sha256": "88ae25e149a121a701be53a85d31d5d6d4ec70e9401b0e4fd26bf2e6b3b4a43c"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-request-transport-amendment-v1.json",
+      "sha256": "7cf0b6610f50a943de9387399e12b0a36d746c3f4e26cc1f795f1758c6b5a95c"
+    }
+  ]
+}

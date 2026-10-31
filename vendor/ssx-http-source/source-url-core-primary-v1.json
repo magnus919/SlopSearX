@@ -1,0 +1,34 @@
+{
+  "schema": "T07_SOURCE_URL_CORE_PRIMARY_V1",
+  "inputs": [
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/httpx2_urlparse.py.txt",
+      "bytes": 18323,
+      "sha256": "5fefeb2c3b02f5030819cd455ebf435514d8b0b2c1fd239d6823ad176f834480"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpx2___urls.py.txt",
+      "bytes": 23184,
+      "sha256": "b76c19382b96b663fcbc79f0ab684b84b67f836637e8add2329534bbfdc9f026"
+    },
+    {
+      "path": "docs/rust-rewrite/t07/source-inputs/httpx2___client.py.txt",
+      "bytes": 75410,
+      "sha256": "fa3948aa66a9efd5edf097c6d13d927612c617328b43ceefc4bdd5e350aaa93b"
+    },
+    {
+      "path": "vendor/ssx-http-source/source-url-primary/urllib_parse3147.py.txt",
+      "bytes": 46980,
+      "sha256": "484b633b81d024da52649c7ff775c81b338de9f60585c94e5adfe335a27d9509"
+    }
+  ],
+  "urllib_attribution": "InstalledCPython3.14.7matches retainedoraclepatchlevel; exactfilehasnohistoricalperfilepin. Retainedmatchingversionprimarybytes; PSFlicense at crates/ssx-source-codecs/provenance/idna2008/inputs/CPython-LICENSE. No module execution/capture.",
+  "httpx_attribution": "Exact previouslyretained HTTPX2.13.1 source bytes; existing docs sourceinputs and reusedcodecinputpin receipts.",
+  "semantics": [
+    "HTTPX2ParseResult/quote/copy_with/normalize_path",
+    "HTTPX2URL.join\u2192CPython3.14.7urljoin onnormalizedsource strings",
+    "HTTPX2Client._merge_url rawpathconcat aftertrailing slash",
+    "httpcore2URL.origin portor default, priorprimaryaudit retainedseparately"
+  ],
+  "runtime_status": "SOURCE_ONLY_REVIEW_NOT_APPLIED_OR_COMPILED"
+}

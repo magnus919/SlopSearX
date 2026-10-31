@@ -1,0 +1,233 @@
+--- a/src/transport/auth.rs
++++ b/src/transport/auth.rs
+@@ -49,6 +49,10 @@
+     Follow,
+     /// Return the redirect response without following its location.
+     Stop,
++    /// Explicit source-provider rule: preserve method and stay within the
++    /// current origin (or its default-port HTTPS upgrade), at most five hops.
++    /// Only adapters implementing this rule may accept this variant.
++    SourceWithinOrigin,
+ }
+ 
+ /// A complete outbound HTTP operation requested by the OAuth implementation.
+@@ -145,6 +149,12 @@
+             let client = match redirect_policy {
+                 OAuthHttpRedirectPolicy::Follow => &self.follow_redirects,
+                 OAuthHttpRedirectPolicy::Stop => &self.stop_redirects,
++                OAuthHttpRedirectPolicy::SourceWithinOrigin => {
++                    return Err(
++                        "source OAuth redirect policy requires an explicitly injected adapter"
++                            .into(),
++                    );
++                }
+             };
+             let request = reqwest::Request::try_from(request)
+                 .map_err(|error| Box::new(error) as OAuthHttpClientError)?;
+@@ -1130,6 +1140,7 @@
+     http_client: Arc<dyn OAuthHttpClient>,
+     // Preserve legacy reqwest refresh behavior without weakening custom clients.
+     refresh_redirect_policy: OAuthHttpRedirectPolicy,
++    source_within_origin_redirects: bool,
+     metadata: Option<AuthorizationMetadata>,
+     oauth_client: Option<OAuthClient>,
+     credential_store: Arc<dyn CredentialStore>,
+@@ -1375,6 +1386,7 @@
+         let manager = Self {
+             http_client,
+             refresh_redirect_policy,
++            source_within_origin_redirects: false,
+             metadata: None,
+             oauth_client: None,
+             credential_store: Arc::new(InMemoryCredentialStore::new()),
+@@ -1393,6 +1405,19 @@
+         Ok(manager)
+     }
+ 
++    /// Select the source-provider redirect contract on every OAuth subrequest.
++    /// Call before discovery/registration/token work, using an injected adapter
++    /// which implements SourceWithinOrigin. Default SDK behavior stays unchanged.
++    pub fn use_source_within_origin_redirects(&mut self) {
++        self.source_within_origin_redirects = true;
++    }
++    fn oauth_redirect_policy(&self, normal: OAuthHttpRedirectPolicy) -> OAuthHttpRedirectPolicy {
++        if self.source_within_origin_redirects {
++            OAuthHttpRedirectPolicy::SourceWithinOrigin
++        } else {
++            normal
++        }
++    }
+     /// Set the scope upgrade configuration
+     pub fn set_scope_upgrade_config(&mut self, config: ScopeUpgradeConfig) {
+         self.scope_upgrade_config = config;
+@@ -1459,7 +1484,9 @@
+                         // A CIMD client ID is the client's metadata URL, so it is
+                         // portable across authorization servers — but the tokens
+                         // were minted by the previous AS and must not be reused.
+-                        tracing::warn!("authorization server issuer changed; discarding tokens but keeping portable CIMD client ID");
++                        tracing::warn!(
++                            "authorization server issuer changed; discarding tokens but keeping portable CIMD client ID"
++                        );
+                         self.credential_store
+                             .save(
+                                 StoredCredentials::new(
+@@ -1475,7 +1502,9 @@
+                         return Ok(false);
+                     }
+ 
+-                    tracing::warn!("authorization server issuer changed; clearing stored credentials bound to the previous issuer");
++                    tracing::warn!(
++                        "authorization server issuer changed; clearing stored credentials bound to the previous issuer"
++                    );
+                     self.credential_store.clear().await?;
+                     return Ok(false);
+                 }
+@@ -1764,7 +1793,7 @@
+             .http_client
+             .execute(OAuthHttpRequest::new(
+                 request,
+-                OAuthHttpRedirectPolicy::Follow,
++                self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow),
+             ))
+             .await
+         {
+@@ -2136,7 +2165,7 @@
+             .add_extra_param("resource", self.oauth_resource().await)
+             .request_async(&OAuth2HttpClient {
+                 client: self.http_client.as_ref(),
+-                redirect_policy: OAuthHttpRedirectPolicy::Stop,
++                redirect_policy: self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
+             })
+             .await
+         {
+@@ -2271,7 +2300,9 @@
+         // Refreshing with another client's stored token would put that token on a
+         // request authenticated as this client.
+         if stored_credentials.client_id != oauth_client.client_id().as_str() {
+-            tracing::warn!("stored credentials belong to a different client; reauthorization required");
++            tracing::warn!(
++                "stored credentials belong to a different client; reauthorization required"
++            );
+             return Err(AuthError::AuthorizationRequired);
+         }
+         let current_credentials = stored_credentials
+@@ -2298,7 +2329,7 @@
+         let mut token_result = match refresh_request
+             .request_async(&OAuth2HttpClient {
+                 client: self.http_client.as_ref(),
+-                redirect_policy: self.refresh_redirect_policy,
++                redirect_policy: self.oauth_redirect_policy(self.refresh_redirect_policy),
+             })
+             .await
+         {
+@@ -2964,6 +2995,22 @@
+     }
+ 
+     async fn discovery_get(&self, url: &Url) -> Result<HttpResponse, OAuthHttpClientError> {
++        if self.source_within_origin_redirects {
++            let request = oauth2::http::Request::builder()
++                .method("GET")
++                .uri(url.as_str())
++                .header(HEADER_MCP_PROTOCOL_VERSION, "2024-11-05")
++                .body(Vec::new())
++                .map_err(|error| Box::new(error) as OAuthHttpClientError)?;
++            // The injected source adapter owns the entire five-hop rule. Do
++            // not apply the SDK's independent discovery loop a second time.
++            return self
++                .discovery_request(OAuthHttpRequest::new(
++                    request,
++                    OAuthHttpRedirectPolicy::SourceWithinOrigin,
++                ))
++                .await;
++        }
+         let mut current_url = url.clone();
+         for _ in 0..MAX_OAUTH_DISCOVERY_REDIRECTS {
+             let request = oauth2::http::Request::builder()
+@@ -9644,3 +9691,87 @@
+         assert!(store.lock.try_lock().is_ok());
+     }
+ }
++
++#[cfg(test)]
++mod source_redirect_profile_tests {
++    use super::*;
++    use std::sync::Mutex;
++    #[derive(Default)]
++    struct Recording {
++        policies: Mutex<Vec<OAuthHttpRedirectPolicy>>,
++    }
++    impl OAuthHttpClient for Recording {
++        fn execute(&self, request: OAuthHttpRequest) -> OAuthHttpClientFuture<'_> {
++            Box::pin(async move {
++                self.policies.lock().unwrap().push(request.redirect_policy);
++                let path = request.request.uri().path();
++                let (status, body) = if path == "/register" {
++                    (
++                        200,
++                        br#"{"client_id":"source-client","token_endpoint_auth_method":"none"}"#
++                            .to_vec(),
++                    )
++                } else if path == "/token" {
++                    (200,br#"{"access_token":"source-access","token_type":"bearer","refresh_token":"source-refresh"}"#.to_vec())
++                } else {
++                    (404, vec![])
++                };
++                Ok(oauth2::http::Response::builder()
++                    .status(status)
++                    .body(body)?)
++            })
++        }
++    }
++    #[tokio::test]
++    async fn source_profile_is_explicit_and_reaches_discovery_registration_exchange_refresh() {
++        let http = Arc::new(Recording::default());
++        let mut manager = AuthorizationManager::new_with_oauth_http_client(
++            "http://source.invalid/mcp",
++            http.clone(),
++        )
++        .await
++        .unwrap();
++        assert_eq!(
++            manager.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
++            OAuthHttpRedirectPolicy::Stop
++        );
++        assert_eq!(
++            manager.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow),
++            OAuthHttpRedirectPolicy::Follow
++        );
++        manager.use_source_within_origin_redirects();
++        manager
++            .discovery_get(&Url::parse("http://source.invalid/metadata").unwrap())
++            .await
++            .unwrap();
++        manager.set_metadata(AuthorizationMetadata {
++            authorization_endpoint: "http://source.invalid/authorize".into(),
++            token_endpoint: "http://source.invalid/token".into(),
++            registration_endpoint: Some("http://source.invalid/register".into()),
++            ..Default::default()
++        });
++        manager
++            .register_client("source", "http://127.0.0.1:8765/callback", &[])
++            .await
++            .unwrap();
++        let url = Url::parse(&manager.get_authorization_url(&[]).await.unwrap()).unwrap();
++        let state = url
++            .query_pairs()
++            .find(|(k, _)| k == "state")
++            .unwrap()
++            .1
++            .into_owned();
++        manager
++            .exchange_code_for_token("source-code", &state)
++            .await
++            .unwrap();
++        manager.refresh_token().await.unwrap();
++        let policies = http.policies.lock().unwrap();
++        assert_eq!(policies.len(), 4);
++        assert!(
++            policies
++                .iter()
++                .all(|p| *p == OAuthHttpRedirectPolicy::SourceWithinOrigin)
++        );
++    }
++}

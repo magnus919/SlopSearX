@@ -112,6 +112,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         "unknown_schema_metadata_objects_and_refs_are_preserved_without_numeric_reinterpretation",
         "legacy_request_cancellation_releases_inflight_work_and_sessions",
         "real_stdio_subprocess_preserves_complete_contract_and_clean_shutdown",
+        "native_sdk_child_builder_captures_stderr_and_one_page_catalogs",
         "real_streamable_http_bearer_and_stateless_contract",
         "real_stdio_gateway_forwards_to_remote_and_owns_session",
         "real_legacy_sse_matches_observed_python_status_and_payloads",

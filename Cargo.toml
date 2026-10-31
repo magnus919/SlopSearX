@@ -1,6 +1,6 @@
 [workspace]
 members = ["crates/*"]
-exclude = ["vendor/expat", "vendor/libxml"]
+exclude = ["vendor/expat", "vendor/libxml", "vendor/ssx-http-source/httparse", "vendor/ssx-http-source/hyper", "vendor/ssx-http-source/hyper-util", "vendor/ssx-http-source/reqwest", "vendor/ssx-sdk-auth/rmcp", "vendor/ssx-windows-owner", "vendor/ssx-native-ip-text"]
 resolver = "3"
 
 [workspace.package]
@@ -40,12 +40,13 @@ ssx-source-codecs = { path = "crates/ssx-source-codecs" }
 ssx-owned-budget = { path = "crates/ssx-owned-budget" }
 ssx-publication = { path = "crates/ssx-publication" }
 ssx-json = { path = "crates/ssx-json" }
+ssx-source-json = { path = "crates/ssx-source-json" }
 ssx-domain = { path = "crates/ssx-domain" }
 ssx-wire = { path = "crates/ssx-wire" }
 ssx-application = { path = "crates/ssx-application" }
 ssx-infra = { path = "crates/ssx-infra" }
 ssx-http = { path = "crates/ssx-http" }
-ssx-mcp = { path = "crates/ssx-mcp" }
+ssx-mcp = { path = "crates/ssx-mcp", default-features = false }
 ssx-config = { path = "crates/ssx-config" }
 ssx-registry = { path = "crates/ssx-registry" }
 
@@ -54,3 +55,11 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 all = "warn"
+
+# Explicit T07 reviewed HTTP/OAuth source composition.
+[patch.crates-io]
+httparse = { path = "vendor/ssx-http-source/httparse" }
+hyper = { path = "vendor/ssx-http-source/hyper" }
+hyper-util = { path = "vendor/ssx-http-source/hyper-util" }
+reqwest = { path = "vendor/ssx-http-source/reqwest" }
+rmcp = { path = "vendor/ssx-sdk-auth/rmcp" }

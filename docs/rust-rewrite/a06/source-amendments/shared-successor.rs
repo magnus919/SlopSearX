@@ -7,8 +7,12 @@ mod a13_header_layout_successor;
 #[path = "post-a06-generation.rs"]
 mod post_a06_generation;
 pub(crate) use post_a06_generation::native_search;
+#[path = "../../t07/source-amendments/main-isolation-current.rs"]
+pub(crate) mod main_isolation_current;
 #[path = "real-clock-successor.rs"]
 mod real_clock_successor;
+#[path = "../../t07/source-amendments/a06-shared-material-successor.rs"]
+mod t07_source_successor;
 #[path = "w07-evidence-successor.rs"]
 pub(crate) mod w07_evidence_successor;
 #[path = "../../w07/source-amendments/main_successor.rs"]
@@ -327,6 +331,7 @@ fn material(row: &Value, raw: &[u8], mode: &str) -> Result<(), String> {
         ),
     )
 }
+
 fn read(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     if let Some(prior) = post_a06_generation::historical(root, row)? {
         return Ok(prior);
@@ -574,7 +579,139 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+// The A04 runtime command now executes the relocated parser crate. Only this
+// frozen A06 proof operand receives its exact original command spelling.
+fn a04_relocation_frame(
+    expected: &Value,
+    physical: &[u8],
+    mode: &str,
+    inverse: &Value,
+) -> Result<Vec<u8>, String> {
+    need(
+        *expected
+            == json!({"bytes":17516,"git_blob":"f2bef0f215fcc83614f2b6259470cc16673d5e5b","mode":"0644","path":"crates/xtask/src/a04.rs","sha256":"7b254744ad789c3e24f325880b03b884e696fdb6657515e6460977c129dea3e1"})
+            && mode == "0644"
+            && physical.len() == 17522
+            && digest(physical)
+                == "a428fa3644bc92511de13d5e9344a4f14015e2f37ffc380e45e5c108e08501f3",
+        "A04 exact relocated proof caller/current differs",
+    )?;
+    need(
+        *inverse
+            == json!([{"at":9279,"remove_utf8":"\"ssx-source-json\"","insert_utf8":"\"ssx-infra\""}]),
+        "A04 exact relocated command inverse differs",
+    )?;
+    let prior = edits(physical, inverse)?;
+    material(expected, &prior, "0644")?;
+    Ok(prior)
+}
+fn a04_relocation_operand(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    let file = root.join("crates/xtask/src/a04.rs");
+    let metadata = fs::symlink_metadata(&file).map_err(|e| e.to_string())?;
+    need(
+        metadata.is_file() && !metadata.file_type().is_symlink(),
+        "A04 proof source must be regular",
+    )?;
+    let physical = fs::read(&file).map_err(|e| e.to_string())?;
+    let inverse =
+        json!([{"at":9279,"remove_utf8":"\"ssx-source-json\"","insert_utf8":"\"ssx-infra\""}]);
+    let prior = a04_relocation_frame(expected, &physical, &permissions(&file)?, &inverse)?;
+    let git = std::process::Command::new("git")
+        .args([
+            "cat-file",
+            "blob",
+            "f2bef0f215fcc83614f2b6259470cc16673d5e5b",
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        git.status.success() && git.stdout == prior,
+        "A04 original proof Git blob differs",
+    )?;
+    Ok(prior)
+}
+#[cfg(test)]
+fn a04_relocation_controls(root: &Path) -> Result<(), String> {
+    let doc = load(root)?;
+    let claim = &source(&doc, "crates/xtask/src/a04.rs")?["current"];
+    let physical = fs::read(root.join("crates/xtask/src/a04.rs")).map_err(|e| e.to_string())?;
+    let inverse =
+        json!([{"at":9279,"remove_utf8":"\"ssx-source-json\"","insert_utf8":"\"ssx-infra\""}]);
+    let prior = a04_relocation_operand(root, claim)?;
+    let scoped_current = &source(&doc, "crates/xtask/src/a04.rs")?["current"];
+    need(
+        a04_scoped_current(root, scoped_current)? == prior,
+        "A04 derived scoped current positive differs",
+    )?;
+    for key in ["path", "sha256", "bytes", "git_blob", "mode"] {
+        let mut bad = scoped_current.clone();
+        bad[key] = json!("unlisted");
+        need(
+            a04_scoped_current(root, &bad).is_err(),
+            "A04 derived scoped caller mutation accepted",
+        )?;
+    }
+    need(
+        a04_scoped_current(root, &source(&doc, "crates/xtask/src/a04.rs")?["baseline"]).is_err(),
+        "A04 frozen baseline accepted as derived current",
+    )?;
+    need(
+        a04_relocation_frame(claim, &physical, "0644", &inverse)? == prior,
+        "A04 relocation paired positive differs",
+    )?;
+    for key in ["path", "sha256", "bytes", "git_blob", "mode"] {
+        let mut bad = claim.clone();
+        bad[key] = json!("unlisted");
+        need(
+            a04_relocation_frame(&bad, &physical, "0644", &inverse).is_err(),
+            "A04 wrong relocation caller accepted",
+        )?;
+    }
+    need(
+        a04_relocation_frame(claim, &physical, "0600", &inverse).is_err(),
+        "A04 wrong physical mode accepted",
+    )?;
+    let mut changed = physical.clone();
+    changed.push(0);
+    for bad in [changed, prior] {
+        need(
+            a04_relocation_frame(claim, &bad, "0644", &inverse).is_err(),
+            "A04 altered/old-as-physical accepted",
+        )?;
+    }
+    for key in ["at", "remove_utf8", "insert_utf8"] {
+        let mut bad = inverse.clone();
+        bad[0][key] = if key == "at" {
+            json!(1)
+        } else {
+            json!("unlisted")
+        };
+        need(
+            a04_relocation_frame(claim, &physical, "0644", &bad).is_err(),
+            "A04 changed inverse span accepted",
+        )?;
+    }
+    let mut duplicate = inverse.clone();
+    duplicate.as_array_mut().unwrap().push(inverse[0].clone());
+    for bad in [json!([]), duplicate] {
+        need(
+            a04_relocation_frame(claim, &physical, "0644", &bad).is_err(),
+            "A04 missing/extra inverse accepted",
+        )?;
+    }
+    Ok(())
+}
 fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if row["path"] == "crates/xtask/src/a04.rs"
+        && row["sha256"] == "7b254744ad789c3e24f325880b03b884e696fdb6657515e6460977c129dea3e1"
+    {
+        return a04_relocation_operand(root, row);
+    }
+
+    if let Some(proof) = main_isolation_current::a06_current_operand(root, row) {
+        return proof;
+    }
     if let Some(prior) = default_ca_fixture_operand(
         root,
         text(row, "path")?,
@@ -796,10 +933,13 @@ fn source<'a>(doc: &'a Value, path: &str) -> Result<&'a Value, String> {
 fn verify_transition(root: &Path, row: &Value) -> Result<(Vec<u8>, Vec<u8>), String> {
     let before = read(root, &row["archive"])?;
     let path = text(&row["current"], "path")?;
+    let selected_t07 = t07_source_successor::selected(path);
     let selected_child = real_clock_successor::selected(path);
     let selected_layout = path == a13_header_layout_successor::SOURCE;
     let selected_page_catalog = path == "crates/ssx-infra/tests/a09_catalog_media.rs";
-    let historical = if path == A13 {
+    let historical = if selected_t07 {
+        t07_source_successor::archived_prior(root, &row["current"])?
+    } else if path == A13 {
         a13_json_inventory_successor::archived_prior(root, &row["current"])?
     } else if selected_layout {
         a13_header_layout_successor::archived_prior(root, &row["current"])?
@@ -831,7 +971,9 @@ fn verify_transition(root: &Path, row: &Value) -> Result<(Vec<u8>, Vec<u8>), Str
         "0644",
         text(row, "edits_sha256")?,
     )?;
-    if path == A13 {
+    if selected_t07 {
+        t07_source_successor::prove_current(root, &row["current"], &historical)?;
+    } else if path == A13 {
         a13_json_inventory_successor::prove_current(root, &row["current"], &historical)?;
     } else if selected_layout {
         a13_header_layout_successor::prove_current(root, &row["current"], &historical)?;
@@ -944,6 +1086,35 @@ pub(crate) fn try_verify(
         page_proof_try_verify(root, container, container_sha, path, expected, bytes)
     {
         return Some(result);
+    }
+    const RELOCATED_HELPERS: [&str; 4] = [
+        "crates/ssx-infra/src/adapters/source_json.rs",
+        "crates/ssx-infra/src/adapters/source_json_accounting.rs",
+        "crates/ssx-infra/src/adapters/source_json_diagnostic.rs",
+        "crates/ssx-infra/src/adapters/source_json_future.rs",
+    ];
+    if container == "docs/rust-rewrite/a06/coverage.json" && RELOCATED_HELPERS.contains(&path) {
+        return Some((|| {
+            need(
+                container_sha == ARTIFACT_COVERAGE_SHA && bytes.is_none(),
+                "A06 exact relocated helper caller",
+            )?;
+            let raw = fs::read(root.join(container)).map_err(|e| e.to_string())?;
+            need(
+                digest(&raw) == ARTIFACT_COVERAGE_SHA,
+                "A06 frozen relocated helper container",
+            )?;
+            let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+            let index = RELOCATED_HELPERS
+                .iter()
+                .position(|p| *p == path)
+                .ok_or("A06 helper index")?;
+            need(
+                doc["artifacts"][51 + index] == json!({"path":path,"sha256":expected}),
+                "A06 exact frozen helper row",
+            )?;
+            main_isolation_current::a06_helper(root, path, expected)
+        })());
     }
     // O01's frozen row predates only W07's four Metrics forwarding methods.
     if container == "docs/rust-rewrite/o01/coverage.json"
@@ -1198,6 +1369,46 @@ pub(crate) fn validator_baseline(
     )?;
     Ok((row["baseline"].clone(), before))
 }
+/// PR1034 first validates its immutable baseline row, then compose_scoped
+/// derives this exact A06 current row. Keep that derived frame distinct from
+/// both the frozen baseline and today's relocated command.
+pub(crate) fn a04_scoped_current(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    need(
+        *expected
+            == json!({"bytes":17516,"git_blob":"f2bef0f215fcc83614f2b6259470cc16673d5e5b","mode":"0644","path":"crates/xtask/src/a04.rs","sha256":"7b254744ad789c3e24f325880b03b884e696fdb6657515e6460977c129dea3e1"}),
+        "A04 exact derived PR1034 current caller differs",
+    )?;
+    let doc = load(root)?;
+    let row = source(&doc, "crates/xtask/src/a04.rs")?;
+    need(
+        row["current"] == *expected,
+        "A04 fixed derived current relation differs",
+    )?;
+    let (_, current) = verify_transition(root, row)?;
+    material(expected, &current, "0644")?;
+    Ok(current)
+}
+/// A08's immutable UA proof consumes the exact A06 manifest predecessor only
+/// after the existing T07 successor has proved the actual current root bytes.
+// Used by xtask A08; this module is also included by standalone A13 tests.
+#[allow(dead_code)]
+pub(crate) fn user_agent_manifest_prior(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
+    need(
+        *expected
+            == json!({"path":"Cargo.toml","sha256":"d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3","bytes":1984,"mode":420}),
+        "A08 exact manifest caller differs",
+    )?;
+    let doc = load(root)?;
+    let row = source(&doc, "Cargo.toml")?;
+    let (_, prior) = verify_transition(root, row)?;
+    need(
+        row["current"]["sha256"] == expected["sha256"]
+            && row["current"]["bytes"] == expected["bytes"],
+        "A08 manifest predecessor relation differs",
+    )?;
+    material(&row["current"], &prior, "0644")?;
+    Ok(prior)
+}
 pub(crate) fn security_lock_baseline(
     root: &Path,
     supplied_current: &[u8],
@@ -1205,13 +1416,26 @@ pub(crate) fn security_lock_baseline(
     let doc = load(root)?;
     let row = source(&doc, "Cargo.lock")?;
     let (before, _) = verify_transition(root, row)?;
-    let actual = post_a06_generation::actual(root, &row["current"])?;
-    let supplied_current = w07_t02_joint::parent(
+    let actual = t07_source_successor::actual_bytes(root, &row["current"])?;
+    let t07_current = main_isolation_current::parent(
+        root,
+        "Cargo.lock",
+        Some(supplied_current),
+        main_isolation_current::Parent::T07,
+    )?;
+    // Prove the other normal-merge parent independently, in its original frame.
+    let t02_current = w07_t02_joint::parent(
         root,
         "Cargo.lock",
         supplied_current,
         w07_t02_joint::Parent::T02,
     )?;
+    need(
+        t02_current == post_a06_generation::actual(root, &row["current"])?,
+        "A06 normal-main lock parent proof differs",
+    )?;
+    let supplied_current = t07_source_successor::lock_parent_frame(root, &t07_current)?;
+
     need(
         supplied_current == actual,
         "A06 supplied lock differs from actual current",
@@ -1272,6 +1496,7 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    a04_relocation_controls(root)?;
     w07_test_dependency::controls(root)?;
     default_ca_fixture_controls(root)?;
     native_search::controls(root)?;
@@ -1279,6 +1504,8 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     a13_json_inventory_successor::controls(root)?;
     a13_qualification_successor::controls(root)?;
     real_clock_successor::controls(root)?;
+    main_isolation_current::controls(root)?;
+    t07_source_successor::controls(root)?;
     w07_evidence_successor::controls(root)?;
     let doc = load(root)?;
     frozen(root, &doc)?;
@@ -1422,12 +1649,19 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     )?;
     let lock = source(&doc, "Cargo.lock")?;
     let (before, _) = verify_transition(root, lock)?;
-    let expected = post_a06_generation::actual(root, &lock["current"])?;
     let actual = fs::read(root.join("Cargo.lock")).map_err(|e| e.to_string())?;
-    need(
-        w07_t02_joint::parent(root, "Cargo.lock", &actual, w07_t02_joint::Parent::T02)? == expected,
-        "A06 physical lock parent differs from canonical current proof",
+    let t07_current = main_isolation_current::parent(
+        root,
+        "Cargo.lock",
+        Some(&actual),
+        main_isolation_current::Parent::T07,
     )?;
+    need(
+        t07_source_successor::lock_parent_frame(root, &t07_current)?
+            == t07_source_successor::actual_bytes(root, &lock["current"])?,
+        "A06 physical lock T07 parent differs",
+    )?;
+
     security_lock_successor(root, &before, &actual)?;
     let mut wrong_baseline = before.clone();
     wrong_baseline.push(0);
@@ -1444,7 +1678,7 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         security_lock_successor(root, &before, &wrong_current)
             .err()
             .as_deref()
-            == Some("W07/T02 joint source: supplied bytes are not physical joint source"),
+            == Some("T07 main/isolation: supplied bytes are not physical current"),
         "A06 altered actual lock accepted",
     )?;
     for path in [
@@ -1950,6 +2184,18 @@ pub(crate) fn a13_header_layout_controls(root: &Path) -> Result<(), String> {
 
 pub(crate) fn a13_inventory_library_source(root: &Path, expected: &Value) -> Result<(), String> {
     a13_json_inventory_successor::library_source(root, expected)
+}
+
+/// Single immutable T06 opaque caller, with current T07 reconstruction and an
+/// independent exact default-owner byte invariant; no general material bypass.
+// Used by xtask T06; this module is also included by standalone A13 tests.
+#[allow(dead_code)]
+pub(crate) fn t07_opaque_material(
+    root: &Path,
+    expected: &Value,
+    actual: &[u8],
+) -> Result<(), String> {
+    t07_source_successor::t06_opaque_material(root, expected, actual)
 }
 
 pub(crate) fn verify_current_qualification(root: &Path, expected: &Value) -> Result<(), String> {

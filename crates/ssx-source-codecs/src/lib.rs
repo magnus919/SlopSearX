@@ -189,3 +189,12 @@ mod bounded_parameter;
 pub use bounded_parameter::{
     BoundedParameterError, lookup_http_encoding_bounded, strict_parameter_ascii_bounded,
 };
+
+/// Opt-in strict Python IDNA2008 profile; existing IDNA2003 remains unchanged.
+#[cfg(feature = "source-idna2008")]
+pub mod idna2008;
+#[cfg(feature = "source-idna2008")]
+mod idna2008_data;
+/// Pinned Python text operations for the opt-in source URL consumer.
+#[cfg(feature = "source-idna2008")]
+pub mod python_text;

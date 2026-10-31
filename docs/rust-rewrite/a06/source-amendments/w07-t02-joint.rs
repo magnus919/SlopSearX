@@ -4,6 +4,7 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 #[path = "../../snapshot-fixture-amendment/main-custody.rs"]
 mod snapshot_fixture_main;
+pub(crate) use snapshot_fixture_main::gateway_main_join as snapshot_helper_amendment;
 type Result<T> = std::result::Result<T, String>;
 #[derive(Clone, Copy)]
 pub(crate) enum Parent {
@@ -537,7 +538,12 @@ fn paired_manifest(root: &Path) -> Result<()> {
 }
 /// Only the five exact physical afterimages can yield either sealed parent.
 /// A parent supplied in place of actual current bytes is always rejected.
-pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -> Result<Vec<u8>> {
+pub(super) fn original_parent(
+    root: &Path,
+    path: &str,
+    supplied: &[u8],
+    parent: Parent,
+) -> Result<Vec<u8>> {
     let r = row(path)?;
     let (actual, mode) = read(root, r)?;
     need(
@@ -547,16 +553,75 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -
     if path == "Cargo.lock" {
         paired_manifest(root)?;
     }
-    let joint = if path == "crates/xtask/src/main.rs" {
-        snapshot_fixture_main::joint(root, &actual)?
-    } else if path == PAGE_SEARCH.path {
-        search_frame(&actual, mode, false)?
-    } else {
-        actual.clone()
-    };
-    let w07 = inverse(r, &joint, mode, &r.w07)?;
-    let t02 = inverse(r, &joint, mode, &r.t02)?;
+    let w07 = inverse(r, &actual, mode, &r.w07)?;
+    let t02 = inverse(r, &actual, mode, &r.t02)?;
     Ok(match parent {
+        Parent::W07 => w07,
+        Parent::T02 => t02,
+    })
+}
+fn canonical_input(root: &Path, path: &str, supplied: &[u8], mode: u32) -> Result<Vec<u8>> {
+    if [
+        "Cargo.lock",
+        "crates/xtask/src/main.rs",
+        "crates/xtask/src/a13.rs",
+    ]
+    .contains(&path)
+    {
+        let canonical = super::main_isolation_current::parent(
+            root,
+            path,
+            Some(supplied),
+            super::main_isolation_current::Parent::Main,
+        )?;
+        if path == "crates/xtask/src/main.rs" {
+            let snapshot = snapshot_fixture_main::joint(root, supplied)?;
+            need(
+                canonical == snapshot,
+                "gateway and snapshot proofs must agree on the exact common main frame",
+            )?;
+        }
+        Ok(canonical)
+    } else if path == PAGE_SEARCH.path {
+        search_frame(supplied, mode, false)
+    } else {
+        Ok(supplied.to_vec())
+    }
+}
+fn current_paired_manifest(root: &Path) -> Result<()> {
+    let accepted = super::main_isolation_current::parent(
+        root,
+        "crates/ssx-mcp/Cargo.toml",
+        None,
+        super::main_isolation_current::Parent::Main,
+    )?;
+    need(
+        accepted.len() == 1234
+            && sha(&accepted) == "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
+        "exact paired MCP manifest accepted parent",
+    )
+}
+/// Supplied bytes always mean physical current. Both older inverse frames are
+/// derived only after the finite normal-main/client-isolation proof succeeds.
+pub(crate) fn parent(
+    root: &Path,
+    path: &str,
+    supplied: &[u8],
+    selected: Parent,
+) -> Result<Vec<u8>> {
+    let r = row(path)?;
+    let (physical, mode) = read(root, r)?;
+    need(
+        supplied == physical,
+        "supplied bytes are not physical joint source",
+    )?;
+    let actual = canonical_input(root, path, &physical, mode)?;
+    if path == "Cargo.lock" {
+        current_paired_manifest(root)?;
+    }
+    let w07 = inverse(r, &actual, mode, &r.w07)?;
+    let t02 = inverse(r, &actual, mode, &r.t02)?;
+    Ok(match selected {
         Parent::W07 => w07,
         Parent::T02 => t02,
     })
@@ -610,22 +675,16 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         "current admission constants",
     )?;
     for r in ROWS {
-        let (actual, mode) = read(root, r)?;
-        let joint = if r.path == "crates/xtask/src/main.rs" {
-            snapshot_fixture_main::joint(root, &actual)?
-        } else if r.path == PAGE_SEARCH.path {
-            search_frame(&actual, mode, false)?
-        } else {
-            actual.clone()
-        };
+        let (physical, mode) = read(root, r)?;
+        let actual = canonical_input(root, r.path, &physical, mode)?;
         for (kind, p) in [(Parent::W07, &r.w07), (Parent::T02, &r.t02)] {
-            let prior = parent(root, r.path, &actual, kind)?;
+            let prior = parent(root, r.path, &physical, kind)?;
             need(
-                inverse(r, &joint, mode, p)? == prior,
-                "pure controls use the same authenticated logical joint frame",
+                inverse(r, &actual, mode, p)? == prior,
+                "pure controls use the same gateway canonical frame",
             )?;
             need(
-                parent_git_blob(root, r.path, &actual, kind)? == p.blob,
+                parent_git_blob(root, r.path, &physical, kind)? == p.blob,
                 "same proved parent Git frame",
             )?;
             let git = Command::new("git")
@@ -651,7 +710,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 parent(root, r.path, &prior, kind).is_err(),
                 "historical parent supplied as physical current",
             )?;
-            let mut changed = actual.clone();
+            let mut changed = physical.clone();
             changed.push(0);
             need(
                 parent(root, r.path, &changed, kind).is_err(),
@@ -659,7 +718,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             )?;
             for bad_mode in [0o600, 0o755, 0o4644] {
                 need(
-                    inverse(r, &joint, bad_mode, p).is_err(),
+                    inverse(r, &actual, bad_mode, p).is_err(),
                     "changed source mode",
                 )?;
             }
@@ -678,21 +737,21 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                             "unchanged joint edit descriptor",
                         )?;
                         need(
-                            inverse_with_edits(r, &joint, mode, p, &edits).is_err(),
+                            inverse_with_edits(r, &actual, mode, p, &edits).is_err(),
                             "missing/duplicate/relocated insertion-only joint edit",
                         )?;
                     }
                     continue;
                 }
-                let mut missing = joint.clone();
+                let mut missing = actual.clone();
                 missing.drain(at..at + remove.len());
-                let mut duplicate = joint.clone();
+                let mut duplicate = actual.clone();
                 duplicate.splice(at..at, remove.as_bytes().iter().copied());
                 let mut moved = missing.clone();
                 moved.extend_from_slice(remove.as_bytes());
                 for bad in [missing, duplicate, moved] {
                     need(
-                        bad != joint && inverse(r, &bad, mode, p).is_err(),
+                        bad != actual && inverse(r, &bad, mode, p).is_err(),
                         "missing/duplicate/relocated joint span",
                     )?;
                 }
@@ -733,39 +792,29 @@ fn filesystem_controls(root: &Path) -> Result<()> {
     let manifest_path = owned.0.join("crates/ssx-mcp/Cargo.toml");
     fs::create_dir_all(manifest_path.parent().ok_or("paired manifest parent")?)
         .map_err(|e| e.to_string())?;
-    let manifest = fs::read(root.join("crates/ssx-mcp/Cargo.toml")).map_err(|e| e.to_string())?;
+    let manifest = super::main_isolation_current::parent(
+        root,
+        "crates/ssx-mcp/Cargo.toml",
+        None,
+        super::main_isolation_current::Parent::Main,
+    )?;
     fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
     fs::set_permissions(&manifest_path, fs::Permissions::from_mode(0o644))
         .map_err(|e| e.to_string())?;
-    let capsule_relative = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
-    let capsule_path = owned.0.join(capsule_relative);
-    fs::create_dir_all(capsule_path.parent().ok_or("capsule parent")?)
-        .map_err(|e| e.to_string())?;
-    fs::copy(root.join(capsule_relative), &capsule_path).map_err(|e| e.to_string())?;
-    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))
-        .map_err(|e| e.to_string())?;
     for r in ROWS {
-        let (actual, _) = read(root, r)?;
+        let (physical, mode) = read(root, r)?;
+        let actual = canonical_input(root, r.path, &physical, mode)?;
         let path = owned.0.join(r.path);
         fs::create_dir_all(path.parent().ok_or("joint owned source parent")?)
             .map_err(|e| e.to_string())?;
         fs::write(&path, &actual).map_err(|e| e.to_string())?;
         fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
-        parent(&owned.0, r.path, &actual, Parent::W07)?;
-        if r.path == "crates/xtask/src/main.rs" {
-            let old_joint = snapshot_fixture_main::joint(root, &actual)?;
-            fs::write(&path, &old_joint).map_err(|e| e.to_string())?;
-            need(
-                parent(&owned.0, r.path, &old_joint, Parent::W07).is_err(),
-                "old joint physically substituted for new current",
-            )?;
-            fs::write(&path, &actual).map_err(|e| e.to_string())?;
-        }
+        original_parent(&owned.0, r.path, &actual, Parent::W07)?;
         for bad_mode in [0o600, 0o4644] {
             fs::set_permissions(&path, fs::Permissions::from_mode(bad_mode))
                 .map_err(|e| e.to_string())?;
             need(
-                parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+                original_parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
                 "physical source mode accepted",
             )?;
         }
@@ -773,18 +822,18 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         let backup = path.with_extension("owned-backup");
         fs::rename(&path, &backup).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+            original_parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
             "missing physical source accepted",
         )?;
         symlink(&backup, &path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+            original_parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
             "symlink physical source accepted",
         )?;
         fs::remove_file(&path).map_err(|e| e.to_string())?;
         fs::create_dir(&path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
+            original_parent(&owned.0, r.path, &actual, Parent::W07).is_err(),
             "nonregular physical source accepted",
         )?;
         fs::remove_dir(&path).map_err(|e| e.to_string())?;
@@ -796,7 +845,7 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         changed[0] ^= 1;
         fs::write(&manifest_path, changed).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            original_parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
             "wrong paired manifest accepted",
         )?;
         fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
@@ -804,7 +853,7 @@ fn filesystem_controls(root: &Path) -> Result<()> {
             fs::set_permissions(&manifest_path, fs::Permissions::from_mode(mode))
                 .map_err(|e| e.to_string())?;
             need(
-                parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+                original_parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
                 "paired manifest mode accepted",
             )?;
         }
@@ -813,23 +862,23 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         let backup = manifest_path.with_extension("owned-backup");
         fs::rename(&manifest_path, &backup).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            original_parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
             "missing paired manifest accepted",
         )?;
         symlink(&backup, &manifest_path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            original_parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
             "symlink paired manifest accepted",
         )?;
         fs::remove_file(&manifest_path).map_err(|e| e.to_string())?;
         fs::create_dir(&manifest_path).map_err(|e| e.to_string())?;
         need(
-            parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
+            original_parent(&owned.0, "Cargo.lock", &lock, kind).is_err(),
             "nonregular paired manifest accepted",
         )?;
         fs::remove_dir(&manifest_path).map_err(|e| e.to_string())?;
         fs::rename(backup, &manifest_path).map_err(|e| e.to_string())?;
-        parent(&owned.0, "Cargo.lock", &lock, kind)?;
+        original_parent(&owned.0, "Cargo.lock", &lock, kind)?;
     }
     Ok(())
 }

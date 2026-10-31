@@ -92,7 +92,7 @@ fn pair(lock: &[u8], manifest: &[u8]) -> Result<Vec<u8>> {
 }
 /// Historical readers receive exactly their unchanged A06 predecessor bytes.
 /// Both actual source leaves and their paired profile are checked first.
-pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
+fn original_historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
     let lock = read(root, "Cargo.lock")?;
     let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
     if sha(&lock) == LOCK_PRIOR_SHA {
@@ -100,7 +100,7 @@ pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
         need(supplied == lock, "W07 supplied historical lock differs")?;
         return Ok(old);
     }
-    let parent = super::w07_t02_joint::parent(
+    let parent = super::w07_t02_joint::original_parent(
         root,
         "Cargo.lock",
         supplied,
@@ -109,16 +109,61 @@ pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
     pair(&parent, &manifest)
 }
 /// W07 current admission requires the actual new direct dev edge, never old pins alone.
-pub fn verify_current(root: &Path) -> Result<()> {
+fn original_verify_current(root: &Path) -> Result<()> {
     let lock = read(root, "Cargo.lock")?;
     let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
     need(
         sha(&lock) == super::w07_t02_joint::LOCK_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
         "W07 current test dependency edge and manifest are required",
     )?;
-    let parent =
-        super::w07_t02_joint::parent(root, "Cargo.lock", &lock, super::w07_t02_joint::Parent::W07)?;
+    let parent = super::w07_t02_joint::original_parent(
+        root,
+        "Cargo.lock",
+        &lock,
+        super::w07_t02_joint::Parent::W07,
+    )?;
     pair(&parent, &manifest).map(|_| ())
+}
+/// Current physical lock and manifest first prove the accepted normal-main
+/// frame; the original paired aws-lc inverse remains the only historic read.
+pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
+    let lock = read(root, "Cargo.lock")?;
+    need(supplied == lock, "W07 supplied physical lock differs")?;
+    let manifest = super::main_isolation_current::parent(
+        root,
+        "crates/ssx-mcp/Cargo.toml",
+        None,
+        super::main_isolation_current::Parent::Main,
+    )?;
+    let accepted = super::w07_t02_joint::parent(
+        root,
+        "Cargo.lock",
+        supplied,
+        super::w07_t02_joint::Parent::W07,
+    )?;
+    pair(&accepted, &manifest)
+}
+pub fn verify_current(root: &Path) -> Result<()> {
+    let lock = read(root, "Cargo.lock")?;
+    let main = super::main_isolation_current::parent(
+        root,
+        "Cargo.lock",
+        Some(&lock),
+        super::main_isolation_current::Parent::Main,
+    )?;
+    let manifest = super::main_isolation_current::parent(
+        root,
+        "crates/ssx-mcp/Cargo.toml",
+        None,
+        super::main_isolation_current::Parent::Main,
+    )?;
+    need(
+        sha(&main) == super::w07_t02_joint::LOCK_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
+        "W07 accepted main dependency pair required",
+    )?;
+    let accepted =
+        super::w07_t02_joint::parent(root, "Cargo.lock", &lock, super::w07_t02_joint::Parent::W07)?;
+    pair(&accepted, &manifest).map(|_| ())
 }
 /// Called by the W07 named unit and every shared aggregate proof consumer.
 pub fn controls(root: &Path) -> Result<()> {
@@ -131,7 +176,12 @@ pub fn controls(root: &Path) -> Result<()> {
         &physical_lock,
         super::w07_t02_joint::Parent::W07,
     )?;
-    let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
+    let manifest = super::main_isolation_current::parent(
+        root,
+        "crates/ssx-mcp/Cargo.toml",
+        None,
+        super::main_isolation_current::Parent::Main,
+    )?;
     let old_lock = reconstruct_lock(&lock)?;
     let old_manifest = reconstruct_manifest(&manifest)?;
     need(
@@ -186,7 +236,13 @@ pub fn controls(root: &Path) -> Result<()> {
             "W07 SDK/other-package lock delta accepted",
         )?;
     }
-    filesystem_controls(&physical_lock, &manifest, &old_lock, &old_manifest)
+    let main_lock = super::main_isolation_current::parent(
+        root,
+        "Cargo.lock",
+        Some(&physical_lock),
+        super::main_isolation_current::Parent::Main,
+    )?;
+    filesystem_controls(&main_lock, &manifest, &old_lock, &old_manifest)
 }
 #[cfg(not(unix))]
 fn filesystem_controls(_: &[u8], _: &[u8], _: &[u8], _: &[u8]) -> Result<()> {
@@ -221,23 +277,23 @@ fn filesystem_controls(
     for path in [&target, &manifest_path] {
         fs::set_permissions(path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
     }
-    verify_current(&owned.0)?;
+    original_verify_current(&owned.0)?;
     for path in [&target, &manifest_path] {
         fs::set_permissions(path, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())?;
         need(
-            verify_current(&owned.0).is_err(),
+            original_verify_current(&owned.0).is_err(),
             "W07 changed dependency source mode accepted",
         )?;
         fs::set_permissions(path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
         let backup = path.with_extension("owned-original");
         fs::rename(path, &backup).map_err(|e| e.to_string())?;
         need(
-            verify_current(&owned.0).is_err(),
+            original_verify_current(&owned.0).is_err(),
             "W07 missing dependency source accepted",
         )?;
         symlink(&backup, path).map_err(|e| e.to_string())?;
         need(
-            verify_current(&owned.0).is_err(),
+            original_verify_current(&owned.0).is_err(),
             "W07 symlink dependency source accepted",
         )?;
         fs::remove_file(path).map_err(|e| e.to_string())?;
@@ -246,14 +302,15 @@ fn filesystem_controls(
     fs::write(&target, old_lock).map_err(|e| e.to_string())?;
     fs::write(&manifest_path, old_manifest).map_err(|e| e.to_string())?;
     need(
-        historical_lock(&owned.0, old_lock)?.as_slice() == old_lock,
+        original_historical_lock(&owned.0, old_lock)?.as_slice() == old_lock,
         "W07 exact historical dependency read rejected",
     )?;
     need(
-        verify_current(&owned.0).is_err() && historical_lock(&owned.0, lock).is_err(),
+        original_verify_current(&owned.0).is_err()
+            && original_historical_lock(&owned.0, lock).is_err(),
         "W07 historical pair authorized a current dependency afterimage",
     )?;
     fs::write(&target, lock).map_err(|e| e.to_string())?;
     fs::write(&manifest_path, manifest).map_err(|e| e.to_string())?;
-    verify_current(&owned.0)
+    original_verify_current(&owned.0)
 }

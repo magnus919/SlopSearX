@@ -1,0 +1,203 @@
+name: Rust client platforms
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Native runners, never cross-compilation as runtime evidence. This lane excludes
+# server features and release signing/promotion (O04 remains separate).
+jobs:
+  client-platform:
+    name: Client install and security (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: windows-2025
+            target: x86_64-pc-windows-msvc
+    defaults:
+      run:
+        shell: bash
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      CARGO_INCREMENTAL: 0
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure private client fixture and artifact paths
+        shell: pwsh
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-client-target
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-client-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-client-unit
+          SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST: ${{ runner.temp }}/ssx-client-evidence/production-artifacts.json
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $entries = @(
+            "CARGO_TARGET_DIR=$env:CARGO_TARGET_DIR",
+            "SLOPSEARX_INSTALL_TEST_ROOT=$env:SLOPSEARX_INSTALL_TEST_ROOT",
+            "SLOPSEARX_T07_UNIT_TEST_ROOT=$env:SLOPSEARX_T07_UNIT_TEST_ROOT",
+            "SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST=$env:SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST"
+          )
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, (($entries -join "`n") + "`n"), [System.Text.UTF8Encoding]::new($false))
+      - name: Record actual native host and pinned inputs
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ssx-client-evidence"
+          rustc --version --verbose | tee "$RUNNER_TEMP/ssx-client-evidence/toolchain.txt"
+          test "$(rustc --version --verbose | sed -n 's/^host: //p')" = '${{ matrix.target }}'
+          git rev-parse HEAD | tee "$RUNNER_TEMP/ssx-client-evidence/head.txt"
+          git diff --exit-code
+      - name: Prepare private Unix fixture roots
+        if: runner.os != 'Windows'
+        run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT" "$SLOPSEARX_T07_UNIT_TEST_ROOT"
+      - name: Prepare protected Windows fixture roots
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+          foreach ($path in @($env:SLOPSEARX_INSTALL_TEST_ROOT, $env:SLOPSEARX_T07_UNIT_TEST_ROOT)) {
+            if (Test-Path -LiteralPath $path) { throw 'Refuse to adopt a preexisting fixture root' }
+            New-Item -ItemType Directory -Path $path | Out-Null
+            $acl = [System.Security.AccessControl.DirectorySecurity]::new()
+            $acl.SetOwner($sid)
+            $acl.SetAccessRuleProtection($true, $false)
+            foreach ($principal in @($sid, [System.Security.Principal.SecurityIdentifier]::new('S-1-5-18'), [System.Security.Principal.SecurityIdentifier]::new('S-1-5-32-544'))) {
+              $rule = [System.Security.AccessControl.FileSystemAccessRule]::new($principal, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow')
+              $acl.AddAccessRule($rule)
+            }
+            Set-Acl -LiteralPath $path -AclObject $acl
+          }
+      - name: Prove default client dependency boundary and production executables
+        run: |
+          set -euo pipefail
+          cargo tree --locked -p ssx-gateway --no-default-features --edges normal > "$RUNNER_TEMP/ssx-client-evidence/client-tree.txt"
+          if grep -E 'ssx-(application|infra|http|registry|config|worker) v' "$RUNNER_TEMP/ssx-client-evidence/client-tree.txt"; then
+            echo 'Server dependency entered client-only graph' >&2
+            exit 1
+          fi
+          cargo build --locked -p ssx-gateway --no-default-features --bin ssx-gateway --bin ssx-gateway-dns --bin ssx-gateway-input --message-format=json > "$RUNNER_TEMP/ssx-client-evidence/client-build.jsonl"
+      - name: Preserve exact default production artifacts before feature builds
+        shell: pwsh
+        run: |
+          ./crates/ssx-gateway/tests/platform_support/seal-production.ps1 -BuildJson "$env:RUNNER_TEMP/ssx-client-evidence/client-build.jsonl" -OutputRoot "$env:RUNNER_TEMP/ssx-client-shipping" -Manifest $env:SLOPSEARX_PRODUCTION_ARTIFACT_MANIFEST -Target '${{ matrix.target }}'
+      - name: Assert compiled platform test inventory before execution
+        run: |
+          set -euo pipefail
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_install --test t07_platform_tls --test t07_runtime --test t07_windows_owner --test t07_windows_security -- --list 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt"
+      - name: Capture already built macOS trust finalizer executable
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls --no-run --message-format=json > "$RUNNER_TEMP/ssx-client-evidence/platform-tls-build.jsonl"
+      - name: Register exact compiled macOS trust finalizer
+        if: runner.os == 'macOS'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $artifacts = @(Get-Content -LiteralPath "$env:RUNNER_TEMP/ssx-client-evidence/platform-tls-build.jsonl" | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.reason -eq 'compiler-artifact' -and $_.target.name -eq 't07_platform_tls' -and $_.profile.test -and $_.executable })
+          if ($artifacts.Count -ne 1) { throw 'Exact compiled macOS trust finalizer executable missing or duplicated' }
+          $executable = $artifacts[0].executable
+          if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) { throw 'Compiled macOS finalizer is missing' }
+          $targetRoot = [System.IO.Path]::GetFullPath($env:CARGO_TARGET_DIR).TrimEnd('/') + '/'
+          $executable = [System.IO.Path]::GetFullPath($executable)
+          if (-not $executable.StartsWith($targetRoot, [System.StringComparison]::Ordinal) -or [System.IO.Path]::GetFileName($executable) -cnotmatch '^t07_platform_tls-[0-9a-f]+$') { throw 'Finalizer executable is outside the exact owned target' }
+          $sha256 = (Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash.ToLowerInvariant()
+          @{ executable = $executable; sha256 = $sha256; target = '${{ matrix.target }}'; head = '${{ github.sha }}' } | ConvertTo-Json | Set-Content -LiteralPath "$env:RUNNER_TEMP/ssx-client-evidence/platform-tls-image.json"
+          & $executable finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children --exact --ignored --list | Tee-Object -FilePath "$env:RUNNER_TEMP/ssx-client-evidence/finalizer-inventory.txt"
+          if ($LASTEXITCODE -ne 0) { throw 'Finalizer inventory failed' }
+          $cases = @(Get-Content -LiteralPath "$env:RUNNER_TEMP/ssx-client-evidence/finalizer-inventory.txt" | Where-Object { $_ -match ': test$' })
+          if ($cases.Count -ne 1 -or $cases[0] -cne 'finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children: test') { throw 'Exact compiled finalizer inventory differs' }
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE=$executable`nSLOPSEARX_PLATFORM_TLS_TEST_SHA256=$sha256`n", [System.Text.UTF8Encoding]::new($false))
+      - name: Verify required named native cases are present exactly once
+        shell: pwsh
+        run: |
+          ./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory "$env:RUNNER_TEMP/ssx-client-evidence/compiled-inventory.txt"
+      - name: Native installed client and private TLS witnesses
+        run: |
+          set -euo pipefail
+          features=source-endpoint-test-fixtures,windows-owner-test-fixtures
+          cargo test --locked -p ssx-gateway --no-default-features --features "$features" --test t07_platform_install --test t07_platform_tls --test t07_runtime --test t07_windows_owner --test t07_windows_security -- --nocapture 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/runtime.txt"
+      - name: Assert exact ignored hosted trust-store inventory
+        run: |
+          set -euo pipefail
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --list 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/store-inventory.txt"
+      - name: Verify nonzero exact hosted trust-store case
+        shell: pwsh
+        run: |
+          ./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory "$env:RUNNER_TEMP/ssx-client-evidence/store-inventory.txt" -IgnoredOnly
+      - name: Dedicated ephemeral platform trust-store witness
+        env:
+          SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
+        run: |
+          set -euo pipefail
+          # This runner is disposable. Exact CA cleanup also runs in the finalizer.
+          if [[ "$RUNNER_OS" != macOS ]]; then
+            trap 'for case_root in "$SLOPSEARX_INSTALL_TEST_ROOT"/platform-tls-store-*; do if [[ -f "$case_root/trust-active" ]]; then bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove "$case_root"; fi; done' EXIT
+          fi
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --nocapture 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/platform-store.txt"
+      - name: Always retire exact owned macOS trust fixtures with bounded Rust owner
+        if: always() && runner.os == 'macOS'
+        timeout-minutes: 3
+        env:
+          SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
+        run: |
+          set -euo pipefail
+          if [[ -n "${SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE:-}" ]]; then
+            [[ "$SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE" == "$CARGO_TARGET_DIR"/debug/deps/t07_platform_tls-* ]]
+            actual_sha256="$(shasum -a 256 "$SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE" | cut -d ' ' -f1)"
+            test "$actual_sha256" = "$SLOPSEARX_PLATFORM_TLS_TEST_SHA256"
+            "$SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE" finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children --exact --ignored --nocapture 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/platform-store-finalizer.txt"
+          else
+            # No mutation is possible before the exact binary is registered.
+            for case_root in "$SLOPSEARX_INSTALL_TEST_ROOT"/platform-tls-store-*; do
+              test ! -e "$case_root/trust-active"
+            done
+          fi
+      - name: Always remove exact owned CI trust fixtures
+        if: always() && runner.os != 'macOS'
+        env:
+          SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
+        run: |
+          set -euo pipefail
+          for case_root in "$SLOPSEARX_INSTALL_TEST_ROOT"/platform-tls-store-*; do
+            if [[ -f "$case_root/trust-active" ]]; then
+              bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove "$case_root"
+            fi
+          done
+      - name: Retain exact host receipts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-client-${{ matrix.target }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ssx-client-evidence
+          if-no-files-found: error
+      - name: Remove this job's reproducible target and fixture roots
+        if: always()
+        run: |
+          set -euo pipefail
+          # Only fixed directories owned by this ephemeral job, never a cache.
+          for case_root in "$SLOPSEARX_INSTALL_TEST_ROOT"/platform-tls-store-*; do
+            test ! -f "$case_root/trust-active"
+          done
+          rm -rf -- "$CARGO_TARGET_DIR" "$SLOPSEARX_INSTALL_TEST_ROOT" "$SLOPSEARX_T07_UNIT_TEST_ROOT" "$RUNNER_TEMP/ssx-client-shipping"

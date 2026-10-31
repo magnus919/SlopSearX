@@ -1,0 +1,36 @@
+# Genuine Reqwest unit qualification
+
+Reqwest is an excluded package in the workspace. Root workspace tests cannot prove its development-dependency unit controls. T07 prepares a genuine root from the complete vendored package, its original manifest declarations/defaults/features/targets and the five reviewed local fork identities. The closed declaration binds71 package members and407 fork members; source copies and executable modes are verified. The original Cargo.toml is preserved as an exact byte prefix with only standalone workspace and runtime-derived patch paths appended. The exact retained standalone Cargo.lock is69,009 bytes, SHA256772da776c5233912b2d921b3f3fed2cb42901d7ecd32dac184329795c6f1c805. No absolute host paths are committed.
+
+Use `cargo xtask prepare-t07-unit --profile-dir <absolute-owned-path>` outside the checkout to create it exclusively. Preparation uses Rust filesystem APIs and performs no Cargo command or network call. Regular-file copies avoid Windows symlink privileges. Existing profiles are never overwritten; bootstrap/T07 can reuse only a complete matching profile with its exact declaration and no active writer. Native process-group qualification is currently Unix; portable preparation does not establish Windows runtime acceptance.
+
+CI invokes `cargo xtask bootstrap-t07-unit --profile-dir <same-path>` before the offline gate. Bootstrap compiles all selected project targets and the genuine unit root using its exact retained lock, default+ssx-http1-source-pool request and root-matching resolver configuration. It acquires only sources actually needed by that locked compilation, with no bulk fetch of278 dormant catalogue packages. It does not execute tests. Both metadata and compilation use the root Cargo target directory, so the external package creates no second target. Locally, acquisition/import/native execution still require the reserved lane and explicit task authorization.
+
+Set SLOPSEARX_T07_UNIT_PROFILE_ROOT to that path for `cargo xtask check T07`. The gate compiles every selected target before runtime cases, checks actual root declarations/target inventory, verifies the genuine test artifact/source/default-feature closure and binary hash, then lists and runs all19 exact pool/parser IDs. Current118 gateway/stdio/DNS selectors remain for137 total. Every selected native result must be exactly `ok`; missing, duplicate, extra, ignored and malformed lines fail. Filtered-out nonselected Reqwest tests are accounted for without requiring them to run. Bounded stdout/stderr readers stop before exceeding their write caps and are joined after original Child/group kill/wait. Failed retirement retains the profile writer marker for audit instead of freeing it for reuse.
+
+The 128 Linux/macOS xtask controls now include six authored profile/ownership checks. These source declarations are not native pass claims. In particular, the output-cap control acknowledges a real blocked child, observes the cap failure before any output write, then requires original-group retirement and a joined reader without sleep-based scheduling assumptions. The profile-copy control covers omitted/tampered source, manifest, lock, concurrent ownership and overwrite refusal. CI uses dedicated ephemeral SLOPSEARX_T07_UNIT_TEST_ROOT; local tests require that or the preregistered SLOPSEARX_TEST_TEMP_ROOT, with no ambient temporary-directory fallback.
+
+The13 original cookie/proxy counterfactuals and two reviewed scheme/budget regressions remain required with actual semantic failures, exact source restoration and fresh positives on the final graph. T01/T05/T06/F08/T07, full SDK/profile/privacy/default/global/install and platform evidence remain required. Source review, metadata resolution and source acquisition do not satisfy them. Raw authority, strict Unicode/IDNA, pinned missing-SOCKS failure stages and supported Windows resolver/runtime ownership remain open.
+
+The precise formatting exclusions for9 trailing-whitespace and25 end-of-file inputs preserve immutable upstream/oracle/source-delta bytes. They do not exclude whole vendor trees. JSON/TOML/YAML/conflict/size checks remain, and T07 protects every byte and complete vendor namespace through its source hashes. These exclusions fix a branch-introduced formatting conflict; they do not waive a failing CI check or repin frozen source.
+
+
+The current SDK profile uses the same bounded `Profile` copier and original-child
+retirement checks as Reqwest. `cargo xtask prepare-t07-sdk-unit --profile-dir PATH`
+creates the full 174-file rmcp package outside the checkout; it preserves the
+complete manifest, 12 original dev dependencies, default features, and all 85
+target declarations. `bootstrap-t07-sdk-unit` compiles the genuine library test
+context with the checked 317-record SDK lock and official Cargo registry sources.
+It may download dormant Rust dependency sources while bootstrapping; it never
+activates a Python feature or permits a PyO3 compiler unit. The SDK's original
+unit-only serde declaration remains separate from the production workspace.
+
+CI runs both prepare/bootstrap commands before the offline T07 gate and passes
+`SLOPSEARX_T07_SDK_UNIT_PROFILE_ROOT`. This has no dependency on a developer's
+build-root copy. The SDK full list must contain exactly the retained 580 IDs;
+only the declared 14 metadata, seven manager, and 11 source-operation controls
+run. The current gateway list retains the original 95 IDs and adds 22 reviewed
+IDs. Earlier component receipts remain evidence for their original commits;
+the merged source still requires its own native gate result. No Windows,
+production deployment, concurrency, or performance acceptance follows from
+these inventories.

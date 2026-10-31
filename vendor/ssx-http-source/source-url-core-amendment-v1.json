@@ -1,0 +1,70 @@
+{
+  "schema": "T07_FULL_SOURCE_URL_CORE_REVIEW_V1",
+  "status": "REVIEW_ONLY_NOT_APPLIED_COMPILED_OR_EXECUTED",
+  "source_baseline": "76adfe19ad0e5f567e2a3326684defa45a26d19b",
+  "predecessor_provenance_sha256": "95ce1bf503074570169fc6b2b743115ef4a9c5ae70c8743144c924fa680859a0",
+  "scope": "immutablefullURLcodec+optinReqwestexposure/dependencyonly; NOrequest/transport/mount/SDKadoption",
+  "before_actual_reqwest_tree_sha256": "76032c3e2d713f7d78cae6d3c8fe46de599c198f155d3048774c2f1b59dc6a5b",
+  "after_reqwest_tree_sha256": "e0b806f3b4fc9fdef28c2bef850093f4ae03df9bdf6d93b32dbfb1980269504f",
+  "exact_package_delta": [
+    {
+      "path": "Cargo.toml",
+      "before": {
+        "path": "Cargo.toml",
+        "bytes": 13932,
+        "sha256": "f2c81c01425afbcb21066273d54806bad89ec89a9f0e3e2b554f17d3c7810182"
+      },
+      "after": {
+        "path": "Cargo.toml",
+        "bytes": 14081,
+        "sha256": "4745db5e1d9599acc0820f3b49ac61a66e029122ff686e8639aeb6a07bef0b6b"
+      }
+    },
+    {
+      "path": "src/source_pool.rs",
+      "before": {
+        "path": "src/source_pool.rs",
+        "bytes": 22918,
+        "sha256": "38099adf861d6ba0a1c3996e892e2fea08edf4a2977bcdbc418307114642ae0f"
+      },
+      "after": {
+        "path": "src/source_pool.rs",
+        "bytes": 23045,
+        "sha256": "95677596150e96f59df321a0ff998b426771d343a517dfa8a7f7856f2cb7451d"
+      }
+    },
+    {
+      "path": "src/source_pool/source_url.rs",
+      "before": null,
+      "after": {
+        "path": "src/source_pool/source_url.rs",
+        "bytes": 49597,
+        "sha256": "704bf6b952ef01df3579167cb0074141af36c662bf54a2419c85f3e51cb6b710"
+      }
+    }
+  ],
+  "preexisting_declared_package_drift": {
+    "added_since_declared": [
+      "src/source_pool/source_cookie_clock.rs",
+      "src/source_pool/source_cookies.rs",
+      "src/source_pool/source_cookie_headers.rs",
+      "src/source_pool/source_cookie_date.rs",
+      "src/source_pool/source_cookie_jar.rs"
+    ],
+    "removed_since_declared": [],
+    "changed_since_declared": [
+      "Cargo.toml",
+      "src/source_pool.rs",
+      "src/source_pool/python_text.rs"
+    ]
+  },
+  "preexisting_drift_note": "Currentclean76adDNS/libc/sourcepackagebytespreserved; beforeactualtree pins allcurrentmembers. Priorhistoricalprovenance retained, not treatedas currentfileproof.",
+  "unchanged_current_members": 69,
+  "primary": {
+    "path": "source-url-core-primary-v1.json",
+    "sha256": "764cc727405b7405fe04ca522982bfed7496da68c4f611bee90aefba3c29b759"
+  },
+  "no_old_lock_or_manifest_replacement": true,
+  "rejected_predecessor_patch_sha256": "84341e8631f601da68b65e920f7f63352afa278c7c4e186f9dbb212f36bc5cbc",
+  "join_stage_correction": "CPython3.14.7 private split/bracket/Unicode16NFKC guard onboth nonemptyserializedoperands; typedValueErrorstages, no globalconstructor tightening"
+}
