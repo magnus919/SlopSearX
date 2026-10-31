@@ -344,12 +344,13 @@ fn current_filesystem_controls(source_root: &Path, current_lock: &[u8]) -> Resul
     let owned = Owned(directory);
     let stacked = &owned.0;
     super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::copy_fixture_inputs(source_root, stacked)?;
-    for path in [
+    const PAIRED_INPUTS: [&str; 4] = [
         "crates/ssx-mcp/Cargo.toml",
         "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json",
         "docs/rust-rewrite/t08a/shared-source-successor.json",
         "docs/rust-rewrite/t08a/accepted-w08-main-join-v1.json",
-    ] {
+    ];
+    for path in PAIRED_INPUTS {
         let target = stacked.join(path);
         fs::create_dir_all(target.parent().ok_or("current fixture parent")?)
             .map_err(|e| e.to_string())?;
@@ -357,19 +358,53 @@ fn current_filesystem_controls(source_root: &Path, current_lock: &[u8]) -> Resul
         fs::set_permissions(&target, fs::Permissions::from_mode(0o644))
             .map_err(|e| e.to_string())?;
     }
-    verify_current(stacked)?;
+    // Only this owned fixture may compare physical copies with the trusted
+    // source. Git authority stays at source_root; a fixture never becomes a repo.
+    verify_current(source_root)?;
+    let verify_fixture = || -> Result<()> {
+        let physical_lock = read(stacked, "Cargo.lock")?;
+        super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::project(
+            stacked,
+            "Cargo.lock",
+            &physical_lock,
+            super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::Parent::Gateway,
+        )?;
+        for path in PAIRED_INPUTS {
+            for root in [stacked.as_path(), source_root] {
+                need(
+                    fs::symlink_metadata(root.join(path))
+                        .map_err(|e| e.to_string())?
+                        .permissions()
+                        .mode()
+                        & 0o7777
+                        == 0o644,
+                    "owned paired metadata requires exact0644",
+                )?;
+            }
+            need(
+                read(stacked, path)? == read(source_root, path)?,
+                "owned paired metadata differs from trusted current source",
+            )?;
+        }
+        Ok(())
+    };
+    verify_fixture()?;
+    need(
+        matches!(verify_current(stacked), Err(ref error) if error == "T07 main/isolation: proved parent Git bytes"),
+        "owned fixture must not acquire public Git proof authority",
+    )?;
     let capsule = stacked.join(super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::CAPSULE_PATH);
     let raw = fs::read(&capsule).map_err(|e| e.to_string())?;
     let mut changed = raw.clone();
     changed.push(0);
     fs::write(&capsule, changed).map_err(|e| e.to_string())?;
     need(
-        verify_current(stacked).is_err(),
+        verify_fixture().is_err(),
         "changed stacked lock capsule accepted",
     )?;
     fs::remove_file(&capsule).map_err(|e| e.to_string())?;
     need(
-        verify_current(stacked).is_err(),
+        verify_fixture().is_err(),
         "missing stacked lock capsule accepted",
     )?;
     fs::write(&capsule, &raw).map_err(|e| e.to_string())?;
@@ -379,7 +414,7 @@ fn current_filesystem_controls(source_root: &Path, current_lock: &[u8]) -> Resul
         super::w07_t02_joint::cli_source_custody::prior(source_root, "Cargo.lock", current_lock)?;
     fs::write(&target, old).map_err(|e| e.to_string())?;
     need(
-        verify_current(stacked).is_err(),
+        verify_fixture().is_err(),
         "old joint lock substituted for stacked current",
     )?;
     fs::write(&target, current_lock).map_err(|e| e.to_string())?;
@@ -389,9 +424,10 @@ fn current_filesystem_controls(source_root: &Path, current_lock: &[u8]) -> Resul
     changed[0] ^= 1;
     fs::write(&manifest, changed).map_err(|e| e.to_string())?;
     need(
-        verify_current(stacked).is_err(),
+        verify_fixture().is_err(),
         "changed paired stacked MCP manifest accepted",
     )?;
     fs::write(&manifest, raw).map_err(|e| e.to_string())?;
-    verify_current(stacked)
+    verify_fixture()?;
+    verify_current(source_root)
 }

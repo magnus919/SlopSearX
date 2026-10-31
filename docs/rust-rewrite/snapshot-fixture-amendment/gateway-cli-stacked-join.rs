@@ -5,7 +5,7 @@ use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const CAPSULE_PATH: &str =
     "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-stacked-join-v1.json";
-const CAPSULE_SHA: &str = "230b9704d0d32a4885d1b7baa2ed24182235a32aa714cae973e59811ae5e3774";
+const CAPSULE_SHA: &str = "079273842cf317a7b8dfecc0dacf296214212b1c63eda8df44c90ee7563924e7";
 const CLI_PARENT: &str = "41e5976fc9ba5272bf2585b252136e3843581f18";
 const GATEWAY_PARENT: &str = "96574a69f9a287cf07ed11c222b6ae0313d5453b";
 const ROWS: [(&str, usize, usize); 11] = [
