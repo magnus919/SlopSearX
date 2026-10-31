@@ -130,17 +130,10 @@ fn joint_current_material_at(
     let physical = fs::read(&file).map_err(|e| e.to_string())?;
     let permissions = mode(&file)?;
     use a06_source_successor::w07_t02_joint::{self, Parent};
-    let t02_parent = w07_t02_joint::parent(proof_root, path, &physical, Parent::T02)?;
-    check_material(
-        t02_row,
-        &t02_parent,
-        &permissions,
-        "PR1034 exact T02 parent row",
-    )?;
-
     for capsule in [
         "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json",
         "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json",
+        w07_t02_joint::cli_source_custody::LEGACY_CAPSULE_PATH,
     ] {
         let metadata = fs::symlink_metadata(root.join(capsule)).map_err(|e| e.to_string())?;
         require(
@@ -161,6 +154,14 @@ fn joint_current_material_at(
             "PR1034 custody/proof capsule bytes differ",
         )?;
     }
+    let t02_parent = w07_t02_joint::parent(proof_root, path, &physical, Parent::T02)?;
+    check_material(
+        t02_row,
+        &t02_parent,
+        &permissions,
+        "PR1034 exact T02 parent row",
+    )?;
+
     // Select only the existing capsule's predecessor. effective_current seals
     // that document and proves its W07 inverse from the actual physical file.
     let capsule = fs::read(
@@ -831,7 +832,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
             let original_capsule = fs::read(&current_capsule).map_err(|e| e.to_string())?;
             let absent = current_capsule.with_extension("held-for-missing-control");
             fs::rename(&current_capsule, &absent).map_err(|e| e.to_string())?;
-            let missing_rejected = joint_current_material(&owned.0, path, &row).is_err();
+            let missing_rejected = joint_current_material_at(&owned.0, root, path, &row).is_err();
             fs::rename(&absent, &current_capsule).map_err(|e| e.to_string())?;
             require(
                 missing_rejected,
@@ -840,14 +841,14 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
             let mut changed_capsule = original_capsule.clone();
             changed_capsule.push(0);
             fs::write(&current_capsule, changed_capsule).map_err(|e| e.to_string())?;
-            let tampered_rejected = joint_current_material(&owned.0, path, &row).is_err();
+            let tampered_rejected = joint_current_material_at(&owned.0, root, path, &row).is_err();
             fs::write(&current_capsule, &original_capsule).map_err(|e| e.to_string())?;
             require(
                 tampered_rejected,
                 "owned joint proof accepted a tampered current legacy capsule",
             )?;
             require(
-                joint_current_material(&owned.0, path, &row)? == actual,
+                joint_current_material_at(&owned.0, root, path, &row)? == actual,
                 "owned joint current capsule restoration must preserve the physical positive",
             )?;
         }
