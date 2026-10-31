@@ -1,6 +1,8 @@
 //! Finite W08 semantic execution. Missing, ignored or renamed cases fail closed.
 pub(crate) use crate::a13::a06_source_successor::w07_t02_joint::w08_source_successor as source_successor;
 use crate::{Result, command};
+#[path = "w08/snapshot_selection_successor.rs"]
+mod snapshot_selection_successor;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -45,6 +47,14 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     if digest(&raw) != expected {
         use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;
         let prior = match (path, expected) {
+            (
+                "crates/ssx-application/src/composition.rs",
+                "50270b17f692104c481f19475c055584ef42af36c9864774347d5d27e9852e3f",
+            )
+            | (
+                "crates/ssx-application/tests/w08.rs",
+                "4ae215d754b138da6ed4677bdcb5702249605624fbac78f2a0c141c27e87c702",
+            ) => snapshot_selection_successor::prior(root, path, expected, &raw)?,
             (
                 "crates/xtask/src/w08/source_successor.rs",
                 "3a8699c6449e05b6b94f64ff43643af15287ad2ae4d9b5319617d8f5c38f4069",
@@ -98,6 +108,7 @@ fn names(output: &str, listing: bool) -> Result<BTreeSet<String>> {
     Ok(names)
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
+    snapshot_selection_successor::controls(root)?;
     source_successor::controls(root)?;
     let q: Qualification = serde_json::from_slice(&frozen(root, REGISTRY, REGISTRY_SHA)?)
         .map_err(|e| e.to_string())?;
@@ -174,6 +185,7 @@ mod tests {
     #[test]
     fn closed_successor_requires_actual_afterimages_exact_inverses_and_frozen_predecessors() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        snapshot_selection_successor::controls(&root).unwrap();
         source_successor::controls(&root).unwrap();
     }
     #[test]
