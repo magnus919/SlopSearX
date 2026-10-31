@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "native_case": {
+        "id": "page-negative-underscore-attached",
+        "argv": [
+          "search",
+          "x",
+          "--pageno=-000_0",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=x&language=en&format=json",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#page-negative-underscore-attached"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "page-negative-underscore-space",
+        "argv": [
+          "search",
+          "x",
+          "--pageno",
+          " -000_0 ",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=x&language=en&format=json",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#page-negative-underscore-space"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    }
+  ]
+}

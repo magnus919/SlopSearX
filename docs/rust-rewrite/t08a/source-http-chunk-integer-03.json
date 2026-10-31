@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "runtime": "3.13.6 (v3.13.6:4e665351082, Aug  6 2025, 11:22:35) [Clang 16.0.0 (clang-1600.0.26.6)]",
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "scope": "exact3 non-RFC source-admitted lexical forms; original captures unchanged; native not executed",
+  "captures": [
+    {
+      "id": "chunk-size-plus",
+      "profile": {
+        "kind": "non-rfc-chunk-size-lexical",
+        "token": "+2"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35383534330d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-size-plus.bin.gz",
+        "original_bytes": 79,
+        "original_sha256": "9b5a79fb3604127a9a78aed786992946b6b9b11f336ce1c80176d4509fbcec84",
+        "gzip_sha256": "68e720849086450118b0b4c6fa35b1a4177485e6498a5812df84b4d3eb83ab03",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true,
+      "native_disposition": "TransportFailure status1 empty stdout; root-approved explicit protocol-integrity hardening, native not yet run"
+    },
+    {
+      "id": "chunk-size-prefix",
+      "profile": {
+        "kind": "non-rfc-chunk-size-lexical",
+        "token": "0x2"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35383534350d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-size-prefix.bin.gz",
+        "original_bytes": 80,
+        "original_sha256": "a2cd6d124964d4d03f641b7779e388cce28449d96372a8d7bee2609be9fd51fc",
+        "gzip_sha256": "c6ed990e29927ad37f59403b7b18cefceff5fcec05d66c3a650780ad453d1762",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true,
+      "native_disposition": "TransportFailure status1 empty stdout; root-approved explicit protocol-integrity hardening, native not yet run"
+    },
+    {
+      "id": "chunk-size-underscore",
+      "profile": {
+        "kind": "non-rfc-chunk-size-lexical",
+        "token": "2_0"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "300a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35383534370d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-size-underscore.bin.gz",
+        "original_bytes": 110,
+        "original_sha256": "a443d517bd84ecabf6d9d326eb7093096135b8bb03c4483f807e32eef9cc8b2a",
+        "gzip_sha256": "44decfeeba82867c8bdfc9dae5e285b6bf7af1da117320179083dce0930610be",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true,
+      "native_disposition": "TransportFailure status1 empty stdout; root-approved explicit protocol-integrity hardening, native not yet run"
+    }
+  ]
+}

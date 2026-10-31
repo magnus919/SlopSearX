@@ -1,0 +1,27 @@
+[package]
+name = "ssx-cli-check"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde_json.workspace = true
+sha2.workspace = true
+
+# Developer gate process containment only; absent from production ssx graph.
+[dependencies.process-wrap]
+version = "=10.0.1"
+default-features = false
+features = ["tokio1", "process-group", "job-object", "kill-on-drop"]
+
+[dependencies.tokio]
+workspace = true
+
+[target.'cfg(unix)'.dependencies.nix]
+version = "=0.31.3"
+features = ["signal"]

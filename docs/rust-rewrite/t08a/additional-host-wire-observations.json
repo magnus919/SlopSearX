@@ -1,0 +1,1027 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "runtime": "CPython3.13.6 / encodings.idna Unicode3.2 nameprep",
+  "captures": [
+    {
+      "native_case": {
+        "id": "host-default-port-proxy",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://fixture.invalid:80",
+          "http_proxy": "$BASE"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "http://fixture.invalid:80/health",
+            "host": "fixture.invalid:80",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-host-wire-observations.json#host-default-port-proxy"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_requests": [
+        "47455420687474703a2f2f666978747572652e696e76616c69643a38302f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a20666978747572652e696e76616c69643a38300d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "fixture_retired": true,
+      "errors": []
+    },
+    {
+      "native_case": {
+        "id": "host-leading-zero-direct",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://127.0.0.1:000$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "host": "127.0.0.1:000$PORT",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-host-wire-observations.json#host-leading-zero-direct"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a30303035343632300d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "fixture_retired": true,
+      "errors": []
+    },
+    {
+      "native_case": {
+        "id": "host-uppercase-direct",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://LOCALHOST:$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "host": "LOCALHOST:$PORT",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-host-wire-observations.json#host-uppercase-direct"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a204c4f43414c484f53543a35343632330d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "fixture_retired": true,
+      "errors": []
+    },
+    {
+      "native_case": {
+        "id": "host-idna2003-soft-hyphen-direct",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://loc\u00adalhost:$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "host": "loc\u00adalhost:$PORT",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-host-wire-observations.json#host-idna2003-soft-hyphen-direct"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63ad616c686f73743a35343632350d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "fixture_retired": true,
+      "errors": []
+    },
+    {
+      "native_case": {
+        "id": "host-percent-decoded-direct",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://%31%32%37.0.0.1:$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "host": "127.0.0.1:$PORT",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-host-wire-observations.json#host-percent-decoded-direct"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35343632380d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "fixture_retired": true,
+      "errors": []
+    },
+    {
+      "native_case": {
+        "id": "direct-fragment-omits-selector-fragment",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base#fragment"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/base",
+            "host": "127.0.0.1:$PORT",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-host-wire-observations.json#direct-fragment-omits-selector-fragment"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_requests": [
+        "474554202f6261736520485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35343633300d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "fixture_retired": true,
+      "errors": []
+    },
+    {
+      "native_case": {
+        "id": "proxy-fragment-retains-literal-no-added-slash",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://fixture.invalid#fragment",
+          "http_proxy": "$BASE"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "http://fixture.invalid#fragment/health",
+            "host": "fixture.invalid",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-host-wire-observations.json#proxy-fragment-retains-literal-no-added-slash"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_requests": [
+        "47455420687474703a2f2f666978747572652e696e76616c696423667261676d656e742f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a20666978747572652e696e76616c69640d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "fixture_retired": true,
+      "errors": []
+    },
+    {
+      "native_case": {
+        "id": "source-raw-path-control-rejected",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base\n"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-host-wire-observations.json#source-raw-path-control-rejected"
+      },
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942055524c2063616e277420636f6e7461696e20636f6e74726f6c20636861726163746572732e20272f626173655c6e2f6865616c7468272028666f756e64206174206c6561737420275c6e27290a",
+      "raw_requests": [],
+      "fixture_retired": true,
+      "errors": []
+    }
+  ],
+  "source_idna_encoder_cases": [
+    {
+      "host": "a\u0080b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0081b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0082b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0083b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0084b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0085b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0086b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0087b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0088b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0089b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u008ab.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u008bb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u008cb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u008db.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u008eb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u008fb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0090b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0091b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0092b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0093b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0094b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0095b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0096b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0097b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0098b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u0099b.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u009ab.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u009bb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u009cb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u009db.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u009eb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u009fb.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "a\u00a0b.example",
+      "ascii": "a b.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a1b.example",
+      "ascii": "xn--ab-4ca.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a2b.example",
+      "ascii": "xn--ab-7ca.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a3b.example",
+      "ascii": "xn--ab-bda.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a4b.example",
+      "ascii": "xn--ab-eda.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a5b.example",
+      "ascii": "xn--ab-hda.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a6b.example",
+      "ascii": "xn--ab-kda.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a7b.example",
+      "ascii": "xn--ab-nda.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a8b.example",
+      "ascii": "xn--a b-eec.example",
+      "error": null
+    },
+    {
+      "host": "a\u00a9b.example",
+      "ascii": "xn--ab-tda.example",
+      "error": null
+    },
+    {
+      "host": "a\u00aab.example",
+      "ascii": "aab.example",
+      "error": null
+    },
+    {
+      "host": "a\u00abb.example",
+      "ascii": "xn--ab-zda.example",
+      "error": null
+    },
+    {
+      "host": "a\u00acb.example",
+      "ascii": "xn--ab-2da.example",
+      "error": null
+    },
+    {
+      "host": "a\u00adb.example",
+      "ascii": "ab.example",
+      "error": null
+    },
+    {
+      "host": "a\u00aeb.example",
+      "ascii": "xn--ab-8da.example",
+      "error": null
+    },
+    {
+      "host": "a\u00afb.example",
+      "ascii": "xn--a b-xdc.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b0b.example",
+      "ascii": "xn--ab-fea.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b1b.example",
+      "ascii": "xn--ab-iea.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b2b.example",
+      "ascii": "a2b.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b3b.example",
+      "ascii": "a3b.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b4b.example",
+      "ascii": "xn--a b-ldc.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b5b.example",
+      "ascii": "xn--ab-99b.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b6b.example",
+      "ascii": "xn--ab-xea.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b7b.example",
+      "ascii": "xn--ab-0ea.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b8b.example",
+      "ascii": "xn--a b-xhc.example",
+      "error": null
+    },
+    {
+      "host": "a\u00b9b.example",
+      "ascii": "a1b.example",
+      "error": null
+    },
+    {
+      "host": "a\u00bab.example",
+      "ascii": "aob.example",
+      "error": null
+    },
+    {
+      "host": "a\u00bbb.example",
+      "ascii": "xn--ab-dfa.example",
+      "error": null
+    },
+    {
+      "host": "a\u00bcb.example",
+      "ascii": "xn--a14b-1g7a.example",
+      "error": null
+    },
+    {
+      "host": "a\u00bdb.example",
+      "ascii": "xn--a12b-1g7a.example",
+      "error": null
+    },
+    {
+      "host": "a\u00beb.example",
+      "ascii": "xn--a34b-1g7a.example",
+      "error": null
+    },
+    {
+      "host": "a\u00bfb.example",
+      "ascii": "xn--ab-pfa.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c0b.example",
+      "ascii": "xn--ab-jia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c1b.example",
+      "ascii": "xn--ab-mia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c2b.example",
+      "ascii": "xn--ab-pia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c3b.example",
+      "ascii": "xn--ab-sia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c4b.example",
+      "ascii": "xn--ab-via.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c5b.example",
+      "ascii": "xn--ab-yia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c6b.example",
+      "ascii": "xn--ab-1ia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c7b.example",
+      "ascii": "xn--ab-4ia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c8b.example",
+      "ascii": "xn--ab-7ia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00c9b.example",
+      "ascii": "xn--ab-bja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00cab.example",
+      "ascii": "xn--ab-eja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00cbb.example",
+      "ascii": "xn--ab-hja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00ccb.example",
+      "ascii": "xn--ab-kja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00cdb.example",
+      "ascii": "xn--ab-nja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00ceb.example",
+      "ascii": "xn--ab-qja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00cfb.example",
+      "ascii": "xn--ab-tja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d0b.example",
+      "ascii": "xn--ab-wja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d1b.example",
+      "ascii": "xn--ab-zja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d2b.example",
+      "ascii": "xn--ab-2ja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d3b.example",
+      "ascii": "xn--ab-5ja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d4b.example",
+      "ascii": "xn--ab-8ja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d5b.example",
+      "ascii": "xn--ab-cka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d6b.example",
+      "ascii": "xn--ab-fka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d7b.example",
+      "ascii": "xn--ab-rha.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d8b.example",
+      "ascii": "xn--ab-lka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00d9b.example",
+      "ascii": "xn--ab-oka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00dab.example",
+      "ascii": "xn--ab-rka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00dbb.example",
+      "ascii": "xn--ab-uka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00dcb.example",
+      "ascii": "xn--ab-xka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00ddb.example",
+      "ascii": "xn--ab-0ka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00deb.example",
+      "ascii": "xn--ab-3ka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00dfb.example",
+      "ascii": "assb.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e0b.example",
+      "ascii": "xn--ab-jia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e1b.example",
+      "ascii": "xn--ab-mia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e2b.example",
+      "ascii": "xn--ab-pia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e3b.example",
+      "ascii": "xn--ab-sia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e4b.example",
+      "ascii": "xn--ab-via.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e5b.example",
+      "ascii": "xn--ab-yia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e6b.example",
+      "ascii": "xn--ab-1ia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e7b.example",
+      "ascii": "xn--ab-4ia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e8b.example",
+      "ascii": "xn--ab-7ia.example",
+      "error": null
+    },
+    {
+      "host": "a\u00e9b.example",
+      "ascii": "xn--ab-bja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00eab.example",
+      "ascii": "xn--ab-eja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00ebb.example",
+      "ascii": "xn--ab-hja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00ecb.example",
+      "ascii": "xn--ab-kja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00edb.example",
+      "ascii": "xn--ab-nja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00eeb.example",
+      "ascii": "xn--ab-qja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00efb.example",
+      "ascii": "xn--ab-tja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f0b.example",
+      "ascii": "xn--ab-wja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f1b.example",
+      "ascii": "xn--ab-zja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f2b.example",
+      "ascii": "xn--ab-2ja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f3b.example",
+      "ascii": "xn--ab-5ja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f4b.example",
+      "ascii": "xn--ab-8ja.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f5b.example",
+      "ascii": "xn--ab-cka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f6b.example",
+      "ascii": "xn--ab-fka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f7b.example",
+      "ascii": "xn--ab-ika.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f8b.example",
+      "ascii": "xn--ab-lka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00f9b.example",
+      "ascii": "xn--ab-oka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00fab.example",
+      "ascii": "xn--ab-rka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00fbb.example",
+      "ascii": "xn--ab-uka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00fcb.example",
+      "ascii": "xn--ab-xka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00fdb.example",
+      "ascii": "xn--ab-0ka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00feb.example",
+      "ascii": "xn--ab-3ka.example",
+      "error": null
+    },
+    {
+      "host": "a\u00ffb.example",
+      "ascii": "xn--ab-6ka.example",
+      "error": null
+    },
+    {
+      "host": "LOCALHOST",
+      "ascii": "LOCALHOST",
+      "error": null
+    },
+    {
+      "host": "localhost.",
+      "ascii": "localhost.",
+      "error": null
+    },
+    {
+      "host": "a..b",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example",
+      "ascii": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example",
+      "error": null
+    },
+    {
+      "host": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "loc\u00adalhost",
+      "ascii": "localhost",
+      "error": null
+    },
+    {
+      "host": "fa\u00df.de",
+      "ascii": "fass.de",
+      "error": null
+    },
+    {
+      "host": "",
+      "ascii": "",
+      "error": null
+    },
+    {
+      "host": ".",
+      "ascii": null,
+      "error": "UnicodeEncodeError"
+    },
+    {
+      "host": "xn--bcher-kva.example",
+      "ascii": "xn--bcher-kva.example",
+      "error": null
+    }
+  ]
+}

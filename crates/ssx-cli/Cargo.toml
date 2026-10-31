@@ -6,14 +6,49 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+source-transport-test-fixtures = []
+
 [lints]
 workspace = true
 
 [dependencies]
-ssx-wire.workspace = true
+ssx-json.workspace = true
+ssx-cli-openssl-store = { path = "../ssx-cli-openssl-store" }
+tokio.workspace = true
+url.workspace = true
 clap.workspace = true
-reqwest.workspace = true
+# One private HTTP1 serializer; registry http/body types remain unchanged.
+hyper = { package = "ssx-cli-hyper", path = "../../vendor/ssx-cli-hyper", default-features = false, features = ["client", "http1", "source-client-framing"] }
+bytes = "=1.12.1"
+http-body = "=1.1.0"
+tokio-rustls.workspace = true
+base64.workspace = true
+ssx-source-codecs.workspace = true
+rustls.workspace = true
+# Native, statically built X509 trust lookup; no interpreter/backend FFI.
+openssl = { version = "=0.10.81", features = ["vendored"] }
 
 [[bin]]
 name = "ssx"
 path = "src/main.rs"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+flate2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+# Existing locked vetted native chain/SSL policy verifier, never a platform fallback on CA override.
+rustls-platform-verifier = "=0.7.1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+system-configuration = "=0.7.0"
+core-foundation = "=0.9.4"
+# Safe projection of OS-generated CF property-list strings; no libxml/backend.
+quick-xml.workspace = true
+
+[target.'cfg(windows)'.dependencies.windows-registry]
+version = "=0.6.1"

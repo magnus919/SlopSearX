@@ -1,5 +1,13 @@
 //! Closed physical-current custody and finite inverse for two W07 source entries.
 //! The physical read and the pure inverse remain separate composition stages.
+// This reader intentionally borrows only the legacy API of the same leaf.
+// Owning T08A controls exercise main/lock and every otherwise-unused proof API.
+#[expect(
+    dead_code,
+    reason = "W07 reader uses legacy-only proof API; owning T08A instance exercises main/lock and controls"
+)]
+#[path = "../../../crates/xtask/src/t08a_custody.rs"]
+mod cli_source_custody;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
@@ -272,7 +280,7 @@ pub(crate) fn verify(
                 value.pointer(&pointer) == Some(&Value::String(expected.into())),
                 "exact combined current container pointer",
             )?;
-            return Ok(physical);
+            return accepted_main_operand(root, path, &physical);
         }
         let page_doc = page_composition_document(root)?;
         if page_composition_row(&page_doc, path)?["current"]["sha256"] == expected {
@@ -303,9 +311,11 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let baseline = common_snapshot(root, path, &physical)?;
         let joined = outer_document(root)?;
         let current_pin = text(&outer_row(&joined, path)?["current"], "sha256")?;
+        let admitted_current = accepted_main_operand(root, path, &physical)?;
         need(
-            verify(root, path, current_pin, &physical).ok_or("current helper absent")?? == physical,
-            "closed current helper route positive",
+            verify(root, path, current_pin, &physical).ok_or("current helper absent")??
+                == admitted_current,
+            "closed current helper route yields the authenticated accepted-main operand",
         )?;
         let prior = verify(root, path, expected, &physical).ok_or("selected helper absent")??;
         need(
@@ -507,7 +517,15 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         "failed acquisition deleted preexisting contents",
     )?;
     for path in [
-        CAPSULE, PAGE_JOIN, W08_JOIN, OUTER, MAIN, CONTAINER, SOURCES[0], SOURCES[1],
+        CAPSULE,
+        PAGE_JOIN,
+        W08_JOIN,
+        OUTER,
+        MAIN,
+        CONTAINER,
+        SOURCES[0],
+        SOURCES[1],
+        cli_source_custody::accepted_main_join::CAPSULE_PATH,
     ] {
         let target = owned.0.join(path);
         fs::create_dir_all(target.parent().ok_or("copy parent")?).map_err(|e| e.to_string())?;
@@ -822,6 +840,18 @@ fn outer_row<'a>(doc: &'a Value, path: &str) -> Result<&'a Value> {
         .find(|row| row["current"]["path"] == path)
         .ok_or("composition source absent".into())
 }
+fn accepted_main_operand(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    if cli_source_custody::accepted_main_join::owns(path) {
+        cli_source_custody::accepted_main_join::project(
+            root,
+            path,
+            supplied,
+            cli_source_custody::accepted_main_join::Parent::Main,
+        )
+    } else {
+        Ok(supplied.to_vec())
+    }
+}
 fn outer_endpoint(root: &Path, path: &str, supplied: &[u8], parent: &str) -> Result<Vec<u8>> {
     let doc = outer_document(root)?;
     let row = outer_row(&doc, path)?;
@@ -830,10 +860,11 @@ fn outer_endpoint(root: &Path, path: &str, supplied: &[u8], parent: &str) -> Res
         physical == supplied,
         "composition supplied bytes are not physical current",
     )?;
-    material(&row["current"], &physical, "0644")?;
-    // Both exact endpoint inverses run before either old reader receives an operand.
-    let w08 = inverse(&row["w08"], &physical, "0644")?;
-    let page = inverse(&row["page"], &physical, "0644")?;
+    let logical = accepted_main_operand(root, path, &physical)?;
+    material(&row["current"], &logical, "0644")?;
+    // Physical admission above precedes both unchanged accepted-main endpoint inverses.
+    let w08 = inverse(&row["w08"], &logical, "0644")?;
+    let page = inverse(&row["page"], &logical, "0644")?;
     match parent {
         "w08" => Ok(w08),
         "page" => Ok(page),
@@ -874,10 +905,11 @@ fn outer_controls(root: &Path) -> Result<()> {
         let path = text(&row["current"], "path")?;
         let physical = regular(root, path)?;
         common_snapshot(root, path, &physical)?;
+        let logical = accepted_main_operand(root, path, &physical)?;
         for name in ["w08", "page"] {
             let prior = outer_endpoint(root, path, &physical, name)?;
             need(
-                inverse(&row[name], &physical, "0644")? == prior,
+                inverse(&row[name], &logical, "0644")? == prior,
                 "composition pure positive before controls",
             )?;
             let commit = text(&doc["parents"], name)?;
@@ -913,14 +945,14 @@ fn outer_controls(root: &Path) -> Result<()> {
             }
             for mode in ["0600", "0755", "4644"] {
                 need(
-                    inverse(&row[name], &physical, mode).is_err(),
+                    inverse(&row[name], &logical, mode).is_err(),
                     "composition changed mode",
                 )?;
             }
             let mut bad = row[name].clone();
             bad["prior"]["sha256"] = serde_json::json!("changed");
             need(
-                inverse(&bad, &physical, "0644").is_err(),
+                inverse(&bad, &logical, "0644").is_err(),
                 "composition changed prior identity",
             )?;
             if !row[name]["edits"]
@@ -943,7 +975,7 @@ fn outer_controls(root: &Path) -> Result<()> {
                         _ => edits[0]["insert_utf8"] = serde_json::json!("changed"),
                     }
                     need(
-                        inverse(&bad, &physical, "0644").is_err(),
+                        inverse(&bad, &logical, "0644").is_err(),
                         "composition missing/duplicate/moved/changed descriptor",
                     )?;
                 }
@@ -972,7 +1004,12 @@ pub(crate) fn verify_current_registry(root: &Path, supplied: &[u8]) -> Result<()
     let registry: Value = serde_json::from_slice(&physical).map_err(|error| error.to_string())?;
     for path in SOURCES {
         let current = &outer_row(&doc, path)?["current"];
-        material(current, &regular(root, path)?, "0644")?;
+        let physical_source = regular(root, path)?;
+        material(
+            current,
+            &accepted_main_operand(root, path, &physical_source)?,
+            "0644",
+        )?;
         let pointer = format!("/sources/{}", path.replace('~', "~0").replace('/', "~1"));
         need(
             registry.pointer(&pointer) == Some(&current["sha256"]),
@@ -1035,7 +1072,8 @@ pub(crate) fn w07_source_operand(
         "W07 supplied bytes are not physical current",
     )?;
     let row = &doc["rows"][0];
-    let prior = inverse(row, supplied, "0644")?;
+    let logical = accepted_main_operand(root, path, &physical)?;
+    let prior = inverse(row, &logical, "0644")?;
     let git = std::process::Command::new("git")
         .args(["cat-file", "blob", text(&row["prior"], "git_blob")?])
         .current_dir(root)
@@ -1070,6 +1108,7 @@ fn w07_source_controls(root: &Path) -> Result<()> {
     let doc = w07_source_document(root)?;
     let row = &doc["rows"][0];
     let physical = regular(root, W07_SOURCE_PATH)?;
+    let logical = accepted_main_operand(root, W07_SOURCE_PATH, &physical)?;
     let prior = w07_source_operand(root, W07_SOURCE_PATH, W07_SOURCE_PRIOR, &physical)?;
     need(
         sha(&prior) == W07_SOURCE_PRIOR && prior != physical,
@@ -1099,7 +1138,7 @@ fn w07_source_controls(root: &Path) -> Result<()> {
     }
     for mode in ["0600", "0755", "4644"] {
         need(
-            inverse(row, &physical, mode).is_err(),
+            inverse(row, &logical, mode).is_err(),
             "changed W07 source mode",
         )?;
     }
@@ -1128,7 +1167,7 @@ fn w07_source_controls(root: &Path) -> Result<()> {
     altered["edits"][0]["insert_utf8"] = Value::String("changed".into());
     for bad in [missing, duplicate, moved, altered] {
         need(
-            inverse(&bad, &physical, "0644").is_err(),
+            inverse(&bad, &logical, "0644").is_err(),
             "changed W07 inverse spans",
         )?;
     }
@@ -1406,6 +1445,7 @@ fn w08_qualification_controls(root: &Path) -> Result<()> {
 }
 
 pub(crate) fn composition_controls(root: &Path) -> Result<()> {
+    cli_source_custody::accepted_main_join::controls(root)?;
     w07_source_controls(root)?;
     w08_reader_source_controls(root)?;
     w08_frozen_registry_controls(root)?;
