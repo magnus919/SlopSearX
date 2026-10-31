@@ -348,9 +348,6 @@ jobs:
           if run_one mutant "$copy"; then mutant_status=0; else mutant_status=$?; fi
           validate_mutant "$mutant_status" "$evidence/mutant.stdout" "$evidence/mutant.stderr"
           printf '%s\n' 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED' > "$evidence/control-result.txt"
-      - name: Native scholarly adapters and Expat boundary qualification
-        run: cargo xtask check A06 --output target/rust-evidence/A06.json
-
       - name: Locked workspace build
         run: cargo build --locked --workspace --target "${{ matrix.target }}"
 
@@ -1006,6 +1003,12 @@ jobs:
 
       - name: Native DuckDuckGo and Google HTML adapters
         run: cargo xtask check A05 --output target/rust-evidence/A05.json
+      - name: Native scholarly adapters and Expat boundary qualification
+        env:
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
+        run: cargo xtask check A06 --output target/rust-evidence/A06.json
+
       - name: Native biomedical adapters
         run: cargo xtask check A07 --output target/rust-evidence/A07.json
 
