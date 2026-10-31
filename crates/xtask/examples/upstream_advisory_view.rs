@@ -809,7 +809,12 @@ fn advisory_text(name: &str, id: &str, safe: bool) -> String {
 }
 fn fixture_config(out: &Path, kind: &str) -> Result<String> {
     let source = out.join(format!("{kind}-source"));
-    let url = format!("file://{}", source.to_str().ok_or("fixture UTF8")?);
+    // cargo-deny requires a domain; url normalizes bare localhost away.
+    // Unix Git file transport uses this absolute path locally, without DNS.
+    let url = format!(
+        "file://localhost.{}",
+        source.to_str().ok_or("fixture UTF8")?
+    );
     // JSON quoted strings are compatible with the restricted strings used here.
     Ok(format!(
         "[advisories]\ndb-path = {}\ndb-urls = [{}]\nyanked = \"allow\"\n",
