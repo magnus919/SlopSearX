@@ -325,6 +325,144 @@ enum CurrentBoundary {
     Main,
     Page,
 }
+
+// Exact W08/Page outer registry projection before the unchanged Page/main proof.
+// Pure byte-span inverse/forward algorithm follows the existing w07-helpers reader;
+// this private route admits only this registry path, actual supplied bytes and
+// the immutable old Page capsule's exact current tuple. No crate-root imports.
+const W08_REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
+const W08_JOIN: &str = "docs/rust-rewrite/snapshot-fixture-amendment/w08-page-join-v1.json";
+const W08_JOIN_SHA: &str = "2201b3d459bc0e386d3fb847a02a23f5f30fcf4b7e82ca85fd056bead5567847";
+fn current_operand(root: &Path, row: &CurrentRow, supplied: &[u8], mode: u32) -> Result<Vec<u8>> {
+    if row.path != W08_REGISTRY {
+        return Ok(supplied.to_vec());
+    }
+    need(
+        row.current.mode == 0o644
+            && row.current.sha256
+                == "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80",
+        "exact accepted Page registry caller",
+    )?;
+    let (physical, actual_mode) = regular(root, W08_REGISTRY)?;
+    need(
+        mode == 0o644 && actual_mode == mode && physical == supplied,
+        "outer receipt registry is not physical current",
+    )?;
+    let (capsule, capsule_mode) = regular(root, W08_JOIN)?;
+    need(
+        capsule_mode == 0o644 && digest(&capsule) == W08_JOIN_SHA,
+        "outer receipt registry capsule differs",
+    )?;
+    let doc: serde_json::Value =
+        serde_json::from_slice(&capsule).map_err(|error| error.to_string())?;
+    need(
+        doc["schema"] == "W08_PAGE_FOUR_OPERAND_JOIN_V1"
+            && doc["parents"]
+                == serde_json::json!({"w08":"8c12d02ae5e7741410e41de4795a235700fc71c2","page":"72987c50283eb70f70ff6d339c5d9f4ed8e00efd"}),
+        "closed outer receipt registry parents",
+    )?;
+    let rows = doc["rows"].as_array().ok_or("outer receipt rows")?;
+    let paths = [
+        "crates/xtask/src/main.rs",
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        W08_REGISTRY,
+    ];
+    need(
+        rows.len() == paths.len()
+            && rows
+                .iter()
+                .zip(paths)
+                .all(|(row, path)| row["current"]["path"] == path),
+        "closed outer receipt membership",
+    )?;
+    let outer = rows.last().ok_or("outer receipt registry absent")?;
+    let frame = &outer["page"];
+    need(
+        frame["current"] == outer["current"]
+            && frame["current"]["path"] == W08_REGISTRY
+            && frame["current"]["mode"] == "0644"
+            && frame["current"]["sha256"] == digest(&physical)
+            && frame["current"]["bytes"].as_u64() == Some(physical.len() as u64)
+            && frame["prior"]["path"] == W08_REGISTRY
+            && frame["prior"]["mode"] == "0644"
+            && frame["prior"]["sha256"] == row.current.sha256
+            && frame["prior"]["bytes"].as_u64() == Some(row.current.bytes as u64),
+        "exact outer receipt current/prior registry",
+    )?;
+    let edits = frame["edits"].as_array().ok_or("outer receipt edits")?;
+    let mut prior = Vec::new();
+    let (mut old, mut cursor) = (0usize, 0usize);
+    for edit in edits {
+        let at = edit["at"]
+            .as_u64()
+            .and_then(|n| usize::try_from(n).ok())
+            .ok_or("outer receipt offset")?;
+        let remove = edit["remove_utf8"]
+            .as_str()
+            .ok_or("outer receipt removal")?
+            .as_bytes();
+        let insert = edit["insert_utf8"]
+            .as_str()
+            .ok_or("outer receipt insertion")?
+            .as_bytes();
+        need(
+            !remove.is_empty() || !insert.is_empty(),
+            "outer receipt vacuous edit",
+        )?;
+        let end = cursor
+            .checked_add(at.checked_sub(old).ok_or("outer receipt edit order")?)
+            .ok_or("outer receipt span overflow")?;
+        prior.extend_from_slice(physical.get(cursor..end).ok_or("outer receipt prefix")?);
+        let next = end
+            .checked_add(insert.len())
+            .ok_or("outer receipt insertion overflow")?;
+        need(
+            physical.get(end..next) == Some(insert),
+            "outer receipt exact inserted span",
+        )?;
+        prior.extend_from_slice(remove);
+        old = at
+            .checked_add(remove.len())
+            .ok_or("outer receipt removal overflow")?;
+        cursor = next;
+    }
+    prior.extend_from_slice(physical.get(cursor..).ok_or("outer receipt suffix")?);
+    material(&row.current, &prior, mode)?;
+    let mut forward = Vec::new();
+    let mut end = 0;
+    for edit in edits {
+        let at = edit["at"]
+            .as_u64()
+            .and_then(|n| usize::try_from(n).ok())
+            .ok_or("outer receipt forward offset")?;
+        let remove = edit["remove_utf8"]
+            .as_str()
+            .ok_or("outer receipt forward removal")?
+            .as_bytes();
+        let next = at
+            .checked_add(remove.len())
+            .ok_or("outer receipt forward overflow")?;
+        need(
+            at >= end && prior.get(at..next) == Some(remove),
+            "outer receipt exact forward removal",
+        )?;
+        forward.extend_from_slice(prior.get(end..at).ok_or("outer receipt forward prefix")?);
+        forward.extend_from_slice(
+            edit["insert_utf8"]
+                .as_str()
+                .ok_or("outer receipt forward insertion")?
+                .as_bytes(),
+        );
+        end = next;
+    }
+    forward.extend_from_slice(prior.get(end..).ok_or("outer receipt forward suffix")?);
+    need(
+        forward == physical,
+        "outer receipt independent forward differs",
+    )?;
+    Ok(prior)
+}
 fn current_load(root: &Path) -> Result<CurrentComposition> {
     for (path, expected, bytes) in IMMUTABLE_ASSETS {
         let (actual, mode) = regular(root, path)?;
@@ -357,7 +495,8 @@ fn current_load(root: &Path) -> Result<CurrentComposition> {
     )?;
     for row in &doc.rows {
         let (physical, mode) = regular(root, &row.path)?;
-        material(&row.current, &physical, mode)?;
+        let logical = current_operand(root, row, &physical, mode)?;
+        material(&row.current, &logical, mode)?;
     }
     Ok(doc)
 }
@@ -414,7 +553,8 @@ fn current_frame(
         CurrentBoundary::Main => (&row.main, CURRENT_MAIN),
         CurrentBoundary::Page => (&row.page, CURRENT_PAGE),
     };
-    let prior = current_inverse(row, endpoint, &physical, mode)?;
+    let logical = current_operand(root, row, &physical, mode)?;
+    let prior = current_inverse(row, endpoint, &logical, mode)?;
     let blob = Command::new("git")
         .args(["cat-file", "blob", &endpoint.prior_git_blob])
         .current_dir(root)
@@ -439,6 +579,26 @@ fn current_controls(root: &Path) -> Result<()> {
     let doc = current_load(root)?;
     for row in &doc.rows {
         let (physical, mode) = regular(root, &row.path)?;
+        let logical = current_operand(root, row, &physical, mode)?;
+        if row.path == W08_REGISTRY {
+            need(
+                logical != physical,
+                "outer registry projection must be nonvacuous",
+            )?;
+            need(
+                current_operand(root, row, &logical, mode).is_err(),
+                "old Page registry supplied as physical current",
+            )?;
+            need(
+                current_operand(root, row, &physical, 0o755).is_err(),
+                "outer registry wrong mode",
+            )?;
+            let bytes = Command::new("git").args(["show", "72987c50283eb70f70ff6d339c5d9f4ed8e00efd:docs/rust-rewrite/w07/qualification-completion-v1.json"]).current_dir(root).output().map_err(|error|error.to_string())?;
+            need(
+                bytes.status.success() && bytes.stdout == logical,
+                "outer registry exact accepted Page Git bytes",
+            )?;
+        }
         for boundary in [CurrentBoundary::Main, CurrentBoundary::Page] {
             let endpoint = match boundary {
                 CurrentBoundary::Main => &row.main,
@@ -464,7 +624,7 @@ fn current_controls(root: &Path) -> Result<()> {
                 }
             }
             need(
-                current_inverse(row, endpoint, &physical, mode)? == prior,
+                current_inverse(row, endpoint, &logical, mode)? == prior,
                 "combined receipt positive inverse differs",
             )?;
             need(
@@ -480,6 +640,12 @@ fn current_controls(root: &Path) -> Result<()> {
                     current_frame(root, &row.path, &bad, mode, boundary).is_err(),
                     "combined receipt changed/extra supplied bytes accepted",
                 )?;
+            }
+            let mut changed_logical = logical.clone();
+            changed_logical[0] ^= 1;
+            let mut extra_logical = logical.clone();
+            extra_logical.push(b' ');
+            for bad in [changed_logical, extra_logical] {
                 need(
                     current_inverse(row, endpoint, &bad, mode).is_err(),
                     "combined receipt changed/extra inverse accepted",
@@ -494,26 +660,26 @@ fn current_controls(root: &Path) -> Result<()> {
             let mut wrong = row.clone();
             wrong.path = "unlisted.rs".into();
             need(
-                current_inverse(&wrong, endpoint, &physical, mode).is_err(),
+                current_inverse(&wrong, endpoint, &logical, mode).is_err(),
                 "combined receipt unlisted inverse accepted",
             )?;
             if !endpoint.edits.is_empty() {
                 let mut missing = endpoint.clone();
                 missing.edits.remove(0);
                 need(
-                    current_inverse(row, &missing, &physical, mode).is_err(),
+                    current_inverse(row, &missing, &logical, mode).is_err(),
                     "combined receipt missing inverse accepted",
                 )?;
                 let mut duplicate = endpoint.clone();
                 duplicate.edits.insert(0, endpoint.edits[0].clone());
                 need(
-                    current_inverse(row, &duplicate, &physical, mode).is_err(),
+                    current_inverse(row, &duplicate, &logical, mode).is_err(),
                     "combined receipt duplicate inverse accepted",
                 )?;
                 let mut moved = endpoint.clone();
                 moved.edits[0].current_offset += 1;
                 need(
-                    current_inverse(row, &moved, &physical, mode).is_err(),
+                    current_inverse(row, &moved, &logical, mode).is_err(),
                     "combined receipt relocated inverse accepted",
                 )?;
             }

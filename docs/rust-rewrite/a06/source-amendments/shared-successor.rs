@@ -2,6 +2,7 @@
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
+use w07_t02_joint::w08_source_successor;
 #[path = "a13-header-layout-successor.rs"]
 mod a13_header_layout_successor;
 #[path = "post-a06-generation.rs"]
@@ -592,7 +593,24 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         "A06 source must be regular, not symlink",
     )?;
     let raw = fs::read(&path).map_err(|e| e.to_string())?;
+    // W08 admits only these exact current-generation operands. Older joint and
+    // Metrics routes below keep the physical buffer until their own first proof.
+    let raw = if (row["path"] == "crates/ssx-application/src/lib.rs"
+        && row["sha256"] == "e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b")
+        || (row["path"] == "crates/ssx-infra/src/lib.rs"
+            && row["sha256"] == "8a58685c0e79b79a12f38d44259f91adf5c5975ee664efed7d5030172d915c4a")
+        || (row["path"] == "crates/xtask/src/main.rs" && row["sha256"] == w07_t02_joint::MAIN_SHA)
+        || (row["path"] == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs"
+            && row["sha256"] == "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2")
+        || (row["path"] == "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs"
+            && row["sha256"] == "2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6")
+    {
+        w08_source_successor::parent(root, text(row, "path")?, &raw)?
+    } else {
+        raw
+    };
     // Joint normalization is permitted only for these exact historical/current tuples.
+
     let raw = if (row["path"] == "crates/xtask/src/main.rs"
         && row["sha256"] == "8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c")
         || (row["path"] == "Cargo.lock"
@@ -615,7 +633,7 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     let raw = if row["path"] == "crates/ssx-application/src/lib.rs"
         && row["sha256"] == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4"
     {
-        metrics_predecessor(text(row, "path")?, text(row, "sha256")?, &raw)?
+        metrics_predecessor(root, text(row, "path")?, text(row, "sha256")?, &raw)?
     } else {
         raw
     };
@@ -2184,6 +2202,7 @@ pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> 
 /// Only the reviewed Metrics insertion is removed for existing historical callers.
 /// The full physical afterimage is required; old bytes alone are never current proof.
 pub(crate) fn metrics_predecessor(
+    root: &Path,
     path: &str,
     expected: &str,
     actual: &[u8],
@@ -2193,6 +2212,22 @@ pub(crate) fn metrics_predecessor(
             && expected == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4",
         "W07 Metrics caller tuple differs",
     )?;
+    let operand = w08_source_successor::parent(root, path, actual)?;
+    metrics_frame_predecessor(path, expected, &operand)
+}
+/// Original exact Metrics-frame proof, independently exercised after the W08
+/// physical proof. Its prior source remains reconstructible byte for byte.
+pub(crate) fn metrics_frame_predecessor(
+    path: &str,
+    expected: &str,
+    actual: &[u8],
+) -> Result<Vec<u8>, String> {
+    need(
+        path == "crates/ssx-application/src/lib.rs"
+            && expected == "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4",
+        "W07 Metrics caller tuple differs",
+    )?;
+
     need(
         actual.len() == 6168
             && digest(actual) == "e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b",

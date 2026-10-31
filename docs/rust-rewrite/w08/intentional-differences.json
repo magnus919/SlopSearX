@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan_id": "W08",
+  "status": "native_scope_qualified",
+  "differences": [
+    {
+      "id": "W08-D01",
+      "kind": "security_hardening",
+      "reference": "Python resolves composition sources at admission; the retained source is not re-read by the research worker",
+      "native": "Re-resolve complete immutable binding before every reservation and after reservation/load/renew awaits before dispatch; absent validator fails closed for composed jobs",
+      "evidence": "expiry_during_atomic_create_is_persisted_but_worker_denies_without_charge; revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves_reservation",
+      "limit": "No revocation guarantee for requests already admitted and in flight; acknowledged reservations remain monotonic"
+    },
+    {
+      "id": "W08-D03",
+      "kind": "malformed_record_hardening",
+      "reference": "Malformed incomparable_reasons may be treated as an iterable",
+      "native": "Reject a malformed report/reasons container and nonstring engine members explicitly",
+      "evidence": "saved_report_uses_historical_window_and_rejects_incomparable_truncated_malformed"
+    },
+    {
+      "id": "W08-D04",
+      "kind": "bounded_execution",
+      "reference": "Reference resolution has no per-worker source validation step",
+      "native": "Read-only worker source admission observes persisted deadline, worker cancellation and a 30-second maximum operation window; this is not a semantic cursor-count cap",
+      "evidence": "blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_loss_without_dispatch: actual shutdown/cancel/persisted10sdeadline/30scap/owner-loss cases passed",
+      "limit": "Valid retained multi-attempt sources remain accepted; final request timeout/cancellation wiring belongs to W09"
+    }
+  ],
+  "deferred": [
+    {
+      "owner": "W09",
+      "scope": "final workflow MCP registry/schema/wire composition including authenticated transport matrix"
+    },
+    {
+      "owner": "W10",
+      "scope": "protected portal composition UI/browser acceptance"
+    }
+  ],
+  "qualified_code_head": "a67a156100d30f87cb824a52699ae575da8dc0cd",
+  "local_acceptance": "docs/rust-rewrite/w08/LOCAL_ACCEPTANCE.json"
+}
