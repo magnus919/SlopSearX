@@ -19,17 +19,17 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "776747fe03698c554c33355bc1bd3054c2ea1f20cd7bfe85b95cc2a2f1f3ab32";
+const REGISTRY_SHA: &str = "3c79332149a2efcd69f4d2ef4a16aa5771d8bf82add08f23b057568e7901c01c";
 const NORMAL_MAIN_JOIN_READERS: [(&str, &str, &str); 2] = [
     (
         "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
         "fde467c22e12d3441352eb959a1be0370e8b7fbefe3b078a86357d145c33eada",
-        "072ecabfc3c8c297250d672732919774e4843d286b1d36784465edecd1fd46c5",
+        "d21595831cc5a2610e5fd28c027e123a8d3f02a57f6cde5c725f12d10d99a1d7",
     ),
     (
         "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
         "4e072aa43f9dd856a9fa17304f2b5661215ccd273655b5cb0ed022502f369868",
-        "39077fcab03e0801cc75c92127fa01406d77197d916397c8c22f2c33bfc7038e",
+        "f1548d981dd29552e28b0356062fc14b70dae7d9663d2050538395490a3f41ce",
     ),
 ];
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
@@ -78,6 +78,13 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     if path == "crates/xtask/src/main.rs" && expected == w07_t02_joint::MAIN_SHA {
         w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
         return Ok(bytes);
+    }
+    if path == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE
+        && expected == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA
+    {
+        return w07_t02_joint::cli_source_custody::test_dependency_prior(
+            root, path, expected, &bytes,
+        );
     }
     if let Some(proven) = snapshot_helper_amendment::verify(root, path, expected, &bytes) {
         return proven;
@@ -803,6 +810,33 @@ mod tests {
             .parent()
             .unwrap();
         test_dependency_successor::controls(root).unwrap();
+        let path = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE;
+        let expected = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA;
+        let actual = fs::read(root.join(path)).unwrap();
+        let prior = frozen(root, path, expected).unwrap();
+        assert_eq!(sha(&prior), expected);
+        assert!(frozen(root, path, &"0".repeat(64)).is_err());
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(
+                root,
+                "Cargo.lock",
+                expected,
+                &actual,
+            )
+            .is_err()
+        );
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(root, path, expected, &prior,)
+                .is_err()
+        );
+        let mut changed = actual;
+        changed.push(b' ');
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(
+                root, path, expected, &changed,
+            )
+            .is_err()
+        );
     }
     #[test]
     fn main_successor_requires_exact_finite_insertions() {

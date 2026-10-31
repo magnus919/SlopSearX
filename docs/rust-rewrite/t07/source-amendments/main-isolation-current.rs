@@ -207,25 +207,28 @@ pub(crate) fn operands(
             "exact relocation and seventeen-selector manifest",
         )?;
     }
+    if let Some(buffer) = supplied {
+        need(
+            buffer == actual,
+            "supplied gateway operand is not physical current",
+        )?;
+    }
     let proof_input = if path == "crates/xtask/src/main.rs" {
-        if let Some(buffer) = supplied {
-            need(
-                buffer == actual,
-                "supplied gateway main is not physical current",
-            )?;
-        }
         super::w07_t02_joint::snapshot_helper_amendment::gateway_main(root, &actual)?
+    } else if super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::owns(
+        path,
+    ) {
+        super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::project(
+            root, path, &actual,
+            super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::Parent::Gateway,
+        )?
     } else {
         actual.clone()
     };
     let proof = validate(
         row,
         &proof_input,
-        if path == "crates/xtask/src/main.rs" {
-            supplied.map(|_| proof_input.as_slice())
-        } else {
-            supplied
-        },
+        supplied.map(|_| proof_input.as_slice()),
         selected,
     )?;
     git_material(
@@ -343,6 +346,11 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         let physical = regular(root, text(&row["physical"], "path")?)?;
         let actual = if path == "crates/xtask/src/main.rs" {
             super::w07_t02_joint::snapshot_helper_amendment::gateway_main(root, &physical)?
+        } else if super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::owns(path) {
+            super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::project(
+                root, path, &physical,
+                super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::Parent::Gateway,
+            )?
         } else {
             physical.clone()
         };

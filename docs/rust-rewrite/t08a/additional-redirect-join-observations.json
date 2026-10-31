@@ -1,0 +1,314 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "runtime": "CPython3.13.6",
+  "classification": "immutable owned-loopback source redirect observations; no native parity inferred",
+  "captures": [
+    {
+      "native_case": {
+        "id": "redirect-join-triple-slash",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base"
+        },
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "///final"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/base/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/final",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-redirect-join-observations.json#redirect-join-triple-slash"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    },
+    {
+      "native_case": {
+        "id": "redirect-join-same-scheme-params",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base"
+        },
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "http:next;new?x=1#frag"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/base/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/base/next;new?x=1",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-redirect-join-observations.json#redirect-join-same-scheme-params"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    },
+    {
+      "native_case": {
+        "id": "redirect-join-relative-redundant",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base"
+        },
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "../c//d"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/base/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/c/d",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-redirect-join-observations.json#redirect-join-relative-redundant"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    },
+    {
+      "native_case": {
+        "id": "redirect-join-absolute-redundant",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base"
+        },
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/c//d"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/base/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/c//d",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-redirect-join-observations.json#redirect-join-absolute-redundant"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    },
+    {
+      "native_case": {
+        "id": "redirect-join-latin1-header",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base"
+        },
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/caf\u00e9"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/base/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/caf%E9",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-redirect-join-observations.json#redirect-join-latin1-header"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    },
+    {
+      "native_case": {
+        "id": "redirect-join-percent-encoded-dot",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/base"
+        },
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/a/%2e%2e/final"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/base/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/a/%2e%2e/final",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-redirect-join-observations.json#redirect-join-percent-encoded-dot"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": ""
+    }
+  ]
+}

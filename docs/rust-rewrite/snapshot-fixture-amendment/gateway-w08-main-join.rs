@@ -1,4 +1,10 @@
 //! Closed gateway040/accepted-d9 join. No calls into either historical reader.
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Gateway and CLI/checker proof namespaces share one self-contained stateless physical join leaf"
+)]
+#[path = "gateway-cli-stacked-join.rs"]
+pub(crate) mod stacked;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
@@ -178,7 +184,7 @@ fn capsule(root: &Path) -> Result<Value> {
         let physical = regular(root, path)?;
         material(
             &doc["rows"][ROWS.iter().position(|r| r.0 == path).ok_or("row")?]["current"],
-            &physical,
+            &stacked::project(root, path, &physical, stacked::Parent::Gateway)?,
             source_mode(root, path)?,
         )?;
     }
@@ -275,13 +281,16 @@ pub(crate) fn project(root: &Path, path: &str, supplied: &[u8], parent: Parent) 
         physical == supplied,
         "join supplied buffer is not physical current",
     )?;
-    interpret(&capsule(root)?, path, &physical, mode, parent)
+    let logical = stacked::project(root, path, &physical, stacked::Parent::Gateway)?;
+    interpret(&capsule(root)?, path, &logical, mode, parent)
 }
 /// Same controls are reached by owning CLI and W08 composition routes.
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    stacked::controls(root)?;
     let doc = capsule(root)?;
     for (index, (path, gateway_count, main_count)) in ROWS.iter().enumerate() {
         let physical = regular(root, path)?;
+        let logical = stacked::project(root, path, &physical, stacked::Parent::Gateway)?;
         for (name, parent, count, other) in [
             ("gateway", Parent::Gateway, *gateway_count, "main"),
             ("main", Parent::Main, *main_count, "gateway"),
@@ -289,7 +298,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             let prior = project(root, path, &physical, parent)?;
             let row = &doc["rows"][index][name];
             need(
-                inverse(row, &physical, "0644", count)? == prior,
+                inverse(row, &logical, "0644", count)? == prior,
                 "pure outer positive before controls",
             )?;
             let commit = text(&row["prior"], "commit")?;
@@ -324,7 +333,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             )?;
             for mode in ["0600", "0755", "4644"] {
                 need(
-                    interpret(&doc, path, &physical, mode, parent).is_err(),
+                    interpret(&doc, path, &logical, mode, parent).is_err(),
                     "outer wrong mode",
                 )?;
             }
@@ -344,14 +353,14 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                     _ => edits[0]["insert_utf8"] = serde_json::json!("changed"),
                 }
                 need(
-                    interpret(&bad, path, &physical, "0644", parent).is_err(),
+                    interpret(&bad, path, &logical, "0644", parent).is_err(),
                     "outer missing/duplicate/moved/changed span",
                 )?;
             }
             let mut unselected = doc.clone();
             unselected["rows"][index][other]["prior"]["sha256"] = serde_json::json!("changed");
             need(
-                interpret(&unselected, path, &physical, "0644", parent).is_err(),
+                interpret(&unselected, path, &logical, "0644", parent).is_err(),
                 "unselected endpoint must also authenticate",
             )?;
         }

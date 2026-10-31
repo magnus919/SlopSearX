@@ -1,5 +1,11 @@
 //! Closed normal-merge composition of the reviewed W07 and T02 source parents.
 //! Physical joint identity precedes either historical parent interpretation.
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Owning joint and legacy W07 proof namespaces intentionally share this self-contained stateless leaf"
+)]
+#[path = "../../../../crates/xtask/src/t08a_custody.rs"]
+pub(crate) mod cli_source_custody;
 #[allow(dead_code)]
 #[path = "../../../../crates/xtask/src/w08/source_successor.rs"]
 pub(crate) mod w08_source_successor;
@@ -586,6 +592,38 @@ fn canonical_input(root: &Path, path: &str, actual: &[u8], mode: u32) -> Result<
                 "gateway, W08 and snapshot must agree on exact common main",
             )?;
         }
+        let cli = if path == "crates/xtask/src/a13.rs" {
+            cli_source_custody::legacy_prior(root, path, actual)?
+        } else if path == "crates/xtask/src/main.rs" {
+            // Main6 authenticates the pre-W08 e763 frame; the accepted-main
+            // join independently yields d9. They are deliberately distinct stages.
+            cli_source_custody::prior(root, path, actual)?;
+            cli_source_custody::accepted_main_join::project(
+                root,
+                path,
+                actual,
+                cli_source_custody::accepted_main_join::Parent::Main,
+            )?
+        } else {
+            cli_source_custody::prior(root, path, actual)?
+        };
+        if path == "crates/xtask/src/main.rs" {
+            let accepted_main = snapshot_helper_amendment::gateway_w08_main_join::project(
+                root,
+                path,
+                actual,
+                snapshot_helper_amendment::gateway_w08_main_join::Parent::Main,
+            )?;
+            need(
+                cli == accepted_main,
+                "CLI accepted-W08 join agrees with exact d9 main input",
+            )?;
+        } else {
+            need(
+                gateway == cli,
+                "gateway and CLI agree on exact common lock/A13 joint input",
+            )?;
+        }
         Ok(gateway)
     } else if path == PAGE_SEARCH.path {
         search_frame(actual, mode, false)
@@ -673,6 +711,7 @@ pub(crate) fn parent_git_blob(
 }
 /// Real Git parents and both exact inverses, plus rejection controls. No new test identity.
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    cli_source_custody::controls(root)?;
     #[cfg(test)]
     snapshot_helper_amendment::controls(root)?;
     page_search_controls(root)?;

@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "differences": [
+    {
+      "id": "sanitized-diagnostics-help",
+      "scope": "native stable diagnostic/help bytes replace Python exception/traceback/argparse rendering; status/request/empty-output preserved",
+      "review": "root explicitly approved proposed improvement; native evidence pending"
+    },
+    {
+      "id": "unordered-NaN-category-comparison",
+      "scope": "config YAML rejects only an actual unordered NaN category-key comparison, including nested comparisons; single NaN and JSON rendering retain source behavior",
+      "cases": [
+        "category-nan-order",
+        "category-nested-nan-order"
+      ],
+      "reference": "additional-shape-observations.json preserves original successful Timsort outcomes; no claim of Timsort parity",
+      "review": "root approved narrow malformed-shape rejection with empty stdout"
+    },
+    {
+      "id": "native-default-trust",
+      "scope": "portable OS OpenSSL bundles/directories on Unix, Windows platform verifier only with both FILE/DIR unset; explicit overrides remain OpenSSL and never broaden to OS roots",
+      "review": "root approved architecture pending actual platform evidence and independent security review"
+    },
+    {
+      "id": "native-tls-negotiation",
+      "scope": "maintained Rustls TLS12/TLS13 cipher/signature suite; no claim of universal OpenSSL negotiation equivalence",
+      "review": "disclosed, pending final root review"
+    },
+    {
+      "id": "native-utf8-lf-streams",
+      "scope": "Native piped stdout/stderr use UTF-8 with literal LF on every supported target, including Windows. Frozen Mac/Unix source bytes stay exact; Windows CPython CRLF/locale text output is not universal byte-parity evidence. JSON values and request order are unchanged.",
+      "review": "root explicitly approved deterministic native stream policy; every platform still executes full corpus"
+    },
+    {
+      "id": "proxy-credential-hop-scope",
+      "scope": "Proxy-Authorization belongs only to the selected current proxy. Unlike captured source leak, redirects to direct origins or a different proxy never inherit credentials.",
+      "review": "Root explicitly approved; immutable successful source leak retained; new native outcome still unrun."
+    },
+    {
+      "id": "strict-chunk-framing",
+      "scope": "Exactly five demonstrated malformed frames fail with empty stdout: wrong data CRLF, missing final trailer blank, and non-RFC chunk-size tokens +2, 0x2, 2_0. Valid RFC hexadecimal sizes/leading zeros/extensions and every observed valid source framing boundary remain admitted.",
+      "review": "Root explicitly approved these five protocol-integrity exceptions only; original successful source outcomes retained; final native corpus unrun.",
+      "cases": [
+        "wire-chunk-delimiter-malformed",
+        "wire-chunk-trailer-eof-no-blank",
+        "wire-chunk-size-plus",
+        "wire-chunk-size-prefix",
+        "wire-chunk-size-underscore"
+      ]
+    }
+  ]
+}

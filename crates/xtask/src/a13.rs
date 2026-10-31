@@ -809,6 +809,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "--locked",
             "--workspace",
             "--all-targets",
+            "--features",
+            "ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing",
         ],
         records,
     )?;

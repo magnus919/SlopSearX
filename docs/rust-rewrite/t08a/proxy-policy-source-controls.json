@@ -1,0 +1,161 @@
+{
+  "schema": 1,
+  "runtime": "3.13.6 (v3.13.6:4e665351082, Aug  6 2025, 11:22:35) [Clang 16.0.0 (clang-1600.0.26.6)]",
+  "source_files": {
+    "request.py": {
+      "sha256": "7353b9d47f51fa495839328f79c4f24bc1feaea70f7c3377c521159db34fa1aa",
+      "bytes": 102260
+    },
+    "fnmatch.py": {
+      "sha256": "95391dac2ce9f60084d65eba2f4b9d9735e28136d55b684e1fde7d6342555963",
+      "bytes": 6180
+    }
+  },
+  "mac": [
+    {
+      "host": "printer",
+      "simple": true,
+      "exceptions": [],
+      "expected": true
+    },
+    {
+      "host": "printer:80",
+      "simple": true,
+      "exceptions": [],
+      "expected": true
+    },
+    {
+      "host": "printer.local",
+      "simple": true,
+      "exceptions": [],
+      "expected": false
+    },
+    {
+      "host": "10.1.2.3:80",
+      "simple": false,
+      "exceptions": [
+        "10.1/16"
+      ],
+      "expected": true
+    },
+    {
+      "host": "10.2.2.3",
+      "simple": false,
+      "exceptions": [
+        "10.1/16"
+      ],
+      "expected": false
+    },
+    {
+      "host": "127.0.0.1",
+      "simple": false,
+      "exceptions": [
+        "127.0.0.1/33"
+      ],
+      "expected": false
+    },
+    {
+      "host": "ABC.local:80",
+      "simple": false,
+      "exceptions": [
+        "*.local"
+      ],
+      "expected": false
+    },
+    {
+      "host": "ABC.local:80",
+      "simple": false,
+      "exceptions": [
+        "*.local:*"
+      ],
+      "expected": true
+    },
+    {
+      "host": "a.local",
+      "simple": false,
+      "exceptions": [
+        "[!z-a].local"
+      ],
+      "expected": true
+    }
+  ],
+  "windows": [
+    {
+      "host": "printer:80",
+      "override": "<local>",
+      "expected": true
+    },
+    {
+      "host": "printer.local",
+      "override": "<local>",
+      "expected": false
+    },
+    {
+      "host": "ABC.local:80",
+      "override": "*.LOCAL",
+      "expected": true
+    },
+    {
+      "host": "a.example:80",
+      "override": " [!b-z].example ; ignored",
+      "expected": true
+    },
+    {
+      "host": "a.example",
+      "override": "[z-a].example",
+      "expected": false
+    }
+  ],
+  "glob": [
+    {
+      "host": "a",
+      "pattern": "[z-a]",
+      "expected": false
+    },
+    {
+      "host": "b",
+      "pattern": "[!z-a]",
+      "expected": true
+    },
+    {
+      "host": "a",
+      "pattern": "[a--c]",
+      "expected": false
+    },
+    {
+      "host": "-",
+      "pattern": "[a--c]",
+      "expected": false
+    },
+    {
+      "host": "x",
+      "pattern": "[]]",
+      "expected": false
+    },
+    {
+      "host": "]",
+      "pattern": "[]]",
+      "expected": true
+    },
+    {
+      "host": "!",
+      "pattern": "[!]",
+      "expected": false
+    },
+    {
+      "host": "[",
+      "pattern": "[",
+      "expected": true
+    },
+    {
+      "host": "abcd",
+      "pattern": "a**?d",
+      "expected": true
+    },
+    {
+      "host": "a\nb",
+      "pattern": "a*b",
+      "expected": true
+    }
+  ]
+}

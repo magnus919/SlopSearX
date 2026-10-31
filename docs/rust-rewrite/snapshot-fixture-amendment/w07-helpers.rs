@@ -79,6 +79,15 @@ pub(crate) fn verify(
         let (g, m) = frames(root, path, supplied)?;
         let registry = main_d9::raw_source(root, REGISTRY)?;
         verify_current_registry(root, &registry)?;
+        let cli = gateway_w08_main_join::stacked::project(
+            root,
+            path,
+            supplied,
+            gateway_w08_main_join::stacked::Parent::Cli,
+        )?;
+        if expected == digest(&cli) {
+            return Ok(cli);
+        }
         if expected == digest(supplied) {
             return Ok(supplied.to_vec());
         }
@@ -2650,6 +2659,7 @@ mod main_d9 {
 #[cfg(all(test, unix))]
 fn copy_outer_fixture_inputs(root: &Path, fixture: &Path) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
+    gateway_w08_main_join::stacked::copy_fixture_inputs(root, fixture)?;
     for path in [
         MAIN,
         SOURCES[0],

@@ -198,3 +198,21 @@ mod idna2008_data;
 /// Pinned Python text operations for the opt-in source URL consumer.
 #[cfg(feature = "source-idna2008")]
 pub mod python_text;
+
+/// Encode a network hostname with the existing source IDNA2003/Unicode3.2
+/// implementation. ASCII case and trailing dot follow CPython's encoder fast
+/// path; Unicode labels use the same private nameprep/punycode code and data.
+/// No decoder-worker budget or unrelated codec behavior is changed. None is a
+/// source Unicode admission error; arithmetic overflow remains distinguishable.
+pub fn encode_idna2003_host(input: &str) -> Result<Option<String>, ParameterError> {
+    match idna::encode_host(input) {
+        Ok(bytes) => String::from_utf8(bytes)
+            .map(Some)
+            .map_err(|_| ParameterError::RegistryInvariant),
+        Err(punycode::Failure::Source(punycode::StrictError::Unicode { .. })) => Ok(None),
+        Err(punycode::Failure::Source(punycode::StrictError::Overflow)) => Err(
+            ParameterError::OverflowError("Python int too large to convert to C ssize_t"),
+        ),
+        Err(punycode::Failure::Output(_)) => Err(ParameterError::RegistryInvariant),
+    }
+}

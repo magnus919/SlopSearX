@@ -157,6 +157,11 @@ pub fn verify_current(root: &Path) -> Result<()> {
         None,
         super::main_isolation_current::Parent::Main,
     )?;
+    let cli = super::w07_t02_joint::cli_source_custody::prior(root, "Cargo.lock", &lock)?;
+    need(
+        main == cli,
+        "gateway and CLI current lock agree on original joint frame",
+    )?;
     need(
         sha(&main) == super::w07_t02_joint::LOCK_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
         "W07 accepted main dependency pair required",
@@ -242,6 +247,7 @@ pub fn controls(root: &Path) -> Result<()> {
         Some(&physical_lock),
         super::main_isolation_current::Parent::Main,
     )?;
+    current_filesystem_controls(root, &physical_lock)?;
     filesystem_controls(&main_lock, &manifest, &old_lock, &old_manifest)
 }
 #[cfg(not(unix))]
@@ -313,4 +319,79 @@ fn filesystem_controls(
     fs::write(&target, lock).map_err(|e| e.to_string())?;
     fs::write(&manifest_path, manifest).map_err(|e| e.to_string())?;
     original_verify_current(&owned.0)
+}
+
+#[cfg(not(unix))]
+fn current_filesystem_controls(_: &Path, _: &[u8]) -> Result<()> {
+    Err("W07 current dependency filesystem controls require Unix".into())
+}
+#[cfg(unix)]
+fn current_filesystem_controls(source_root: &Path, current_lock: &[u8]) -> Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    struct Owned(std::path::PathBuf);
+    impl Drop for Owned {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_nanos();
+    let directory =
+        std::env::temp_dir().join(format!("w07-stacked-dev-{}-{stamp}", std::process::id()));
+    fs::create_dir(&directory).map_err(|e| e.to_string())?;
+    let owned = Owned(directory);
+    let stacked = &owned.0;
+    super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::copy_fixture_inputs(source_root, stacked)?;
+    for path in [
+        "crates/ssx-mcp/Cargo.toml",
+        "docs/rust-rewrite/t07/source-amendments/main-isolation-current-operands-v1.json",
+        "docs/rust-rewrite/t08a/shared-source-successor.json",
+        "docs/rust-rewrite/t08a/accepted-w08-main-join-v1.json",
+    ] {
+        let target = stacked.join(path);
+        fs::create_dir_all(target.parent().ok_or("current fixture parent")?)
+            .map_err(|e| e.to_string())?;
+        fs::copy(source_root.join(path), &target).map_err(|e| e.to_string())?;
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o644))
+            .map_err(|e| e.to_string())?;
+    }
+    verify_current(stacked)?;
+    let capsule = stacked.join(super::w07_t02_joint::snapshot_helper_amendment::gateway_w08_main_join::stacked::CAPSULE_PATH);
+    let raw = fs::read(&capsule).map_err(|e| e.to_string())?;
+    let mut changed = raw.clone();
+    changed.push(0);
+    fs::write(&capsule, changed).map_err(|e| e.to_string())?;
+    need(
+        verify_current(stacked).is_err(),
+        "changed stacked lock capsule accepted",
+    )?;
+    fs::remove_file(&capsule).map_err(|e| e.to_string())?;
+    need(
+        verify_current(stacked).is_err(),
+        "missing stacked lock capsule accepted",
+    )?;
+    fs::write(&capsule, &raw).map_err(|e| e.to_string())?;
+    fs::set_permissions(&capsule, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
+    let target = stacked.join("Cargo.lock");
+    let old =
+        super::w07_t02_joint::cli_source_custody::prior(source_root, "Cargo.lock", current_lock)?;
+    fs::write(&target, old).map_err(|e| e.to_string())?;
+    need(
+        verify_current(stacked).is_err(),
+        "old joint lock substituted for stacked current",
+    )?;
+    fs::write(&target, current_lock).map_err(|e| e.to_string())?;
+    let manifest = stacked.join("crates/ssx-mcp/Cargo.toml");
+    let raw = fs::read(&manifest).map_err(|e| e.to_string())?;
+    let mut changed = raw.clone();
+    changed[0] ^= 1;
+    fs::write(&manifest, changed).map_err(|e| e.to_string())?;
+    need(
+        verify_current(stacked).is_err(),
+        "changed paired stacked MCP manifest accepted",
+    )?;
+    fs::write(&manifest, raw).map_err(|e| e.to_string())?;
+    verify_current(stacked)
 }

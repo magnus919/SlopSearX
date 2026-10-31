@@ -1,0 +1,296 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "runtime": "CPython3.13.6 http.client",
+  "captures": [
+    {
+      "id": "headers-99",
+      "profile": {
+        "kind": "header-count",
+        "extra": 97
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353937330d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "headers-99.bin.gz",
+        "original_bytes": 922,
+        "original_sha256": "b4766b22d33136d0bccdafd52e66551981a2ef135bdca7f8fca1a1e5dc426182",
+        "gzip_sha256": "3e0c633cc43a77a24517f53a1d774b667d0ac1e915f2482cca7cb560ccba1312",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "headers-100",
+      "profile": {
+        "kind": "header-count",
+        "extra": 98
+      },
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420676f74206d6f7265207468616e2031303020686561646572730a",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353937350d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "headers-100.bin.gz",
+        "original_bytes": 931,
+        "original_sha256": "8a6b8640b2cffebfb6fac766e123828766f850e1537059d91b338bee77c756d7",
+        "gzip_sha256": "3f37855d670070f9e5f46a7ed8299a783ae1826817ceb85c6c1ba0258b3b6ba7",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "header-line-65536",
+      "profile": {
+        "kind": "single-header",
+        "value_bytes": 65531
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353937370d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "header-line-65536.bin.gz",
+        "original_bytes": 65595,
+        "original_sha256": "5cc16844ea9a14e178c527960cc05f380708b9ed4150b1c4a5fc28c1eaab8a7e",
+        "gzip_sha256": "ec0879247d0d00fce2845321b6533cde645cbfb8f540f7fc9f376d41ab34c536",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "header-line-65537",
+      "profile": {
+        "kind": "single-header",
+        "value_bytes": 65532
+      },
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420676f74206d6f7265207468616e203635353336206279746573207768656e2072656164696e6720686561646572206c696e650a",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353937390d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "header-line-65537.bin.gz",
+        "original_bytes": 65596,
+        "original_sha256": "11ecb9103d0e46c08a6922b4e1674647f7695b63b3d5d9b101a9915fa42247d1",
+        "gzip_sha256": "8ae80aaa35c689fcca5506e4c3d6a8a37056486c340b43fbc82f18e29893dfca",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "headers-eight-60000",
+      "profile": {
+        "kind": "large-headers",
+        "count": 8,
+        "value_bytes": 60000
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353938310d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "headers-eight-60000.bin.gz",
+        "original_bytes": 480115,
+        "original_sha256": "a7d659ac5271bdc8c3d4000948d220aa6b211ae8fbdf3644d29f319a40cfec3f",
+        "gzip_sha256": "5ec148a1bdfbcf49275740b6ff79958ac8084127bace9fa2cdfab06d55c79d9c",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "trailers-1-20000",
+      "profile": {
+        "kind": "chunked-trailers",
+        "count": 1,
+        "value_bytes": 20000
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353938340d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "trailers-1-20000.bin.gz",
+        "original_bytes": 20083,
+        "original_sha256": "c4ce8e0d719bb6235052a2225faae72d97ab597fe999e398f7c6bf787d7f5551",
+        "gzip_sha256": "f56766c2b310fe7bd46e7c7471f537f51f03a59b76df2c1e9eab947d89b4f136",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "trailers-101-100",
+      "profile": {
+        "kind": "chunked-trailers",
+        "count": 101,
+        "value_bytes": 100
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353938360d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "trailers-101-100.bin.gz",
+        "original_bytes": 10683,
+        "original_sha256": "564711a1bf79ec5e443adc364979e7ebba26ceb7333e8199bef37d3a29bb1f82",
+        "gzip_sha256": "473085a23cc3f4e491188822c5e240ec8de94944ee888d7100641242e972616a",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "trailers-1024-100",
+      "profile": {
+        "kind": "chunked-trailers",
+        "count": 1024,
+        "value_bytes": 100
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353938380d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "trailers-1024-100.bin.gz",
+        "original_bytes": 107598,
+        "original_sha256": "ba8102c025a4f400bbf94e28526a3cee6154966a805c5f2428470b4e560b7733",
+        "gzip_sha256": "47befa66de022cdcad4490a6b166c278f22dd7295b11133b4fdf1ce112b82f55",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "trailers-1-65532",
+      "profile": {
+        "kind": "chunked-trailers",
+        "count": 1,
+        "value_bytes": 65532
+      },
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420676f74206d6f7265207468616e203635353336206279746573207768656e2072656164696e6720747261696c6572206c696e650a",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353939300d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "trailers-1-65532.bin.gz",
+        "original_bytes": 65615,
+        "original_sha256": "1cb254ca8467c32c01c08c678293f0920ff42fe3d230615d821ff29b5cfd15d7",
+        "gzip_sha256": "0684699e694f731fea7c30e8f303ed5288d992868dedaaa20d65b0846e74070f",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "informational-100",
+      "profile": {
+        "kind": "informational",
+        "status": 100
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353939330d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "informational-100.bin.gz",
+        "original_bytes": 83,
+        "original_sha256": "261114913e726c1b926f111b65c1f975ee360c9cdf8525dd502edb99c8d7b60a",
+        "gzip_sha256": "c33be3c00da3dfc256005f6ee368969d0d8e98d2f8c12708fdcf9f3ba78b139d",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "informational-103",
+      "profile": {
+        "kind": "informational",
+        "status": 103
+      },
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203130333a20466978747572650a",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353939350d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "informational-103.bin.gz",
+        "original_bytes": 83,
+        "original_sha256": "f0639132f6a7700d54832c03612e5341902c1daa416973b38591d23108b62b99",
+        "gzip_sha256": "abc5308a3faf9320a6b8e62e91bb25037f4f291574465121ca10fa6fdc61e5ba",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "chunk-delimiter-malformed",
+      "profile": {
+        "kind": "malformed-chunk-delimiter"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353939370d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-delimiter-malformed.bin.gz",
+        "original_bytes": 78,
+        "original_sha256": "f87dcb387da15c0c2dec36f40ceb490a033f39dd38371d8cc057cf72f86a514f",
+        "gzip_sha256": "79a598a848c0b46ba55b7a1dc8ecb585c07ff10e3a20994cf1e3b0a7c6f168ee",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    },
+    {
+      "id": "chunk-trailer-eof-no-blank",
+      "profile": {
+        "kind": "missing-trailer-blank"
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35353939390d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-trailer-eof-no-blank.bin.gz",
+        "original_bytes": 76,
+        "original_sha256": "761d732a758cce94e51368e192fe1c4f213d9ee189bbbe627a86a0651013a254",
+        "gzip_sha256": "250526e50163b2f65de44d157bc4c1448729a6325e312d479ed411311dbae61c",
+        "roundtrip": true
+      },
+      "fixture_errors": [],
+      "fixture_joined": true
+    }
+  ]
+}

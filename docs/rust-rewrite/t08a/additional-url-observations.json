@@ -1,0 +1,248 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "native_case": {
+        "id": "url-userinfo-password",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://fixture-user:fixture-password@127.0.0.1:$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#url-userinfo-password"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f72205b4572726e6f20385d206e6f64656e616d65206e6f7220736572766e616d652070726f76696465642c206f72206e6f74206b6e6f776e3e0a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "url-userinfo-only",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://fixture-user@127.0.0.1:$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#url-userinfo-only"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f72205b4572726e6f20385d206e6f64656e616d65206e6f7220736572766e616d652070726f76696465642c206f72206e6f74206b6e6f776e3e0a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "url-unicode-path",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE/caf\u00e9"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#url-unicode-path"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094202761736369692720636f6465632063616e277420656e636f64652063686172616374657220275c7865392720696e20706f736974696f6e20383a206f7264696e616c206e6f7420696e2072616e676528313238290a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "url-unicode-host",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://\uff4c\uff4f\uff43\uff41\uff4c\uff48\uff4f\uff53\uff54:$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#url-unicode-host"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420276c6174696e2d312720636f6465632063616e277420656e636f6465206368617261637465727320696e20706f736974696f6e20302d383a206f7264696e616c206e6f7420696e2072616e676528323536290a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "url-malformed-url",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://[broken"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#url-malformed-url"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420496e76616c696420495076362055524c0a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "url-invalid-port",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://127.0.0.1:invalid"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#url-invalid-port"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094206e6f6e6e756d6572696320706f72743a2027696e76616c6964270a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "url-url-query",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE?base=1"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/?base=1/health",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#url-url-query"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "url-url-fragment",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "$BASE#fragment"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#url-url-fragment"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    }
+  ]
+}

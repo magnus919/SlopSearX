@@ -8,19 +8,19 @@
     },
     {
       "path": ".github/workflows/rust.yml",
-      "sha256": "49beb3bf98a511e82e24ba314ea2d3490de079118feefad83bc81ea98b78d2a8"
+      "sha256": "0e51efcf055712ef248476a5cb292f52566e2809c9f9f860ed53851799451b58"
     },
     {
       "path": ".pre-commit-config.yaml",
-      "sha256": "ea4cc40b3aed49442d4cdc110420b29c997031101752e33280ea900780d4feb1"
+      "sha256": "73cbb69a1089871ef718a8ebf4359897ebfc5c25edd9bcb8f8163308a875ba6e"
     },
     {
       "path": "Cargo.lock",
-      "sha256": "8676f1c9e900522f584e63cbcc0129fbfc6e90aa64c52adefd19272d754c3543"
+      "sha256": "3ec2d9c97c8bf45b06807f17cbeb6809202351f5f6006eb574988cda40e84b12"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "fe4e5d047c9d9b03d75567547534d213167a88621ae560a0132488ed37b709a7"
+      "sha256": "b31280cfa0cf90060114f040df383c6c07a6a94aefe75d036563f0e25b4de087"
     },
     {
       "path": "crates/ssx-gateway/Cargo.toml",
@@ -424,7 +424,7 @@
     },
     {
       "path": "crates/ssx-source-codecs/src/lib.rs",
-      "sha256": "46f4a1e57aa359424839c34a3d6655341a6c7ed7a18d9c93099d5804f24e08a0"
+      "sha256": "993796620eb3e23447c431e528ea651784ee0fc98fe28ee26273c6b26cf9a587"
     },
     {
       "path": "crates/ssx-source-codecs/src/python_text.rs",
@@ -463,6 +463,10 @@
       "sha256": "38d2b45d524c6c1e3172fe1db94e6c905537317abfdf0d1886ee90a796455392"
     },
     {
+      "path": "crates/xtask/Cargo.toml",
+      "sha256": "b094e2505c6c413ce43b00eae58599f2bbc8084c03c8d37676543b4f9576322c"
+    },
+    {
       "path": "crates/xtask/examples/foundation_python_boundary.rs",
       "sha256": "f21884cb6326306dd215e77ad9015581f37b0d349b0229a848a134ee8aa255d3"
     },
@@ -476,7 +480,7 @@
     },
     {
       "path": "crates/xtask/src/a13.rs",
-      "sha256": "f444ce18a441454d240163a8f402c87cb1725fc0d964c77616d76f9a8b9e63ce"
+      "sha256": "17aeee11f3cf5e44258a72d1ccf4d1961b506e0924441d849e37286d51fd6fb7"
     },
     {
       "path": "crates/xtask/src/f15.rs",
@@ -488,7 +492,7 @@
     },
     {
       "path": "crates/xtask/src/main.rs",
-      "sha256": "dd1d6d2be286ff37aecb401384ae48313d175bd70d42be0f3099d4fbe1a941b0"
+      "sha256": "cdd3f73ff4833777b5327bf9ea76961ccfa5b39e4a73869e74dc84a7f8b295f6"
     },
     {
       "path": "crates/xtask/src/t01.rs",
@@ -503,8 +507,16 @@
       "sha256": "0e0a19f94a3c50c36120bfeaed46f6a0d5e41c84f273bb674359b513adb365ec"
     },
     {
+      "path": "crates/xtask/src/t08a_custody.rs",
+      "sha256": "966070dc85fb94903acf2b5c4cfb71293059d5ea9650d1acb04c8a4bbc670816"
+    },
+    {
+      "path": "crates/xtask/src/t08a_main_join.rs",
+      "sha256": "81babfd58e35b324afa44dfca3be4b7634e613ed86cc384e1902542a6d476b62"
+    },
+    {
       "path": "crates/xtask/src/w07.rs",
-      "sha256": "72cea43aac3378f5655f191e362b6e59993118e09a59c31e5be4b2c1ab5bc154"
+      "sha256": "97425b5c9244c2030e5a9008f72c7e615e4702d743b34bfd47fb9aeec0a3dafb"
     },
     {
       "path": "crates/xtask/src/w08/source_successor.rs",
@@ -512,23 +524,31 @@
     },
     {
       "path": "docs/rust-rewrite/a04/source-amendments/scoped-successor.rs",
-      "sha256": "464cdf4919123198351b777d988d18e22c817d100efc546a2f4e5e815a41896e"
+      "sha256": "32c10150d09f762ada5ebf94ee676cc334905361cbb4c0d762eee9140bf5a92e"
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
-      "sha256": "072ecabfc3c8c297250d672732919774e4843d286b1d36784465edecd1fd46c5"
+      "sha256": "d21595831cc5a2610e5fd28c027e123a8d3f02a57f6cde5c725f12d10d99a1d7"
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-      "sha256": "39077fcab03e0801cc75c92127fa01406d77197d916397c8c22f2c33bfc7038e"
+      "sha256": "f1548d981dd29552e28b0356062fc14b70dae7d9663d2050538395490a3f41ce"
     },
     {
       "path": "docs/rust-rewrite/ci/gates.json",
-      "sha256": "df20928e447c3208eca06262d8092723d4c29436ed67b45659eee75226e168c2"
+      "sha256": "c50a6ec3bc237dde4873e6cb743d4b62547f2b21991256d0f12312e4fc392d9b"
     },
     {
       "path": "docs/rust-rewrite/foundation/ci.md",
       "sha256": "4e8277c5ee0940a8a47411d4822a45a36fc45112defb8c619f2b94f4dc498728"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-stacked-join-v1.json",
+      "sha256": "3411e60d0d56e97d9df08411c2c7982deac57031228a9d2d7e5cfa96991db085"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-stacked-join.rs",
+      "sha256": "5bc1458924b0e980155721fbcdefafa2404a1babf4bc2361a26460bc70e801af"
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-join-v1.json",
@@ -544,11 +564,11 @@
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-w08-main-join.rs",
-      "sha256": "b8a2689ee12a8534ff8f89913dcf868d32282c9720f2dcaa296570564e5a0311"
+      "sha256": "1a3975c666de206b145d019de540d82b76f3e37364026c64fb7bbe211cbbda03"
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/main-custody.rs",
-      "sha256": "768c7633aa6dc8b3cf05ce2215b7ace8a443686c512c660b5695fef4c72436c3"
+      "sha256": "f56dca804b0f032fe753d6968b53a6525b4a9871dfe6e679997e215083ec9794"
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/page-join-v1.json",
@@ -560,7 +580,7 @@
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs",
-      "sha256": "44941510f02fcf124c772787c4a203d10324709e8f9950b8eca6f7a652c51706"
+      "sha256": "0dbd7198f753394063ff1b3545028ceadfde0e972def0e70d673659abc239da6"
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/w08-join-v1.json",
@@ -732,7 +752,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/main-isolation-current.rs",
-      "sha256": "b46c1df9b2d1a547475d1a6d4fbfc14f679ae631ec1c034f752dee7a15657f6c"
+      "sha256": "785b2211a4309c264b7c9b007fa7d33862b71dadd33d9e6fb4616072288e2e04"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/main-receipt-control-adapter.rs",
@@ -919,12 +939,32 @@
       "sha256": "38ef93dd9bca6142ab1770f377562ddc9ad550256508bc5173ba9a721591fe7c"
     },
     {
+      "path": "docs/rust-rewrite/t08a/accepted-w08-main-join-v1.json",
+      "sha256": "e7206a5a5b3b9f882519c861e85dbcb71771ed48a156c68b96d06edc0d1e4d21"
+    },
+    {
+      "path": "docs/rust-rewrite/t08a/legacy-input-successor-v2.json",
+      "sha256": "ef0098cb7eb3f33cd7295bb982fe4c34b146a97644a612cf26c21cea48713479"
+    },
+    {
+      "path": "docs/rust-rewrite/t08a/legacy-input-successor.json",
+      "sha256": "72da3c4e57ce68923f3dd75dbc85316244ccfd6c4245eae29c69dbf5f8b9c796"
+    },
+    {
+      "path": "docs/rust-rewrite/t08a/shared-source-successor.json",
+      "sha256": "bb6ae04922975769b8baa8fc0b1f1751326a9c2c15fb9b2052239493e5c98c38"
+    },
+    {
+      "path": "docs/rust-rewrite/t08a/source-parent-frames/test_dependency_successor.rs",
+      "sha256": "f2103c06807e1ba1490c1d972ebe3abaebdc09a3243845f4478fc40260608365"
+    },
+    {
       "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
-      "sha256": "776747fe03698c554c33355bc1bd3054c2ea1f20cd7bfe85b95cc2a2f1f3ab32"
+      "sha256": "3c79332149a2efcd69f4d2ef4a16aa5771d8bf82add08f23b057568e7901c01c"
     },
     {
       "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
-      "sha256": "ee9fc897420f76a94d52fd7199b35a5ec58db54a2c1f75b64ea8dd3c113635c3"
+      "sha256": "9e0c99d65dee2195e19e73e4f91f26f8ddffdf1680c78576b3da324eafe15e8d"
     },
     {
       "path": "docs/rust-rewrite/w08/reader-page-source-admission-v1.json",
@@ -3254,5 +3294,28 @@
       "windows_trust::tests::windows_trust_owner_script_ca_and_case_admission_fail_before_creation"
     ],
     "native_status": "UNRUN on this composed source; Windows trust import outcome unproven; Mac1073 separate."
+  },
+  "gateway_cli_stacked_successor": {
+    "gateway_parent": "96574a69f9a287cf07ed11c222b6ae0313d5453b",
+    "historical_CLI_proof_parent": "41e5976fc9ba5272bf2585b252136e3843581f18",
+    "actual_repaired_CLI_merge_parent": "dc09634fcac5a83d89937030627787e4e362c85e",
+    "prior_current_bindings_sha256": "e703f5bbb1015af606d1a74e0c369b239db69841890cf758a388af4a8dc5d999",
+    "new_explicit_proof_inputs": [
+      "crates/xtask/Cargo.toml",
+      "crates/xtask/src/t08a_custody.rs",
+      "crates/xtask/src/t08a_main_join.rs",
+      "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-stacked-join-v1.json",
+      "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-stacked-join.rs",
+      "docs/rust-rewrite/t08a/accepted-w08-main-join-v1.json",
+      "docs/rust-rewrite/t08a/legacy-input-successor-v2.json",
+      "docs/rust-rewrite/t08a/legacy-input-successor.json",
+      "docs/rust-rewrite/t08a/shared-source-successor.json",
+      "docs/rust-rewrite/t08a/source-parent-frames/test_dependency_successor.rs"
+    ],
+    "retained_parent_rows": 676,
+    "current_rows": 686,
+    "scope": "Technical normal-history stack only; CLI acceptance remains first in merge queue. Preserve all ordinary native inventories and frozen parent frames; new shared source/code roles require current qualification.",
+    "native_status": "UNRUN on stacked source; actual repaired Windows fixture qualification pending.",
+    "formatter_correction": "Exact root-cleared proposal5c4faa64: two assert layouts only, real edition2024/pristine config; private runtime unchanged."
   }
 }
