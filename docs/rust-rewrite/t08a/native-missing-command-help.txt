@@ -1,0 +1,15 @@
+SlopSearX CLI — AI-agent-native meta search client
+
+Usage: ssx <COMMAND>
+
+Commands:
+  search   Execute a search query
+  engines  List engines with status
+  health   Check server and engine health
+  config   Show engine-to-categories mapping
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+
+Environment: SSX_URL, SSX_FORMAT (yaml|json). See docs/rust-rewrite/t08a/README.md.

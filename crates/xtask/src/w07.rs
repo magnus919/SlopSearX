@@ -67,6 +67,13 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
         return Ok(bytes);
     }
+    if path == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE
+        && expected == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA
+    {
+        return w07_t02_joint::cli_source_custody::test_dependency_prior(
+            root, path, expected, &bytes,
+        );
+    }
     if let Some(proven) = snapshot_helper_amendment::verify(root, path, expected, &bytes) {
         return proven;
     }
@@ -662,6 +669,33 @@ mod tests {
             .parent()
             .unwrap();
         test_dependency_successor::controls(root).unwrap();
+        let path = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE;
+        let expected = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA;
+        let actual = fs::read(root.join(path)).unwrap();
+        let prior = frozen(root, path, expected).unwrap();
+        assert_eq!(sha(&prior), expected);
+        assert!(frozen(root, path, &"0".repeat(64)).is_err());
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(
+                root,
+                "Cargo.lock",
+                expected,
+                &actual,
+            )
+            .is_err()
+        );
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(root, path, expected, &prior,)
+                .is_err()
+        );
+        let mut changed = actual;
+        changed.push(b' ');
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(
+                root, path, expected, &changed,
+            )
+            .is_err()
+        );
     }
     #[test]
     fn main_successor_requires_exact_finite_insertions() {

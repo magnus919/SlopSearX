@@ -18,3 +18,17 @@ sha2.workspace = true
 ssx-json.workspace = true
 ssx-registry.workspace = true
 ssx-application.workspace = true
+
+# Developer gate process containment only; absent from production ssx graph.
+[dependencies.process-wrap]
+version = "=10.0.1"
+path = "../../vendor/ssx-cli-process-wrap"
+default-features = false
+features = ["tokio1", "process-group", "job-object", "kill-on-drop"]
+
+[dependencies.tokio]
+workspace = true
+
+[target.'cfg(unix)'.dependencies.nix]
+version = "=0.31.3"
+features = ["signal"]

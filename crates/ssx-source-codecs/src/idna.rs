@@ -461,6 +461,43 @@ fn offset_failure(error: punycode::Failure, offset: u64) -> punycode::Failure {
     }
 }
 
+/// Additive hostname encoder for the external HTTP client. All existing IDNA
+/// decoding/validation callers retain their original paths and budgets.
+pub(crate) fn encode_host(input: &str) -> Result<Vec<u8>, punycode::Failure> {
+    if input.is_empty() {
+        return Ok(Vec::new());
+    }
+    if input.is_ascii() {
+        let labels = input.split('.').collect::<Vec<_>>();
+        for (index, label) in labels.iter().enumerate() {
+            if label.len() >= 64 || (label.is_empty() && index + 1 != labels.len()) {
+                return Err(unicode_failure());
+            }
+        }
+        return Ok(input.as_bytes().to_vec());
+    }
+    let mut labels = input
+        .split(['.', '\u{3002}', '\u{ff0e}', '\u{ff61}'])
+        .collect::<Vec<_>>();
+    let trailing = labels.last() == Some(&"");
+    if trailing {
+        labels.pop();
+    }
+    let mut output = Vec::new();
+    for (index, label) in labels.iter().enumerate() {
+        if index != 0 {
+            output.push(b'.');
+        }
+        let points = label.chars().map(u32::from).collect::<Vec<_>>();
+        let ascii = to_ascii_work(&points, legacy_work())?;
+        output.extend_from_slice(&ascii);
+    }
+    if trailing {
+        output.push(b'.');
+    }
+    Ok(output)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

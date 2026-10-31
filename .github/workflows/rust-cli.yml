@@ -1,0 +1,118 @@
+name: Native CLI component
+
+"on":
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  native-cli:
+    name: Native CLI (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: windows-2025
+            target: x86_64-pc-windows-msvc
+    defaults:
+      run:
+        shell: bash
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_INCREMENTAL: 0
+      OPENSSL_NO_ASM: "1"
+      OPENSSL_NO_VENDOR: "0"
+      OPENSSL_STATIC: "1"
+      EXPECTED_TARGET: ${{ matrix.target }}
+    steps:
+      - name: Preserve literal source bytes on Windows
+        if: ${{ runner.os == 'Windows' }}
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Confirm native bootstrap and source identity
+        run: |
+          set -euo pipefail
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/ssx-cli-target"
+          export TMPDIR="$RUNNER_TEMP/ssx-cli-tmp"
+          export TMP="$TMPDIR" TEMP="$TMPDIR"
+          {
+            printf 'CARGO_TARGET_DIR=%s\n' "$CARGO_TARGET_DIR"
+            printf 'TMPDIR=%s\n' "$TMPDIR"
+            printf 'TMP=%s\n' "$TMP"
+            printf 'TEMP=%s\n' "$TEMP"
+          } >> "$GITHUB_ENV"
+          mkdir -p "$TMPDIR" "$CARGO_TARGET_DIR/rust-evidence"
+          rustc --version --verbose | tee "$CARGO_TARGET_DIR/rust-evidence/rustc.txt"
+          grep -Fx "host: $EXPECTED_TARGET" "$CARGO_TARGET_DIR/rust-evidence/rustc.txt"
+          cargo --version --verbose | tee "$CARGO_TARGET_DIR/rust-evidence/cargo.txt"
+          if [ "$RUNNER_OS" = Windows ]; then
+            export OPENSSL_SRC_PERL='C:/Strawberry/perl/bin/perl.exe'
+            "$OPENSSL_SRC_PERL" -MIPC::Cmd -MLocale::Maketext::Simple -e 'die "native Windows Perl required\n" unless $^O eq "MSWin32"; printf "OpenSSL native Perl: %s (%s)\n", $^X, $^V;' | tee "$CARGO_TARGET_DIR/rust-evidence/perl-selected.txt"
+            "$OPENSSL_SRC_PERL" -V > "$CARGO_TARGET_DIR/rust-evidence/perl.txt"
+            printf 'OPENSSL_SRC_PERL=%s\n' "$OPENSSL_SRC_PERL" >> "$GITHUB_ENV"
+          else
+            perl -V > "$CARGO_TARGET_DIR/rust-evidence/perl.txt"
+          fi
+          git rev-parse HEAD > "$CARGO_TARGET_DIR/rust-evidence/head.txt"
+          git ls-files --stage > "$CARGO_TARGET_DIR/rust-evidence/index-before.txt"
+          git status --porcelain=v1 --untracked-files=all > "$CARGO_TARGET_DIR/rust-evidence/status-before.txt"
+          test ! -s "$CARGO_TARGET_DIR/rust-evidence/status-before.txt"
+      - name: Locked format and strict standalone client lint
+        run: |
+          set -euo pipefail
+          cargo fmt --all --check
+          cargo clippy --locked -p ssx-cli -p ssx-cli-check -p ssx-cli-openssl-store -p ssx-source-codecs --all-targets -- -D warnings
+      - name: Native external-child corpus and source installation
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = Windows ]; then
+            cargo run --locked -p ssx-cli-check -- check T08A --output "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
+          else
+            cargo xtask check T08A --output "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
+          fi
+          test -s "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
+          git ls-files --stage > "$CARGO_TARGET_DIR/rust-evidence/index-after.txt"
+          cmp "$CARGO_TARGET_DIR/rust-evidence/index-before.txt" "$CARGO_TARGET_DIR/rust-evidence/index-after.txt"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+      - name: Retain native CLI evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-cli-${{ matrix.target }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ssx-cli-target/rust-evidence/
+          if-no-files-found: error
+      - name: Retire reproducible native artifacts
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          rm -rf "$CARGO_TARGET_DIR" "$TMPDIR"
+  native-cli-acceptance:
+    name: Native CLI component acceptance
+    if: ${{ always() }}
+    needs: [native-cli]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every supported native client target
+        env:
+          MATRIX_RESULT: ${{ needs.native-cli.result }}
+        run: test "$MATRIX_RESULT" = success

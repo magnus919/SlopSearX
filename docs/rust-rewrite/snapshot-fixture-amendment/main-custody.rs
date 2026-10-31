@@ -173,6 +173,7 @@ pub(super) fn joint(root: &Path, supplied: &[u8]) -> Result<Vec<u8>, String> {
         supplied == current,
         "snapshot fixture supplied main is not physical current",
     )?;
+    // The outer CLI/main join authenticates physical current before W08/Page interpretation.
     let snapshot_current = w08_main_join::snapshot_main(root, &current)?;
     let prior = inverse(&doc, &doc["main"]["prior"], &snapshot_current, "0644")?;
     for (identity, bytes) in [
@@ -232,6 +233,7 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     assert!(joint(root, &historical).is_err());
     super::parent(root, SOURCE, &current, super::Parent::T02)?;
     super::parent(root, SOURCE, &current, super::Parent::W07)?;
+    // The outer CLI/main join authenticates physical current before W08/Page interpretation.
     let snapshot_current = w08_main_join::snapshot_main(root, &current)?;
     need(
         inverse(&doc, expected, &snapshot_current, "0644")? == historical,
