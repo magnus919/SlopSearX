@@ -1,5 +1,9 @@
 //! Actual merged generation first; both accepted historical WH chains remain
 //! private admitted-frame interpreters. No historical operand is public current.
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Receipt adapters and joint proof readers intentionally share this self-contained stateless physical join leaf"
+)]
 #[path = "gateway-w08-main-join.rs"]
 pub(crate) mod gateway_w08_main_join;
 use std::path::Path;
