@@ -311,9 +311,25 @@ async fn admission_precedes_copy_and_shutdown_drains_preflight() {
 }
 
 #[cfg(unix)]
-#[tokio::test]
+#[tokio::test(flavor = "current_thread")]
 async fn actual_native_expansion_cancellation_holds_admission_until_reap() {
-    use std::os::unix::fs::PermissionsExt;
+    use std::{io::Read as _, os::unix::fs::PermissionsExt};
+    // Required Linux and Darwin hosts have bounded, nonblocking child pipes.
+    // Linux >=4.9 caps new pipes at this actual sysctl; Apple's pipe size table
+    // caps Darwin pipes at 64 KiB. PIPE_BUF is not a capacity bound.
+    let input = retained_input(false);
+    let pipe_ceiling = if cfg!(target_os = "linux") {
+        std::fs::read_to_string("/proc/sys/fs/pipe-max-size")
+            .unwrap()
+            .trim()
+            .parse::<usize>()
+            .unwrap()
+    } else if cfg!(target_os = "macos") {
+        64 * 1024
+    } else {
+        panic!("native cancellation fixture needs a verified pipe ceiling on this Unix host");
+    };
+    assert!(pipe_ceiling > 0 && input.len() > pipe_ceiling);
     let id = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
@@ -321,11 +337,14 @@ async fn actual_native_expansion_cancellation_holds_admission_until_reap() {
     let wrapper =
         std::env::temp_dir().join(format!("a06-native-cancel-{}-{id}", std::process::id()));
     let pidfile = wrapper.with_extension("pid");
+    let ready = wrapper.with_extension("ready");
+    let start = wrapper.with_extension("start");
+    let observation = wrapper.with_extension("observation");
     std::fs::write(
         &wrapper,
         format!(
-            "#!/bin/sh\necho $$ > '{}'\nexec '{}'\n",
-            pidfile.display(),
+            "#!/bin/sh\nprintf '%s\\n' \"$$\" > '{}'\n: > '{}'\nwhile [ ! -f '{}' ]; do :; done\nexec '{}'\n",
+            pidfile.display(), ready.display(), start.display(),
             env!("CARGO_BIN_EXE_ssx-atom-parser")
         ),
     )
@@ -333,54 +352,103 @@ async fn actual_native_expansion_cancellation_holds_admission_until_reap() {
     std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o700)).unwrap();
     let pool = AtomPool::new(wrapper.clone(), NonZeroUsize::new(1).unwrap()).unwrap();
     let worker = pool.clone();
-    let caller = tokio::spawn(async move {
-        worker
-            .parse(
-                &retained_input(false),
-                Instant::now() + Duration::from_secs(10),
-            )
-            .await
-    });
-    let pid = tokio::time::timeout(Duration::from_secs(5), async {
+    let mut caller = Some(Box::pin(
+        worker.parse(&input, Instant::now() + Duration::from_secs(10)),
+    ));
+    // READY is created only after printf has closed the complete PID file.
+    // The wrapper owns no extra process, never reads stdin and execs in place.
+    let readiness = tokio::time::timeout(Duration::from_secs(5), async {
         loop {
-            if let Ok(pid) = std::fs::read_to_string(&pidfile) {
-                break pid.trim().to_owned();
+            if ready.is_file() {
+                let raw = std::fs::read_to_string(&pidfile).map_err(|e| e.to_string())?;
+                let pid = raw.trim().parse::<u32>().map_err(|e| e.to_string())?;
+                if pid == 0 || raw != format!("{pid}\n") {
+                    return Err("wrapper did not publish one complete positive PID".to_owned());
+                }
+                return Ok(pid);
             }
             tokio::time::sleep(Duration::from_millis(1)).await;
         }
-    })
-    .await
-    .unwrap();
-    // This wrapper execs, preserving the exact child PID. Wait until the native
-    // image has replaced the shell, then cancel the real helper receiving the
-    // hostile-expansion input. This does not prove Expat parse entry occurred.
-    tokio::time::timeout(Duration::from_secs(2), async {
-        loop {
-            let output = std::process::Command::new("/bin/ps")
-                .args(["-p", &pid, "-o", "comm="])
-                .output()
-                .unwrap();
-            if String::from_utf8_lossy(&output.stdout).contains("ssx-atom-parser") {
-                break;
-            }
-            tokio::task::yield_now().await;
+    });
+    let pid = tokio::select! {
+        completed = caller.as_mut().unwrap() => Err(format!("native request completed before cancellation readiness: {completed:?}")),
+        ready = readiness => ready.map_err(|e| e.to_string()).and_then(|pid| pid),
+    };
+    // No assertion can bypass cancellation, pool shutdown or fixture removal.
+    let observed = (|| -> Result<u32, String> {
+        let pid = pid?;
+        if pool.available_operations() != 0 {
+            return Err("native request was not held under admission".into());
         }
-    })
-    .await
-    .unwrap();
-    assert_eq!(pool.available_operations(), 0);
-    caller.abort();
-    let _ = caller.await;
-    pool.shutdown().await.unwrap();
-    assert_eq!(pool.available_operations(), 1);
-    assert!(
-        !std::process::Command::new("/bin/kill")
-            .args(["-0", &pid])
+        std::fs::write(&start, []).map_err(|e| e.to_string())?;
+        let end = std::time::Instant::now() + Duration::from_secs(2);
+        loop {
+            // Intentionally no await: on this current-thread runtime the pool's
+            // nonblocking writer cannot deliver the remaining original hostile
+            // input or EOF. The real native image therefore stays in read_exact;
+            // this test still makes no claim that Expat parse entry occurred.
+            let out = std::fs::File::create(&observation).map_err(|e| e.to_string())?;
+            let mut probe = std::process::Command::new("/bin/ps")
+                .args(["-p", &pid.to_string(), "-o", "comm="])
+                .stdout(out)
+                .stderr(std::process::Stdio::null())
+                .spawn()
+                .map_err(|e| e.to_string())?;
+            let status = loop {
+                match probe.try_wait() {
+                    Ok(Some(status)) => break status,
+                    Ok(None) if std::time::Instant::now() < end => {
+                        std::thread::sleep(Duration::from_millis(1))
+                    }
+                    other => {
+                        let _ = probe.kill();
+                        let _ = probe.wait();
+                        return Err(format!("bounded owned ps observation failed: {other:?}"));
+                    }
+                }
+            };
+            let file = std::fs::File::open(&observation).map_err(|e| e.to_string())?;
+            let mut image = String::new();
+            file.take(4097)
+                .read_to_string(&mut image)
+                .map_err(|e| e.to_string())?;
+            if image.len() > 4096 {
+                return Err("ps observation exceeded bound".into());
+            }
+            if status.success() && image.trim().rsplit('/').next() == Some("ssx-atom-parser") {
+                if pool.available_operations() != 0 {
+                    return Err("native observation lost active admission".into());
+                }
+                return Ok(pid);
+            }
+            if std::time::Instant::now() >= end {
+                return Err("real native image was not observed before the original bound".into());
+            }
+        }
+    })();
+    // Drop the pending caller BEFORE the first await following START. This
+    // synchronously closes the reply receiver, without an abort-task scheduling
+    // race. A completed call was rejected above; shutdown proves child reap.
+    drop(caller.take());
+    let admission_after_cancel = pool.available_operations();
+    let closed = pool.shutdown().await;
+    let available = pool.available_operations();
+    let reaped = observed.as_ref().ok().map(|pid| {
+        std::process::Command::new("/bin/kill")
+            .args(["-0", &pid.to_string()])
             .stderr(std::process::Stdio::null())
             .status()
-            .unwrap()
-            .success()
+            .map(|status| !status.success())
+    });
+    for path in [&wrapper, &pidfile, &ready, &start, &observation] {
+        let _ = std::fs::remove_file(path);
+    }
+    observed.unwrap();
+    assert_eq!(admission_after_cancel, 0);
+    closed.unwrap();
+    assert_eq!(available, 1);
+    assert!(
+        matches!(reaped, Some(Ok(true))),
+        "native PID reap observation: {reaped:?}"
     );
-    let _ = std::fs::remove_file(wrapper);
-    let _ = std::fs::remove_file(pidfile);
 }

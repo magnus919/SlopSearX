@@ -162,7 +162,103 @@ fn document_for(raw: &[u8], kind: Kind) -> Result<Value> {
     )?;
     Ok(doc)
 }
+// Frozen unit descriptors remain baseline artifacts. Only these two exact
+// shipping-codec rows acquire a physical-current view for source validation.
+fn current_codec_rows() -> [(Value, Value); 2] {
+    [
+        (
+            json!({"path":"crates/ssx-source-codecs/src/idna.rs","bytes":23717,"mode":"0o644","sha256":"8438937c4542c2a8eabffd0b40716f84114694a12810a61ba97c1418e6c2e7b4"}),
+            json!({"path":"crates/ssx-source-codecs/src/idna.rs","bytes":24970,"mode":"0o644","sha256":"b75ed6a6571d96708f874562b7b5ccb1bfaa5c1f7c1208f0f5ace4baaef17310"}),
+        ),
+        (
+            json!({"path":"crates/ssx-source-codecs/src/lib.rs","bytes":7310,"mode":"0o644","sha256":"46f4a1e57aa359424839c34a3d6655341a6c7ed7a18d9c93099d5804f24e08a0"}),
+            json!({"path":"crates/ssx-source-codecs/src/lib.rs","bytes":8321,"mode":"0o644","sha256":"993796620eb3e23447c431e528ea651784ee0fc98fe28ee26273c6b26cf9a587"}),
+        ),
+    ]
+}
+fn current_source_document(root: &Path, supplied: &Value) -> Result<Value> {
+    let (kind, bytes) = match supplied["kind"].as_str() {
+        Some("T07_GENUINE_REQWEST_UNIT_PROFILE_V1") => (Kind::Reqwest, 247510),
+        Some("T07_GENUINE_SDK_UNIT_PROFILE_V1") => (Kind::Sdk, 346186),
+        _ => return Err("unit current source unlisted descriptor caller".into()),
+    };
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        need(
+            fs::symlink_metadata(root.join(kind.declaration()))
+                .map_err(|e| e.to_string())?
+                .permissions()
+                .mode()
+                & 0o7777
+                == 0o644,
+            "unit frozen descriptor full mode differs",
+        )?;
+    }
+    let declaration = checked(
+        root,
+        &json!({"path":kind.declaration(),"bytes":bytes,"sha256":kind.digest(),"mode":"0o644"}),
+    )?;
+    let frozen = document_for(&declaration, kind)?;
+    need(
+        *supplied == frozen,
+        "unit current source frozen caller differs",
+    )?;
+    let mut effective = frozen;
+    for (prior, current) in current_codec_rows() {
+        let path = text(&current, "path")?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            need(
+                fs::symlink_metadata(root.join(path))
+                    .map_err(|e| e.to_string())?
+                    .permissions()
+                    .mode()
+                    & 0o7777
+                    == 0o644,
+                "unit current codec full mode differs",
+            )?;
+        }
+        checked(root, &current)?;
+        let mut found = 0;
+        for input in effective["workspace_source_roots"]
+            .as_array_mut()
+            .ok_or("unit current source roots")?
+        {
+            for row in input["files"]
+                .as_array_mut()
+                .ok_or("unit current source rows")?
+            {
+                if row["path"] == path {
+                    need(*row == prior, "unit current codec frozen tuple differs")?;
+                    *row = current.clone();
+                    found += 1;
+                }
+            }
+        }
+        need(found == 1, "unit current codec unique frozen row required")?;
+    }
+    Ok(effective)
+}
+fn current_source_identity(root: &Path, supplied: &Value) -> Result<Value> {
+    let effective = current_source_document(root, supplied)?;
+    let kind = if sdk(supplied) {
+        Kind::Sdk
+    } else {
+        Kind::Reqwest
+    };
+    Ok(json!({
+        "frozen_descriptor":{"path":kind.declaration(),"sha256":kind.digest(),"role":"baseline; physical codec successors are listed separately"},
+        "effective_workspace_source_roots_sha256":digest(&serde_json::to_vec(&effective["workspace_source_roots"]).map_err(|e|e.to_string())?),
+        "current_codec_inputs":current_codec_rows().into_iter().map(|(_,current)|current).collect::<Vec<_>>(),
+        "scope":"frozen baseline descriptor plus exact current codec rows; source() validates remaining unchanged declared closure"
+    }))
+}
+
 fn source(root: &Path, doc: &Value) -> Result<()> {
+    let effective = current_source_document(root, doc)?;
+    let doc = &effective;
     checked(root, &doc["historical_declaration"])?;
     for input in rows(doc, "workspace_source_roots")? {
         let mut actual = BTreeSet::new();
@@ -474,6 +570,7 @@ impl Profile {
         Err("unit profile command receipt limit".into())
     }
     fn command(&self, cwd: &Path, args: &[String], records: &mut Vec<Value>) -> Result<String> {
+        let source_identity = current_source_identity(&self.root, &self.doc)?;
         need(
             cfg!(unix),
             "unit native process ownership qualification currently Unix; Windows preparation only",
@@ -554,7 +651,7 @@ impl Profile {
         }
         let waited = owned.child.wait().map_err(|e| e.to_string())?;
         let environment = unit_environment();
-        let row = json!({"program":cargo,"args":args,"cwd":cwd,"environment":environment,"exit_code":status.code(),"wait_exit_code":waited.code(),"original_pid":pid,"waited":true,"original_group_absent":owned.group_absent,"group_probes":owned.probes,"readers_joined":owned.readers.is_empty(),"stop":stop,"stdout_path":stdout_path,"stderr_path":stderr_path,"elapsed_ms":start.elapsed().as_millis()});
+        let row = json!({"source_identity":source_identity,"source_identity_phase":"before child spawn","program":cargo,"args":args,"cwd":cwd,"environment":environment,"exit_code":status.code(),"wait_exit_code":waited.code(),"original_pid":pid,"waited":true,"original_group_absent":owned.group_absent,"group_probes":owned.probes,"readers_joined":owned.readers.is_empty(),"stop":stop,"stdout_path":stdout_path,"stderr_path":stderr_path,"elapsed_ms":start.elapsed().as_millis()});
         fs::write(
             &receipt,
             serde_json::to_vec_pretty(&row).map_err(|e| e.to_string())?,
@@ -710,7 +807,7 @@ impl Profile {
             &target,
             &selected_features(&self.doc)?,
         )?;
-        let marker = json!({"target":target,"executable":executable,"binary_sha256":file_digest(&executable)?,"package_id":package["id"],"environment":unit_environment(),"declaration_sha256":self.kind.digest()});
+        let marker = json!({"target":target,"executable":executable,"binary_sha256":file_digest(&executable)?,"package_id":package["id"],"environment":unit_environment(),"declaration_sha256":self.kind.digest(),"source_identity":current_source_identity(&self.root,&self.doc)?,"source_identity_phase":"after successful compile"});
         publish(
             &self.directory,
             "compiled-unit.json",
@@ -730,7 +827,8 @@ impl Profile {
         .map_err(|e| e.to_string())?;
         need(
             target["environment"] == unit_environment()
-                && target["declaration_sha256"] == self.kind.digest(),
+                && target["declaration_sha256"] == self.kind.digest()
+                && target["source_identity"] == current_source_identity(&self.root, &self.doc)?,
             "unit compiled environment/declaration changed",
         )?;
         let executable = Path::new(text(&target, "executable")?);
@@ -1209,7 +1307,7 @@ pub fn cli(root: &Path, args: &[String]) -> bool {
         }
         println!(
             "{}",
-            json!({"profile":profile.directory,"package":profile.package,"commands":records,"python_executed":false})
+            json!({"profile":profile.directory,"package":profile.package,"commands":records,"source_identity":current_source_identity(&profile.root,&profile.doc)?,"source_identity_phase":"after profile verification","python_executed":false})
         );
         Ok(())
     })();
@@ -1287,6 +1385,117 @@ mod tests {
         }
         assert!(inventory("a: test\na: test", &names, true).is_err());
     }
+    #[cfg(unix)]
+    #[test]
+    fn current_codec_view_rejects_wrong_callers_and_physical_changes() {
+        use std::os::unix::fs::PermissionsExt;
+        struct Owned(PathBuf);
+        impl Drop for Owned {
+            fn drop(&mut self) {
+                let _ = fs::remove_dir_all(&self.0);
+            }
+        }
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .canonicalize()
+            .unwrap();
+        let parent = PathBuf::from(
+            std::env::var_os("SLOPSEARX_T07_UNIT_TEST_ROOT")
+                .or_else(|| std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT"))
+                .expect("registered unit test temp root"),
+        );
+        let dir = parent.join(format!(
+            "t07-current-codecs-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir(&dir).unwrap();
+        let owned = Owned(dir);
+        for (_, row) in current_codec_rows() {
+            let path = text(&row, "path").unwrap();
+            let target = owned.0.join(path);
+            fs::create_dir_all(target.parent().unwrap()).unwrap();
+            fs::write(&target, checked(&root, &row).unwrap()).unwrap();
+            fs::set_permissions(target, fs::Permissions::from_mode(0o644)).unwrap();
+        }
+        for kind in [Kind::Reqwest, Kind::Sdk] {
+            let raw = fs::read(root.join(kind.declaration())).unwrap();
+            let frozen = document_for(&raw, kind).unwrap();
+            let declared = owned.0.join(kind.declaration());
+            fs::create_dir_all(declared.parent().unwrap()).unwrap();
+            fs::write(&declared, &raw).unwrap();
+            fs::set_permissions(&declared, fs::Permissions::from_mode(0o644)).unwrap();
+            let effective = current_source_document(&root, &frozen).unwrap();
+            assert_ne!(effective, frozen);
+            assert_eq!(
+                current_source_document(&owned.0, &frozen).unwrap(),
+                effective
+            );
+            let mut restored = effective.clone();
+            for (prior, current) in current_codec_rows() {
+                let matches: Vec<_> = effective["workspace_source_roots"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .flat_map(|input| input["files"].as_array().unwrap())
+                    .filter(|row| row["path"] == current["path"])
+                    .collect();
+                assert_eq!(matches, vec![&current]);
+                for input in restored["workspace_source_roots"].as_array_mut().unwrap() {
+                    for row in input["files"].as_array_mut().unwrap() {
+                        if row["path"] == prior["path"] {
+                            *row = prior.clone();
+                        }
+                    }
+                }
+            }
+            assert_eq!(restored, frozen); // Exactly two rows; every other field remains frozen.
+            let mut wrong = frozen.clone();
+            wrong["requested_features"] = json!(["unlisted-feature"]);
+            assert!(current_source_document(&owned.0, &wrong).is_err());
+            let mut extra = frozen.clone();
+            let row = extra["workspace_source_roots"][0]["files"][0].clone();
+            extra["workspace_source_roots"][0]["files"]
+                .as_array_mut()
+                .unwrap()
+                .push(row);
+            assert!(current_source_document(&owned.0, &extra).is_err());
+            for (_, row) in current_codec_rows() {
+                let target = owned.0.join(text(&row, "path").unwrap());
+                let raw = fs::read(&target).unwrap();
+                let mut bad = raw.clone();
+                bad.push(0);
+                fs::write(&target, bad).unwrap();
+                assert!(current_source_document(&owned.0, &frozen).is_err());
+                fs::write(&target, &raw).unwrap();
+                let backup = target.with_extension("owned-original");
+                fs::rename(&target, &backup).unwrap();
+                assert!(current_source_document(&owned.0, &frozen).is_err());
+                fs::rename(backup, &target).unwrap();
+                fs::set_permissions(&target, fs::Permissions::from_mode(0o600)).unwrap();
+                assert!(current_source_document(&owned.0, &frozen).is_err());
+                fs::set_permissions(&target, fs::Permissions::from_mode(0o644)).unwrap();
+                assert_eq!(
+                    current_source_document(&owned.0, &frozen).unwrap(),
+                    effective
+                );
+            }
+            let mut changed = raw.clone();
+            changed.push(0);
+            fs::write(&declared, changed).unwrap();
+            assert!(current_source_document(&owned.0, &frozen).is_err());
+            fs::write(&declared, &raw).unwrap();
+            assert_eq!(
+                current_source_document(&owned.0, &frozen).unwrap(),
+                effective
+            );
+            assert_eq!(fs::read(root.join(kind.declaration())).unwrap(), raw);
+        }
+    }
+
     #[test]
     fn complete_copy_rejects_foreign_overwrite_concurrent_owner_and_tampering() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

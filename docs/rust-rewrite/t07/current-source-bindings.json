@@ -476,7 +476,7 @@
     },
     {
       "path": "crates/xtask/src/a06.rs",
-      "sha256": "e6abcf309a2e939f5fbd522fd2815700c93949ed30094c4c8ca96a67f47884ad"
+      "sha256": "ebe21c6420cbe3050b26881f96d0330c2b1f382ce3bf4a896890d6d68444c424"
     },
     {
       "path": "crates/xtask/src/a13.rs",
@@ -504,7 +504,7 @@
     },
     {
       "path": "crates/xtask/src/t07_unit_profile.rs",
-      "sha256": "0e0a19f94a3c50c36120bfeaed46f6a0d5e41c84f273bb674359b513adb365ec"
+      "sha256": "3c9e08d1e1f7b156b3411afad7cae6c0ce0434f387d8ba4b3f143f3d3984919c"
     },
     {
       "path": "crates/xtask/src/t08a_custody.rs",
@@ -2745,6 +2745,14 @@
     {
       "path": "vendor/ssx-windows-owner/src/trust_fixture.rs",
       "sha256": "269304a21458ea8ce7b9b69f0955f65993cbbb72f365bc7043d342e9a359542f"
+    },
+    {
+      "path": "crates/ssx-infra/tests/a06_expat_candidate.rs",
+      "sha256": "f8ab8db70d47680363c4cbf2e6e39dba165631ed13f4ea6dcdfcf1d37f996681"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/native-cancel-fixture-v1.json",
+      "sha256": "863fcb998aae337c6246adbf619d8e8d65046c65ddb53796bec430861b9c689c"
     }
   ],
   "library_tests": [
@@ -3310,12 +3318,33 @@
       "docs/rust-rewrite/t08a/legacy-input-successor-v2.json",
       "docs/rust-rewrite/t08a/legacy-input-successor.json",
       "docs/rust-rewrite/t08a/shared-source-successor.json",
-      "docs/rust-rewrite/t08a/source-parent-frames/test_dependency_successor.rs"
+      "docs/rust-rewrite/t08a/source-parent-frames/test_dependency_successor.rs",
+      "crates/ssx-infra/tests/a06_expat_candidate.rs",
+      "docs/rust-rewrite/a06/source-amendments/native-cancel-fixture-v1.json"
     ],
     "retained_parent_rows": 676,
-    "current_rows": 686,
+    "current_rows": 688,
     "scope": "Technical normal-history stack only; CLI acceptance remains first in merge queue. Preserve all ordinary native inventories and frozen parent frames; new shared source/code roles require current qualification.",
     "native_status": "UNRUN on stacked source; actual repaired Windows fixture qualification pending.",
     "formatter_correction": "Exact root-cleared proposal5c4faa64: two assert layouts only, real edition2024/pristine config; private runtime unchanged."
+  },
+  "native_cancel_fixture_repair": {
+    "repair_parent": "a3954876ddbc4a425cda8ae41bddaaea67e8d0f5",
+    "prior_gateway_parent": "7d14ae9b02a1b37a1b1d2ff85cc6b0d64f85a331",
+    "prior_current_map_sha256": "36e54f2b6e73955612891b84a5d305da9e90a69cbf379316f309d4d1ab604bb4",
+    "normal_merge_tree": "20353eb7ca393784bf2d6ebd72dcfca2c59b4350",
+    "current_rows": 688,
+    "additional_explicit_inputs": [
+      "crates/ssx-infra/tests/a06_expat_candidate.rs",
+      "docs/rust-rewrite/a06/source-amendments/native-cancel-fixture-v1.json"
+    ],
+    "merged_a06_reader": {
+      "path": "crates/xtask/src/a06.rs",
+      "bytes": 36404,
+      "sha256": "ebe21c6420cbe3050b26881f96d0330c2b1f382ce3bf4a896890d6d68444c424",
+      "git_blob": "b499b8e2e880c732869fd46b963d3769810e36f5",
+      "mode": "100644"
+    },
+    "scope": "Normal-history candidate composition; preserves all frozen A06 captures and current CLI/gateway case semantics. PR1079 acceptance and native current-profile qualification remain required."
   }
 }
