@@ -9,8 +9,19 @@ $storePath = "Cert:\CurrentUser\Root\$thumbprint"
 if ($Mode -eq 'install') {
     if (Test-Path $storePath) { throw 'Fixture must not adopt an existing CA' }
     Set-Content -LiteralPath $marker -Value $thumbprint
-    $installed = Import-Certificate -FilePath (Join-Path $CaseRoot 'ca.der') -CertStoreLocation 'Cert:\CurrentUser\Root'
+    # Same CurrentUser Root scope; headless acceptance remains a hosted witness.
+    $certutil = Join-Path $env:SystemRoot 'System32\certutil.exe'
+    & $certutil '-user' '-addstore' 'Root' (Join-Path $CaseRoot 'ca.der')
+    $importExit = $LASTEXITCODE
+    if ($importExit -ne 0) { throw 'Owned CA import failed' }
+    $installed = Get-Item -LiteralPath $storePath
     if ($installed.Thumbprint -ne $thumbprint) { throw 'Wrong certificate installed' }
+    $expectedDer = $certificate.RawData
+    $installedDer = $installed.RawData
+    if ($installedDer.Length -ne $expectedDer.Length) { throw 'Wrong certificate bytes installed' }
+    for ($index = 0; $index -lt $expectedDer.Length; $index++) {
+        if ($installedDer[$index] -ne $expectedDer[$index]) { throw 'Wrong certificate bytes installed' }
+    }
 } elseif (Test-Path -LiteralPath $marker) {
     if ((Get-Content -LiteralPath $marker).Trim() -ne $thumbprint) { throw 'Cleanup ownership mismatch' }
     if (Test-Path $storePath) { Remove-Item -LiteralPath $storePath -Force }
