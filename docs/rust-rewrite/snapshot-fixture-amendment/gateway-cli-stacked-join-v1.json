@@ -354,8 +354,8 @@
       "path": "crates/xtask/src/w07.rs",
       "current": {
         "path": "crates/xtask/src/w07.rs",
-        "sha256": "97425b5c9244c2030e5a9008f72c7e615e4702d743b34bfd47fb9aeec0a3dafb",
-        "bytes": 47735,
+        "sha256": "9bd8a4de9f262f99ab371ca59654afe5641656456b35358f122fdbac3ca56d20",
+        "bytes": 47842,
         "mode": "0644"
       },
       "gateway": {
@@ -369,8 +369,8 @@
         },
         "current": {
           "path": "crates/xtask/src/w07.rs",
-          "sha256": "97425b5c9244c2030e5a9008f72c7e615e4702d743b34bfd47fb9aeec0a3dafb",
-          "bytes": 47735,
+          "sha256": "9bd8a4de9f262f99ab371ca59654afe5641656456b35358f122fdbac3ca56d20",
+          "bytes": 47842,
           "mode": "0644"
         },
         "edits": [
@@ -398,6 +398,26 @@
             "at": 36550,
             "remove_utf8": "",
             "insert_utf8": "        let path = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE;\n        let expected = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA;\n        let actual = fs::read(root.join(path)).unwrap();\n        let prior = frozen(root, path, expected).unwrap();\n        assert_eq!(sha(&prior), expected);\n        assert!(frozen(root, path, &\"0\".repeat(64)).is_err());\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(\n                root,\n                \"Cargo.lock\",\n                expected,\n                &actual,\n            )\n            .is_err()\n        );\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(root, path, expected, &prior,)\n                .is_err()\n        );\n        let mut changed = actual;\n        changed.push(b' ');\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(\n                root, path, expected, &changed,\n            )\n            .is_err()\n        );\n"
+          },
+          {
+            "at": 37672,
+            "remove_utf8": "",
+            "insert_utf8": "        let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n"
+          },
+          {
+            "at": 37892,
+            "remove_utf8": "        let predecessor = metrics_predecessor(path, expected, actual).unwrap();\n",
+            "insert_utf8": "        let predecessor = metrics_predecessor(&root, path, expected, actual).unwrap();\n"
+          },
+          {
+            "at": 38066,
+            "remove_utf8": "        assert!(metrics_predecessor(path, expected, &predecessor).is_err());\n        assert!(metrics_predecessor(\"unlisted.rs\", expected, actual).is_err());\n        assert!(metrics_predecessor(path, &\"0\".repeat(64), actual).is_err());\n",
+            "insert_utf8": "        assert!(metrics_predecessor(&root, path, expected, &predecessor).is_err());\n        assert!(metrics_predecessor(&root, \"unlisted.rs\", expected, actual).is_err());\n        assert!(metrics_predecessor(&root, path, &\"0\".repeat(64), actual).is_err());\n"
+          },
+          {
+            "at": 39156,
+            "remove_utf8": "            assert!(metrics_predecessor(path, expected, &bad).is_err());\n",
+            "insert_utf8": "            assert!(metrics_predecessor(&root, path, expected, &bad).is_err());\n"
           }
         ]
       },
@@ -412,8 +432,8 @@
         },
         "current": {
           "path": "crates/xtask/src/w07.rs",
-          "sha256": "97425b5c9244c2030e5a9008f72c7e615e4702d743b34bfd47fb9aeec0a3dafb",
-          "bytes": 47735,
+          "sha256": "9bd8a4de9f262f99ab371ca59654afe5641656456b35358f122fdbac3ca56d20",
+          "bytes": 47842,
           "mode": "0644"
         },
         "edits": [
@@ -486,26 +506,6 @@
             "at": 22045,
             "remove_utf8": "    let current = crate::w08::source_successor::physical(\n        root,\n        \"crates/xtask/src/main.rs\",\n        w07_t02_joint::MAIN_SHA,\n    )?;\n",
             "insert_utf8": "    let current = frozen(root, \"crates/xtask/src/main.rs\", w07_t02_joint::MAIN_SHA)?;\n"
-          },
-          {
-            "at": 31318,
-            "remove_utf8": "        let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n",
-            "insert_utf8": ""
-          },
-          {
-            "at": 31610,
-            "remove_utf8": "        let predecessor = metrics_predecessor(&root, path, expected, actual).unwrap();\n",
-            "insert_utf8": "        let predecessor = metrics_predecessor(path, expected, actual).unwrap();\n"
-          },
-          {
-            "at": 31791,
-            "remove_utf8": "        assert!(metrics_predecessor(&root, path, expected, &predecessor).is_err());\n        assert!(metrics_predecessor(&root, \"unlisted.rs\", expected, actual).is_err());\n        assert!(metrics_predecessor(&root, path, &\"0\".repeat(64), actual).is_err());\n",
-            "insert_utf8": "        assert!(metrics_predecessor(path, expected, &predecessor).is_err());\n        assert!(metrics_predecessor(\"unlisted.rs\", expected, actual).is_err());\n        assert!(metrics_predecessor(path, &\"0\".repeat(64), actual).is_err());\n"
-          },
-          {
-            "at": 32902,
-            "remove_utf8": "            assert!(metrics_predecessor(&root, path, expected, &bad).is_err());\n",
-            "insert_utf8": "            assert!(metrics_predecessor(path, expected, &bad).is_err());\n"
           },
           {
             "at": 32992,
