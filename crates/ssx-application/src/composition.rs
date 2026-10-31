@@ -271,12 +271,12 @@ impl SourceResolver {
         snapshot: &SearchSnapshot,
         artifact: &ArtifactRef,
         indices: Vec<usize>,
+        count: usize,
         details: Value,
     ) -> Result<ResolvedSource, Error> {
         if indices.iter().any(|i| *i >= snapshot.results().len()) {
             return Err(malformed());
         }
-        let count = indices.len();
         Ok(ResolvedSource {
             artifact: artifact.clone(),
             status: if count > MAX_SOURCE_RESULTS {
@@ -305,7 +305,8 @@ impl SourceResolver {
         Self::selected(
             &snapshot,
             artifact,
-            (0..count).collect(),
+            (0..count.min(MAX_SOURCE_RESULTS)).collect(),
+            count,
             json!({"query_id":snapshot.query_id().as_str(),"result_count":count,"included_result_count":count.min(MAX_SOURCE_RESULTS)}),
         )
     }
@@ -330,6 +331,7 @@ impl SourceResolver {
             &snapshot,
             artifact,
             vec![index],
+            1,
             json!({"query_id":snapshot.query_id().as_str(),"result_index":index}),
         )
     }
@@ -359,6 +361,7 @@ impl SourceResolver {
             &snapshot,
             artifact,
             group.result_indices,
+            count,
             json!({"entity_id":group.id,"member_count":count,"included_result_count":count.min(MAX_SOURCE_RESULTS)}),
         )
     }

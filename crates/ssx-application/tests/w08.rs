@@ -164,6 +164,17 @@ impl Entities for Groups {
         }]
     }
 }
+// Explicit groups remain authoritative even beyond the displayed prefix.
+struct ExplicitGroups(Vec<usize>);
+impl Entities for ExplicitGroups {
+    fn groups(&self, _: &SearchSnapshot, _: u8) -> Vec<EntityGroup> {
+        vec![EntityGroup {
+            id: "entity-1".into(),
+            namespace: "fixture".into(),
+            result_indices: self.0.clone(),
+        }]
+    }
+}
 struct WorkflowRecords {
     job: Read<ResearchJob>,
     staged: Read<Record>,
@@ -536,6 +547,80 @@ fn preview_bounds_snapshot_result_entity_without_persistence_or_dispatch() {
         25
     );
     assert_eq!(store.reads.load(Ordering::SeqCst), 5);
+
+    // A large retained source still exposes only the ordered first 25 IDs,
+    // while its complete selection count controls status and metadata.
+    let first_25 = (0..25)
+        .map(|index| format!("snapshot-a:{index}"))
+        .collect::<Vec<_>>();
+    for count in [0, 25, 26, 4096] {
+        let (resolver, store, _) =
+            self::resolver(Some(snapshot(count, 200.)), None, false, records());
+        let requested = artifact(ArtifactKind::Snapshot, "snapshot-a");
+        let source = run(resolver.resolve(
+            &tenant(),
+            &requested,
+            Destination::DependencyDossier,
+            &cancel,
+        ))
+        .unwrap();
+        assert_eq!(source.artifact, requested);
+        assert_eq!(source.query.as_deref(), Some("retained query"));
+        assert_eq!(source.details["query_id"], "query-a");
+        assert_eq!(source.details["result_count"], count);
+        assert_eq!(source.details["included_result_count"], count.min(25));
+        assert_eq!(
+            source.status,
+            if count > 25 {
+                SourceStatus::Truncated
+            } else {
+                SourceStatus::Live
+            }
+        );
+        assert_eq!(
+            source.result_ids,
+            if count == 0 { vec![] } else { first_25.clone() }
+        );
+        assert_eq!(store.reads.load(Ordering::SeqCst), 1);
+        assert_eq!(store.snapshot.as_ref().unwrap().results().len(), count);
+    }
+
+    let (mut explicit, _, _) = self::resolver(Some(snapshot(26, 200.)), None, false, records());
+    explicit.entities = Arc::new(ExplicitGroups((0..26).rev().collect()));
+    let requested = artifact(ArtifactKind::EntityGroup, &group);
+    let source = run(explicit.resolve(
+        &tenant(),
+        &requested,
+        Destination::DependencyDossier,
+        &cancel,
+    ))
+    .unwrap();
+    assert_eq!(source.artifact, requested);
+    assert_eq!(source.status, SourceStatus::Truncated);
+    assert_eq!(
+        source.result_ids,
+        (1..26)
+            .rev()
+            .map(|index| format!("snapshot-a:{index}"))
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(source.details["member_count"], 26);
+    assert_eq!(source.details["included_result_count"], 25);
+
+    // The first 25 members are valid: only complete validation can reject
+    // the out-of-range final member, which would not be displayed.
+    explicit.entities = Arc::new(ExplicitGroups((0..27).collect()));
+    assert_eq!(
+        run(explicit.resolve(
+            &tenant(),
+            &requested,
+            Destination::DependencyDossier,
+            &cancel,
+        ))
+        .unwrap_err()
+        .code,
+        "source_malformed"
+    );
 }
 #[test]
 fn foreign_expired_missing_unavailable_revoked_and_cancelled_sources_fail_closed() {
