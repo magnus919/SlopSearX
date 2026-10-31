@@ -492,7 +492,8 @@ fn default_shipping_floor(root: &Path, records: &mut Vec<Value>) -> Result<(Path
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let before = sources(root)?;
-    vendor_sources(root)?;
+    let upstream_identity = vendor_sources(root)?;
+    records.push(json!({"plan":"T08A","private_hyper_upstream_identity":upstream_identity}));
     process_wrap_guard::sources(root)?;
     source_custody::controls(root)?;
     tls_roles::check(root, records)?;
@@ -892,13 +893,27 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     Ok(())
 }
 
-fn vendor_sources(root: &Path) -> Result<()> {
+// This is the exact historical CLI upstream/archive identity, not the current
+// resolver graph. The existing stateless join authenticates physical current,
+// all eleven current rows and both parents before yielding the CLI lock frame.
+fn upstream_hyper_lock(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    ensure(path == "Cargo.lock", "T08A exact upstream lock caller")?;
+    source_custody::accepted_main_join::stacked::project(
+        root,
+        path,
+        supplied,
+        source_custody::accepted_main_join::stacked::Parent::Cli,
+    )
+}
+fn vendor_sources(root: &Path) -> Result<Value> {
     let provenance: Value = serde_json::from_slice(
         &fs::read(root.join("docs/rust-rewrite/t08a/hyper-provenance.json"))
             .map_err(|e| e.to_string())?,
     )
     .map_err(|e| e.to_string())?;
-    let lock = fs::read_to_string(root.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    let physical_lock = fs::read(root.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    let historical_lock = upstream_hyper_lock(root, "Cargo.lock", &physical_lock)?;
+    let lock = std::str::from_utf8(&historical_lock).map_err(|e| e.to_string())?;
     let version = provenance["upstream"]["version"]
         .as_str()
         .ok_or("upstream version")?;
@@ -912,6 +927,27 @@ fn vendor_sources(root: &Path) -> Result<()> {
                 && p.lines().any(|l| l == format!("checksum = \"{checksum}\""))
         }),
         "private Hyper upstream registry/advisory identity changed without reviewed port",
+    )?;
+    // The real physical positive and exact upstream tuple pass before controls.
+    // Mutants change only the supplied buffer/caller, never the source tree.
+    let changed_reason = "gateway/CLI stacked join: join supplied buffer is not physical current";
+    let mut changed_lock = physical_lock.clone();
+    *changed_lock.last_mut().ok_or("T08A empty current lock")? ^= 1;
+    for supplied in [&changed_lock, &historical_lock] {
+        ensure(
+            upstream_hyper_lock(root, "Cargo.lock", supplied)
+                .err()
+                .as_deref()
+                == Some(changed_reason),
+            "T08A upstream lock supplied-buffer rejection differs",
+        )?;
+    }
+    ensure(
+        upstream_hyper_lock(root, "Cargo.toml", &physical_lock)
+            .err()
+            .as_deref()
+            == Some("T08A exact upstream lock caller"),
+        "T08A upstream lock wrong caller accepted",
     )?;
     let archive = fs::read(root.join("docs/rust-rewrite/t08a/hyper-1.12.0.crate"))
         .map_err(|e| e.to_string())?;
@@ -956,5 +992,15 @@ fn vendor_sources(root: &Path) -> Result<()> {
             "private Hyper file changed",
         )?;
     }
-    ensure(actual == expected, "private Hyper missing or extra files")
+    ensure(actual == expected, "private Hyper missing or extra files")?;
+    Ok(json!({
+        "scope":"historical CLI upstream archive/advisory identity; current resolver, shipping and TLS roles retain physical current inputs",
+        "physical_current_lock_sha256":hash(&physical_lock),
+        "historical_cli_lock_sha256":hash(&historical_lock),
+        "historical_cli_parent":"41e5976fc9ba5272bf2585b252136e3843581f18",
+        "upstream":{"name":"hyper","version":version,"archive_sha256":checksum},
+        "positive_validated_before_mutants":true,
+        "supplied_buffer_controls":["changed_current_lock","historical_cli_lock_as_current","wrong_caller_path"],
+        "changed_buffer_sha256":hash(&changed_lock)
+    }))
 }

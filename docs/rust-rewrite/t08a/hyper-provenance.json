@@ -7,7 +7,7 @@
     "license": "MIT"
   },
   "private_package": "ssx-cli-hyper",
-  "advisory_identity_bridge": "T08A requires matching registry hyper version/checksum in workspace Cargo.lock; existing RustSec/cargo-deny retains upstream identity. Private package updates require assessed port and full requalification.",
+  "advisory_identity_bridge": "T08A authenticates the physical current workspace Cargo.lock through the existing closed gateway/CLI join, then compares the exact historical CLI41 registry hyper version/checksum with the pristine upstream archive. Current resolver, shipping and TLS checks continue to use physical current source; this historical identity bridge is not current Cargo graph or new advisory-scan execution. Private package updates require assessed port and full requalification.",
   "files": [
     {
       "path": ".cargo_vcs_info.json",
