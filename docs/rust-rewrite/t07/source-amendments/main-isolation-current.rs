@@ -208,10 +208,7 @@ pub(crate) fn operands(
         )?;
     }
     if let Some(buffer) = supplied {
-        need(
-            buffer == actual,
-            "supplied gateway operand is not physical current",
-        )?;
+        need(buffer == actual, "supplied bytes are not physical current")?;
     }
     let proof_input = if path == "crates/xtask/src/main.rs" {
         super::w07_t02_joint::snapshot_helper_amendment::gateway_main(root, &actual)?
