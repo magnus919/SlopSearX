@@ -365,9 +365,6 @@ jobs:
           if run_one mutant "$copy"; then mutant_status=0; else mutant_status=$?; fi
           validate_mutant "$mutant_status" "$evidence/mutant.stdout" "$evidence/mutant.stderr"
           printf '%s\n' 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED' > "$evidence/control-result.txt"
-      - name: Native scholarly adapters and Expat boundary qualification
-        run: cargo xtask check A06 --output target/rust-evidence/A06.json
-
       - name: Locked workspace build
         run: cargo build --locked --workspace --target "${{ matrix.target }}"
 
@@ -1070,6 +1067,12 @@ jobs:
 
       - name: Native DuckDuckGo and Google HTML adapters
         run: cargo xtask check A05 --output target/rust-evidence/A05.json
+      - name: Native scholarly adapters and Expat boundary qualification
+        env:
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR
+        run: cargo xtask check A06 --output target/rust-evidence/A06.json
+
       - name: Native biomedical adapters
         run: cargo xtask check A07 --output target/rust-evidence/A07.json
 
@@ -1315,3 +1318,133 @@ jobs:
 
       - name: Check advisories, licenses, duplicate versions and registry sources
         run: cargo deny --locked --workspace check all
+
+      - name: Build native upstream advisory view and capture actual metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          evidence=target/rust-evidence/upstream-advisories
+          mkdir -p "$evidence"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain)"
+          cargo deny --version > "$evidence/scanner-version.txt"
+          cargo --version --verbose > "$evidence/cargo-version.txt"
+          rustc --version --verbose > "$evidence/rustc-version.txt"
+          cargo build --locked -p xtask --example upstream_advisory_view --message-format=json-render-diagnostics > "$evidence/helper-build.jsonl"
+          cargo metadata --locked --format-version 1 > "$evidence/raw-metadata.json" 2> "$evidence/metadata.stderr"
+          target/debug/examples/upstream_advisory_view derive "$evidence/raw-metadata.json" "$evidence/view"
+      - name: Prove private fork advisory coverage with the pinned scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          evidence=target/rust-evidence/upstream-advisories
+          fixture="$evidence/fixtures"
+          target/debug/examples/upstream_advisory_view fixtures "$evidence/raw-metadata.json" "$fixture"
+          cargo deny --version > "$fixture/cargo-deny-version.stdout"
+          while IFS=$'\t' read -r name source config; do
+            source="$fixture/$source"
+            config="$fixture/$config"
+            test -n "$name" && test -d "$source" && test -f "$config"
+            git -C "$source" init --initial-branch=main
+            git -C "$source" add --all
+            git -C "$source" -c user.name='SlopSearX scanner fixture' -c user.email='scanner-fixture@example.invalid' commit -s -m 'Synthetic local advisory fixture'
+            cargo deny --config "$config" fetch db > "$fixture/$name-fetch.stdout" 2> "$fixture/$name-fetch.stderr"
+          done < "$fixture/fixture-dbs.tsv"
+          while IFS=$'\t' read -r name config metadata; do
+            config="$fixture/$config"
+            metadata="$fixture/$metadata"
+            test -n "$name" && test -f "$config" && test -f "$metadata"
+            if cargo deny --format json --locked --offline --workspace --metadata-path "$metadata" --config "$config" check advisories > "$fixture/$name.stdout" 2> "$fixture/$name.stderr"; then
+              code=0
+            else
+              code=$?
+            fi
+            printf '%s\n' "$code" > "$fixture/$name.exit"
+          done < "$fixture/fixture-runs.tsv"
+          target/debug/examples/upstream_advisory_view verify-fixtures "$fixture"
+      - name: Fetch fresh RustSec data and check upstream fork advisories
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          evidence=target/rust-evidence/upstream-advisories
+          if cargo deny --locked --workspace fetch db > "$evidence/db-fetch.stdout" 2> "$evidence/db-fetch.stderr"; then
+            SSX_AUDIT_FETCH_EXIT=0
+          else
+            SSX_AUDIT_FETCH_EXIT=$?
+          fi
+          SSX_AUDIT_SCAN_EXIT=not-run
+          if [ "$SSX_AUDIT_FETCH_EXIT" -eq 0 ]; then
+            if cargo deny --format json --locked --offline --workspace --metadata-path "$evidence/view/upstream-advisory-metadata.json" check advisories > "$evidence/scan.stdout" 2> "$evidence/scan.stderr"; then
+              SSX_AUDIT_SCAN_EXIT=0
+            else
+              SSX_AUDIT_SCAN_EXIT=$?
+            fi
+          fi
+          export SSX_AUDIT_FETCH_EXIT SSX_AUDIT_SCAN_EXIT
+          node <<'NODE'
+          const fs = require('node:fs'), path = require('node:path'), os = require('node:os');
+          const crypto = require('node:crypto'), cp = require('node:child_process');
+          const evidence = 'target/rust-evidence/upstream-advisories';
+          const need = (ok, why) => { if (!ok) throw Error(why); };
+          const hashFile = file => {
+            const info = fs.lstatSync(file);
+            need(info.isFile() && !info.isSymbolicLink() && info.size <= 32 * 1024 * 1024, `bounded regular evidence: ${file}`);
+            return { path: file, bytes: info.size, sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') };
+          };
+          const git = args => {
+            const value = cp.spawnSync('git', args, { encoding: 'utf8', timeout: 10000, maxBuffer: 65536 });
+            need(value.status === 0, `git evidence failed: ${args.join(' ')}`);
+            return value.stdout.trim();
+          };
+          const version = fs.readFileSync(`${evidence}/scanner-version.txt`, 'utf8').trim();
+          need(version === 'cargo-deny 0.20.2', 'pinned scanner version');
+          const source = git(['rev-parse', 'HEAD']);
+          need(source === process.env.GITHUB_SHA && git(['status', '--porcelain']) === '', 'source revision or clean tree changed');
+          const fetchExit = Number(process.env.SSX_AUDIT_FETCH_EXIT);
+          const scanExit = process.env.SSX_AUDIT_SCAN_EXIT === 'not-run' ? null : Number(process.env.SSX_AUDIT_SCAN_EXIT);
+          const databases = [];
+          if (fetchExit === 0) {
+            const dbRoot = path.join(process.env.CARGO_HOME || path.join(os.homedir(), '.cargo'), 'advisory-dbs');
+            const entries = fs.readdirSync(dbRoot, { withFileTypes: true });
+            need(entries.length <= 32, 'advisory database directory bound');
+            for (const entry of entries) {
+              if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+              const dir = path.join(dbRoot, entry.name);
+              const origin = git(['-C', dir, 'remote', 'get-url', 'origin']);
+              need(origin.replace(/\/?$/, '').replace(/\.git$/, '').toLowerCase() === 'https://github.com/rustsec/advisory-db', 'unexpected production advisory database origin');
+              databases.push({ path: dir, origin, commit: git(['-C', dir, 'rev-parse', 'HEAD']), tree: git(['-C', dir, 'rev-parse', 'HEAD^{tree}']) });
+            }
+            need(databases.length === 1, 'one freshly fetched production RustSec database required');
+          }
+          const files = [
+            'Cargo.toml', 'Cargo.lock', 'deny.toml',
+            'crates/xtask/examples/upstream_advisory_view.rs',
+            'docs/rust-rewrite/ci/upstream-fork-advisories.json',
+            `${evidence}/raw-metadata.json`, `${evidence}/view/upstream-advisory-metadata.json`,
+            `${evidence}/view/identity-receipt.json`, `${evidence}/db-fetch.stdout`, `${evidence}/db-fetch.stderr`,
+            ...[`${evidence}/scan.stdout`, `${evidence}/scan.stderr`].filter(file => fs.existsSync(file))
+          ].map(hashFile);
+          const receipt = {
+            schema: 1, scope: 'Inherited upstream Rust crate advisories for reviewed current path forks; not physical resolution, private-patch safety, native C advisory coverage, or shipping/TLS evidence',
+            source_revision: source, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT,
+            recorded_utc: new Date().toISOString(), scanner_version: version,
+            metadata_producer: { argv: ['cargo', 'metadata', '--locked', '--format-version', '1'], exit: 0 },
+            database_fetch: { argv: ['cargo', 'deny', '--locked', '--workspace', 'fetch', 'db'], exit: fetchExit },
+            scan: { argv: ['cargo', 'deny', '--format', 'json', '--locked', '--offline', '--workspace', '--metadata-path', `${evidence}/view/upstream-advisory-metadata.json`, 'check', 'advisories'], exit: scanExit, skipped_reason: scanExit === null ? 'fresh database fetch failed' : null },
+            databases, files
+          };
+          fs.writeFileSync(`${evidence}/fresh-scan-receipt.json`, JSON.stringify(receipt, null, 2) + '\n');
+          NODE
+          test "$SSX_AUDIT_FETCH_EXIT" -eq 0
+          test "$SSX_AUDIT_SCAN_EXIT" = 0
+      - name: Retain upstream fork advisory coverage evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: upstream-fork-advisories-${{ github.sha }}
+          path: target/rust-evidence/upstream-advisories/
+          if-no-files-found: error
+          retention-days: 14

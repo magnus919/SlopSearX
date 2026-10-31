@@ -1,0 +1,457 @@
+{
+  "schema": 1,
+  "purpose": "Audit-only upstream RustSec identities; physical Cargo resolution and existing all checks are not changed.",
+  "source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+  "forks": [
+    {
+      "path": "vendor/ssx-http-source/httparse",
+      "current_package_name": "httparse",
+      "upstream_name": "httparse",
+      "version": "1.10.1",
+      "manifest_bytes": 1670,
+      "manifest_sha256": "067da5f6334526ce5f080909e5c271dd0968ab4198a65eea51d93b242febb48a",
+      "archive_sha256": "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87",
+      "current_tree_sha256": "20520aa93afe7a2e83b458e59fde6973ab1964847dd21cde94f21e837733a2f0",
+      "current_regular_files": 25,
+      "licenses": [
+        {
+          "path": "vendor/ssx-http-source/httparse/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "vendor/ssx-http-source/httparse/LICENSE-MIT",
+          "bytes": 1063,
+          "sha256": "391a5396cec6230bfabd4ef4eb2350eb895bc5efce377a2218f5702ed020d3e3"
+        }
+      ],
+      "reviewed_provenance": [
+        {
+          "path": "vendor/ssx-http-source/PROVENANCE.json",
+          "sha256": "ff631b467b301a20f49d84815f44727f364ee747f0d06ab7e34adf3b643e6987",
+          "pointer": "/packages/httparse",
+          "version_field": "version",
+          "checksum_field": "upstream_archive_sha256"
+        }
+      ],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "workspace_member": false
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper",
+      "current_package_name": "hyper",
+      "upstream_name": "hyper",
+      "version": "1.12.0",
+      "manifest_bytes": 7103,
+      "manifest_sha256": "860e543c05cd8633f0d82b14f9aa8603ed1a48e93bbdc8c517a238440b51d73e",
+      "archive_sha256": "2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c",
+      "current_tree_sha256": "05941ec0d26dc27e37b4c4eb0fcbf9fc08c10614f777d79ee1df34fcd988af5a",
+      "current_regular_files": 74,
+      "licenses": [
+        {
+          "path": "vendor/ssx-http-source/hyper/LICENSE",
+          "bytes": 1062,
+          "sha256": "2d01890414494742ba4a509fcec8efa40f6d8be22cbd72be7cff08d6fda4ec89"
+        }
+      ],
+      "reviewed_provenance": [
+        {
+          "path": "vendor/ssx-http-source/PROVENANCE.json",
+          "sha256": "ff631b467b301a20f49d84815f44727f364ee747f0d06ab7e34adf3b643e6987",
+          "pointer": "/packages/hyper",
+          "version_field": "version",
+          "checksum_field": "upstream_archive_sha256"
+        }
+      ],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "workspace_member": false
+    },
+    {
+      "path": "vendor/ssx-http-source/hyper-util",
+      "current_package_name": "hyper-util",
+      "upstream_name": "hyper-util",
+      "version": "0.1.21",
+      "manifest_bytes": 5210,
+      "manifest_sha256": "12a25f77c65175f13448f4098877bb270de2f1221fd51fa0ad1a28da00ed39b9",
+      "archive_sha256": "ddc03d96684f9226b8a787cdb71488417b53ab5ea8fdb1dac946cb9431cc8bff",
+      "current_tree_sha256": "8b4f275dd77c493f75511aa2f7b5bb24629e4c7d7e5130ab03668e93e5095ad8",
+      "current_regular_files": 67,
+      "licenses": [
+        {
+          "path": "vendor/ssx-http-source/hyper-util/LICENSE",
+          "bytes": 1062,
+          "sha256": "9e0a97848ea543aef745c98e84fde696a9a3e0735538f6daefdd3cb1942effc1"
+        }
+      ],
+      "reviewed_provenance": [
+        {
+          "path": "vendor/ssx-http-source/PROVENANCE.json",
+          "sha256": "ff631b467b301a20f49d84815f44727f364ee747f0d06ab7e34adf3b643e6987",
+          "pointer": "/packages/hyper-util",
+          "version_field": "version",
+          "checksum_field": "upstream_archive_sha256"
+        }
+      ],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "workspace_member": false
+    },
+    {
+      "path": "vendor/ssx-http-source/reqwest",
+      "current_package_name": "reqwest",
+      "upstream_name": "reqwest",
+      "version": "0.13.5",
+      "manifest_bytes": 14150,
+      "manifest_sha256": "0552db576a6950355c3c6a4eca3dbd3915765b54cae1c8f620245bb6f64f2c4a",
+      "archive_sha256": "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029",
+      "current_tree_sha256": "052e8e2d308f6422b9091de2eb8d8bcac5bb39024766c9fb1c7a8bce7e528a56",
+      "current_regular_files": 72,
+      "licenses": [
+        {
+          "path": "vendor/ssx-http-source/reqwest/LICENSE-APACHE",
+          "bytes": 10833,
+          "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/LICENSE-MIT",
+          "bytes": 1063,
+          "sha256": "dd87e27dfbaa888cb77ea34592648a7743636b8dce07e49543bddda0fcfc73bc"
+        },
+        {
+          "path": "vendor/ssx-http-source/reqwest/src/source_pool/python-text-source/LICENSE.txt",
+          "bytes": 13804,
+          "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+        }
+      ],
+      "reviewed_provenance": [
+        {
+          "path": "vendor/ssx-http-source/PROVENANCE.json",
+          "sha256": "ff631b467b301a20f49d84815f44727f364ee747f0d06ab7e34adf3b643e6987",
+          "pointer": "/packages/reqwest",
+          "version_field": "version",
+          "checksum_field": "upstream_archive_sha256"
+        }
+      ],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "workspace_member": false
+    },
+    {
+      "path": "vendor/ssx-sdk-auth/rmcp",
+      "current_package_name": "rmcp",
+      "upstream_name": "rmcp",
+      "version": "3.5.1",
+      "manifest_bytes": 18655,
+      "manifest_sha256": "de275ee47ab722df699f2b290ef50a5fba16c271a9d0454475ff260bcd3e06d6",
+      "archive_sha256": "ab5023804cbe0304cbe06197ac16e645a0a0d0ffa2953bf735c15c2fa0213350",
+      "current_tree_sha256": "dd8c210bf5e316697ab563da9cd3938d123c2ec01a6da3fbb041ec18a1f00489",
+      "current_regular_files": 174,
+      "licenses": [
+        {
+          "path": "vendor/ssx-sdk-auth/rmcp/LICENSE-APACHE",
+          "bytes": 10833,
+          "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+        }
+      ],
+      "reviewed_provenance": [
+        {
+          "path": "vendor/ssx-sdk-auth/PROVENANCE.json",
+          "sha256": "b775068938da4749437686ad1061e5071dc1010b0b1de0319a5ca95f94a2f1fd",
+          "pointer": "/packages/rmcp",
+          "version_field": "version",
+          "checksum_field": "upstream_archive_sha256"
+        }
+      ],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "workspace_member": false
+    },
+    {
+      "path": "vendor/libxml",
+      "current_package_name": "libxml",
+      "upstream_name": "libxml",
+      "version": "0.3.22",
+      "manifest_bytes": 3737,
+      "manifest_sha256": "a5308c71e3d6c5fbb65e070b4570215c59f9cfc9e3c668bc7b8f68963aca2960",
+      "archive_sha256": "1157d8bc7a14d07445541827e7a9c80fc5939718b43a973cf7e666d3ab5035fb",
+      "current_tree_sha256": "da7ec890a9a1bee31814abcc8ada7ca2b8d3c6da5ee81cb0fbcce492c713d559",
+      "current_regular_files": 101,
+      "licenses": [
+        {
+          "path": "vendor/libxml/LICENSE",
+          "bytes": 1124,
+          "sha256": "7b1ecc3b341c6515618d01ed9d5d8f428fc44f97f40a8ee3f7c4c02e4a0b9b06"
+        }
+      ],
+      "reviewed_provenance": [],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "upstream_identity_url": "https://crates.io/api/v1/crates/libxml/0.3.22",
+      "selected_pristine_identity": [
+        {
+          "path": "vendor/libxml/.cargo_vcs_info.json",
+          "sha256": "1c5882b0b1d4df332c2026a3e9234586328916701f97cfd8126d969628f7a3a4"
+        },
+        {
+          "path": "vendor/libxml/Cargo.toml.orig",
+          "sha256": "4fa8cdcd2abefd55817a2d4e7dce1918524cfd3da2ba9183762e738539aa0e3c"
+        },
+        {
+          "path": "vendor/libxml/LICENSE",
+          "sha256": "7b1ecc3b341c6515618d01ed9d5d8f428fc44f97f40a8ee3f7c4c02e4a0b9b06"
+        }
+      ],
+      "workspace_member": false
+    },
+    {
+      "path": "vendor/ssx-cli-process-wrap",
+      "current_package_name": "process-wrap",
+      "upstream_name": "process-wrap",
+      "version": "10.0.1",
+      "manifest_bytes": 3399,
+      "manifest_sha256": "e76f740495f311001dac33b070136a06ed15662ffcff52b3b2e8cecb8f23bb1e",
+      "archive_sha256": "1f21b97672d2dc848e7b25701ab4535618b92f4861c13cc3f7f7bed52ad3c8da",
+      "current_tree_sha256": "61b21414796a93fb9e3154bf7954d6f95e0bb6de699fc07c09ebb606b7dee2c2",
+      "current_regular_files": 95,
+      "licenses": [
+        {
+          "path": "vendor/ssx-cli-process-wrap/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "vendor/ssx-cli-process-wrap/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ],
+      "reviewed_provenance": [
+        {
+          "path": "docs/rust-rewrite/t08a/process-wrap-provenance.json",
+          "sha256": "2f98ad9a3df02859cdb49c59388e4000e12718c2f2f903d5fba3a71352a32261",
+          "pointer": "/upstream",
+          "version_field": "version",
+          "checksum_field": "archive_sha256"
+        }
+      ],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "workspace_member": false
+    },
+    {
+      "path": "vendor/ssx-cli-hyper",
+      "current_package_name": "ssx-cli-hyper",
+      "upstream_name": "hyper",
+      "version": "1.12.0",
+      "manifest_bytes": 7052,
+      "manifest_sha256": "602af7bd48b3b7a92c186fe6ac2d3dc25f2d3c424377e693e79257a0e26415d8",
+      "archive_sha256": "2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c",
+      "current_tree_sha256": "e019266bd1de457243f33e9cdcb077aebf5bcf659deef8ebbed964a060c9534e",
+      "current_regular_files": 72,
+      "licenses": [
+        {
+          "path": "vendor/ssx-cli-hyper/LICENSE",
+          "bytes": 1062,
+          "sha256": "2d01890414494742ba4a509fcec8efa40f6d8be22cbd72be7cff08d6fda4ec89"
+        }
+      ],
+      "reviewed_provenance": [
+        {
+          "path": "docs/rust-rewrite/t08a/hyper-provenance.json",
+          "sha256": "f2f152487bea7557f0125eb6d3fb9d83e1b591177eed02b119e2c693ea0216bd",
+          "pointer": "/upstream",
+          "version_field": "version",
+          "checksum_field": "archive_sha256"
+        }
+      ],
+      "patch_source_origin": "8dc52e72bb2e753eef75c578ab48cfe97ecb1b01",
+      "scope": "Pinned current fork tree plus reviewed upstream identity; not a claim of archive-to-current reconstruction.",
+      "workspace_member": true
+    }
+  ],
+  "native_non_crate_boundary": "Native C expat/libxml2 are not RustSec crates; this does not claim their advisory coverage.",
+  "first_party": [
+    {
+      "manifest": "crates/ssx-application/Cargo.toml",
+      "sha256": "2b33610e5b35eec5599665f4962202a158002ed6f09563de92840a457a21fca6",
+      "name": "ssx-application",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-cli-check/Cargo.toml",
+      "sha256": "3f69532d7239aa90169e03abf5e7e32dd31fcd2ec2c47b07c56f5dbc5e77e42a",
+      "name": "ssx-cli-check",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-cli-openssl-store/Cargo.toml",
+      "sha256": "6aafec46ea39aaa7a0aadc664db3d826586fab7f8265a373a4758907f99363c7",
+      "name": "ssx-cli-openssl-store",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-cli/Cargo.toml",
+      "sha256": "7d6d7230871ac1ad5c8a8765259bb8b4319ce677cc3dce6039bb4809617c4fe1",
+      "name": "ssx-cli",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-config/Cargo.toml",
+      "sha256": "01450b08df02ad0376c3ad6445bf658d17693cebeae590c956cc36b92082452a",
+      "name": "ssx-config",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-domain/Cargo.toml",
+      "sha256": "9f888410f4845845e1e89fe61a0ca700375fb043456f748f28f6fb02864477c9",
+      "name": "ssx-domain",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-gateway/Cargo.toml",
+      "sha256": "8c7390c71ddf88536665dccc0183d7e935bbc365b879510bfa2d56a163e5e481",
+      "name": "ssx-gateway",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-http/Cargo.toml",
+      "sha256": "f90536f1ed8b9db38035ee7546258a08dfe441013d802d618bb5c65f98a9480e",
+      "name": "ssx-http",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-infra/Cargo.toml",
+      "sha256": "f0121ddfe28bb85c8f30d9239fd57cc4bbf9d4f7c3e343db2f490c366b74af93",
+      "name": "ssx-infra",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-json/Cargo.toml",
+      "sha256": "7a0c845afac7c12978c32014fc062d9ac40a749a08e242f8018c758fd47ee1a5",
+      "name": "ssx-json",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-mcp/Cargo.toml",
+      "sha256": "4533776d9d0e23235e711892d99777ce149dacfb13b69751860d22df38a174e6",
+      "name": "ssx-mcp",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-owned-budget/Cargo.toml",
+      "sha256": "ec362096bdaafb9c0349bf0431bb6c526a960742bca41792117dbcea82862d05",
+      "name": "ssx-owned-budget",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-publication/Cargo.toml",
+      "sha256": "4210d472ed31f3dd9aca84add482fc7a0bc7122340fea9329220ec2698247f32",
+      "name": "ssx-publication",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-registry/Cargo.toml",
+      "sha256": "291ed00bfe46415d991e639f5231ad707b061be363e83bf3ab43cdcac2aea567",
+      "name": "ssx-registry",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-server/Cargo.toml",
+      "sha256": "cf5ad45f669bc86de67939196edeea126ef159cba89004130cad44f938bc92b2",
+      "name": "ssx-server",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-source-codecs/Cargo.toml",
+      "sha256": "20cde50cad0faf1b736864eb3d48f7cd4c39e3ecb37cafaca26d0f2d9f56acd8",
+      "name": "ssx-source-codecs",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-source-json/Cargo.toml",
+      "sha256": "b07e8681086d7cb6d2825d5d392fe303ccec847dd945441ac43dd525a711190f",
+      "name": "ssx-source-json",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-wire/Cargo.toml",
+      "sha256": "191c76d6deeb3707bfca604f93e9a0878d15b36ca5eb37b8ae8ad77f12b1de8e",
+      "name": "ssx-wire",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/ssx-worker/Cargo.toml",
+      "sha256": "4614a36bf0c3198c0beb66a0b95f90dc26f00ad4f0322e6fac907055fe70c3de",
+      "name": "ssx-worker",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "crates/xtask/Cargo.toml",
+      "sha256": "b094e2505c6c413ce43b00eae58599f2bbc8084c03c8d37676543b4f9576322c",
+      "name": "xtask",
+      "version": "0.1.0",
+      "workspace_member": true
+    },
+    {
+      "manifest": "vendor/expat/Cargo.toml",
+      "sha256": "97313b6c3823d75788468ff970a5c0ccdb1648189112cbf0d68cf7eb547e6d86",
+      "name": "ssx-source-xml",
+      "version": "0.1.0",
+      "classification": "First-party Rust XML owner wrapper; bundled native C Expat is outside RustSec crate identity projection.",
+      "workspace_member": false
+    },
+    {
+      "manifest": "vendor/ssx-native-ip-text/Cargo.toml",
+      "sha256": "2f39d7de0c2d4b716843af7d90ec9f6607c3c9bf2111ebedb428f57fd8203329",
+      "name": "ssx-native-ip-text",
+      "version": "0.1.0",
+      "workspace_member": false
+    },
+    {
+      "manifest": "vendor/ssx-windows-owner/Cargo.toml",
+      "sha256": "c1321dc5b1bbe7fc45caf1a5c213a28876a09d887f11277e865c94e281b61ce3",
+      "name": "ssx-windows-owner",
+      "version": "0.1.0",
+      "workspace_member": false
+    }
+  ],
+  "root_input_identities": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "b31280cfa0cf90060114f040df383c6c07a6a94aefe75d036563f0e25b4de087"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "3ec2d9c97c8bf45b06807f17cbeb6809202351f5f6006eb574988cda40e84b12"
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "sha256": "72f7dd8c9fdf9c1fcd8eb8bf9326d4bc66833e4ebf4bc2932636e2b85efcb7af"
+    },
+    {
+      "path": "deny.toml",
+      "sha256": "4ee1f9002026c1283dd2108a0539e74f0ab46f71e550f6b2f06f41917f72b4f6"
+    }
+  ]
+}

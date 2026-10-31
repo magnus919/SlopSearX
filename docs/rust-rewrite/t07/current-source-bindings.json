@@ -8,7 +8,7 @@
     },
     {
       "path": ".github/workflows/rust.yml",
-      "sha256": "0e51efcf055712ef248476a5cb292f52566e2809c9f9f860ed53851799451b58"
+      "sha256": "b4836eaab7d6ffcdb582fa25d5cf76b4ccc7f4f6126d19ca21ab64402a9c78e4"
     },
     {
       "path": ".pre-commit-config.yaml",
@@ -536,7 +536,7 @@
     },
     {
       "path": "docs/rust-rewrite/ci/gates.json",
-      "sha256": "c50a6ec3bc237dde4873e6cb743d4b62547f2b21991256d0f12312e4fc392d9b"
+      "sha256": "0753d02cf4cea34b54b8aec241110405ce7033ad0883f141c8aa0afe2fa27b24"
     },
     {
       "path": "docs/rust-rewrite/foundation/ci.md",
@@ -732,7 +732,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor.rs",
-      "sha256": "935c26f4c5aaf43802e6540bc5737c53c99ca01b1d3e576d71a257484568e249"
+      "sha256": "19608f14244b6ce234e15fa7d45ef171e775e84bf897edda966d6a2d80d06b97"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-predecessor-v1/main.rs",
@@ -2753,6 +2753,14 @@
     {
       "path": "docs/rust-rewrite/a06/source-amendments/native-cancel-fixture-v1.json",
       "sha256": "863fcb998aae337c6246adbf619d8e8d65046c65ddb53796bec430861b9c689c"
+    },
+    {
+      "path": "crates/xtask/examples/upstream_advisory_view.rs",
+      "sha256": "2afe6c85c9dfbc3b462a15c2673913dad4b3b4b4e6bff7649c8e475e695551e7"
+    },
+    {
+      "path": "docs/rust-rewrite/ci/upstream-fork-advisories.json",
+      "sha256": "431dcde0f1bb85c2a22cc7e3a50e16ff4ca0d4c5f0c27319bbe832734495efce"
     }
   ],
   "library_tests": [
@@ -3033,7 +3041,7 @@
   "opaque_current_operand_successor": {
     "parent_bindings_sha256": "8d486b5f22994c4cfaf56c6a4436c309f44cdd9c0d056b237bfa70674195a4a3",
     "source_head": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
-    "reason": "exactsamephysicalbuffer bcd6→3fe5→sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
+    "reason": "exactsamephysicalbuffer bcd6\u21923fe5\u2192sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
     "current_source_rows": 608,
     "native_identities_unchanged": 215
   },
