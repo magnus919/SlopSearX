@@ -174,9 +174,69 @@ fn admission_capsule(root: &Path) -> Result<Value> {
     Ok(doc)
 }
 
+// One mutable cancellation fixture; published A06 coverage and old admission
+// capsules remain unchanged. The existing inverse checker proves its old bytes.
+const NATIVE_CANCEL_SOURCE: &str = "crates/ssx-infra/tests/a06_expat_candidate.rs";
+const NATIVE_CANCEL_PRIOR: &str =
+    "39bcb04f308a2556627f4105a7d2150522fffb65e803d043df6e1ab29fdc8f70";
+const NATIVE_CANCEL_CAPSULE: &str =
+    "docs/rust-rewrite/a06/source-amendments/native-cancel-fixture-v1.json";
+const NATIVE_CANCEL_CAPSULE_SHA: &str =
+    "863fcb998aae337c6246adbf619d8e8d65046c65ddb53796bec430861b9c689c";
+fn native_cancel_material(root: &Path, path: &str, bound: usize) -> Result<Vec<u8>> {
+    use std::io::Read as _;
+    let path = root.join(path);
+    let before = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
+    if !before.is_file() {
+        return Err("A06 native cancellation requires regular source".into());
+    }
+    let file = fs::File::open(path).map_err(|e| e.to_string())?;
+    let opened = file.metadata().map_err(|e| e.to_string())?;
+    if !opened.is_file() {
+        return Err("A06 native cancellation source changed kind".into());
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+        if before.dev() != opened.dev()
+            || before.ino() != opened.ino()
+            || before.permissions().mode() & 0o7777 != 0o644
+            || opened.permissions().mode() & 0o7777 != 0o644
+        {
+            return Err("A06 native cancellation source custody differs".into());
+        }
+    }
+    let mut raw = Vec::new();
+    file.take((bound + 1) as u64)
+        .read_to_end(&mut raw)
+        .map_err(|e| e.to_string())?;
+    if raw.len() > bound || opened.len() != raw.len() as u64 {
+        return Err("A06 native cancellation bounded source changed".into());
+    }
+    Ok(raw)
+}
+fn native_cancel_capsule(root: &Path) -> Result<Value> {
+    let raw = native_cancel_material(root, NATIVE_CANCEL_CAPSULE, 9811)?;
+    if digest(&raw) != NATIVE_CANCEL_CAPSULE_SHA {
+        return Err("A06 native cancellation capsule changed".into());
+    }
+    let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    if doc["path"] != NATIVE_CANCEL_SOURCE || doc["historical_sha256"] != NATIVE_CANCEL_PRIOR {
+        return Err("A06 native cancellation closed scope changed".into());
+    }
+    Ok(doc)
+}
 fn verify_artifact(root: &Path, row: &Value) -> Result<()> {
     let path = row["path"].as_str().ok_or("A06 artifact path missing")?;
     let expected = row["sha256"].as_str().ok_or("A06 artifact hash missing")?;
+    if path == NATIVE_CANCEL_SOURCE {
+        if expected != NATIVE_CANCEL_PRIOR {
+            return Err("A06 native cancellation frozen caller differs".into());
+        }
+        let capsule = native_cancel_capsule(root)?;
+        let raw = native_cancel_material(root, path, 18095)?;
+        return admission_bytes(&raw, expected, &capsule);
+    }
     if crate::snapshot_fixture_amendment::a06(root, row)?.is_some() {
         return Ok(());
     }
@@ -624,6 +684,42 @@ mod tests {
         fs::remove_dir_all(dir).unwrap();
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         crate::a13::a06_source_successor::artifact_controls(&root).unwrap();
+        let current = native_cancel_material(&root, NATIVE_CANCEL_SOURCE, 18095).unwrap();
+        let capsule = native_cancel_capsule(&root).unwrap();
+        let caller = json!({"path":NATIVE_CANCEL_SOURCE,"sha256":NATIVE_CANCEL_PRIOR});
+        verify_artifact(&root, &caller).unwrap();
+        assert!(
+            verify_artifact(
+                &root,
+                &json!({"path":NATIVE_CANCEL_SOURCE,"sha256":"wrong"})
+            )
+            .is_err()
+        );
+        let mut changed = current.clone();
+        changed.push(0);
+        assert!(admission_bytes(&changed, NATIVE_CANCEL_PRIOR, &capsule).is_err());
+        let mut rehashed = capsule.clone();
+        rehashed["current_sha256"] = json!(digest(&changed));
+        rehashed["current_bytes"] = json!(changed.len());
+        assert!(admission_bytes(&changed, NATIVE_CANCEL_PRIOR, &rehashed).is_err());
+        let mut bad_edit = capsule.clone();
+        bad_edit["edits"][0]["at"] = json!(usize::MAX);
+        assert!(admission_bytes(&current, NATIVE_CANCEL_PRIOR, &bad_edit).is_err());
+        let isolated =
+            std::env::temp_dir().join(format!("a06-native-capsule-{}", std::process::id()));
+        fs::create_dir(&isolated).unwrap();
+        let capsule_path = isolated.join(NATIVE_CANCEL_CAPSULE);
+        fs::create_dir_all(capsule_path.parent().unwrap()).unwrap();
+        assert!(native_cancel_capsule(&isolated).is_err());
+        fs::write(
+            &capsule_path,
+            fs::read(root.join(NATIVE_CANCEL_CAPSULE)).unwrap(),
+        )
+        .unwrap();
+        native_cancel_capsule(&isolated).unwrap();
+        fs::write(&capsule_path, b"tampered").unwrap();
+        assert!(native_cancel_capsule(&isolated).is_err());
+        fs::remove_dir_all(isolated).unwrap();
         let doc = admission_capsule(&root).unwrap();
         for row in doc["sources"].as_array().unwrap() {
             let raw = fs::read(root.join(row["path"].as_str().unwrap())).unwrap();
