@@ -567,8 +567,11 @@ fn preview_bounds_snapshot_result_entity_without_persistence_or_dispatch() {
         assert_eq!(source.artifact, requested);
         assert_eq!(source.query.as_deref(), Some("retained query"));
         assert_eq!(source.details["query_id"], "query-a");
-        assert_eq!(source.details["result_count"], count);
-        assert_eq!(source.details["included_result_count"], count.min(25));
+        assert_eq!(source.details["result_count"], json!(count));
+        assert_eq!(
+            source.details["included_result_count"],
+            json!(count.min(25))
+        );
         assert_eq!(
             source.status,
             if count > 25 {
