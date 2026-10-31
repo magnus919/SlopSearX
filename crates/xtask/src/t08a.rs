@@ -1,9 +1,9 @@
 //! T08A standalone native client: source-bound real child, never Python/backend.
 pub(crate) use crate::cli_source_custody as source_custody;
-#[path = "t08a_tls_roles.rs"]
-pub(crate) mod tls_roles;
 #[path = "t08a_process_wrap.rs"]
 mod process_wrap_guard;
+#[path = "t08a_tls_roles.rs"]
+pub(crate) mod tls_roles;
 use crate::{Result, command, t08a_child};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
