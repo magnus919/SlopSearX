@@ -189,3 +189,6 @@ pub mod staged;
 
 pub mod lineage;
 pub mod receipts;
+
+pub mod composition;
+pub mod dependency_dossier;

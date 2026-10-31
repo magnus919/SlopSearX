@@ -608,3 +608,10 @@ pub fn fixture_public_access(path: &Path, writable: bool) -> io::Result<()> {
         Ok(())
     }
 }
+
+// System PowerShell is a fixed fixture-only OS input, not an installed package.
+// OS files may be hard-linked; original package/image admission stays single-link.
+#[cfg(feature = "fixtures")]
+pub(crate) fn fixture_system_identity(file: &File) -> io::Result<Identity> {
+    build_identity(file)
+}

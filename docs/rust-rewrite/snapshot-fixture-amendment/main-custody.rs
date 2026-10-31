@@ -6,6 +6,7 @@ use std::{fs, path::Path};
 #[allow(dead_code)]
 #[path = "w07-helpers.rs"]
 pub(crate) mod gateway_main_join;
+pub(crate) use gateway_main_join as w08_main_join;
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
 include!("capsule-sha.rs");
 const SOURCE: &str = "crates/xtask/src/main.rs";
@@ -174,7 +175,7 @@ pub(super) fn joint(root: &Path, supplied: &[u8]) -> Result<Vec<u8>, String> {
         supplied == current,
         "snapshot fixture supplied main is not physical current",
     )?;
-    let snapshot_current = gateway_main_join::snapshot_main(root, &current)?;
+    let snapshot_current = w08_main_join::snapshot_main(root, &current)?;
     let prior = inverse(&doc, &doc["main"]["prior"], &snapshot_current, "0644")?;
     for (identity, bytes) in [
         (&doc["main"]["prior"], prior.as_slice()),
@@ -233,10 +234,10 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     assert!(joint(root, &historical).is_err());
     super::parent(root, SOURCE, &current, super::Parent::T02)?;
     super::parent(root, SOURCE, &current, super::Parent::W07)?;
-    let snapshot_current = gateway_main_join::snapshot_main(root, &current)?;
+    let snapshot_current = w08_main_join::snapshot_main(root, &current)?;
     need(
         inverse(&doc, expected, &snapshot_current, "0644")? == historical,
-        "snapshot pure main positive before mutants",
+        "original snapshot pure positive before mutants",
     )?;
     assert!(inverse(&doc, expected, &historical, "0644").is_err());
     for mode in ["0600", "0755", "4644"] {

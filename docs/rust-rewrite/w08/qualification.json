@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "plan_id": "W08",
+  "baseline": "e9c5911a468b892fe2adef9027374cb867a2535d",
+  "sources": {
+    "slopsearx/dependency_dossier.py": "37300389d8eaf080b7910abcd99649714f34981302ac4d7d9aaa3b29fc51b091",
+    "slopsearx/mcp/dependency_tools.py": "88ca18e61e8e3aa8d77596ccce3514e81872234e9ec1649c62900d8787ab214b",
+    "slopsearx/mcp/composition.py": "3c3b530a7aebf0dd153f8cb00349438bad7b1308e1d53d1d9a03b9f5b3d81077",
+    "tests/test_dependency_dossier.py": "d4f41c69304ca3894cd6da940aa4f9e412cffe02d72c4acc502a244cfdb6ae54",
+    "tests/test_workflow_composition.py": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+    "tests/test_workflow_composition_transport.py": "f1adebf80445a6a61767a406486738f4362fb1e493b2e3e79ec1a07b4deb8a32",
+    "crates/ssx-application/src/composition.rs": "50270b17f692104c481f19475c055584ef42af36c9864774347d5d27e9852e3f",
+    "crates/ssx-application/src/dependency_dossier.rs": "f9584cf1a7ae7d9c200a4da7d15501b3d3524656efee6fe019b1c3cbed2888e6",
+    "crates/ssx-infra/src/dependency_dossier.rs": "6482dad37c0cdc33e99c2a4f4f97cc3b911edcfdbcfaab106065c090df8b7760",
+    "crates/ssx-infra/src/research_runner.rs": "c47c355424910198683c5ccad231b87ed7ed0da1db6d73eef9fef97a953cfc76",
+    "crates/ssx-application/tests/w08.rs": "4ae215d754b138da6ed4677bdcb5702249605624fbac78f2a0c141c27e87c702",
+    "crates/ssx-infra/tests/w08.rs": "dbf6940c738d05ac7396880886350eb0138188ece49281409b9152f9bbb6065e",
+    "crates/ssx-infra/tests/w07_support/valkey.rs": "ed4e2e544ff40856f46810532a17cf5fb9a3b393eb35d09a75907c4585b6b699",
+    "crates/xtask/src/w08/source_successor.rs": "3a8699c6449e05b6b94f64ff43643af15287ad2ae4d9b5319617d8f5c38f4069",
+    "docs/rust-rewrite/w08/source-successor.json": "a12f8ebaf9fe78bbf6b2647562b7af3d6e55f18d53e7caf99ead3b36080ba712",
+    "crates/xtask/src/w07.rs": "64bbd78e5910558eae78de7e449d0488337020a814ec10cb2869e412193582ea",
+    "docs/rust-rewrite/a06/source-amendments/shared-successor.rs": "013f8448379ef92ea059cf2d48981742635d7433931a6e0973f781139bb9d612",
+    "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs": "07ffa419b6324171042fdb1bba37b4e3a4827f38ae18e0150c39bf962896a3f6",
+    "docs/rust-rewrite/w08/regression-map.json": "27d29ab39db74e769331011455a318aa0ddebecf941a88d4e0e6a587d00c9a6b",
+    "crates/ssx-infra/src/dependency_dossier/saved_reports.rs": "8bba1e1c8955eb49600d1e80cb33b44133cad881a905dc00b51c2ed7781eb294"
+  },
+  "suites": [
+    {
+      "package": "ssx-application",
+      "target": "w08",
+      "tests": [
+        "identity_normalization_and_canonical_digest_are_exact",
+        "exact_attribution_preserves_ambiguity_and_never_infers_ownership",
+        "plan_is_bounded_and_idempotency_binds_identity_and_source",
+        "preview_bounds_snapshot_result_entity_without_persistence_or_dispatch",
+        "foreign_expired_missing_unavailable_revoked_and_cancelled_sources_fail_closed",
+        "unsupported_transitions_read_nothing_and_research_missing_cursors_are_partial",
+        "research_attempts_stream_valid_retained_cursor_sets",
+        "report_attribution_uses_all_admitted_rows_while_cards_remain_sliced",
+        "saved_report_uses_historical_window_and_rejects_incomparable_truncated_malformed",
+        "staged_source_requires_selected_attempt_and_captured_cursor",
+        "repository_parser_preserves_literal_host_port_and_empty_credentials_semantics",
+        "earlier_snapshot_expiry_is_rechecked_after_later_cursor_read_and_attempt_refs_are_exact",
+        "staged_expiry_is_rechecked_after_selected_snapshot_read"
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "w08",
+      "tests": [
+        "native_service_executes_existing_worker_and_reads_without_new_calls_or_ttl_renewal",
+        "expiry_during_atomic_create_is_persisted_but_worker_denies_without_charge",
+        "source_revocation_after_first_query_blocks_next_query",
+        "restart_without_validator_and_malformed_or_tampered_binding_fail_closed",
+        "concurrent_idempotency_with_different_source_never_adopts_other_binding",
+        "revocation_in_reserved_renewal_gap_blocks_actual_dispatch_and_conserves_reservation",
+        "each_destination_grant_and_source_engine_revocation_blocks_unreserved_work",
+        "real_saved_report_composition_uses_full_authority_and_rejects_lossy_lineage_mutant",
+        "real_saved_report_errors_and_awaited_authority_changes_are_readonly",
+        "real_staged_expiry_during_selected_snapshot_read_cannot_compose",
+        "dossier_get_preserves_real_missing_expired_unavailable_snapshot_states_without_dispatch",
+        "blocked_source_validation_observes_shutdown_cancel_deadline_and_owner_loss_without_dispatch",
+        "owning_saved_read_uses_principal_operator_intersection_for_changed_definition"
+      ]
+    }
+  ]
+}

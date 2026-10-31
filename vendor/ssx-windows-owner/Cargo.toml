@@ -9,7 +9,7 @@ license = "MIT"
 # Deliberately separate from the application's unsafe_code=forbid workspace.
 # This private crate is the complete, reviewed Windows FFI boundary.
 [features]
-fixtures = []
+fixtures = ["windows-sys/Win32_System_SystemInformation"]
 
 [lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

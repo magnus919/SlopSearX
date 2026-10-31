@@ -2,6 +2,8 @@
 //! Copied gateway adapter de2f8a6 SHA96860f0a66a173ba84d69943041eeeaae4e8f92c376626d607e9de92915a97b5.
 //! Copied source boundary: main bf6aebe, reader SHA792876948f3885663a72373a733e7b6c312a45de0b3c2cda431fbf9fae1cbef1.
 //! Original reader, closure and capsule remain physically unchanged; actual combined bytes authenticate first.
+#[path = "../../snapshot-fixture-amendment/gateway-w08-main-join.rs"]
+mod current_gateway_main_join;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
@@ -364,9 +366,39 @@ enum CurrentBoundary {
     Gateway,
     Page,
 }
+// Only these admitted outer rows differ from the immutable old generation.
+fn current_operand(root: &Path, row: &CurrentRow, supplied: &[u8], mode: u32) -> Result<Vec<u8>> {
+    if !current_gateway_main_join::owns(&row.path) {
+        return Ok(supplied.to_vec());
+    }
+    let (physical, actual_mode) = regular(root, &row.path)?;
+    need(
+        mode == 0o644 && actual_mode == mode && physical == supplied,
+        "combined receipt operand is not raw current",
+    )?;
+    current_gateway_main_join::project(
+        root,
+        &row.path,
+        supplied,
+        current_gateway_main_join::Parent::Gateway,
+    )
+}
 fn current_load(root: &Path) -> Result<CurrentComposition> {
+    current_gateway_main_join::validate_current(root)?;
     for (path, expected, bytes) in IMMUTABLE_ASSETS {
         let (actual, mode) = regular(root, path)?;
+        let actual = if *path
+            == "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs"
+        {
+            current_gateway_main_join::project(
+                root,
+                path,
+                &actual,
+                current_gateway_main_join::Parent::Gateway,
+            )?
+        } else {
+            actual
+        };
         need(
             mode == 0o644 && actual.len() == *bytes && digest(&actual) == *expected,
             "combined receipt immutable main asset differs",
@@ -397,7 +429,8 @@ fn current_load(root: &Path) -> Result<CurrentComposition> {
     )?;
     for row in &doc.rows {
         let (physical, mode) = regular(root, &row.path)?;
-        material(&row.current, &physical, mode)?;
+        let admitted = current_operand(root, row, &physical, mode)?;
+        material(&row.current, &admitted, mode)?;
     }
     Ok(doc)
 }
@@ -455,7 +488,8 @@ fn current_frame(
         CurrentBoundary::Gateway => (&row.gateway, CURRENT_GATEWAY),
         CurrentBoundary::Page => (&row.page, CURRENT_PAGE),
     };
-    let prior = current_inverse(row, endpoint, &physical, mode)?;
+    let admitted = current_operand(root, row, &physical, mode)?;
+    let prior = current_inverse(row, endpoint, &admitted, mode)?;
     let blob = Command::new("git")
         .args(["cat-file", "blob", &endpoint.prior_git_blob])
         .current_dir(root)
@@ -477,9 +511,11 @@ fn current_frame(
     Ok(prior)
 }
 fn current_controls(root: &Path) -> Result<()> {
+    current_gateway_main_join::controls(root)?;
     let doc = current_load(root)?;
     for row in &doc.rows {
         let (physical, mode) = regular(root, &row.path)?;
+        let admitted = current_operand(root, row, &physical, mode)?;
         for boundary in [
             CurrentBoundary::Main,
             CurrentBoundary::Gateway,
@@ -511,16 +547,16 @@ fn current_controls(root: &Path) -> Result<()> {
                 }
             }
             need(
-                current_inverse(row, endpoint, &physical, mode)? == prior,
+                current_inverse(row, endpoint, &admitted, mode)? == prior,
                 "combined receipt positive inverse differs",
             )?;
             need(
                 current_frame(root, &row.path, &physical, 0o755, boundary).is_err(),
                 "combined receipt wrong mode accepted",
             )?;
-            let mut changed = physical.clone();
+            let mut changed = admitted.clone();
             changed[0] ^= 1;
-            let mut extra = physical.clone();
+            let mut extra = admitted.clone();
             extra.push(b' ');
             for bad in [changed, extra] {
                 need(
@@ -541,26 +577,26 @@ fn current_controls(root: &Path) -> Result<()> {
             let mut wrong = row.clone();
             wrong.path = "unlisted.rs".into();
             need(
-                current_inverse(&wrong, endpoint, &physical, mode).is_err(),
+                current_inverse(&wrong, endpoint, &admitted, mode).is_err(),
                 "combined receipt unlisted inverse accepted",
             )?;
             if !endpoint.edits.is_empty() {
                 let mut missing = endpoint.clone();
                 missing.edits.remove(0);
                 need(
-                    current_inverse(row, &missing, &physical, mode).is_err(),
+                    current_inverse(row, &missing, &admitted, mode).is_err(),
                     "combined receipt missing inverse accepted",
                 )?;
                 let mut duplicate = endpoint.clone();
                 duplicate.edits.insert(0, endpoint.edits[0].clone());
                 need(
-                    current_inverse(row, &duplicate, &physical, mode).is_err(),
+                    current_inverse(row, &duplicate, &admitted, mode).is_err(),
                     "combined receipt duplicate inverse accepted",
                 )?;
                 let mut moved = endpoint.clone();
                 moved.edits[0].current_offset += 1;
                 need(
-                    current_inverse(row, &moved, &physical, mode).is_err(),
+                    current_inverse(row, &moved, &admitted, mode).is_err(),
                     "combined receipt relocated inverse accepted",
                 )?;
             }

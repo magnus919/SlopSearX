@@ -24,6 +24,18 @@ if ($IgnoredOnly) { $expected = @($store) } else {
     )
     if ($IsWindows) {
       $expected += @(
+        'windows_trust::tests::windows_trust_owner_closes_normal_fake_and_preserves_utf16_arguments',
+        'windows_trust::tests::windows_trust_owner_deadline_retires_original_quiet_child',
+        'windows_trust::tests::windows_trust_owner_leader_exit_cannot_hide_live_descendant',
+        'windows_trust::tests::windows_trust_owner_bounds_both_newline_free_output_streams',
+        'windows_trust::tests::windows_trust_owner_job_and_resume_faults_never_enter_body',
+        'windows_trust::tests::windows_trust_owner_pending_state_never_grants_cleanup',
+        'windows_trust::tests::windows_trust_owner_script_ca_and_case_admission_fail_before_creation',
+        'windows_trust::tests::windows_trust_owner_drop_leaves_pending_and_blocks_fake_remove',
+        'windows_trust::tests::windows_trust_owner_failed_remove_keeps_marker_and_exact_retired_retry_succeeds',
+        'finalize_exact_owned_windows_trust_fixtures_with_bounded_children'
+      )
+      $expected += @(
         'windows_numeric_source_ports_use_exact_proactor_mask_without_lookup_child',
         'windows_dropped_lookup_joins_original_helper_job_without_input_eof',
         'windows_dropped_close_future_retains_registered_original_owner_for_retry',

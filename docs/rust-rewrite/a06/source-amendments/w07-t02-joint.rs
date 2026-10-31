@@ -1,10 +1,13 @@
 //! Closed normal-merge composition of the reviewed W07 and T02 source parents.
 //! Physical joint identity precedes either historical parent interpretation.
+#[allow(dead_code)]
+#[path = "../../../../crates/xtask/src/w08/source_successor.rs"]
+pub(crate) mod w08_source_successor;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 #[path = "../../snapshot-fixture-amendment/main-custody.rs"]
 mod snapshot_fixture_main;
-pub(crate) use snapshot_fixture_main::gateway_main_join as snapshot_helper_amendment;
+pub(crate) use snapshot_fixture_main::w08_main_join as snapshot_helper_amendment;
 type Result<T> = std::result::Result<T, String>;
 #[derive(Clone, Copy)]
 pub(crate) enum Parent {
@@ -512,7 +515,7 @@ fn read(root: &Path, row: &Row) -> Result<(Vec<u8>, u32)> {
     }
 }
 /// The direct dev edge belongs to one exact physical MCP manifest on every lock route.
-fn paired_manifest(root: &Path) -> Result<()> {
+fn paired_manifest(root: &Path, trusted: &Path) -> Result<()> {
     let path = root.join("crates/ssx-mcp/Cargo.toml");
     let meta = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
     need(
@@ -522,7 +525,13 @@ fn paired_manifest(root: &Path) -> Result<()> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        let bytes = fs::read(path).map_err(|e| e.to_string())?;
+        let physical = fs::read(path).map_err(|e| e.to_string())?;
+        let bytes = super::main_isolation_current::parent(
+            trusted,
+            "crates/ssx-mcp/Cargo.toml",
+            Some(&physical),
+            super::main_isolation_current::Parent::Main,
+        )?;
         need(
             meta.permissions().mode() & 0o7777 == 0o644
                 && bytes.len() == 1234
@@ -538,20 +547,81 @@ fn paired_manifest(root: &Path) -> Result<()> {
 }
 /// Only the five exact physical afterimages can yield either sealed parent.
 /// A parent supplied in place of actual current bytes is always rejected.
-pub(super) fn original_parent(
-    root: &Path,
+pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -> Result<Vec<u8>> {
+    parent_at_physical_root(root, root, None, path, supplied, parent)
+}
+// The existing filesystem controls own a disposable physical directory. This
+// private scope is constructed only there; it cannot authorize another caller's
+// source or make a fixture into a Git/capsule authority.
+struct FilesystemControl {
+    physical_root: std::path::PathBuf,
+    trusted_source_root: std::path::PathBuf,
+}
+impl Drop for FilesystemControl {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.physical_root);
+    }
+}
+// The caller first authenticates the supplied physical bytes and source/control roots.
+// This finite interpretation retains both accepted W08-main and Page-search frames.
+fn canonical_input(root: &Path, path: &str, actual: &[u8], mode: u32) -> Result<Vec<u8>> {
+    if [
+        "Cargo.lock",
+        "crates/xtask/src/main.rs",
+        "crates/xtask/src/a13.rs",
+    ]
+    .contains(&path)
+    {
+        let gateway = super::main_isolation_current::parent(
+            root,
+            path,
+            Some(actual),
+            super::main_isolation_current::Parent::Main,
+        )?;
+        if path == "crates/xtask/src/main.rs" {
+            let w08 = w08_source_successor::parent(root, path, actual)?;
+            let snapshot = snapshot_fixture_main::joint(root, actual)?;
+            need(
+                gateway == w08 && gateway == snapshot,
+                "gateway, W08 and snapshot must agree on exact common main",
+            )?;
+        }
+        Ok(gateway)
+    } else if path == PAGE_SEARCH.path {
+        search_frame(actual, mode, false)
+    } else {
+        Ok(actual.to_vec())
+    }
+}
+fn parent_at_physical_root(
+    physical_root: &Path,
+    trusted_source_root: &Path,
+    control: Option<&FilesystemControl>,
     path: &str,
     supplied: &[u8],
     parent: Parent,
 ) -> Result<Vec<u8>> {
     let r = row(path)?;
-    let (actual, mode) = read(root, r)?;
+    let (actual, mode) = read(physical_root, r)?;
+    need(
+        mode == 0o644,
+        "exact physical source mode before interpretation",
+    )?;
     need(
         supplied == actual,
         "supplied bytes are not physical joint source",
     )?;
+    need(
+        physical_root == trusted_source_root
+            || control.is_some_and(|scope| {
+                physical_root == scope.physical_root
+                    && trusted_source_root == scope.trusted_source_root
+            }),
+        "distinct source roots require the owned filesystem-control scope",
+    )?;
+    let actual = canonical_input(trusted_source_root, path, &actual, mode)?;
     if path == "Cargo.lock" {
-        paired_manifest(root)?;
+        paired_manifest(physical_root, trusted_source_root)?;
     }
     let w07 = inverse(r, &actual, mode, &r.w07)?;
     let t02 = inverse(r, &actual, mode, &r.t02)?;
@@ -560,73 +630,7 @@ pub(super) fn original_parent(
         Parent::T02 => t02,
     })
 }
-fn canonical_input(root: &Path, path: &str, supplied: &[u8], mode: u32) -> Result<Vec<u8>> {
-    if [
-        "Cargo.lock",
-        "crates/xtask/src/main.rs",
-        "crates/xtask/src/a13.rs",
-    ]
-    .contains(&path)
-    {
-        let canonical = super::main_isolation_current::parent(
-            root,
-            path,
-            Some(supplied),
-            super::main_isolation_current::Parent::Main,
-        )?;
-        if path == "crates/xtask/src/main.rs" {
-            let snapshot = snapshot_fixture_main::joint(root, supplied)?;
-            need(
-                canonical == snapshot,
-                "gateway and snapshot proofs must agree on the exact common main frame",
-            )?;
-        }
-        Ok(canonical)
-    } else if path == PAGE_SEARCH.path {
-        search_frame(supplied, mode, false)
-    } else {
-        Ok(supplied.to_vec())
-    }
-}
-fn current_paired_manifest(root: &Path) -> Result<()> {
-    let accepted = super::main_isolation_current::parent(
-        root,
-        "crates/ssx-mcp/Cargo.toml",
-        None,
-        super::main_isolation_current::Parent::Main,
-    )?;
-    need(
-        accepted.len() == 1234
-            && sha(&accepted) == "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
-        "exact paired MCP manifest accepted parent",
-    )
-}
-/// Supplied bytes always mean physical current. Both older inverse frames are
-/// derived only after the finite normal-main/client-isolation proof succeeds.
-pub(crate) fn parent(
-    root: &Path,
-    path: &str,
-    supplied: &[u8],
-    selected: Parent,
-) -> Result<Vec<u8>> {
-    let r = row(path)?;
-    let (physical, mode) = read(root, r)?;
-    need(
-        supplied == physical,
-        "supplied bytes are not physical joint source",
-    )?;
-    let actual = canonical_input(root, path, &physical, mode)?;
-    if path == "Cargo.lock" {
-        current_paired_manifest(root)?;
-    }
-    let w07 = inverse(r, &actual, mode, &r.w07)?;
-    let t02 = inverse(r, &actual, mode, &r.t02)?;
-    Ok(match selected {
-        Parent::W07 => w07,
-        Parent::T02 => t02,
-    })
-}
-/// Ordinary controls for the shared owner's test wrapper, without discovered tests.
+/// Ordinary controls retained in the existing xtask-owned source test.
 #[cfg(test)]
 #[allow(dead_code)]
 pub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {
@@ -669,6 +673,8 @@ pub(crate) fn parent_git_blob(
 }
 /// Real Git parents and both exact inverses, plus rejection controls. No new test identity.
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    #[cfg(test)]
+    snapshot_helper_amendment::controls(root)?;
     page_search_controls(root)?;
     need(
         row("crates/xtask/src/main.rs")?.sha == MAIN_SHA && row("Cargo.lock")?.sha == LOCK_SHA,
@@ -676,12 +682,12 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     )?;
     for r in ROWS {
         let (physical, mode) = read(root, r)?;
-        let actual = canonical_input(root, r.path, &physical, mode)?;
+        let joint = canonical_input(root, r.path, &physical, mode)?;
         for (kind, p) in [(Parent::W07, &r.w07), (Parent::T02, &r.t02)] {
             let prior = parent(root, r.path, &physical, kind)?;
             need(
-                inverse(r, &actual, mode, p)? == prior,
-                "pure controls use the same gateway canonical frame",
+                inverse(r, &joint, mode, p)? == prior,
+                "pure controls use the same authenticated logical joint frame",
             )?;
             need(
                 parent_git_blob(root, r.path, &physical, kind)? == p.blob,
@@ -715,6 +721,13 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             need(
                 parent(root, r.path, &changed, kind).is_err(),
                 "changed supplied current",
+            )?;
+            // Preserve the original joint-frame body controls after a positive
+            // inverse, independently from W08's physical afterimage controls.
+            let actual = joint.clone();
+            need(
+                inverse(r, &actual, mode, p)? == prior,
+                "positive unchanged joint frame differs",
             )?;
             for bad_mode in [0o600, 0o755, 0o4644] {
                 need(
@@ -766,7 +779,8 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         parent(root, "unknown", b"", Parent::W07).is_err(),
         "unknown source path",
     )?;
-    filesystem_controls(root)
+    filesystem_controls(root)?;
+    gateway_filesystem_controls(root)
 }
 
 #[cfg(not(unix))]
@@ -775,6 +789,197 @@ fn filesystem_controls(_: &Path) -> Result<()> {
 }
 #[cfg(unix)]
 fn filesystem_controls(root: &Path) -> Result<()> {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    let suffix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_nanos();
+    let directory = std::env::temp_dir().join(format!("w07-joint-{}-{suffix}", std::process::id()));
+    fs::create_dir(&directory).map_err(|e| e.to_string())?;
+    let owned = FilesystemControl {
+        physical_root: directory,
+        trusted_source_root: root.to_path_buf(),
+    };
+    let fixture_parent = |path: &str, supplied: &[u8], kind: Parent| {
+        parent_at_physical_root(
+            &owned.physical_root,
+            root,
+            Some(&owned),
+            path,
+            supplied,
+            kind,
+        )
+    };
+    let manifest_path = owned.physical_root.join("crates/ssx-mcp/Cargo.toml");
+    fs::create_dir_all(manifest_path.parent().ok_or("paired manifest parent")?)
+        .map_err(|e| e.to_string())?;
+    let manifest = fs::read(root.join("crates/ssx-mcp/Cargo.toml")).map_err(|e| e.to_string())?;
+    fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
+    fs::set_permissions(&manifest_path, fs::Permissions::from_mode(0o644))
+        .map_err(|e| e.to_string())?;
+    for r in ROWS {
+        let (actual, _) = read(root, r)?;
+        let path = owned.physical_root.join(r.path);
+        fs::create_dir_all(path.parent().ok_or("joint owned source parent")?)
+            .map_err(|e| e.to_string())?;
+        fs::write(&path, &actual).map_err(|e| e.to_string())?;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
+        fixture_parent(r.path, &actual, Parent::W07)?;
+        if r.path == "crates/xtask/src/main.rs" {
+            let mut changed = actual.clone();
+            changed.push(0);
+            fs::write(&path, &changed).map_err(|e| e.to_string())?;
+            need(
+                fixture_parent(r.path, &changed, Parent::W07).is_err(),
+                "changed fixture main accepted against trusted physical source",
+            )?;
+            fs::write(&path, &actual).map_err(|e| e.to_string())?;
+            let old_joint = w08_source_successor::parent(root, r.path, &actual)?;
+            fs::write(&path, &old_joint).map_err(|e| e.to_string())?;
+            need(
+                fixture_parent(r.path, &old_joint, Parent::W07).is_err(),
+                "old joint physically substituted for current W08/snapshot source",
+            )?;
+            fs::write(&path, &actual).map_err(|e| e.to_string())?;
+        }
+        need(
+            parent_at_physical_root(
+                &owned.physical_root,
+                root,
+                None,
+                r.path,
+                &actual,
+                Parent::W07,
+            )
+            .is_err(),
+            "unguarded distinct physical/source roots accepted",
+        )?;
+        for bad_mode in [0o600, 0o4644] {
+            fs::set_permissions(&path, fs::Permissions::from_mode(bad_mode))
+                .map_err(|e| e.to_string())?;
+            need(
+                fixture_parent(r.path, &actual, Parent::W07).is_err(),
+                "physical source mode accepted",
+            )?;
+        }
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
+        let backup = path.with_extension("owned-backup");
+        fs::rename(&path, &backup).map_err(|e| e.to_string())?;
+        need(
+            fixture_parent(r.path, &actual, Parent::W07).is_err(),
+            "missing physical source accepted",
+        )?;
+        symlink(&backup, &path).map_err(|e| e.to_string())?;
+        need(
+            fixture_parent(r.path, &actual, Parent::W07).is_err(),
+            "symlink physical source accepted",
+        )?;
+        fs::remove_file(&path).map_err(|e| e.to_string())?;
+        fs::create_dir(&path).map_err(|e| e.to_string())?;
+        need(
+            fixture_parent(r.path, &actual, Parent::W07).is_err(),
+            "nonregular physical source accepted",
+        )?;
+        fs::remove_dir(&path).map_err(|e| e.to_string())?;
+        fs::rename(backup, path).map_err(|e| e.to_string())?;
+    }
+    let lock = fs::read(owned.physical_root.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    for kind in [Parent::W07, Parent::T02] {
+        let mut changed = manifest.clone();
+        changed[0] ^= 1;
+        fs::write(&manifest_path, changed).map_err(|e| e.to_string())?;
+        need(
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
+            "wrong paired manifest accepted",
+        )?;
+        fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
+        for mode in [0o600, 0o755, 0o4644] {
+            fs::set_permissions(&manifest_path, fs::Permissions::from_mode(mode))
+                .map_err(|e| e.to_string())?;
+            need(
+                fixture_parent("Cargo.lock", &lock, kind).is_err(),
+                "paired manifest mode accepted",
+            )?;
+        }
+        fs::set_permissions(&manifest_path, fs::Permissions::from_mode(0o644))
+            .map_err(|e| e.to_string())?;
+        let backup = manifest_path.with_extension("owned-backup");
+        fs::rename(&manifest_path, &backup).map_err(|e| e.to_string())?;
+        need(
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
+            "missing paired manifest accepted",
+        )?;
+        symlink(&backup, &manifest_path).map_err(|e| e.to_string())?;
+        need(
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
+            "symlink paired manifest accepted",
+        )?;
+        fs::remove_file(&manifest_path).map_err(|e| e.to_string())?;
+        fs::create_dir(&manifest_path).map_err(|e| e.to_string())?;
+        need(
+            fixture_parent("Cargo.lock", &lock, kind).is_err(),
+            "nonregular paired manifest accepted",
+        )?;
+        fs::remove_dir(&manifest_path).map_err(|e| e.to_string())?;
+        fs::rename(backup, &manifest_path).map_err(|e| e.to_string())?;
+        fixture_parent("Cargo.lock", &lock, kind)?;
+    }
+    Ok(())
+}
+
+// Original040historicalframepathanditsownedfixturesremainindependentofcurrentnormalization.
+fn historical_paired_manifest(root: &Path) -> Result<()> {
+    let path = root.join("crates/ssx-mcp/Cargo.toml");
+    let meta = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
+    need(
+        meta.is_file() && !meta.file_type().is_symlink(),
+        "regular non-symlink paired MCP manifest",
+    )?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let bytes = fs::read(path).map_err(|e| e.to_string())?;
+        need(
+            meta.permissions().mode() & 0o7777 == 0o644
+                && bytes.len() == 1234
+                && sha(&bytes)
+                    == "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
+            "exact paired MCP manifest bytes/mode",
+        )
+    }
+    #[cfg(not(unix))]
+    {
+        Err("W07/T02 paired manifest source mode proof requires Unix".into())
+    }
+}
+pub(super) fn original_parent(
+    root: &Path,
+    path: &str,
+    supplied: &[u8],
+    parent: Parent,
+) -> Result<Vec<u8>> {
+    let r = row(path)?;
+    let (actual, mode) = read(root, r)?;
+    need(
+        supplied == actual,
+        "supplied bytes are not physical joint source",
+    )?;
+    if path == "Cargo.lock" {
+        historical_paired_manifest(root)?;
+    }
+    let w07 = inverse(r, &actual, mode, &r.w07)?;
+    let t02 = inverse(r, &actual, mode, &r.t02)?;
+    Ok(match parent {
+        Parent::W07 => w07,
+        Parent::T02 => t02,
+    })
+}
+#[cfg(not(unix))]
+fn gateway_filesystem_controls(_: &Path) -> Result<()> {
+    Err("W07/T02 filesystem source proof requires Unix".into())
+}
+#[cfg(unix)]
+fn gateway_filesystem_controls(root: &Path) -> Result<()> {
     use std::os::unix::fs::{PermissionsExt, symlink};
     struct Owned(std::path::PathBuf);
     impl Drop for Owned {

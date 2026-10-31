@@ -51,3 +51,13 @@ pub use trust::{fixture_build_file_link_count, fixture_public_access};
 
 #[cfg(feature = "fixtures")]
 pub use confidential::FixtureConfidentialRead;
+
+#[cfg(feature = "fixtures")]
+mod trust_fixture;
+#[cfg(feature = "fixtures")]
+pub use process::fixture_current_process_identity;
+#[cfg(feature = "fixtures")]
+pub use trust_fixture::{
+    TRUST_SCRIPT_SHA256, TrustFixtureChild, TrustFixtureObservation, TrustFixtureOperation,
+    TrustFixtureScenario,
+};

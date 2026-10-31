@@ -155,6 +155,156 @@ fn config_spec(
 const WORKFLOW_ENV_INVERSE: &str = r###"[{"at":569,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":850,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""},{"at":20995,"remove_utf8":"","insert_utf8":"      SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n      SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n"},{"at":21079,"remove_utf8":"\n      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n","insert_utf8":""}]"###;
 // Exact shipping-prerequisite profile and runtime debug0-only profile; tests and deadlines are unchanged.
 const WORKFLOW_PROFILE_INVERSE: &str = r###"[{"at":545,"remove_utf8":"      CARGO_BUILD_JOBS: 2\n      CARGO_PROFILE_DEV_DEBUG: 0\n      CARGO_PROFILE_TEST_DEBUG: 0\n      CARGO_INCREMENTAL: 0\n","insert_utf8":""},{"at":21091,"remove_utf8":"      CARGO_PROFILE_DEV_DEBUG: 0\n      CARGO_PROFILE_TEST_DEBUG: 0\n","insert_utf8":""}]"###;
+// Exact compiler-artifact smoke capture continuation; old accepted workflow inverses stay unchanged.
+// Exact normal-main W08/scheduling union before the accepted smoke operand.
+const WORKFLOW_MAIN_JOIN_INVERSE: &str = r#####"[{"at":34336,"remove_utf8":"      - name: Native dependency dossier and policy-checked composition evidence\n        run: cargo xtask check W08 --output target/rust-evidence/W08.json\n","insert_utf8":""},{"at":51885,"remove_utf8":"            target/rust-evidence/W08.json\n","insert_utf8":""},{"at":53794,"remove_utf8":"          for plan in F03 F04 T04 T05 T06 T07 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 W08 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s \"target/rust-evidence/$plan.json\"; done\n","insert_utf8":"          for plan in F03 F04 T04 T05 T06 T07 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s \"target/rust-evidence/$plan.json\"; done\n"}]"#####;
+fn workflow_main_join_claim() -> Value {
+    json!({"path":".github/workflows/rust.yml","bytes":56270,"sha256":"49beb3bf98a511e82e24ba314ea2d3490de079118feefad83bc81ea98b78d2a8","git_blob":"4974dcf8c871ed665f85f167deffc57cc43bb921","mode":"0644"})
+}
+fn workflow_main_join_frame(
+    expected: &Value,
+    physical: &[u8],
+    mode: &str,
+    inverse: &Value,
+) -> Result<Vec<u8>, String> {
+    need(
+        *expected == workflow_main_join_claim(),
+        "T07 normal-main workflow exact caller differs",
+    )?;
+    material(expected, physical, mode)?;
+    need(
+        digest(&serde_json::to_vec(inverse).map_err(|e| e.to_string())?)
+            == "09e92bd4f0031ac8fa7ef5cfb7ac2ade2ab082291a702368df161e6071416abd",
+        "T07 normal-main workflow finite inverse differs",
+    )?;
+    let prior = edits(physical, inverse)?;
+    material(&workflow_smoke_claim(), &prior, "0644")?;
+    Ok(prior)
+}
+#[cfg(test)]
+fn workflow_main_join_controls(physical: &[u8]) -> Result<Vec<u8>, String> {
+    let claim = workflow_main_join_claim();
+    let inverse: Value =
+        serde_json::from_str(WORKFLOW_MAIN_JOIN_INVERSE).map_err(|e| e.to_string())?;
+    let prior = workflow_main_join_frame(&claim, physical, "0644", &inverse)?;
+    need(
+        workflow_main_join_frame(&claim, &prior, "0644", &inverse).is_err(),
+        "T07 normal-main workflow old-as-current accepted",
+    )?;
+    need(
+        workflow_main_join_frame(&claim, physical, "0600", &inverse).is_err(),
+        "T07 normal-main workflow wrong mode accepted",
+    )?;
+    let mut changed = physical.to_vec();
+    changed.push(0);
+    need(
+        workflow_main_join_frame(&claim, &changed, "0644", &inverse).is_err(),
+        "T07 normal-main workflow changed current accepted",
+    )?;
+    for key in ["path", "bytes", "sha256", "git_blob", "mode"] {
+        let mut wrong = claim.clone();
+        wrong[key] = json!("wrong");
+        need(
+            workflow_main_join_frame(&wrong, physical, "0644", &inverse).is_err(),
+            "T07 normal-main workflow wrong caller accepted",
+        )?;
+    }
+    for selected in 0..3 {
+        for key in ["at", "remove_utf8", "insert_utf8"] {
+            let mut wrong = inverse.clone();
+            wrong[selected][key] = json!("wrong");
+            need(
+                workflow_main_join_frame(&claim, physical, "0644", &wrong).is_err(),
+                "T07 normal-main workflow changed span accepted",
+            )?;
+        }
+    }
+    let mut missing = inverse.clone();
+    missing.as_array_mut().unwrap().pop();
+    let mut extra = inverse.clone();
+    extra.as_array_mut().unwrap().push(inverse[0].clone());
+    for wrong in [missing, extra] {
+        need(
+            workflow_main_join_frame(&claim, physical, "0644", &wrong).is_err(),
+            "T07 normal-main workflow missing/duplicate span accepted",
+        )?;
+    }
+    Ok(prior)
+}
+
+const WORKFLOW_SMOKE_INVERSE: &str = r###"[{"at":40123,"insert_utf8":"      - name: Locked workspace build\n        run: cargo build --locked --workspace --target \"${{ matrix.target }}\"\n","remove_utf8":"      - name: Locked workspace build\n        run: |\n          set -eu\n          evidence=\"target/rust-evidence/partitions/adapters\"\n          mkdir -p \"$evidence\"\n          cargo build --locked -p xtask --example foundation_python_boundary --target \"${{ matrix.target }}\"\n          cargo test --locked -p xtask --example foundation_python_boundary --target \"${{ matrix.target }}\" -- --test-threads=1\n          producer_exit=0\n          cargo build --locked --workspace --target \"${{ matrix.target }}\" --message-format=json-render-diagnostics > \"$evidence/native-workspace.jsonl\" || producer_exit=$?\n          printf '%s\\n' \"$producer_exit\" > \"$evidence/native-workspace.exit\"\n          [ \"$producer_exit\" -eq 0 ]\n          \"target/${{ matrix.target }}/debug/examples/foundation_python_boundary\" \"$PWD\" \"$PWD/target\" \"${{ matrix.target }}\" \"$evidence/native-workspace.jsonl\" \"$evidence/native-workspace.exit\" \"$PWD/target/${{ matrix.target }}/debug/ssx-server\" --record > \"$evidence/native-build-boundary.json\"\n"},{"at":46246,"insert_utf8":"","remove_utf8":"          SSX_FOUNDATION_BUILD_JSON: target/rust-evidence/partitions/adapters/native-workspace.jsonl\n          SSX_FOUNDATION_BUILD_EXIT: target/rust-evidence/partitions/adapters/native-workspace.exit\n          SSX_FOUNDATION_TARGET: ${{ matrix.target }}\n          SSX_FOUNDATION_TARGET_ROOT: target\n          SSX_FOUNDATION_BUILD_BOUNDARY: target/rust-evidence/partitions/adapters/native-build-boundary.json\n          SSX_FOUNDATION_BOUNDARY_BIN: target/${{ matrix.target }}/debug/examples/foundation_python_boundary\n"}]"###;
+fn workflow_smoke_claim() -> Value {
+    json!({"path":".github/workflows/rust.yml","bytes":56070,"sha256":"372916cb8508d7e58b37659c72bd1d1ef763222c7aee19e7ba98c7ed3a3f1fab","git_blob":"9ed1b09ec02ca27fe35239ecb46f78ee8da8a892","mode":"0644"})
+}
+fn workflow_smoke_frame(
+    expected: &Value,
+    physical: &[u8],
+    mode: &str,
+    inverse: &Value,
+) -> Result<Vec<u8>, String> {
+    need(
+        *expected == workflow_smoke_claim(),
+        "T07 smoke exact current caller differs",
+    )?;
+    material(expected, physical, mode)?;
+    need(
+        digest(&serde_json::to_vec(inverse).map_err(|e| e.to_string())?)
+            == "c403f0be99a0e11efad2c8df41d77a362a0faefca2f2aa32f87c909297698fed",
+        "T07 smoke closed two-span inverse differs",
+    )?;
+    let prior = edits(physical, inverse)?;
+    material(&workflow_env_claim(), &prior, "0644")?;
+    Ok(prior)
+}
+#[cfg(test)]
+fn workflow_smoke_controls(physical: &[u8]) -> Result<Vec<u8>, String> {
+    let claim = workflow_smoke_claim();
+    let inverse: Value = serde_json::from_str(WORKFLOW_SMOKE_INVERSE).map_err(|e| e.to_string())?;
+    let prior = workflow_smoke_frame(&claim, physical, "0644", &inverse)?;
+    need(
+        workflow_smoke_frame(&claim, &prior, "0644", &inverse).is_err(),
+        "T07 smoke old-as-current accepted",
+    )?;
+    need(
+        workflow_smoke_frame(&claim, physical, "0600", &inverse).is_err(),
+        "T07 smoke wrong mode accepted",
+    )?;
+    let mut changed = physical.to_vec();
+    changed.push(0);
+    need(
+        workflow_smoke_frame(&claim, &changed, "0644", &inverse).is_err(),
+        "T07 smoke changed current accepted",
+    )?;
+    for key in ["path", "bytes", "sha256", "git_blob", "mode"] {
+        let mut wrong = claim.clone();
+        wrong[key] = json!("wrong");
+        need(
+            workflow_smoke_frame(&wrong, physical, "0644", &inverse).is_err(),
+            "T07 smoke wrong caller accepted",
+        )?;
+    }
+    for selected in 0..2 {
+        for key in ["at", "remove_utf8", "insert_utf8"] {
+            let mut wrong = inverse.clone();
+            wrong[selected][key] = json!("wrong");
+            need(
+                workflow_smoke_frame(&claim, physical, "0644", &wrong).is_err(),
+                "T07 smoke modified span accepted",
+            )?;
+        }
+    }
+    let mut missing = inverse.clone();
+    missing.as_array_mut().unwrap().pop();
+    let mut extra = inverse.clone();
+    extra.as_array_mut().unwrap().push(inverse[0].clone());
+    for wrong in [missing, extra] {
+        need(
+            workflow_smoke_frame(&claim, physical, "0644", &wrong).is_err(),
+            "T07 smoke missing/duplicate span accepted",
+        )?;
+    }
+    Ok(prior)
+}
 fn workflow_env_claim() -> Value {
     json!({"bytes":54657,"git_blob":"88c8316361219d8a49261e955d285e7da1afeba3","mode":"0644","path":".github/workflows/rust.yml","sha256":"cac3e563ffb7a9b8d1bb83d40e992c585cbe0f7b7a93bfdbf951b6127a839e7a"})
 }
@@ -237,7 +387,19 @@ fn config_frame(
     let accepted = if expected["path"] == ".github/workflows/rust.yml" {
         let env_inverse: Value =
             serde_json::from_str(WORKFLOW_ENV_INVERSE).map_err(|e| e.to_string())?;
-        workflow_env_frame(&workflow_env_claim(), physical, mode, &env_inverse)?
+        let smoke_inverse: Value =
+            serde_json::from_str(WORKFLOW_SMOKE_INVERSE).map_err(|e| e.to_string())?;
+        let main_inverse: Value =
+            serde_json::from_str(WORKFLOW_MAIN_JOIN_INVERSE).map_err(|e| e.to_string())?;
+        let smoke_physical =
+            workflow_main_join_frame(&workflow_main_join_claim(), physical, mode, &main_inverse)?;
+        let accepted_current = workflow_smoke_frame(
+            &workflow_smoke_claim(),
+            &smoke_physical,
+            mode,
+            &smoke_inverse,
+        )?;
+        workflow_env_frame(&workflow_env_claim(), &accepted_current, mode, &env_inverse)?
     } else {
         physical.to_vec()
     };
@@ -323,6 +485,8 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
             let path = text(claim, "path")?;
             let physical = std::fs::read(root.join(path)).map_err(|e| e.to_string())?;
             if path == ".github/workflows/rust.yml" {
+                let physical = workflow_main_join_controls(&physical)?;
+                let physical = workflow_smoke_controls(&physical)?;
                 let current = workflow_env_claim();
                 let env_inverse: Value =
                     serde_json::from_str(WORKFLOW_ENV_INVERSE).map_err(|e| e.to_string())?;

@@ -64,3 +64,26 @@ fixture-only TerminateProcess path is never selected by a production build.
 These are source-level claims until actual native Windows/MSVC compilation and
 runtime receipts exist. The new five-platform workflow is a candidate witness;
 no Windows minimum-version, release signature or production routing claim follows.
+
+## Closed Windows trust-fixture owner (nondefault fixtures only)
+
+TrustFixtureChild admits exactly fixed system PowerShell, compiled-hash
+trust-store.ps1, Install/Remove and an exact CA/case identity. It does not add
+an ImageRole or production generic command constructor. ProcessCore is private;
+existing fixed DNS/Input frontends preserve their image validation and argv.
+The fake probe has an independent exact-name/hash admission and finite scenario
+enum; it has no certificate API. System PowerShell comes only from
+GetSystemDirectoryW, held against write/delete through retirement. This fixed
+OS input is distinct from installed-package DACL/single-link custody; system
+images may have stable positive hard links. Source script/CA hashes and live
+file/parent no-delete fences prevent replacement during launch. The trusted
+ephemeral Windows OS installation is an explicit prerequisite, not an
+Authenticode or minimum-version claim. No existing package policy is relaxed.
+
+The supervisor owns both fixed-buffer reads and original process/job through
+completion or a fixed cleanup deadline. It does not expose raw handles/PID
+termination or create detached readers. Drop requests original-job cancellation
+only. Pending state is never a retirement proof: unknown quiescence retains the
+marker and fails cleanup rather than racing a late import. Actual Windows
+compile/runtime/fake lifecycle evidence is required; source preparation and
+formatting do not qualify trust behavior.

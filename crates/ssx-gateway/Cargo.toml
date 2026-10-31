@@ -58,3 +58,8 @@ chrono = { version = "=0.4.45", default-features = false, features = ["clock", "
 
 [target.'cfg(unix)'.dev-dependencies]
 nix = { version = "=0.31.3", default-features = false, features = ["process", "signal"] }
+
+[[bin]]
+name = "ssx-gateway-trust-probe"
+path = "src/bin/ssx-gateway-trust-probe.rs"
+required-features = ["windows-owner-test-fixtures"]

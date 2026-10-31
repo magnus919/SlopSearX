@@ -7,7 +7,8 @@ case_root="$2"
 [[ -d "$case_root" && -f "$case_root/ca.der" && -f "$case_root/ca.pem" ]]
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*)
-    powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(dirname "$0")/trust-store.ps1" "$mode" "$case_root"
+    echo 'Windows trust fixtures require the bounded t07_platform_tls Rust owner' >&2
+    exit 2
     ;;
   Linux)
     fingerprint="$(sha256sum "$case_root/ca.der" | cut -d ' ' -f1)"

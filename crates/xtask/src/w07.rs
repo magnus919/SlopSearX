@@ -19,7 +19,19 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "dea97d038759d08c5de510d531db907fba7b52d59cb981d62f7148fe7b9ce1b0";
+const REGISTRY_SHA: &str = "776747fe03698c554c33355bc1bd3054c2ea1f20cd7bfe85b95cc2a2f1f3ab32";
+const NORMAL_MAIN_JOIN_READERS: [(&str, &str, &str); 2] = [
+    (
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "fde467c22e12d3441352eb959a1be0370e8b7fbefe3b078a86357d145c33eada",
+        "072ecabfc3c8c297250d672732919774e4843d286b1d36784465edecd1fd46c5",
+    ),
+    (
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "4e072aa43f9dd856a9fa17304f2b5661215ccd273655b5cb0ed022502f369868",
+        "39077fcab03e0801cc75c92127fa01406d77197d916397c8c22f2c33bfc7038e",
+    ),
+];
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -565,6 +577,14 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
         }
         expected["sources"][path] = Value::String(after.into());
     }
+    // Keep every historical Gateway/Page predecessor guard; only the two
+    // exact normal-main shared-reader source tuples advance after those proofs.
+    for (path, before, after) in NORMAL_MAIN_JOIN_READERS {
+        if expected["sources"][path] != before {
+            return Err("W07 normal-main reader predecessor differs".into());
+        }
+        expected["sources"][path] = Value::String(after.into());
+    }
     if expected != *current {
         return Err(
             "W07 completion inventory differs from the exact additive source/test delta".into(),
@@ -888,6 +908,15 @@ mod tests {
         ))
         .unwrap();
         preserve_registry(&original, &current).unwrap();
+        for (path, before, _) in NORMAL_MAIN_JOIN_READERS {
+            let mut old_as_current = current.clone();
+            old_as_current["sources"][path] = Value::String(before.into());
+            assert!(preserve_registry(&original, &old_as_current).is_err());
+            let mut changed = current.clone();
+            changed["sources"][path] = Value::String("0".repeat(64));
+            assert!(preserve_registry(&original, &changed).is_err());
+        }
+
         let mut removed = current.clone();
         removed["suites"][0]["tests"]
             .as_array_mut()

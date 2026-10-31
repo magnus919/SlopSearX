@@ -4,11 +4,11 @@
   "files": [
     {
       "path": ".github/workflows/rust-client-platforms.yml",
-      "sha256": "fe37b380e6a3af5f6ea63f040c7b8027f19808ef0f004c77e4cfd8058d743186"
+      "sha256": "92d07150dd494f9b8ba43c411e52c127122a5cab42f03b60513a413aaeffe4d8"
     },
     {
       "path": ".github/workflows/rust.yml",
-      "sha256": "cac3e563ffb7a9b8d1bb83d40e992c585cbe0f7b7a93bfdbf951b6127a839e7a"
+      "sha256": "49beb3bf98a511e82e24ba314ea2d3490de079118feefad83bc81ea98b78d2a8"
     },
     {
       "path": ".pre-commit-config.yaml",
@@ -24,7 +24,7 @@
     },
     {
       "path": "crates/ssx-gateway/Cargo.toml",
-      "sha256": "e7120fd8fc9f229d97b83e5f03dbf6d73ffe7d817d16b4bffc57cf0fa1ac7a5e"
+      "sha256": "8c7390c71ddf88536665dccc0183d7e935bbc365b879510bfa2d56a163e5e481"
     },
     {
       "path": "crates/ssx-gateway/src/bin/ssx-gateway-dns-fixture.rs",
@@ -41,6 +41,10 @@
     {
       "path": "crates/ssx-gateway/src/bin/ssx-gateway-owner-probe.rs",
       "sha256": "4fd41d41262367cbbf276bb41df38f3750a536a8bbec633149ec2866a57bad27"
+    },
+    {
+      "path": "crates/ssx-gateway/src/bin/ssx-gateway-trust-probe.rs",
+      "sha256": "9acc48cff742b97ffaf4e681f1909fb5d1fc7ae70bc2e23d0f3c7949a76cf9da"
     },
     {
       "path": "crates/ssx-gateway/src/main.rs",
@@ -72,11 +76,15 @@
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/trust-store.sh",
-      "sha256": "c9652836127a4e64aab3af141ddf3f146e9929dbcaa9b07ca6cc4972707f8373"
+      "sha256": "e9903caa4333586cb8e1e835bb74ff5829b7335a6cdfa071b4c75b31d8be5b02"
     },
     {
       "path": "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
-      "sha256": "81adc0d578270a7c592b5929f6559474cd8a4ac27d37581d4da816b7ea43b02c"
+      "sha256": "65a5aa5d723e13f134edb5b1dee52a44001e21dfd3cff9e422148a3e0783d399"
+    },
+    {
+      "path": "crates/ssx-gateway/tests/platform_support/windows_trust.rs",
+      "sha256": "45fafa3ad47d28ab78c84bfc6d177b794c8ba8ddc834f76315a357ae1c43a477"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_dns_owner.rs",
@@ -88,7 +96,7 @@
     },
     {
       "path": "crates/ssx-gateway/tests/t07_platform_tls.rs",
-      "sha256": "1b7be8f00e2d4fa35ef48282a5cd5a430facc395fcbde77d7459c274635461cb"
+      "sha256": "86533e0e6677f84f1fbb4e45916be096dcafe80364026310f84bcb07a33f2c40"
     },
     {
       "path": "crates/ssx-gateway/tests/t07_runtime.rs",
@@ -455,6 +463,10 @@
       "sha256": "38d2b45d524c6c1e3172fe1db94e6c905537317abfdf0d1886ee90a796455392"
     },
     {
+      "path": "crates/xtask/examples/foundation_python_boundary.rs",
+      "sha256": "f21884cb6326306dd215e77ad9015581f37b0d349b0229a848a134ee8aa255d3"
+    },
+    {
       "path": "crates/xtask/src/a04.rs",
       "sha256": "a428fa3644bc92511de13d5e9344a4f14015e2f37ffc380e45e5c108e08501f3"
     },
@@ -476,7 +488,7 @@
     },
     {
       "path": "crates/xtask/src/main.rs",
-      "sha256": "297dec89019455b33b66e2d9edac7255465bdae3207e0bf33d7d5a8f19504765"
+      "sha256": "dd1d6d2be286ff37aecb401384ae48313d175bd70d42be0f3099d4fbe1a941b0"
     },
     {
       "path": "crates/xtask/src/t01.rs",
@@ -492,7 +504,11 @@
     },
     {
       "path": "crates/xtask/src/w07.rs",
-      "sha256": "cf4676e762f38d503fc47710c31bed2673362c94ad3048c7bb81ef633231385f"
+      "sha256": "72cea43aac3378f5655f191e362b6e59993118e09a59c31e5be4b2c1ab5bc154"
+    },
+    {
+      "path": "crates/xtask/src/w08/source_successor.rs",
+      "sha256": "489dd9ffc753eff3e9d4207cbc17eb323fd424d7237df94a2c4ceac8c06e419f"
     },
     {
       "path": "docs/rust-rewrite/a04/source-amendments/scoped-successor.rs",
@@ -500,11 +516,19 @@
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
-      "sha256": "fde467c22e12d3441352eb959a1be0370e8b7fbefe3b078a86357d145c33eada"
+      "sha256": "072ecabfc3c8c297250d672732919774e4843d286b1d36784465edecd1fd46c5"
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-      "sha256": "4e072aa43f9dd856a9fa17304f2b5661215ccd273655b5cb0ed022502f369868"
+      "sha256": "39077fcab03e0801cc75c92127fa01406d77197d916397c8c22f2c33bfc7038e"
+    },
+    {
+      "path": "docs/rust-rewrite/ci/gates.json",
+      "sha256": "df20928e447c3208eca06262d8092723d4c29436ed67b45659eee75226e168c2"
+    },
+    {
+      "path": "docs/rust-rewrite/foundation/ci.md",
+      "sha256": "4e8277c5ee0940a8a47411d4822a45a36fc45112defb8c619f2b94f4dc498728"
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-join-v1.json",
@@ -513,6 +537,18 @@
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-page-join-v1.json",
       "sha256": "97ecad427bfebc5aafbe969e82bc2be727c922d10019d838eb51902fd9d162b2"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-w08-main-join-v1.json",
+      "sha256": "9f7b316a40a1aaab0559074c1892541ad0607f7e37dabd245eb1f227aac3ab18"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-w08-main-join.rs",
+      "sha256": "b8a2689ee12a8534ff8f89913dcf868d32282c9720f2dcaa296570564e5a0311"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/main-custody.rs",
+      "sha256": "768c7633aa6dc8b3cf05ce2215b7ace8a443686c512c660b5695fef4c72436c3"
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/page-join-v1.json",
@@ -524,7 +560,15 @@
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs",
-      "sha256": "77dacd3c72d1df1f0cb141bd64435d1404f7aa8402f6324ce988e5536624a2e5"
+      "sha256": "44941510f02fcf124c772787c4a203d10324709e8f9950b8eca6f7a652c51706"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/w08-join-v1.json",
+      "sha256": "11e80b07b1c40fd7b0c3f37b5c1dfbe95981ab68306bebf83112b443f088309e"
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/w08-page-join-v1.json",
+      "sha256": "2201b3d459bc0e386d3fb847a02a23f5f30fcf4b7e82ca85fd056bead5567847"
     },
     {
       "path": "docs/rust-rewrite/t06/coverage.json",
@@ -532,7 +576,7 @@
     },
     {
       "path": "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs",
-      "sha256": "35433668bc7f4929602e2c2670d04f099cb832601149941be41186c91c54a337"
+      "sha256": "1ff29f1eb98fdde33d3e6d6990990fc036b6d01a99a19db138757a4c3c4a428a"
     },
     {
       "path": "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-composition-v1.json",
@@ -668,7 +712,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor.rs",
-      "sha256": "5f8f7dd94005f087c0fc3163c8c084250def46a2afc4abe2d8e3a03dce0316ab"
+      "sha256": "5b9275a74c247f5e031a339e6ef3b77b223bd2e5569816a2acf3a306a401b49b"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/gateway-xtask-main-predecessor-v1/main.rs",
@@ -700,7 +744,7 @@
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs",
-      "sha256": "3a3f4b5b8d9eccd47d3af45c614a1409e58c22de141dd9a383d650233d5b1064"
+      "sha256": "b720c39eef916f9f822670dfedc9b98367a62686ed3b1382e2a70bd5120f5f25"
     },
     {
       "path": "docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-composition-v2.json",
@@ -876,11 +920,27 @@
     },
     {
       "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
-      "sha256": "dea97d038759d08c5de510d531db907fba7b52d59cb981d62f7148fe7b9ce1b0"
+      "sha256": "776747fe03698c554c33355bc1bd3054c2ea1f20cd7bfe85b95cc2a2f1f3ab32"
     },
     {
       "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
       "sha256": "ee9fc897420f76a94d52fd7199b35a5ec58db54a2c1f75b64ea8dd3c113635c3"
+    },
+    {
+      "path": "docs/rust-rewrite/w08/reader-page-source-admission-v1.json",
+      "sha256": "395f90ba3d22614996515a9f5ecfb6bdaf58c1cf5d5129eba97a661ea6df17b1"
+    },
+    {
+      "path": "docs/rust-rewrite/w08/source-successor.json",
+      "sha256": "a12f8ebaf9fe78bbf6b2647562b7af3d6e55f18d53e7caf99ead3b36080ba712"
+    },
+    {
+      "path": "docs/rust-rewrite/w08/w07-page-source-admission-v1.json",
+      "sha256": "7db2d39f8c2e0fe49211a3cfdc1ef4e35c755a4b66b8d893f717643677f28b57"
+    },
+    {
+      "path": "scripts/rust-foundation-smoke.sh",
+      "sha256": "f06f04ed4b430364e708f9609ccf36d0de7e4b48129cee2dd9eed3dde8a37fe8"
     },
     {
       "path": "slopsearx/mcp/gateway.py",
@@ -2616,11 +2676,11 @@
     },
     {
       "path": "vendor/ssx-windows-owner/Cargo.toml",
-      "sha256": "670924b8dce630180950b593a99b27af220bb2fa7f1965497b24fb15e429befb"
+      "sha256": "c1321dc5b1bbe7fc45caf1a5c213a28876a09d887f11277e865c94e281b61ce3"
     },
     {
       "path": "vendor/ssx-windows-owner/SAFETY.md",
-      "sha256": "48d38b19adddd048da1b4c8a203c3786a23607d78d65a84a151b0dac6d905d90"
+      "sha256": "56697778395fafa9dce69880953ce128ab352d9d97273d5612b424dd0f06528d"
     },
     {
       "path": "vendor/ssx-windows-owner/src/confidential.rs",
@@ -2632,15 +2692,19 @@
     },
     {
       "path": "vendor/ssx-windows-owner/src/lib.rs",
-      "sha256": "fe7145b38d5c818fabb36d2a717407d17cf0319e0ee41ca22507c8778ff7186f"
+      "sha256": "241892b4ec9cfa1f3adf806fcb99d048eddcfdcb4cedf6e336f229224ba4be3a"
     },
     {
       "path": "vendor/ssx-windows-owner/src/process.rs",
-      "sha256": "4960950ee51a0cc8584d6f799aef233f2476a41553f61ce36e381da2273b578b"
+      "sha256": "66374f36d32521c13f6e28d54af0fce7ca60bb924b228277131717a7b95fcdab"
     },
     {
       "path": "vendor/ssx-windows-owner/src/trust.rs",
-      "sha256": "dba6365674e0e77ba2a50f1f3780ba6d4b712bd2a13ec3dd494be1ada66b2527"
+      "sha256": "d762a739cde1e37ed55c4510186d489e07ff2c97def9b880043b2664356e41e2"
+    },
+    {
+      "path": "vendor/ssx-windows-owner/src/trust_fixture.rs",
+      "sha256": "269304a21458ea8ce7b9b69f0955f65993cbbb72f365bc7043d342e9a359542f"
     }
   ],
   "library_tests": [
@@ -2921,7 +2985,7 @@
   "opaque_current_operand_successor": {
     "parent_bindings_sha256": "8d486b5f22994c4cfaf56c6a4436c309f44cdd9c0d056b237bfa70674195a4a3",
     "source_head": "0a44833af3d19f46e2dab006ea2fcb69732a7ba4",
-    "reason": "exactsamephysicalbuffer bcd6\u21923fe5\u2192sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
+    "reason": "exactsamephysicalbuffer bcd6→3fe5→sealedf46 using2reviewedGitcommits then unchangedoriginalT06capsule/archive/defaultowner; no frozenrepin/generalreaderfallback",
     "current_source_rows": 608,
     "native_identities_unchanged": 215
   },
@@ -3130,5 +3194,65 @@
     "scope": "Normal main merge preserves accepted Page production and immutable proof capsules; additive current readers authenticate physical union first, reconstruct exact accepted gateway/Page Git endpoints, and require both old W07 joins to agree on common snapshot. Prior main/Gateway receipt artifacts stay immutable.",
     "test_inventory": "Existing identities retained; additional controls inside existing owners. No native/hosted acceptance implied.",
     "qualification": "Source-only merged proposal; affected shared-type/caller/native qualification pending independent source review and compiler handoff."
+  },
+  "gateway_w08_bounded_trust_successor": {
+    "gateway_parent": "040f504314c805ef11aefcb5bb086875bd7857da",
+    "main_parent": "d9d42277657394e9f62061072a95671345a94f38",
+    "parent_bindings_sha256": "212cdf4684452fbcc7a6fcf3ef4579f481634526f51f980129766ac8e0206d17",
+    "changed_existing_rows": [
+      ".github/workflows/rust-client-platforms.yml",
+      ".github/workflows/rust.yml",
+      "crates/ssx-gateway/Cargo.toml",
+      "crates/ssx-gateway/tests/platform_support/trust-store.sh",
+      "crates/ssx-gateway/tests/platform_support/verify-inventory.ps1",
+      "crates/ssx-gateway/tests/t07_platform_tls.rs",
+      "crates/xtask/src/main.rs",
+      "crates/xtask/src/w07.rs",
+      "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+      "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs",
+      "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs",
+      "docs/rust-rewrite/t07/source-amendments/gateway-unit-route-successor.rs",
+      "docs/rust-rewrite/t07/source-amendments/page-main-receipt-control-adapter-v2.rs",
+      "docs/rust-rewrite/w07/qualification-completion-v1.json",
+      "vendor/ssx-windows-owner/Cargo.toml",
+      "vendor/ssx-windows-owner/SAFETY.md",
+      "vendor/ssx-windows-owner/src/lib.rs",
+      "vendor/ssx-windows-owner/src/process.rs",
+      "vendor/ssx-windows-owner/src/trust.rs"
+    ],
+    "new_explicit_rows": [
+      "crates/ssx-gateway/src/bin/ssx-gateway-trust-probe.rs",
+      "crates/ssx-gateway/tests/platform_support/windows_trust.rs",
+      "crates/xtask/examples/foundation_python_boundary.rs",
+      "crates/xtask/src/w08/source_successor.rs",
+      "docs/rust-rewrite/ci/gates.json",
+      "docs/rust-rewrite/foundation/ci.md",
+      "docs/rust-rewrite/snapshot-fixture-amendment/gateway-w08-main-join-v1.json",
+      "docs/rust-rewrite/snapshot-fixture-amendment/gateway-w08-main-join.rs",
+      "docs/rust-rewrite/snapshot-fixture-amendment/main-custody.rs",
+      "docs/rust-rewrite/snapshot-fixture-amendment/w08-join-v1.json",
+      "docs/rust-rewrite/snapshot-fixture-amendment/w08-page-join-v1.json",
+      "docs/rust-rewrite/w08/reader-page-source-admission-v1.json",
+      "docs/rust-rewrite/w08/source-successor.json",
+      "docs/rust-rewrite/w08/w07-page-source-admission-v1.json",
+      "scripts/rust-foundation-smoke.sh",
+      "vendor/ssx-windows-owner/src/trust_fixture.rs"
+    ],
+    "scope": "Normal main history, exact dual-parent physical source admission, preserved historical proof/control routes, source-only smoke setup and closed Windows fixture ownership. No frozen capsule repin or production arbitrary-command API.",
+    "source_files": 676,
+    "ordinary_inventories": "All parent arrays preserved; Windows fixture controls are supplemental platform tests.",
+    "windows_fake_controls": [
+      "windows_trust::tests::windows_trust_owner_closes_normal_fake_and_preserves_utf16_arguments",
+      "windows_trust::tests::windows_trust_owner_deadline_retires_original_quiet_child",
+      "windows_trust::tests::windows_trust_owner_leader_exit_cannot_hide_live_descendant",
+      "windows_trust::tests::windows_trust_owner_bounds_both_newline_free_output_streams",
+      "windows_trust::tests::windows_trust_owner_job_and_resume_faults_never_enter_body",
+      "windows_trust::tests::windows_trust_owner_pending_state_never_grants_cleanup",
+      "windows_trust::tests::windows_trust_owner_drop_leaves_pending_and_blocks_fake_remove",
+      "windows_trust::tests::windows_trust_owner_failed_remove_keeps_marker_and_exact_retired_retry_succeeds",
+      "windows_trust::tests::windows_trust_owner_script_ca_and_case_admission_fail_before_creation"
+    ],
+    "native_status": "UNRUN on this composed source; Windows trust import outcome unproven; Mac1073 separate."
   }
 }

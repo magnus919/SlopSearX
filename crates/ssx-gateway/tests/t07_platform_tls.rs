@@ -6,6 +6,9 @@ mod mac_trust;
 mod platform_support;
 #[path = "platform_support/tls.rs"]
 mod tls;
+#[cfg(all(windows, feature = "windows-owner-test-fixtures"))]
+#[path = "platform_support/windows_trust.rs"]
+mod windows_trust;
 use platform_support::{BUDGET, Process, root, stage};
 use std::{
     path::{Path, PathBuf},
@@ -21,8 +24,8 @@ struct TrustGuard {
 impl TrustGuard {
     #[cfg(windows)]
     fn windows_command(root: &Path, mode: &str) -> std::process::Command {
-        // Match the already configured trust-store.sh Windows branch exactly,
-        // bypassing only ambiguous bash lookup (which can select the WSL launcher).
+        // Metadata-only preserved argument/WTF16 control. This function never
+        // launches a command; actual Windows mutation has only the closed owner.
         let mut command = std::process::Command::new("powershell.exe");
         command
             .args([
@@ -40,10 +43,6 @@ impl TrustGuard {
             .arg(mode)
             .arg(root);
         command
-    }
-    #[cfg(windows)]
-    fn command(root: &Path, mode: &str) -> std::io::Result<std::process::ExitStatus> {
-        Self::windows_command(root, mode).status()
     }
     #[cfg(not(any(windows, target_os = "macos")))]
     fn command(root: &Path, mode: &str) -> std::io::Result<std::process::ExitStatus> {
@@ -73,7 +72,13 @@ impl TrustGuard {
         mac_trust::install(root)
             .await
             .expect("bounded owned macOS trust install");
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(all(windows, feature = "windows-owner-test-fixtures"))]
+        windows_trust::install(root)
+            .await
+            .expect("bounded original Windows install");
+        #[cfg(all(windows, not(feature = "windows-owner-test-fixtures")))]
+        panic!("Windows trust witness requires windows-owner-test-fixtures");
+        #[cfg(not(any(windows, target_os = "macos")))]
         assert!(Self::command(root, "install").unwrap().success());
         guard
     }
@@ -82,7 +87,13 @@ impl TrustGuard {
         mac_trust::remove(&self.root)
             .await
             .expect("bounded exact macOS trust cleanup");
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(all(windows, feature = "windows-owner-test-fixtures"))]
+        windows_trust::remove(&self.root)
+            .await
+            .expect("bounded original Windows remove");
+        #[cfg(all(windows, not(feature = "windows-owner-test-fixtures")))]
+        panic!("Windows trust witness requires windows-owner-test-fixtures");
+        #[cfg(not(any(windows, target_os = "macos")))]
         assert!(Self::command(&self.root, "remove").unwrap().success());
         self.active = false;
     }
@@ -95,7 +106,11 @@ impl Drop for TrustGuard {
                 "owned CI certificate cleanup pending at {}; bounded Rust workflow finalizer must retry",
                 self.root.display()
             );
-            #[cfg(not(target_os = "macos"))]
+            #[cfg(windows)]
+            eprintln!(
+                "owned Windows trust cleanup pending; bounded finalizer must verify quiescence"
+            );
+            #[cfg(not(any(windows, target_os = "macos")))]
             {
                 let status = Self::command(&self.root, "remove");
                 if !status.is_ok_and(|status| status.success()) {
@@ -104,6 +119,15 @@ impl Drop for TrustGuard {
             }
         }
     }
+}
+
+#[cfg(all(windows, feature = "windows-owner-test-fixtures"))]
+#[tokio::test(flavor = "current_thread")]
+#[ignore = "exact hosted Windows trust cleanup only; never run on personal hosts"]
+async fn finalize_exact_owned_windows_trust_fixtures_with_bounded_children() {
+    windows_trust::finalize()
+        .await
+        .expect("exact owned Windows trust cleanup");
 }
 
 #[cfg(target_os = "macos")]

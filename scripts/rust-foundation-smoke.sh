@@ -45,10 +45,20 @@ server_alive() {
     esac
 }
 
-# The final runtime may not embed CPython or depend on a Python bridge crate.
-if grep -Eq '^name = "(cpython|pyo3|pyo3-ffi|pyo3-macros|pythonize|rust-cpython)"$' "$lockfile"; then
-    fail "Cargo.lock contains a Python bridge dependency"
-fi
+# Cargo.lock also records inactive optional dependencies. Audit the complete
+# actual native workspace build instead, then retain native image checks below.
+[ -n "${SSX_FOUNDATION_BUILD_JSON:-}" ] || fail "native build transcript is required"
+[ -n "${SSX_FOUNDATION_BUILD_EXIT:-}" ] || fail "native producer exit receipt is required"
+[ -n "${SSX_FOUNDATION_TARGET:-}" ] || fail "native target is required"
+[ -n "${SSX_FOUNDATION_BUILD_BOUNDARY:-}" ] || fail "captured native image boundary is required"
+[ -n "${SSX_FOUNDATION_BOUNDARY_BIN:-}" ] || fail "native boundary verifier is required"
+[ -x "$SSX_FOUNDATION_BOUNDARY_BIN" ] || fail "native boundary verifier is not executable"
+target_root=${SSX_FOUNDATION_TARGET_ROOT:-${CARGO_TARGET_DIR:-"$repo_root/target"}}
+"$SSX_FOUNDATION_BOUNDARY_BIN" "$repo_root" "$target_root" "$SSX_FOUNDATION_TARGET" \
+    "$SSX_FOUNDATION_BUILD_JSON" "$SSX_FOUNDATION_BUILD_EXIT" "$server_bin" \
+    "$SSX_FOUNDATION_BUILD_BOUNDARY" > "$scratch/build-boundary.json" \
+    || fail "native compiler/image Python boundary rejected"
+cat "$scratch/build-boundary.json"
 host_os=$(uname -s)
 case "$host_os" in
     Linux)

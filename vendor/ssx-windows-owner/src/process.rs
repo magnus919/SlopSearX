@@ -227,54 +227,30 @@ impl PipePair {
 
 /// A suspended, assigned child. Resume is explicit so the supervisor can
 /// publish the scoped cancellation handle before child code is allowed to run.
-pub struct NativeChild {
+pub(crate) struct ProcessCore {
     process: Arc<OwnedHandle>,
     thread: Option<OwnedHandle>,
     cancel: JobCancel,
     pid: u32,
-    _image: TrustedImage,
+    retired: bool,
 }
-impl std::fmt::Debug for NativeChild {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("NativeChild")
-            .field("pid", &self.pid)
-            .finish_non_exhaustive()
-    }
-}
-impl Drop for NativeChild {
+impl Drop for ProcessCore {
     fn drop(&mut self) {
-        let _ = self.cancel.cancel();
+        if !self.retired {
+            let _ = self.cancel.cancel();
+        }
     }
 }
-impl NativeChild {
-    pub fn dns(image: &TrustedImage) -> io::Result<(Self, ChildPipes)> {
-        Self::spawn(image, ImageRole::Dns, None)
-    }
-    pub fn input(image: &TrustedImage, input: OwnedHandle) -> io::Result<(Self, ChildPipes)> {
-        Self::spawn(image, ImageRole::Input, Some(input))
-    }
-    fn spawn(
-        image: &TrustedImage,
-        role: ImageRole,
+impl ProcessCore {
+    pub(crate) fn spawn(
+        application: &[u16],
+        mut command: Vec<u16>,
         input: Option<OwnedHandle>,
-    ) -> io::Result<(Self, ChildPipes)> {
-        Self::spawn_inner(
-            image,
-            role,
-            input,
-            #[cfg(feature = "fixtures")]
-            None,
-        )
-    }
-    fn spawn_inner(
-        image: &TrustedImage,
-        role: ImageRole,
-        input: Option<OwnedHandle>,
+        environment: Option<&[u16]>,
         #[cfg(feature = "fixtures")] rejected: Option<&mut Option<i32>>,
     ) -> io::Result<(Self, ChildPipes)> {
         #[cfg(feature = "fixtures")]
         let wrong_job = rejected.is_some();
-        let application = image.application(role)?;
         let output = PipePair::create(true)?;
         let error = PipePair::create(true)?;
         let incoming = if input.is_none() {
@@ -324,12 +300,8 @@ impl NativeChild {
         startup.StartupInfo.hStdError = handles[2];
         startup.lpAttributeList = attributes.pointer();
         // SAFETY: mutable command storage and all STARTUPINFO/attribute/handle
-        // storage remain live; application is the exact pinned no-argument role.
-        let mut command = Vec::with_capacity(application.len() + 2);
-        command.push(b'"' as u16);
-        command.extend_from_slice(&application[..application.len() - 1]);
-        command.push(b'"' as u16);
-        command.push(0);
+        // storage remain live; only closed admitted production/fixture frontends
+        // construct this private application/command pair.
         if unsafe {
             CreateProcessW(
                 application.as_ptr(),
@@ -337,8 +309,15 @@ impl NativeChild {
                 ptr::null(),
                 ptr::null(),
                 1,
-                CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW,
-                ptr::null(),
+                CREATE_SUSPENDED
+                    | EXTENDED_STARTUPINFO_PRESENT
+                    | CREATE_NO_WINDOW
+                    | if environment.is_some() {
+                        CREATE_UNICODE_ENVIRONMENT
+                    } else {
+                        0
+                    },
+                environment.map_or(ptr::null(), |e| e.as_ptr().cast()),
                 ptr::null(),
                 &startup.StartupInfo,
                 &mut info,
@@ -363,7 +342,7 @@ impl NativeChild {
             thread: Some(thread),
             cancel,
             pid: info.dwProcessId,
-            _image: image.clone(),
+            retired: false,
         };
         #[cfg(feature = "fixtures")]
         if wrong_job {
@@ -386,16 +365,16 @@ impl NativeChild {
         };
         Ok((child, pipes))
     }
-    pub fn pid(&self) -> u32 {
+    pub(crate) fn pid(&self) -> u32 {
         self.pid
     }
-    pub fn observer(&self) -> ExitHandle {
+    pub(crate) fn observer(&self) -> ExitHandle {
         ExitHandle(self.process.clone())
     }
-    pub fn cancellation(&self) -> JobCancel {
+    pub(crate) fn cancellation(&self) -> JobCancel {
         self.cancel.clone()
     }
-    pub fn resume(&mut self) -> io::Result<()> {
+    pub(crate) fn resume(&mut self) -> io::Result<()> {
         let thread = self.thread.as_ref().ok_or(io::ErrorKind::InvalidInput)?;
         let count = unsafe { ResumeThread(trust::raw(thread)) };
         if count == u32::MAX {
@@ -407,7 +386,7 @@ impl NativeChild {
         drop(self.thread.take());
         Ok(())
     }
-    pub fn observe(&self) -> io::Result<Option<ExitObservation>> {
+    pub(crate) fn observe(&self) -> io::Result<Option<ExitObservation>> {
         match unsafe { WaitForSingleObject(trust::raw(&self.process), 0) } {
             WAIT_TIMEOUT => Ok(None),
             WAIT_OBJECT_0 => {
@@ -421,7 +400,7 @@ impl NativeChild {
             _ => Err(io::Error::last_os_error()),
         }
     }
-    pub async fn wait_exit(&self, budget: Duration) -> io::Result<ExitObservation> {
+    pub(crate) async fn wait_exit(&self, budget: Duration) -> io::Result<ExitObservation> {
         tokio::time::timeout(budget, async {
             loop {
                 if let Some(exit) = self.observe()? {
@@ -433,7 +412,7 @@ impl NativeChild {
         .await
         .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
     }
-    pub async fn retire(&mut self, budget: Duration) -> io::Result<Retirement> {
+    pub(crate) async fn retire(&mut self, budget: Duration) -> io::Result<Retirement> {
         self.cancel.cancel()?;
         tokio::time::timeout(budget, async {
             loop {
@@ -447,6 +426,103 @@ impl NativeChild {
         })
         .await
         .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
+    }
+    #[cfg(feature = "fixtures")]
+    pub(crate) fn job_empty(&self) -> io::Result<bool> {
+        self.cancel.empty()
+    }
+    #[cfg(feature = "fixtures")]
+    pub(crate) fn finish(&mut self) -> io::Result<Retirement> {
+        let exit = self.observe()?;
+        let job_empty = self.cancel.empty()?;
+        if exit.is_none() || !job_empty {
+            return Err(io::ErrorKind::WouldBlock.into());
+        }
+        self.retired = true;
+        Ok(Retirement { exit, job_empty })
+    }
+}
+
+/// Production API remains fixed to the original installed DNS/Input roles.
+pub struct NativeChild {
+    core: ProcessCore,
+    _image: TrustedImage,
+}
+impl std::fmt::Debug for NativeChild {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("NativeChild")
+            .field("pid", &self.core.pid)
+            .finish_non_exhaustive()
+    }
+}
+impl NativeChild {
+    pub fn dns(image: &TrustedImage) -> io::Result<(Self, ChildPipes)> {
+        Self::spawn(image, ImageRole::Dns, None)
+    }
+    pub fn input(image: &TrustedImage, input: OwnedHandle) -> io::Result<(Self, ChildPipes)> {
+        Self::spawn(image, ImageRole::Input, Some(input))
+    }
+    fn spawn(
+        image: &TrustedImage,
+        role: ImageRole,
+        input: Option<OwnedHandle>,
+    ) -> io::Result<(Self, ChildPipes)> {
+        Self::spawn_inner(
+            image,
+            role,
+            input,
+            #[cfg(feature = "fixtures")]
+            None,
+        )
+    }
+    fn spawn_inner(
+        image: &TrustedImage,
+        role: ImageRole,
+        input: Option<OwnedHandle>,
+        #[cfg(feature = "fixtures")] rejected: Option<&mut Option<i32>>,
+    ) -> io::Result<(Self, ChildPipes)> {
+        let application = image.application(role)?;
+        let mut command = Vec::with_capacity(application.len() + 2);
+        command.push(b'"' as u16);
+        command.extend_from_slice(&application[..application.len() - 1]);
+        command.push(b'"' as u16);
+        command.push(0);
+        let (core, pipes) = ProcessCore::spawn(
+            &application,
+            command,
+            input,
+            None,
+            #[cfg(feature = "fixtures")]
+            rejected,
+        )?;
+        Ok((
+            Self {
+                core,
+                _image: image.clone(),
+            },
+            pipes,
+        ))
+    }
+    pub fn pid(&self) -> u32 {
+        self.core.pid()
+    }
+    pub fn observer(&self) -> ExitHandle {
+        self.core.observer()
+    }
+    pub fn cancellation(&self) -> JobCancel {
+        self.core.cancellation()
+    }
+    pub fn resume(&mut self) -> io::Result<()> {
+        self.core.resume()
+    }
+    pub fn observe(&self) -> io::Result<Option<ExitObservation>> {
+        self.core.observe()
+    }
+    pub async fn wait_exit(&self, budget: Duration) -> io::Result<ExitObservation> {
+        self.core.wait_exit(budget).await
+    }
+    pub async fn retire(&mut self, budget: Duration) -> io::Result<Retirement> {
+        self.core.retire(budget).await
     }
 }
 
@@ -505,7 +581,7 @@ impl NativeChild {
     }
 
     pub fn fixture_creation_time(&self) -> io::Result<u64> {
-        creation_time(trust::raw(&self.process))
+        creation_time(trust::raw(&self.core.process))
     }
 }
 #[cfg(feature = "fixtures")]
@@ -557,4 +633,12 @@ impl FixtureProcessWitness {
             _ => Err(io::Error::last_os_error()),
         }
     }
+}
+
+#[cfg(feature = "fixtures")]
+pub fn fixture_current_process_identity() -> io::Result<(u32, u64)> {
+    Ok((
+        unsafe { GetCurrentProcessId() },
+        creation_time(unsafe { GetCurrentProcess() })?,
+    ))
 }

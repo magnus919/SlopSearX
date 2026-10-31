@@ -129,6 +129,24 @@ jobs:
           $cases = @(Get-Content -LiteralPath "$env:RUNNER_TEMP/ssx-client-evidence/finalizer-inventory.txt" | Where-Object { $_ -match ': test$' })
           if ($cases.Count -ne 1 -or $cases[0] -cne 'finalize_exact_owned_macos_trust_fixtures_with_bounded_security_children: test') { throw 'Exact compiled finalizer inventory differs' }
           [System.IO.File]::AppendAllText($env:GITHUB_ENV, "SLOPSEARX_PLATFORM_TLS_TEST_EXECUTABLE=$executable`nSLOPSEARX_PLATFORM_TLS_TEST_SHA256=$sha256`n", [System.Text.UTF8Encoding]::new($false))
+      - name: Register already built exact Windows trust finalizer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls --no-run --message-format=json > "$env:RUNNER_TEMP/ssx-client-evidence/windows-trust-build.jsonl"
+          if ($LASTEXITCODE -ne 0) { throw 'Windows trust owner build failed' }
+          $artifacts = @(Get-Content -LiteralPath "$env:RUNNER_TEMP/ssx-client-evidence/windows-trust-build.jsonl" | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.reason -eq 'compiler-artifact' -and $_.target.name -eq 't07_platform_tls' -and $_.profile.test -and $_.executable })
+          if ($artifacts.Count -ne 1) { throw 'Exact Windows finalizer missing or duplicated' }
+          $executable = [System.IO.Path]::GetFullPath($artifacts[0].executable)
+          $targetRoot = [System.IO.Path]::GetFullPath($env:CARGO_TARGET_DIR).TrimEnd('\') + '\'
+          if (-not $executable.StartsWith($targetRoot, [System.StringComparison]::OrdinalIgnoreCase) -or [System.IO.Path]::GetFileName($executable) -cnotmatch '^t07_platform_tls-[0-9a-f]+\.exe$') { throw 'Windows finalizer outside exact target' }
+          $sha256 = (Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash.ToLowerInvariant()
+          & $executable finalize_exact_owned_windows_trust_fixtures_with_bounded_children --exact --ignored --list > "$env:RUNNER_TEMP/ssx-client-evidence/windows-finalizer-inventory.txt"
+          if ($LASTEXITCODE -ne 0) { throw 'Windows finalizer inventory failed' }
+          $cases = @(Get-Content -LiteralPath "$env:RUNNER_TEMP/ssx-client-evidence/windows-finalizer-inventory.txt" | Where-Object { $_ -match ': test$' })
+          if ($cases.Count -ne 1 -or $cases[0] -cne 'finalize_exact_owned_windows_trust_fixtures_with_bounded_children: test') { throw 'Windows finalizer selector differs' }
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "SLOPSEARX_WINDOWS_TRUST_TEST_EXECUTABLE=$executable`nSLOPSEARX_WINDOWS_TRUST_TEST_SHA256=$sha256`n", [System.Text.UTF8Encoding]::new($false))
       - name: Verify required named native cases are present exactly once
         shell: pwsh
         run: |
@@ -147,6 +165,7 @@ jobs:
         run: |
           ./crates/ssx-gateway/tests/platform_support/verify-inventory.ps1 -Inventory "$env:RUNNER_TEMP/ssx-client-evidence/store-inventory.txt" -IgnoredOnly
       - name: Dedicated ephemeral platform trust-store witness
+        if: runner.os != 'Windows'
         env:
           SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
         run: |
@@ -155,6 +174,16 @@ jobs:
           if [[ "$RUNNER_OS" != macOS ]]; then
             trap 'for case_root in "$SLOPSEARX_INSTALL_TEST_ROOT"/platform-tls-store-*; do if [[ -f "$case_root/trust-active" ]]; then bash crates/ssx-gateway/tests/platform_support/trust-store.sh remove "$case_root"; fi; done' EXIT
           fi
+          cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --nocapture 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/platform-store.txt"
+      - name: Dedicated ephemeral bounded Windows trust-store witness
+        if: runner.os == 'Windows'
+        timeout-minutes: 3
+        env:
+          SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
+        run: |
+          set -euo pipefail
+          test -n "$SLOPSEARX_WINDOWS_TRUST_TEST_EXECUTABLE"
+          trap 'actual="$(sha256sum "$SLOPSEARX_WINDOWS_TRUST_TEST_EXECUTABLE" | cut -d " " -f1)"; test "$actual" = "$SLOPSEARX_WINDOWS_TRUST_TEST_SHA256" && "$SLOPSEARX_WINDOWS_TRUST_TEST_EXECUTABLE" finalize_exact_owned_windows_trust_fixtures_with_bounded_children --exact --ignored --nocapture' EXIT
           cargo test --locked -p ssx-gateway --no-default-features --features source-endpoint-test-fixtures,windows-owner-test-fixtures --test t07_platform_tls installed_platform_verifier_rejects_private_ca_then_accepts_exact_system_store_and_still_checks_hostname -- --exact --ignored --nocapture 2>&1 | tee "$RUNNER_TEMP/ssx-client-evidence/platform-store.txt"
       - name: Always retire exact owned macOS trust fixtures with bounded Rust owner
         if: always() && runner.os == 'macOS'
@@ -174,8 +203,51 @@ jobs:
               test ! -e "$case_root/trust-active"
             done
           fi
+      - name: Always finalize exact Windows fixture with its bounded owner
+        if: always() && runner.os == 'Windows'
+        timeout-minutes: 3
+        shell: pwsh
+        env:
+          SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            if ($env:SLOPSEARX_WINDOWS_TRUST_TEST_EXECUTABLE) {
+              $sha256 = (Get-FileHash -LiteralPath $env:SLOPSEARX_WINDOWS_TRUST_TEST_EXECUTABLE -Algorithm SHA256).Hash.ToLowerInvariant()
+              if ($sha256 -cne $env:SLOPSEARX_WINDOWS_TRUST_TEST_SHA256) { throw 'Windows finalizer image changed' }
+              & $env:SLOPSEARX_WINDOWS_TRUST_TEST_EXECUTABLE finalize_exact_owned_windows_trust_fixtures_with_bounded_children --exact --ignored --nocapture 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/ssx-client-evidence/windows-trust-finalizer.txt"
+              if ($LASTEXITCODE -ne 0) { throw 'Windows fixture retirement unproved; retain markers' }
+            } else {
+              foreach ($root in @(Get-ChildItem -LiteralPath $env:SLOPSEARX_INSTALL_TEST_ROOT -Directory -Filter 'platform-tls-store-*')) {
+                if (Test-Path -LiteralPath (Join-Path $root.FullName 'trust-active')) { throw 'Unregistered Windows fixture marker' }
+              }
+            }
+          } finally {
+            $output = Join-Path $env:RUNNER_TEMP 'ssx-client-evidence/windows-trust-owner'
+            if (Test-Path -LiteralPath $output) { throw 'Refuse to overwrite trust-owner evidence' }
+            New-Item -ItemType Directory -Path $output | Out-Null
+            $roots = @(Get-ChildItem -LiteralPath $env:SLOPSEARX_INSTALL_TEST_ROOT -Directory -Filter 'platform-tls-store-*')
+            if ($roots.Count -gt 1) { throw 'Unexpected real trust-case inventory' }
+            $files = @()
+            $pointer = Join-Path $env:SLOPSEARX_INSTALL_TEST_ROOT 'windows-trust-case.json'
+            if (Test-Path -LiteralPath $pointer) { $files += Get-Item -LiteralPath $pointer }
+            foreach ($root in $roots) {
+              if (($root.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Reparse trust-case evidence root' }
+              $names = @('trust-active')
+              foreach ($slot in 0..3) { $names += @("trust-owner-$slot.pending", "trust-owner-$slot.retired", "trust-owner-$slot.stdout", "trust-owner-$slot.stderr") }
+              foreach ($name in $names) {
+                $path = Join-Path $root.FullName $name
+                if (Test-Path -LiteralPath $path) { $files += Get-Item -LiteralPath $path }
+              }
+            }
+            foreach ($file in $files) {
+              if (($file.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 -or $file.PSIsContainer -or $file.Length -gt 16384) { throw 'Unsafe or oversized trust-owner evidence' }
+              Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $output $file.Name)
+            }
+          }
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "SLOPSEARX_WINDOWS_TRUST_RETIRED=1`n", [System.Text.UTF8Encoding]::new($false))
       - name: Always remove exact owned CI trust fixtures
-        if: always() && runner.os != 'macOS'
+        if: always() && runner.os == 'Linux'
         env:
           SLOPSEARX_PLATFORM_TRUST_FIXTURE: '1'
         run: |
@@ -197,6 +269,9 @@ jobs:
         run: |
           set -euo pipefail
           # Only fixed directories owned by this ephemeral job, never a cache.
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            test "${SLOPSEARX_WINDOWS_TRUST_RETIRED:-}" = 1
+          fi
           for case_root in "$SLOPSEARX_INSTALL_TEST_ROOT"/platform-tls-store-*; do
             test ! -f "$case_root/trust-active"
           done
