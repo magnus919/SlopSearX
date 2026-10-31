@@ -584,6 +584,126 @@ fn native_tls_fixture_value(
     }
     Some(output)
 }
+// OpenSSL hash_dir and its store provider append '/' internally. That is not
+// valid inside a Windows verbatim namespace. Only this owned fixture seam uses
+// an ordinary DOS/UNC alias, after filesystem resolution proves the same source
+// directory and CA file. Production/raw environment operands are untouched.
+fn owned_openssl_directory_fixture_root(directory: &std::path::Path) -> PathBuf {
+    #[cfg(windows)]
+    {
+        use std::path::{Component, Prefix};
+        let canonical = directory
+            .canonicalize()
+            .expect("owned TLS directory exists");
+        let mut components = canonical.components();
+        let Some(Component::Prefix(prefix)) = components.next() else {
+            panic!("owned canonical TLS directory needs a Windows prefix");
+        };
+        let mut alias = match prefix.kind() {
+            Prefix::VerbatimDisk(drive) => PathBuf::from(format!("{}:\\", char::from(drive))),
+            Prefix::VerbatimUNC(server, share) => {
+                let mut path = PathBuf::from(r"\\");
+                path.push(server);
+                path.push(share);
+                path
+            }
+            _ => panic!("owned canonical TLS directory needs DOS or UNC identity"),
+        };
+        for component in components {
+            match component {
+                Component::RootDir => {}
+                Component::Normal(value) => alias.push(value),
+                _ => panic!("owned canonical TLS directory has an unexpected component"),
+            }
+        }
+        assert_eq!(
+            alias
+                .canonicalize()
+                .expect("ordinary fixture directory resolves"),
+            canonical,
+            "ordinary and verbatim fixture directory identities must match"
+        );
+        assert_eq!(
+            alias
+                .join("ca.pem")
+                .canonicalize()
+                .expect("ordinary fixture CA resolves"),
+            directory
+                .join("ca.pem")
+                .canonicalize()
+                .expect("verbatim fixture CA resolves"),
+            "ordinary and verbatim fixture CA identities must match"
+        );
+        assert_eq!(
+            fs::read(alias.join("ca.pem")).expect("ordinary fixture CA readable"),
+            include_bytes!("../../../docs/rust-rewrite/t08a/tls/ca.pem"),
+            "ordinary fixture CA bytes must remain exact"
+        );
+        alias
+    }
+    #[cfg(not(windows))]
+    {
+        directory.to_path_buf()
+    }
+}
+fn native_tls_directory_store_controls(directory: &std::path::Path) {
+    use openssl::{
+        stack::Stack,
+        x509::{X509, X509StoreContext, store::X509StoreBuilder},
+    };
+    fn verifies(path: &std::path::Path, store_uri: bool) -> Result<bool, &'static str> {
+        let mut store = X509StoreBuilder::new().map_err(|_| "fixture store allocation")?;
+        let registered = if store_uri {
+            ssx_cli_openssl_store::add_source_directory_os(&mut store, path.as_os_str())
+        } else {
+            ssx_cli_openssl_store::add_source_hash_directory(&mut store, path.as_os_str())
+        };
+        registered.map_err(|_| "fixture directory registration rejected")?;
+        let store = store.build();
+        let leaf = X509::from_pem(include_bytes!(
+            "../../../docs/rust-rewrite/t08a/tls/server.pem"
+        ))
+        .map_err(|_| "fixture leaf decode")?;
+        let chain = Stack::new().map_err(|_| "fixture chain allocation")?;
+        X509StoreContext::new()
+            .map_err(|_| "fixture context allocation")?
+            .init(&store, &leaf, &chain, |ctx| ctx.verify_cert())
+            .map_err(|_| "fixture verification rejected")
+    }
+    let alias = owned_openssl_directory_fixture_root(directory);
+    let ca = X509::from_pem(include_bytes!("../../../docs/rust-rewrite/t08a/tls/ca.pem")).unwrap();
+    for (name, suffix, store_uri) in [("hashed", 0, false), ("gap", 1, true)] {
+        let file = format!("{:08x}.{suffix}", ca.subject_name_hash());
+        assert_eq!(
+            alias.join(name).canonicalize().unwrap(),
+            directory.join(name).canonicalize().unwrap(),
+            "directory lookup aliases must resolve to the same fixture"
+        );
+        assert_eq!(
+            alias.join(name).join(&file).canonicalize().unwrap(),
+            directory.join(name).join(&file).canonicalize().unwrap(),
+            "directory lookup certificate identities must match"
+        );
+        assert_eq!(
+            fs::read(alias.join(name).join(&file)).unwrap(),
+            include_bytes!("../../../docs/rust-rewrite/t08a/tls/ca.pem")
+        );
+        assert!(
+            matches!(verifies(&alias.join(name), store_uri), Ok(true)),
+            "native directory representation must verify through the real OpenSSL lookup"
+        );
+        #[cfg(windows)]
+        assert!(
+            !matches!(verifies(&directory.join(name), store_uri), Ok(true)),
+            "old verbatim directory representation must not verify through OpenSSL joining"
+        );
+    }
+    assert!(
+        !matches!(verifies(&alias.join("wrong-hash"), false), Ok(true)),
+        "wrong subject hash must remain rejected"
+    );
+    println!("T08A native directory store controls passed");
+}
 fn native_tls_fixture_path_controls() {
     let root = std::env::var_os("SSX_T08A_ROOT")
         .map(PathBuf::from)
@@ -644,6 +764,7 @@ fn native_tls_fixture_path_controls() {
         assert!(actual.encode_wide().any(|unit| unit == 0xd800));
         assert!(!actual.encode_wide().any(|unit| unit == u16::from(b'/')));
     }
+    native_tls_directory_store_controls(&directory);
     println!("T08A native CA path controls passed");
 }
 fn fixture_io_kind(kind: std::io::ErrorKind) -> &'static str {
@@ -705,14 +826,19 @@ fn execute(case: &Case) -> Result<serde_json::Value, String> {
             (
                 k.clone(),
                 if matches!(k.as_str(), "SSL_CERT_FILE" | "SSL_CERT_DIR") {
-                    native_tls_fixture_value(
-                        v,
-                        &root
-                            .join("docs")
-                            .join("rust-rewrite")
-                            .join("t08a")
-                            .join("tls"),
-                    )
+                    let directory = root
+                        .join("docs")
+                        .join("rust-rewrite")
+                        .join("t08a")
+                        .join("tls");
+                    let directory = if k == "SSL_CERT_DIR"
+                        && v.split("$PATHSEP").all(|entry| entry.starts_with("$TLS/"))
+                    {
+                        owned_openssl_directory_fixture_root(&directory)
+                    } else {
+                        directory
+                    };
+                    native_tls_fixture_value(v, &directory)
                 } else {
                     None
                 }
