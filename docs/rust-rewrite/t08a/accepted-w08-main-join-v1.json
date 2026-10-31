@@ -1,0 +1,574 @@
+{
+  "schema": "T08A_CLI_ACCEPTED_W08_MAIN_JOIN_V1",
+  "parents": {
+    "cli": "c9a943f00eb94c739ec6f4d5433ce2c6e1f62b42",
+    "main": "d9d42277657394e9f62061072a95671345a94f38"
+  },
+  "rows": [
+    {
+      "path": "crates/xtask/src/main.rs",
+      "current": {
+        "path": "crates/xtask/src/main.rs",
+        "bytes": 41759,
+        "sha256": "7aaacf8aaafda17fbc676f6344720197b77be3be583882bf8d4fff2ac6695bd6",
+        "mode": "0644"
+      },
+      "cli": {
+        "prior": {
+          "path": "crates/xtask/src/main.rs",
+          "bytes": 41494,
+          "sha256": "06d28204c949c2c66d500d65d9a4d79fb364c61ce67ef285ab05a54c157bc4e8",
+          "mode": "0644",
+          "commit": "c9a943f00eb94c739ec6f4d5433ce2c6e1f62b42",
+          "git_blob": "aab13c3db32158f4722811400f728e36b0c7273a"
+        },
+        "current": {
+          "path": "crates/xtask/src/main.rs",
+          "bytes": 41759,
+          "sha256": "7aaacf8aaafda17fbc676f6344720197b77be3be583882bf8d4fff2ac6695bd6",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 761,
+            "remove_utf8": "",
+            "insert_utf8": "mod w08;\n"
+          },
+          {
+            "at": 19123,
+            "remove_utf8": "",
+            "insert_utf8": "        \"W08\" => w08::check(root, records),\n"
+          },
+          {
+            "at": 29022,
+            "remove_utf8": "",
+            "insert_utf8": "    } else if id == \"W08\" {\n        \"native bounded dossiers and read-only composition with actual research worker/private Valkey/loopback; final workflow transports W09 and protected portal W10 remain separate\"\n"
+          }
+        ]
+      },
+      "main": {
+        "prior": {
+          "path": "crates/xtask/src/main.rs",
+          "bytes": 40504,
+          "sha256": "7a3cbd510448fa97e56fc8c43074a84e950dbefa646845d615947968c667c410",
+          "mode": "0644",
+          "commit": "d9d42277657394e9f62061072a95671345a94f38",
+          "git_blob": "10485d3009051d8dce100399b58516693f308cb7"
+        },
+        "current": {
+          "path": "crates/xtask/src/main.rs",
+          "bytes": 41759,
+          "sha256": "7aaacf8aaafda17fbc676f6344720197b77be3be583882bf8d4fff2ac6695bd6",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 551,
+            "remove_utf8": "",
+            "insert_utf8": "mod t08a;\nmod t08a_child;\npub(crate) use a13::a06_source_successor::w07_t02_joint::cli_source_custody;\n"
+          },
+          {
+            "at": 18367,
+            "remove_utf8": "",
+            "insert_utf8": "        \"T08A\" => t08a::check(root, records),\n"
+          },
+          {
+            "at": 19837,
+            "remove_utf8": "",
+            "insert_utf8": "                    \"--exclude\",\n                    \"ssx-cli-hyper\",\n                    \"--\",\n                    \"-D\",\n                    \"warnings\",\n                ],\n                records,\n            )?;\n            command(\n                root,\n                \"cargo\",\n                &[\n                    \"clippy\",\n                    \"--locked\",\n                    \"-p\",\n                    \"ssx-cli-hyper\",\n                    \"--features\",\n                    \"full,source-client-framing\",\n                    \"--lib\",\n"
+          },
+          {
+            "at": 20172,
+            "remove_utf8": "                &[\"test\", \"--locked\", \"--workspace\", \"--exclude\", \"xtask\"],\n",
+            "insert_utf8": "                &[\n                    \"test\",\n                    \"--locked\",\n                    \"--workspace\",\n                    \"--exclude\",\n                    \"xtask\",\n                    \"--features\",\n                    \"ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing\",\n                ],\n"
+          },
+          {
+            "at": 20643,
+            "remove_utf8": "",
+            "insert_utf8": "    if let Some(code) = t08a_child::fixture_entry() {\n        std::process::exit(code);\n    }\n"
+          },
+          {
+            "at": 24414,
+            "remove_utf8": "    let scope = if id == \"A12\" {\n",
+            "insert_utf8": "    let scope = if id == \"T08A\" {\n        \"standalone native external-HTTP CLI; finite source-bound loopback corpus, X509/proxy/error contract and source installation; native backend integration T08/T02 and production/O04 delivery remain pending\"\n    } else if id == \"A12\" {\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "current": {
+        "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "bytes": 87891,
+        "sha256": "8e2347c9e17f87e1d1145c9ea247e0a30d6d5a502b15a545a7339e012686a3ac",
+        "mode": "0644"
+      },
+      "cli": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "bytes": 86142,
+          "sha256": "2d89b9a3742d136f80788fcf75d113db9aa96a73990a4270e37eded04d64d635",
+          "mode": "0644",
+          "commit": "c9a943f00eb94c739ec6f4d5433ce2c6e1f62b42",
+          "git_blob": "2d0a5d789912cb8a8f40959820d2e7222f23cba3"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "bytes": 87891,
+          "sha256": "8e2347c9e17f87e1d1145c9ea247e0a30d6d5a502b15a545a7339e012686a3ac",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 172,
+            "remove_utf8": "",
+            "insert_utf8": "use w07_t02_joint::w08_source_successor;\n"
+          },
+          {
+            "at": 22250,
+            "remove_utf8": "",
+            "insert_utf8": "    // W08 admits only these exact current-generation operands. Older joint and\n    // Metrics routes below keep the physical buffer until their own first proof.\n    let raw = if (row[\"path\"] == \"crates/ssx-application/src/lib.rs\"\n        && row[\"sha256\"] == \"e328c4b5a4217acbe79a186d1c85d772fbe78ff901bad81ad07aaa458e0ffa8b\")\n        || (row[\"path\"] == \"crates/ssx-infra/src/lib.rs\"\n            && row[\"sha256\"] == \"8a58685c0e79b79a12f38d44259f91adf5c5975ee664efed7d5030172d915c4a\")\n        || (row[\"path\"] == \"crates/xtask/src/main.rs\" && row[\"sha256\"] == w07_t02_joint::MAIN_SHA)\n        || (row[\"path\"] == \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\"\n            && row[\"sha256\"] == \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\")\n        || (row[\"path\"] == \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\"\n            && row[\"sha256\"] == \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\")\n    {\n        w08_source_successor::parent(root, text(row, \"path\")?, &raw)?\n    } else {\n        raw\n    };\n"
+          },
+          {
+            "at": 22338,
+            "remove_utf8": "",
+            "insert_utf8": "\n"
+          },
+          {
+            "at": 23864,
+            "remove_utf8": "        metrics_predecessor(text(row, \"path\")?, text(row, \"sha256\")?, &raw)?\n",
+            "insert_utf8": "        metrics_predecessor(root, text(row, \"path\")?, text(row, \"sha256\")?, &raw)?\n"
+          },
+          {
+            "at": 82291,
+            "remove_utf8": "",
+            "insert_utf8": "    root: &Path,\n"
+          },
+          {
+            "at": 82586,
+            "remove_utf8": "",
+            "insert_utf8": "    let operand = w08_source_successor::parent(root, path, actual)?;\n    metrics_frame_predecessor(path, expected, &operand)\n}\n/// Original exact Metrics-frame proof, independently exercised after the W08\n/// physical proof. Its prior source remains reconstructible byte for byte.\npub(crate) fn metrics_frame_predecessor(\n    path: &str,\n    expected: &str,\n    actual: &[u8],\n) -> Result<Vec<u8>, String> {\n    need(\n        path == \"crates/ssx-application/src/lib.rs\"\n            && expected == \"7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4\",\n        \"W07 Metrics caller tuple differs\",\n    )?;\n\n"
+          }
+        ]
+      },
+      "main": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "bytes": 87665,
+          "sha256": "8a9bb7b1894e84b8de2673c25f5091a61eb4cf8d77d1c0b8f191edf866b2748c",
+          "mode": "0644",
+          "commit": "d9d42277657394e9f62061072a95671345a94f38",
+          "git_blob": "6c2e93820553d9ea51173ac7c6e7d67a0d1c2ad1"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "bytes": 87891,
+          "sha256": "8e2347c9e17f87e1d1145c9ea247e0a30d6d5a502b15a545a7339e012686a3ac",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 23446,
+            "remove_utf8": "    let raw = if (row[\"path\"] == \"crates/xtask/src/main.rs\"\n",
+            "insert_utf8": "    let raw = if row[\"path\"] == \"Cargo.toml\"\n        && row[\"sha256\"] == \"d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3\"\n    {\n        w07_t02_joint::cli_source_custody::legacy_prior(root, \"Cargo.toml\", &raw)?\n    } else if (row[\"path\"] == \"crates/xtask/src/main.rs\"\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+      "current": {
+        "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "bytes": 45982,
+        "sha256": "f99da3fcc2fd084b78f3c261d77b1ab6eff7b8aca0582186ada251d8a68c2451",
+        "mode": "0644"
+      },
+      "cli": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "bytes": 44376,
+          "sha256": "f932c24ac2f9d5d3c582fbf5328258cc83819d5fbfce4809a632ea0974dc419b",
+          "mode": "0644",
+          "commit": "c9a943f00eb94c739ec6f4d5433ce2c6e1f62b42",
+          "git_blob": "0fa195f91ead576a96dd44b837cc4652a846afc7"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "bytes": 45982,
+          "sha256": "f99da3fcc2fd084b78f3c261d77b1ab6eff7b8aca0582186ada251d8a68c2451",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 404,
+            "remove_utf8": "",
+            "insert_utf8": "#[allow(dead_code)]\n#[path = \"../../../../crates/xtask/src/w08/source_successor.rs\"]\npub(crate) mod w08_source_successor;\n"
+          },
+          {
+            "at": 565,
+            "remove_utf8": "",
+            "insert_utf8": "pub(crate) use snapshot_fixture_main::w08_main_join as snapshot_helper_amendment;\n"
+          },
+          {
+            "at": 30791,
+            "remove_utf8": "",
+            "insert_utf8": "    parent_at_physical_root(root, root, None, path, supplied, parent)\n}\n// The existing filesystem controls own a disposable physical directory. This\n// private scope is constructed only there; it cannot authorize another caller's\n// source or make a fixture into a Git/capsule authority.\nstruct FilesystemControl {\n    physical_root: std::path::PathBuf,\n    trusted_source_root: std::path::PathBuf,\n}\nimpl Drop for FilesystemControl {\n    fn drop(&mut self) {\n        let _ = fs::remove_dir_all(&self.physical_root);\n    }\n}\n// The caller first authenticates the supplied physical bytes and source/control roots.\n// This finite interpretation retains both accepted W08-main and Page-search frames.\nfn canonical_input(root: &Path, path: &str, actual: &[u8], mode: u32) -> Result<Vec<u8>> {\n    if path == \"crates/xtask/src/main.rs\" {\n        let w08 = w08_source_successor::parent(root, path, actual)?;\n        let snapshot = snapshot_fixture_main::joint(root, actual)?;\n        need(\n            w08 == snapshot,\n            \"W08 and snapshot proofs must agree on the exact common main frame\",\n        )?;\n        Ok(w08)\n    } else if path == \"Cargo.lock\" {\n        cli_source_custody::prior(root, path, actual)\n    } else if path == \"crates/xtask/src/a13.rs\" {\n        cli_source_custody::legacy_prior(root, path, actual)\n    } else if path == PAGE_SEARCH.path {\n        search_frame(actual, mode, false)\n    } else {\n        Ok(actual.to_vec())\n    }\n}\nfn parent_at_physical_root(\n    physical_root: &Path,\n    trusted_source_root: &Path,\n    control: Option<&FilesystemControl>,\n    path: &str,\n    supplied: &[u8],\n    parent: Parent,\n) -> Result<Vec<u8>> {\n"
+          },
+          {
+            "at": 30815,
+            "remove_utf8": "    let (actual, mode) = read(root, r)?;\n",
+            "insert_utf8": "    let (actual, mode) = read(physical_root, r)?;\n    need(\n        mode == 0o644,\n        \"exact physical source mode before interpretation\",\n    )?;\n"
+          },
+          {
+            "at": 30958,
+            "remove_utf8": "",
+            "insert_utf8": "    need(\n        physical_root == trusted_source_root\n            || control.is_some_and(|scope| {\n                physical_root == scope.physical_root\n                    && trusted_source_root == scope.trusted_source_root\n            }),\n        \"distinct source roots require the owned filesystem-control scope\",\n    )?;\n    let actual = canonical_input(trusted_source_root, path, &actual, mode)?;\n"
+          },
+          {
+            "at": 30988,
+            "remove_utf8": "        paired_manifest(root)?;\n",
+            "insert_utf8": "        paired_manifest(physical_root)?;\n"
+          },
+          {
+            "at": 31026,
+            "remove_utf8": "    let joint = if path == \"crates/xtask/src/main.rs\" {\n        snapshot_fixture_main::joint(root, &actual)?\n    } else if path == \"Cargo.lock\" {\n        cli_source_custody::prior(root, path, &actual)?\n    } else if path == \"crates/xtask/src/a13.rs\" {\n        cli_source_custody::legacy_prior(root, path, &actual)?\n    } else if path == PAGE_SEARCH.path {\n        search_frame(&actual, mode, false)?\n    } else {\n        actual.clone()\n    };\n    let w07 = inverse(r, &joint, mode, &r.w07)?;\n    let t02 = inverse(r, &joint, mode, &r.t02)?;\n",
+            "insert_utf8": "    let w07 = inverse(r, &actual, mode, &r.w07)?;\n    let t02 = inverse(r, &actual, mode, &r.t02)?;\n"
+          },
+          {
+            "at": 31654,
+            "remove_utf8": "/// Ordinary controls for the shared owner's test wrapper, without discovered tests.\n",
+            "insert_utf8": "/// Ordinary controls retained in the existing xtask-owned source test.\n"
+          },
+          {
+            "at": 33193,
+            "remove_utf8": "",
+            "insert_utf8": "    #[cfg(test)]\n    snapshot_helper_amendment::controls(root)?;\n"
+          },
+          {
+            "at": 33399,
+            "remove_utf8": "        let (actual, mode) = read(root, r)?;\n        let joint = if r.path == \"crates/xtask/src/main.rs\" {\n            snapshot_fixture_main::joint(root, &actual)?\n        } else if r.path == \"Cargo.lock\" {\n            cli_source_custody::prior(root, r.path, &actual)?\n        } else if r.path == \"crates/xtask/src/a13.rs\" {\n            cli_source_custody::legacy_prior(root, r.path, &actual)?\n        } else if r.path == PAGE_SEARCH.path {\n            search_frame(&actual, mode, false)?\n        } else {\n            actual.clone()\n        };\n",
+            "insert_utf8": "        let (physical, mode) = read(root, r)?;\n        let joint = canonical_input(root, r.path, &physical, mode)?;\n"
+          },
+          {
+            "at": 34017,
+            "remove_utf8": "            let prior = parent(root, r.path, &actual, kind)?;\n",
+            "insert_utf8": "            let prior = parent(root, r.path, &physical, kind)?;\n"
+          },
+          {
+            "at": 34266,
+            "remove_utf8": "                parent_git_blob(root, r.path, &actual, kind)? == p.blob,\n",
+            "insert_utf8": "                parent_git_blob(root, r.path, &physical, kind)? == p.blob,\n"
+          },
+          {
+            "at": 35332,
+            "remove_utf8": "            let mut changed = actual.clone();\n",
+            "insert_utf8": "            let mut changed = physical.clone();\n"
+          },
+          {
+            "at": 35548,
+            "remove_utf8": "",
+            "insert_utf8": "            // Preserve the original joint-frame body controls after a positive\n            // inverse, independently from W08's physical afterimage controls.\n            let actual = joint.clone();\n            need(\n                inverse(r, &actual, mode, p)? == prior,\n                \"positive unchanged joint frame differs\",\n            )?;\n"
+          },
+          {
+            "at": 35623,
+            "remove_utf8": "                    inverse(r, &joint, bad_mode, p).is_err(),\n",
+            "insert_utf8": "                    inverse(r, &actual, bad_mode, p).is_err(),\n"
+          },
+          {
+            "at": 36588,
+            "remove_utf8": "                            inverse_with_edits(r, &joint, mode, p, &edits).is_err(),\n",
+            "insert_utf8": "                            inverse_with_edits(r, &actual, mode, p, &edits).is_err(),\n"
+          },
+          {
+            "at": 36856,
+            "remove_utf8": "                let mut missing = joint.clone();\n",
+            "insert_utf8": "                let mut missing = actual.clone();\n"
+          },
+          {
+            "at": 36959,
+            "remove_utf8": "                let mut duplicate = joint.clone();\n",
+            "insert_utf8": "                let mut duplicate = actual.clone();\n"
+          },
+          {
+            "at": 37279,
+            "remove_utf8": "                        bad != joint && inverse(r, &bad, mode, p).is_err(),\n",
+            "insert_utf8": "                        bad != actual && inverse(r, &bad, mode, p).is_err(),\n"
+          },
+          {
+            "at": 38033,
+            "remove_utf8": "    struct Owned(std::path::PathBuf);\n    impl Drop for Owned {\n        fn drop(&mut self) {\n            let _ = fs::remove_dir_all(&self.0);\n        }\n    }\n",
+            "insert_utf8": ""
+          },
+          {
+            "at": 38503,
+            "remove_utf8": "    let owned = Owned(directory);\n    let manifest_path = owned.0.join(\"crates/ssx-mcp/Cargo.toml\");\n",
+            "insert_utf8": "    let owned = FilesystemControl {\n        physical_root: directory,\n        trusted_source_root: root.to_path_buf(),\n    };\n    let fixture_parent = |path: &str, supplied: &[u8], kind: Parent| {\n        parent_at_physical_root(\n            &owned.physical_root,\n            root,\n            Some(&owned),\n            path,\n            supplied,\n            kind,\n        )\n    };\n    let manifest_path = owned.physical_root.join(\"crates/ssx-mcp/Cargo.toml\");\n"
+          },
+          {
+            "at": 39002,
+            "remove_utf8": "    let capsule_relative = \"docs/rust-rewrite/snapshot-fixture-amendment/capsule.json\";\n    let capsule_path = owned.0.join(capsule_relative);\n    fs::create_dir_all(capsule_path.parent().ok_or(\"capsule parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(capsule_relative), &capsule_path).map_err(|e| e.to_string())?;\n    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n    let cli_capsule = \"docs/rust-rewrite/t08a/shared-source-successor.json\";\n    let cli_path = owned.0.join(cli_capsule);\n    fs::create_dir_all(cli_path.parent().ok_or(\"CLI custody fixture parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(cli_capsule), &cli_path).map_err(|e| e.to_string())?;\n    let legacy = cli_source_custody::LEGACY_CAPSULE_PATH;\n    let legacy_path = owned.0.join(legacy);\n    fs::create_dir_all(legacy_path.parent().ok_or(\"CLI legacy fixture parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(legacy), &legacy_path).map_err(|e| e.to_string())?;\n    fs::set_permissions(&legacy_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n    fs::set_permissions(&cli_path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;\n",
+            "insert_utf8": ""
+          },
+          {
+            "at": 40337,
+            "remove_utf8": "        let path = owned.0.join(r.path);\n",
+            "insert_utf8": "        let path = owned.physical_root.join(r.path);\n"
+          },
+          {
+            "at": 40660,
+            "remove_utf8": "        parent(&owned.0, r.path, &actual, Parent::W07)?;\n",
+            "insert_utf8": "        fixture_parent(r.path, &actual, Parent::W07)?;\n"
+          },
+          {
+            "at": 40767,
+            "remove_utf8": "            let old_joint = snapshot_fixture_main::joint(root, &actual)?;\n",
+            "insert_utf8": "            let mut changed = actual.clone();\n            changed.push(0);\n            fs::write(&path, &changed).map_err(|e| e.to_string())?;\n            need(\n                fixture_parent(r.path, &changed, Parent::W07).is_err(),\n                \"changed fixture main accepted against trusted physical source\",\n            )?;\n            fs::write(&path, &actual).map_err(|e| e.to_string())?;\n            let old_joint = w08_source_successor::parent(root, r.path, &actual)?;\n"
+          },
+          {
+            "at": 40929,
+            "remove_utf8": "                parent(&owned.0, r.path, &old_joint, Parent::W07).is_err(),\n                \"old joint physically substituted for new current\",\n",
+            "insert_utf8": "                fixture_parent(r.path, &old_joint, Parent::W07).is_err(),\n                \"old joint physically substituted for current W08/snapshot source\",\n"
+          },
+          {
+            "at": 41166,
+            "remove_utf8": "",
+            "insert_utf8": "        need(\n            parent_at_physical_root(\n                &owned.physical_root,\n                root,\n                None,\n                r.path,\n                &actual,\n                Parent::W07,\n            )\n            .is_err(),\n            \"unguarded distinct physical/source roots accepted\",\n        )?;\n"
+          },
+          {
+            "at": 41349,
+            "remove_utf8": "                parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+            "insert_utf8": "                fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+          },
+          {
+            "at": 41732,
+            "remove_utf8": "            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+            "insert_utf8": "            fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+          },
+          {
+            "at": 41936,
+            "remove_utf8": "            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+            "insert_utf8": "            fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+          },
+          {
+            "at": 42198,
+            "remove_utf8": "            parent(&owned.0, r.path, &actual, Parent::W07).is_err(),\n",
+            "insert_utf8": "            fixture_parent(r.path, &actual, Parent::W07).is_err(),\n"
+          },
+          {
+            "at": 42457,
+            "remove_utf8": "    let lock = fs::read(owned.0.join(\"Cargo.lock\")).map_err(|e| e.to_string())?;\n",
+            "insert_utf8": "    let lock = fs::read(owned.physical_root.join(\"Cargo.lock\")).map_err(|e| e.to_string())?;\n"
+          },
+          {
+            "at": 42738,
+            "remove_utf8": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+            "insert_utf8": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+          },
+          {
+            "at": 43127,
+            "remove_utf8": "                parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+            "insert_utf8": "                fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+          },
+          {
+            "at": 43547,
+            "remove_utf8": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+            "insert_utf8": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+          },
+          {
+            "at": 43757,
+            "remove_utf8": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+            "insert_utf8": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+          },
+          {
+            "at": 44034,
+            "remove_utf8": "            parent(&owned.0, \"Cargo.lock\", &lock, kind).is_err(),\n",
+            "insert_utf8": "            fixture_parent(\"Cargo.lock\", &lock, kind).is_err(),\n"
+          },
+          {
+            "at": 44303,
+            "remove_utf8": "        parent(&owned.0, \"Cargo.lock\", &lock, kind)?;\n",
+            "insert_utf8": "        fixture_parent(\"Cargo.lock\", &lock, kind)?;\n"
+          }
+        ]
+      },
+      "main": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "bytes": 45493,
+          "sha256": "f5736b78c04437056c5bf12b3637e2fa6b53c9b654b1cb28087fe4de22187a86",
+          "mode": "0644",
+          "commit": "d9d42277657394e9f62061072a95671345a94f38",
+          "git_blob": "0e62520ca57bb067bba1fdbc90589b264ef0f9a9"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "bytes": 45982,
+          "sha256": "f99da3fcc2fd084b78f3c261d77b1ab6eff7b8aca0582186ada251d8a68c2451",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 158,
+            "remove_utf8": "",
+            "insert_utf8": "#[allow(\n    clippy::duplicate_mod,\n    reason = \"Owning joint and legacy W07 proof namespaces intentionally share this self-contained stateless leaf\"\n)]\n#[path = \"../../../../crates/xtask/src/t08a_custody.rs\"]\npub(crate) mod cli_source_custody;\n"
+          },
+          {
+            "at": 31872,
+            "remove_utf8": "",
+            "insert_utf8": "    } else if path == \"Cargo.lock\" {\n        cli_source_custody::prior(root, path, actual)\n    } else if path == \"crates/xtask/src/a13.rs\" {\n        cli_source_custody::legacy_prior(root, path, actual)\n"
+          },
+          {
+            "at": 34639,
+            "remove_utf8": "",
+            "insert_utf8": "    cli_source_custody::controls(root)?;\n"
+          }
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/w07.rs",
+      "current": {
+        "path": "crates/xtask/src/w07.rs",
+        "bytes": 41464,
+        "sha256": "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916",
+        "mode": "0644"
+      },
+      "cli": {
+        "prior": {
+          "path": "crates/xtask/src/w07.rs",
+          "bytes": 36643,
+          "sha256": "5f0ecff135355424f431cba6bd9b6608bf1b099124e61ba54cc3546ffb01b599",
+          "mode": "0644",
+          "commit": "c9a943f00eb94c739ec6f4d5433ce2c6e1f62b42",
+          "git_blob": "5e30cbdc18da103e56e3e60c3e7f8d1345d2c0fa"
+        },
+        "current": {
+          "path": "crates/xtask/src/w07.rs",
+          "bytes": 41464,
+          "sha256": "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 277,
+            "remove_utf8": "",
+            "insert_utf8": "use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;\n"
+          },
+          {
+            "at": 509,
+            "remove_utf8": "#[path = \"../../../docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs\"]\nmod snapshot_helper_amendment;\n",
+            "insert_utf8": ""
+          },
+          {
+            "at": 886,
+            "remove_utf8": "const REGISTRY_SHA: &str = \"a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80\";\n",
+            "insert_utf8": "const REGISTRY_SHA: &str = \"a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d\";\n"
+          },
+          {
+            "at": 2509,
+            "remove_utf8": "",
+            "insert_utf8": "    if path == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE\n        && expected == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA\n    {\n        return w07_t02_joint::cli_source_custody::test_dependency_prior(\n            root, path, expected, &bytes,\n        );\n    }\n"
+          },
+          {
+            "at": 2663,
+            "remove_utf8": "",
+            "insert_utf8": "        if let Some(operand) =\n            crate::w08::source_successor::frozen_operand(root, path, expected, &bytes)?\n        {\n            return Ok(operand);\n        }\n\n"
+          },
+          {
+            "at": 9124,
+            "remove_utf8": "",
+            "insert_utf8": "// The exact two post-Page reader successors in the reviewed W08 normal merge.\nconst W08_PAGE_READERS: [(&str, &str, &str); 2] = [\n    (\n        \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\",\n        \"fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b\",\n        \"8a9bb7b1894e84b8de2673c25f5091a61eb4cf8d77d1c0b8f191edf866b2748c\",\n    ),\n    (\n        \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\",\n        \"2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79\",\n        \"f5736b78c04437056c5bf12b3637e2fa6b53c9b654b1cb28087fe4de22187a86\",\n    ),\n];\n"
+          },
+          {
+            "at": 19279,
+            "remove_utf8": "",
+            "insert_utf8": "    // Keep the five exact Page predecessor guards above, then admit only this\n    // closed W08 two-reader transition. All remaining registry fields stay exact.\n    for (path, page, joined) in W08_PAGE_READERS {\n        if expected[\"sources\"][path] != page {\n            return Err(\"W07 exact Page reader predecessor changed\".into());\n        }\n        expected[\"sources\"][path] = Value::String(joined.into());\n    }\n"
+          },
+          {
+            "at": 19789,
+            "remove_utf8": "",
+            "insert_utf8": "    snapshot_helper_amendment::verify_current_registry(root, &registry)?;\n"
+          },
+          {
+            "at": 20515,
+            "remove_utf8": "    let current = frozen(root, \"crates/xtask/src/main.rs\", w07_t02_joint::MAIN_SHA)?;\n",
+            "insert_utf8": "    let current = crate::w08::source_successor::physical(\n        root,\n        \"crates/xtask/src/main.rs\",\n        w07_t02_joint::MAIN_SHA,\n    )?;\n"
+          },
+          {
+            "at": 27583,
+            "remove_utf8": "",
+            "insert_utf8": "        let path = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE;\n        let expected = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA;\n        let actual = fs::read(root.join(path)).unwrap();\n        let prior = frozen(root, path, expected).unwrap();\n        assert_eq!(sha(&prior), expected);\n        assert!(frozen(root, path, &\"0\".repeat(64)).is_err());\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(\n                root,\n                \"Cargo.lock\",\n                expected,\n                &actual,\n            )\n            .is_err()\n        );\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(root, path, expected, &prior,)\n                .is_err()\n        );\n        let mut changed = actual;\n        changed.push(b' ');\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(\n                root, path, expected, &changed,\n            )\n            .is_err()\n        );\n"
+          },
+          {
+            "at": 28705,
+            "remove_utf8": "",
+            "insert_utf8": "        let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n"
+          },
+          {
+            "at": 28925,
+            "remove_utf8": "        let predecessor = metrics_predecessor(path, expected, actual).unwrap();\n",
+            "insert_utf8": "        let predecessor = metrics_predecessor(&root, path, expected, actual).unwrap();\n"
+          },
+          {
+            "at": 29099,
+            "remove_utf8": "        assert!(metrics_predecessor(path, expected, &predecessor).is_err());\n        assert!(metrics_predecessor(\"unlisted.rs\", expected, actual).is_err());\n        assert!(metrics_predecessor(path, &\"0\".repeat(64), actual).is_err());\n",
+            "insert_utf8": "        assert!(metrics_predecessor(&root, path, expected, &predecessor).is_err());\n        assert!(metrics_predecessor(&root, \"unlisted.rs\", expected, actual).is_err());\n        assert!(metrics_predecessor(&root, path, &\"0\".repeat(64), actual).is_err());\n"
+          },
+          {
+            "at": 30189,
+            "remove_utf8": "            assert!(metrics_predecessor(path, expected, &bad).is_err());\n",
+            "insert_utf8": "            assert!(metrics_predecessor(&root, path, expected, &bad).is_err());\n"
+          },
+          {
+            "at": 30272,
+            "remove_utf8": "",
+            "insert_utf8": "        // Original Metrics-frame controls remain nonvacuous: prove its positive\n        // operand, then mutate that frame rather than only W08's outer buffer.\n        use crate::a13::a06_source_successor::metrics_frame_predecessor;\n        let frame = crate::w08::source_successor::parent(&root, path, actual).unwrap();\n        assert_eq!(\n            metrics_frame_predecessor(path, expected, &frame).unwrap(),\n            predecessor\n        );\n        let mut duplicate = frame.clone();\n        duplicate.splice(at..at, insertion.iter().copied());\n        let mut altered = frame.clone();\n        altered[at] ^= 1;\n        let mut unrelated = frame.clone();\n        unrelated[0] ^= 1;\n        let mut moved = frame.clone();\n        moved.drain(at..at + insertion.len());\n        moved.splice(0..0, insertion.iter().copied());\n        let mut extra = frame.clone();\n        extra.push(b' ');\n        for bad in [duplicate, altered, unrelated, moved, extra] {\n            assert!(metrics_frame_predecessor(path, expected, &bad).is_err());\n        }\n        assert!(metrics_frame_predecessor(\"unlisted.rs\", expected, &frame).is_err());\n        assert!(metrics_frame_predecessor(path, &\"0\".repeat(64), &frame).is_err());\n"
+          },
+          {
+            "at": 30358,
+            "remove_utf8": "",
+            "insert_utf8": "\n"
+          },
+          {
+            "at": 32796,
+            "remove_utf8": "",
+            "insert_utf8": "        snapshot_helper_amendment::verify_current_registry(\n            &root,\n            include_bytes!(\"../../../docs/rust-rewrite/w07/qualification-completion-v1.json\"),\n        )\n        .unwrap();\n"
+          },
+          {
+            "at": 32853,
+            "remove_utf8": "",
+            "insert_utf8": "        for (path, page, joined) in W08_PAGE_READERS {\n            assert_eq!(current[\"sources\"][path], joined);\n            let mut prior = current.clone();\n            prior[\"sources\"][path] = Value::String(page.into());\n            assert!(preserve_registry(&original, &prior).is_err());\n            let mut changed = current.clone();\n            changed[\"sources\"][path] = Value::String(\"0\".repeat(64));\n            assert!(preserve_registry(&original, &changed).is_err());\n            let mut missing = current.clone();\n            missing[\"sources\"].as_object_mut().unwrap().remove(path);\n            assert!(preserve_registry(&original, &missing).is_err());\n        }\n"
+          }
+        ]
+      },
+      "main": {
+        "prior": {
+          "path": "crates/xtask/src/w07.rs",
+          "bytes": 40149,
+          "sha256": "9aa2467100b7607723982b92b8eaa6850147cfcac1176300ba32d0be251eb90b",
+          "mode": "0644",
+          "commit": "d9d42277657394e9f62061072a95671345a94f38",
+          "git_blob": "8266e1c29d2c258d084fa38be9c31fce8ed3ba20"
+        },
+        "current": {
+          "path": "crates/xtask/src/w07.rs",
+          "bytes": 41464,
+          "sha256": "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916",
+          "mode": "0644"
+        },
+        "edits": [
+          {
+            "at": 2471,
+            "remove_utf8": "",
+            "insert_utf8": "    }\n    if path == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE\n        && expected == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA\n    {\n        return w07_t02_joint::cli_source_custody::test_dependency_prior(\n            root, path, expected, &bytes,\n        );\n"
+          },
+          {
+            "at": 28881,
+            "remove_utf8": "",
+            "insert_utf8": "        let path = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE;\n        let expected = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA;\n        let actual = fs::read(root.join(path)).unwrap();\n        let prior = frozen(root, path, expected).unwrap();\n        assert_eq!(sha(&prior), expected);\n        assert!(frozen(root, path, &\"0\".repeat(64)).is_err());\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(\n                root,\n                \"Cargo.lock\",\n                expected,\n                &actual,\n            )\n            .is_err()\n        );\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(root, path, expected, &prior,)\n                .is_err()\n        );\n        let mut changed = actual;\n        changed.push(b' ');\n        assert!(\n            w07_t02_joint::cli_source_custody::test_dependency_prior(\n                root, path, expected, &changed,\n            )\n            .is_err()\n        );\n"
+          }
+        ]
+      }
+    }
+  ]
+}

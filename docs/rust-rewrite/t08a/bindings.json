@@ -24,8 +24,8 @@
     },
     {
       "path": ".github/workflows/rust.yml",
-      "bytes": 54269,
-      "sha256": "3fdf92f3087e2831b50887e771af363a79b66222df3a467efaa6fe0d9796718d",
+      "bytes": 54469,
+      "sha256": "2818f90e23e181197e0d8da30b716861e2c770e1913e2b7875525e440aafbc2b",
       "mode": 420,
       "unix_modes": [
         420
@@ -213,8 +213,8 @@
     },
     {
       "path": "crates/xtask/src/main.rs",
-      "bytes": 41494,
-      "sha256": "06d28204c949c2c66d500d65d9a4d79fb364c61ce67ef285ab05a54c157bc4e8",
+      "bytes": 41759,
+      "sha256": "7aaacf8aaafda17fbc676f6344720197b77be3be583882bf8d4fff2ac6695bd6",
       "mode": 420,
       "unix_modes": [
         420
@@ -240,8 +240,17 @@
     },
     {
       "path": "crates/xtask/src/t08a_custody.rs",
-      "bytes": 11002,
-      "sha256": "3a0118300bde66dafba79f223bf337825a242fbfa3bbd2968c9f080e55828ec5",
+      "bytes": 13077,
+      "sha256": "308935b38ce1b9a81385fb7b4c156d79da7415200a9a26a1cff14b55ac4b9d5b",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "crates/xtask/src/t08a_main_join.rs",
+      "bytes": 12409,
+      "sha256": "3c7658a1376b25863b9053438d7746c9d7de03680aef2e7fac3f9b1a326c505a",
       "mode": 420,
       "unix_modes": [
         420
@@ -267,8 +276,8 @@
     },
     {
       "path": "crates/xtask/src/w07.rs",
-      "bytes": 36643,
-      "sha256": "5f0ecff135355424f431cba6bd9b6608bf1b099124e61ba54cc3546ffb01b599",
+      "bytes": 41464,
+      "sha256": "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916",
       "mode": 420,
       "unix_modes": [
         420
@@ -303,8 +312,8 @@
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
-      "bytes": 86142,
-      "sha256": "2d89b9a3742d136f80788fcf75d113db9aa96a73990a4270e37eded04d64d635",
+      "bytes": 87891,
+      "sha256": "8e2347c9e17f87e1d1145c9ea247e0a30d6d5a502b15a545a7339e012686a3ac",
       "mode": 420,
       "unix_modes": [
         420
@@ -312,8 +321,8 @@
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
-      "bytes": 44376,
-      "sha256": "f932c24ac2f9d5d3c582fbf5328258cc83819d5fbfce4809a632ea0974dc419b",
+      "bytes": 45982,
+      "sha256": "f99da3fcc2fd084b78f3c261d77b1ab6eff7b8aca0582186ada251d8a68c2451",
       "mode": 420,
       "unix_modes": [
         420
@@ -330,8 +339,8 @@
     },
     {
       "path": "docs/rust-rewrite/ci/gates.json",
-      "bytes": 152834,
-      "sha256": "5dc375eef8a206bc731ce983ffffb44ba802096f323af41acb7d500cef799e62",
+      "bytes": 153073,
+      "sha256": "fd18bdc71b90729144be9d03dddb4b7c2be7a6554a74635f56ce2024b06f5f9a",
       "mode": 420,
       "unix_modes": [
         420
@@ -348,8 +357,8 @@
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/main-custody.rs",
-      "bytes": 9773,
-      "sha256": "52e4de538c4d68a8985667f4f6a786af7798fe3d32d87af859c0451b0de4264e",
+      "bytes": 10217,
+      "sha256": "60939e29dc622bb23b21f5a9579449c162f1ad59ed8f620f0b887cd5d7aeaec5",
       "mode": 420,
       "unix_modes": [
         420
@@ -366,8 +375,8 @@
     },
     {
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs",
-      "bytes": 25962,
-      "sha256": "0aedd4d36d99afd80a75c96a234dc36f5f32c6deedec492d12ed44fdc63c7a5c",
+      "bytes": 57550,
+      "sha256": "0014e02e00466348be4f7d2353f6acfd92f328991ffc0c23917db9ed1235389e",
       "mode": 420,
       "unix_modes": [
         420
@@ -386,6 +395,15 @@
       "path": "docs/rust-rewrite/t08a/README.md",
       "bytes": 14689,
       "sha256": "ee7a533bdbb83eed919916899ec23feebd0e3e2bd28aa63339e26cd21787e8b6",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t08a/accepted-w08-main-join-v1.json",
+      "bytes": 38101,
+      "sha256": "e7206a5a5b3b9f882519c861e85dbcb71771ed48a156c68b96d06edc0d1e4d21",
       "mode": 420,
       "unix_modes": [
         420
@@ -707,6 +725,15 @@
       ]
     },
     {
+      "path": "docs/rust-rewrite/t08a/legacy-input-successor-v2.json",
+      "bytes": 9502,
+      "sha256": "7ddd32d1d23edf3a22e0b8dcb23a329d5b1ff5d78e0d6044ea834572913593cb",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "docs/rust-rewrite/t08a/legacy-input-successor.json",
       "bytes": 5576,
       "sha256": "72da3c4e57ce68923f3dd75dbc85316244ccfd6c4245eae29c69dbf5f8b9c796",
@@ -863,6 +890,15 @@
       "path": "docs/rust-rewrite/t08a/source-http-framing-02.json",
       "bytes": 4072,
       "sha256": "68319c83693f59822781af5924b5ce56288f3aaf5669444d1833175f1a4c0f1c",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t08a/source-parent-frames/test_dependency_successor.rs",
+      "bytes": 9829,
+      "sha256": "f2103c06807e1ba1490c1d972ebe3abaebdc09a3243845f4478fc40260608365",
       "mode": 420,
       "unix_modes": [
         420
@@ -1215,6 +1251,15 @@
       "path": "docs/rust-rewrite/t08a/wire/trailers-1024-100.bin.gz",
       "bytes": 487,
       "sha256": "47befa66de022cdcad4490a6b166c278f22dd7295b11133b4fdf1ce112b82f55",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
+      "bytes": 12158,
+      "sha256": "5dd1fc5bd429e413a9dac90402ec322d5d1cb4894ea3b8d63f958074b76aaf15",
       "mode": 420,
       "unix_modes": [
         420

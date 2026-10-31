@@ -974,6 +974,134 @@ mod tests {
         );
     }
     #[test]
+    #[cfg(unix)]
+    fn w08_current_workflow_producer_and_actual_aggregate_list_fail_closed() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let workflow = yaml(&root.join(".github/workflows/rust.yml")).unwrap();
+        let ledger = load_json(&root.join("docs/rust-rewrite/ci/gates.json")).unwrap();
+        let runtime = &workflow["jobs"]["foundation-runtime"];
+        let source = gate_source(&workflow, runtime).unwrap();
+        validate_gate_source(&source, &ledger["gates"]["rust.yml:foundation-runtime"]).unwrap();
+        let steps = runtime["steps"].as_array().unwrap();
+        let command = "cargo xtask check W08 --output target/rust-evidence/W08.json";
+        assert_eq!(
+            steps.iter().filter(|step| step["run"] == command).count(),
+            1
+        );
+        let mut missing = source.clone();
+        missing["job"]["steps"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|step| step["run"] != command);
+        assert_eq!(
+            validate_gate_source(&missing, &ledger["gates"]["rust.yml:foundation-runtime"])
+                .unwrap_err(),
+            "executable workflow/job/step controls differ from successor ledger"
+        );
+        let foundation = &workflow["jobs"]["foundation"];
+        validate_gate_source(
+            &gate_source(&workflow, foundation).unwrap(),
+            &ledger["gates"]["rust.yml:foundation"],
+        )
+        .unwrap();
+        let steps = foundation["steps"].as_array().unwrap();
+        assert_eq!(
+            steps
+                .iter()
+                .filter(
+                    |step| step["with"]["path"].as_str().is_some_and(|paths| paths
+                        .lines()
+                        .any(|line| line == "target/rust-evidence/W08.json"))
+                )
+                .count(),
+            1
+        );
+        let loops = steps
+            .iter()
+            .filter_map(|step| step["run"].as_str())
+            .flat_map(str::lines)
+            .filter(|line| line.trim_start().starts_with("for plan "))
+            .collect::<Vec<_>>();
+        assert_eq!(loops.len(), 1);
+        let actual = loops[0].trim();
+        let names = actual
+            .strip_prefix("for plan ")
+            .unwrap()
+            .strip_suffix("; do test -s \"target/rust-evidence/$plan.json\"; done")
+            .unwrap()
+            .split_whitespace()
+            .collect::<Vec<_>>();
+        assert!(names.contains(&"W08"));
+        assert!(
+            names
+                .iter()
+                .all(|name| !name.is_empty()
+                    && name.bytes().all(|byte| byte.is_ascii_alphanumeric()))
+        );
+        assert_eq!(
+            names.iter().copied().collect::<BTreeSet<_>>().len(),
+            names.len()
+        );
+        struct Owned(std::path::PathBuf);
+        impl Drop for Owned {
+            fn drop(&mut self) {
+                let _ = fs::remove_dir_all(&self.0);
+            }
+        }
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path =
+            std::env::temp_dir().join(format!("ssx-w08-aggregate-{}-{nonce}", std::process::id()));
+        fs::create_dir(&path).unwrap();
+        let owned = Owned(path);
+        let evidence = owned.0.join("target/rust-evidence");
+        fs::create_dir_all(&evidence).unwrap();
+        // Every name comes from the actual current job's exact loop, not a second list.
+        // These nonempty owned fixture files prove the guard, not W08 runtime behavior.
+        for name in &names {
+            fs::write(
+                evidence.join(format!("{name}.json")),
+                b"owned guard fixture\n",
+            )
+            .unwrap();
+        }
+        // The existing bounded owner deliberately discards stderr. A finite wrapper
+        // returns the exact guard's exit code on stdout without changing that guard.
+        let wrapper = r#"set +e; /bin/bash -euo pipefail -c "$1"; code=$?; printf '%s' "$code""#;
+        let guard = || {
+            git_bounded(
+                Path::new("/bin/bash"),
+                &owned.0,
+                &[
+                    "-euo",
+                    "pipefail",
+                    "-c",
+                    wrapper,
+                    "w08-aggregate-control",
+                    actual,
+                ],
+                5,
+            )
+            .unwrap()
+        };
+        assert_eq!(
+            guard(),
+            "0",
+            "complete actual aggregate list must pass first"
+        );
+        fs::remove_file(evidence.join("W08.json")).unwrap();
+        assert_eq!(
+            guard(),
+            "1",
+            "sole missing W08.json must fail the actual aggregate guard"
+        );
+        for name in names.iter().filter(|name| **name != "W08") {
+            assert!(evidence.join(format!("{name}.json")).is_file());
+        }
+    }
+    #[test]
     fn gate_ledger_rejects_failure_weakening_and_all_execution_control_drift() {
         let original = json!({"on":{"pull_request":{}},"permissions":{"contents":"read"},"concurrency":{"group":"gate"},"jobs":{"test":{"runs-on":"ubuntu-24.04","needs":["build"],"strategy":{"fail-fast":true},"timeout-minutes":10,"environment":"test","steps":[{"run":"cargo test --locked","timeout-minutes":5}]}}});
         let source = gate_source(&original, &original["jobs"]["test"]).unwrap();

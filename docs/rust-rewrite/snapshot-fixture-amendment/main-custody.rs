@@ -3,6 +3,8 @@
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
+#[path = "w07-helpers.rs"]
+pub(crate) mod w08_main_join;
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
 include!("capsule-sha.rs");
 const SOURCE: &str = "crates/xtask/src/main.rs";
@@ -171,11 +173,12 @@ pub(super) fn joint(root: &Path, supplied: &[u8]) -> Result<Vec<u8>, String> {
         supplied == current,
         "snapshot fixture supplied main is not physical current",
     )?;
-    let admitted = super::cli_source_custody::prior(root, SOURCE, &current)?;
-    let prior = inverse(&doc, &doc["main"]["prior"], &admitted, "0644")?;
+    // The outer CLI/main join authenticates physical current before W08/Page interpretation.
+    let snapshot_current = w08_main_join::snapshot_main(root, &current)?;
+    let prior = inverse(&doc, &doc["main"]["prior"], &snapshot_current, "0644")?;
     for (identity, bytes) in [
         (&doc["main"]["prior"], prior.as_slice()),
-        (&doc["main"]["current"], admitted.as_slice()),
+        (&doc["main"]["current"], snapshot_current.as_slice()),
     ] {
         need(
             identity["git_blob"] == git_blob(root, bytes)?,
@@ -230,18 +233,23 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
     assert!(joint(root, &historical).is_err());
     super::parent(root, SOURCE, &current, super::Parent::T02)?;
     super::parent(root, SOURCE, &current, super::Parent::W07)?;
+    // The outer CLI/main join authenticates physical current before W08/Page interpretation.
+    let snapshot_current = w08_main_join::snapshot_main(root, &current)?;
+    need(
+        inverse(&doc, expected, &snapshot_current, "0644")? == historical,
+        "original snapshot pure positive before mutants",
+    )?;
     assert!(inverse(&doc, expected, &historical, "0644").is_err());
-    let admitted = super::cli_source_custody::prior(root, SOURCE, &current)?;
     for mode in ["0600", "0755", "4644"] {
-        assert!(inverse(&doc, expected, &admitted, mode).is_err());
+        assert!(inverse(&doc, expected, &snapshot_current, mode).is_err());
     }
     let mut bad = expected.clone();
     bad["sha256"] = serde_json::json!("wrong");
-    assert!(inverse(&doc, &bad, &admitted, "0644").is_err());
+    assert!(inverse(&doc, &bad, &snapshot_current, "0644").is_err());
     bad = expected.clone();
     bad["bytes"] = serde_json::json!(0);
-    assert!(inverse(&doc, &bad, &admitted, "0644").is_err());
-    let mut changed = admitted.clone();
+    assert!(inverse(&doc, &bad, &snapshot_current, "0644").is_err());
+    let mut changed = snapshot_current.clone();
     changed.push(b'\n');
     let mut rehashed = doc.clone();
     rehashed["main"]["current"]["sha256"] = serde_json::json!(digest(&changed));
@@ -261,7 +269,7 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
                 edits[0]["at"] = serde_json::json!(0);
             }
         }
-        assert!(inverse(&wrong, expected, &admitted, "0644").is_err());
+        assert!(inverse(&wrong, expected, &snapshot_current, "0644").is_err());
     }
     Ok(())
 }

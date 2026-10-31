@@ -1,0 +1,172 @@
+{
+  "schema": "T08A_FIVE_LEGACY_INPUTS_V2",
+  "scope": "exact CLI outer workspace/shared-reader/joint/A13 successors to accepted Page main e763, before unchanged Page join and older snapshot/W07/T02 proofs; exact W07 test-dependency reader current-to-original projection, original reader archive retained",
+  "rows": [
+    {
+      "path": "Cargo.toml",
+      "prior": {
+        "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3",
+        "bytes": 1984,
+        "mode": "0644",
+        "commit": "e763c77397cad717d47de690a0dcbba4d0420aa3",
+        "git_blob": "6dc332bf47713645e032e1e44d8b92ed74cdd16f"
+      },
+      "current": {
+        "sha256": "991efb05911f2e4c497b57add7772dfba1b9315a165bf02d565ec13dd258154e",
+        "bytes": 2008,
+        "mode": "0644",
+        "git_blob": "9026cd7f2327b2c8b7c06bc9cca84ef1f30cac49"
+      },
+      "edits": [
+        {
+          "at": 12,
+          "remove_utf8": "members = [\"crates/*\"]\n",
+          "insert_utf8": "members = [\"crates/*\", \"vendor/ssx-cli-hyper\"]\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "prior": {
+        "sha256": "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+        "bytes": 85916,
+        "mode": "0644",
+        "commit": "e763c77397cad717d47de690a0dcbba4d0420aa3",
+        "git_blob": "9314a7ea668fa98c97ce95c55b7e2e2e5420cb19"
+      },
+      "current": {
+        "sha256": "2d89b9a3742d136f80788fcf75d113db9aa96a73990a4270e37eded04d64d635",
+        "bytes": 86142,
+        "mode": "0644",
+        "git_blob": "2d0a5d789912cb8a8f40959820d2e7222f23cba3"
+      },
+      "edits": [
+        {
+          "at": 22338,
+          "remove_utf8": "    let raw = if (row[\"path\"] == \"crates/xtask/src/main.rs\"\n",
+          "insert_utf8": "    let raw = if row[\"path\"] == \"Cargo.toml\"\n        && row[\"sha256\"] == \"d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3\"\n    {\n        w07_t02_joint::cli_source_custody::legacy_prior(root, \"Cargo.toml\", &raw)?\n    } else if (row[\"path\"] == \"crates/xtask/src/main.rs\"\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+      "prior": {
+        "sha256": "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+        "bytes": 42830,
+        "mode": "0644",
+        "commit": "e763c77397cad717d47de690a0dcbba4d0420aa3",
+        "git_blob": "7260ac4f2fc3ee695f8285d1ff8ed2825d176b0e"
+      },
+      "current": {
+        "sha256": "f932c24ac2f9d5d3c582fbf5328258cc83819d5fbfce4809a632ea0974dc419b",
+        "bytes": 44376,
+        "mode": "0644",
+        "git_blob": "0fa195f91ead576a96dd44b837cc4652a846afc7"
+      },
+      "edits": [
+        {
+          "at": 158,
+          "remove_utf8": "",
+          "insert_utf8": "#[allow(\n    clippy::duplicate_mod,\n    reason = \"Owning joint and legacy W07 proof namespaces intentionally share this self-contained stateless leaf\"\n)]\n#[path = \"../../../../crates/xtask/src/t08a_custody.rs\"]\npub(crate) mod cli_source_custody;\n"
+        },
+        {
+          "at": 30889,
+          "remove_utf8": "",
+          "insert_utf8": "    } else if path == \"Cargo.lock\" {\n        cli_source_custody::prior(root, path, &actual)?\n    } else if path == \"crates/xtask/src/a13.rs\" {\n        cli_source_custody::legacy_prior(root, path, &actual)?\n"
+        },
+        {
+          "at": 32700,
+          "remove_utf8": "",
+          "insert_utf8": "    cli_source_custody::controls(root)?;\n"
+        },
+        {
+          "at": 33070,
+          "remove_utf8": "",
+          "insert_utf8": "        } else if r.path == \"Cargo.lock\" {\n            cli_source_custody::prior(root, r.path, &actual)?\n        } else if r.path == \"crates/xtask/src/a13.rs\" {\n            cli_source_custody::legacy_prior(root, r.path, &actual)?\n"
+        },
+        {
+          "at": 38729,
+          "remove_utf8": "",
+          "insert_utf8": "    let cli_capsule = \"docs/rust-rewrite/t08a/shared-source-successor.json\";\n    let cli_path = owned.0.join(cli_capsule);\n    fs::create_dir_all(cli_path.parent().ok_or(\"CLI custody fixture parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(cli_capsule), &cli_path).map_err(|e| e.to_string())?;\n    let legacy = cli_source_custody::LEGACY_CAPSULE_PATH;\n    let legacy_path = owned.0.join(legacy);\n    fs::create_dir_all(legacy_path.parent().ok_or(\"CLI legacy fixture parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(legacy), &legacy_path).map_err(|e| e.to_string())?;\n    fs::set_permissions(&legacy_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n    fs::set_permissions(&cli_path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/a13.rs",
+      "prior": {
+        "sha256": "681d6f0d1f1ec6af77bb88aa1774aa8aa8669f390dd801bf7391308db7494ff0",
+        "bytes": 57322,
+        "mode": "0644",
+        "commit": "e763c77397cad717d47de690a0dcbba4d0420aa3",
+        "git_blob": "3b6ed827cf06a1b68fd1a040bf34b42df4d6c893"
+      },
+      "current": {
+        "sha256": "9f0ab79ff42d6548d1c582d2532db3af1df713b0678da5c9fdb899251b4b0787",
+        "bytes": 57418,
+        "mode": "0644",
+        "git_blob": "42eabbd95b496e18852fdca9ea90710528e716f7"
+      },
+      "edits": [
+        {
+          "at": 37578,
+          "remove_utf8": "",
+          "insert_utf8": "            \"--features\",\n            \"ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing\",\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
+      "prior": {
+        "sha256": "f2103c06807e1ba1490c1d972ebe3abaebdc09a3243845f4478fc40260608365",
+        "bytes": 9829,
+        "mode": "0644",
+        "commit": "e763c77397cad717d47de690a0dcbba4d0420aa3",
+        "git_blob": "bf6ae1cdf17490a9de4fae78eda3abbfb8bd5dda",
+        "archive": "docs/rust-rewrite/t08a/source-parent-frames/test_dependency_successor.rs"
+      },
+      "current": {
+        "sha256": "5dd1fc5bd429e413a9dac90402ec322d5d1cb4894ea3b8d63f958074b76aaf15",
+        "bytes": 12158,
+        "mode": "0644",
+        "git_blob": "2fe4c3acf212bcffb6546219e9d102f88c4a4e3a"
+      },
+      "edits": [
+        {
+          "at": 4089,
+          "remove_utf8": "",
+          "insert_utf8": "// Physical current is authenticated before comparing its accepted joint frame.\n    // Keep the raw physical lock for parent(), which independently checks supplied==actual.\n    let joint = super::w07_t02_joint::cli_source_custody::prior(root, \"Cargo.lock\", &lock)?;\n    "
+        },
+        {
+          "at": 4108,
+          "remove_utf8": "l",
+          "insert_utf8": "j"
+        },
+        {
+          "at": 4110,
+          "remove_utf8": "ck",
+          "insert_utf8": "int"
+        },
+        {
+          "at": 6860,
+          "remove_utf8": "",
+          "insert_utf8": "root, "
+        },
+        {
+          "at": 6956,
+          "remove_utf8": "",
+          "insert_utf8": "_: &Path, "
+        },
+        {
+          "at": 7116,
+          "remove_utf8": "",
+          "insert_utf8": "\n    source_root: &Path,"
+        },
+        {
+          "at": 8245,
+          "remove_utf8": "",
+          "insert_utf8": "\n    // This owned current-profile fixture needs the same authenticated outer capsule\n    // as the real caller; historical lock/manifest pairs below remain unchanged.\n    let shared = \"docs/rust-rewrite/t08a/shared-source-successor.json\";\n    let capsule_path = owned.0.join(shared);\n    fs::create_dir_all(\n        capsule_path\n            .parent()\n            .ok_or(\"CLI lock fixture capsule parent\")?,\n    )\n    .map_err(|e| e.to_string())?;\n    let capsule = fs::read(source_root.join(shared)).map_err(|e| e.to_string())?;\n    fs::write(&capsule_path, &capsule).map_err(|e| e.to_string())?;\n    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n    verify_current(&owned.0)?;\n    let mut changed_capsule = capsule.clone();\n    changed_capsule.push(b' ');\n    fs::write(&capsule_path, changed_capsule).map_err(|e| e.to_string())?;\n    need(\n        verify_current(&owned.0).is_err(),\n        \"tampered CLI lock capsule accepted\",\n    )?;\n    fs::remove_file(&capsule_path).map_err(|e| e.to_string())?;\n    need(\n        verify_current(&owned.0).is_err(),\n        \"missing CLI lock capsule accepted\",\n    )?;\n    fs::write(&capsule_path, &capsule).map_err(|e| e.to_string())?;\n    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n    let joint = super::w07_t02_joint::cli_source_custody::prior(&owned.0, \"Cargo.lock\", lock)?;\n    fs::write(&target, &joint).map_err(|e| e.to_string())?;\n    need(\n        verify_current(&owned.0).is_err(),\n        \"old joint physically substituted for CLI lock\",\n    )?;\n    fs::write(&target, lock).map_err(|e| e.to_string())?;\n    let mut changed_manifest = manifest.to_vec();\n    changed_manifest[0] ^= 1;\n    fs::write(&manifest_path, changed_manifest).map_err(|e| e.to_string())?;\n    need(\n        verify_current(&owned.0).is_err(),\n        \"changed paired MCP manifest accepted\",\n    )?;\n    fs::write(&manifest_path, manifest).map_err(|e| e.to_string())?;"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 //! Two-path CLI successor. Physical current bytes precede historical interpretation.
+#[path = "t08a_main_join.rs"]
+pub(crate) mod accepted_main_join;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
@@ -146,6 +148,13 @@ fn inverse(row: &Value, current: &[u8], mode: &str, count: usize) -> Result<Vec<
     need(forward == current, "full forward reconstruction")?;
     Ok(prior)
 }
+fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if accepted_main_join::owns(path) {
+        accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
+    } else {
+        Ok(physical.to_vec())
+    }
+}
 /// Returns one exact pre-CLI frame only after authenticating physical current.
 /// Historical bytes supplied as current are rejected, even if the caller owns them.
 pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
@@ -158,10 +167,11 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
         current == supplied,
         "supplied bytes are not physical current",
     )?;
+    let logical = cli_logical_input(root, path, &current)?;
     let doc = capsule(root)?;
     inverse(
         &doc["rows"][index],
-        &current,
+        &logical,
         source_mode(root, path)?,
         ROWS[index].1,
     )
@@ -178,6 +188,11 @@ fn controls_for(
         let row = &doc["rows"][index];
         let actual = regular(root, path)?;
         let old = normalize(root, path, &actual)?;
+        let logical = cli_logical_input(root, path, &actual)?;
+        need(
+            inverse(row, &logical, "0644", *count)? == old,
+            "original pure positive after physical outer admission",
+        )?;
         let commit = text(&row["prior"], "commit")?;
         let git = Command::new("git")
             .args(["show", &format!("{commit}:{path}")])
@@ -212,7 +227,7 @@ fn controls_for(
         )?;
         for mode in ["0600", "0755", "4644"] {
             need(
-                inverse(row, &actual, mode, *count).is_err(),
+                inverse(row, &logical, mode, *count).is_err(),
                 "mode substitution",
             )?;
         }
@@ -231,7 +246,7 @@ fn controls_for(
                 }
             }
             need(
-                inverse(&wrong, &actual, "0644", *count).is_err(),
+                inverse(&wrong, &logical, "0644", *count).is_err(),
                 "missing/duplicate/overflow span",
             )?;
         }
@@ -240,9 +255,10 @@ fn controls_for(
 }
 
 // Separate closed legacy reader admission; the original main/lock ROWS remain2.
-pub(crate) const LEGACY_CAPSULE_PATH: &str = "docs/rust-rewrite/t08a/legacy-input-successor.json";
-const LEGACY_CAPSULE_SHA: &str = "72da3c4e57ce68923f3dd75dbc85316244ccfd6c4245eae29c69dbf5f8b9c796";
-const LEGACY_ROWS: [(&str, usize); 4] = [
+pub(crate) const LEGACY_CAPSULE_PATH: &str =
+    "docs/rust-rewrite/t08a/legacy-input-successor-v2.json";
+const LEGACY_CAPSULE_SHA: &str = "7ddd32d1d23edf3a22e0b8dcb23a329d5b1ff5d78e0d6044ea834572913593cb";
+const LEGACY_ROWS: [(&str, usize); 5] = [
     ("Cargo.toml", 1),
     (
         "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
@@ -253,6 +269,10 @@ const LEGACY_ROWS: [(&str, usize); 4] = [
         5,
     ),
     ("crates/xtask/src/a13.rs", 1),
+    (
+        "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
+        7,
+    ),
 ];
 fn legacy_capsule(root: &Path) -> Result<Value> {
     let raw = regular(root, LEGACY_CAPSULE_PATH)?;
@@ -262,8 +282,8 @@ fn legacy_capsule(root: &Path) -> Result<Value> {
     )?;
     let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     need(
-        doc["schema"] == "T08A_FOUR_LEGACY_INPUTS_V1"
-            && doc["rows"].as_array().is_some_and(|rows| rows.len() == 4),
+        doc["schema"] == "T08A_FIVE_LEGACY_INPUTS_V2"
+            && doc["rows"].as_array().is_some_and(|rows| rows.len() == 5),
         "closed legacy four-path schema",
     )?;
     for (index, (path, count)) in LEGACY_ROWS.iter().enumerate() {
@@ -290,15 +310,51 @@ pub(crate) fn legacy_prior(root: &Path, path: &str, supplied: &[u8]) -> Result<V
         physical == supplied,
         "legacy supplied is not physical current",
     )?;
+    let logical = cli_logical_input(root, path, &physical)?;
     let doc = legacy_capsule(root)?;
     inverse(
         &doc["rows"][index],
-        &physical,
+        &logical,
         source_mode(root, path)?,
         LEGACY_ROWS[index].1,
     )
 }
+/// One exact historical W07 caller; common custody authenticates current first.
+pub(crate) const TEST_DEPENDENCY_SOURCE: &str =
+    "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs";
+pub(crate) const TEST_DEPENDENCY_PRIOR_SHA: &str =
+    "f2103c06807e1ba1490c1d972ebe3abaebdc09a3243845f4478fc40260608365";
+const TEST_DEPENDENCY_ARCHIVE: &str =
+    "docs/rust-rewrite/t08a/source-parent-frames/test_dependency_successor.rs";
+pub(crate) fn test_dependency_prior(
+    root: &Path,
+    path: &str,
+    expected: &str,
+    supplied: &[u8],
+) -> Result<Vec<u8>> {
+    need(
+        path == TEST_DEPENDENCY_SOURCE && expected == TEST_DEPENDENCY_PRIOR_SHA,
+        "closed W07 dependency caller path/hash",
+    )?;
+    let prior = legacy_prior(root, path, supplied)?;
+    let archive = regular(root, TEST_DEPENDENCY_ARCHIVE)?;
+    source_mode(root, TEST_DEPENDENCY_ARCHIVE)?;
+    need(
+        digest(&archive) == TEST_DEPENDENCY_PRIOR_SHA && archive == prior,
+        "exact immutable W07 dependency archive",
+    )?;
+    Ok(prior)
+}
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    accepted_main_join::controls(root)?;
     controls_for(root, &ROWS, &capsule(root)?, prior)?;
-    controls_for(root, &LEGACY_ROWS, &legacy_capsule(root)?, legacy_prior)
+    controls_for(root, &LEGACY_ROWS, &legacy_capsule(root)?, legacy_prior)?;
+    let actual = regular(root, TEST_DEPENDENCY_SOURCE)?;
+    test_dependency_prior(
+        root,
+        TEST_DEPENDENCY_SOURCE,
+        TEST_DEPENDENCY_PRIOR_SHA,
+        &actual,
+    )?;
+    Ok(())
 }
