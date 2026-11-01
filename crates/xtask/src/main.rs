@@ -339,13 +339,16 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
     let mut provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();
     if retired {
         provided.remove(o02_health_retirement::PATH);
+        provided.remove(o02_health_retirement::VERIFIER);
     }
     if required.is_empty() || required != provided {
         return Err("source fixture coverage is incomplete or unexpected".into());
     }
 
     for s in &f.sources {
-        if retired && s.path == o02_health_retirement::PATH {
+        if retired
+            && (s.path == o02_health_retirement::PATH || s.path == o02_health_retirement::VERIFIER)
+        {
             continue;
         }
         if retired && o02_health_retirement::successor(root, &s.path, &s.git_blob)? {
@@ -385,6 +388,7 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
             .collect();
         if retired {
             paths.remove(o02_health_retirement::PATH);
+            paths.remove(o02_health_retirement::VERIFIER);
         }
         if paths.is_empty() || paths != expected {
             return Err("Python source inventory differs from tracked source set".into());

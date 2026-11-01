@@ -184,7 +184,7 @@ fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
 const IMAGE_OPS_LOCK_SHA: &str = "8d8d87dc69683e47e9b28b68ee332f1b585001128905e2a26481e61c3b37d7d5";
 const IMAGE_OPS_LOCK_BYTES: usize = 94371;
 const IMAGE_OPS_LOCK_INSERT: &str = "[[package]]\nname = \"ssx-ops\"\nversion = \"0.1.0\"\ndependencies = [\n \"sha2\",\n \"ssx-infra\",\n \"ssx-json\",\n \"tokio\",\n \"url\",\n]\n\n";
-fn native_image_ops_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
+pub(crate) fn native_image_ops_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
     need(
         physical.len() == IMAGE_OPS_LOCK_BYTES && digest(physical) == IMAGE_OPS_LOCK_SHA,
         "native image operations exact current lock",

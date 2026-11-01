@@ -314,8 +314,59 @@ fn pre_t08_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior.into_bytes())
 }
+fn pre_image_ops_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path != "crates/xtask/src/main.rs" {
+        return Ok(physical.to_vec());
+    }
+    need(
+        physical.len() == 43282
+            && digest(physical)
+                == "cab24fd77328750eedb27d9ef191316aba5a2d64ffcabc1780d8ff947188d8d4",
+        "Ops exact current F01 main",
+    )?;
+    let frames: [(&str, &str); 2] = [
+        (
+            "    let mut provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();\n    if retired {\n        provided.remove(o02_health_retirement::PATH);\n    }\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n    }\n\n    for s in &f.sources {\n        if retired && s.path == o02_health_retirement::PATH {\n            continue;\n        }\n        if retired && o02_health_retirement::successor(root, &s.path, &s.git_blob)? {\n",
+            "    let mut provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();\n    if retired {\n        provided.remove(o02_health_retirement::PATH);\n        provided.remove(o02_health_retirement::VERIFIER);\n    }\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n    }\n\n    for s in &f.sources {\n        if retired\n            && (s.path == o02_health_retirement::PATH || s.path == o02_health_retirement::VERIFIER)\n        {\n            continue;\n        }\n        if retired && o02_health_retirement::successor(root, &s.path, &s.git_blob)? {\n",
+        ),
+        (
+            "            .collect();\n        if retired {\n            paths.remove(o02_health_retirement::PATH);\n        }\n        if paths.is_empty() || paths != expected {\n            return Err(\"Python source inventory differs from tracked source set\".into());\n",
+            "            .collect();\n        if retired {\n            paths.remove(o02_health_retirement::PATH);\n            paths.remove(o02_health_retirement::VERIFIER);\n        }\n        if paths.is_empty() || paths != expected {\n            return Err(\"Python source inventory differs from tracked source set\".into());\n",
+        ),
+    ];
+    let mut prior = std::str::from_utf8(physical)
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    for (before, after) in frames {
+        need(
+            prior.matches(after).count() == 1,
+            "Ops unique inverse main span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 43098
+            && digest(prior.as_bytes())
+                == "c9a162caa7986f1ca8e52337da4eb2d1acf441b08d38768cb38b20096c80c7ba",
+        "Ops exact accepted health main",
+    )?;
+    let mut forward = prior.clone();
+    for (before, after) in frames {
+        need(
+            forward.matches(before).count() == 1,
+            "Ops unique forward main span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical,
+        "Ops complete main reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
 fn current_main_projection(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let health = pre_health_f01(path, physical)?;
+    let ops = pre_image_ops_f01(path, physical)?;
+    let health = pre_health_f01(path, &ops)?;
     pre_t08_registration(path, &health)
 }
 fn interpret(
@@ -359,7 +410,12 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let physical = regular(root, path)?;
         let logical = current_main_projection(path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
-            let health = pre_health_f01(path, &physical)?;
+            let ops = pre_image_ops_f01(path, &physical)?;
+            need(
+                pre_image_ops_f01(path, &ops).is_err(),
+                "pre-Ops main substituted as physical current",
+            )?;
+            let health = pre_health_f01(path, &ops)?;
             need(
                 pre_t08_registration(path, &health)? == logical,
                 "exact pre-health frame reaches existing registration",
