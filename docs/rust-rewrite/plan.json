@@ -17,7 +17,9 @@
       "measured build-footprint changes and cleanup disposition for completed PRs"
     ],
     "queue_policy": "Prioritize completing and accepting the oldest ready delivery before expanding implementation. Keep the next user-visible capability queued with prerequisites and an acceptance plan; when a lane is blocked, advance independent ready work without reporting the blocked lane as progress.",
-    "completion_rule": "Each PR's acceptance includes exact-head required checks, review disposition, merge verification, local main synchronization when applicable, and the repository's post-merge artifact and worktree cleanup audit. These delivery practices do not waive any plan acceptance criterion or authorize production activation."
+    "completion_rule": "Each PR's acceptance includes exact-head required checks, review disposition, merge verification, local main synchronization when applicable, and the repository's post-merge artifact and worktree cleanup audit. These delivery practices do not waive any plan acceptance criterion or authorize production activation.",
+    "communication_rule": "Send user-facing updates when requested or when a material state change needs attention. While work is waiting, continue useful independent work and avoid repeating unchanged status.",
+    "authorization_rule": "Apply the user's existing authorization to routine work without asking again. Ask only when a distinct permission or approval is genuinely required, state the exact action and boundary, and do not broaden an earlier bounded authorization."
   },
   "items": [
     {
