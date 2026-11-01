@@ -169,7 +169,7 @@ async fn all_engine_source_replay() {
         };
         let request = SearchRequest {
             query: case["query"].as_str().unwrap().into(),
-            page: 8,
+            page: ssx_domain::SearchPage::from_u64(8).expect("positive fixture page"),
             ..Default::default()
         };
         let result = if case["responses"].as_array().unwrap().is_empty()

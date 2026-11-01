@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "PAGE_F09_W03_INVENTORY_COMPOSITION_V1",
+  "baseline": "8721d7ec46901c6935c3cfc8adc2f959cde2ed69",
+  "qualification": "SOURCE_ONLY_UNEXECUTED_INVENTORY_COMPOSITION",
+  "rows": [
+    {
+      "path": "crates/ssx-application/tests/f09.rs",
+      "prior_sha256": "ad5504feb5e212fde163ae111f20cf7e9a2a0774d2476e4c597345a621f07ceb",
+      "prior_bytes": 23747,
+      "prior_blob": "7663ad297ef3adef3a179aa97d5b5aefd26119ab",
+      "current_sha256": "0a7361a1f297f86dc2e147e2bf62a5faa20122bbf8a27e3f27fd1754faf4a784",
+      "current_bytes": 23908,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 13094,
+          "delete": "    eprintln!(\"F09_HIGH_PAGE_SUBCASE start\");\n    high_page_policy_preserves_exact_request_and_numeric_enforcement_value();\n    eprintln!(\"F09_HIGH_PAGE_SUBCASE pass\");\n",
+          "insert": ""
+        },
+        {
+          "offset": 23250,
+          "delete": "",
+          "insert": "#[test]\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/f09.rs",
+      "prior_sha256": "301a963fc3633bfb44b96912d83a080289d75f0ff50c312375753b294d08ba26",
+      "prior_bytes": 8070,
+      "prior_blob": "76c7b4eb23b6f0baaa13d7332d9f6318826a0ae8",
+      "current_sha256": "0e0505569c88c9c120933905b54363e2770f83302301e874523bed00f49dec60",
+      "current_bytes": 7988,
+      "mode": 420,
+      "inverse": [
+        {
+          "offset": 4747,
+          "delete": "",
+          "insert": "        \"high_page_policy_preserves_exact_request_and_numeric_enforcement_value\",\n"
+        }
+      ]
+    }
+  ],
+  "frozen_predecessors": [
+    {
+      "path": "docs/rust-rewrite/t02/source-amendments/current-main-two-source-v2.rs",
+      "sha256": "dc8621c347075fc5662925e3f4561d7fdc6b0f4ae4bafe4e793860c5e93a8bfe"
+    },
+    {
+      "path": "docs/rust-rewrite/t02/source-amendments/lossless-page-1049-v1.json",
+      "sha256": "dfd7494b0ee42ac6a9ca702020640aaf65454b6a57f99991ae761c571dd96fcf"
+    },
+    {
+      "path": "docs/rust-rewrite/w03/native-tests.json",
+      "sha256": "db4337dbdafb35edebe3f980b4ca9a795e9bd456d8daabb68f3cc771b94df5eb"
+    }
+  ]
+}

@@ -96,7 +96,33 @@ fn composition_material(root: &Path, path: &str) -> Result<Material> {
             mode: 0o644,
         })
     } else {
-        load(root, path)
+        let mut physical = load(root, path)?;
+        // Only the three source operands in the sealed A07 composition capsule.
+        let page = match path {
+            "crates/ssx-infra/tests/a07_biomedical.rs" => Some((
+                "f50dad891fe6f16e2b2363536a4c0c4cfd48c932ee7229730af50de8649e514b",
+                34801,
+            )),
+            "crates/ssx-infra/src/adapters/a07_matrix_replay.rs" => Some((
+                "1b84793a369ccbfe1eb3251fd653f65efd8570f7186e625436071faf3cdac14c",
+                12214,
+            )),
+            "crates/ssx-infra/tests/support/a07_source_replay.rs" => Some((
+                "f44fa9e3ac288e63bedfad3f41e6f3bc40a0182e35024a45ce3fa3c4311da04a",
+                9170,
+            )),
+            _ => None,
+        };
+        if let Some((sha, bytes)) = page {
+            let frame = json!({"path":path,"sha256":sha,"bytes":bytes,"mode":"0644"});
+            physical.bytes = crate::a13::a06_source_successor::native_search::page_prior(
+                root,
+                &frame,
+                Some(&physical.bytes),
+            )?
+            .ok_or("A07 page source operand not selected")?;
+        }
+        Ok(physical)
     }
 }
 

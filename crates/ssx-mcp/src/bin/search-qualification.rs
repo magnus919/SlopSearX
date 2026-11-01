@@ -155,7 +155,7 @@ mod tests {
 
     #[tokio::test]
     async fn receipt_write_latency_is_outside_the_ready_fake_engine_future() -> Result<()> {
-        let server = private_valkey::Server::start();
+        let mut server = private_valkey::Server::start();
         let store = Arc::new(
             ssx_infra::valkey::Valkey::new(server.url(), Duration::from_millis(300)).unwrap(),
         );
@@ -175,13 +175,9 @@ mod tests {
             dispatch_receipt: None,
             ..old.clone()
         };
-        // This is an actual delayed private-store write, not an adapter/provider delay.
-        // READ commands and local counter observation remain available.
-        redis::cmd("CLIENT")
-            .arg("PAUSE")
-            .arg(100)
-            .arg("WRITE")
-            .query::<()>(&mut server.connection())?;
+        // Hold the actual owned store until explicitly released. A timed CLIENT
+        // PAUSE could expire during the first phase before publication was polled.
+        let suspended = server.suspend();
         let request = SearchRequest::default();
         assert!(
             tokio::time::timeout(Duration::from_millis(1), old.search(&request))
@@ -201,12 +197,16 @@ mod tests {
         assert_eq!(ready.calls.load(Ordering::SeqCst), 1);
         let receipts =
             observer::DispatchReceipts::new(BTreeMap::from([(ready.name.clone(), ready)]), store);
-        let start = tokio::time::Instant::now();
-        receipts.publish().await?;
+        let mut publication = std::pin::pin!(receipts.publish());
         assert!(
-            start.elapsed() > Duration::from_millis(1),
-            "control did not delay post-call publication"
+            publication.as_mut().now_or_never().is_none(),
+            "publication completed while its owned store was suspended"
         );
+        // Prove the child remained stopped throughout both phases; Pending alone
+        // could otherwise be ordinary connection I/O rather than the control.
+        suspended.assert_stopped();
+        suspended.resume();
+        publication.await?;
         let keys: Vec<String> = redis::cmd("KEYS")
             .arg("t06:qualification:dispatch:brave:*")
             .query(&mut server.connection())?;

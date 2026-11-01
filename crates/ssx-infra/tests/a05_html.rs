@@ -114,7 +114,7 @@ async fn run(case: &Value) {
                     .map(|v| v.as_str().unwrap().into())
                     .collect()
             }),
-            page: 7,
+            page: ssx_domain::SearchPage::from_u64(7).expect("positive fixture page"),
             language: "fr".into(),
             safesearch: 2,
             time_range: Some("day".into()),

@@ -165,7 +165,7 @@ impl HtmlRenderer for PublicHtml {
         }
         params.push(("language", request.language.clone()));
         params.push(("safesearch", request.safesearch.to_string()));
-        let link = |page: u64| {
+        let link = |page: &ssx_domain::SearchPage| {
             let mut serializer = url::form_urlencoded::Serializer::new(String::from("/search?"));
             for (k, v) in &params {
                 serializer.append_pair(k, v);
@@ -174,14 +174,18 @@ impl HtmlRenderer for PublicHtml {
             escape(&serializer.finish())
         };
         body.push_str("<nav aria-label=\"Search pages\">");
-        if request.page > 1 {
-            body.push_str(&format!(
-                "<a href=\"{}\">← Previous</a> ",
-                link(request.page - 1)
-            ));
+        if let Some(previous) = request.page.previous_page() {
+            body.push_str(&format!("<a href=\"{}\">← Previous</a> ", link(&previous)));
         }
-        if let Some(next) = request.page.checked_add(1) {
-            body.push_str(&format!("<a href=\"{}\">Try next page →</a>", link(next)));
+        if let Some(next) = request.page.next_page() {
+            if next.as_str().len() <= crate::native::MAX_PAGE_DIGITS {
+                body.push_str(&format!("<a href=\"{}\">Try next page →</a>", link(&next)));
+            } else {
+                // Intentional bounded hardening: Python raises while formatting
+                // this4301-digit neighbor. Retain exact current/previous values,
+                // but never emit a link that our unchanged HTTP grammar rejects.
+                body.push_str(&format!("<span aria-current=\"page\">Page {}</span> <span role=\"link\" aria-disabled=\"true\">Next page unavailable (page number limit)</span>", request.page));
+            }
         }
         body.push_str("</nav>");
         self.document(&format!("Search results for {}", response.query), &body)

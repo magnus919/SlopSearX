@@ -1080,6 +1080,57 @@ async fn expired_host_deadline_never_polls_or_dispatches_provider() {
     assert!(provider.calls.lock().unwrap().is_empty());
     assert_eq!(decision.state, RerankState::Fallback);
     assert_eq!(decision.results, rows);
+
+    // The same exhausted-host branch must not enter the actual native provider
+    // either. Drain both real owners before claiming that no POST was sent.
+    struct CountedNative {
+        inner: Arc<JevReranker>,
+        calls: AtomicUsize,
+    }
+    impl Provider for CountedNative {
+        fn rerank<'a>(
+            &'a self,
+            query: &'a str,
+            candidates: &'a [Candidate],
+        ) -> PortFuture<'a, Option<ssx_application::rerank::Decision>> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            self.inner.rerank(query, candidates)
+        }
+        fn cache_identity(&self) -> String {
+            self.inner.cache_identity()
+        }
+        fn shutdown(&self) -> PortFuture<'_, ()> {
+            Provider::shutdown(self.inner.as_ref())
+        }
+    }
+    let server = SocketServer::start(two_answers(), vec![], true).await;
+    let provider = Arc::new(CountedNative {
+        inner: socket_provider(&server),
+        calls: AtomicUsize::new(0),
+    });
+    let stage = ssx_infra::rerank::HostReranker::new(provider.clone());
+    let decision = stage
+        .rerank(
+            &SearchRequest {
+                query: "public".into(),
+                ..Default::default()
+            },
+            &rows,
+            tokio::time::Instant::now() - Duration::from_millis(1),
+        )
+        .await;
+    let calls = provider.calls.load(Ordering::SeqCst);
+    RerankStage::shutdown(&stage).await;
+    let sent = server.seen.lock().unwrap().len();
+    server.shutdown().await;
+    let decision = decision.unwrap();
+    assert_eq!(
+        calls, 0,
+        "expired host must never enter the native provider"
+    );
+    assert_eq!(sent, 0);
+    assert_eq!(decision.state, RerankState::Fallback);
+    assert_eq!(decision.results, rows);
 }
 
 fn composed_service(
@@ -1624,6 +1675,86 @@ async fn configured_native_stage_suppresses_specialist_promotion_for_every_outco
 
 #[tokio::test]
 async fn actual_native_service_remaining_interactive_budget_cancels_provider_socket() {
+    use std::{future::Future, task::Poll};
+    use tokio::time::Instant;
+
+    // Only the service execution owner is driven. Native provider/HTTP clocks
+    // remain real, including the provider's one-second operation limit. A future
+    // anchor keeps the inherited absolute deadline live during cold readiness;
+    // this proves a 100ms logical budget, not a 100ms wall-time startup claim.
+    struct OwnerClock(tokio::sync::watch::Sender<Instant>);
+    impl OwnerClock {
+        fn advance_to(&self, now: Instant) {
+            assert!(now >= *self.0.borrow());
+            self.0.send_replace(now);
+        }
+    }
+    impl SearchDeadlineClock for OwnerClock {
+        fn now(&self) -> Instant {
+            *self.0.borrow()
+        }
+        fn sleep_until(&self, deadline: Instant) -> PortFuture<'_, ()> {
+            Box::pin(async move {
+                let mut now = self.0.subscribe();
+                loop {
+                    if *now.borrow_and_update() >= deadline {
+                        return;
+                    }
+                    now.changed().await.expect("fixture clock owner retained");
+                }
+            })
+        }
+    }
+    #[derive(Default)]
+    struct StageLifecycle {
+        entered: AtomicUsize,
+        completed: AtomicUsize,
+        cancelled: AtomicUsize,
+    }
+    struct PendingStage {
+        lifecycle: Arc<StageLifecycle>,
+        completed: bool,
+    }
+    impl Drop for PendingStage {
+        fn drop(&mut self) {
+            if !self.completed {
+                self.lifecycle.cancelled.fetch_add(1, Ordering::SeqCst);
+            }
+        }
+    }
+    struct ObservedStage {
+        inner: ssx_infra::rerank::HostReranker,
+        deadlines: Arc<Mutex<Vec<Instant>>>,
+        lifecycle: Arc<StageLifecycle>,
+    }
+    impl RerankStage for ObservedStage {
+        fn identity(&self) -> Option<(String, String)> {
+            RerankStage::identity(&self.inner)
+        }
+        fn shutdown(&self) -> PortFuture<'_, ()> {
+            RerankStage::shutdown(&self.inner)
+        }
+        fn rerank<'a>(
+            &'a self,
+            request: &'a SearchRequest,
+            results: &'a [SearchResult],
+            deadline: Instant,
+        ) -> PortFuture<'a, std::result::Result<RerankDecision, ()>> {
+            Box::pin(async move {
+                self.deadlines.lock().unwrap().push(deadline);
+                self.lifecycle.entered.fetch_add(1, Ordering::SeqCst);
+                let mut pending = PendingStage {
+                    lifecycle: self.lifecycle.clone(),
+                    completed: false,
+                };
+                let result = self.inner.rerank(request, results, deadline).await;
+                pending.completed = true;
+                self.lifecycle.completed.fetch_add(1, Ordering::SeqCst);
+                result
+            })
+        }
+    }
+
     let valkey = PrivateValkey::start().await;
     let store = Arc::new(Valkey::new(&valkey.url, Duration::from_millis(250)).unwrap());
     let server = SocketServer::start(two_answers(), vec![], true).await;
@@ -1632,28 +1763,103 @@ async fn actual_native_service_remaining_interactive_budget_cancels_provider_soc
         count: 2,
         calls: AtomicUsize::new(0),
     });
-    let service = Arc::new(composed_service(&server, store, engine));
+    let anchor = Instant::now() + Duration::from_secs(60);
+    let clock = Arc::new(OwnerClock(tokio::sync::watch::channel(anchor).0));
+    let deadlines = Arc::new(Mutex::new(vec![]));
+    let lifecycle = Arc::new(StageLifecycle::default());
+    let mut deps = dependencies(vec![("brave", engine)]);
+    deps.cache = Some(Arc::new(CanonicalCache::new(
+        Arc::new(ValkeyCache::new(store.clone())),
+        CacheTtls::default(),
+    )));
+    deps.reranker = Some(Arc::new(ObservedStage {
+        inner: ssx_infra::rerank::HostReranker::new(socket_provider(&server)),
+        deadlines: deadlines.clone(),
+        lifecycle: lifecycle.clone(),
+    }));
+    deps.owned_stores.push(store);
+    let service = SearchService::new(SearchConfig::default(), deps)
+        .unwrap()
+        .with_deadline_clock(clock.clone())
+        .unwrap();
     let mut request = proposal("interactive provider");
     request.request.interactive_timeout_ms = Some(100);
-    let started = tokio::time::Instant::now();
-    let task = tokio::spawn({
-        let service = service.clone();
-        async move { service.search(request).await }
-    });
-    server.wait_requests(1).await;
-    let response = tokio::time::timeout(Duration::from_millis(600), task)
+    let mut search = Box::pin(service.search(request));
+    let observed = tokio::time::timeout(Duration::from_secs(3), async {
+        tokio::select! {
+            biased;
+            early = search.as_mut() => Err(format!(
+                "service completed before held provider POST: {early:?}; stage deadlines: {:?}",
+                deadlines.lock().unwrap()
+            )),
+            _ = async {
+                while server.seen.lock().unwrap().is_empty() {
+                    tokio::time::sleep(Duration::from_millis(1)).await;
+                }
+            } => Ok(()),
+        }
+    })
+    .await;
+    let outcome: std::result::Result<_, String> = async {
+        observed
+            .map_err(|_| "provider POST readiness exceeded its separate 3s guard".to_owned())??;
+        if *deadlines.lock().unwrap() != vec![anchor + Duration::from_millis(100)] {
+            return Err("the original exact 100ms service deadline was not forwarded".into());
+        }
+        // The complete actual POST is held: only service-owned expiry may now
+        // end it. Advancing to 99ms must not cancel the still-live operation.
+        clock.advance_to(anchor + Duration::from_millis(99));
+        tokio::task::yield_now().await;
+        let pending =
+            std::future::poll_fn(|cx| Poll::Ready(search.as_mut().poll(cx).is_pending())).await;
+        if !pending
+            || lifecycle.entered.load(Ordering::SeqCst) != 1
+            || lifecycle.completed.load(Ordering::SeqCst) != 0
+            || lifecycle.cancelled.load(Ordering::SeqCst) != 0
+            || server.disconnected.load(Ordering::SeqCst) != 0
+        {
+            return Err("held provider stage/socket did not remain live at logical 99ms".into());
+        }
+        let cancelled_at = Instant::now();
+        clock.advance_to(anchor + Duration::from_millis(100));
+        let response = tokio::time::timeout(Duration::from_millis(600), search.as_mut())
+            .await
+            .map_err(|_| "service cancellation exceeded the real 600ms bound".to_owned())?
+            .map_err(|error| format!("service search failed: {error:?}"))?;
+        if cancelled_at.elapsed() >= Duration::from_millis(600) {
+            return Err("service cancellation exceeded the real 600ms bound".into());
+        }
+        // A natural one-second provider timeout returns normally through the
+        // HostReranker. Only dropping the still-pending actual stage establishes
+        // service-owned cancellation, and this is checked before shutdown.
+        if lifecycle.entered.load(Ordering::SeqCst) != 1
+            || lifecycle.completed.load(Ordering::SeqCst) != 0
+            || lifecycle.cancelled.load(Ordering::SeqCst) != 1
+        {
+            return Err("service deadline did not cancel the pending native rerank stage".into());
+        }
+        tokio::time::timeout(Duration::from_secs(3), async {
+            while server.disconnected.load(Ordering::SeqCst) < 1 {
+                tokio::time::sleep(Duration::from_millis(1)).await;
+            }
+        })
         .await
-        .unwrap()
-        .unwrap()
-        .unwrap();
-    assert!(
-        started.elapsed() < Duration::from_millis(600),
-        "remaining interactive budget must bound the one-second provider operation"
-    );
+        .map_err(|_| "cancelled native provider socket did not reach EOF".to_owned())?;
+        let keys = valkey.keys("*").await;
+        Ok((response, keys))
+    }
+    .await;
+    // Even an early return/readiness failure drops the caller and drains the
+    // actual flight, provider builders/sockets and private store before failing.
+    drop(search);
+    let cleanup = tokio::time::timeout(Duration::from_secs(5), async {
+        service.shutdown().await;
+        server.shutdown().await;
+    })
+    .await;
+    cleanup.expect("causal cancellation fixture cleanup guard");
+    let (response, keys) = outcome.unwrap();
     assert_ne!(response.ranking_explanation, "semantic_shortlist_rerank");
     assert_eq!(response.results.len(), 2);
-    server.wait_disconnects(1).await;
-    assert!(valkey.keys("*").await.is_empty());
-    service.shutdown().await;
-    server.shutdown().await;
+    assert!(keys.is_empty());
 }

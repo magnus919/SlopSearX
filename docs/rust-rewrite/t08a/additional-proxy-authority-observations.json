@@ -1,0 +1,277 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "runtime": "CPython3.13.6",
+  "captures": [
+    {
+      "native_case": {
+        "id": "proxy-raw-leading-zero-initial",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://127.0.0.1:000$PORT",
+          "http_proxy": "$BASE",
+          "no_proxy": "127.0.0.1:00050153"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-proxy-authority-observations.json#proxy-raw-leading-zero-initial"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0,
+      "actual_requests": [
+        {
+          "target": "/health",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ]
+    },
+    {
+      "native_case": {
+        "id": "proxy-raw-leading-zero-redirect",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "http_proxy": "$BASE",
+          "no_proxy": "127.0.0.1:00050153"
+        },
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "http://127.0.0.1:000$PORT/final"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "$BASE/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/final",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-proxy-authority-observations.json#proxy-raw-leading-zero-redirect"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0,
+      "actual_requests": [
+        {
+          "target": "http://127.0.0.1:50153/health",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        },
+        {
+          "target": "/final",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ]
+    },
+    {
+      "native_case": {
+        "id": "redirect-source-no-referer",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/final"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/final",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-proxy-authority-observations.json#redirect-source-no-referer"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0,
+      "actual_requests": [
+        {
+          "target": "/health",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        },
+        {
+          "target": "/final",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ]
+    },
+    {
+      "native_case": {
+        "id": "redirect-source-uri-header",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "URI": "/final"
+            },
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          },
+          {
+            "target": "/final",
+            "accept": "application/json",
+            "proxy_auth": "",
+            "referer": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-proxy-authority-observations.json#redirect-source-uri-header"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0,
+      "actual_requests": [
+        {
+          "target": "/health",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        },
+        {
+          "target": "/final",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ]
+    }
+  ],
+  "source_proxy_bypass_boundaries": [
+    {
+      "authority": "example.invalid:80",
+      "no_proxy": "example.invalid:80",
+      "bypass": true
+    },
+    {
+      "authority": "example.invalid:443",
+      "no_proxy": "example.invalid:443",
+      "bypass": true
+    },
+    {
+      "authority": "example.invalid:00080",
+      "no_proxy": "example.invalid:80",
+      "bypass": false
+    },
+    {
+      "authority": "example.invalid:00080",
+      "no_proxy": "example.invalid:00080",
+      "bypass": true
+    },
+    {
+      "authority": "[::1]:80",
+      "no_proxy": "[::1]:80",
+      "bypass": true
+    },
+    {
+      "authority": "example.invalid",
+      "no_proxy": "example.invalid:80",
+      "bypass": false
+    }
+  ]
+}

@@ -46,7 +46,7 @@ fn request(case: &Value) -> SearchRequest {
     SearchRequest {
         query: case["query"].as_str().unwrap().into(),
         categories: Some(serde_json::from_value(case["params"]["categories"].clone()).unwrap()),
-        page: 7,
+        page: ssx_domain::SearchPage::from_u64(7).expect("positive fixture page"),
         language: "fr".into(),
         safesearch: 2,
         time_range: Some("week".into()),

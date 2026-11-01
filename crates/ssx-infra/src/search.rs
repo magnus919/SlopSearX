@@ -1304,7 +1304,7 @@ fn cache_key(
             &scope.selected_engines,
             &scope.jev_scores,
             jev,
-            request.page,
+            &request.page,
         ))
         .expect("logical identity"),
     );
@@ -1316,7 +1316,7 @@ fn cache_key(
             safesearch: request.safesearch.into(),
             categories: request.categories.clone().unwrap_or_default(),
             engines: request.engines.clone().unwrap_or_default(),
-            page: i64::try_from(request.page).unwrap_or(i64::MAX),
+            page: request.page.as_number().clone(),
             time_range: request.time_range.clone(),
             media_type: request.media_type.clone(),
             date_from: request.date_from.clone(),

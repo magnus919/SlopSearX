@@ -51,7 +51,16 @@ impl From<DomainError> for RunnerError {
     }
 }
 
+/// Trusted W08 read-only composition admission. It cannot dispatch or persist.
+pub trait SourceValidator: Send + Sync {
+    fn validate<'a>(
+        &'a self,
+        tenant: &'a TenantId,
+        job: &'a ResearchJob,
+    ) -> ssx_application::PortFuture<'a, Result<(), ssx_application::composition::Error>>;
+}
 /// Composition owns the search service; a runner never shuts down shared search.
+
 #[derive(Clone)]
 pub struct ResearchRunner {
     jobs: ResearchStore,
@@ -59,6 +68,7 @@ pub struct ResearchRunner {
     snapshots: SnapshotService,
     config: RunnerConfig,
     clock: Arc<dyn SearchClock>,
+    source_validator: Option<Arc<dyn SourceValidator>>,
 }
 struct OwnedRenewal {
     cancellation: SearchCancellation,
@@ -116,7 +126,14 @@ impl ResearchRunner {
             snapshots,
             config,
             clock: Arc::new(SystemSearchClock),
+            source_validator: None,
         })
+    }
+    /// Uncomposed jobs need no source port. Composed work fails closed until
+    /// the native composition root supplies the same resolver as admission.
+    pub fn with_source_validator(mut self, validator: Arc<dyn SourceValidator>) -> Self {
+        self.source_validator = Some(validator);
+        self
     }
     fn now(&self) -> WallClockTimestamp {
         self.clock.capture().0
@@ -404,6 +421,32 @@ impl ResearchRunner {
             if job.queries[index].state != "pending" {
                 continue;
             }
+            if job.workflow.contains_key("composition") {
+                let validation = self
+                    .validate_source(&tenant, &job, &cancellation, &shutdown)
+                    .await;
+                if let Err(error) = validation {
+                    // No reservation exists: denied sources consume no attempt
+                    // or adapter-call budget and cannot look like execution.
+                    store
+                        .mutate(id, token, |j| {
+                            if j.cancel_requested || self.now().seconds() >= j.deadline.get() {
+                                return Ok(());
+                            }
+                            let reason = format!("source_rejected: {}", error.code);
+                            j.stop_reason = Some(reason.clone());
+                            for query in &mut j.queries {
+                                if query.state == "pending" {
+                                    query.state = "failed".into();
+                                    query.error = Some(reason.clone());
+                                }
+                            }
+                            Ok(())
+                        })
+                        .await?;
+                    break;
+                }
+            }
             if let Err(error) = self.search.validate_research_workflow(&job) {
                 let denied_attempt = attempt();
                 store
@@ -438,6 +481,7 @@ impl ResearchRunner {
                 continue;
             }
             let acknowledged = attempt();
+
             job = store
                 .mutate(id, token, |j| {
                     if j.cancel_requested || self.now().seconds() >= j.deadline.get() {
@@ -488,7 +532,50 @@ impl ResearchRunner {
             if job.cancel_requested || self.now().seconds() >= job.deadline.get() {
                 cancellation.cancel();
             }
+            // The first check avoided unnecessary reservations. Reads/writes and
+            // lease renewal have awaited since then, so admit the source again
+            // at the actual dispatch boundary. Nothing awaits between a valid
+            // concrete source witness and construction/polling of the search.
+            if let Err(error) = self
+                .validate_source(&tenant, &job, &cancellation, &shutdown)
+                .await
+            {
+                store
+                    .mutate(id, token, |j| {
+                        let now = self.now();
+                        let reason = format!("source_rejected_before_dispatch: {}", error.code);
+                        let q = &mut j.queries[index];
+                        q.state = "failed".into();
+                        q.error = Some(reason.clone());
+                        q.engine_coverage = q
+                            .engines
+                            .iter()
+                            .map(|name| classify_coverage(name.clone(), false, None, 0, false))
+                            .collect();
+                        ssx_application::research::finish_attempt(
+                            j,
+                            index,
+                            &acknowledged,
+                            None,
+                            now,
+                        )?;
+                        j.stop_reason = Some(reason.clone());
+                        for q in &mut j.queries {
+                            if q.state == "pending" {
+                                q.state = "failed".into();
+                                q.error = Some(reason.clone());
+                            }
+                        }
+                        // W01 reservations are conservative, monotonic evidence.
+                        // This known unexecuted attempt retains its reservation;
+                        // there is no response, new lead or actual adapter request.
+                        Ok(())
+                    })
+                    .await?;
+                break;
+            }
             let mut proposal = ScopeProposal::from_research_query(&job.queries[index]);
+
             proposal.request.client_identifier = Some(format!("mcp-job:{}", id.as_str()));
             proposal.request.execution_isolation_key =
                 Some(ssx_domain::canonical::composite_artifact_id(&[
@@ -700,6 +787,31 @@ impl ResearchRunner {
             })
             .await?;
         Ok(job)
+    }
+    async fn validate_source(
+        &self,
+        tenant: &TenantId,
+        job: &ResearchJob,
+        cancellation: &SearchCancellation,
+        shutdown: &watch::Receiver<bool>,
+    ) -> Result<(), ssx_application::composition::Error> {
+        use ssx_application::composition::Error;
+        if !job.workflow.contains_key("composition") {
+            return Ok(());
+        }
+        let validator = self.source_validator.as_ref().ok_or_else(|| {
+            Error::new(
+                "source_unavailable",
+                "composition source validator is unavailable",
+            )
+        })?;
+        let remaining = (job.deadline.get() - self.now().seconds()).clamp(0.0, 30.0);
+        let mut stop = shutdown.clone();
+        tokio::select! {biased;
+            _=stopped(&mut stop)=>Err(Error::new("cancelled","source admission interrupted by shutdown")),
+            _=cancellation.cancelled()=>Err(Error::new("cancelled","source admission lost worker authority")),
+            result=tokio::time::timeout(Duration::from_secs_f64(remaining),validator.validate(tenant,job))=>result.unwrap_or_else(|_|Err(Error::new("source_unavailable","source admission deadline exceeded"))),
+        }
     }
     async fn load_owned(
         &self,

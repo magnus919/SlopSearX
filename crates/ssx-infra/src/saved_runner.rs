@@ -268,7 +268,7 @@ impl SavedRunner {
             ScopeProposal::generic(SearchRequest {
                 query: d.query.clone(),
                 engines: Some(d.engines.clone()),
-                page: 1,
+                page: ssx_domain::SearchPage::default(),
                 max_results: None,
                 include: ["results".into(), "engine_status".into()]
                     .into_iter()

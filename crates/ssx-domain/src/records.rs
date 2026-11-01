@@ -226,6 +226,95 @@ impl Default for SearchResponse {
         }
     }
 }
+/// Positive search page, serialized as an exact JSON integer rather than a
+/// machine word. HTTP owns Python lexical/digit-limit admission separately.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(transparent)]
+pub struct SearchPage(ssx_json::Number);
+impl Eq for SearchPage {}
+impl SearchPage {
+    /// Construct a canonical positive decimal integer. No sign, leading zero,
+    /// fraction, exponent or float conversion enters the shared request domain.
+    pub fn new(digits: &str) -> Result<Self, DomainError> {
+        if digits.is_empty()
+            || digits.starts_with('0')
+            || !digits.bytes().all(|b| b.is_ascii_digit())
+        {
+            return Err(DomainError("page must be a positive integer"));
+        }
+        ssx_json::Number::new(digits)
+            .map(Self)
+            .map_err(|_| DomainError("page exceeds JSON number budget"))
+    }
+    /// Construct an already bounded positive page without changing zero semantics.
+    pub fn from_u64(value: u64) -> Result<Self, DomainError> {
+        Self::new(&value.to_string())
+    }
+    /// Borrow the exact canonical decimal digits.
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+    /// Borrow the existing lossless JSON primitive for cache/wire composition.
+    pub fn as_number(&self) -> &ssx_json::Number {
+        &self.0
+    }
+    /// Exact previous page; page one has no predecessor.
+    pub fn previous_page(&self) -> Option<Self> {
+        if self.as_str() == "1" {
+            return None;
+        }
+        let mut digits = self.as_str().as_bytes().to_vec();
+        for digit in digits.iter_mut().rev() {
+            if *digit == b'0' {
+                *digit = b'9';
+            } else {
+                *digit -= 1;
+                break;
+            }
+        }
+        let digits = if digits.first() == Some(&b'0') {
+            &digits[1..]
+        } else {
+            &digits[..]
+        };
+        Self::new(std::str::from_utf8(digits).expect("decimal invariant")).ok()
+    }
+    /// Exact next page. None denotes only the shared JSON byte budget, never a
+    /// machine-word limit. Every HTTP-admitted 4300-digit page fits this budget.
+    pub fn next_page(&self) -> Option<Self> {
+        let mut digits = self.as_str().as_bytes().to_vec();
+        let mut carry = true;
+        for digit in digits.iter_mut().rev() {
+            if *digit == b'9' {
+                *digit = b'0';
+            } else {
+                *digit += 1;
+                carry = false;
+                break;
+            }
+        }
+        if carry {
+            digits.insert(0, b'1');
+        }
+        Self::new(std::str::from_utf8(&digits).expect("decimal invariant")).ok()
+    }
+}
+impl Default for SearchPage {
+    fn default() -> Self {
+        Self::new("1").expect("positive literal")
+    }
+}
+impl std::fmt::Display for SearchPage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+impl<'de> Deserialize<'de> for SearchPage {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let number = ssx_json::Number::deserialize(deserializer)?;
+        Self::new(number.as_str()).map_err(serde::de::Error::custom)
+    }
+}
 #[derive(Debug, Clone, PartialEq)]
 pub struct SearchRequest {
     pub query: String,
@@ -234,7 +323,7 @@ pub struct SearchRequest {
     /// Provider-specific subreddit scope used by Reddit's `reddit:subreddit` category.
     pub subreddit: Option<String>,
     pub language: String,
-    pub page: u64,
+    pub page: SearchPage,
     pub time_range: Option<String>,
     pub safesearch: u8,
     pub media_type: Option<String>,
@@ -257,7 +346,7 @@ impl Default for SearchRequest {
             engines: None,
             subreddit: None,
             language: "en".into(),
-            page: 1,
+            page: SearchPage::default(),
             time_range: None,
             safesearch: 0,
             media_type: None,
@@ -344,6 +433,50 @@ mod typed_float_tests {
                 FiniteF64::from_python_float(value).unwrap_err(),
                 FiniteF64::new(value).unwrap_err()
             );
+        }
+    }
+}
+
+#[cfg(test)]
+mod search_page_tests {
+    use super::*;
+    #[test]
+    fn original_high_pages_keep_exact_numeric_wire_and_decimal_neighbors() {
+        for (raw, previous, next) in [
+            (
+                "18446744073709551616",
+                "18446744073709551615",
+                "18446744073709551617",
+            ),
+            (
+                "170141183460469231731687303715884105727",
+                "170141183460469231731687303715884105726",
+                "170141183460469231731687303715884105728",
+            ),
+            (
+                "170141183460469231731687303715884105728",
+                "170141183460469231731687303715884105727",
+                "170141183460469231731687303715884105729",
+            ),
+            ("1000", "999", "1001"),
+            ("999", "998", "1000"),
+        ] {
+            let page = SearchPage::new(raw).unwrap();
+            assert_eq!(ssx_json::to_string(&page).unwrap(), raw);
+            assert_eq!(serde_json::to_string(&page).unwrap(), raw);
+            assert_eq!(ssx_json::from_str::<SearchPage>(raw).unwrap(), page);
+            assert_eq!(page.previous_page().unwrap().as_str(), previous);
+            assert_eq!(page.next_page().unwrap().as_str(), next);
+        }
+        let boundary = SearchPage::new(&"9".repeat(4300)).unwrap();
+        assert_eq!(
+            boundary.next_page().unwrap().as_str(),
+            format!("1{}", "0".repeat(4300))
+        );
+        assert_eq!(ssx_json::to_string(&boundary).unwrap(), "9".repeat(4300));
+        assert!(SearchPage::default().previous_page().is_none());
+        for invalid in ["0", "-1", "+1", "01", "1.0", "1e0", "", " 1"] {
+            assert!(SearchPage::new(invalid).is_err());
         }
     }
 }

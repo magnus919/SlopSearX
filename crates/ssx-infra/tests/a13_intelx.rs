@@ -546,7 +546,7 @@ async fn intelx_header_redaction_settings_and_filters() {
     assert!(!h.registry.is_available("hibp"));
     let mut q = query();
     q.language = "fr".into();
-    q.page = 8;
+    q.page = ssx_domain::SearchPage::from_u64(8).expect("positive fixture page");
     q.safesearch = 1;
     q.time_range = Some("week".into());
     q.media_type = Some("image".into());

@@ -1,6 +1,6 @@
 [workspace]
-members = ["crates/*"]
-exclude = ["vendor/expat", "vendor/libxml"]
+members = ["crates/*", "vendor/ssx-cli-hyper"]
+exclude = ["vendor/expat", "vendor/libxml", "vendor/ssx-cli-process-wrap"]
 resolver = "3"
 
 [workspace.package]

@@ -1,0 +1,391 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "native_case": {
+        "id": "utf8-invalid-search",
+        "argv": [
+          "search",
+          "x",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "ff7b",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=x&language=en&pageno=1&format=json",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: response is not UTF-8\n",
+        "reference": "additional-source-observations.json#utf8-invalid-search"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "54726163656261636b20286d6f737420726563656e742063616c6c206c617374293a0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e65203235392c20696e203c6d6f64756c653e0a202020206d61696e28290a202020207e7e7e7e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e65203235352c20696e206d61696e0a20202020636f6d6d616e64735b617267732e636f6d6d616e645d2861726773290a202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e652039312c20696e20636d645f7365617263680a2020202064617461203d205f66657463685f6a736f6e2875726c290a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e652035332c20696e205f66657463685f6a736f6e0a20202020726177203d205f66657463682875726c2c20226170706c69636174696f6e2f6a736f6e22290a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e652034392c20696e205f66657463680a2020202072657475726e20726573702e7265616428292e6465636f646528227574662d3822290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e0a556e69636f64654465636f64654572726f723a20277574662d382720636f6465632063616e2774206465636f64652062797465203078666620696e20706f736974696f6e20303a20696e76616c696420737461727420627974650a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "utf8-invalid-health",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "ff7b",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: response is not UTF-8\n",
+        "reference": "additional-source-observations.json#utf8-invalid-health"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420277574662d382720636f6465632063616e2774206465636f64652062797465203078666620696e20706f736974696f6e20303a20696e76616c696420737461727420627974650a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "utf8-invalid-config",
+        "argv": [
+          "config",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "ff7b",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: response is not UTF-8\n",
+        "reference": "additional-source-observations.json#utf8-invalid-config"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420277574662d382720636f6465632063616e2774206465636f64652062797465203078666620696e20706f736974696f6e20303a20696e76616c696420737461727420627974650a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "utf8-invalid-engines",
+        "argv": [
+          "engines",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "ff7b",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: response is not UTF-8\n",
+        "reference": "additional-source-observations.json#utf8-invalid-engines"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420277574662d382720636f6465632063616e2774206465636f64652062797465203078666620696e20706f736974696f6e20303a20696e76616c696420737461727420627974650a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "proxy-lowercase",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "http_proxy": "$BASE",
+          "SSX_URL": "http://fixture.invalid"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "http://fixture.invalid/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#proxy-lowercase"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "proxy-lowercase-precedence",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "HTTP_PROXY": "http://127.0.0.1:1",
+          "http_proxy": "$BASE",
+          "SSX_URL": "http://fixture.invalid"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "http://fixture.invalid/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#proxy-lowercase-precedence"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "proxy-auth",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "http_proxy": "http://fixture-user:fixture-password@$ADDRESS",
+          "SSX_URL": "http://fixture.invalid"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "http://fixture.invalid/health",
+            "accept": "application/json",
+            "proxy_auth": "Basic Zml4dHVyZS11c2VyOmZpeHR1cmUtcGFzc3dvcmQ="
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#proxy-auth"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "proxy-cgi-uppercase-ignored",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "HTTP_PROXY": "http://127.0.0.1:1",
+          "REQUEST_METHOD": "GET"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#proxy-cgi-uppercase-ignored"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "proxy-no-proxy-bypass",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "http_proxy": "http://127.0.0.1:1",
+          "no_proxy": " .127.0.0.1 "
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#proxy-no-proxy-bypass"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "proxy-all-ignored",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "ALL_PROXY": "http://127.0.0.1:1"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#proxy-all-ignored"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "proxy-empty-lowercase-removes-uppercase",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "HTTP_PROXY": "http://127.0.0.1:1",
+          "http_proxy": ""
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json",
+            "proxy_auth": ""
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#proxy-empty-lowercase-removes-uppercase"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    }
+  ]
+}

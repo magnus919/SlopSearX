@@ -44,12 +44,18 @@ fn validate(bytes: &[u8], expected: &str) -> Result<Value> {
     }
     serde_json::from_slice(bytes).map_err(|e| e.to_string())
 }
-fn run(root: &Path, records: &mut Vec<Value>, package: &str, expected: &[&str]) -> Result<()> {
+fn run(
+    root: &Path,
+    records: &mut Vec<Value>,
+    package: &str,
+    target: &str,
+    expected: &[&str],
+) -> Result<()> {
     let listed = command(
         root,
         "cargo",
         &[
-            "test", "--locked", "-p", package, "--test", "f13", "--", "--list",
+            "test", "--locked", "-p", package, "--test", target, "--", "--list",
         ],
         records,
     )?;
@@ -58,19 +64,19 @@ fn run(root: &Path, records: &mut Vec<Value>, package: &str, expected: &[&str]) 
         .filter_map(|v| v.strip_suffix(": test"))
         .collect();
     if actual != expected.iter().copied().collect() || actual.len() != expected.len() {
-        return Err(format!("F13 exact {package} test inventory drift"));
+        return Err(format!("F13 exact {package}/{target} test inventory drift"));
     }
     let output = command(
         root,
         "cargo",
-        &["test", "--locked", "-p", package, "--test", "f13"],
+        &["test", "--locked", "-p", package, "--test", target],
         records,
     )?;
     if !output.contains(&format!(
         "test result: ok. {} passed; 0 failed; 0 ignored;",
         expected.len()
     )) {
-        return Err(format!("F13 {package} incomplete/ignored tests"));
+        return Err(format!("F13 {package}/{target} incomplete/ignored tests"));
     }
     Ok(())
 }
@@ -158,6 +164,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         root,
         records,
         "ssx-application",
+        "f13",
         &[
             "source_base_keys_answers_ttls_and_views_replay_exactly",
             "canonical_nested_views_and_snapshot_pages_cannot_contaminate_evidence",
@@ -171,6 +178,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         root,
         records,
         "ssx-infra",
+        "f13",
         &[
             "nx_two_independent_clients_preserve_first_value_and_retention",
             "immutable_cache_views_admission_answer_and_negative_namespaces_are_separate",
@@ -189,6 +197,13 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "durable_byte_and_depth_refusal_is_nonmutating",
             "snapshot_local_legacy_iterables_preserve_valid_scope_without_rewriting",
         ],
+    )?;
+    run(
+        root,
+        records,
+        "ssx-application",
+        "lossless_cache_key",
+        &["source_base_key_preserves_literal_high_page_integers"],
     )?;
     let output = command(
         root,

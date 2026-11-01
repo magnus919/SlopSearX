@@ -381,7 +381,7 @@ async fn source_slices_and_request_limits_are_independent() {
         c.max_results = max;
         let mut q = query();
         q.max_results = Some(1);
-        q.page = 17;
+        q.page = ssx_domain::SearchPage::from_u64(17).expect("positive fixture page");
         let (result, wire, _) = execute(c, q, Reply::json(body), AdmissionDecision::Allowed).await;
         let all = ["one@example.test", "two@example.test", "three@example.test"]
             .into_iter()
@@ -1528,7 +1528,7 @@ async fn unsupported_request_filters_do_not_change_wire_or_claim_media() {
     q.language = "fr".into();
     q.time_range = Some("week".into());
     q.safesearch = 1;
-    q.page = 9;
+    q.page = ssx_domain::SearchPage::from_u64(9).expect("positive fixture page");
     q.media_type = Some("image".into());
     q.max_results = Some(1);
     q.date_from = Some("2024-01-01".into());

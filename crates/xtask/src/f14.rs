@@ -11,6 +11,7 @@ const BASELINE: &str = "730c37a5f48b9830088594582cefb4c2f10a35e8";
 const CORPUS: &str = "f3adbefd92e5bc057c1df421a93be3fe3097012af9f56fa4790b1f741b8d7310";
 const EXPORTER: &str = "8b41723cfe47b1488fe24cd09948911105f521c8a78809c1b62dd913ef3ea3cd";
 const TESTS: &[&str] = &[
+    "lossless_high_pages_keep_distinct_valkey_views_and_canonical_snapshots",
     "actual_source_service_replay",
     "actual_source_suggestion_wire_encoding_primary_and_fallback",
     "internal_task_panic_stays_synthetic_without_upstream_health",

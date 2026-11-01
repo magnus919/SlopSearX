@@ -9,18 +9,17 @@ use std::{
     path::Path,
 };
 
+use crate::a13::a06_source_successor::w07_t02_joint::snapshot_helper_amendment;
 use crate::a13::a06_source_successor::{
     w07_main_successor as main_successor, w07_t02_joint,
     w07_test_dependency as test_dependency_successor,
 };
 use main_successor::{PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main};
-#[path = "../../../docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs"]
-mod snapshot_helper_amendment;
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "99c9a0bad80804a64f6934c4e3e09afb12ae41146c8b7d040cd2c69a8c196883";
+const REGISTRY_SHA: &str = "4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -68,10 +67,34 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
         return Ok(bytes);
     }
+    if path == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE
+        && expected == w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA
+    {
+        return w07_t02_joint::cli_source_custody::test_dependency_prior(
+            root, path, expected, &bytes,
+        );
+    }
     if let Some(proven) = snapshot_helper_amendment::verify(root, path, expected, &bytes) {
         return proven;
     }
     if sha(&bytes) != expected {
+        if let Some(operand) =
+            crate::w08::source_successor::frozen_operand(root, path, expected, &bytes)?
+        {
+            return Ok(operand);
+        }
+
+        if matches!(
+            path,
+            "crates/xtask/src/t06.rs" | "crates/ssx-mcp/tests/t06_source_bindings.rs"
+        ) {
+            crate::t06::receipt_control_closure::verify(root)?;
+            if let Some(prior) =
+                crate::t06::receipt_control::reader_parent(root, path, expected, &bytes)?
+            {
+                return Ok(prior);
+            }
+        }
         if path == crate::t06::lock_amendment::SOURCE_PATH
             && expected == crate::t06::lock_amendment::HISTORICAL_SHA256
         {
@@ -233,6 +256,19 @@ fn reference(root: &Path, binding: &Reference, packaging: &str) -> Result<Value>
     }
     Ok(packet)
 }
+// The exact two post-Page reader successors in the reviewed W08 normal merge.
+const W08_PAGE_READERS: [(&str, &str, &str); 2] = [
+    (
+        "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+        "8a9bb7b1894e84b8de2673c25f5091a61eb4cf8d77d1c0b8f191edf866b2748c",
+    ),
+    (
+        "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+        "f5736b78c04437056c5bf12b3637e2fa6b53c9b654b1cb28087fe4de22187a86",
+    ),
+];
 fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     let mut expected = original.clone();
     // #984 adds exact real-adapter MCP/HTTP suites; all historical W07 suites
@@ -379,6 +415,47 @@ fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     }
     expected["sources"]["crates/ssx-infra/src/observability/metrics.rs"] =
         Value::String("cccca54dc139061f691d183c0b073cb479229be0c5c3990752686ce3457bc460".into());
+    // Exact #1049 normal-merge source successors; historical registry remains frozen.
+    for (path, prior, current) in [
+        (
+            "crates/ssx-infra/src/search.rs",
+            "b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb",
+            "8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+            "7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2",
+            "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+            "2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6",
+            "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+            "ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4",
+            "bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c",
+        ),
+        (
+            "docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs",
+            "6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c",
+            "8ab186367b6b6e535c296ecf376fa83e9d5325a5a65b8da9fda8ce408d804aa9",
+        ),
+    ] {
+        if expected["sources"][path] != prior {
+            return Err("W07 page merge source predecessor changed".into());
+        }
+        expected["sources"][path] = Value::String(current.into());
+    }
+    // Keep the five exact Page predecessor guards above, then admit only this
+    // closed W08 two-reader transition. All remaining registry fields stay exact.
+    for (path, page, joined) in W08_PAGE_READERS {
+        if expected["sources"][path] != page {
+            return Err("W07 exact Page reader predecessor changed".into());
+        }
+        expected["sources"][path] = Value::String(joined.into());
+    }
     if expected != *current {
         return Err(
             "W07 completion inventory differs from the exact additive source/test delta".into(),
@@ -391,6 +468,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     // Frozen original inventory and all measured wire observations remain intact.
     let original = frozen(root, ORIGINAL_REGISTRY, ORIGINAL_REGISTRY_SHA)?;
     let registry = frozen(root, REGISTRY, REGISTRY_SHA)?;
+    snapshot_helper_amendment::verify_current_registry(root, &registry)?;
     preserve_registry(
         &serde_json::from_slice(&original).map_err(|e| e.to_string())?,
         &serde_json::from_slice(&registry).map_err(|e| e.to_string())?,
@@ -409,7 +487,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         frozen(root, path, digest)?;
     }
     let original = frozen(root, MAIN_ARCHIVE, MAIN_SHA)?;
-    let current = frozen(root, "crates/xtask/src/main.rs", w07_t02_joint::MAIN_SHA)?;
+    let current = crate::w08::source_successor::physical(
+        root,
+        "crates/xtask/src/main.rs",
+        w07_t02_joint::MAIN_SHA,
+    )?;
     let parent = w07_t02_joint::parent(
         root,
         "crates/xtask/src/main.rs",
@@ -597,6 +679,33 @@ mod tests {
             .parent()
             .unwrap();
         test_dependency_successor::controls(root).unwrap();
+        let path = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE;
+        let expected = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA;
+        let actual = fs::read(root.join(path)).unwrap();
+        let prior = frozen(root, path, expected).unwrap();
+        assert_eq!(sha(&prior), expected);
+        assert!(frozen(root, path, &"0".repeat(64)).is_err());
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(
+                root,
+                "Cargo.lock",
+                expected,
+                &actual,
+            )
+            .is_err()
+        );
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(root, path, expected, &prior,)
+                .is_err()
+        );
+        let mut changed = actual;
+        changed.push(b' ');
+        assert!(
+            w07_t02_joint::cli_source_custody::test_dependency_prior(
+                root, path, expected, &changed,
+            )
+            .is_err()
+        );
     }
     #[test]
     fn main_successor_requires_exact_finite_insertions() {
@@ -626,15 +735,16 @@ mod tests {
     #[test]
     fn metrics_successor_requires_exact_afterimage_and_inverse() {
         use crate::a13::a06_source_successor::metrics_predecessor;
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let path = "crates/ssx-application/src/lib.rs";
         let expected = "7d3b8126448059633426e964a1ecc9cc3c2b1fd0ba2cdc7bd75917862cf0cee4";
         let actual = include_bytes!("../../ssx-application/src/lib.rs");
-        let predecessor = metrics_predecessor(path, expected, actual).unwrap();
+        let predecessor = metrics_predecessor(&root, path, expected, actual).unwrap();
         assert_eq!(sha(&predecessor), expected);
         assert_eq!(predecessor.len(), 5893);
-        assert!(metrics_predecessor(path, expected, &predecessor).is_err());
-        assert!(metrics_predecessor("unlisted.rs", expected, actual).is_err());
-        assert!(metrics_predecessor(path, &"0".repeat(64), actual).is_err());
+        assert!(metrics_predecessor(&root, path, expected, &predecessor).is_err());
+        assert!(metrics_predecessor(&root, "unlisted.rs", expected, actual).is_err());
+        assert!(metrics_predecessor(&root, path, &"0".repeat(64), actual).is_err());
         let at = 2805;
         let insertion = b"    fn workflow_accepted(&self, _: &'static str, _: &'static str) {}\n    fn workflow_rejected(&self, _: &'static str, _: &'static str) {}\n    fn workflow_terminal(&self, _: &'static str, _: &'static str) {}\n    fn workflow_expired(&self, _: &'static str, _: &'static str) {}\n";
         let mut duplicate = actual.to_vec();
@@ -649,9 +759,34 @@ mod tests {
         let mut extra = actual.to_vec();
         extra.push(b' ');
         for bad in [duplicate, altered, unrelated, moved, extra] {
-            assert!(metrics_predecessor(path, expected, &bad).is_err());
+            assert!(metrics_predecessor(&root, path, expected, &bad).is_err());
         }
+        // Original Metrics-frame controls remain nonvacuous: prove its positive
+        // operand, then mutate that frame rather than only W08's outer buffer.
+        use crate::a13::a06_source_successor::metrics_frame_predecessor;
+        let frame = crate::w08::source_successor::parent(&root, path, actual).unwrap();
+        assert_eq!(
+            metrics_frame_predecessor(path, expected, &frame).unwrap(),
+            predecessor
+        );
+        let mut duplicate = frame.clone();
+        duplicate.splice(at..at, insertion.iter().copied());
+        let mut altered = frame.clone();
+        altered[at] ^= 1;
+        let mut unrelated = frame.clone();
+        unrelated[0] ^= 1;
+        let mut moved = frame.clone();
+        moved.drain(at..at + insertion.len());
+        moved.splice(0..0, insertion.iter().copied());
+        let mut extra = frame.clone();
+        extra.push(b' ');
+        for bad in [duplicate, altered, unrelated, moved, extra] {
+            assert!(metrics_frame_predecessor(path, expected, &bad).is_err());
+        }
+        assert!(metrics_frame_predecessor("unlisted.rs", expected, &frame).is_err());
+        assert!(metrics_frame_predecessor(path, &"0".repeat(64), &frame).is_err());
         // This is O01's real frozen caller; every mutated physical buffer must fail.
+
         use crate::a13::a06_source_successor::o01_metrics_predecessor;
         let caller = include_bytes!("../../../docs/rust-rewrite/o01/coverage.json");
         let current = include_bytes!("../../ssx-infra/src/observability/mod.rs");
@@ -701,7 +836,24 @@ mod tests {
             "../../../docs/rust-rewrite/w07/qualification-completion-v1.json"
         ))
         .unwrap();
+        snapshot_helper_amendment::verify_current_registry(
+            &root,
+            include_bytes!("../../../docs/rust-rewrite/w07/qualification-completion-v1.json"),
+        )
+        .unwrap();
         preserve_registry(&original, &current).unwrap();
+        for (path, page, joined) in W08_PAGE_READERS {
+            assert_eq!(current["sources"][path], joined);
+            let mut prior = current.clone();
+            prior["sources"][path] = Value::String(page.into());
+            assert!(preserve_registry(&original, &prior).is_err());
+            let mut changed = current.clone();
+            changed["sources"][path] = Value::String("0".repeat(64));
+            assert!(preserve_registry(&original, &changed).is_err());
+            let mut missing = current.clone();
+            missing["sources"].as_object_mut().unwrap().remove(path);
+            assert!(preserve_registry(&original, &missing).is_err());
+        }
         let mut removed = current.clone();
         removed["suites"][0]["tests"]
             .as_array_mut()
@@ -750,6 +902,8 @@ mod tests {
             "crates/ssx-mcp/src/search_surface/mod.rs",
             "crates/ssx-mcp/src/evidence/tools/tests.rs",
             "crates/ssx-mcp/tests/w07_mcp.rs",
+            "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+            "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
         ] {
             let mut missing = current.clone();
             missing["sources"].as_object_mut().unwrap().remove(source);

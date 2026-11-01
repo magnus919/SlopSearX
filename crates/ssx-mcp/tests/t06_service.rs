@@ -1,4 +1,6 @@
 //! Actual shared service seams: preview authority, ownership, capture identity.
+#[path = "t06_support/eof.rs"]
+mod eof;
 #[path = "t06_support/fixture.rs"]
 mod fixture;
 #[path = "t06_support/server.rs"]
@@ -48,8 +50,10 @@ struct Provider {
     endpoint: String,
     started: Arc<tokio::sync::Semaphore>,
     closed: Arc<AtomicUsize>,
+    request_read: Arc<tokio::sync::Semaphore>,
     cancel: tokio_util::sync::CancellationToken,
-    task: tokio::task::JoinHandle<()>,
+    task: tokio::task::JoinHandle<std::result::Result<(), &'static str>>,
+    failure: Arc<std::sync::Mutex<Option<&'static str>>>,
 }
 impl Provider {
     async fn new() -> Result<Self> {
@@ -59,38 +63,46 @@ impl Provider {
         let endpoint = format!("http://{}/v1/systemone", listener.local_addr()?);
         let started = Arc::new(tokio::sync::Semaphore::new(0));
         let closed = Arc::new(AtomicUsize::new(0));
+        let request_read = Arc::new(tokio::sync::Semaphore::new(0));
         let cancel = tokio_util::sync::CancellationToken::new();
-        let (s, c, ct) = (started.clone(), closed.clone(), cancel.clone());
+        let failure = Arc::new(std::sync::Mutex::new(None));
+        let (s, c, ct, f) = (
+            started.clone(),
+            closed.clone(),
+            cancel.clone(),
+            failure.clone(),
+        );
+        let read = request_read.clone();
         let task = tokio::spawn(async move {
-            loop {
-                let mut socket = tokio::select! {_=ct.cancelled()=>break,socket=listener.accept()=>socket.unwrap().0};
-                let mut bytes = Vec::new();
-                let mut buf = [0; 4096];
+            let result = async {
                 loop {
-                    let n = socket.read(&mut buf).await.unwrap();
-                    if n == 0 {
-                        break;
+                    let mut socket = tokio::select! {
+                        _ = ct.cancelled() => return Ok(()),
+                        socket = listener.accept() => socket.map_err(|_| "accept failed")?.0,
+                    };
+                    if !read_provider_request(&mut socket, &ct, &read).await? {
+                        return Ok(());
                     }
-                    bytes.extend_from_slice(&buf[..n]);
-                    if let Some(end) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
-                        let header = String::from_utf8_lossy(&bytes[..end]);
-                        let length = header
-                            .lines()
-                            .find_map(|l| {
-                                l.to_ascii_lowercase()
-                                    .strip_prefix("content-length: ")
-                                    .map(str::to_owned)
-                            })
-                            .and_then(|n| n.parse::<usize>().ok())
-                            .unwrap_or(0);
-                        if bytes.len() >= end + 4 + length {
-                            break;
+                    // Only a complete bounded request may establish readiness.
+                    s.add_permits(1);
+                    let mut byte = [0];
+                    tokio::select! {
+                        _ = ct.cancelled() => return Ok(()),
+                        n = socket.read(&mut byte) => {
+                            if n.map_err(|_| "peer close read failed")? != 0 {
+                                return Err("unexpected bytes after complete request");
+                            }
+                            c.fetch_add(1, Ordering::SeqCst);
                         }
                     }
                 }
-                s.add_permits(1);
-                tokio::select! {_=ct.cancelled()=>{},n=socket.read(&mut buf)=>{assert_eq!(n.unwrap(),0,"client connection did not close");c.fetch_add(1,Ordering::SeqCst);}}
             }
+            .await;
+            if let Err(reason) = result {
+                *f.lock().unwrap() = Some(reason);
+            }
+            s.close();
+            result
         });
         Ok(Self {
             endpoint,
@@ -98,6 +110,8 @@ impl Provider {
             closed,
             cancel,
             task,
+            failure,
+            request_read,
         })
     }
     fn router(&self) -> Arc<JevRouter> {
@@ -114,18 +128,114 @@ impl Provider {
     async fn observed(&self) -> Result<()> {
         tokio::time::timeout(Duration::from_secs(3), self.started.acquire())
             .await
-            .map_err(|e| format!("{e:?}"))??
+            .map_err(|_| "provider readiness observation timeout (3s)")?
+            .map_err(|_| {
+                self.failure
+                    .lock()
+                    .unwrap()
+                    .unwrap_or("provider stopped before readiness")
+            })?
             .forget();
         Ok(())
     }
-    async fn close(self) -> Result<()> {
+    async fn close(mut self) -> Result<()> {
         self.cancel.cancel();
-        tokio::time::timeout(Duration::from_secs(2), self.task)
-            .await
-            .map_err(|e| format!("{e:?}"))??;
-        Ok(())
+        match tokio::time::timeout(Duration::from_secs(2), &mut self.task).await {
+            Ok(joined) => joined
+                .map_err(|_| "provider task join failed")?
+                .map_err(Into::into),
+            Err(_) => {
+                self.task.abort();
+                // Aborting is followed by a join; dropping a JoinHandle detaches it.
+                let disposition = match self.task.await {
+                    Err(e) if e.is_cancelled() => "aborted and joined",
+                    Err(_) => "joined after task failure",
+                    Ok(Ok(())) => "completed and joined after guard",
+                    Ok(Err(_)) => "joined after protocol failure",
+                };
+                Err(format!("provider cooperative retirement timeout (2s); {disposition}").into())
+            }
+        }
     }
 }
+
+/// The fixture accepts only its real Jev POST framing, never partial EOF,
+/// missing/ambiguous length, unbounded headers/body or malformed JSON. No
+/// provider payload/header (including authorization) enters diagnostics.
+async fn read_provider_request(
+    socket: &mut tokio::net::TcpStream,
+    cancel: &tokio_util::sync::CancellationToken,
+    read: &tokio::sync::Semaphore,
+) -> std::result::Result<bool, &'static str> {
+    const HEADER_CAP: usize = 8 * 1024;
+    const REQUEST_CAP: usize = 64 * 1024;
+    let mut bytes = Vec::new();
+    let mut buf = [0; 4096];
+    loop {
+        let n = tokio::select! {
+            _ = cancel.cancelled() => return Ok(false),
+            n = socket.read(&mut buf) => n.map_err(|_| "request read failed")?,
+        };
+        if n == 0 {
+            return Err("incomplete HTTP request before peer EOF");
+        }
+        if bytes.len() + n > REQUEST_CAP {
+            return Err("HTTP request exceeds fixture byte bound");
+        }
+        bytes.extend_from_slice(&buf[..n]);
+        read.add_permits(1);
+        let Some(end) = bytes.windows(4).position(|w| w == b"\r\n\r\n") else {
+            if bytes.len() > HEADER_CAP {
+                return Err("HTTP headers exceed fixture byte bound");
+            }
+            continue;
+        };
+        if end > HEADER_CAP {
+            return Err("HTTP headers exceed fixture byte bound");
+        }
+        let header = std::str::from_utf8(&bytes[..end]).map_err(|_| "invalid HTTP headers")?;
+        let mut lines = header.split("\r\n");
+        if lines.next() != Some("POST /v1/systemone HTTP/1.1") {
+            return Err("unexpected provider request line");
+        }
+        let mut length = None;
+        for line in lines {
+            let (key, value) = line.split_once(':').ok_or("malformed HTTP header")?;
+            if key.eq_ignore_ascii_case("transfer-encoding") {
+                return Err("unsupported HTTP transfer encoding");
+            }
+            if key.eq_ignore_ascii_case("content-length") {
+                if length.is_some() {
+                    return Err("duplicate HTTP content length");
+                }
+                length = Some(
+                    value
+                        .trim()
+                        .parse::<usize>()
+                        .map_err(|_| "invalid HTTP content length")?,
+                );
+            }
+        }
+        let length = length.ok_or("missing HTTP content length")?;
+        let total = (end + 4)
+            .checked_add(length)
+            .filter(|n| *n <= REQUEST_CAP)
+            .ok_or("HTTP request exceeds fixture byte bound")?;
+        if bytes.len() < total {
+            continue;
+        }
+        if bytes.len() != total {
+            return Err("unexpected bytes after HTTP request body");
+        }
+        let body: serde_json::Value =
+            serde_json::from_slice(&bytes[end + 4..]).map_err(|_| "invalid provider JSON body")?;
+        if !body["state"]["user_query"].is_string() || !body["questions"].is_object() {
+            return Err("unexpected provider JSON shape");
+        }
+        return Ok(true);
+    }
+}
+
 #[tokio::test]
 async fn preview_rejects_sensitive_and_disabled_before_optional_provider_and_never_dispatches()
 -> Result<()> {
@@ -630,60 +740,19 @@ async fn actual_stateless_http_disconnect_drains_inflight_optional_request() -> 
 
 #[tokio::test]
 async fn actual_stdio_eof_during_optional_prepare_and_preview_drains_owned_process() -> Result<()> {
-    use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+    eprintln!("T06 EOF control=incomplete-http phase=start");
+    eof::incomplete_readiness_controls().await?;
+    eprintln!("T06 EOF control=incomplete-http phase=passed");
+    eprintln!("T06 EOF control=early-error-cleanup phase=start");
+    eof::early_failure_controls().await?;
+    eprintln!("T06 EOF control=early-error-cleanup phase=passed");
+    eprintln!("T06 EOF control=protocol-and-child-status phase=start");
+    eof::initialization_controls().await?;
+    eprintln!("T06 EOF control=protocol-and-child-status phase=passed");
     for name in ["slopsearx_search", "slopsearx_explain_search_scope"] {
-        let provider = Provider::new().await?;
-        let server = private_valkey::Server::start();
-        let mut child = tokio::process::Command::new(env!("CARGO_BIN_EXE_search-qualification"))
-            .args(["stdio", server.url(), &provider.endpoint])
-            .env_clear()
-            .stdin(std::process::Stdio::piped())
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::inherit())
-            .kill_on_drop(true)
-            .spawn()?;
-        let mut input = child.stdin.take().unwrap();
-        let mut output = tokio::io::BufReader::new(child.stdout.take().unwrap());
-        let init = r#"{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"owned-eof","version":"1"}}}"#;
-        input.write_all(format!("{init}\n").as_bytes()).await?;
-        input.flush().await?;
-        let mut line = String::new();
-        tokio::time::timeout(Duration::from_secs(1), output.read_line(&mut line)).await??;
-        let request = serde_json::json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":{"query":"unrelated public query"}}});
-        input.write_all(format!("{request}\n").as_bytes()).await?;
-        input.flush().await?;
-        provider.observed().await?;
-        input.shutdown().await?;
-        drop(input);
-        assert!(
-            tokio::time::timeout(Duration::from_secs(5), child.wait())
-                .await??
-                .success(),
-            "EOF drain process failed"
-        );
-        // Process exit closes descriptors, but the independently scheduled
-        // provider task must still observe peer EOF before its exact count is ready.
-        tokio::time::timeout(Duration::from_secs(1), async {
-            while provider.closed.load(Ordering::SeqCst) == 0 {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .map_err(|_| "EOF retained owned provider connection")?;
-        assert_eq!(
-            provider.closed.load(Ordering::SeqCst),
-            1,
-            "EOF retained owned provider connection"
-        );
-        assert_eq!(
-            redis::cmd("KEYS")
-                .arg("t06:qualification:dispatch:*")
-                .query::<Vec<String>>(&mut server.connection())?
-                .len(),
-            0,
-            "EOF dispatched engine"
-        );
-        provider.close().await?;
+        eprintln!("T06 EOF positive tool={name} phase=start");
+        eof::run(name, eof::Fault::None).await?;
+        eprintln!("T06 EOF positive tool={name} phase=passed");
     }
     Ok(())
 }

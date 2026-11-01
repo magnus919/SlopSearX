@@ -1,0 +1,197 @@
+--- a/crates/ssx-json/src/float.rs
++++ b/crates/ssx-cli/src/cli_float.rs
+@@ -1,19 +1,14 @@
++//! CLI-local compatibility copy of ssx-json/src/float.rs (repository MIT).
++//! The shared constructor's4MiB token guard is removed for Python CLI parity;
++//! its exact decimal normalization and vetted standard IEEE conversion remain.
++//! Original source SHA and change disposition: docs/rust-rewrite/t08a/provenance.json.
+ //! Exact decimal normalization before standard IEEE conversion. Caller policies
+ //! decide whether nonfinite values are acceptable; no JSON grammar is widened.
+-use crate::MAX_JSON_BYTES;
+ use std::fmt::Write as _;
+ #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+ pub enum FloatError {
+-    ByteLimit,
+     Malformed,
+     Incomplete,
+-}
+-/// Storage refusal is distinct from JSON lexical validation. The caller owns
+-/// the backing allocation charge and keeps it alive until the normalizer drops.
+-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+-pub enum FloatBufferError {
+-    Input(FloatError),
+-    Capacity,
+ }
+ #[derive(Clone, Copy)]
+ enum Grammar {
+@@ -32,9 +27,8 @@
+     Overflow,
+     Decimal,
+ }
+-/// Input is borrowed and independently bounded by each caller. The constructor also
+-/// enforces the public codec's 4MiB ceiling for direct API safety. Invalid and
+-/// incomplete direct inputs return errors, never panic.
++/// Borrowed CLI float token, already constrained by the received response length.
++/// Invalid/incomplete inputs fail; no shared backend limits are changed.
+ pub struct FloatNormalizer<'a> {
+     raw: &'a [u8],
+     at: usize,
+@@ -52,9 +46,6 @@
+ }
+ impl<'a> FloatNormalizer<'a> {
+     pub fn new(raw: &'a str) -> Result<Self, FloatError> {
+-        if raw.len() > MAX_JSON_BYTES {
+-            return Err(FloatError::ByteLimit);
+-        }
+         if raw.is_empty() {
+             return Err(FloatError::Malformed);
+         }
+@@ -73,20 +64,6 @@
+             prepared: None,
+             failed: false,
+         })
+-    }
+-    /// Use caller-owned preallocated scratch without implicit growth. The input
+-    /// bound/initial validation matches `new`. Storage must be empty and cover
+-    /// raw.len()+8 bytes. Digit/sign/dot construction needs at most raw.len()+1;
+-    /// preparation adds at most `e-324` (5 bytes), leaving two bytes of margin.
+-    /// The caller must retain any associated charge through this value's drop.
+-    pub fn with_buffer(raw: &'a str, buffer: String) -> Result<Self, FloatBufferError> {
+-        let mut out = Self::new(raw).map_err(FloatBufferError::Input)?;
+-        let required = raw.len().checked_add(8).ok_or(FloatBufferError::Capacity)?;
+-        if !buffer.is_empty() || buffer.capacity() < required {
+-            return Err(FloatBufferError::Capacity);
+-        }
+-        out.normalized = buffer;
+-        Ok(out)
+     }
+     fn digit(&mut self, byte: u8, fraction: bool) {
+         let index = self.total;
+@@ -254,127 +231,3 @@
+     while !value.advance(8192)? {}
+     value.finish()
+ }
+-
+-#[cfg(test)]
+-mod tests {
+-    use super::*;
+-    #[test]
+-    fn direct_api_rejects_malformed_incomplete_and_bounds_without_panics() {
+-        for raw in [
+-            "", "+1", "01", "-", "1.", "1e", "1e+", " 1", "1 ", "NaN", "Infinity", "0x1", "١",
+-            "1_0",
+-        ] {
+-            assert!(parse_json_f64(raw).is_err(), "{raw}");
+-        }
+-        let mut normalizer = FloatNormalizer::new("1.0").unwrap();
+-        assert_eq!(normalizer.finish(), Err(FloatError::Incomplete));
+-        assert!(!normalizer.advance(0).unwrap());
+-        assert!(!normalizer.advance(1).unwrap());
+-        assert_eq!(normalizer.finish(), Err(FloatError::Incomplete));
+-        assert!(normalizer.advance(2).unwrap());
+-        assert_eq!(normalizer.finish().unwrap(), 1.0);
+-        assert!(matches!(
+-            FloatNormalizer::new(&"0".repeat(MAX_JSON_BYTES + 1)),
+-            Err(FloatError::ByteLimit)
+-        ));
+-    }
+-    #[test]
+-    fn signed_zero_extreme_exponents_subnormal_and_rounding_are_preserved() {
+-        for (raw, expected) in [
+-            ("-0", -0.0),
+-            ("-0e99999999999999999999", -0.0),
+-            ("-1e-99999999999999999999", -0.0),
+-            ("1e99999999999999999999", f64::INFINITY),
+-            ("-1e99999999999999999999", f64::NEG_INFINITY),
+-            ("4.9406564584124654e-324", f64::from_bits(1)),
+-            ("2.4703282292062327e-324", 0.0),
+-            ("1.7976931348623157e308", f64::MAX),
+-            ("1.7976931348623159e308", f64::INFINITY),
+-            (
+-                "1.00000000000000011102230246251565404236316680908203125",
+-                1.0,
+-            ),
+-            (
+-                "1.00000000000000011102230246251565404236316680908203126",
+-                f64::from_bits(1.0f64.to_bits() + 1),
+-            ),
+-        ] {
+-            assert_eq!(
+-                parse_json_f64(raw).unwrap().to_bits(),
+-                expected.to_bits(),
+-                "{raw}"
+-            );
+-        }
+-        let raw = format!("0.{}1e+1990000", "0".repeat(1_990_000));
+-        assert_eq!(parse_json_f64(&raw).unwrap(), 0.1);
+-    }
+-}
+-
+-#[cfg(test)]
+-mod buffer_tests {
+-    use super::*;
+-    #[test]
+-    fn provided_scratch_never_reallocates_across_grammar_and_numeric_paths() {
+-        let mut cases = vec![
+-            "-0".to_owned(),
+-            "0.000e999999999999999999999".to_owned(),
+-            "-1e-99999999999999999999".to_owned(),
+-            "1e99999999999999999999".to_owned(),
+-            "-1e99999999999999999999".to_owned(),
+-            "4.9406564584124654e-324".to_owned(),
+-            "2.4703282292062327e-324".to_owned(),
+-            "1.7976931348623157e308".to_owned(),
+-            "1.7976931348623159e308".to_owned(),
+-            "1.00000000000000011102230246251565404236316680908203126".to_owned(),
+-            "-".to_owned(),
+-            "1.".to_owned(),
+-            "1e+".to_owned(),
+-            "+1".to_owned(),
+-            "01".to_owned(),
+-        ];
+-        cases.push(format!("0.{}1e+1990000", "0".repeat(1_990_000)));
+-        cases.push(format!("-0.{}e+1990000", "0".repeat(1_990_000)));
+-        cases.push(format!("-1.{}e-308", "1".repeat(100_000)));
+-        cases.push(format!("1.{}e0", "1".repeat(MAX_JSON_BYTES - 4)));
+-        for raw in cases {
+-            let expected = parse_json_f64(&raw);
+-            let buffer = String::with_capacity(raw.len() + 8);
+-            let pointer = buffer.as_ptr();
+-            let capacity = buffer.capacity();
+-            let mut value = FloatNormalizer::with_buffer(&raw, buffer).unwrap();
+-            let actual = loop {
+-                let step = value.advance(1024);
+-                assert_eq!(value.normalized.as_ptr(), pointer);
+-                assert_eq!(value.normalized.capacity(), capacity);
+-                match step {
+-                    Ok(true) => break value.finish(),
+-                    Ok(false) => {}
+-                    Err(error) => break Err(error),
+-                }
+-            };
+-            assert_eq!(actual.map(f64::to_bits), expected.map(f64::to_bits));
+-        }
+-    }
+-    #[test]
+-    fn storage_refusal_and_constructor_errors_are_distinct() {
+-        assert!(matches!(
+-            FloatNormalizer::with_buffer("1", String::new()),
+-            Err(FloatBufferError::Capacity)
+-        ));
+-        let mut nonempty = String::with_capacity(32);
+-        nonempty.push('x');
+-        assert!(matches!(
+-            FloatNormalizer::with_buffer("1", nonempty),
+-            Err(FloatBufferError::Capacity)
+-        ));
+-        assert!(matches!(
+-            FloatNormalizer::with_buffer("", String::new()),
+-            Err(FloatBufferError::Input(FloatError::Malformed))
+-        ));
+-        let huge = "0".repeat(MAX_JSON_BYTES + 1);
+-        assert!(matches!(
+-            FloatNormalizer::with_buffer(&huge, String::new()),
+-            Err(FloatBufferError::Input(FloatError::ByteLimit))
+-        ));
+-    }
+-}

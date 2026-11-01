@@ -382,6 +382,25 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             records.push(json!({"A07_source_binding":{"path":path,"kind":"exact original document archive plus reviewed storage-policy successor"}}));
             continue;
         }
+        if path == "docs/rust-rewrite/CASE_STUDY.md" {
+            require(
+                *source
+                    == json!({"path":path,"sha256":"da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39","git_blob":"d609376fa8a8dba26de1d941a60351915f2b1687"}),
+                "A07 exact Page document caller changed",
+            )?;
+            crate::a13::a06_source_successor::try_verify(
+                root,
+                "docs/rust-rewrite/a07/coverage.json",
+                "3356fa8d6933418a666af2642d1c95705f76d60cf1d8306024a7e7f82d0718d2",
+                path,
+                source["sha256"].as_str().unwrap(),
+                None,
+            )
+            .ok_or("A07 Page document route absent")??;
+            let physical = fs::read(root.join(path)).map_err(|e| e.to_string())?;
+            records.push(json!({"A07_source_binding":{"path":path,"kind":"exact frozen source tuple plus authenticated Page inverse","sha256":digest(&physical)}}));
+            continue;
+        }
         if path.starts_with("crates/") || path == "docs/rust-rewrite/ci/gates.json" {
             let blob = source["git_blob"]
                 .as_str()

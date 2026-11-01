@@ -153,7 +153,7 @@ async fn all_engine_source_replay() {
         let response = engine
             .search(&SearchRequest {
                 query: case["query"].as_str().unwrap().into(),
-                page: 8,
+                page: ssx_domain::SearchPage::from_u64(8).expect("positive fixture page"),
                 max_results: Some(1),
                 language: "fr".into(),
                 ..Default::default()

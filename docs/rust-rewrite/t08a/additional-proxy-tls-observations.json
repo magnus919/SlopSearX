@@ -1,0 +1,487 @@
+{
+  "schema": 1,
+  "runtime": "CPython3.13.6",
+  "openssl": "OpenSSL 3.0.16 11 Feb 2025",
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "classification": "immutable actual external source child / owned proxy+origin observations; no native acceptance",
+  "captures": [
+    {
+      "id": "proxy-http-target-http",
+      "destination_scheme": "http",
+      "proxy_scheme": "http",
+      "declared_env": {
+        "SSX_URL": "http://localhost:$TARGETPORT",
+        "http_proxy": "http://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "GET",
+          "target": "http://localhost:$TARGETPORT/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [],
+      "proxy_response_code": 200,
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_proxy_headers": [
+        "47455420687474703a2f2f6c6f63616c686f73743a35333235342f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333235340d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-http-target-https",
+      "destination_scheme": "http",
+      "proxy_scheme": "https",
+      "declared_env": {
+        "SSX_URL": "http://localhost:$TARGETPORT",
+        "http_proxy": "https://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "TLS",
+      "proxy_requests": [
+        {
+          "method": "GET",
+          "target": "http://localhost:$TARGETPORT/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [],
+      "proxy_response_code": 200,
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_proxy_headers": [
+        "47455420687474703a2f2f6c6f63616c686f73743a35333235382f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333235380d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "TLS"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-https-target-http",
+      "destination_scheme": "https",
+      "proxy_scheme": "http",
+      "declared_env": {
+        "SSX_URL": "https://localhost:$TARGETPORT",
+        "https_proxy": "http://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "CONNECT",
+          "target": "localhost:$TARGETPORT",
+          "host": "localhost:$TARGETPORT",
+          "accept": "",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [
+        {
+          "method": "GET",
+          "target": "/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "proxy_response_code": 200,
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_proxy_headers": [
+        "434f4e4e454354206c6f63616c686f73743a353332363120485454502f312e310d0a486f73743a206c6f63616c686f73743a35333236310d0a0d0a"
+      ],
+      "raw_origin_headers": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333236310d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-https-target-https-plain-connect",
+      "destination_scheme": "https",
+      "proxy_scheme": "https",
+      "declared_env": {
+        "SSX_URL": "https://localhost:$TARGETPORT",
+        "https_proxy": "https://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "CONNECT",
+          "target": "localhost:$TARGETPORT",
+          "host": "localhost:$TARGETPORT",
+          "accept": "",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [
+        {
+          "method": "GET",
+          "target": "/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "proxy_response_code": 200,
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_proxy_headers": [
+        "434f4e4e454354206c6f63616c686f73743a353332363620485454502f312e310d0a486f73743a206c6f63616c686f73743a35333236360d0a0d0a"
+      ],
+      "raw_origin_headers": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333236360d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-http-preemptive-auth",
+      "destination_scheme": "http",
+      "proxy_scheme": "http",
+      "declared_env": {
+        "SSX_URL": "http://localhost:$TARGETPORT",
+        "http_proxy": "http://fixture%2Duser:p%C3%A4ss%3Aword@localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "GET",
+          "target": "http://localhost:$TARGETPORT/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "Basic Zml4dHVyZS11c2VyOnDDpHNzOndvcmQ=",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [],
+      "proxy_response_code": 200,
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_proxy_headers": [
+        "47455420687474703a2f2f6c6f63616c686f73743a35333237302f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333237300d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a50726f78792d417574686f72697a6174696f6e3a204261736963205a6d6c34644856795a533131633256794f6e444470484e7a4f6e6476636d513d0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-connect-preemptive-auth",
+      "destination_scheme": "https",
+      "proxy_scheme": "http",
+      "declared_env": {
+        "SSX_URL": "https://localhost:$TARGETPORT",
+        "https_proxy": "http://fixture%2Duser:p%C3%A4ss%3Aword@localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "CONNECT",
+          "target": "localhost:$TARGETPORT",
+          "host": "localhost:$TARGETPORT",
+          "accept": "",
+          "proxy_auth": "Basic Zml4dHVyZS11c2VyOnDDpHNzOndvcmQ=",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [
+        {
+          "method": "GET",
+          "target": "/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "proxy_response_code": 200,
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_proxy_headers": [
+        "434f4e4e454354206c6f63616c686f73743a353332373320485454502f312e310d0a50726f78792d417574686f72697a6174696f6e3a204261736963205a6d6c34644856795a533131633256794f6e444470484e7a4f6e6476636d513d0d0a486f73743a206c6f63616c686f73743a35333237330d0a0d0a"
+      ],
+      "raw_origin_headers": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333237330d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-tls-proxy-wrong-ca",
+      "destination_scheme": "http",
+      "proxy_scheme": "https",
+      "declared_env": {
+        "SSX_URL": "http://localhost:$TARGETPORT",
+        "http_proxy": "https://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/wrong-ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "TLS",
+      "proxy_requests": [],
+      "origin_requests": [],
+      "proxy_response_code": 200,
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f72205b53534c3a2043455254494649434154455f5645524946595f4641494c45445d20636572746966696361746520766572696679206661696c65643a20756e61626c6520746f20676574206c6f63616c2069737375657220636572746966696361746520285f73736c2e633a31303335293e0a",
+      "raw_proxy_headers": [],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "TLS"
+        },
+        {
+          "proxy_error": "SSLError"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-connect-origin-wrong-ca",
+      "destination_scheme": "https",
+      "proxy_scheme": "http",
+      "declared_env": {
+        "SSX_URL": "https://localhost:$TARGETPORT",
+        "https_proxy": "http://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/wrong-ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "CONNECT",
+          "target": "localhost:$TARGETPORT",
+          "host": "localhost:$TARGETPORT",
+          "accept": "",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [],
+      "proxy_response_code": 200,
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f72205b53534c3a2043455254494649434154455f5645524946595f4641494c45445d20636572746966696361746520766572696679206661696c65643a20756e61626c6520746f20676574206c6f63616c2069737375657220636572746966696361746520285f73736c2e633a31303335293e0a",
+      "raw_proxy_headers": [
+        "434f4e4e454354206c6f63616c686f73743a353332383020485454502f312e310d0a486f73743a206c6f63616c686f73743a35333238300d0a0d0a"
+      ],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "plain"
+        },
+        {
+          "proxy_error": "ConnectionResetError"
+        },
+        {
+          "origin_error": "SSLError"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-tls-proxy-wrong-hostname",
+      "destination_scheme": "http",
+      "proxy_scheme": "https",
+      "declared_env": {
+        "SSX_URL": "http://localhost:$TARGETPORT",
+        "http_proxy": "https://127.0.0.1:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "TLS",
+      "proxy_requests": [],
+      "origin_requests": [],
+      "proxy_response_code": 200,
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f72205b53534c3a2043455254494649434154455f5645524946595f4641494c45445d20636572746966696361746520766572696679206661696c65643a2049502061646472657373206d69736d617463682c206365727469666963617465206973206e6f742076616c696420666f7220273132372e302e302e31272e20285f73736c2e633a31303335293e0a",
+      "raw_proxy_headers": [],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "TLS"
+        },
+        {
+          "proxy_error": "SSLError"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-https-url-ip-plain-connect",
+      "destination_scheme": "https",
+      "proxy_scheme": "https",
+      "declared_env": {
+        "SSX_URL": "https://localhost:$TARGETPORT",
+        "https_proxy": "https://127.0.0.1:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "CONNECT",
+          "target": "localhost:$TARGETPORT",
+          "host": "localhost:$TARGETPORT",
+          "accept": "",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [
+        {
+          "method": "GET",
+          "target": "/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "proxy_response_code": 200,
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "raw_proxy_headers": [
+        "434f4e4e454354206c6f63616c686f73743a353332383720485454502f312e310d0a486f73743a206c6f63616c686f73743a35333238370d0a0d0a"
+      ],
+      "raw_origin_headers": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333238370d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-http-407-no-retry",
+      "destination_scheme": "http",
+      "proxy_scheme": "http",
+      "declared_env": {
+        "SSX_URL": "http://localhost:$TARGETPORT",
+        "http_proxy": "http://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "GET",
+          "target": "http://localhost:$TARGETPORT/health",
+          "host": "localhost:$TARGETPORT",
+          "accept": "application/json",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [],
+      "proxy_response_code": 407,
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203430373a20466978747572650a",
+      "raw_proxy_headers": [
+        "47455420687474703a2f2f6c6f63616c686f73743a35333239312f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a206c6f63616c686f73743a35333239310d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    },
+    {
+      "id": "proxy-connect-407-no-retry",
+      "destination_scheme": "https",
+      "proxy_scheme": "http",
+      "declared_env": {
+        "SSX_URL": "https://localhost:$TARGETPORT",
+        "https_proxy": "http://localhost:$PROXYPORT",
+        "SSL_CERT_FILE": "$TLS/ca.pem",
+        "SSL_CERT_DIR": "$TLS/empty"
+      },
+      "proxy_first_transport": "plain",
+      "proxy_requests": [
+        {
+          "method": "CONNECT",
+          "target": "localhost:$TARGETPORT",
+          "host": "localhost:$TARGETPORT",
+          "accept": "",
+          "proxy_auth": "",
+          "referer": ""
+        }
+      ],
+      "origin_requests": [],
+      "proxy_response_code": 407,
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f722054756e6e656c20636f6e6e656374696f6e206661696c65643a2034303720466978747572653e0a",
+      "raw_proxy_headers": [
+        "434f4e4e454354206c6f63616c686f73743a353332393420485454502f312e310d0a486f73743a206c6f63616c686f73743a35333239340d0a0d0a"
+      ],
+      "raw_origin_headers": [],
+      "events": [
+        {
+          "proxy_first": "plain"
+        }
+      ],
+      "fixture_retired": true
+    }
+  ]
+}
