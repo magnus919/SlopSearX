@@ -1187,6 +1187,12 @@ pub(crate) fn verify_current_registry(root: &Path, supplied: &[u8]) -> Result<()
         physical == supplied,
         "current registry supplied bytes differ",
     )?;
+    let frame = document(root)?["container"].clone();
+    let original = registry_parent(root, &frame, &physical)?;
+    need(
+        sha(&original) == CONTAINER_SHA,
+        "exact current registry parent differs",
+    )?;
     let registry: Value = serde_json::from_slice(&physical).map_err(|error| error.to_string())?;
     for path in SOURCES {
         let current = &outer_row(&doc, path)?["current"];
