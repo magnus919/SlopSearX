@@ -4,6 +4,22 @@ This matrix is the release contract for milestone #9. It separates browser
 overhead from upstream engine latency so a slow source is not misdiagnosed as a
 slow interface.
 
+## Bounded publication-date portal contract (#984)
+
+- The labelled form retains `date_from`, `date_to`, and explicit
+  `engines=openalex` while the user refines or resubmits a search. Empty optional
+  controls are omitted from the request rather than serialized as empty dates.
+- Rendered date bounds, status, selected source, and layer-qualified provenance
+  come from the same canonical proof exposed by JSON/YAML; they are escaped and
+  available to assistive technology as text.
+- Pagination and JSON/YAML links preserve both absolute bounds. CSV/RSS links
+  are omitted for bounded searches and direct bounded CSV/RSS requests are
+  rejected before acquisition. Unbounded CSV/RSS links remain available.
+- Browser coverage submits the form at a narrow viewport and inspects the exact
+  URL while intercepting the request before server dispatch. The real HTTP and
+  OpenAlex integration gate separately verifies provider-bound filters, public
+  machine proof, cache behavior, and zero-dispatch denials.
+
 ## Browser matrix
 
 The supported review matrix is the current stable release of Chromium, Firefox,

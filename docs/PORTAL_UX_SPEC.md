@@ -67,7 +67,14 @@ return to the same query by copying the URL.
 5. **Navigate and share:** previous/next controls preserve every active
    parameter. Filter changes reset to page one; browser Back/Forward restores
    the complete URL state.
-6. **Choose visual mode:** the toggle is labelled `Darker mode` when Dark is
+6. **Bound publication dates:** labelled source and inclusive date controls
+   retain the query, explicit OpenAlex scope, and absolute bounds on search
+   resubmission. The results page shows the same applied bounds, enforcement
+   status, source, and `upstream:openalex` provenance as machine metadata. JSON
+   and YAML links preserve the bounds. CSV and RSS are unavailable for bounded
+   searches because they cannot carry the enforcement proof; direct requests
+   for those formats fail before engine dispatch.
+7. **Choose visual mode:** the toggle is labelled `Darker mode` when Dark is
    active and `Dark mode` when Darker is active. The setting is explicit and
    local; it is never inferred from system preference.
 

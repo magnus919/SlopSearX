@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
@@ -89,6 +89,42 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 assert page.evaluate("window.localStorage.getItem('slopsearx-theme')") == next_theme
                 page.reload(wait_until="load")
                 _check_mode(page, next_theme)
+
+                for label in [
+                    "Sources (comma-separated)",
+                    "Categories (comma-separated)",
+                    "Relative time range",
+                    "Publication date from",
+                    "Publication date to",
+                ]:
+                    assert page.get_by_label(label).is_visible()
+                assert page.locator("body").evaluate("element => element.scrollWidth <= window.innerWidth"), (
+                    "search controls overflow the narrow browser viewport"
+                )
+                page.get_by_label("Search").fill("climate & change")
+                page.get_by_label("Sources (comma-separated)").fill("openalex")
+                page.get_by_label("Publication date from").fill("2024-02-29")
+                page.get_by_label("Publication date to").fill("2024-02-29")
+                intercepted: list[str] = []
+
+                def capture_form_request(route: Any) -> None:
+                    intercepted.append(route.request.url)
+                    route.abort()
+
+                context.route("**/search?*", capture_form_request)
+                with page.expect_request(lambda request: "/search?" in request.url) as captured:
+                    page.locator("[data-search-form]").evaluate("form => form.requestSubmit()")
+                parameters = parse_qs(urlsplit(captured.value.url).query)
+                assert parameters == {
+                    "q": ["climate & change"],
+                    "engines": ["openalex"],
+                    "date_from": ["2024-02-29"],
+                    "date_to": ["2024-02-29"],
+                    "language": ["en"],
+                    "safesearch": ["0"],
+                    "format": ["html"],
+                }
+                assert intercepted == [captured.value.url]
             finally:
                 context.close()
 
