@@ -135,3 +135,10 @@ The accepted Page merge is now the CLI integration baseline, `e763c77397cad717d4
 Qualification has three explicit lint/test roles. Workspace Clippy preserves every accepted-main target and flag while excluding only the newly added private Hyper package; the excluded package is not named by workspace feature arguments. The same owners and the shared T08A/checker gate run private Hyper LIB Clippy with full/source-client-framing and -D warnings. The six existing full-unit build/test owners keep their feature floors. Existing unfiltered full private Cargo tests and the upstream test/full deny(warnings) attribute stay intact. Actual successful LIB/full-test records pass the shared validator first; each hostile control removes only one actual role and requires its named error, with all remaining records equal. All ten reviewed HTTP controls must actually pass once. The single production compatibility adjustment below changes no branch behavior; no new ignore, dropped test, global lint allowance or shipping feature change is used.
 
 Minimal-client production Clippy omits the server-only Encoder kind. The private patch expresses `into_chunked_with_trailing_fields` as an equivalent `if matches!(..., Kind::Chunked(_))`: chunked encoders receive the same trailers and preserve `is_last`, while every other encoder is returned unchanged. This removes the single-remaining-variant wildcard lint without an allowance. The pristine archive/license, all surrounding production bytes, and the complete existing upstream unit tests stay unchanged. Both minimal and full production lint plus the existing full unit/encoded-wire controls must qualify the new bytes; prior execution is historical.
+
+T08 native-server integration additionally accepts the discovery endpoint's
+`categories` string list with its separate `category_engines` object. Names must
+be unique, map keys must match exactly, and each mapping value must be a string
+array. Legacy `categories` objects take precedence and retain their original
+semantics; raw `config --json` remains raw JSON presentation. Thirty
+separate external native-shape controls preserve the frozen original corpus.

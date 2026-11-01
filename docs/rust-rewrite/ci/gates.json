@@ -1750,7 +1750,7 @@
               "uses": "actions/upload-artifact@v7",
               "with": {
                 "name": "rust-foundation-${{ matrix.target }}-${{ github.sha }}",
-                "path": "target/rust-evidence/F03.json\ntarget/rust-evidence/F04.json\ntarget/rust-evidence/T01.json\ntarget/rust-evidence/T04.json\ntarget/rust-evidence/T05.json\ntarget/rust-evidence/T06.json\ntarget/rust-evidence/F05.json\ntarget/rust-evidence/F06.json\ntarget/rust-evidence/F09.json\ntarget/rust-evidence/F12.json\ntarget/rust-evidence/F07.json\ntarget/rust-evidence/W00.json\ntarget/rust-evidence/W01.json\ntarget/rust-evidence/W02.json\ntarget/rust-evidence/W03.json\ntarget/rust-evidence/W04.json\ntarget/rust-evidence/W05.json\ntarget/rust-evidence/W11.json\ntarget/rust-evidence/W06.json\ntarget/rust-evidence/W08.json\ntarget/rust-evidence/O03.json\ntarget/rust-evidence/O01.json\ntarget/rust-evidence/F08.json\ntarget/rust-evidence/F10.json\ntarget/rust-evidence/F11.json\ntarget/rust-evidence/F13.json\ntarget/rust-evidence/F14.json\ntarget/rust-evidence/F15.json\ntarget/rust-evidence/T02.json\ntarget/rust-evidence/T09.json\ntarget/rust-evidence/A01.json\ntarget/rust-evidence/A02.json\ntarget/rust-evidence/A03.json\ntarget/rust-evidence/A04.json\ntarget/rust-evidence/A06.json\ntarget/rust-evidence/A05.json\ntarget/rust-evidence/A07.json\ntarget/rust-evidence/A08.json\ntarget/rust-evidence/A09.json\ntarget/rust-evidence/A10.json\ntarget/rust-evidence/A10-linux-control/${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}.*/\ntarget/rust-evidence/A11.json\ntarget/rust-evidence/A12.json\ntarget/rust-evidence/A13.json\ntarget/rust-evidence/A14.json\ntarget/rust-feature-graph.txt\ntarget/rust-evidence/partitions/\ntarget/rust-evidence/foundation-partitions.txt\n",
+                "path": "target/rust-evidence/F03.json\ntarget/rust-evidence/F04.json\ntarget/rust-evidence/T01.json\ntarget/rust-evidence/T04.json\ntarget/rust-evidence/T05.json\ntarget/rust-evidence/T06.json\ntarget/rust-evidence/F05.json\ntarget/rust-evidence/F06.json\ntarget/rust-evidence/F09.json\ntarget/rust-evidence/F12.json\ntarget/rust-evidence/F07.json\ntarget/rust-evidence/W00.json\ntarget/rust-evidence/W01.json\ntarget/rust-evidence/W02.json\ntarget/rust-evidence/W03.json\ntarget/rust-evidence/W04.json\ntarget/rust-evidence/W05.json\ntarget/rust-evidence/W11.json\ntarget/rust-evidence/W06.json\ntarget/rust-evidence/W08.json\ntarget/rust-evidence/O03.json\ntarget/rust-evidence/O01.json\ntarget/rust-evidence/F08.json\ntarget/rust-evidence/F10.json\ntarget/rust-evidence/F11.json\ntarget/rust-evidence/F13.json\ntarget/rust-evidence/F14.json\ntarget/rust-evidence/F15.json\ntarget/rust-evidence/T02.json\ntarget/rust-evidence/T08.json\ntarget/rust-evidence/T09.json\ntarget/rust-evidence/A01.json\ntarget/rust-evidence/A02.json\ntarget/rust-evidence/A03.json\ntarget/rust-evidence/A04.json\ntarget/rust-evidence/A06.json\ntarget/rust-evidence/A05.json\ntarget/rust-evidence/A07.json\ntarget/rust-evidence/A08.json\ntarget/rust-evidence/A09.json\ntarget/rust-evidence/A10.json\ntarget/rust-evidence/A10-linux-control/${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}.*/\ntarget/rust-evidence/A11.json\ntarget/rust-evidence/A12.json\ntarget/rust-evidence/A13.json\ntarget/rust-evidence/A14.json\ntarget/rust-feature-graph.txt\ntarget/rust-evidence/partitions/\ntarget/rust-evidence/foundation-partitions.txt\n",
                 "if-no-files-found": "warn"
               }
             },
@@ -2268,6 +2268,20 @@
               "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo xtask check T02 --output target/rust-evidence/T02.json\n"
             },
             {
+              "name": "Native CLI default and installed backend integration evidence",
+              "env": {
+                "SLOPSEARX_TEST_TEMP_ROOT": "${{ runner.temp }}/t08-sockets",
+                "TMPDIR": "${{ runner.temp }}/t08-sockets",
+                "TMP": "${{ runner.temp }}/t08-sockets",
+                "TEMP": "${{ runner.temp }}/t08-sockets",
+                "SLOPSEARX_TEST_VALKEY_SERVER": "${{ runner.temp }}/ssx-valkey/bin/valkey-server",
+                "OPENSSL_NO_ASM": "1",
+                "OPENSSL_NO_VENDOR": "0",
+                "OPENSSL_STATIC": "1"
+              },
+              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\"' EXIT\ncargo xtask check T08 --output target/rust-evidence/T08.json\n"
+            },
+            {
               "name": "Native Valkey ownership and lifecycle evidence",
               "run": "cargo xtask check F07 --output target/rust-evidence/F07.json"
             },
@@ -2358,7 +2372,7 @@
       },
       "owner": "F03",
       "state": "additive",
-      "successor": "Mandatory runtime partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates."
+      "successor": "Mandatory runtime partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Includes explicit T08 default/installed native CLI-to-production-component integration and source/binary O04 handoff; original command bodies and all other owners remain unchanged."
     },
     "rust.yml:foundation-adapters": {
       "source": {
@@ -2424,21 +2438,44 @@
               "run": "sh scripts/rust-valkey-build.sh \"$RUNNER_TEMP/ssx-valkey/bin\"\necho \"$RUNNER_TEMP/ssx-valkey/bin\" >> \"$GITHUB_PATH\"\nvalkey_server=\"$RUNNER_TEMP/ssx-valkey/bin/valkey-server\"\n{\n  printf 'SLOPSEARX_TEST_VALKEY_SERVER=%s\\n' \"$valkey_server\"\n  printf 'SLOPSEARX_TEST_VALKEY_SERVER_SHA256=%s\\n' \"$(sha256sum \"$valkey_server\" | cut -d ' ' -f 1)\"\n} >> \"$GITHUB_ENV\"\n"
             },
             {
+              "name": "Record adapters footprint before-builds",
+              "shell": "bash",
+              "run": "set -euo pipefail\nevidence=\"target/rust-evidence/partitions/adapters\"\nmkdir -p \"$evidence\"\n{\n  df -Pk \"$GITHUB_WORKSPACE\" \"$RUNNER_TEMP\"\n  df -Pi \"$GITHUB_WORKSPACE\" \"$RUNNER_TEMP\"\n  for directory in .git crates vendor docs target/debug \"target/${{ matrix.target }}\" \"${CARGO_HOME:-$HOME/.cargo}/registry\" \"$RUNNER_TEMP\"; do\n    if [ -d \"$directory\" ]; then du -sk \"$directory\"; fi\n  done\n} | tee \"$evidence/footprint-before-builds.txt\"\n"
+            },
+            {
               "name": "Build actual-process HTTP fixture server",
               "run": "cargo build --locked -p ssx-http --example t02_fixture"
             },
             {
               "name": "Locked workspace build",
-              "run": "cargo build --locked --workspace --target \"${{ matrix.target }}\""
+              "shell": "bash",
+              "run": "set -euo pipefail\nhost=$(rustc --version --verbose | sed -n 's/^host: //p')\ntest \"$host\" = \"${{ matrix.target }}\"\ncargo build --locked --workspace\n"
+            },
+            {
+              "name": "Native readiness and Python bridge smoke",
+              "env": {
+                "SSX_SERVER_BIN": "target/debug/ssx-server"
+              },
+              "run": "sh scripts/rust-foundation-smoke.sh"
             },
             {
               "name": "Verify outbound TLS feature graph",
               "run": "cargo tree --locked --workspace --exclude ssx-cli --exclude ssx-cli-check --exclude ssx-cli-openssl-store --exclude ssx-cli-hyper -e features > target/rust-feature-graph.txt\ngrep -q 'rustls-platform-verifier' target/rust-feature-graph.txt\nif grep -Eq '(^|[[:space:]])(native-tls|hyper-tls|openssl-sys)([[:space:]@v]|$)' target/rust-feature-graph.txt; then\n  echo \"unexpected native-TLS/OpenSSL backend in the locked feature graph\" >&2\n  exit 1\nfi\ncargo run --locked -p ssx-cli-check -- check T08A-TLS-ROLES --output target/rust-cli-tls-roles.json\n"
             },
             {
+              "name": "Record adapters footprint before-provenance",
+              "shell": "bash",
+              "run": "set -euo pipefail\nevidence=\"target/rust-evidence/partitions/adapters\"\nmkdir -p \"$evidence\"\n{\n  df -Pk \"$GITHUB_WORKSPACE\" \"$RUNNER_TEMP\"\n  df -Pi \"$GITHUB_WORKSPACE\" \"$RUNNER_TEMP\"\n  for directory in .git crates vendor docs target/debug \"target/${{ matrix.target }}\" \"${CARGO_HOME:-$HOME/.cargo}/registry\" \"$RUNNER_TEMP\"; do\n    if [ -d \"$directory\" ]; then du -sk \"$directory\"; fi\n  done\n} | tee \"$evidence/footprint-before-provenance.txt\"\n"
+            },
+            {
               "name": "Fresh source-bound workspace compiler provenance",
               "shell": "bash",
               "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/adapters\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=adapters TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst privateUnit = rows.filter(r => r.reason === 'compiler-artifact' && r.manifest_path === path.join(root, 'vendor/ssx-cli-hyper/Cargo.toml') && r.profile.test);\nneed(privateUnit.some(r => ['full', 'http1', 'http2', 'client', 'server', 'source-client-framing'].every(f => r.features.includes(f))), 'qualification private unit feature closure');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual qualification-only full-private-Hyper workspace compiler contexts and executable hashes; not standalone default-shipping CLI evidence or immutable byte/launch archive' }, null, 2) + '\\n');\nNODE\n"
+            },
+            {
+              "name": "Record adapters footprint after-provenance",
+              "shell": "bash",
+              "run": "set -euo pipefail\nevidence=\"target/rust-evidence/partitions/adapters\"\nmkdir -p \"$evidence\"\n{\n  df -Pk \"$GITHUB_WORKSPACE\" \"$RUNNER_TEMP\"\n  df -Pi \"$GITHUB_WORKSPACE\" \"$RUNNER_TEMP\"\n  for directory in .git crates vendor docs target/debug \"target/${{ matrix.target }}\" \"${CARGO_HOME:-$HOME/.cargo}/registry\" \"$RUNNER_TEMP\"; do\n    if [ -d \"$directory\" ]; then du -sk \"$directory\"; fi\n  done\n} | tee \"$evidence/footprint-after-provenance.txt\"\n"
             },
             {
               "name": "Native npm and crates registry pilot adapters",
@@ -2499,13 +2536,6 @@
             {
               "name": "Native infrastructure security adapters",
               "run": "cargo xtask check A12 --output target/rust-evidence/A12.json"
-            },
-            {
-              "name": "Native readiness and Python bridge smoke",
-              "env": {
-                "SSX_SERVER_BIN": "target/${{ matrix.target }}/debug/ssx-server"
-              },
-              "run": "sh scripts/rust-foundation-smoke.sh"
             },
             {
               "name": "Verify adapters source and index unchanged",
@@ -2737,6 +2767,18 @@
               }
             },
             {
+              "name": "Configure private gateway fixture roots",
+              "env": {
+                "SLOPSEARX_INSTALL_TEST_ROOT": "${{ runner.temp }}/ssx-gateway-install",
+                "SLOPSEARX_T07_UNIT_TEST_ROOT": "${{ runner.temp }}/ssx-t07-unit-tests"
+              },
+              "run": "printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\nprintf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n"
+            },
+            {
+              "name": "Prepare private gateway package fixtures",
+              "run": "mkdir -m 700 \"$SLOPSEARX_INSTALL_TEST_ROOT\""
+            },
+            {
               "name": "Confirm pinned toolchain",
               "run": "rustc --version --verbose"
             },
@@ -2791,6 +2833,11 @@
                 "path": "target/rust-evidence/\ntarget/rust-feature-graph.txt\n",
                 "if-no-files-found": "warn"
               }
+            },
+            {
+              "name": "Retire gateway package fixtures",
+              "if": "always()",
+              "run": "rm -rf -- \"$SLOPSEARX_INSTALL_TEST_ROOT\""
             }
           ]
         }
