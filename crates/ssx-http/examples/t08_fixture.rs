@@ -19,7 +19,7 @@ use ssx_infra::{
     search::*,
     valkey::{Valkey, cache::ValkeyCache},
 };
-use ssx_json::{Value, json};
+use ssx_json::json;
 use std::{
     collections::BTreeMap,
     fs::OpenOptions,
@@ -176,7 +176,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         search: service,
         policy: policy_arc,
         telemetry,
-        formats: vec!["html".into(), "json".into(), "csv".into(), "rss".into()],
+        formats: ["html", "json", "csv", "rss"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
         discovery: discovery.config,
         health_contexts: discovery.health_contexts,
         valkey_connected: Arc::new(|| true),

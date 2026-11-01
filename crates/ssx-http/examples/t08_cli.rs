@@ -57,7 +57,10 @@ mod unix {
         path
     }
     fn sha(path: &Path) -> String {
-        format!("{:x}", Sha256::digest(fs::read(path).unwrap()))
+        Sha256::digest(fs::read(path).unwrap())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect()
     }
     fn lines(path: &Path) -> Vec<Value> {
         fs::read_to_string(path)
