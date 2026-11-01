@@ -1344,3 +1344,120 @@ fn fixture_wire(id: &str) -> Vec<u8> {
     GzDecoder::new(compressed).read_to_end(&mut bytes).unwrap();
     bytes
 }
+
+// Additive native-server discovery acceptance. The immutable source corpus and
+// its original case identities stay unchanged; these have separate receipts.
+#[test]
+fn native_discovery_shapes_have_explicit_external_contract() {
+    let corpus: Corpus = serde_json::from_slice(CASES).unwrap();
+    let mut completed = Vec::new();
+    let mut errors = Vec::new();
+    for template_id in [
+        "reference-config-yaml",
+        "reference-engines-yaml",
+        "reference-engines-json",
+    ] {
+        let template = corpus
+            .cases
+            .iter()
+            .find(|case| case.id == template_id)
+            .unwrap();
+        let index = template.replies.len() - 1;
+        let legacy: serde_json::Value =
+            serde_json::from_slice(&unhex(&template.replies[index].body_hex)).unwrap();
+        let mut native = legacy.clone();
+        native["category_engines"] = legacy["categories"].clone();
+        native["categories"] = serde_json::json!(["zeta-cat", "alpha-cat"]);
+        let mut valid = template.clone();
+        valid.id = format!("native-discovery-{template_id}");
+        valid.reference = "T08 explicit native categories-list/category_engines-map extension; unchanged legacy expected output".into();
+        valid.replies[index].body_hex = hex(native.to_string().as_bytes());
+        let result = execute(&valid);
+        completed.push(serde_json::json!({"case":valid.id,"passed":result.is_ok(),"error":result.as_ref().err()}));
+        if let Err(error) = result {
+            errors.push(error);
+        }
+        for (id, body) in [
+            ("missing-map", r#"{"categories":[]}"#),
+            ("wrong-map", r#"{"categories":[],"category_engines":[]}"#),
+            (
+                "nonstring-name",
+                r#"{"categories":[1],"category_engines":{"1":[]}}"#,
+            ),
+            (
+                "duplicate-name",
+                r#"{"categories":["x","x"],"category_engines":{"x":[]}}"#,
+            ),
+            (
+                "mismatched-keys",
+                r#"{"categories":["x"],"category_engines":{"y":[]}}"#,
+            ),
+            (
+                "string-engine-list",
+                r#"{"categories":["x"],"category_engines":{"x":"npm"}}"#,
+            ),
+            (
+                "nonstring-engine",
+                r#"{"categories":["x"],"category_engines":{"x":[1]}}"#,
+            ),
+        ] {
+            let mut case = template.clone();
+            case.id = format!("native-discovery-{template_id}-{id}");
+            case.reference =
+                "T08 malformed native discovery shape must fail closed without coercion".into();
+            case.replies[index].body_hex = hex(body.as_bytes());
+            case.status = 1;
+            case.stdout.clear();
+            case.stderr = "error: ssx: unexpected JSON shape\n".into();
+            let result = execute(&case);
+            completed.push(serde_json::json!({"case":case.id,"passed":result.is_ok(),"error":result.as_ref().err()}));
+            if let Err(error) = result {
+                errors.push(error);
+            }
+        }
+        let mut empty = template.clone();
+        empty.id = format!("native-discovery-{template_id}-empty");
+        empty.reference = "T08 explicit empty native catalog".into();
+        empty.replies[index].body_hex = hex(br#"{"categories":[],"category_engines":{}}"#);
+        empty.stdout = if template_id == "reference-config-yaml" {
+            let footer = template
+                .stdout
+                .split_once("\n## Engine Category Reference")
+                .unwrap()
+                .1;
+            format!("---\ncategory_count: 0\ncategories:\n\n## Engine Category Reference{footer}")
+        } else if template_id == "reference-engines-yaml" {
+            template
+                .stdout
+                .replace("categories: [zeta-cat]", "categories: []")
+        } else {
+            template
+                .stdout
+                .replace("[\n      \"zeta-cat\"\n    ]", "[]")
+        };
+        let result = execute(&empty);
+        completed.push(serde_json::json!({"case":empty.id,"passed":result.is_ok(),"error":result.as_ref().err()}));
+        if let Err(error) = result {
+            errors.push(error);
+        }
+        let mut precedence = template.clone();
+        precedence.id = format!("native-discovery-{template_id}-legacy-precedence");
+        let mut body = legacy;
+        body["category_engines"] = serde_json::json!(false);
+        precedence.replies[index].body_hex = hex(body.to_string().as_bytes());
+        let result = execute(&precedence);
+        completed.push(serde_json::json!({"case":precedence.id,"passed":result.is_ok(),"error":result.as_ref().err()}));
+        if let Err(error) = result {
+            errors.push(error);
+        }
+    }
+    assert_eq!(completed.len(), 30);
+    if let Some(dir) = std::env::var_os("SSX_T08A_EVIDENCE") {
+        fs::write(
+            PathBuf::from(dir).join("native-discovery-controls.json"),
+            serde_json::to_vec_pretty(&completed).unwrap(),
+        )
+        .unwrap();
+    }
+    assert!(errors.is_empty(), "{}", errors.join("\n"));
+}
