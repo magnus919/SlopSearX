@@ -314,6 +314,10 @@ fn pre_t08_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior.into_bytes())
 }
+fn current_main_projection(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    let health = pre_health_f01(path, physical)?;
+    pre_t08_registration(path, &health)
+}
 fn interpret(
     doc: &Value,
     path: &str,
@@ -321,8 +325,7 @@ fn interpret(
     mode: &str,
     parent: Parent,
 ) -> Result<Vec<u8>> {
-    let health = pre_health_f01(path, physical)?;
-    let logical = pre_t08_registration(path, &health)?;
+    let logical = current_main_projection(path, physical)?;
     let physical = logical.as_slice();
     scope(doc)?;
     let index = ROWS
@@ -354,8 +357,17 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = capsule(root)?;
     for (index, (path, cli_count, main_count)) in ROWS.iter().enumerate() {
         let physical = regular(root, path)?;
-        let logical = pre_t08_registration(path, &physical)?;
+        let logical = current_main_projection(path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
+            let health = pre_health_f01(path, &physical)?;
+            need(
+                pre_t08_registration(path, &health)? == logical,
+                "exact pre-health frame reaches existing registration",
+            )?;
+            need(
+                pre_health_f01(path, &health).is_err(),
+                "pre-health frame substituted as physical registration",
+            )?;
             need(
                 pre_t08_registration(path, &logical).is_err(),
                 "pre-T08 frame substituted as physical registration",
