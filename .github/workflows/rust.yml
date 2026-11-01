@@ -404,6 +404,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure private gateway fixture roots
+        env:
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
+        run: |
+          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\n' "$SLOPSEARX_INSTALL_TEST_ROOT" >> "$GITHUB_ENV"
+          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\n' "$SLOPSEARX_T07_UNIT_TEST_ROOT" >> "$GITHUB_ENV"
+
+      - name: Prepare private gateway package fixtures
+        run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"
+
       - name: Confirm pinned toolchain
         run: rustc --version --verbose
 
@@ -566,6 +577,10 @@ jobs:
             target/rust-evidence/
             target/rust-feature-graph.txt
           if-no-files-found: warn
+
+      - name: Retire gateway package fixtures
+        if: always()
+        run: rm -rf -- "$SLOPSEARX_INSTALL_TEST_ROOT"
 
   foundation-runtime:
     name: Foundation runtime (${{ matrix.runner }})
@@ -774,6 +789,21 @@ jobs:
           trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT" 2>/dev/null || true' EXIT
           cargo xtask check T02 --output target/rust-evidence/T02.json
 
+      - name: Native CLI default and installed backend integration evidence
+        env:
+          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t08-sockets
+          TMPDIR: ${{ runner.temp }}/t08-sockets
+          TMP: ${{ runner.temp }}/t08-sockets
+          TEMP: ${{ runner.temp }}/t08-sockets
+          SLOPSEARX_TEST_VALKEY_SERVER: ${{ runner.temp }}/ssx-valkey/bin/valkey-server
+          OPENSSL_NO_ASM: '1'
+          OPENSSL_NO_VENDOR: '0'
+          OPENSSL_STATIC: '1'
+        run: |
+          mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
+          trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT"' EXIT
+          cargo xtask check T08 --output target/rust-evidence/T08.json
+
       - name: Native Valkey ownership and lifecycle evidence
         run: cargo xtask check F07 --output target/rust-evidence/F07.json
 
@@ -937,11 +967,35 @@ jobs:
             printf 'SLOPSEARX_TEST_VALKEY_SERVER_SHA256=%s\n' "$(sha256sum "$valkey_server" | cut -d ' ' -f 1)"
           } >> "$GITHUB_ENV"
 
+      - name: Record adapters footprint before-builds
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="target/rust-evidence/partitions/adapters"
+          mkdir -p "$evidence"
+          {
+            df -Pk "$GITHUB_WORKSPACE" "$RUNNER_TEMP"
+            df -Pi "$GITHUB_WORKSPACE" "$RUNNER_TEMP"
+            for directory in .git crates vendor docs target/debug "target/${{ matrix.target }}" "${CARGO_HOME:-$HOME/.cargo}/registry" "$RUNNER_TEMP"; do
+              if [ -d "$directory" ]; then du -sk "$directory"; fi
+            done
+          } | tee "$evidence/footprint-before-builds.txt"
+
       - name: Build actual-process HTTP fixture server
         run: cargo build --locked -p ssx-http --example t02_fixture
 
       - name: Locked workspace build
-        run: cargo build --locked --workspace --target "${{ matrix.target }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+          host=$(rustc --version --verbose | sed -n 's/^host: //p')
+          test "$host" = "${{ matrix.target }}"
+          cargo build --locked --workspace
+
+      - name: Native readiness and Python bridge smoke
+        env:
+          SSX_SERVER_BIN: target/debug/ssx-server
+        run: sh scripts/rust-foundation-smoke.sh
 
       - name: Verify outbound TLS feature graph
         run: |
@@ -952,6 +1006,20 @@ jobs:
             exit 1
           fi
           cargo run --locked -p ssx-cli-check -- check T08A-TLS-ROLES --output target/rust-cli-tls-roles.json
+
+      - name: Record adapters footprint before-provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="target/rust-evidence/partitions/adapters"
+          mkdir -p "$evidence"
+          {
+            df -Pk "$GITHUB_WORKSPACE" "$RUNNER_TEMP"
+            df -Pi "$GITHUB_WORKSPACE" "$RUNNER_TEMP"
+            for directory in .git crates vendor docs target/debug "target/${{ matrix.target }}" "${CARGO_HOME:-$HOME/.cargo}/registry" "$RUNNER_TEMP"; do
+              if [ -d "$directory" ]; then du -sk "$directory"; fi
+            done
+          } | tee "$evidence/footprint-before-provenance.txt"
 
       - name: Fresh source-bound workspace compiler provenance
         shell: bash
@@ -988,6 +1056,20 @@ jobs:
           fs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\n');
           fs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual qualification-only full-private-Hyper workspace compiler contexts and executable hashes; not standalone default-shipping CLI evidence or immutable byte/launch archive' }, null, 2) + '\n');
           NODE
+
+      - name: Record adapters footprint after-provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="target/rust-evidence/partitions/adapters"
+          mkdir -p "$evidence"
+          {
+            df -Pk "$GITHUB_WORKSPACE" "$RUNNER_TEMP"
+            df -Pi "$GITHUB_WORKSPACE" "$RUNNER_TEMP"
+            for directory in .git crates vendor docs target/debug "target/${{ matrix.target }}" "${CARGO_HOME:-$HOME/.cargo}/registry" "$RUNNER_TEMP"; do
+              if [ -d "$directory" ]; then du -sk "$directory"; fi
+            done
+          } | tee "$evidence/footprint-after-provenance.txt"
 
       - name: Native npm and crates registry pilot adapters
         run: cargo xtask check A01 --output target/rust-evidence/A01.json
@@ -1032,11 +1114,6 @@ jobs:
 
       - name: Native infrastructure security adapters
         run: cargo xtask check A12 --output target/rust-evidence/A12.json
-
-      - name: Native readiness and Python bridge smoke
-        env:
-          SSX_SERVER_BIN: target/${{ matrix.target }}/debug/ssx-server
-        run: sh scripts/rust-foundation-smoke.sh
 
       - name: Verify adapters source and index unchanged
         if: always()
@@ -1175,6 +1252,7 @@ jobs:
             target/rust-evidence/F14.json
             target/rust-evidence/F15.json
             target/rust-evidence/T02.json
+            target/rust-evidence/T08.json
             target/rust-evidence/T09.json
             target/rust-evidence/A01.json
             target/rust-evidence/A02.json

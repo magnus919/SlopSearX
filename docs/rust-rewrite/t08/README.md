@@ -1,0 +1,25 @@
+# T08 native backend integration
+
+T08 consumes the accepted native T08A client and accepted T02 HTTP boundary. Read the [rewrite case study](../CASE_STUDY.md), [CLI split](../CLI_AUTHORING_SPLIT.md), and issue #903. The executable gate is `cargo xtask check T08`.
+
+The gate launches the unchanged production HTTP router, SearchService, production npm adapter and real private Valkey in a separate qualification process. A counted loopback provider supplies deterministic npm JSON. This is production-component integration, not foundation-only `ssx-server`, production startup, deployment or O04 distribution acceptance. The CLI imports no backend implementation.
+
+The adapter recorder delegates every request unchanged. npm intentionally does not send page upstream. Adjacent values beyond u64 must reach the adapter exactly as numeric JSON lexemes and decimal text, produce distinct first misses, and each repeat must report cached=true without another adapter/upstream call. Raw adapter JSONL is authoritative for numeric lexemes; the generic serde_json receipt view is not a lossless numeric representation. No upstream pagination capability is invented.
+
+The closed inventory has 17 IDs: all four commands in text/JSON forms, Unicode search, two distinct high pages with repeats, unavailable unknown scope/invalid page (neither dispatches), classified upstream HTTP/malformed-JSON failures and unavailable native server. Gate validation checks actual IDs, outputs/statuses, images, raw adapter requests, cache state and owned cleanup. It first accepts the real receipt, then rejects omission, duplication and image-identity counterfactuals. T08A retains the full original 531 source-bound compatibility receipts plus 30 separate native discovery shape cases. Its actual default and installed images both run that new owner; these counts remain separate.
+
+## Native source build and installation
+
+The five supported client source-build targets and C/Perl/make or MSVC/nmake requirements are documented in [T08A installation](../t08a/README.md#build-and-source-installation). Use the pinned Rust toolchain and registered persistent build/cache/TMP roots. `cargo install --debug --locked --path crates/ssx-cli --root "$SSX_INSTALL_ROOT"` installs `$SSX_INSTALL_ROOT/bin/ssx` (`ssx.exe` on Windows). No interpreter or backend is needed by that executable. Native backend integration runs only on supported Unix backend hosts; Windows client installation remains independently qualified by T08A.
+
+For T08, set an absolute `SLOPSEARX_TEST_VALKEY_SERVER` and an owned short absolute `SLOPSEARX_TEST_TEMP_ROOT`. An optional `SLOPSEARX_TEST_VALKEY_SERVER_SHA256` must match when present. Run `cargo xtask check T08 --output "$CARGO_TARGET_DIR/rust-evidence/T08.json"`. It builds the normal `ssx-http` examples `t08_fixture` and `t08_cli`, obtains current compiler artifact identities, enforces the existing default CLI compiler/feature floor, audits native libraries and dependency separation, executes the actual default CLI, performs the documented source installation into a fresh owned root, and replays all 17 cases against that independently hashed installed binary. Every phase has its own fresh receipts.
+
+The explicit native driver is not an automatically discovered test, ignored test or nested Cargo runner. Ordinary workspace tests cannot accidentally invoke environment-dependent integration. Driver children run without Python/PyPy or inherited proxy/backend settings; startup/execution, IO and owned child/socket/listener retirement are bounded.
+
+## Handoff and remaining acceptance
+
+Each real gate writes `O04-HANDOFF.json` below its unique `rust-evidence/t08-native-*` root and embeds that record in T08.json. It names the exact source, lock/toolchain/native host, default and installed CLI images, HTTP assembly/driver/Valkey images, source-install guide, both actual 17-case receipts, optional-client disposition and O04 boundary. Retain it with the actual gate report and raw outputs. O04/#921 owns release archives, signing/promotion, and production install/upgrade/uninstall. No production activation or provider calls are included.
+
+The root `ssx` remains an optional historical standalone stdlib Python wire script during migration. Its exact accepted source identity and lack of backend imports are audited; the native client/backend neither imports nor starts it. No new Python package is introduced and no Python runtime is required by this gate's executable paths.
+
+Source qualification, actual local gate execution, final original compatibility regression, hosted Linux x86_64/ARM64 T08 acceptance and the final reviewed handoff must all be verified before #903 closes. Authored code and partial executions alone do not establish completion. Portal impact: no shared browser/request/renderer contract is changed; this slice composes existing production boundaries and extends native CLI handling of their existing discovery shape.
