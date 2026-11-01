@@ -813,6 +813,21 @@ mod tests {
         let script = root.join("crates/ssx-gateway/tests/platform_support/trust-store.ps1");
         std::fs::create_dir_all(script.parent().unwrap()).unwrap();
         let original = include_bytes!("trust-store.ps1");
+        let script_hash = Sha256::digest(original)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>();
+        let crlf_pairs = original.windows(2).filter(|pair| *pair == b"\r\n").count();
+        eprintln!(
+            "SSX_TRUST_SCRIPT bytes={} sha256={script_hash} crlf_pairs={crlf_pairs}",
+            original.len()
+        );
+        assert_eq!(original.len(), 1904, "fixed trust script byte count");
+        assert_eq!(
+            script_hash, TRUST_SCRIPT_SHA256,
+            "fixed trust script digest"
+        );
+        assert_eq!(crlf_pairs, 0, "fixed trust script must retain LF bytes");
         std::fs::write(&script, original).unwrap();
         std::fs::write(
             case.join("ca.der"),

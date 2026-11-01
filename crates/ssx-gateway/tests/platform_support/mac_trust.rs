@@ -12,7 +12,7 @@ use std::{
     os::unix::process::CommandExt,
     path::{Path, PathBuf},
     process::{ExitStatus, Stdio},
-    time::Duration,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::{
     io::{AsyncRead, AsyncReadExt},
@@ -166,6 +166,12 @@ impl Security {
         let mut child = command
             .spawn()
             .map_err(|error| format!("security {label}: spawn: {error}"))?;
+        let launched_unix_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .ok()
+            .map(|value| value.as_millis());
+        let owned_pid = child.id().ok_or("child has no pid")?;
+        eprintln!("owned security {label}: launched pid={owned_pid} unix_ms={launched_unix_ms:?}");
         let mut group = Group {
             pid: Pid::from_raw(
                 i32::try_from(child.id().ok_or("child has no pid")?)
@@ -231,7 +237,11 @@ impl Security {
             errors.push("output cap exceeded".into());
         }
         eprintln!(
-            "owned security {label}: finished in {:?}, status {status:?}",
+            "owned security {label}: finished pid={owned_pid} unix_ms={:?} after {:?}, status {status:?}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .ok()
+                .map(|value| value.as_millis()),
             started.elapsed()
         );
         if !errors.is_empty() {
@@ -501,9 +511,81 @@ fn registered() -> Result<PathBuf, String> {
         .map(PathBuf::from)
         .ok_or_else(|| "missing registered fixture root".into())
 }
+// Every diagnostic uses the same bounded child/group/capture owner. Unknown
+// diagnostics cannot replace or weaken the original trust-operation outcome.
+#[cfg(any(target_os = "macos", test))]
+async fn read_only_diagnostic(
+    root: &Path,
+    owner: &Security,
+    arguments: &[&str],
+    deadline: Instant,
+    label: &str,
+) {
+    match owner.run(root, args(arguments), deadline).await {
+        Ok(bytes) => eprintln!(
+            "read-only hosted diagnostic {label}: {}",
+            String::from_utf8_lossy(&bytes)
+        ),
+        Err(error) => {
+            eprintln!("read-only hosted diagnostic {label}: unavailable/unknown: {error}")
+        }
+    }
+}
+#[cfg(any(target_os = "macos", test))]
+async fn retain_install_result_after_diagnostics(
+    root: &Path,
+    result: Result<(), String>,
+    log_owner: &Security,
+) -> Result<(), String> {
+    if result.is_err() {
+        read_only_diagnostic(root, log_owner,
+            &["show", "--last", "1m", "--style", "compact", "--info", "--predicate",
+                "(process == 'authd' OR process == 'SecurityAgent') AND eventMessage CONTAINS[c] 'trust-settings'"],
+            Instant::now() + Duration::from_secs(5), "recent-trust-authorization-events").await;
+    }
+    result
+}
+#[cfg(target_os = "macos")]
+async fn read_only_context(root: &Path) {
+    let context: &[(&str, &str, &[&str])] = &[
+        ("uid", "/usr/bin/id", &["-u"]),
+        ("bootstrap-manager", "/bin/launchctl", &["managername"]),
+        ("bootstrap-uid", "/bin/launchctl", &["manageruid"]),
+        (
+            "stored-user-rule-not-effective-policy",
+            "/usr/bin/security",
+            &["authorizationdb", "read", "com.apple.trust-settings.user"],
+        ),
+    ];
+    let deadline = Instant::now() + Duration::from_secs(25);
+    for &(label, executable, arguments) in context {
+        let owner = Security {
+            executable: PathBuf::from(executable),
+            limits: Limits {
+                command: Duration::from_secs(5),
+                ..Limits::default()
+            },
+        };
+        read_only_diagnostic(root, &owner, arguments, deadline, label).await;
+    }
+    // Bootstrap hints and a stored rule do not establish the Security session,
+    // effective built-in policy, an authorization prompt or queued-write quiescence.
+}
 #[cfg(target_os = "macos")]
 pub async fn install(root: &Path) -> Result<(), String> {
-    install_with(&Security::hosted()?, &registered()?, root).await
+    let security = Security::hosted()?;
+    let base = registered()?;
+    let root = owned_root(&base, root)?;
+    read_only_context(&root).await;
+    let result = install_with(&security, &base, &root).await;
+    let log_owner = Security {
+        executable: "/usr/bin/log".into(),
+        limits: Limits {
+            command: Duration::from_secs(5),
+            ..Limits::default()
+        },
+    };
+    retain_install_result_after_diagnostics(&root, result, &log_owner).await
 }
 #[cfg(target_os = "macos")]
 pub async fn remove(root: &Path) -> Result<(), String> {
@@ -730,6 +812,34 @@ exit 0"#
             );
             assert_eq!(fake.calls().len(), step);
             assert_eq!(fake.root.join(MARKER).exists(), step > 1);
+        }
+        // Exercise the actual observer path with an owned fake executable. A
+        // failed/timeout diagnostic must never replace the real install error.
+        for diagnostic in ["printf unavailable >&2; exit 19", "exec sleep 30"] {
+            let fake = Fake::new(&format!(
+                r#"
+if [ "$1" = list-keychains ]; then printf original-install-error >&2; exit 71; fi
+if [ "$1" = show ]; then printf entered > diagnostic-entered; {diagnostic}; fi
+exit 0"#
+            ));
+            let original = install_with(&fake.security, &fake.base, &fake.root)
+                .await
+                .unwrap_err();
+            assert!(original.contains("original-install-error"));
+            let observed = retain_install_result_after_diagnostics(
+                &fake.root,
+                Err(original.clone()),
+                &fake.security,
+            )
+            .await
+            .unwrap_err();
+            assert_eq!(observed, original);
+            assert_eq!(
+                fs::read_to_string(fake.root.join("diagnostic-entered")).unwrap(),
+                "entered"
+            );
+            assert_eq!(fake.calls(), ["list-keychains", "show"]);
+            assert!(!fake.root.join(MARKER).exists());
         }
     }
     #[tokio::test]
