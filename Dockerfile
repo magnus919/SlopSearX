@@ -1,7 +1,9 @@
 # Native status-only container health probe. Runtime remains Python until O04/G08.
 FROM rust:1.99.0-bookworm@sha256:114c7a4425406451c2866b6aafe69fe29b1b298832db1277d411ac73c82d04d6 AS healthcheck-builder
 WORKDIR /build
-COPY . .
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+COPY crates/ crates/
+COPY vendor/ vendor/
 RUN rustc --version && cargo test --locked -p ssx-healthcheck \
     && cargo build --locked --release -p ssx-healthcheck
 

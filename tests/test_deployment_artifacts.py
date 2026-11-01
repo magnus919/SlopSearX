@@ -279,6 +279,13 @@ def test_architecture_tags_follow_commit_retention_instead_of_each_run() -> None
 def test_health_builder_and_runtime_bases_are_both_verified(monkeypatch: pytest.MonkeyPatch) -> None:
     dockerfile = (ROOT / "Dockerfile").read_text()
     bases = verify.pinned_bases(dockerfile)
+    builder = dockerfile.split("# SlopSearX production image", 1)[0]
+    assert "COPY . ." not in builder
+    assert [line for line in builder.splitlines() if line.startswith("COPY ")] == [
+        "COPY Cargo.toml Cargo.lock rust-toolchain.toml ./",
+        "COPY crates/ crates/",
+        "COPY vendor/ vendor/",
+    ]
     assert [repository for repository, _, _ in bases] == ["library/rust", "library/python"]
     assert bases[0][1] == "1.99.0-bookworm"
     assert 'CMD ["/usr/local/bin/ssx-healthcheck"]' in dockerfile
