@@ -654,7 +654,7 @@
             },
             {
               "name": "Smoke test container",
-              "run": "docker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8080/health\npython3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark\ndocker stop slopsearx-smoke\ndocker rm slopsearx-smoke\n"
+              "run": "trap 'docker rm -f slopsearx-smoke >/dev/null 2>&1 || true' EXIT\ndocker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8080/health\npython3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark\n# Actual shipped probe: direct local health despite hostile proxy environment.\ndocker exec -e HTTP_PROXY=http://127.0.0.1:9 -e http_proxy=http://127.0.0.1:9 \\\n  -e ALL_PROXY=http://127.0.0.1:9 -e NO_PROXY= -e no_proxy= \\\n  slopsearx-smoke /usr/local/bin/ssx-healthcheck\n# A fresh container with no server must fail, silently, with exit one.\nset +e\noutput=$(docker run --rm --entrypoint /usr/local/bin/ssx-healthcheck ${{ steps.tag.outputs.ref }} 2>&1)\nstatus=$?\nset -e\ntest \"$status\" -eq 1\ntest -z \"$output\"\ndocker stop slopsearx-smoke\ndocker rm slopsearx-smoke\n"
             },
             {
               "name": "Smoke test configured Darker default",
