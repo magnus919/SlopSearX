@@ -345,6 +345,10 @@ struct Stage {
     identified: bool,
     pending: bool,
 }
+fn device_id<T: TryInto<u64>>(value: T) -> Option<u64> {
+    value.try_into().ok()
+}
+
 impl Stage {
     fn cleanup(&mut self) -> io::Result<()> {
         if !self.pending {
@@ -358,7 +362,7 @@ impl Stage {
             self.name.as_str(),
             AtFlags::AT_SYMLINK_NOFOLLOW,
         ) {
-            Ok(stat) if stat.st_dev as u64 == self.dev && stat.st_ino == self.ino => {
+            Ok(stat) if device_id(stat.st_dev) == Some(self.dev) && stat.st_ino == self.ino => {
                 unlinkat(&self.parent, self.name.as_str(), UnlinkatFlags::NoRemoveDir)
                     .map_err(io::Error::from)?;
                 self.pending = false;
@@ -372,8 +376,21 @@ impl Stage {
         }
     }
 }
+
 impl Drop for Stage {
     fn drop(&mut self) {
         let _ = self.cleanup();
+    }
+}
+
+#[cfg(test)]
+mod device_id_tests {
+    use super::device_id;
+
+    #[test]
+    fn converts_signed_macos_and_unsigned_linux_device_ids_without_casts() {
+        assert_eq!(device_id(7_i32), Some(7_u64));
+        assert_eq!(device_id(7_u64), Some(7_u64));
+        assert_eq!(device_id(-1_i32), None);
     }
 }
