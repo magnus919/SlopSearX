@@ -83,20 +83,30 @@ fn material(_: &Path, _: &str, _: usize, _: &str) -> Result<Vec<u8>> {
     Err("O02 health retirement source proof requires a Unix qualification host".into())
 }
 fn absence(root: &Path, tracked: &BTreeSet<String>) -> Result<()> {
-    let parent = root.join("docker");
-    let meta = fs::symlink_metadata(&parent).map_err(|e| e.to_string())?;
-    need(
-        meta.is_dir() && !meta.file_type().is_symlink(),
-        "retired parent requires actual directory",
-    )?;
-    need(
-        parent
-            .canonicalize()
-            .map_err(|e| e.to_string())?
-            .starts_with(root.canonicalize().map_err(|e| e.to_string())?),
-        "retired parent stays within root",
-    )?;
     need(!tracked.contains(PATH), "retired path remains untracked")?;
+    let parent = root.join("docker");
+    match fs::symlink_metadata(&parent) {
+        Ok(meta) => {
+            need(
+                meta.is_dir() && !meta.file_type().is_symlink(),
+                "retired parent requires actual directory",
+            )?;
+            need(
+                parent
+                    .canonicalize()
+                    .map_err(|e| e.to_string())?
+                    .starts_with(root.canonicalize().map_err(|e| e.to_string())?),
+                "retired parent stays within root",
+            )?;
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            need(
+                !tracked.iter().any(|path| path.starts_with("docker/")),
+                "absent retired parent has no indexed descendants",
+            )?;
+        }
+        Err(error) => return Err(error.to_string()),
+    }
     match fs::symlink_metadata(root.join(PATH)) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
         _ => Err("O02 health retirement: retired path must be physically absent".into()),
@@ -250,6 +260,16 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     ));
     fs::create_dir(&owned).map_err(|e| e.to_string())?;
     let result = (|| -> Result<()> {
+        // Fresh Git checkouts omit the directory after its last tracked file retires.
+        absence(&owned, &BTreeSet::new())?;
+        need(
+            absence(
+                &owned,
+                &BTreeSet::from(["docker/unexpected.py".to_string()]),
+            )
+            .is_err(),
+            "missing parent with indexed descendant rejected",
+        )?;
         fs::create_dir(owned.join("docker")).map_err(|e| e.to_string())?;
         // Exercise the real fixed replacement authentication on an owned closure,
         // then mutate the actual native source material, not its expected tuple.
