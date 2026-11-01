@@ -2897,6 +2897,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ssx-ops"
+version = "0.1.0"
+dependencies = [
+ "sha2",
+ "ssx-infra",
+ "ssx-json",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "ssx-owned-budget"
 version = "0.1.0"
 

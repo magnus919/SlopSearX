@@ -1,12 +1,11 @@
 import re
 from pathlib import Path
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 
 import pytest
 import yaml
 
 from scripts import promote_image_digest as promo
-from scripts import verify_docker_base_digest as verify
 
 ROOT = Path(__file__).parents[1]
 
@@ -16,78 +15,7 @@ def test_dockerfile_uses_a_digest_pinned_python_base() -> None:
     assert re.search(r"^FROM python:[^@\s]+@sha256:[0-9a-f]{64}$", dockerfile, re.MULTILINE)
 
     workflow = (ROOT / ".github/workflows/docker.yml").read_text()
-    assert "python3 scripts/verify_docker_base_digest.py" in workflow
-
-
-def test_pinned_base_parser_accepts_generic_python_tag() -> None:
-    digest = "a" * 64
-    assert verify._pinned_python_base(f"FROM python:3.13-slim-bookworm@sha256:{digest}\n") == (
-        "3.13-slim-bookworm",
-        f"sha256:{digest}",
-    )
-
-
-def test_pinned_base_parser_rejects_multiple_from_lines() -> None:
-    digest = "a" * 64
-    dockerfile = f"FROM python:3.12-slim@sha256:{digest}\nFROM scratch\n"
-
-    with pytest.raises(SystemExit, match="recognized"):
-        verify._pinned_python_base(dockerfile)
-
-
-@pytest.mark.parametrize(
-    "second_from",
-    [
-        "FROM --platform=linux/amd64 python:3.12-slim",
-        "FROM python:3.12-slim  # runtime stage",
-    ],
-)
-def test_pinned_base_parser_rejects_unrecognized_from_lines(second_from: str) -> None:
-    digest = "a" * 64
-    dockerfile = f"FROM python:3.12-slim@sha256:{digest}\n{second_from}\n"
-
-    with pytest.raises(SystemExit, match="recognized"):
-        verify._pinned_python_base(dockerfile)
-
-
-def test_registry_lookup_retries_transient_failures(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls: list[object] = []
-
-    class Response:
-        def __enter__(self) -> "Response":
-            return self
-
-        def __exit__(self, *args: object) -> None:
-            return None
-
-    def fake_urlopen(request: object, timeout: int) -> Response:
-        calls.append((request, timeout))
-        if len(calls) < 3:
-            raise URLError("temporary failure")
-        return Response()
-
-    monkeypatch.setattr(verify.urllib.request, "urlopen", fake_urlopen)
-    monkeypatch.setattr(verify.time, "sleep", lambda _seconds: None)
-
-    with verify._urlopen_with_retries("https://example.test", label="test request"):
-        pass
-
-    assert len(calls) == 3
-
-
-def test_registry_lookup_classifies_permanent_http_failure(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls: list[object] = []
-
-    def fake_urlopen(request: object, timeout: int) -> None:
-        calls.append((request, timeout))
-        raise HTTPError("https://example.test", 404, "not found", {}, None)
-
-    monkeypatch.setattr(verify.urllib.request, "urlopen", fake_urlopen)
-
-    with pytest.raises(verify.RegistryLookupError, match="HTTP 404"):
-        verify._urlopen_with_retries("https://example.test", label="test request")
-
-    assert len(calls) == 1
+    assert '"$SSX_IMAGE_OPS_BIN" verify-base-digests --dockerfile Dockerfile' in workflow
 
 
 GHCR_DIGEST_PIN = "ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7"
@@ -264,7 +192,8 @@ def test_container_publication_requires_both_native_architectures() -> None:
         step["run"] for step in publish["steps"] if step.get("name") == "Publish manifest from tested digests"
     )
     assert '"$(cat digests/amd64)" "$(cat digests/arm64)"' in command
-    assert 'assert platforms == {("linux", "amd64"), ("linux", "arm64")}' in command
+    assert "verify-image-platforms --manifest manifest.json" in command
+    assert "python" not in command
 
 
 def test_architecture_tags_follow_commit_retention_instead_of_each_run() -> None:
@@ -276,37 +205,28 @@ def test_architecture_tags_follow_commit_retention_instead_of_each_run() -> None
     assert "GITHUB_RUN_ATTEMPT" not in tag_command
 
 
-def test_health_builder_and_runtime_bases_are_both_verified(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_native_health_builder_inputs_and_tool_handoff_remain_bounded() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text()
-    bases = verify.pinned_bases(dockerfile)
     builder = dockerfile.split("# SlopSearX production image", 1)[0]
-    assert "COPY . ." not in builder
     assert [line for line in builder.splitlines() if line.startswith("COPY ")] == [
         "COPY Cargo.toml Cargo.lock rust-toolchain.toml ./",
         "COPY crates/ crates/",
         "COPY vendor/ vendor/",
     ]
-    assert [repository for repository, _, _ in bases] == ["library/rust", "library/python"]
-    assert bases[0][1] == "1.99.0-bookworm"
     assert 'CMD ["/usr/local/bin/ssx-healthcheck"]' in dockerfile
-    assert "healthcheck.py" not in dockerfile
-    assert "uvicorn" in dockerfile  # This increment does not claim server retirement.
-    for malformed in [
-        dockerfile + "\nFROM scratch\n",
-        dockerfile.replace(" AS healthcheck-builder", " AS arbitrary-builder"),
-        dockerfile.replace("rust:1.99.0-bookworm@sha256:", "rust:1.99.0-bookworm@bad:"),
-    ]:
-        with pytest.raises(SystemExit):
-            verify.pinned_bases(malformed)
-    calls: list[str] = []
-
-    def actual(repository: str, tag: str) -> str:
-        calls.append(repository)
-        return next(digest for repo, _, digest in bases if repo == repository)
-
-    monkeypatch.setattr(verify, "registry_digest", actual)
-    monkeypatch.setattr("sys.argv", ["verify_docker_base_digest.py", "--dockerfile", str(ROOT / "Dockerfile")])
-    assert verify.main() == 0
-    assert calls == ["library/rust", "library/python"]
-    monkeypatch.setattr(verify, "registry_digest", lambda repository, tag: "sha256:" + "0" * 64)
-    assert verify.main() == 1
+    assert "uvicorn" in dockerfile
+    workflow = yaml.safe_load((ROOT / ".github/workflows/docker.yml").read_text())
+    jobs = workflow["jobs"]
+    handoff = next(
+        step for step in jobs["build-and-push"]["steps"] if step.get("name") == "Hand off native manifest verifier"
+    )
+    assert handoff["if"] == "github.event_name == 'push' && matrix.arch == 'amd64'"
+    download = next(
+        step
+        for step in jobs["publish-manifest"]["steps"]
+        if step.get("name") == "Download native manifest verifier from this run"
+    )
+    assert handoff["with"]["name"] == download["with"]["name"]
+    assert "run-id" not in download["with"]
+    assert "repository" not in download["with"]
+    assert not (ROOT / "scripts/verify_docker_base_digest.py").exists()

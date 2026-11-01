@@ -578,11 +578,26 @@
     "docker.yml:build-and-push": {
       "source": {
         "job": {
+          "strategy": {
+            "fail-fast": false,
+            "matrix": {
+              "include": [
+                {
+                  "arch": "amd64",
+                  "runner": "ubuntu-24.04"
+                },
+                {
+                  "arch": "arm64",
+                  "runner": "ubuntu-24.04-arm"
+                }
+              ]
+            }
+          },
+          "runs-on": "${{ matrix.runner }}",
           "permissions": {
             "contents": "read",
             "packages": "write"
           },
-          "runs-on": "${{ matrix.runner }}",
           "steps": [
             {
               "uses": "actions/checkout@v7"
@@ -602,14 +617,14 @@
               "name": "Log in to ghcr.io",
               "uses": "docker/login-action@v4",
               "with": {
-                "password": "${{ secrets.GITHUB_TOKEN }}",
                 "registry": "${{ env.REGISTRY }}",
-                "username": "${{ github.actor }}"
+                "username": "${{ github.actor }}",
+                "password": "${{ secrets.GITHUB_TOKEN }}"
               }
             },
             {
-              "id": "meta",
               "name": "Extract metadata",
+              "id": "meta",
               "uses": "docker/metadata-action@v6",
               "with": {
                 "images": "${{ env.IMAGE_NAME }}",
@@ -617,83 +632,94 @@
               }
             },
             {
-              "id": "tag",
               "name": "Set architecture image tag",
+              "id": "tag",
               "run": "echo \"ref=${IMAGE_NAME}:${GITHUB_SHA::7}-${{ matrix.arch }}\" >> \"$GITHUB_OUTPUT\""
             },
             {
+              "name": "Build and test native image operations",
+              "shell": "bash",
+              "env": {
+                "CARGO_PROFILE_DEV_DEBUG": "0",
+                "CARGO_PROFILE_TEST_DEBUG": "0",
+                "CARGO_INCREMENTAL": "0"
+              },
+              "run": "set -euo pipefail\nops_root=\"$RUNNER_TEMP/ssx-image-ops\"\nmkdir -m 700 \"$ops_root\"\nmkdir -m 700 \"$ops_root/tmp\" \"$ops_root/tool\"\nexport CARGO_TARGET_DIR=\"$ops_root/target\" CARGO_HOME=\"$ops_root/cargo-home\" TMPDIR=\"$ops_root/tmp\"\nrustc --version --verbose\nhost=$(rustc --version --verbose | sed -n 's/^host: //p')\ncase '${{ matrix.arch }}' in\n  amd64) test \"$host\" = x86_64-unknown-linux-gnu ;;\n  arm64) test \"$host\" = aarch64-unknown-linux-gnu ;;\n  *) exit 1 ;;\nesac\ncargo test --locked -p ssx-ops -- --test-threads=1\ncargo build --locked -p ssx-ops --bin ssx-ops\ncp \"$CARGO_TARGET_DIR/debug/ssx-ops\" \"$ops_root/tool/ssx-ops\"\nchmod 700 \"$ops_root/tool/ssx-ops\"\n(cd \"$ops_root/tool\" && sha256sum ssx-ops > ssx-ops.sha256)\ncat \"$ops_root/tool/ssx-ops.sha256\"\nprintf 'SSX_IMAGE_OPS_BIN=%s\\n' \"$ops_root/tool/ssx-ops\" >> \"$GITHUB_ENV\"\n"
+            },
+            {
               "name": "Verify pinned Docker base digest",
-              "run": "python3 scripts/verify_docker_base_digest.py"
+              "run": "\"$SSX_IMAGE_OPS_BIN\" verify-base-digests --dockerfile Dockerfile"
             },
             {
               "name": "Build and load image",
               "uses": "docker/build-push-action@v7",
               "with": {
-                "build-args": "DEBIAN_SECURITY_REFRESH=${{ github.run_id }}-${{ github.run_attempt }}\n",
+                "context": ".",
+                "load": true,
+                "push": false,
+                "tags": "${{ steps.tag.outputs.ref }}",
+                "labels": "${{ steps.meta.outputs.labels }}",
+                "platforms": "linux/${{ matrix.arch }}",
                 "cache-from": "type=gha,scope=${{ matrix.arch }}",
                 "cache-to": "type=gha,mode=max,scope=${{ matrix.arch }}",
-                "context": ".",
-                "labels": "${{ steps.meta.outputs.labels }}",
-                "load": true,
-                "platforms": "linux/${{ matrix.arch }}",
                 "pull": true,
-                "push": false,
-                "tags": "${{ steps.tag.outputs.ref }}"
+                "build-args": "DEBIAN_SECURITY_REFRESH=${{ github.run_id }}-${{ github.run_attempt }}\n"
               }
             },
             {
               "name": "Scan image with Trivy",
               "uses": "aquasecurity/trivy-action@master",
               "with": {
-                "exit-code": "1",
-                "format": "table",
-                "ignore-unfixed": true,
                 "image-ref": "${{ steps.tag.outputs.ref }}",
+                "format": "table",
+                "exit-code": "1",
+                "ignore-unfixed": true,
                 "severity": "CRITICAL,HIGH"
               }
             },
             {
               "name": "Smoke test container",
-              "run": "docker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8080/health\npython3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark\ndocker stop slopsearx-smoke\ndocker rm slopsearx-smoke\n"
+              "run": "trap 'docker rm -f slopsearx-smoke >/dev/null 2>&1 || true' EXIT\ndocker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8080/health\npython3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark\n# Actual shipped probe: direct local health despite hostile proxy environment.\ndocker exec -e HTTP_PROXY=http://127.0.0.1:9 -e http_proxy=http://127.0.0.1:9 \\\n  -e ALL_PROXY=http://127.0.0.1:9 -e NO_PROXY= -e no_proxy= \\\n  slopsearx-smoke /usr/local/bin/ssx-healthcheck\n# A fresh container with no server must fail, silently, with exit one.\nset +e\noutput=$(docker run --rm --entrypoint /usr/local/bin/ssx-healthcheck ${{ steps.tag.outputs.ref }} 2>&1)\nstatus=$?\nset -e\ntest \"$status\" -eq 1\ntest -z \"$output\"\ndocker stop slopsearx-smoke\ndocker rm slopsearx-smoke\n"
             },
             {
               "name": "Smoke test configured Darker default",
               "run": "docker run -d --name slopsearx-smoke-darker -p 8081:8080 \\\n  -e SLOPSEARX_PORTAL_DEFAULT_THEME=darker \\\n  ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8081/health\npython3 scripts/portal_release_smoke.py --base-url http://localhost:8081 --expected-theme darker\ndocker stop slopsearx-smoke-darker\ndocker rm slopsearx-smoke-darker\n"
             },
             {
+              "name": "Push tested architecture image",
+              "if": "github.event_name == 'push'",
               "env": {
                 "IMAGE_REF": "${{ steps.tag.outputs.ref }}"
               },
-              "if": "github.event_name == 'push'",
-              "name": "Push tested architecture image",
               "run": "docker push \"$IMAGE_REF\"\nmkdir -p digests\ndocker inspect --format '{{index .RepoDigests 0}}' \"$IMAGE_REF\" > \"digests/${{ matrix.arch }}\"\n"
             },
             {
-              "if": "github.event_name == 'push'",
               "name": "Upload tested image digest",
+              "if": "github.event_name == 'push'",
               "uses": "actions/upload-artifact@v7",
               "with": {
                 "name": "digest-${{ matrix.arch }}",
                 "path": "digests/*",
                 "retention-days": 1
               }
+            },
+            {
+              "name": "Hand off native manifest verifier",
+              "if": "github.event_name == 'push' && matrix.arch == 'amd64'",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "name": "native-image-ops-amd64",
+                "path": "${{ runner.temp }}/ssx-image-ops/tool/",
+                "if-no-files-found": "error",
+                "retention-days": 1
+              }
+            },
+            {
+              "name": "Retire native image operations build inputs",
+              "if": "always()",
+              "run": "rm -rf -- \"$RUNNER_TEMP/ssx-image-ops\""
             }
-          ],
-          "strategy": {
-            "fail-fast": false,
-            "matrix": {
-              "include": [
-                {
-                  "arch": "amd64",
-                  "runner": "ubuntu-24.04"
-                },
-                {
-                  "arch": "arm64",
-                  "runner": "ubuntu-24.04-arm"
-                }
-              ]
-            }
-          }
+          ]
         },
         "workflow": {
           "env": {
@@ -733,11 +759,11 @@
         "job": {
           "if": "github.event_name == 'push'",
           "needs": "build-and-push",
+          "runs-on": "ubuntu-latest",
           "permissions": {
             "contents": "read",
             "packages": "write"
           },
-          "runs-on": "ubuntu-latest",
           "steps": [
             {
               "uses": "docker/setup-buildx-action@v4"
@@ -745,14 +771,14 @@
             {
               "uses": "docker/login-action@v4",
               "with": {
-                "password": "${{ secrets.GITHUB_TOKEN }}",
                 "registry": "${{ env.REGISTRY }}",
-                "username": "${{ github.actor }}"
+                "username": "${{ github.actor }}",
+                "password": "${{ secrets.GITHUB_TOKEN }}"
               }
             },
             {
-              "id": "meta",
               "name": "Extract metadata",
+              "id": "meta",
               "uses": "docker/metadata-action@v6",
               "with": {
                 "images": "${{ env.IMAGE_NAME }}",
@@ -762,27 +788,45 @@
             {
               "uses": "actions/download-artifact@v8",
               "with": {
-                "merge-multiple": true,
+                "pattern": "digest-*",
                 "path": "digests",
-                "pattern": "digest-*"
+                "merge-multiple": true
               }
             },
             {
+              "name": "Download native manifest verifier from this run",
+              "uses": "actions/download-artifact@v8",
+              "with": {
+                "name": "native-image-ops-amd64",
+                "path": "${{ runner.temp }}/ssx-image-ops/tool"
+              }
+            },
+            {
+              "name": "Verify native manifest verifier input",
+              "shell": "bash",
+              "run": "set -euo pipefail\ntest \"$(uname -m)\" = x86_64\ncd \"$RUNNER_TEMP/ssx-image-ops/tool\"\nsha256sum --check ssx-ops.sha256\nchmod 700 ssx-ops\n"
+            },
+            {
+              "name": "Publish manifest from tested digests",
               "env": {
                 "IMAGE_TAGS": "${{ steps.meta.outputs.tags }}"
               },
-              "name": "Publish manifest from tested digests",
-              "run": "set -euo pipefail\ntags=()\nwhile IFS= read -r tag; do\n  tags+=(--tag \"$tag\")\ndone <<< \"$IMAGE_TAGS\"\ndocker buildx imagetools create \"${tags[@]}\" \"$(cat digests/amd64)\" \"$(cat digests/arm64)\"\nwhile IFS= read -r tag; do\n  docker buildx imagetools inspect \"$tag\" --raw > manifest.json\n  python3 - <<'PYTHON'\nimport json\nwith open(\"manifest.json\") as manifest_file:\n    manifest = json.load(manifest_file)\nplatforms = {(item[\"platform\"][\"os\"], item[\"platform\"][\"architecture\"]) for item in manifest[\"manifests\"]}\nassert platforms == {(\"linux\", \"amd64\"), (\"linux\", \"arm64\")}, platforms\nPYTHON\ndone <<< \"$IMAGE_TAGS\"\n"
+              "run": "set -euo pipefail\ntags=()\nwhile IFS= read -r tag; do\n  tags+=(--tag \"$tag\")\ndone <<< \"$IMAGE_TAGS\"\ndocker buildx imagetools create \"${tags[@]}\" \"$(cat digests/amd64)\" \"$(cat digests/arm64)\"\nwhile IFS= read -r tag; do\n  docker buildx imagetools inspect \"$tag\" --raw > manifest.json\n  \"$RUNNER_TEMP/ssx-image-ops/tool/ssx-ops\" verify-image-platforms --manifest manifest.json\ndone <<< \"$IMAGE_TAGS\"\n"
             },
             {
+              "name": "Prune untagged versions past retention",
+              "if": "github.event_name == 'push'",
+              "shell": "bash",
+              "run": "# Deployment manifests pin the image by digest (issue #210). A\n# re-run of this workflow for the same commit produces a new digest\n# under the same short-SHA tag, briefly orphaning the pinned one.\n# Retention keeps orphaned digests alive long enough for the\n# scheduled image-promotion workflow (or a human) to heal the pin.\necho \"Pruning untagged slopsearx versions older than ${RETENTION_DAYS} days\"\ncutoff=\"$(date -u -d \"-${RETENTION_DAYS} days\" +%Y-%m-%dT%H:%M:%SZ)\"\nquery=\".[] | select((.metadata.container.tags == null or (.metadata.container.tags | length) == 0) and (.created_at < \\\"${cutoff}\\\")) | .id\"\ngh api \\\n  --method GET \\\n  \"/users/magnus919/packages/container/slopsearx/versions?per_page=100\" \\\n  --jq \"$query\" \\\n  | while read -r version_id; do\n    echo \"  Deleting version $version_id\"\n    gh api --method DELETE \\\n      \"/users/magnus919/packages/container/slopsearx/versions/$version_id\" --silent\n  done\n",
               "env": {
                 "GH_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
                 "RETENTION_DAYS": "14"
-              },
-              "if": "github.event_name == 'push'",
-              "name": "Prune untagged versions past retention",
-              "run": "# Deployment manifests pin the image by digest (issue #210). A\n# re-run of this workflow for the same commit produces a new digest\n# under the same short-SHA tag, briefly orphaning the pinned one.\n# Retention keeps orphaned digests alive long enough for the\n# scheduled image-promotion workflow (or a human) to heal the pin.\necho \"Pruning untagged slopsearx versions older than ${RETENTION_DAYS} days\"\ncutoff=\"$(date -u -d \"-${RETENTION_DAYS} days\" +%Y-%m-%dT%H:%M:%SZ)\"\nquery=\".[] | select((.metadata.container.tags == null or (.metadata.container.tags | length) == 0) and (.created_at < \\\"${cutoff}\\\")) | .id\"\ngh api \\\n  --method GET \\\n  \"/users/magnus919/packages/container/slopsearx/versions?per_page=100\" \\\n  --jq \"$query\" \\\n  | while read -r version_id; do\n    echo \"  Deleting version $version_id\"\n    gh api --method DELETE \\\n      \"/users/magnus919/packages/container/slopsearx/versions/$version_id\" --silent\n  done\n",
-              "shell": "bash"
+              }
+            },
+            {
+              "name": "Retire native manifest verifier",
+              "if": "always()",
+              "run": "rm -rf -- \"$RUNNER_TEMP/ssx-image-ops\""
             }
           ]
         },

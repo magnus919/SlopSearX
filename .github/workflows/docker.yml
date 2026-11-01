@@ -65,8 +65,35 @@ jobs:
         # supersede these tags, allowing orphaned children to age out too.
         run: echo "ref=${IMAGE_NAME}:${GITHUB_SHA::7}-${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
 
+      - name: Build and test native image operations
+        shell: bash
+        env:
+          CARGO_PROFILE_DEV_DEBUG: '0'
+          CARGO_PROFILE_TEST_DEBUG: '0'
+          CARGO_INCREMENTAL: '0'
+        run: |
+          set -euo pipefail
+          ops_root="$RUNNER_TEMP/ssx-image-ops"
+          mkdir -m 700 "$ops_root"
+          mkdir -m 700 "$ops_root/tmp" "$ops_root/tool"
+          export CARGO_TARGET_DIR="$ops_root/target" CARGO_HOME="$ops_root/cargo-home" TMPDIR="$ops_root/tmp"
+          rustc --version --verbose
+          host=$(rustc --version --verbose | sed -n 's/^host: //p')
+          case '${{ matrix.arch }}' in
+            amd64) test "$host" = x86_64-unknown-linux-gnu ;;
+            arm64) test "$host" = aarch64-unknown-linux-gnu ;;
+            *) exit 1 ;;
+          esac
+          cargo test --locked -p ssx-ops -- --test-threads=1
+          cargo build --locked -p ssx-ops --bin ssx-ops
+          cp "$CARGO_TARGET_DIR/debug/ssx-ops" "$ops_root/tool/ssx-ops"
+          chmod 700 "$ops_root/tool/ssx-ops"
+          (cd "$ops_root/tool" && sha256sum ssx-ops > ssx-ops.sha256)
+          cat "$ops_root/tool/ssx-ops.sha256"
+          printf 'SSX_IMAGE_OPS_BIN=%s\n' "$ops_root/tool/ssx-ops" >> "$GITHUB_ENV"
+
       - name: Verify pinned Docker base digest
-        run: python3 scripts/verify_docker_base_digest.py
+        run: '"$SSX_IMAGE_OPS_BIN" verify-base-digests --dockerfile Dockerfile'
 
       - name: Build and load image
         uses: docker/build-push-action@v7
@@ -141,6 +168,19 @@ jobs:
           path: digests/*
           retention-days: 1
 
+      - name: Hand off native manifest verifier
+        if: github.event_name == 'push' && matrix.arch == 'amd64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-image-ops-amd64
+          path: ${{ runner.temp }}/ssx-image-ops/tool/
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Retire native image operations build inputs
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/ssx-image-ops"
+
   publish-manifest:
     if: github.event_name == 'push'
     needs: build-and-push
@@ -173,6 +213,21 @@ jobs:
           path: digests
           merge-multiple: true
 
+      - name: Download native manifest verifier from this run
+        uses: actions/download-artifact@v8
+        with:
+          name: native-image-ops-amd64
+          path: ${{ runner.temp }}/ssx-image-ops/tool
+
+      - name: Verify native manifest verifier input
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          cd "$RUNNER_TEMP/ssx-image-ops/tool"
+          sha256sum --check ssx-ops.sha256
+          chmod 700 ssx-ops
+
       - name: Publish manifest from tested digests
         env:
           IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
@@ -185,13 +240,7 @@ jobs:
           docker buildx imagetools create "${tags[@]}" "$(cat digests/amd64)" "$(cat digests/arm64)"
           while IFS= read -r tag; do
             docker buildx imagetools inspect "$tag" --raw > manifest.json
-            python3 - <<'PYTHON'
-          import json
-          with open("manifest.json") as manifest_file:
-              manifest = json.load(manifest_file)
-          platforms = {(item["platform"]["os"], item["platform"]["architecture"]) for item in manifest["manifests"]}
-          assert platforms == {("linux", "amd64"), ("linux", "arm64")}, platforms
-          PYTHON
+            "$RUNNER_TEMP/ssx-image-ops/tool/ssx-ops" verify-image-platforms --manifest manifest.json
           done <<< "$IMAGE_TAGS"
 
       - name: Prune untagged versions past retention
@@ -218,3 +267,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RETENTION_DAYS: "14"
+
+      - name: Retire native manifest verifier
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/ssx-image-ops"

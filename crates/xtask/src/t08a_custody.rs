@@ -180,9 +180,40 @@ fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior)
 }
+// One additive native operations package; first recover the accepted health lock.
+const IMAGE_OPS_LOCK_SHA: &str = "8d8d87dc69683e47e9b28b68ee332f1b585001128905e2a26481e61c3b37d7d5";
+const IMAGE_OPS_LOCK_BYTES: usize = 94371;
+const IMAGE_OPS_LOCK_INSERT: &str = "[[package]]\nname = \"ssx-ops\"\nversion = \"0.1.0\"\ndependencies = [\n \"sha2\",\n \"ssx-infra\",\n \"ssx-json\",\n \"tokio\",\n \"url\",\n]\n\n";
+fn native_image_ops_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
+    need(
+        physical.len() == IMAGE_OPS_LOCK_BYTES && digest(physical) == IMAGE_OPS_LOCK_SHA,
+        "native image operations exact current lock",
+    )?;
+    let text = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
+    need(
+        text.matches(IMAGE_OPS_LOCK_INSERT).count() == 1,
+        "native image operations unique package",
+    )?;
+    let at = text
+        .find(IMAGE_OPS_LOCK_INSERT)
+        .ok_or("native image operations package absent")?;
+    let mut prior = physical.to_vec();
+    prior.drain(at..at + IMAGE_OPS_LOCK_INSERT.len());
+    need(
+        prior.len() == HEALTH_LOCK_BYTES && digest(&prior) == HEALTH_LOCK_SHA,
+        "native image operations exact health predecessor",
+    )?;
+    let mut forward = prior.clone();
+    forward.splice(at..at, IMAGE_OPS_LOCK_INSERT.bytes());
+    need(
+        forward == physical,
+        "native image operations full forward reconstruction",
+    )?;
+    Ok(prior)
+}
 fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     if path == "Cargo.lock" {
-        return native_health_lock_prior(physical);
+        return native_health_lock_prior(&native_image_ops_lock_prior(physical)?);
     }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
@@ -381,7 +412,28 @@ pub(crate) fn test_dependency_prior(
     Ok(prior)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
-    let actual = regular(root, "Cargo.lock")?;
+    let current = regular(root, "Cargo.lock")?;
+    let actual = native_image_ops_lock_prior(&current)?;
+    need(
+        native_image_ops_lock_prior(&actual).is_err(),
+        "native image operations old/missing package is not current",
+    )?;
+    let mut duplicate = current.clone();
+    duplicate.extend_from_slice(IMAGE_OPS_LOCK_INSERT.as_bytes());
+    need(
+        native_image_ops_lock_prior(&duplicate).is_err(),
+        "native image operations duplicate package",
+    )?;
+    let mut changed = current.clone();
+    let at = changed
+        .windows(b"ssx-ops".len())
+        .position(|v| v == b"ssx-ops")
+        .ok_or("native image operations package absent")?;
+    changed[at] = b'x';
+    need(
+        native_image_ops_lock_prior(&changed).is_err(),
+        "native image operations changed package",
+    )?;
     let prior_lock = native_health_lock_prior(&actual)?;
     need(
         native_health_lock_prior(&prior_lock).is_err(),
