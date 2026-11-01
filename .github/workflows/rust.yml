@@ -404,6 +404,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure private gateway fixture roots
+        env:
+          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install
+          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests
+        run: |
+          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\n' "$SLOPSEARX_INSTALL_TEST_ROOT" >> "$GITHUB_ENV"
+          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\n' "$SLOPSEARX_T07_UNIT_TEST_ROOT" >> "$GITHUB_ENV"
+
+      - name: Prepare private gateway package fixtures
+        run: mkdir -m 700 "$SLOPSEARX_INSTALL_TEST_ROOT"
+
       - name: Confirm pinned toolchain
         run: rustc --version --verbose
 
@@ -566,6 +577,10 @@ jobs:
             target/rust-evidence/
             target/rust-feature-graph.txt
           if-no-files-found: warn
+
+      - name: Retire gateway package fixtures
+        if: always()
+        run: rm -rf -- "$SLOPSEARX_INSTALL_TEST_ROOT"
 
   foundation-runtime:
     name: Foundation runtime (${{ matrix.runner }})

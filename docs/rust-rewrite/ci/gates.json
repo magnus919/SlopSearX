@@ -2751,6 +2751,18 @@
               }
             },
             {
+              "name": "Configure private gateway fixture roots",
+              "env": {
+                "SLOPSEARX_INSTALL_TEST_ROOT": "${{ runner.temp }}/ssx-gateway-install",
+                "SLOPSEARX_T07_UNIT_TEST_ROOT": "${{ runner.temp }}/ssx-t07-unit-tests"
+              },
+              "run": "printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\nprintf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n"
+            },
+            {
+              "name": "Prepare private gateway package fixtures",
+              "run": "mkdir -m 700 \"$SLOPSEARX_INSTALL_TEST_ROOT\""
+            },
+            {
               "name": "Confirm pinned toolchain",
               "run": "rustc --version --verbose"
             },
@@ -2805,6 +2817,11 @@
                 "path": "target/rust-evidence/\ntarget/rust-feature-graph.txt\n",
                 "if-no-files-found": "warn"
               }
+            },
+            {
+              "name": "Retire gateway package fixtures",
+              "if": "always()",
+              "run": "rm -rf -- \"$SLOPSEARX_INSTALL_TEST_ROOT\""
             }
           ]
         }
