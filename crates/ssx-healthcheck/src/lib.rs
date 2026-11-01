@@ -39,7 +39,7 @@ pub fn probe(address: SocketAddr, budget: Duration) -> io::Result<()> {
         .strip_prefix(b"HTTP/1.1 ")
         .or_else(|| line.strip_prefix(b"HTTP/1.0 "))
         .and_then(|line| line.strip_prefix(b"200"));
-    if status.is_some_and(|tail| tail.starts_with(b" ") || tail == b"\r") {
+    if status.is_some_and(|tail| tail.starts_with(b" ")) {
         Ok(())
     } else {
         Err(io::Error::new(
@@ -100,6 +100,7 @@ mod tests {
             assert!(served(response.into_bytes(), Duration::from_secs(2)).is_err());
         }
         assert!(served(b"not HTTP\r\n\r\n".to_vec(), Duration::from_secs(2)).is_err());
+        assert!(served(b"HTTP/1.1 200\r\n\r\n".to_vec(), Duration::from_secs(2)).is_err());
         assert!(served(b"HTTP/1.1 200 OK\r\n".to_vec(), Duration::from_secs(2)).is_err());
         assert!(served(vec![b'x'; MAX_HEADERS + 1], Duration::from_secs(2)).is_err());
     }
