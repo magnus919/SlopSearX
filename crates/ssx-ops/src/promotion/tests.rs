@@ -379,6 +379,58 @@ mod unix {
         );
     }
     #[test]
+    fn ready_to_rename_rechecks_source_and_staging_identity() {
+        let f = Fixture::new();
+        let snapshot = PinSnapshot::read(&f.0).unwrap();
+        let plan = snapshot.plan(&digest('b')).unwrap();
+        let edited = b"concurrent user edit";
+        let source_error = snapshot
+            .apply_with_test_hook(&plan, |point, index, _, _| {
+                if point == ApplyPoint::ReadyToRename && index == 0 {
+                    fs::write(f.0.join(PIN_PATHS[0]), edited)?;
+                }
+                Ok(())
+            })
+            .unwrap_err();
+        assert!(source_error.replaced.is_empty());
+        assert!(
+            source_error
+                .message
+                .contains("source changed at replacement boundary")
+        );
+        assert_eq!(fs::read(f.0.join(PIN_PATHS[0])).unwrap(), edited);
+
+        let other = Fixture::new();
+        let before = other.bytes();
+        let snapshot = PinSnapshot::read(&other.0).unwrap();
+        let plan = snapshot.plan(&digest('b')).unwrap();
+        let mut substituted = None;
+        let stage_error = snapshot
+            .apply_with_test_hook(&plan, |point, index, _, name| {
+                if point == ApplyPoint::ReadyToRename && index == 0 {
+                    let stage = other.0.join(name);
+                    let displaced = stage.with_extension("saved");
+                    fs::rename(&stage, &displaced)?;
+                    fs::write(&stage, b"untrusted staging replacement")?;
+                    substituted = Some(stage);
+                }
+                Ok(())
+            })
+            .unwrap_err();
+        assert!(stage_error.replaced.is_empty());
+        assert!(
+            stage_error
+                .message
+                .contains("staged pin output changed at replacement boundary")
+        );
+        assert_eq!(before, other.bytes());
+        assert_eq!(stage_error.cleanup_failed, vec![PIN_PATHS[0]]);
+        assert_eq!(
+            fs::read(substituted.expect("hook substitutes a stage")).unwrap(),
+            b"untrusted staging replacement"
+        );
+    }
+    #[test]
     fn concurrent_source_edits_and_symlink_targets_are_preserved_and_refused() {
         let f = Fixture::new();
         let snapshot = PinSnapshot::read(&f.0).unwrap();

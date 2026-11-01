@@ -304,6 +304,17 @@ impl PinSnapshot {
                     &stage.name,
                 )
                 .map_err(|_| "replacement control failed")?;
+                self.recheck(source)
+                    .map_err(|_| "pin source changed at replacement boundary")?;
+                let (identity, bytes) = read(&stage.parent, &stage.name)
+                    .map_err(|_| "staged pin output unavailable at replacement boundary")?;
+                if identity.dev != stage.dev
+                    || identity.ino != stage.ino
+                    || identity.mode & 0o7777 != source.identity.mode & 0o7777
+                    || bytes != plan.outputs[index].bytes
+                {
+                    return Err("staged pin output changed at replacement boundary");
+                }
                 renameat(
                     &stage.parent,
                     stage.name.as_str(),
