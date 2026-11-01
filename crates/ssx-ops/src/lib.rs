@@ -242,35 +242,12 @@ pub async fn verify_bases(owner: &AdapterHttp, bases: &[Base]) -> Result<Vec<Obs
             return Err(fail("invalid base"));
         }
         let token_response = exchange(owner, token_request(base)?, TOKEN_BYTES).await?;
-        let token_value: Value = ssx_json::from_slice(&token_response.body)
-            .map_err(|_| fail("invalid token response"))?;
-        let token = token_value["token"]
-            .as_str()
-            .filter(|s| !s.is_empty() && s.len() <= TOKEN_LENGTH)
-            .ok_or_else(|| fail("invalid registry token"))?;
-        let response = exchange(owner, manifest_request(base, token)?, MANIFEST_BYTES).await?;
-        let mut headers = response.headers.get_all("docker-content-digest").iter();
-        let actual = headers
-            .next()
-            .and_then(|h| h.to_str().ok())
-            .filter(|s| digest_valid(s))
-            .ok_or_else(|| fail("invalid registry manifest digest"))?;
-        if headers.next().is_some() {
-            return Err(fail("ambiguous registry manifest digest"));
-        }
-        let actual_body = format!(
-            "sha256:{}",
-            Sha256::digest(&response.body)
-                .iter()
-                .map(|b| format!("{b:02x}"))
-                .collect::<String>()
-        );
-        if actual != actual_body {
-            return Err(fail("manifest bytes do not match registry digest"));
-        }
+        let token = registry_token(&token_response)?;
+        let response = exchange(owner, manifest_request(base, &token)?, MANIFEST_BYTES).await?;
+        let actual = manifest_digest(&response)?;
         observations.push(Observation {
             base: base.clone(),
-            actual: actual.into(),
+            actual,
         });
     }
     Ok(observations)
@@ -278,3 +255,36 @@ pub async fn verify_bases(owner: &AdapterHttp, bases: &[Base]) -> Result<Vec<Obs
 
 #[cfg(test)]
 mod tests;
+
+fn registry_token(response: &Response) -> Result<String, String> {
+    let value: Value =
+        ssx_json::from_slice(&response.body).map_err(|_| fail("invalid token response"))?;
+    value["token"]
+        .as_str()
+        .filter(|s| !s.is_empty() && s.len() <= TOKEN_LENGTH)
+        .map(str::to_owned)
+        .ok_or_else(|| fail("invalid registry token"))
+}
+fn manifest_digest(response: &Response) -> Result<String, String> {
+    let mut headers = response.headers.get_all("docker-content-digest").iter();
+    let actual = headers
+        .next()
+        .and_then(|h| h.to_str().ok())
+        .filter(|s| digest_valid(s))
+        .ok_or_else(|| fail("invalid registry manifest digest"))?;
+    if headers.next().is_some() {
+        return Err(fail("ambiguous registry manifest digest"));
+    }
+    let actual_body = format!(
+        "sha256:{}",
+        Sha256::digest(&response.body)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
+    );
+    if actual != actual_body {
+        return Err(fail("manifest bytes do not match registry digest"));
+    }
+    Ok(actual.to_owned())
+}
+pub mod promotion;
