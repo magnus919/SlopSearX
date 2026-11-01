@@ -184,8 +184,8 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
         ),
         (
             "crates/ssx-healthcheck/src/lib.rs",
-            5122,
-            "58d78e3128f0c01642df53bb20ad2d821a191664eb602381e4da0784eb45c14a",
+            5197,
+            "514d5161df4de6107a5ccaf44429910f2c082dda0219b5c24f46930cbe1980b8",
         ),
         (
             "crates/ssx-healthcheck/src/main.rs",
