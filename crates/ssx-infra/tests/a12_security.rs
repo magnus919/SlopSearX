@@ -745,69 +745,116 @@ async fn expired_absolute_context_does_not_admit_or_dispatch() {
         h.shutdown_and_wait().await;
     }
 }
-#[tokio::test]
-async fn absolute_context_bounds_admission_and_releases_its_future() {
+#[test]
+fn absolute_context_bounds_admission_and_releases_its_future() {
     for kind in KINDS {
-        let h = Arc::new(AdapterHttp::default());
-        let w = wire(kind);
-        h.set_transport(w.clone()).unwrap();
-        let a = admission(AdmissionDecision::Allowed);
-        a.block.store(true, Ordering::SeqCst);
-        let e = engine(kind, h.clone(), a.clone(), settings());
-        let r = tokio::time::timeout(
-            Duration::from_secs(2),
-            e.search_with_context(
-                &query(kind),
-                SearchContext {
-                    deadline: Instant::now() + Duration::from_millis(20),
-                },
-            ),
-        )
-        .await
-        .expect("absolute admission deadline must terminate");
-        whole(r, EngineStatus::Timeout, vec![], None);
-        assert_eq!(a.calls.load(Ordering::SeqCst), 1);
-        assert_eq!(a.active.load(Ordering::SeqCst), 0);
-        assert_eq!(w.calls.load(Ordering::SeqCst), 0);
-        h.shutdown_and_wait().await;
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .start_paused(true)
+            .build()
+            .unwrap()
+            .block_on(async {
+                let h = Arc::new(AdapterHttp::default());
+                let w = wire(kind);
+                h.set_transport(w.clone()).unwrap();
+                let a = admission(AdmissionDecision::Allowed);
+                a.block.store(true, Ordering::SeqCst);
+                let e = engine(kind, h.clone(), a.clone(), settings());
+                let q = query(kind);
+                // Real std::Instant checkpoints retain a generous readiness envelope.
+                // Only the paused Tokio deadline is advanced after admission is observed.
+                let mut f = e.search_with_context(
+                    &q,
+                    SearchContext {
+                        deadline: Instant::now() + Duration::from_secs(60),
+                    },
+                );
+                tokio::time::timeout(Duration::from_secs(2), async {
+                    tokio::select! {
+                        _ = a.entered.notified() => {},
+                        r = &mut f => panic!("admission must be observed before expiry: {r:?}"),
+                    }
+                })
+                .await
+                .unwrap();
+                assert_eq!(a.calls.load(Ordering::SeqCst), 1);
+                assert_eq!(a.active.load(Ordering::SeqCst), 1);
+                assert_eq!(w.calls.load(Ordering::SeqCst), 0);
+                let expiry =
+                    tokio::time::Instant::from_std(Instant::now() + Duration::from_secs(60));
+                tokio::time::advance(expiry.duration_since(tokio::time::Instant::now())).await;
+                let r = tokio::time::timeout(Duration::from_secs(2), f)
+                    .await
+                    .expect("absolute admission deadline must terminate");
+                whole(r, EngineStatus::Timeout, vec![], None);
+                assert_eq!(a.calls.load(Ordering::SeqCst), 1);
+                assert_eq!(a.active.load(Ordering::SeqCst), 0);
+                assert_eq!(w.calls.load(Ordering::SeqCst), 0);
+                h.shutdown_and_wait().await;
+            });
     }
 }
-#[tokio::test]
-async fn context_and_configured_deadline_each_drop_actual_inflight_exchange() {
+#[test]
+fn context_and_configured_deadline_each_drop_actual_inflight_exchange() {
     for kind in KINDS {
         for configured in [false, true] {
-            let h = Arc::new(AdapterHttp::default());
-            let w = wire(kind);
-            w.block.store(true, Ordering::SeqCst);
-            h.set_transport(w.clone()).unwrap();
-            let a = admission(AdmissionDecision::Allowed);
-            let mut s = settings();
-            if configured {
-                config(&mut s, kind).timeout_ms = ssx_config::ConfigScalar::Integer(20);
-            }
-            let e = engine(kind, h.clone(), a, s);
-            let q = query(kind);
-            let context = SearchContext {
-                deadline: Instant::now()
-                    + if configured {
-                        Duration::from_secs(5)
-                    } else {
-                        Duration::from_millis(20)
-                    },
-            };
-            let r =
-                tokio::time::timeout(Duration::from_secs(2), e.search_with_context(&q, context))
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .start_paused(true)
+                .build()
+                .unwrap()
+                .block_on(async {
+                    let h = Arc::new(AdapterHttp::default());
+                    let w = wire(kind);
+                    w.block.store(true, Ordering::SeqCst);
+                    h.set_transport(w.clone()).unwrap();
+                    let a = admission(AdmissionDecision::Allowed);
+                    let mut s = settings();
+                    config(&mut s, kind).timeout_ms =
+                        ssx_config::ConfigScalar::Integer(if configured {
+                            60_000
+                        } else {
+                            120_000
+                        });
+                    let e = engine(kind, h.clone(), a, s);
+                    let q = query(kind);
+                    // The unequal virtual budgets select one winning deadline per arm.
+                    // A fresh runtime per case prevents carrying a virtual offset forward.
+                    let mut f = e.search_with_context(
+                        &q,
+                        SearchContext {
+                            deadline: Instant::now()
+                                + Duration::from_secs(if configured { 120 } else { 60 }),
+                        },
+                    );
+                    tokio::time::timeout(Duration::from_secs(2), async {
+                        tokio::select! {
+                            _ = w.entered.notified() => {},
+                            r = &mut f => panic!("exchange must be observed before expiry: {r:?}"),
+                        }
+                    })
                     .await
-                    .expect("minimum absolute/configured deadline must terminate");
-            whole(r, EngineStatus::Timeout, vec![], None);
-            assert_eq!(w.calls.load(Ordering::SeqCst), 1);
-            assert_eq!(w.active.load(Ordering::SeqCst), 0);
-            // The adapter releases only its own session, preserving its caller's HTTP owner.
-            w.block.store(false, Ordering::SeqCst);
-            let r = e.search(&q).await;
-            whole(r, EngineStatus::Ok, expected(kind), None);
-            assert_eq!(w.calls.load(Ordering::SeqCst), 2);
-            h.shutdown_and_wait().await;
+                    .unwrap();
+                    assert_eq!(w.calls.load(Ordering::SeqCst), 1);
+                    assert_eq!(w.active.load(Ordering::SeqCst), 1);
+                    // Sample after readiness: exceed the existing winning timer without
+                    // overshooting the next same-engine recovery's std-derived deadline.
+                    let expiry =
+                        tokio::time::Instant::from_std(Instant::now() + Duration::from_secs(60));
+                    tokio::time::advance(expiry.duration_since(tokio::time::Instant::now())).await;
+                    let r = tokio::time::timeout(Duration::from_secs(2), f)
+                        .await
+                        .expect("minimum absolute/configured deadline must terminate");
+                    whole(r, EngineStatus::Timeout, vec![], None);
+                    assert_eq!(w.calls.load(Ordering::SeqCst), 1);
+                    assert_eq!(w.active.load(Ordering::SeqCst), 0);
+                    // The adapter releases only its own session, preserving its caller's HTTP owner.
+                    w.block.store(false, Ordering::SeqCst);
+                    let r = e.search(&q).await;
+                    whole(r, EngineStatus::Ok, expected(kind), None);
+                    assert_eq!(w.calls.load(Ordering::SeqCst), 2);
+                    h.shutdown_and_wait().await;
+                });
         }
     }
 }
