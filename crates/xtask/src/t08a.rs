@@ -815,6 +815,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             == BTreeSet::from([
                 "missing_case_and_mutated_native_reply_are_rejected",
                 "native_external_child_executes_complete_frozen_contract",
+                "native_discovery_shapes_have_explicit_external_contract",
             ]),
         "T08A executable test inventory differs",
     )?;
