@@ -1,7 +1,11 @@
 //! Causal EOF fixture: every Result path retires each owned resource before return.
-use super::{Provider, private_valkey};
+use super::{Provider, private_valkey, require_listener_retired, retire_listener};
 use ssx_mcp::Result;
-use std::{process::ExitStatus, sync::atomic::Ordering, time::Duration};
+use std::{
+    process::ExitStatus,
+    sync::atomic::{AtomicBool, Ordering},
+    time::Duration,
+};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
 
 const LINE_CAP: u64 = 16 * 1024;
@@ -19,19 +23,19 @@ struct Outcome {
     cleanup: Vec<String>,
     child_status: Option<ExitStatus>,
     provider_retirement_ok: bool,
+    listener_dropped: bool,
     store_removed: bool,
-    endpoint: String,
     stderr_bytes: usize,
 }
 impl Outcome {
     fn finish(self, name: &str) -> Result<()> {
-        if self.primary.is_none() && self.cleanup.is_empty() {
+        if self.primary.is_none() && self.cleanup.is_empty() && self.listener_dropped {
             return Ok(());
         }
         Err(format!(
-            "T06 tool={name}; primary={}; cleanup={:?}; child_status={:?}; provider_retirement_ok={}; store_removed={}; stderr_bytes={}",
+            "T06 tool={name}; primary={}; cleanup={:?}; child_status={:?}; provider_retirement_ok={}; listener_dropped={}; store_removed={}; stderr_bytes={}",
             self.primary.as_deref().unwrap_or("none"), self.cleanup, self.child_status,
-            self.provider_retirement_ok, self.store_removed, self.stderr_bytes,
+            self.provider_retirement_ok, self.listener_dropped, self.store_removed, self.stderr_bytes,
         ).into())
     }
 }
@@ -308,6 +312,7 @@ async fn attempt(name: &str, fault: Fault) -> Result<Outcome> {
             }
         }
     }
+    let listener_dropped = provider.listener_dropped.clone();
     let provider_retirement_ok = match provider.close().await {
         Ok(()) => true,
         Err(e) => {
@@ -337,8 +342,8 @@ async fn attempt(name: &str, fault: Fault) -> Result<Outcome> {
         cleanup,
         child_status,
         provider_retirement_ok,
+        listener_dropped: listener_dropped.load(Ordering::SeqCst),
         store_removed,
-        endpoint,
         stderr_bytes,
     })
 }
@@ -348,6 +353,13 @@ pub(super) async fn run(name: &str, fault: Fault) -> Result<()> {
 }
 
 pub(super) async fn early_failure_controls() -> Result<()> {
+    // A real bound listener held by this scope cannot satisfy retirement.
+    // Releasing that same socket through the shared primitive can.
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let dropped = AtomicBool::new(false);
+    assert!(require_listener_retired(&dropped).is_err());
+    retire_listener(listener, &dropped);
+    require_listener_retired(&dropped)?;
     for name in ["slopsearx_search", "slopsearx_explain_search_scope"] {
         for (fault, expected) in [
             (Fault::BeforeInitialize, "injected-before-initialize"),
@@ -361,12 +373,9 @@ pub(super) async fn early_failure_controls() -> Result<()> {
             assert!(outcome.cleanup.is_empty(), "{:?}", outcome.cleanup);
             assert!(outcome.child_status.is_some(), "child was not reaped");
             assert!(outcome.provider_retirement_ok && outcome.store_removed);
-            let url = url::Url::parse(&outcome.endpoint)?;
             assert!(
-                tokio::net::TcpStream::connect(("127.0.0.1", url.port().unwrap()))
-                    .await
-                    .is_err(),
-                "provider listener survived joined teardown"
+                outcome.listener_dropped,
+                "owned provider listener survived joined teardown"
             );
         }
     }
@@ -388,6 +397,7 @@ pub(super) async fn initialization_controls() -> Result<()> {
         assert!(outcome.cleanup.is_empty(), "{:?}", outcome.cleanup);
         assert!(outcome.child_status.is_some());
         assert!(outcome.provider_retirement_ok && outcome.store_removed);
+        assert!(outcome.listener_dropped);
     }
     Ok(())
 }

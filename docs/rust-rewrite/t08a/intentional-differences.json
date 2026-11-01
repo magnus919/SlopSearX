@@ -47,6 +47,12 @@
         "wire-chunk-size-prefix",
         "wire-chunk-size-underscore"
       ]
+    },
+    {
+      "id": "native-discovery-category-map",
+      "scope": "Config text and engines accept explicit native categories string-list plus category_engines object with exact unique keyset and string-array values; legacy categories object keeps precedence and all old behavior. Raw config JSON is unchanged. Malformed native shapes fail without coercion.",
+      "reference": "Actual accepted ssx-http::discovery::build_active emits this list/map form; T08 real subprocess config-text failed before this extension. Immutable Python source captures and original cases are unchanged.",
+      "review": "Root approved explicit compatibility extension; native and installed qualification pending."
     }
   ]
 }

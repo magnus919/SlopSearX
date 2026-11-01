@@ -210,9 +210,43 @@ fn health(value: &Value) -> Result<String, Failure> {
     }
     Ok(out)
 }
+// Preserve the legacy categories object and all its historical value behavior.
+// Native discovery instead declares category names separately from its mapping.
+fn category_map<'a>(value: &'a Value, empty: &'a Value) -> Result<&'a Value, Failure> {
+    let categories = default(value, "categories", empty)?;
+    let Value::Array(names) = categories else {
+        return Ok(categories);
+    };
+    let mapping = value.get("category_engines")?.ok_or(Failure::Shape)?;
+    let entries = mapping.object()?;
+    let mut declared = std::collections::BTreeSet::new();
+    for name in names {
+        let Value::String(name) = name else {
+            return Err(Failure::Shape);
+        };
+        if !declared.insert(name.clone()) {
+            return Err(Failure::Shape);
+        }
+    }
+    if entries.len() != declared.len() || entries.iter().any(|(name, _)| !declared.contains(name)) {
+        return Err(Failure::Shape);
+    }
+    for (_, engines) in entries {
+        let Value::Array(engines) = engines else {
+            return Err(Failure::Shape);
+        };
+        if engines
+            .iter()
+            .any(|engine| !matches!(engine, Value::String(_)))
+        {
+            return Err(Failure::Shape);
+        }
+    }
+    Ok(mapping)
+}
 fn config(value: &Value) -> Result<String, Failure> {
     let empty = Value::Object(vec![]);
-    let categories = default(value, "categories", &empty)?;
+    let categories = category_map(value, &empty)?;
     let entries = sorted_object(categories)?;
     let mut out = format!("---\ncategory_count: {}\ncategories:\n", entries.len());
     for (k, v) in entries {
@@ -229,7 +263,7 @@ fn engines(health: &Value, config: &Value, json: bool) -> Result<String, Failure
     let empty = Value::Object(vec![]);
     let unknown = string("unknown");
     let states = default(health, "engines", &empty)?;
-    let categories = default(config, "categories", &empty)?;
+    let categories = category_map(config, &empty)?;
     let mut mapping: BTreeMap<Vec<u32>, Vec<Vec<u32>>> = BTreeMap::new();
     for (k, v) in categories.object()? {
         for engine in v.sequence()? {

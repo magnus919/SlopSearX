@@ -797,6 +797,10 @@ fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
         f09_parent(root, &current)?
     } else if row.path == "crates/ssx-infra/src/search.rs" {
         crate::a13::a06_source_successor::w07_t02_joint::page_current(root, &row.path, &current)?
+    } else if row.path == "crates/ssx-infra/tests/a12_security.rs" {
+        crate::a13::a06_source_successor::native_search::a12_readiness_current(
+            root, &row.path, &current,
+        )?
     } else {
         current
     };
@@ -846,6 +850,14 @@ fn page_controls(root: &Path) -> Result<()> {
                 "merged search is not the frozen page afterimage",
             )?;
             crate::a13::a06_source_successor::w07_t02_joint::page_current(
+                root, &row.path, &current,
+            )?
+        } else if row.path == "crates/ssx-infra/tests/a12_security.rs" {
+            need(
+                page_inverse(row, &current).is_err(),
+                "A12 readiness successor is not a frozen Page afterimage",
+            )?;
+            crate::a13::a06_source_successor::native_search::a12_readiness_current(
                 root, &row.path, &current,
             )?
         } else {
