@@ -567,6 +567,39 @@ pub(super) fn controls(root: &Path) -> Result<()> {
 // may project their exactly proved e127 preimage into the historical checks.
 const PAGE_BASE: &str = "e12744511013bd05370173e777daaef471bf9527";
 const PAGE_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/lossless-page-1049-v1.json";
+const PORTAL_HTML_PATH: &str = "crates/ssx-http/src/html.rs";
+const PORTAL_HTML_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/portal-html-v1.json";
+const PORTAL_HTML_CAPSULE_SHA: &str =
+    "6711b62241f80273dea6ca31d60a02a28dd899b0a121bc054300ce3405641dc8";
+const PORTAL_HTML_BASE: &str = "44fe104577f1be1da497a6f60611d19b909aedb6";
+const PORTAL_HTML_CAPSULE_SHA256: &str =
+    "8825976f55652cb2bf4ab0fe648e88387eced30c2480942da901f11e628099cc";
+const PORTAL_HTML_CAPSULE_BYTES: usize = 8560;
+#[derive(Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PortalHtmlRow {
+    path: String,
+    baseline_commit: String,
+    baseline_blob: String,
+    before_sha256: String,
+    before_bytes: usize,
+    after_sha256: String,
+    after_bytes: usize,
+    after_blob: String,
+    mode: u32,
+    inverse: Vec<Edit>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PortalHtmlCapsule {
+    schema_version: u64,
+    kind: String,
+    coverage_sha256: String,
+    baseline_commit: String,
+    qualification: String,
+    transition: PortalHtmlRow,
+}
+
 const PAGE_CAPSULE_SHA: &str = "dfd7494b0ee42ac6a9ca702020640aaf65454b6a57f99991ae761c571dd96fcf";
 const PAGE_INTERSECTIONS: [&str; 5] = [
     "crates/ssx-http/src/html.rs",
@@ -633,6 +666,103 @@ fn page_capsule(root: &Path) -> Result<PageCapsule> {
     )?;
     Ok(c)
 }
+fn portal_html_capsule(root: &Path) -> Result<PortalHtmlCapsule> {
+    let raw = read(root, PORTAL_HTML_CAPSULE)?;
+    need(raw.mode == 0o644, "portal HTML capsule mode")?;
+    need(
+        sha(&raw.bytes) == PORTAL_HTML_CAPSULE_SHA,
+        "portal HTML capsule digest",
+    )?;
+    let c: PortalHtmlCapsule = serde_json::from_slice(&raw.bytes).map_err(|e| e.to_string())?;
+    let row = &c.transition;
+    need(
+        c.schema_version == 1
+            && c.kind == "T03_PORTAL_HTML_T02_SOURCE_SUCCESSOR"
+            && c.coverage_sha256 == COVERAGE_SHA
+            && c.baseline_commit == PORTAL_HTML_BASE
+            && c.qualification == "CURRENT_SOURCE_ONLY_PORTAL_ACCEPTANCE_PENDING"
+            && row.path == PORTAL_HTML_PATH
+            && row.baseline_commit == PORTAL_HTML_BASE
+            && row.before_sha256 == PORTAL_HTML_CAPSULE_SHA256
+            && row.before_bytes == PORTAL_HTML_CAPSULE_BYTES
+            && row.mode == 0o644
+            && row.inverse.len() == 1
+            && row.inverse[0].offset == 0,
+        "portal HTML capsule closed scope",
+    )?;
+    Ok(c)
+}
+fn portal_html_inverse(row: &PortalHtmlRow, current: &[u8]) -> Result<Vec<u8>> {
+    need(
+        row.path == PORTAL_HTML_PATH
+            && row.baseline_commit == PORTAL_HTML_BASE
+            && row.mode == 0o644
+            && current.len() == row.after_bytes
+            && sha(current) == row.after_sha256,
+        "portal HTML exact current source",
+    )?;
+    let before = reconstruct(current, &row.inverse)?;
+    need(
+        before.len() == row.before_bytes && sha(&before) == row.before_sha256,
+        "portal HTML prior source identity",
+    )?;
+    Ok(before)
+}
+fn portal_html_original(root: &Path, path: &str, current: &[u8]) -> Result<Vec<u8>> {
+    need(path == PORTAL_HTML_PATH, "portal HTML unlisted source")?;
+    let c = portal_html_capsule(root)?;
+    let row = &c.transition;
+    let physical = read(root, path)?;
+    need(
+        physical.mode == row.mode && physical.bytes == current,
+        "portal HTML current bytes are not physical source",
+    )?;
+    let before = portal_html_inverse(row, current)?;
+    need(
+        git(root, &["hash-object", "--no-filters", "--", path])?.as_slice()
+            == format!("{}\n", row.after_blob).as_bytes(),
+        "portal HTML current Git blob",
+    )?;
+    need(
+        git(root, &["show", &format!("{}:{path}", row.baseline_commit)])? == before,
+        "portal HTML baseline bytes",
+    )?;
+    need(
+        String::from_utf8(git(
+            root,
+            &["rev-parse", &format!("{}:{path}", row.baseline_commit)],
+        )?)
+        .map_err(|e| e.to_string())?
+        .trim()
+            == row.baseline_blob,
+        "portal HTML baseline blob",
+    )?;
+    Ok(before)
+}
+fn portal_html_controls(root: &Path) -> Result<()> {
+    let c = portal_html_capsule(root)?;
+    let path = c.transition.path.as_str();
+    let physical = read(root, path)?;
+    let before = portal_html_original(root, path, &physical.bytes)?;
+    need(
+        before.len() == c.transition.before_bytes,
+        "portal HTML positive source control",
+    )?;
+    let mut changed = physical.bytes.clone();
+    changed.push(b' ');
+    need(
+        portal_html_inverse(&c.transition, &changed).is_err(),
+        "portal HTML unrelated source change accepted",
+    )?;
+    let mut altered = c.transition.clone();
+    altered.inverse.clear();
+    need(
+        portal_html_inverse(&altered, &physical.bytes).is_err(),
+        "portal HTML missing inverse edit accepted",
+    )?;
+    Ok(())
+}
+
 fn page_inverse(row: &PageRow, current: &[u8]) -> Result<Vec<u8>> {
     need(
         row.mode == 0o644 && current.len() == row.after_bytes && sha(current) == row.after_sha256,
@@ -661,7 +791,9 @@ fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
         )?;
     }
     let current = fs::read(full).map_err(|e| e.to_string())?;
-    let current = if row.path == F09_PATHS[0] {
+    let current = if row.path == PORTAL_HTML_PATH {
+        portal_html_original(root, &row.path, &current)?
+    } else if row.path == F09_PATHS[0] {
         f09_parent(root, &current)?
     } else if row.path == "crates/ssx-infra/src/search.rs" {
         crate::a13::a06_source_successor::w07_t02_joint::page_current(root, &row.path, &current)?
@@ -699,11 +831,14 @@ pub(super) fn page_original(root: &Path, path: &str) -> Result<Option<Vec<u8>>> 
 }
 fn page_controls(root: &Path) -> Result<()> {
     f09_controls(root)?;
+    portal_html_controls(root)?;
     let c = page_capsule(root)?;
     for row in &c.rows {
         page_row(root, row)?;
         let current = fs::read(root.join(&row.path)).map_err(|e| e.to_string())?;
-        let current = if row.path == F09_PATHS[0] {
+        let current = if row.path == PORTAL_HTML_PATH {
+            portal_html_original(root, &row.path, &current)?
+        } else if row.path == F09_PATHS[0] {
             f09_parent(root, &current)?
         } else if row.path == "crates/ssx-infra/src/search.rs" {
             need(

@@ -8,6 +8,7 @@ provider.
 from __future__ import annotations
 
 import os
+import re
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
@@ -111,7 +112,7 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                     intercepted.append(route.request.url)
                     route.abort()
 
-                context.route("**/search?*", capture_form_request)
+                context.route(re.compile(r".*/search\?.*"), capture_form_request)
                 with page.expect_request(lambda request: "/search?" in request.url) as captured:
                     page.locator("[data-search-form]").evaluate("form => form.requestSubmit()")
                 parameters = parse_qs(urlsplit(captured.value.url).query)

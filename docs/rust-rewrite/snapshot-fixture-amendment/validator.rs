@@ -12,6 +12,8 @@ use std::{
 type Result<T> = std::result::Result<T, String>;
 const SOURCE: &str = "tests/test_coverage_pipeline_inputs.py";
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
+#[path = "portal-browser.rs"]
+mod portal_browser;
 include!("capsule-sha.rs");
 fn need(condition: bool, message: &str) -> Result<()> {
     if condition {
@@ -213,12 +215,16 @@ fn prove(root: &Path, doc: &Value, kind: &str, claimed: &Value) -> Result<Vec<u8
     source_payload(root, &doc["source"], &regular(root, SOURCE)?, "0644")
 }
 pub(crate) fn f01(root: &Path, path: &str, blob: &str) -> Result<Option<()>> {
-    if path != SOURCE {
-        return Ok(None);
+    if path == SOURCE {
+        let doc = load(root)?;
+        prove(root, &doc, "F01", &json!({"path":path,"git_blob":blob}))?;
+        return Ok(Some(()));
     }
-    let doc = load(root)?;
-    prove(root, &doc, "F01", &json!({"path":path,"git_blob":blob}))?;
-    Ok(Some(()))
+    if path == portal_browser::SOURCE {
+        portal_browser::f01(root, &json!({"path":path,"git_blob":blob}))?;
+        return Ok(Some(()));
+    }
+    Ok(None)
 }
 pub(crate) fn a06(root: &Path, row: &Value) -> Result<Option<()>> {
     if row["path"] != SOURCE {
@@ -363,6 +369,13 @@ mod tests {
             assert!(source_payload(&root, &candidate, &changed, "0644").is_err());
         }
         assert!(f01(&root, "unlisted.py", "wrong").unwrap().is_none());
+        assert!(
+            portal_browser::f01(
+                &root,
+                &json!({"path":portal_browser::SOURCE,"git_blob":"wrong"})
+            )
+            .is_err()
+        );
         assert!(
             a06(&root, &json!({"path":"unlisted.py"}))
                 .unwrap()

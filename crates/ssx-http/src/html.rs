@@ -299,17 +299,21 @@ mod date_portal_tests {
 
     #[test]
     fn bounded_portal_view_preserves_scope_and_displays_machine_proof() {
-        let mut request = SearchRequest::default();
-        request.query = "climate & change".into();
-        request.engines = Some(vec!["openalex".into()]);
-        request.date_from = Some("2024-02-29".into());
-        request.date_to = Some("2024-02-29".into());
-        let mut response = SearchResponse::default();
-        response.query = request.query.clone();
-        response.date_filter = Some(
-            PublicationDateProof::openalex(request.date_from.clone(), request.date_to.clone())
-                .unwrap(),
-        );
+        let request = SearchRequest {
+            query: "climate & change".into(),
+            engines: Some(vec!["openalex".into()]),
+            date_from: Some("2024-02-29".into()),
+            date_to: Some("2024-02-29".into()),
+            ..Default::default()
+        };
+        let response = SearchResponse {
+            query: request.query.clone(),
+            date_filter: Some(
+                PublicationDateProof::openalex(request.date_from.clone(), request.date_to.clone())
+                    .unwrap(),
+            ),
+            ..Default::default()
+        };
         let meta = crate::formats::meta(&response, &[]);
         let html = PublicHtml::new("dark").search(&response, &meta, &request);
 
