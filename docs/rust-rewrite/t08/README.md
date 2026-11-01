@@ -1,0 +1,11 @@
+# T08 native backend integration
+
+This slice consumes the accepted T08A client. It launches the unchanged production HTTP router, SearchService, production npm adapter and real private Valkey in an owned qualification process. A loopback provider supplies deterministic npm JSON. This is production-component integration, not production startup, deployment or O04 distribution acceptance. See [case study](../CASE_STUDY.md) and issue #903.
+
+The recorder logs the request at the actual adapter port and delegates it unchanged. npm intentionally does not send page upstream. Two adjacent page values beyond u64 must reach the adapter exactly, produce distinct first misses, and each repeat must avoid both adapter and upstream execution through Valkey. No pagination capability is invented.
+
+The explicit subprocess driver covers all four commands in their native text/JSON forms, Unicode search, unknown scope, invalid negative page, classified upstream errors/malformed JSON and unavailable native server. T08A retains the larger malformed-wire/proxy/TLS/source compatibility corpus. This integration slice does not relabel that corpus as backend evidence.
+
+Before running, build the locked `ssx-http` example `t08_fixture` and accepted `ssx-cli` default binary into the registered exclusive target. Pass absolute `T08_NATIVE_SERVER_BINARY`, `T08_NATIVE_CLI_BINARY`, `SLOPSEARX_TEST_VALKEY_SERVER`, a fresh absolute `T08_RECEIPTS`, and the owned short `SLOPSEARX_TEST_TEMP_ROOT`. Also build `cargo build --locked -p ssx-http --example t08_cli`, then launch the resulting normal `examples/t08_cli` executable with those variables. This driver has no automatically discovered test, no ignored test and no nested Cargo invocation: ordinary workspace tests cannot accidentally run environment-dependent integration. On an unsupported non-Unix backend host, actual invocation exits 2; it does not claim acceptance. Windows client-only acceptance remains T08A. Child runtime environments omit Python and inherited proxies. Every child has bounded startup/execution and is killed/waited on failure.
+
+Status: authored, not yet compiled or executed. Native `cargo xtask check T08`, CI registration, final installed-image replay and source/binary handoff to O04/#921 remain required before issue closure. No production client/server implementation or portal contract is changed.

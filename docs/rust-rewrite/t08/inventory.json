@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "plan_id": "T08",
+  "status": "authored-unqualified",
+  "scope": "native production-component integration, not production executable/deployment",
+  "cases": [
+    "health-text",
+    "health-json",
+    "config-text",
+    "config-json",
+    "engines-text",
+    "engines-json",
+    "search-yaml",
+    "search-json",
+    "page-0-0",
+    "page-0-1",
+    "page-1-0",
+    "page-1-1",
+    "unknown-engine",
+    "negative-page",
+    "upstream-error",
+    "upstream-malformed",
+    "unavailable-server"
+  ],
+  "page_values": [
+    "18446744073709551616",
+    "18446744073709551617"
+  ],
+  "assertions": [
+    "exact adapter-port page text",
+    "distinct high-page first misses",
+    "repeat adapter/upstream count unchanged with real Valkey",
+    "production npm normalized result",
+    "denied scope/page never dispatch",
+    "all owned processes waited and upstream joined"
+  ],
+  "pending": [
+    "native compilation/execution",
+    "T08 xtask ownership and required CI",
+    "final installed-image replay",
+    "O04 source/binary handoff"
+  ]
+}
