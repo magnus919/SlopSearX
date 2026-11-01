@@ -494,13 +494,42 @@ fn a12_readiness_payload(doc: &Value, physical: &Material) -> Result<Material> {
         mode: physical.mode,
     })
 }
+/// One current-admission projection shared by the active A06/A12 and T02 Page readers.
+/// Frozen Page operands are returned only after authenticating actual physical bytes.
+pub(crate) fn a12_readiness_current(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    need(
+        path == A12_READINESS_PATH,
+        "A12 readiness unowned projection path",
+    )?;
+    let actual = read(root, path)?;
+    need(
+        actual.bytes == supplied,
+        "A12 readiness supplied physical identity",
+    )?;
+    Ok(a12_readiness_payload(&a12_readiness_document(root)?, &actual)?.bytes)
+}
 fn a12_readiness_prior(root: &Path, physical: Material) -> Result<Material> {
-    a12_readiness_payload(&a12_readiness_document(root)?, &physical)
+    Ok(Material {
+        bytes: a12_readiness_current(root, A12_READINESS_PATH, &physical.bytes)?,
+        mode: physical.mode,
+    })
 }
 fn a12_readiness_controls(root: &Path) -> Result<()> {
     let doc = a12_readiness_document(root)?;
     let actual = read(root, A12_READINESS_PATH)?;
     let prior = a12_readiness_payload(&doc, &actual)?;
+    need(
+        a12_readiness_current(root, A12_READINESS_PATH, &actual.bytes)? == prior.bytes,
+        "A12 readiness actual shared projection",
+    )?;
+    need(
+        a12_readiness_current(root, A12_READINESS_PATH, &prior.bytes).is_err(),
+        "A12 readiness shared projection rejects old supplied bytes",
+    )?;
+    need(
+        a12_readiness_current(root, "Cargo.lock", &actual.bytes).is_err(),
+        "A12 readiness shared projection rejects unowned path",
+    )?;
     need(
         a12_readiness_payload(&doc, &prior).is_err(),
         "A12 readiness old source is not current",
