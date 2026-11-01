@@ -139,8 +139,9 @@ fn validate_receipt(
         "T08 distinct cache misses or repeat-hit dispatch differs",
     )?;
     for (call, page) in page_calls.iter().zip(pages) {
+        let expected = ssx_json::from_str::<ssx_json::Value>(page).map_err(|e| e.to_string())?;
         need(
-            call["page"].to_string() == page && call["page_text"].as_str() == Some(page),
+            call["page"] == expected && call["page_text"].as_str() == Some(page),
             "T08 actual lossless adapter page differs",
         )?;
     }

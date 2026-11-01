@@ -375,8 +375,10 @@ mod unix {
             .lines()
             .map(|line| ssx_json::from_str::<ssx_json::Value>(line).unwrap())
             .collect::<Vec<_>>();
-        assert_eq!(exact_calls[before]["page"].to_string(), pages[0]);
-        assert_eq!(exact_calls[before + 1]["page"].to_string(), pages[1]);
+        for (offset, page) in pages.iter().enumerate() {
+            let expected = ssx_json::from_str::<ssx_json::Value>(page).unwrap();
+            assert_eq!(exact_calls[before + offset]["page"], expected);
+        }
         for (id, args) in [
             (
                 "unknown-engine",
