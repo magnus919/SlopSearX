@@ -3,6 +3,22 @@
   "baseline_sha": "2a995f964757df77693747b232aa47738c0c58cc",
   "approved_requirement": "Maintainer requested a complete Rust rewrite plan on 2026-10-15: no backend Python; optional client-only Python permitted; native gateway and ssx included. This publication authorizes planning, not production deployment.",
   "dependency_semantics": "Every depends_on edge is a hard finish-to-start gate: predecessor implementation/decision/evidence must be accepted and merged before dependent implementation starts. Analysis may happen early but cannot claim readiness. Epic hierarchy is not a dependency.",
+  "delivery_cadence": {
+    "purpose": "Make steady, reviewable progress through the Rust Rewrite milestone without weakening its capability, quality, hosted-acceptance, or Python-removal requirements.",
+    "work_in_progress_limit": "Keep at most two implementation PRs actively changing code. Other available capacity should unblock a named blocker, perform an independent review, or prepare a separately mergeable next slice. Do not start work whose hard prerequisites are incomplete.",
+    "slice_definition": "Prefer small independently mergeable slices, each with one observable user or operator outcome, an exact plan item or issue, explicit acceptance commands/evidence, and cleanup obligations. Keep issue dependencies hard finish-to-start; parallelize only independent items or analysis that does not claim implementation readiness.",
+    "integration_rule": "Identify shared-file and shared-interface overlap before expensive builds. Integrate dependent work through its reviewed parent/head, then run the affected acceptance gates against the exact integrated revision. Reuse prior evidence only when its source, fixtures, environment, and required scope are unchanged; hosted required checks must still pass on the exact proposed merge head.",
+    "stuck_work_rule": "After two equivalent failures of the same gate, stop replaying it or increasing timeouts without new evidence. Record the failing revision, preserved output, common-cause hypothesis, owner, next diagnostic action, and a bounded stopping condition; switch to independent ready work while the blocker is investigated.",
+    "progress_reporting": [
+      "accepted and merged issues since the previous report",
+      "capabilities with completed acceptance evidence",
+      "active implementation streams and the oldest blocker with its next action",
+      "work completed versus work waiting on CI, review, integration, or external access",
+      "measured build-footprint changes and cleanup disposition for completed PRs"
+    ],
+    "queue_policy": "Prioritize completing and accepting the oldest ready delivery before expanding implementation. Keep the next user-visible capability queued with prerequisites and an acceptance plan; when a lane is blocked, advance independent ready work without reporting the blocked lane as progress.",
+    "completion_rule": "Each PR's acceptance includes exact-head required checks, review disposition, merge verification, local main synchronization when applicable, and the repository's post-merge artifact and worktree cleanup audit. These delivery practices do not waive any plan acceptance criterion or authorize production activation."
+  },
   "items": [
     {
       "id": "F01",
