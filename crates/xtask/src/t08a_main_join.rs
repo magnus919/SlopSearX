@@ -364,6 +364,57 @@ fn pre_image_ops_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior.into_bytes())
 }
+fn pre_o02_gate(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path != "crates/xtask/src/main.rs" {
+        return Ok(physical.to_vec());
+    }
+    need(
+        physical.len() == 43856
+            && digest(physical)
+                == "c9c7ceb9b9dd7b0eb45d306d44533acd8f4af0c2d569228ca681d88003c19b5f",
+        "O02 exact current main",
+    )?;
+    let frames: [(&str, &str); 3] = [
+        ("mod o01;\nmod o02;\n", "mod o01;\n"),
+        (
+            "        \"O01\" => o01::check(root, records),\n        \"O02\" => o02::check(root, records),\n",
+            "        \"O01\" => o01::check(root, records),\n",
+        ),
+        (
+            "    } else if id == \"O02\" {\n        \"partial O02 image-promotion increment: authenticated Python disposition, native ssx-ops build/test/lint and source-admission controls; remains failed until all O02-owned backend Python tooling and tests have accepted native successors; no production promotion or full O02 completion claim\"\n    } else if id == \"T01\" {",
+            "    } else if id == \"T01\" {",
+        ),
+    ];
+    let mut prior = std::str::from_utf8(physical)
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    for (after, before) in frames {
+        need(
+            prior.matches(after).count() == 1,
+            "O02 unique inverse main span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 43476
+            && digest(prior.as_bytes())
+                == "8c78d15a0c561b3b4b80f787ec44a20a93d00ef66d8cd240ace842888f300711",
+        "O02 exact accepted promotion main",
+    )?;
+    let mut forward = prior.clone();
+    for (after, before) in frames {
+        need(
+            forward.matches(before).count() == 1,
+            "O02 unique forward main span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical,
+        "O02 full main reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
 fn pre_promotion_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     if path != "crates/xtask/src/main.rs" {
         return Ok(physical.to_vec());
@@ -419,7 +470,8 @@ fn pre_promotion_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     Ok(prior.into_bytes())
 }
 fn current_main_projection(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let promotion = pre_promotion_f01(path, physical)?;
+    let gate = pre_o02_gate(path, physical)?;
+    let promotion = pre_promotion_f01(path, &gate)?;
     let ops = pre_image_ops_f01(path, &promotion)?;
     let health = pre_health_f01(path, &ops)?;
     pre_t08_registration(path, &health)
@@ -465,7 +517,16 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let physical = regular(root, path)?;
         let logical = current_main_projection(path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
-            let promotion = pre_promotion_f01(path, &physical)?;
+            let gate = pre_o02_gate(path, &physical)?;
+            need(
+                pre_o02_gate(path, &gate).is_err(),
+                "accepted promotion main is not O02 physical current",
+            )?;
+            let promotion = pre_promotion_f01(path, &gate)?;
+            need(
+                pre_o02_gate(path, &promotion).is_err(),
+                "pre-O02 main substituted as physical current",
+            )?;
             need(
                 pre_promotion_f01(path, &promotion).is_err(),
                 "accepted Ops main is not promotion physical current",
