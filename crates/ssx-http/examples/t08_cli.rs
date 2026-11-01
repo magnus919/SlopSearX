@@ -292,7 +292,14 @@ mod unix {
                 } else {
                     vec![command]
                 };
-                let record = cli(&out, &image, &base, &format!("{command}-{json}"), &args, 0);
+                let record = cli(
+                    &out,
+                    &image,
+                    &base,
+                    &format!("{command}-{}", if json { "json" } else { "text" }),
+                    &args,
+                    0,
+                );
                 assert!(
                     record["stdout"].as_str().unwrap().contains("npm"),
                     "discovery must expose actual npm"

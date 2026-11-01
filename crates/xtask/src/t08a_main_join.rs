@@ -197,6 +197,61 @@ fn inverse(row: &Value, current: &[u8], mode: &str, count: usize) -> Result<Vec<
     need(forward == current, "full forward reconstruction")?;
     Ok(prior)
 }
+// Exact additive T08 registration precedes the unchanged accepted CLI/W08 join.
+// This is a closed three-span current-source amendment, not an alternate root.
+fn pre_t08_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path != "crates/xtask/src/main.rs" {
+        return Ok(physical.to_vec());
+    }
+    need(
+        physical.len() == 42077
+            && digest(physical)
+                == "dbce267dc183e0f092eb880f9600676d217ca6b4e8f2ccc39bf7baf322080ceb",
+        "T08 exact physical main registration",
+    )?;
+    let frames: [(&str, &str); 3] = [
+        (
+            "ent;\nmod t01;\nmod t02;\nmod t04;\nmod t05;\nmod t06;\nmod t08a;\nmod t08a_child;\npub(crate) use a13::",
+            "ent;\nmod t01;\nmod t02;\nmod t04;\nmod t05;\nmod t06;\nmod t08;\nmod t08a;\nmod t08a_child;\npub(crate) use a13::",
+        ),
+        (
+            "\"T09\" => t09::check(root, records),\n        \"T08A\" => t08a::check(root, records),\n        \"T04\" ",
+            "\"T09\" => t09::check(root, records),\n        \"T08\" => t08::check(root, records),\n        \"T08A\" => t08a::check(root, records),\n        \"T04\" ",
+        ),
+        (
+            "e = a08::report_scope(&records);\n    let scope = if id == \"T08A\" {\n        \"standalone native ex",
+            "e = a08::report_scope(&records);\n    let scope = if id == \"T08\" {\n        \"native default/installed CLI against separate production HTTP/service/npm/private-Valkey qualification processes; finite17 integration cases and O04 artifact handoff; no production startup, provider or release/deployment claim\"\n    } else if id == \"T08A\" {\n        \"standalone native ex",
+        ),
+    ];
+    let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
+    let mut prior = current.to_owned();
+    for (before, after) in frames {
+        need(
+            prior.matches(after).count() == 1,
+            "T08 unique inverse registration span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 41759
+            && digest(prior.as_bytes())
+                == "7aaacf8aaafda17fbc676f6344720197b77be3be583882bf8d4fff2ac6695bd6",
+        "T08 exact pre-registration main",
+    )?;
+    let mut forward = prior.clone();
+    for (before, after) in frames {
+        need(
+            forward.matches(before).count() == 1,
+            "T08 unique forward registration span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical,
+        "T08 complete forward registration",
+    )?;
+    Ok(prior.into_bytes())
+}
 fn interpret(
     doc: &Value,
     path: &str,
@@ -204,6 +259,8 @@ fn interpret(
     mode: &str,
     parent: Parent,
 ) -> Result<Vec<u8>> {
+    let logical = pre_t08_registration(path, physical)?;
+    let physical = logical.as_slice();
     scope(doc)?;
     let index = ROWS
         .iter()
@@ -234,6 +291,13 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = capsule(root)?;
     for (index, (path, cli_count, main_count)) in ROWS.iter().enumerate() {
         let physical = regular(root, path)?;
+        let logical = pre_t08_registration(path, &physical)?;
+        if *path == "crates/xtask/src/main.rs" {
+            need(
+                pre_t08_registration(path, &logical).is_err(),
+                "pre-T08 frame substituted as physical registration",
+            )?;
+        }
         for (name, parent, count, other) in [
             ("cli", Parent::Cli, *cli_count, "main"),
             ("main", Parent::Main, *main_count, "cli"),
@@ -241,7 +305,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             let prior = project(root, path, &physical, parent)?;
             let row = &doc["rows"][index][name];
             need(
-                inverse(row, &physical, "0644", count)? == prior,
+                inverse(row, &logical, "0644", count)? == prior,
                 "pure outer positive before controls",
             )?;
             let commit = text(&row["prior"], "commit")?;

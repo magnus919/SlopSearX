@@ -198,7 +198,7 @@ fn sources(root: &Path) -> Result<Value> {
 // Full261+4 suites get a fixed900s ceiling; metadata/help retain300s. Each
 // child still has its25s contract, and the whole hosted job remains60minutes.
 #[derive(Clone, Copy)]
-enum NativeChildScope {
+pub(crate) enum NativeChildScope {
     Metadata,
     FullCorpus,
 }
@@ -216,7 +216,7 @@ impl NativeChildScope {
         }
     }
 }
-fn bounded(
+pub(crate) fn bounded(
     root: &Path,
     image: &Path,
     args: &[&str],
@@ -242,7 +242,7 @@ fn bounded(
     String::from_utf8(captured.stdout).map_err(|e| e.to_string())
 }
 
-fn runtime_audit(root: &Path, image: &Path, records: &mut Vec<Value>) -> Result<()> {
+pub(crate) fn runtime_audit(root: &Path, image: &Path, records: &mut Vec<Value>) -> Result<()> {
     let dependencies = if cfg!(target_os = "macos") {
         command(
             root,
@@ -398,7 +398,10 @@ fn validate_shipping_context(root: &Path, rows: &[Value]) -> Result<Value> {
         json!({"role":"standalone-default-shipping-floor","CLI":cli[0],"private_dependency":private[0],"image_path":image,"image_sha256":hash(&fs::read(&image).map_err(|e|e.to_string())?),"bytes":metadata.len(),"scope":"actual standalone default compiler context; not external-test or qualification-full image context"}),
     )
 }
-fn default_shipping_floor(root: &Path, records: &mut Vec<Value>) -> Result<(PathBuf, String)> {
+pub(crate) fn default_shipping_floor(
+    root: &Path,
+    records: &mut Vec<Value>,
+) -> Result<(PathBuf, String)> {
     let raw = command(
         root,
         "cargo",
@@ -873,6 +876,18 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         &test,
         &[
             "native_external_child_executes_complete_frozen_contract",
+            "--exact",
+            "--test-threads=1",
+        ],
+        NativeChildScope::FullCorpus,
+        &installed_env,
+        records,
+    )?;
+    bounded(
+        root,
+        &test,
+        &[
+            "native_discovery_shapes_have_explicit_external_contract",
             "--exact",
             "--test-threads=1",
         ],

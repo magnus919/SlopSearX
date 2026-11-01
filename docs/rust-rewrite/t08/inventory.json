@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_id": "T08",
-  "status": "authored-unqualified",
+  "status": "executable-owner-added-pending-final-native-and-hosted-qualification",
   "scope": "native production-component integration, not production executable/deployment",
   "cases": [
     "health-text",
@@ -35,9 +35,8 @@
     "all owned processes waited and upstream joined"
   ],
   "pending": [
-    "native compilation/execution",
-    "T08 xtask ownership and required CI",
-    "final installed-image replay",
-    "O04 source/binary handoff"
+    "actual final T08 gate execution on default and installed images",
+    "original531 and separate30 final compatibility regression",
+    "hosted T08 required CI and reviewed O04 handoff"
   ]
 }
