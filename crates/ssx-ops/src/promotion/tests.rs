@@ -355,7 +355,7 @@ mod unix {
         let plan = snapshot.plan(&digest('b')).unwrap();
         let error = snapshot
             .apply_with_test_hook(&plan, |point, index, parent, name| {
-                if point == ApplyPoint::ReadyToRename && index == 1 {
+                if point == ApplyPoint::BeforeRename && index == 1 {
                     nix::unistd::unlinkat(parent, name, nix::unistd::UnlinkatFlags::NoRemoveDir)
                         .map_err(std::io::Error::from)?;
                 }

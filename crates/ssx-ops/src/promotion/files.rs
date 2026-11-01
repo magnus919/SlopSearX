@@ -50,6 +50,7 @@ pub(super) enum ApplyPoint {
     BeforeStage,
     BeforeReplace,
     ReadyToRename,
+    BeforeRename,
 }
 fn err() -> io::Error {
     io::Error::other("fixed pin source identity or bounds changed")
@@ -315,6 +316,8 @@ impl PinSnapshot {
                 {
                     return Err("staged pin output changed at replacement boundary");
                 }
+                hook(ApplyPoint::BeforeRename, index, &source.parent, &stage.name)
+                    .map_err(|_| "replacement control failed")?;
                 renameat(
                     &stage.parent,
                     stage.name.as_str(),

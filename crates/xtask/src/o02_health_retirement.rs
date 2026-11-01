@@ -656,13 +656,13 @@ const OPS_INPUTS: &[(&str, usize, &str)] = &[
     ),
     (
         "crates/ssx-ops/src/promotion/files.rs",
-        14474,
-        "ebf77a2cc33319755e55e53dae2a9ce24d6713d68c56c8d311d2ca182ac96d43",
+        14640,
+        "dddd1c58b8bbfe4704c155bc2078f647624c3e662794507f1e9c8e225b0d8d0c",
     ),
     (
         "crates/ssx-ops/src/promotion/tests.rs",
-        16789,
-        "6be08db8ed2e38d8d3138202e3c773a8cb362b7f1147926b1d50d37a40de0421",
+        16788,
+        "077861a075d0878ad8edca2a7626f6a1e1a766c0c99bc89d582f225d363bdbfa",
     ),
     (
         ".github/workflows/docker.yml",

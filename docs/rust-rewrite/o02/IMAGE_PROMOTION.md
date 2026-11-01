@@ -36,4 +36,8 @@ Before delivery, run the affected native package's actual inventory/build/lint a
 
 Portal smoke, hosted mirror configuration, upstream probes and Python backend cutover remain open O02/rewrite work. No full O02 completion, native server assembly, release activation or production operation is claimed.
 
+## Native O02 gate
+
+`cargo xtask check O02` authenticates the O02 historical disposition and accepted retirement/source proofs, runs formatting, the complete `ssx-ops` test and strict Clippy commands, then runs the O02 source-admission mutation controls. Its evidence scope is this partial image-promotion increment and it does not depend on unrelated F01 successors. It returns failure while any O02-owned backend-coupled Python source or test remains present; a passing result therefore requires the later portal-smoke and upstream-contract successors as well. It never dispatches a workflow, contacts GHCR, opens a PR or performs a promotion.
+
 GitHub’s [current GITHUB_TOKEN documentation](https://docs.github.com/en/actions/concepts/security/github_token) states that opening, synchronizing or reopening a PR with this token creates CI runs awaiting approval from a repository writer. That existing platform gate remains. This proposal adds no PAT, separate GitHub App, Actions-write permission or automated approval workaround.

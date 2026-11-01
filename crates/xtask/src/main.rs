@@ -27,6 +27,7 @@ mod f13;
 mod f14;
 mod f15;
 mod o01;
+mod o02;
 mod o02_health_retirement;
 mod o03;
 mod o06;
@@ -525,6 +526,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "A02" => a02::check(root, records),
         "A05" => a05::check(root, records),
         "O01" => o01::check(root, records),
+        "O02" => o02::check(root, records),
         "O03" => o03::check(root, records),
         "O06" => o06::check(root, records),
         "F01" | "F02" => source_check(root, id, records),
@@ -773,6 +775,8 @@ fn main() {
         "exact native receipt/record/lineage/composition/MCP execution and measured frozen Python wire subset; no providers, production activation, startup or complete rewrite certification"
     } else if id == "O03" {
         "active tooling inventory and prospective evidence contracts only; no experiment, provider call, receipt issuance or historical evidence mutation"
+    } else if id == "O02" {
+        "partial O02 image-promotion increment: authenticated Python disposition, native ssx-ops build/test/lint and source-admission controls; remains failed until all O02-owned backend Python tooling and tests have accepted native successors; no production promotion or full O02 completion claim"
     } else if id == "T01" {
         "synthetic MCP registry, real stdio/streamable HTTP/legacy SSE and gateway SDK qualification; no production tool parity or OAuth authorization-server claim"
     } else if id == "T06" {
