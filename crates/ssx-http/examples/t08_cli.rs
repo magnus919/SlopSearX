@@ -379,7 +379,7 @@ mod unix {
             let expected = ssx_json::from_str::<ssx_json::Value>(page).unwrap();
             assert_eq!(exact_calls[before + offset]["page"], expected);
         }
-        for (id, args) in [
+        for (id, args, status) in [
             (
                 "unknown-engine",
                 vec![
@@ -389,6 +389,7 @@ mod unix {
                     "not-a-real-engine",
                     "--json",
                 ],
+                503,
             ),
             (
                 "negative-page",
@@ -401,12 +402,16 @@ mod unix {
                     "-1",
                     "--json",
                 ],
+                400,
             ),
         ] {
             let before = lines(&out.join("adapter-calls.jsonl")).len();
             let upstream_before = upstream.requests.lock().unwrap().len();
             let record = cli(&out, &image, &base, id, &args, 1);
-            assert_eq!(record["stderr"], "error: ssx: HTTP failure: 400\n");
+            assert_eq!(
+                record["stderr"],
+                format!("error: ssx: HTTP failure: {status}\n")
+            );
             records.push(record);
             assert_eq!(upstream.requests.lock().unwrap().len(), upstream_before);
             assert_eq!(
