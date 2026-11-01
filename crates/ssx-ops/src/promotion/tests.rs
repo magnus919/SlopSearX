@@ -66,6 +66,9 @@ fn all_data_sources_must_have_valid_matching_complete_pins() {
         sources[0].bytes = format!("{IMAGE}@{malformed}\n").into_bytes();
         assert!(plan(&sources, &digest('b')).is_err());
     }
+    let mut embedded = good.clone();
+    embedded[0].bytes = format!("other{IMAGE}@{}\n", digest('a')).into_bytes();
+    assert!(plan(&embedded, &digest('b')).is_err());
     let mut reordered = good.clone();
     reordered.swap(0, 1);
     assert!(plan(&reordered, &digest('b')).is_err());

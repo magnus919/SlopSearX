@@ -51,10 +51,16 @@ fn pins(bytes: &[u8]) -> Result<Vec<&str>, String> {
     let prefix = format!("{IMAGE}@");
     let mut found = Vec::new();
     for (at, _) in text.match_indices(&prefix) {
+        if text[..at].chars().next_back().is_some_and(|c| {
+            !c.is_whitespace() && !matches!(c, '\'' | '"' | '(' | '[' | '{' | '<' | '`' | '=' | ':')
+        }) {
+            return Err("fixed-image reference embedded in another token".into());
+        }
         let tail = &text[at + prefix.len()..];
         let end = tail
             .find(|c: char| {
-                c.is_whitespace() || matches!(c, '\'' | '"' | ')' | ']' | ',' | ';' | '`')
+                c.is_whitespace()
+                    || matches!(c, '\'' | '"' | ')' | ']' | '}' | '>' | ',' | ';' | '`')
             })
             .unwrap_or(tail.len());
         let digest = &tail[..end];
