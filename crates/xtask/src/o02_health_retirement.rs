@@ -556,9 +556,12 @@ pub(crate) fn successor(root: &Path, path: &str, blob: &str) -> Result<bool> {
         return Ok(false);
     };
     need(row.1 == blob, "historical Python fixture blob")?;
-    let raw = python_successor(root, row)?;
-    prior(row, &raw)?;
+    python_prior(root, row)?;
     Ok(true)
+}
+fn python_prior(root: &Path, row: &Successor) -> Result<Vec<u8>> {
+    let raw = python_successor(root, row)?;
+    prior(row, &raw)
 }
 
 // Closed native image-operations replacement, authenticated before retirement.
@@ -641,4 +644,29 @@ fn python_successor(root: &Path, row: &Successor) -> Result<Vec<u8>> {
     need(row.0 == OPS_TEST.0, "closed current Python successor")?;
     let raw = material(root, OPS_TEST.0, OPS_TEST.2, OPS_TEST.3)?;
     prior(&OPS_TEST, &raw)
+}
+
+/// Current deployment-test source projected through the same strict F01 inverse.
+pub(crate) fn historical_python_source(
+    root: &Path,
+    row: &serde_json::Value,
+) -> Result<Option<Vec<u8>>> {
+    let path = row["path"].as_str().ok_or("O02 historical source path")?;
+    if path != "tests/test_deployment_artifacts.py" {
+        return Ok(None);
+    }
+    let fields = row.as_object().ok_or("O02 historical source row")?;
+    need(
+        fields.len() == 2 && fields.contains_key("path") && fields.contains_key("sha256"),
+        "closed historical Python source row",
+    )?;
+    let source = SUCCESSORS
+        .iter()
+        .find(|source| source.0 == path)
+        .ok_or("O02 source tuple")?;
+    need(
+        row["sha256"].as_str() == Some(source.5),
+        "exact historical Python source SHA",
+    )?;
+    python_prior(root, source).map(Some)
 }

@@ -19,7 +19,7 @@ use std::{
     collections::BTreeMap,
     sync::{
         Arc,
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     time::Duration,
 };
@@ -46,8 +46,21 @@ fn preview() -> ScopeProposal {
     p.surface = SearchSurface::Preview;
     p
 }
+// This acknowledgment belongs to the exact listener, not its reusable port.
+fn retire_listener(listener: tokio::net::TcpListener, dropped: &AtomicBool) {
+    drop(listener);
+    dropped.store(true, Ordering::SeqCst);
+}
+fn require_listener_retired(dropped: &AtomicBool) -> Result<()> {
+    if dropped.load(Ordering::SeqCst) {
+        Ok(())
+    } else {
+        Err("owned provider listener has not been dropped".into())
+    }
+}
 struct Provider {
     endpoint: String,
+    listener_dropped: Arc<AtomicBool>,
     started: Arc<tokio::sync::Semaphore>,
     closed: Arc<AtomicUsize>,
     request_read: Arc<tokio::sync::Semaphore>,
@@ -61,6 +74,8 @@ impl Provider {
             .await
             .map_err(|e| format!("{e:?}"))?;
         let endpoint = format!("http://{}/v1/systemone", listener.local_addr()?);
+        let listener_dropped = Arc::new(AtomicBool::new(false));
+        let dropped = listener_dropped.clone();
         let started = Arc::new(tokio::sync::Semaphore::new(0));
         let closed = Arc::new(AtomicUsize::new(0));
         let request_read = Arc::new(tokio::sync::Semaphore::new(0));
@@ -98,6 +113,9 @@ impl Provider {
                 }
             }
             .await;
+            // A successful join is not reported until this sole owned socket
+            // was explicitly dropped and its acknowledgment was published.
+            retire_listener(listener, &dropped);
             if let Err(reason) = result {
                 *f.lock().unwrap() = Some(reason);
             }
@@ -106,6 +124,7 @@ impl Provider {
         });
         Ok(Self {
             endpoint,
+            listener_dropped,
             started,
             closed,
             cancel,
@@ -141,9 +160,10 @@ impl Provider {
     async fn close(mut self) -> Result<()> {
         self.cancel.cancel();
         match tokio::time::timeout(Duration::from_secs(2), &mut self.task).await {
-            Ok(joined) => joined
-                .map_err(|_| "provider task join failed")?
-                .map_err(Into::into),
+            Ok(joined) => {
+                joined.map_err(|_| "provider task join failed")??;
+                require_listener_retired(&self.listener_dropped)
+            }
             Err(_) => {
                 self.task.abort();
                 // Aborting is followed by a join; dropping a JoinHandle detaches it.
