@@ -382,9 +382,9 @@ pub(crate) fn test_dependency_prior(
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let actual = regular(root, "Cargo.lock")?;
-    let prior = native_health_lock_prior(&actual)?;
+    let prior_lock = native_health_lock_prior(&actual)?;
     need(
-        native_health_lock_prior(&prior).is_err(),
+        native_health_lock_prior(&prior_lock).is_err(),
         "native health old lock is not current",
     )?;
     let mut duplicate = actual.clone();
