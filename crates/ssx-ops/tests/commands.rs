@@ -103,6 +103,6 @@ fn native_platform_command_and_source_errors_run_without_an_interpreter() {
         docker.to_str().unwrap(),
     ]);
     assert_eq!(status, 2);
-    assert!(output.contains("unrecognized"));
+    assert_eq!(output, "error: ssx-ops: base must pin tag and digest\n");
     assert_eq!(run(&["unknown-command"]).0, 2);
 }

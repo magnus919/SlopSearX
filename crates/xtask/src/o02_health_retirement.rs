@@ -585,8 +585,8 @@ const OPS_INPUTS: &[(&str, usize, &str)] = &[
     ),
     (
         "crates/ssx-ops/tests/commands.rs",
-        2943,
-        "e1339c7db939145ca8fa3f989d897d510440044e82e69803ba647541f5a479cc",
+        2971,
+        "fef20913a8a8bf8526b123dafb929a17ad7397162e2b83d8f75b70597a56fb22",
     ),
     (
         ".github/workflows/docker.yml",
