@@ -1,0 +1,13 @@
+# O02 native container healthcheck increment
+
+Read the [rewrite case study](../CASE_STUDY.md) and [O02 issue #919](https://github.com/magnus919/SlopSearX/issues/919).
+
+The production image runs `/usr/local/bin/ssx-healthcheck` instead of `docker/healthcheck.py`. The std-only `ssx-healthcheck` package sends GET `/health` directly to IPv4 loopback port8080, accepts only HTTP200, reads bounded response headers and does not read, decode or validate the body. It emits no output and exits0 on success or1 on failure. The existing Docker health interval30s, timeout5s, start-period5s and retries3 remain unchanged.
+
+Intentional operational hardening: this fixed local readiness probe never consults proxy settings and never follows redirects. One absolute four-second deadline bounds connection, request and header acquisition; slow trickles cannot reset it. The old urllib helper inherited proxy/redirect behavior and had only Docker's outer timeout. No configurable URL, upstream acquisition, JSON-health requirement or backend import is added.
+
+The pinned Rust1.99.0 Bookworm builder compiles/tests the native helper for the image's architecture. The existing Python runtime base, application source and uvicorn command remain unchanged. Both builder and runtime tags/digests are strictly parsed and checked against the primary registry by the existing verifier. That verifier remains Python temporarily; its full native port is remaining O02 work.
+
+Run `cargo test --locked -p ssx-healthcheck` and `cargo clippy --locked -p ssx-healthcheck --all-targets -- -D warnings`. The unit owner exercises actual loopback requests, status-only success with absent/invalid bodies, non200/redirect/malformed/oversized headers, refused connections and a slow-header deadline. Existing amd64/ARM64 Docker CI builds the actual image and executes its shipped helper against the running server with hostile proxy settings, then verifies silent exit1 in an otherwise empty container. Local Docker/Podman are unavailable on the authoring Mac; hosted image acceptance is required. Source authorship or a native host unit pass cannot substitute for that witness.
+
+This is a partial delivery, not complete O02 or Python-free server/release acceptance. Image promotion, full native base verification, portal smoke, upstream probes and other operational Python remain tracked by O02 and its dependent issues. O04 owns final native image/package assembly; G08 owns backend Python retirement after its hard predecessors. No production activation is included.

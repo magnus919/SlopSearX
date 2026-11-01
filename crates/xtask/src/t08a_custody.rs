@@ -148,7 +148,42 @@ fn inverse(row: &Value, current: &[u8], mode: &str, count: usize) -> Result<Vec<
     need(forward == current, "full forward reconstruction")?;
     Ok(prior)
 }
+// One additive std-only health package; immutable CLI lock capsule stays unchanged.
+const HEALTH_LOCK_SHA: &str = "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9";
+const HEALTH_LOCK_BYTES: usize = 94250;
+const HEALTH_LOCK_STANZA: &str = "[[package]]\nname = \"ssx-healthcheck\"\nversion = \"0.1.0\"\n\n";
+fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
+    need(
+        physical.len() == HEALTH_LOCK_BYTES && digest(physical) == HEALTH_LOCK_SHA,
+        "native health exact current lock",
+    )?;
+    let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
+    need(
+        current.matches(HEALTH_LOCK_STANZA).count() == 1,
+        "native health unique package",
+    )?;
+    let at = current
+        .find(HEALTH_LOCK_STANZA)
+        .ok_or("native health package missing")?;
+    let mut prior = physical.to_vec();
+    prior.drain(at..at + HEALTH_LOCK_STANZA.len());
+    need(
+        prior.len() == 94194
+            && digest(&prior) == "7f64930ad5267129bcd5f750de6bba4249c8a3bfde3a3de1753a853b5e1db9d9",
+        "native health exact accepted-main lock",
+    )?;
+    let mut forward = prior.clone();
+    forward.splice(at..at, HEALTH_LOCK_STANZA.bytes());
+    need(
+        forward == physical,
+        "native health full forward reconstruction",
+    )?;
+    Ok(prior)
+}
 fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path == "Cargo.lock" {
+        return native_health_lock_prior(physical);
+    }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
     } else {
@@ -346,6 +381,28 @@ pub(crate) fn test_dependency_prior(
     Ok(prior)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    let actual = regular(root, "Cargo.lock")?;
+    let prior = native_health_lock_prior(&actual)?;
+    need(
+        native_health_lock_prior(&prior).is_err(),
+        "native health old lock is not current",
+    )?;
+    let mut duplicate = actual.clone();
+    duplicate.extend_from_slice(HEALTH_LOCK_STANZA.as_bytes());
+    need(
+        native_health_lock_prior(&duplicate).is_err(),
+        "native health duplicate package",
+    )?;
+    let mut changed = actual.clone();
+    let at = changed
+        .windows(b"ssx-healthcheck".len())
+        .position(|v| v == b"ssx-healthcheck")
+        .ok_or("native health package missing")?;
+    changed[at] = b'x';
+    need(
+        native_health_lock_prior(&changed).is_err(),
+        "native health changed package",
+    )?;
     accepted_main_join::controls(root)?;
     controls_for(root, &ROWS, &capsule(root)?, prior)?;
     controls_for(root, &LEGACY_ROWS, &legacy_capsule(root)?, legacy_prior)?;
