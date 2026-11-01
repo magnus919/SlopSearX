@@ -71,6 +71,8 @@ def test_promotion_workflow_guards_the_app_image_pin() -> None:
     workflow = yaml.safe_load((ROOT / ".github/workflows/image-promotion.yml").read_text())
     triggers = workflow[True]  # PyYAML resolves the `on:` key to boolean True
     assert "schedule" in triggers and "workflow_dispatch" in triggers
+    assert workflow["permissions"] == {"contents": "write"}
+    assert workflow["jobs"]["promote"]["permissions"] == {"contents": "write", "pull-requests": "write"}
 
     step_text = (ROOT / ".github/workflows/image-promotion.yml").read_text()
     assert '"$SSX_IMAGE_OPS_BIN" promote-image-digest --write --root .' in step_text

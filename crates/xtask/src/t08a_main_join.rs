@@ -364,8 +364,63 @@ fn pre_image_ops_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior.into_bytes())
 }
+fn pre_promotion_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path != "crates/xtask/src/main.rs" {
+        return Ok(physical.to_vec());
+    }
+    need(
+        physical.len() == 43476
+            && digest(physical)
+                == "8c78d15a0c561b3b4b80f787ec44a20a93d00ef66d8cd240ace842888f300711",
+        "promotion exact current main",
+    )?;
+    let frames: [(&str, &str); 3] = [
+        (
+            "    if retired {\n        provided.remove(o02_health_retirement::PATH);\n        provided.remove(o02_health_retirement::VERIFIER);\n    }\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n",
+            "    if retired {\n        provided.remove(o02_health_retirement::PATH);\n        provided.remove(o02_health_retirement::VERIFIER);\n        provided.remove(o02_health_retirement::PROMOTER);\n    }\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n",
+        ),
+        (
+            "\n    for s in &f.sources {\n        if retired\n            && (s.path == o02_health_retirement::PATH || s.path == o02_health_retirement::VERIFIER)\n        {\n            continue;\n        }\n",
+            "\n    for s in &f.sources {\n        if retired\n            && (s.path == o02_health_retirement::PATH\n                || s.path == o02_health_retirement::VERIFIER\n                || s.path == o02_health_retirement::PROMOTER)\n        {\n            continue;\n        }\n",
+        ),
+        (
+            "        if retired {\n            paths.remove(o02_health_retirement::PATH);\n            paths.remove(o02_health_retirement::VERIFIER);\n        }\n        if paths.is_empty() || paths != expected {\n            return Err(\"Python source inventory differs from tracked source set\".into());\n",
+            "        if retired {\n            paths.remove(o02_health_retirement::PATH);\n            paths.remove(o02_health_retirement::VERIFIER);\n            paths.remove(o02_health_retirement::PROMOTER);\n        }\n        if paths.is_empty() || paths != expected {\n            return Err(\"Python source inventory differs from tracked source set\".into());\n",
+        ),
+    ];
+    let mut prior = std::str::from_utf8(physical)
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    for (before, after) in frames {
+        need(
+            prior.matches(after).count() == 1,
+            "promotion unique inverse main span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 43282
+            && digest(prior.as_bytes())
+                == "cab24fd77328750eedb27d9ef191316aba5a2d64ffcabc1780d8ff947188d8d4",
+        "promotion exact accepted Ops main",
+    )?;
+    let mut forward = prior.clone();
+    for (before, after) in frames {
+        need(
+            forward.matches(before).count() == 1,
+            "promotion unique forward main span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical,
+        "promotion full main reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
 fn current_main_projection(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let ops = pre_image_ops_f01(path, physical)?;
+    let promotion = pre_promotion_f01(path, physical)?;
+    let ops = pre_image_ops_f01(path, &promotion)?;
     let health = pre_health_f01(path, &ops)?;
     pre_t08_registration(path, &health)
 }
@@ -410,7 +465,12 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let physical = regular(root, path)?;
         let logical = current_main_projection(path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
-            let ops = pre_image_ops_f01(path, &physical)?;
+            let promotion = pre_promotion_f01(path, &physical)?;
+            need(
+                pre_promotion_f01(path, &promotion).is_err(),
+                "accepted Ops main is not promotion physical current",
+            )?;
+            let ops = pre_image_ops_f01(path, &promotion)?;
             need(
                 pre_image_ops_f01(path, &ops).is_err(),
                 "pre-Ops main substituted as physical current",

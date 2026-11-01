@@ -340,6 +340,7 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
     if retired {
         provided.remove(o02_health_retirement::PATH);
         provided.remove(o02_health_retirement::VERIFIER);
+        provided.remove(o02_health_retirement::PROMOTER);
     }
     if required.is_empty() || required != provided {
         return Err("source fixture coverage is incomplete or unexpected".into());
@@ -347,7 +348,9 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
 
     for s in &f.sources {
         if retired
-            && (s.path == o02_health_retirement::PATH || s.path == o02_health_retirement::VERIFIER)
+            && (s.path == o02_health_retirement::PATH
+                || s.path == o02_health_retirement::VERIFIER
+                || s.path == o02_health_retirement::PROMOTER)
         {
             continue;
         }
@@ -389,6 +392,7 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         if retired {
             paths.remove(o02_health_retirement::PATH);
             paths.remove(o02_health_retirement::VERIFIER);
+            paths.remove(o02_health_retirement::PROMOTER);
         }
         if paths.is_empty() || paths != expected {
             return Err("Python source inventory differs from tracked source set".into());

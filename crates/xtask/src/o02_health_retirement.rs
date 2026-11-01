@@ -1,4 +1,4 @@
-//! Two authenticated O02 retirements; historical inventory bytes remain unchanged.
+//! Three authenticated O02 retirements; historical inventory bytes remain unchanged.
 use sha2::{Digest, Sha256};
 #[cfg(unix)]
 use std::io::Read;
@@ -6,6 +6,8 @@ use std::{collections::BTreeSet, fs, path::Path};
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const PATH: &str = "docker/healthcheck.py";
 pub(crate) const VERIFIER: &str = "scripts/verify_docker_base_digest.py";
+pub(crate) const PROMOTER: &str = "scripts/promote_image_digest.py";
+const PROMOTER_BLOB: &str = "f7fd073d5e48edf249a56cb5a22af9328e8979ab";
 const VERIFIER_BLOB: &str = "3f43f9bc1f90b4b2cd85381d2a54e54387cfab18";
 const BLOB: &str = "39bcbc736bed7e441531ab00f3e6d540e4b3af65";
 fn need(ok: bool, message: &str) -> Result<()> {
@@ -85,7 +87,10 @@ fn material(_: &Path, _: &str, _: usize, _: &str) -> Result<Vec<u8>> {
     Err("O02 health retirement source proof requires a Unix qualification host".into())
 }
 fn absence_of(root: &Path, tracked: &BTreeSet<String>, path: &str) -> Result<()> {
-    need(path == PATH || path == VERIFIER, "closed retired path")?;
+    need(
+        path == PATH || path == VERIFIER || path == PROMOTER,
+        "closed retired path",
+    )?;
     need(!tracked.contains(path), "retired path remains untracked")?;
     let relative_parent = Path::new(path).parent().ok_or("retired parent")?;
     let prefix = format!("{}/", relative_parent.display());
@@ -145,6 +150,11 @@ fn historical(fixture: &[u8], disposition: &[u8]) -> Result<()> {
         verifier.len() == 1 && verifier[0]["git_blob"] == VERIFIER_BLOB,
         "sole historical verifier identity",
     )?;
+    let promoter: Vec<_> = rows.iter().filter(|row| row["path"] == PROMOTER).collect();
+    need(
+        promoter.len() == 1 && promoter[0]["git_blob"] == PROMOTER_BLOB,
+        "sole historical promoter identity",
+    )?;
     let disposition: serde_json::Value =
         serde_json::from_slice(disposition).map_err(|e| e.to_string())?;
     let rows = disposition["files"]
@@ -163,6 +173,13 @@ fn historical(fixture: &[u8], disposition: &[u8]) -> Result<()> {
             && verifier[0]["classification"] == "backend-coupled tooling/test"
             && verifier[0]["migration_owner"] == "O02",
         "sole historical verifier disposition",
+    )?;
+    let promoter: Vec<_> = rows.iter().filter(|row| row["path"] == PROMOTER).collect();
+    need(
+        promoter.len() == 1
+            && promoter[0]["classification"] == "backend-coupled tooling/test"
+            && promoter[0]["migration_owner"] == "O02",
+        "sole historical promoter disposition",
     )
 }
 pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<String>) -> Result<()> {
@@ -175,6 +192,7 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
     historical(fixture, &disposition)?;
     absence(root, tracked)?;
     absence_of(root, tracked, VERIFIER)?;
+    absence_of(root, tracked, PROMOTER)?;
     image_operations(root)?;
     for (path, size, sha) in [
         (
@@ -203,10 +221,11 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
     let lock = material(
         root,
         "Cargo.lock",
-        94371,
-        "8d8d87dc69683e47e9b28b68ee332f1b585001128905e2a26481e61c3b37d7d5",
+        94379,
+        "6f8e13c7ef9e327821075d0d35e95587c909dad2a87947013a39bf7d56dbf2e5",
     )?;
-    let health = crate::cli_source_custody::native_image_ops_lock_prior(&lock)?;
+    let ops = crate::cli_source_custody::native_promotion_lock_prior(&lock)?;
+    let health = crate::cli_source_custody::native_image_ops_lock_prior(&ops)?;
     need(
         health.len() == 94250
             && digest(&health)
@@ -321,6 +340,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             ".github/workflows/docker.yml",
             "docs/rust-rewrite/ci/gates.json",
             "tests/test_deployment_artifacts.py",
+            "crates/ssx-ops/src/promotion.rs",
+            "crates/ssx-ops/src/promotion/files.rs",
+            "crates/ssx-ops/src/promotion/tests.rs",
+            ".github/workflows/image-promotion.yml",
         ] {
             let destination = owned.join(path);
             fs::create_dir_all(destination.parent().ok_or("replacement parent")?)
@@ -360,6 +383,30 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             fs::rename(owned.join("scripts-real"), owned.join("scripts"))
                 .map_err(|e| e.to_string())?;
         }
+        need(
+            authenticate(&owned, &fixture, &BTreeSet::from([PROMOTER.to_string()])).is_err(),
+            "tracked promoter rejected",
+        )?;
+        fs::write(owned.join(PROMOTER), b"recreated promoter").map_err(|e| e.to_string())?;
+        need(
+            authenticate(&owned, &fixture, &BTreeSet::new()).is_err(),
+            "recreated promoter rejected",
+        )?;
+        fs::remove_file(owned.join(PROMOTER)).map_err(|e| e.to_string())?;
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink("missing", owned.join(PROMOTER))
+                .map_err(|e| e.to_string())?;
+            need(
+                authenticate(&owned, &fixture, &BTreeSet::new()).is_err(),
+                "promoter symlink rejected",
+            )?;
+            fs::remove_file(owned.join(PROMOTER)).map_err(|e| e.to_string())?;
+        }
+        need(
+            absence_of(&owned, &BTreeSet::new(), "scripts/unreviewed.py").is_err(),
+            "unowned retirement path rejected",
+        )?;
         let ops_native = owned.join("crates/ssx-ops/src/lib.rs");
         let ops_original = fs::read(&ops_native).map_err(|e| e.to_string())?;
         let mut changed_ops = ops_original;
@@ -435,7 +482,18 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     let cleanup = fs::remove_dir_all(&owned).map_err(|e| e.to_string());
     result?;
     cleanup?;
-    let ops_test = material(root, OPS_TEST.0, OPS_TEST.2, OPS_TEST.3)?;
+    let promotion_test = material(root, PROMOTION_TEST.0, PROMOTION_TEST.2, PROMOTION_TEST.3)?;
+    let ops_test = prior(&PROMOTION_TEST, &promotion_test)?;
+    need(
+        prior(&PROMOTION_TEST, &ops_test).is_err(),
+        "accepted Ops test source is not promotion current",
+    )?;
+    let mut changed_promotion_test = promotion_test.clone();
+    changed_promotion_test[0] ^= 1;
+    need(
+        prior(&PROMOTION_TEST, &changed_promotion_test).is_err(),
+        "changed promotion test source rejected",
+    )?;
     let health_test = prior(&OPS_TEST, &ops_test)?;
     need(
         prior(&OPS_TEST, &health_test).is_err(),
@@ -568,18 +626,18 @@ fn python_prior(root: &Path, row: &Successor) -> Result<Vec<u8>> {
 const OPS_INPUTS: &[(&str, usize, &str)] = &[
     (
         "crates/ssx-ops/Cargo.toml",
-        393,
-        "970910567a818ca292f7998ef6c47df887291740075b883912ab2e296eeea5e3",
+        487,
+        "ae7f39c5c85d695705bffbce6ba27e6a9cd63015471eb2a84daff082255f522c",
     ),
     (
         "crates/ssx-ops/src/lib.rs",
-        10023,
-        "27d928164598ff5a8e014176323b2de82bf11477713bbf9479433fd9d030f349",
+        10193,
+        "e7463b052a7a615121d02619e68ee5f560af0424c36f617229b4f8da5501e85b",
     ),
     (
         "crates/ssx-ops/src/main.rs",
-        1912,
-        "8a71b5282452fc292aa79a803226fac8bf958b907d6b721ff2e37b1b9b65ed8d",
+        3772,
+        "62d063db6330d130db88022d50ef8d679eb2b7315d632526443796ea355ea21c",
     ),
     (
         "crates/ssx-ops/src/tests.rs",
@@ -588,8 +646,23 @@ const OPS_INPUTS: &[(&str, usize, &str)] = &[
     ),
     (
         "crates/ssx-ops/tests/commands.rs",
-        2971,
-        "fef20913a8a8bf8526b123dafb929a17ad7397162e2b83d8f75b70597a56fb22",
+        6034,
+        "0812338817ae8e2638bf394dcd4d04596537bd5ec3d646bdab26a753b3367663",
+    ),
+    (
+        "crates/ssx-ops/src/promotion.rs",
+        7093,
+        "b4f889b9b4ced9e3c81ed259191c1577e09083c31635a5aaee48a8011b9b66c2",
+    ),
+    (
+        "crates/ssx-ops/src/promotion/files.rs",
+        13442,
+        "66334e671132afd62fb3ff3099fbb5d987631e92a5987d8f0863534616f4a454",
+    ),
+    (
+        "crates/ssx-ops/src/promotion/tests.rs",
+        14683,
+        "c27a3b4c79c1bb8f26e7fadbf273a54dd3234e5965646fba6f102f4039265172",
     ),
     (
         ".github/workflows/docker.yml",
@@ -597,17 +670,23 @@ const OPS_INPUTS: &[(&str, usize, &str)] = &[
         "975cfff7e0036464ff291d6f2412691fd1ecd67a54c29c6e37d7f83a2ca2d331",
     ),
     (
+        ".github/workflows/image-promotion.yml",
+        2751,
+        "c6546fc598b7d057106daa800a7377a44625d2260862634d1a55a7427b7a7312",
+    ),
+    (
         "docs/rust-rewrite/ci/gates.json",
-        170743,
-        "89aba2b481ed0eee5f4e7176c065a195c828b39eb42ce0ff85a7f5c978a0c4de",
+        171898,
+        "4e171bac1741c039b7dac617d54f0a8d9325d860aebd36a129bc23dda328e0b8",
     ),
 ];
 fn image_operations(root: &Path) -> Result<()> {
     for &(path, size, sha) in OPS_INPUTS {
         material(root, path, size, sha)?;
     }
-    let raw = material(root, OPS_TEST.0, OPS_TEST.2, OPS_TEST.3)?;
-    prior(&OPS_TEST, &raw)?;
+    let raw = material(root, PROMOTION_TEST.0, PROMOTION_TEST.2, PROMOTION_TEST.3)?;
+    let ops = prior(&PROMOTION_TEST, &raw)?;
+    prior(&OPS_TEST, &ops)?;
     Ok(())
 }
 const OPS_TEST: Successor = (
@@ -642,8 +721,9 @@ fn python_successor(root: &Path, row: &Successor) -> Result<Vec<u8>> {
         "retired verifier has no physical current operand",
     )?;
     need(row.0 == OPS_TEST.0, "closed current Python successor")?;
-    let raw = material(root, OPS_TEST.0, OPS_TEST.2, OPS_TEST.3)?;
-    prior(&OPS_TEST, &raw)
+    let raw = material(root, PROMOTION_TEST.0, PROMOTION_TEST.2, PROMOTION_TEST.3)?;
+    let ops = prior(&PROMOTION_TEST, &raw)?;
+    prior(&OPS_TEST, &ops)
 }
 
 /// Current deployment-test source projected through the same strict F01 inverse.
@@ -670,3 +750,31 @@ pub(crate) fn historical_python_source(
     )?;
     python_prior(root, source).map(Some)
 }
+
+// One exact source/data-boundary port; future promotions change only deployment data.
+const PROMOTION_TEST: Successor = (
+    "tests/test_deployment_artifacts.py",
+    "e595e4bfbec1952a01c466678cc187f2d386e60e",
+    8213,
+    "ace4715a8b41ee13e0110cf7565362aa18c5eb527aeb0bc0260199e58d072e2f",
+    10048,
+    "d3c44b8c75cfff929a19a2cb8b9ec83332a2133ae0fb77d8b7fc09f67478a3ba",
+    &[
+        (
+            "import re\nfrom pathlib import Path\nfrom urllib.error import HTTPError\n\nimport pytest\nimport yaml\n\nfrom scripts import promote_image_digest as promo\n\nROOT = Path(__file__).parents[1]\n\n",
+            "import re\nfrom pathlib import Path\n\nimport yaml\n\nROOT = Path(__file__).parents[1]\n\n",
+        ),
+        (
+            "    assert '\"$SSX_IMAGE_OPS_BIN\" verify-base-digests --dockerfile Dockerfile' in workflow\n\n\nGHCR_DIGEST_PIN = \"ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7\"\n\n\ndef test_existing_compose_source_build_remains_fail_closed() -> None:\n",
+            "    assert '\"$SSX_IMAGE_OPS_BIN\" verify-base-digests --dockerfile Dockerfile' in workflow\n\n\ndef _deployment_image_pin() -> str:\n    compose = yaml.safe_load((ROOT / \"docker-compose.yml\").read_text())\n    pin = compose[\"services\"][\"slopsearx\"][\"image\"]\n    assert isinstance(pin, str)\n    assert re.fullmatch(r\"ghcr\\.io/magnus919/slopsearx@sha256:[0-9a-f]{64}\", pin)\n    return pin\n\n\nGHCR_DIGEST_PIN = _deployment_image_pin()\n\n\ndef test_existing_compose_source_build_remains_fail_closed() -> None:\n",
+        ),
+        (
+            "    workflow = yaml.safe_load((ROOT / \".github/workflows/image-promotion.yml\").read_text())\n    triggers = workflow[True]  # PyYAML resolves the `on:` key to boolean True\n    assert \"schedule\" in triggers and \"workflow_dispatch\" in triggers\n\n    step_text = (ROOT / \".github/workflows/image-promotion.yml\").read_text()\n    assert \"scripts/promote_image_digest.py --write\" in step_text\n\n\ndef test_docker_prune_keeps_a_retention_window_for_orphaned_pins() -> None:\n",
+            "    workflow = yaml.safe_load((ROOT / \".github/workflows/image-promotion.yml\").read_text())\n    triggers = workflow[True]  # PyYAML resolves the `on:` key to boolean True\n    assert \"schedule\" in triggers and \"workflow_dispatch\" in triggers\n    assert workflow[\"permissions\"] == {\"contents\": \"write\"}\n    assert workflow[\"jobs\"][\"promote\"][\"permissions\"] == {\"contents\": \"write\", \"pull-requests\": \"write\"}\n\n    step_text = (ROOT / \".github/workflows/image-promotion.yml\").read_text()\n    assert '\"$SSX_IMAGE_OPS_BIN\" promote-image-digest --write --root .' in step_text\n    pr = next(\n        step for step in workflow[\"jobs\"][\"promote\"][\"steps\"] if step.get(\"name\") == \"Open or update promotion PR\"\n    )\n    assert pr[\"with\"][\"add-paths\"].splitlines() == [\"docker-compose.yml\", \"k8s/deployment.yaml\", \"spec.md\"]\n    assert pr[\"with\"][\"branch\"] == \"chore/promote-image-digest\"\n    assert pr[\"if\"] == \"steps.promote.outputs.changed != '0'\"\n\n\ndef test_docker_prune_keeps_a_retention_window_for_orphaned_pins() -> None:\n",
+        ),
+        (
+            "    workflow_text = (ROOT / \".github/workflows/docker.yml\").read_text()\n    assert \"RETENTION_DAYS\" in workflow_text\n    assert \"created_at\" in workflow_text\n\n\ndef test_promotion_script_extracts_the_unique_pinned_digest(tmp_path: Path) -> None:\n    digest = \"b\" * 64\n    for name, body in [\n        (\"docker-compose.yml\", f\"image: ghcr.io/magnus919/slopsearx@sha256:{digest}\\n\"),\n        (\"k8s/deployment.yaml\", f\"          image: ghcr.io/magnus919/slopsearx@sha256:{digest}\\n\"),\n        (\"tests/test_deployment_artifacts.py\", f'PIN = \"ghcr.io/magnus919/slopsearx@sha256:{digest}\"\\n'),\n    ]:\n        path = tmp_path / name\n        path.parent.mkdir(parents=True, exist_ok=True)\n        path.write_text(body)\n\n    assert promo.extract_pinned_digest(tmp_path) == f\"sha256:{digest}\"\n\n\ndef test_promotion_script_fails_closed_on_conflicting_pins(tmp_path: Path) -> None:\n    for name, digest in [\n        (\"docker-compose.yml\", \"c\" * 64),\n        (\"k8s/deployment.yaml\", \"c\" * 64),\n        (\"tests/test_deployment_artifacts.py\", \"d\" * 64),\n    ]:\n        path = tmp_path / name\n        path.parent.mkdir(parents=True, exist_ok=True)\n        path.write_text(f\"image: ghcr.io/magnus919/slopsearx@sha256:{digest}\\n\")\n\n    with pytest.raises(promo.PromotionError, match=\"exactly one unique pinned digest\"):\n        promo.extract_pinned_digest(tmp_path)\n\n\ndef test_promotion_script_fails_closed_on_missing_pin_file(tmp_path: Path) -> None:\n    (tmp_path / \"docker-compose.yml\").write_text(f\"image: ghcr.io/magnus919/slopsearx@sha256:{'c' * 64}\\n\")\n\n    with pytest.raises(promo.PromotionError, match=\"missing expected pin file\"):\n        promo.extract_pinned_digest(tmp_path)\n\n\ndef test_promotion_script_applies_new_digest_across_all_files(tmp_path: Path) -> None:\n    old, new = \"e\" * 64, \"f\" * 64\n    files = {}\n    for name in promo.PIN_FILES:\n        path = tmp_path / name\n        path.parent.mkdir(parents=True, exist_ok=True)\n        path.write_text(f\"ghcr.io/magnus919/slopsearx@sha256:{old}\\n\")\n        files[name] = path\n\n    changed = promo.apply_promotion(tmp_path, f\"sha256:{new}\")\n\n    assert sorted(changed) == sorted(promo.PIN_FILES)\n    for path in files.values():\n        assert f\"ghcr.io/magnus919/slopsearx@sha256:{new}\" in path.read_text()\n\n\ndef test_promotion_script_classifies_permanent_http_failure(\n    monkeypatch: pytest.MonkeyPatch,\n) -> None:\n    def fake_urlopen(_request: object, timeout: int) -> object:\n        raise HTTPError(\"https://example.test\", 404, \"not found\", {}, None)\n\n    monkeypatch.setattr(promo.urllib.request, \"urlopen\", fake_urlopen)\n\n    with pytest.raises(promo.PromotionError):\n        promo.resolve_latest_digest()\n\n\ndef test_compose_default_service_has_no_build_block() -> None:\n",
+            "    workflow_text = (ROOT / \".github/workflows/docker.yml\").read_text()\n    assert \"RETENTION_DAYS\" in workflow_text\n    assert \"created_at\" in workflow_text\n\n\ndef test_compose_default_service_has_no_build_block() -> None:\n",
+        ),
+    ],
+);

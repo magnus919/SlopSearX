@@ -211,9 +211,39 @@ pub(crate) fn native_image_ops_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior)
 }
+const PROMOTION_LOCK_BYTES: usize = 94379;
+const PROMOTION_LOCK_SHA: &str = "6f8e13c7ef9e327821075d0d35e95587c909dad2a87947013a39bf7d56dbf2e5";
+const PROMOTION_LOCK_STANZA: &str = "[[package]]\nname = \"ssx-ops\"\nversion = \"0.1.0\"\ndependencies = [\n \"nix\",\n \"sha2\",\n \"ssx-infra\",\n \"ssx-json\",\n \"tokio\",\n \"url\",\n]\n\n";
+pub(crate) fn native_promotion_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
+    need(
+        physical.len() == PROMOTION_LOCK_BYTES && digest(physical) == PROMOTION_LOCK_SHA,
+        "promotion exact current lock",
+    )?;
+    let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
+    need(
+        current.matches(PROMOTION_LOCK_STANZA).count() == 1,
+        "promotion unique dependency stanza",
+    )?;
+    let prior = current.replacen(PROMOTION_LOCK_STANZA, IMAGE_OPS_LOCK_INSERT, 1);
+    need(
+        prior.len() == IMAGE_OPS_LOCK_BYTES && digest(prior.as_bytes()) == IMAGE_OPS_LOCK_SHA,
+        "promotion exact accepted Ops lock",
+    )?;
+    need(
+        prior.matches(IMAGE_OPS_LOCK_INSERT).count() == 1
+            && prior
+                .replacen(IMAGE_OPS_LOCK_INSERT, PROMOTION_LOCK_STANZA, 1)
+                .as_bytes()
+                == physical,
+        "promotion complete lock forward reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
 fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     if path == "Cargo.lock" {
-        return native_health_lock_prior(&native_image_ops_lock_prior(physical)?);
+        return native_health_lock_prior(&native_image_ops_lock_prior(
+            &native_promotion_lock_prior(physical)?,
+        )?);
     }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
@@ -413,18 +443,39 @@ pub(crate) fn test_dependency_prior(
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let current = regular(root, "Cargo.lock")?;
-    let actual = native_image_ops_lock_prior(&current)?;
+    let ops_current = native_promotion_lock_prior(&current)?;
+    need(
+        native_promotion_lock_prior(&ops_current).is_err(),
+        "accepted Ops bytes are not promotion current",
+    )?;
+    let mut duplicate_promotion = current.clone();
+    duplicate_promotion.extend_from_slice(PROMOTION_LOCK_STANZA.as_bytes());
+    need(
+        native_promotion_lock_prior(&duplicate_promotion).is_err(),
+        "duplicate promotion dependency stanza rejected",
+    )?;
+    let mut changed_promotion = current.clone();
+    let at = changed_promotion
+        .windows(PROMOTION_LOCK_STANZA.len())
+        .position(|span| span == PROMOTION_LOCK_STANZA.as_bytes())
+        .ok_or("promotion dependency stanza missing")?;
+    changed_promotion[at] ^= 1;
+    need(
+        native_promotion_lock_prior(&changed_promotion).is_err(),
+        "changed promotion dependency stanza rejected",
+    )?;
+    let actual = native_image_ops_lock_prior(&ops_current)?;
     need(
         native_image_ops_lock_prior(&actual).is_err(),
         "native image operations old/missing package is not current",
     )?;
-    let mut duplicate = current.clone();
+    let mut duplicate = ops_current.clone();
     duplicate.extend_from_slice(IMAGE_OPS_LOCK_INSERT.as_bytes());
     need(
         native_image_ops_lock_prior(&duplicate).is_err(),
         "native image operations duplicate package",
     )?;
-    let mut changed = current.clone();
+    let mut changed = ops_current.clone();
     let at = changed
         .windows(b"ssx-ops".len())
         .position(|v| v == b"ssx-ops")
