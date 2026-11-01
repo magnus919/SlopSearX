@@ -1,0 +1,61 @@
+--- a/crates/ssx-source-codecs/src/lib.rs
++++ b/crates/ssx-source-codecs/src/lib.rs
+@@ -191,0 +192,18 @@
++
++/// Encode a network hostname with the existing source IDNA2003/Unicode3.2
++/// implementation. ASCII case and trailing dot follow CPython's encoder fast
++/// path; Unicode labels use the same private nameprep/punycode code and data.
++/// No decoder-worker budget or unrelated codec behavior is changed. None is a
++/// source Unicode admission error; arithmetic overflow remains distinguishable.
++pub fn encode_idna2003_host(input: &str) -> Result<Option<String>, ParameterError> {
++    match idna::encode_host(input) {
++        Ok(bytes) => String::from_utf8(bytes)
++            .map(Some)
++            .map_err(|_| ParameterError::RegistryInvariant),
++        Err(punycode::Failure::Source(punycode::StrictError::Unicode { .. })) => Ok(None),
++        Err(punycode::Failure::Source(punycode::StrictError::Overflow)) => Err(
++            ParameterError::OverflowError("Python int too large to convert to C ssize_t"),
++        ),
++        Err(punycode::Failure::Output(_)) => Err(ParameterError::RegistryInvariant),
++    }
++}
+--- a/crates/ssx-source-codecs/src/idna.rs
++++ b/crates/ssx-source-codecs/src/idna.rs
+@@ -461,0 +462,37 @@
++}
++
++/// Additive hostname encoder for the external HTTP client. All existing IDNA
++/// decoding/validation callers retain their original paths and budgets.
++pub(crate) fn encode_host(input: &str) -> Result<Vec<u8>, punycode::Failure> {
++    if input.is_empty() {
++        return Ok(Vec::new());
++    }
++    if input.is_ascii() {
++        let labels = input.split('.').collect::<Vec<_>>();
++        for (index, label) in labels.iter().enumerate() {
++            if label.len() >= 64 || (label.is_empty() && index + 1 != labels.len()) {
++                return Err(unicode_failure());
++            }
++        }
++        return Ok(input.as_bytes().to_vec());
++    }
++    let mut labels = input
++        .split(['.', '\u{3002}', '\u{ff0e}', '\u{ff61}'])
++        .collect::<Vec<_>>();
++    let trailing = labels.last() == Some(&"");
++    if trailing {
++        labels.pop();
++    }
++    let mut output = Vec::new();
++    for (index, label) in labels.iter().enumerate() {
++        if index != 0 {
++            output.push(b'.');
++        }
++        let points = label.chars().map(u32::from).collect::<Vec<_>>();
++        let ascii = to_ascii_work(&points, legacy_work())?;
++        output.extend_from_slice(&ascii);
++    }
++    if trailing {
++        output.push(b'.');
++    }
++    Ok(output)

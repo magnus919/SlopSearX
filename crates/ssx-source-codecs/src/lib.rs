@@ -189,3 +189,21 @@ mod bounded_parameter;
 pub use bounded_parameter::{
     BoundedParameterError, lookup_http_encoding_bounded, strict_parameter_ascii_bounded,
 };
+
+/// Encode a network hostname with the existing source IDNA2003/Unicode3.2
+/// implementation. ASCII case and trailing dot follow CPython's encoder fast
+/// path; Unicode labels use the same private nameprep/punycode code and data.
+/// No decoder-worker budget or unrelated codec behavior is changed. None is a
+/// source Unicode admission error; arithmetic overflow remains distinguishable.
+pub fn encode_idna2003_host(input: &str) -> Result<Option<String>, ParameterError> {
+    match idna::encode_host(input) {
+        Ok(bytes) => String::from_utf8(bytes)
+            .map(Some)
+            .map_err(|_| ParameterError::RegistryInvariant),
+        Err(punycode::Failure::Source(punycode::StrictError::Unicode { .. })) => Ok(None),
+        Err(punycode::Failure::Source(punycode::StrictError::Overflow)) => Err(
+            ParameterError::OverflowError("Python int too large to convert to C ssize_t"),
+        ),
+        Err(punycode::Failure::Output(_)) => Err(ParameterError::RegistryInvariant),
+    }
+}

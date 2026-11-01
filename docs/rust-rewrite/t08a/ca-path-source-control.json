@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "id": "unix-byte-file",
+  "scope": "Mac Unicode-path source ssl context loading primitive; raw byte creation failure retained separately; native Linux raw-path real TLS positive remains unrun",
+  "source_ca_sha256": "e384fb75b35c60083bb3d4ef09404a231f9327d53edfd011e6984a7f141e6867",
+  "declared_environment": {
+    "SSL_CERT_FILE": "owned Unicode filename",
+    "SSL_CERT_DIR": ""
+  },
+  "status": 0,
+  "stdout_hex": "7b22636572746966696361746573223a205b2230373939643864323165633931393865353731653566303332663065303139653463613435313335393564373364623530626231616565356436383965313362225d2c202272756e74696d65223a20224f70656e53534c20332e302e3136203131204665622032303235222c20227374617473223a207b2263726c223a20302c202278353039223a20312c2022783530395f6361223a20317d7d0a",
+  "stderr_hex": "",
+  "observed": {
+    "certificates": [
+      "0799d8d21ec9198e571e5f032f0e019e4ca4513595d73db50bb1aee5d689e13b"
+    ],
+    "runtime": "OpenSSL 3.0.16 11 Feb 2025",
+    "stats": {
+      "crl": 0,
+      "x509": 1,
+      "x509_ca": 1
+    }
+  },
+  "owned_path_retired": true,
+  "Windows_disposition": "Native Windows counterpart uses a valid Unicode UTF16 filename; undecodable UTF16 override rejects before narrow FFI, no lossy conversion."
+}

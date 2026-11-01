@@ -1,0 +1,602 @@
+{
+  "schema": "t08-wire-reference-v1",
+  "purpose": "preparation evidence only; not native T08 acceptance",
+  "baseline_head": "c9d49a2a14b18a3cc1fb74a805e568aa897f1d70",
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "runtime": {
+    "executable": "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+    "version": "Python 3.13.6"
+  },
+  "fixture_server": "stdlib ThreadingHTTPServer bound exclusively to 127.0.0.1; no backend imports; no external HTTP",
+  "cases": [
+    {
+      "id": "http-health",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "health"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 503,
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "body_hex": "6669787475726520756e617661696c61626c65"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203530333a205365727669636520556e617661696c61626c650a",
+      "stderr_utf8": "error: cannot reach SlopSearX — HTTP Error 503: Service Unavailable\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "http-config",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "config"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/config",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/config": [
+          {
+            "status": 503,
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "body_hex": "6669787475726520756e617661696c61626c65"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203530333a205365727669636520556e617661696c61626c650a",
+      "stderr_utf8": "error: cannot reach SlopSearX — HTTP Error 503: Service Unavailable\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "http-search",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "search",
+        "wire probe"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/search",
+          "query": "q=wire+probe&language=en&pageno=1&format=json",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/search": [
+          {
+            "status": 503,
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "body_hex": "6669787475726520756e617661696c61626c65"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "54726163656261636b20286d6f737420726563656e742063616c6c206c617374293a0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e65203235392c20696e203c6d6f64756c653e0a202020206d61696e28290a202020207e7e7e7e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e65203235352c20696e206d61696e0a20202020636f6d6d616e64735b617267732e636f6d6d616e645d2861726773290a202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e652039312c20696e20636d645f7365617263680a2020202064617461203d205f66657463685f6a736f6e2875726c290a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e652035332c20696e205f66657463685f6a736f6e0a20202020726177203d205f66657463682875726c2c20226170706c69636174696f6e2f6a736f6e22290a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e652034382c20696e205f66657463680a20202020776974682075726c6f70656e287265712c2074696d656f75743d31352920617320726573703a0a2020202020202020207e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203138392c20696e2075726c6f70656e0a2020202072657475726e206f70656e65722e6f70656e2875726c2c20646174612c2074696d656f7574290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203439352c20696e206f70656e0a20202020726573706f6e7365203d206d657468287265712c20726573706f6e7365290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203630342c20696e20687474705f726573706f6e73650a20202020726573706f6e7365203d2073656c662e706172656e742e6572726f72280a20202020202020202768747470272c20726571756573742c20726573706f6e73652c20636f64652c206d73672c2068647273290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203533332c20696e206572726f720a2020202072657475726e2073656c662e5f63616c6c5f636861696e282a61726773290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203436362c20696e205f63616c6c5f636861696e0a20202020726573756c74203d2066756e63282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203631332c20696e20687474705f6572726f725f64656661756c740a20202020726169736520485454504572726f72287265712e66756c6c5f75726c2c20636f64652c206d73672c20686472732c206670290a75726c6c69622e6572726f722e485454504572726f723a2048545450204572726f72203530333a205365727669636520556e617661696c61626c650a",
+      "stderr_utf8": "Traceback (most recent call last):\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 259, in <module>\n    main()\n    ~~~~^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 255, in main\n    commands[args.command](args)\n    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 91, in cmd_search\n    data = _fetch_json(url)\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 53, in _fetch_json\n    raw = _fetch(url, \"application/json\")\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 48, in _fetch\n    with urlopen(req, timeout=15) as resp:\n         ~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/urllib/request.py\", line 189, in urlopen\n    return opener.open(url, data, timeout)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/urllib/request.py\", line 495, in open\n    response = meth(req, response)\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/urllib/request.py\", line 604, in http_response\n    response = self.parent.error(\n        'http', request, response, code, msg, hdrs)\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/urllib/request.py\", line 533, in error\n    return self._call_chain(*args)\n           ~~~~~~~~~~~~~~~~^^^^^^^\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/urllib/request.py\", line 466, in _call_chain\n    result = func(*args)\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/urllib/request.py\", line 613, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 503: Service Unavailable\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "http-engines-health",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 503,
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "body_hex": "6669787475726520756e617661696c61626c65"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203530333a205365727669636520556e617661696c61626c650a",
+      "stderr_utf8": "error: cannot reach SlopSearX — HTTP Error 503: Service Unavailable\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "http-engines-config",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        },
+        {
+          "method": "GET",
+          "path": "/config",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "7b22737461747573223a226f6b222c22656e67696e6573223a7b7d7d"
+          }
+        ],
+        "/config": [
+          {
+            "status": 429,
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "body_hex": "72617465206c696d69746564"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203432393a20546f6f204d616e792052657175657374730a",
+      "stderr_utf8": "error: cannot reach SlopSearX — HTTP Error 429: Too Many Requests\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "redirect-engines",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        },
+        {
+          "method": "GET",
+          "path": "/health-hop",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        },
+        {
+          "method": "GET",
+          "path": "/config",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        },
+        {
+          "method": "GET",
+          "path": "/config-hop",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/health-hop"
+            },
+            "body_hex": ""
+          }
+        ],
+        "/health-hop": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "7b22737461747573223a226f6b222c22656e67696e6573223a7b7d7d"
+          }
+        ],
+        "/config": [
+          {
+            "status": 301,
+            "headers": {
+              "Location": "/config-hop"
+            },
+            "body_hex": ""
+          }
+        ],
+        "/config-hop": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "7b2263617465676f72696573223a7b7d7d"
+          }
+        ]
+      },
+      "stdout_hex": "7b7d0a",
+      "stdout_utf8": "{}\n",
+      "stderr_hex": "",
+      "stderr_utf8": "",
+      "normalized_exception_lines": [],
+      "exit_status": 0
+    },
+    {
+      "id": "redirect-search",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "search",
+        "loopback redirect"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/search",
+          "query": "q=loopback+redirect&language=en&pageno=1&format=json",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        },
+        {
+          "method": "GET",
+          "path": "/search-hop",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/search": [
+          {
+            "status": 307,
+            "headers": {
+              "Location": "/search-hop"
+            },
+            "body_hex": ""
+          }
+        ],
+        "/search-hop": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "7b226f6b223a747275657d"
+          }
+        ]
+      },
+      "stdout_hex": "7b0a2020226f6b223a20747275650a7d0a",
+      "stdout_utf8": "{\n  \"ok\": true\n}\n",
+      "stderr_hex": "",
+      "stderr_utf8": "",
+      "normalized_exception_lines": [],
+      "exit_status": 0
+    },
+    {
+      "id": "engines-first-failure-skips-config",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 502,
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "body_hex": "6865616c746820646f776e"
+          }
+        ],
+        "/config": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "7b2263617465676f72696573223a7b7d7d"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203530323a2042616420476174657761790a",
+      "stderr_utf8": "error: cannot reach SlopSearX — HTTP Error 502: Bad Gateway\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "invalid-utf8-health",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "health"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "ff7b"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420277574662d382720636f6465632063616e2774206465636f64652062797465203078666620696e20706f736974696f6e20303a20696e76616c696420737461727420627974650a",
+      "stderr_utf8": "error: cannot reach SlopSearX — 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "wrong-json-shape-health",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "health"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "5b5d"
+          }
+        ]
+      },
+      "stdout_hex": "5b5d0a",
+      "stdout_utf8": "[]\n",
+      "stderr_hex": "",
+      "stderr_utf8": "",
+      "normalized_exception_lines": [],
+      "exit_status": 0
+    },
+    {
+      "id": "invalid-json-health",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "health"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "7b"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420457870656374696e672070726f7065727479206e616d6520656e636c6f73656420696e20646f75626c652071756f7465733a206c696e65203120636f6c756d6e20322028636861722031290a",
+      "stderr_utf8": "error: cannot reach SlopSearX — Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\n",
+      "normalized_exception_lines": [],
+      "exit_status": 1
+    },
+    {
+      "id": "wrong-json-shape-engines",
+      "argv": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Volumes/tank01/magnus/git/SlopSearX/ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://127.0.0.1:62554",
+        "SSX_FORMAT": "json",
+        "proxies_cleared": true,
+        "ca_environment_cleared": true
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        },
+        {
+          "method": "GET",
+          "path": "/config",
+          "query": "",
+          "accept": "application/json",
+          "host": "127.0.0.1:62554"
+        }
+      ],
+      "fixture_plan": {
+        "/health": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "5b5d"
+          }
+        ],
+        "/config": [
+          {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_hex": "7b2263617465676f72696573223a7b7d7d"
+          }
+        ]
+      },
+      "stdout_hex": "",
+      "stdout_utf8": "",
+      "stderr_hex": "54726163656261636b20286d6f737420726563656e742063616c6c206c617374293a0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e65203235392c20696e203c6d6f64756c653e0a202020206d61696e28290a202020207e7e7e7e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e65203235352c20696e206d61696e0a20202020636f6d6d616e64735b617267732e636f6d6d616e645d2861726773290a202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f6769742f536c6f7053656172582f737378222c206c696e65203131352c20696e20636d645f656e67696e65730a20202020656e67696e65735f6865616c7468203d206865616c74685f646174612e6765742822656e67696e6573222c207b7d290a2020202020202020202020202020202020202020205e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a4174747269627574654572726f723a20276c69737427206f626a65637420686173206e6f206174747269627574652027676574270a",
+      "stderr_utf8": "Traceback (most recent call last):\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 259, in <module>\n    main()\n    ~~~~^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 255, in main\n    commands[args.command](args)\n    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 115, in cmd_engines\n    engines_health = health_data.get(\"engines\", {})\n                     ^^^^^^^^^^^^^^^\nAttributeError: 'list' object has no attribute 'get'\n",
+      "normalized_exception_lines": [
+        "AttributeError: 'list' object has no attribute 'get'"
+      ],
+      "exit_status": 1
+    }
+  ]
+}

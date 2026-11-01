@@ -112,8 +112,11 @@ pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
 pub fn verify_current(root: &Path) -> Result<()> {
     let lock = read(root, "Cargo.lock")?;
     let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
+    // Physical current is authenticated before comparing its accepted joint frame.
+    // Keep the raw physical lock for parent(), which independently checks supplied==actual.
+    let joint = super::w07_t02_joint::cli_source_custody::prior(root, "Cargo.lock", &lock)?;
     need(
-        sha(&lock) == super::w07_t02_joint::LOCK_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
+        sha(&joint) == super::w07_t02_joint::LOCK_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
         "W07 current test dependency edge and manifest are required",
     )?;
     let parent =
@@ -186,14 +189,15 @@ pub fn controls(root: &Path) -> Result<()> {
             "W07 SDK/other-package lock delta accepted",
         )?;
     }
-    filesystem_controls(&physical_lock, &manifest, &old_lock, &old_manifest)
+    filesystem_controls(root, &physical_lock, &manifest, &old_lock, &old_manifest)
 }
 #[cfg(not(unix))]
-fn filesystem_controls(_: &[u8], _: &[u8], _: &[u8], _: &[u8]) -> Result<()> {
+fn filesystem_controls(_: &Path, _: &[u8], _: &[u8], _: &[u8], _: &[u8]) -> Result<()> {
     Err("W07 dependency filesystem controls require Unix".into())
 }
 #[cfg(unix)]
 fn filesystem_controls(
+    source_root: &Path,
     lock: &[u8],
     manifest: &[u8],
     old_lock: &[u8],
@@ -221,6 +225,51 @@ fn filesystem_controls(
     for path in [&target, &manifest_path] {
         fs::set_permissions(path, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
     }
+    // This owned current-profile fixture needs the same authenticated outer capsule
+    // as the real caller; historical lock/manifest pairs below remain unchanged.
+    let shared = "docs/rust-rewrite/t08a/shared-source-successor.json";
+    let capsule_path = owned.0.join(shared);
+    fs::create_dir_all(
+        capsule_path
+            .parent()
+            .ok_or("CLI lock fixture capsule parent")?,
+    )
+    .map_err(|e| e.to_string())?;
+    let capsule = fs::read(source_root.join(shared)).map_err(|e| e.to_string())?;
+    fs::write(&capsule_path, &capsule).map_err(|e| e.to_string())?;
+    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))
+        .map_err(|e| e.to_string())?;
+    verify_current(&owned.0)?;
+    let mut changed_capsule = capsule.clone();
+    changed_capsule.push(b' ');
+    fs::write(&capsule_path, changed_capsule).map_err(|e| e.to_string())?;
+    need(
+        verify_current(&owned.0).is_err(),
+        "tampered CLI lock capsule accepted",
+    )?;
+    fs::remove_file(&capsule_path).map_err(|e| e.to_string())?;
+    need(
+        verify_current(&owned.0).is_err(),
+        "missing CLI lock capsule accepted",
+    )?;
+    fs::write(&capsule_path, &capsule).map_err(|e| e.to_string())?;
+    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))
+        .map_err(|e| e.to_string())?;
+    let joint = super::w07_t02_joint::cli_source_custody::prior(&owned.0, "Cargo.lock", lock)?;
+    fs::write(&target, &joint).map_err(|e| e.to_string())?;
+    need(
+        verify_current(&owned.0).is_err(),
+        "old joint physically substituted for CLI lock",
+    )?;
+    fs::write(&target, lock).map_err(|e| e.to_string())?;
+    let mut changed_manifest = manifest.to_vec();
+    changed_manifest[0] ^= 1;
+    fs::write(&manifest_path, changed_manifest).map_err(|e| e.to_string())?;
+    need(
+        verify_current(&owned.0).is_err(),
+        "changed paired MCP manifest accepted",
+    )?;
+    fs::write(&manifest_path, manifest).map_err(|e| e.to_string())?;
     verify_current(&owned.0)?;
     for path in [&target, &manifest_path] {
         fs::set_permissions(path, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())?;

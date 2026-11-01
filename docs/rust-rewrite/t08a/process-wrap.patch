@@ -1,0 +1,305 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -137,0 +138 @@
++    "time",
+--- a/src/tokio/job_object.rs
++++ b/src/tokio/job_object.rs
+@@ -10 +10 @@
+-use tokio::{process::Command, task::spawn_blocking};
++use tokio::process::Command;
+@@ -21 +21,2 @@
+-		JobPort, job_creation_flags, make_job_object, resume_threads, terminate_job, wait_on_job,
++		JobPort, active_processes, job_creation_flags, make_job_object, resume_threads,
++		terminate_job,
+@@ -140,0 +142,8 @@
++	/// Return the current active process count on this child's original job.
++	///
++	/// # Errors
++	/// Returns the Windows query error if original-job accounting is unavailable.
++	pub fn active_processes(&self) -> Result<u32> {
++		active_processes(self.job_port.job)
++	}
++
+@@ -183,4 +192,4 @@
+-			const MAX_RETRY_ATTEMPT: usize = 10;
+-
+-			// always wait for parent to exit first, as by the time it does,
+-			// it's likely that all its children have already exited.
++			// Parent status alone is not completion of the job. Do not cache it
++			// until authoritative accounting reports zero active processes.
++			// Poll asynchronously: cancelling this future leaves no detached
++			// infinite completion-port waiter behind.
+@@ -188,5 +197,3 @@
+-			self.exit_status = ChildExitStatus::Exited(status);
+-
+-			// nevertheless, now try reaping all children a few times...
+-			for _ in 1..MAX_RETRY_ATTEMPT {
+-				if wait_on_job(self.job_port.completion_port, Some(Duration::ZERO))?.is_break() {
++			loop {
++				if self.active_processes()? == 0 {
++					self.exit_status = ChildExitStatus::Exited(status);
+@@ -195,9 +202,2 @@
+-			}
+-
+-			// ...finally, if there are some that are still alive,
+-			// block in the background to reap them fully.
+-			let JobPort {
+-				completion_port, ..
+-			} = self.job_port;
+-			let _ = spawn_blocking(move || wait_on_job(completion_port, None)).await??;
+-			Ok(status)
++				tokio::time::sleep(Duration::from_millis(5)).await;
++			}
+@@ -209 +209,2 @@
+-		let _ = wait_on_job(self.job_port.completion_port, Some(Duration::ZERO))?;
++		// This API observes only the leader. Never consume job notifications;
++		// final wait and callers query the retained original job explicitly.
+--- a/src/windows.rs
++++ b/src/windows.rs
+@@ -3,4 +3,12 @@
+-use std::{
+-	io::{Error, Result},
+-	ops::ControlFlow,
+-	time::Duration,
++use std::io::{Error, Result};
++#[cfg(feature = "std")]
++use std::{ops::ControlFlow, time::Duration};
++#[cfg(feature = "tokio1")]
++use windows::Win32::System::JobObjects::{
++	JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JobObjectBasicAccountingInformation,
++	QueryInformationJobObject,
++};
++#[cfg(feature = "std")]
++use windows::Win32::System::{
++	IO::{GetQueuedCompletionStatus, OVERLAPPED},
++	Threading::INFINITE,
+@@ -19 +27 @@
+-			IO::{CreateIoCompletionPort, GetQueuedCompletionStatus, OVERLAPPED},
++			IO::CreateIoCompletionPort,
+@@ -27,2 +35,2 @@
+-				CREATE_SUSPENDED, GetProcessId, INFINITE, OpenThread, PROCESS_CREATION_FLAGS,
+-				ResumeThread, THREAD_SUSPEND_RESUME,
++				CREATE_SUSPENDED, GetProcessId, OpenThread, PROCESS_CREATION_FLAGS, ResumeThread,
++				THREAD_SUSPEND_RESUME,
+@@ -242,0 +251,23 @@
++/// Query the active process count on this exact owned job handle.
++#[cfg(feature = "tokio1")]
++pub(crate) fn active_processes(job: JobHandle) -> Result<u32> {
++	let mut accounting = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
++	let bytes = std::mem::size_of_val(&accounting)
++		.try_into()
++		.map_err(Error::other)?;
++	// SAFETY: job is retained by JobPort for this call. The output points to
++	// the correctly sized live accounting structure; no process/PID lookup or
++	// ambient NULL job is used. This reads state and cannot change job limits.
++	unsafe {
++		QueryInformationJobObject(
++			Some(job.0),
++			JobObjectBasicAccountingInformation,
++			(&mut accounting as *mut JOBOBJECT_BASIC_ACCOUNTING_INFORMATION).cast(),
++			bytes,
++			None,
++		)
++	}
++	.map_err(Error::other)?;
++	Ok(accounting.ActiveProcesses)
++}
++
+@@ -243,0 +275 @@
++#[cfg(feature = "std")]
+--- a/tests/tokio_windows/mod.rs
++++ b/tests/tokio_windows/mod.rs
+@@ -29,0 +30,3 @@
++
++#[cfg(all(feature = "job-object", feature = "kill-on-drop"))]
++mod job_accounting;
+--- /dev/null
++++ b/tests/tokio_windows/job_accounting.rs
+@@ -0,0 +1,187 @@
++use std::{any::Any, io::Write, process::Command as StdCommand};
++
++use tokio::{
++	io::{AsyncBufReadExt, BufReader, Take},
++	process::ChildStdout,
++};
++
++use super::prelude::*;
++
++const ROLE: &str = "PROCESS_WRAP_JOB_ACCOUNTING_ROLE";
++const FIXTURE: &str = "tokio_windows::job_accounting::fixture_process";
++const BOUND: Duration = Duration::from_secs(5);
++const STDOUT_CAP: u64 = 4096;
++
++#[test]
++fn fixture_process() {
++	match std::env::var(ROLE).as_deref() {
++		Ok("exit") => {
++			println!("PW_JOB_ACCOUNTING_EXIT_READY");
++			std::io::stdout().flush().unwrap();
++		}
++		Ok("leaf") => std::thread::sleep(Duration::from_secs(30)),
++		Ok("parent") => {
++			let descendant = StdCommand::new(std::env::current_exe().unwrap())
++				.args(["--exact", FIXTURE, "--nocapture"])
++				.env(ROLE, "leaf")
++				.stdin(Stdio::null())
++				// Keep the writer deliberately: readiness is not whole-job EOF.
++				.stdout(Stdio::inherit())
++				.stderr(Stdio::null())
++				.spawn()
++				.unwrap();
++			println!("PW_JOB_ACCOUNTING_DESCENDANT_READY");
++			std::io::stdout().flush().unwrap();
++			// Deliberate leader exit while the original job still owns the leaf.
++			drop(descendant);
++		}
++		_ => {}
++	}
++}
++
++fn count(child: &dyn ChildWrapper) -> Result<u32> {
++	let any: &dyn Any = child;
++	any.downcast_ref::<JobObjectChild>()
++		.ok_or_else(|| std::io::Error::other("original JobObject capability missing"))?
++		.active_processes()
++}
++
++fn spawn(role: &str) -> Result<Box<dyn ChildWrapper>> {
++	CommandWrap::with_new(std::env::current_exe()?, |command| {
++		command
++			.args(["--exact", FIXTURE, "--nocapture"])
++			.env(ROLE, role)
++			.stdin(Stdio::null())
++			.stdout(Stdio::piped())
++			.stderr(Stdio::null());
++	})
++	.wrap(KillOnDrop)
++	.wrap(JobObject)
++	.spawn()
++}
++
++fn timed_out(phase: &'static str) -> std::io::Error {
++	std::io::Error::new(std::io::ErrorKind::TimedOut, phase)
++}
++
++struct FixtureStdout {
++	pipe: BufReader<Take<ChildStdout>>,
++	bytes: Vec<u8>,
++}
++
++async fn fixture_ready(child: &mut dyn ChildWrapper, marker: &str) -> Result<FixtureStdout> {
++	let stdout = child
++		.stdout()
++		.take()
++		.ok_or_else(|| std::io::Error::other("fixture stdout missing"))?;
++	let mut output = FixtureStdout {
++		pipe: BufReader::new(stdout.take(STDOUT_CAP + 1)),
++		bytes: Vec::new(),
++	};
++	tokio::time::timeout(BOUND, async {
++		loop {
++			if output.pipe.read_until(b'\n', &mut output.bytes).await? == 0 {
++				return Err(std::io::Error::other("fixture EOF before readiness"));
++			}
++			if output.bytes.len() as u64 > STDOUT_CAP {
++				return Err(std::io::Error::other("fixture stdout bound"));
++			}
++			if output
++				.bytes
++				.windows(marker.len())
++				.any(|part| part == marker.as_bytes())
++			{
++				return Ok(());
++			}
++		}
++	})
++	.await
++	.map_err(|_| timed_out("fixture readiness timeout"))??;
++	// A wrong exact selector must fail even if its helper exits 0.
++	assert!(
++		output
++			.bytes
++			.windows(14)
++			.any(|part| part == b"running 1 test")
++	);
++	Ok(output)
++}
++
++async fn fixture_stdout(mut output: FixtureStdout) -> Result<String> {
++	// All original-job writers have retired before requiring the pipe's EOF.
++	tokio::time::timeout(BOUND, output.pipe.read_to_end(&mut output.bytes))
++		.await
++		.map_err(|_| timed_out("fixture post-retirement stdout EOF timeout"))??;
++	if output.bytes.len() as u64 > STDOUT_CAP {
++		return Err(std::io::Error::other("fixture stdout bound"));
++	}
++	let text = String::from_utf8(output.bytes).map_err(std::io::Error::other)?;
++	assert!(text.contains("running 1 test"));
++	assert!(text.contains("1 passed; 0 failed; 0 ignored;"));
++	Ok(text)
++}
++
++async fn leader_exited(child: &mut dyn ChildWrapper) -> Result<()> {
++	tokio::time::timeout(BOUND, async {
++		loop {
++			if let Some(status) = child.try_wait()? {
++				assert!(status.success());
++				return Ok(());
++			}
++			sleep(Duration::from_millis(5)).await;
++		}
++	})
++	.await
++	.map_err(|_| timed_out("fixture leader exit timeout"))?
++}
++
++#[tokio::test]
++async fn try_wait_before_final_wait_preserves_original_job_completion() -> Result<()> {
++	let mut child = spawn("exit")?;
++	let output = fixture_ready(child.as_mut(), "PW_JOB_ACCOUNTING_EXIT_READY").await?;
++	leader_exited(child.as_mut()).await?;
++	// Drain opportunities which consumed completion notifications in the old
++	// wrapper; leader observation must not invalidate the final whole-job wait.
++	for _ in 0..16 {
++		assert!(child.try_wait()?.is_some());
++	}
++	let status = tokio::time::timeout(BOUND, child.wait())
++		.await
++		.map_err(|_| timed_out("original job retirement timeout"))??;
++	assert!(status.success());
++	assert_eq!(count(child.as_ref())?, 0);
++	let text = fixture_stdout(output).await?;
++	assert!(text.contains("PW_JOB_ACCOUNTING_EXIT_READY"));
++	Ok(())
++}
++
++#[tokio::test]
++async fn leader_exit_does_not_cache_success_while_descendant_is_active() -> Result<()> {
++	let mut child = spawn("parent")?;
++	let output = fixture_ready(child.as_mut(), "PW_JOB_ACCOUNTING_DESCENDANT_READY").await?;
++	leader_exited(child.as_mut()).await?;
++	assert!(count(child.as_ref())? > 0);
++	assert!(
++		tokio::time::timeout(Duration::from_millis(100), child.wait())
++			.await
++			.is_err()
++	);
++	// Cancelling wait cannot cache leader-only success or detach a blocker.
++	assert!(count(child.as_ref())? > 0);
++	child.start_kill()?;
++	let status = tokio::time::timeout(BOUND, child.wait())
++		.await
++		.map_err(|_| timed_out("original job retirement timeout"))??;
++	assert!(status.success());
++	assert_eq!(count(child.as_ref())?, 0);
++	assert!(
++		tokio::time::timeout(BOUND, child.wait())
++			.await
++			.map_err(|_| timed_out("repeated original job wait timeout"))??
++			.success()
++	);
++	assert_eq!(count(child.as_ref())?, 0);
++	let text = fixture_stdout(output).await?;
++	assert!(text.contains("PW_JOB_ACCOUNTING_DESCENDANT_READY"));
++	Ok(())
++}

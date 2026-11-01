@@ -1,0 +1,20 @@
+[package]
+name = "ssx-cli-openssl-store"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# The workspace forbids unsafe code. This leaf alone denies it, with one
+# documented FFI module allowance for OpenSSL's missing safe store-URI API.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = "warn"
+
+[dependencies]
+openssl = { version = "=0.10.81", features = ["vendored"] }
+openssl-sys = "=0.9.117"
+foreign-types = "=0.3.2"
