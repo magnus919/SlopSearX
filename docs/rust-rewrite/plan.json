@@ -1814,19 +1814,24 @@
         "T08",
         "O01",
         "O04",
-        "O05"
+        "O05",
+        "T02",
+        "T03",
+        "T06"
       ],
       "problem": "Individually passing slices are insufficient until every public path uses the native services together.",
       "scope": [
         "Execute F01 capability matrix across all 51 adapters, HTTP formats, portal journeys, 38 baseline tools and all discovery modes",
         "Test integrated cross-source dedup/provenance/filter claims, sensitive policy, Europe PMC attribution and scholarly evidence",
-        "Run compiled release artifacts with deterministic upstream/IdP fixtures; compare direct/gateway and public/protected surfaces"
+        "Run compiled release artifacts with deterministic upstream/IdP fixtures; compare direct/gateway and public/protected surfaces",
+        "Integrate bounded publication-date issue #984 across the real OpenAlex adapter, shared service, HTTP/form, science MCP, JSON/YAML, cache proof and portal paths after their owning slices are accepted; use deterministic upstream fixtures and no live provider calls."
       ],
       "acceptance": [
         "Zero unclassified contract differences and zero missing capabilities; new upstream additions are explicitly reconciled",
         "All suites execute without Python backend code or stubs; compiled artifact SHA/digest is recorded",
         "A complete traceability report maps each baseline capability/regression to passing evidence; remaining optional client Python is isolated",
-        "Europe PMC remains opt-in and lite-only; both attribution and preprint notices survive deduplication, compact MCP projection and portal rendering."
+        "Europe PMC remains opt-in and lite-only; both attribution and preprint notices survive deduplication, compact MCP projection and portal rendering.",
+        "Issue #984 is fully satisfied at the integrated native artifact: inclusive one-sided/equal/leap-day bounds reach OpenAlex; malformed, contradictory, unsupported or unaudited scopes reject before dispatch; JSON/YAML/MCP/portal preserve truthful date proof, engine outcomes, provenance and absolute bounds; bounded cache identity and legacy-proof reacquisition pass; CSV/RSS reject bounded requests before acquisition; #874 regressions map to native evidence or reviewed supersession."
       ],
       "sources": [
         "tests",
