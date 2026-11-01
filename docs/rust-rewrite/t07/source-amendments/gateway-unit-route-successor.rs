@@ -537,6 +537,133 @@ fn stacked_config_controls(root: &Path, path: &str, physical: &[u8]) -> Result<V
 // Exact additive #1080 audit and retained A06 producer placement. The original
 // combined-source28-span proof below remains unchanged and sees only its own
 // authenticated historical operand after this outer current-frame admission.
+// Preregister the core lane fixture roots before any unchanged workspace test.
+const CORE_FIXTURE_WORKFLOW_INVERSE: &str = r########"[{"at":21955,"insert_utf8":"","remove_utf8":"      - name: Configure private gateway fixture roots\n        env:\n          SLOPSEARX_INSTALL_TEST_ROOT: ${{ runner.temp }}/ssx-gateway-install\n          SLOPSEARX_T07_UNIT_TEST_ROOT: ${{ runner.temp }}/ssx-t07-unit-tests\n        run: |\n          printf 'SLOPSEARX_INSTALL_TEST_ROOT=%s\\n' \"$SLOPSEARX_INSTALL_TEST_ROOT\" >> \"$GITHUB_ENV\"\n          printf 'SLOPSEARX_T07_UNIT_TEST_ROOT=%s\\n' \"$SLOPSEARX_T07_UNIT_TEST_ROOT\" >> \"$GITHUB_ENV\"\n\n      - name: Prepare private gateway package fixtures\n        run: mkdir -m 700 \"$SLOPSEARX_INSTALL_TEST_ROOT\"\n\n"},{"at":31427,"insert_utf8":"","remove_utf8":"\n      - name: Retire gateway package fixtures\n        if: always()\n        run: rm -rf -- \"$SLOPSEARX_INSTALL_TEST_ROOT\"\n"}]"########;
+fn core_fixture_workflow_claim() -> Value {
+    json!({"path":".github/workflows/rust.yml","bytes":77327,"sha256":"a0f55fe4eaaed6039d8829fb3a003fbd5e6ce99dbf141c4e83760fe3d4e7a9bb","git_blob":"3975effbfa3df6200828737282ee990c02e17e84","mode":"0644"})
+}
+fn core_fixture_workflow_frame(
+    expected: &Value,
+    physical: &[u8],
+    mode: &str,
+    inverse: &Value,
+) -> Result<Vec<u8>, String> {
+    need(
+        *expected == core_fixture_workflow_claim(),
+        "T07 core fixture workflow exact caller differs",
+    )?;
+    material(expected, physical, mode)?;
+    need(
+        inverse.as_array().is_some_and(|x| x.len() == 2)
+            && digest(&serde_json::to_vec(inverse).map_err(|e| e.to_string())?)
+                == "f74353e38ad8a1ca06b1157b446bb0f8b6fe661c626b987309ee2f97afeb459a",
+        "T07 core fixture workflow closed inverse differs",
+    )?;
+    let prior = edits(physical, inverse)?;
+    material(&upstream_workflow_claim(), &prior, "0644")?;
+    let mut forward = Vec::new();
+    let (mut current_cursor, mut prior_cursor) = (0usize, 0usize);
+    for row in inverse.as_array().ok_or("core fixture workflow spans")? {
+        let at = row["at"]
+            .as_u64()
+            .and_then(|x| usize::try_from(x).ok())
+            .ok_or("core fixture workflow offset")?;
+        let remove = text(row, "remove_utf8")?;
+        let insert = text(row, "insert_utf8")?;
+        let prior_at = prior_cursor
+            .checked_add(
+                at.checked_sub(current_cursor)
+                    .ok_or("core fixture workflow overlap")?,
+            )
+            .ok_or("core fixture workflow prefix overflow")?;
+        forward.push(json!({"at":prior_at,"remove_utf8":insert,"insert_utf8":remove}));
+        current_cursor = at
+            .checked_add(remove.len())
+            .ok_or("core fixture workflow current overflow")?;
+        prior_cursor = prior_at
+            .checked_add(insert.len())
+            .ok_or("core fixture workflow prior overflow")?;
+    }
+    need(
+        edits(&prior, &json!(forward))? == physical,
+        "T07 core fixture workflow exact forward differs",
+    )?;
+    Ok(prior)
+}
+#[cfg(test)]
+fn core_fixture_workflow_controls(root: &Path, physical: &[u8]) -> Result<Vec<u8>, String> {
+    let claim = core_fixture_workflow_claim();
+    let inverse: Value =
+        serde_json::from_str(CORE_FIXTURE_WORKFLOW_INVERSE).map_err(|e| e.to_string())?;
+    let prior = core_fixture_workflow_frame(&claim, physical, "0644", &inverse)?;
+    let git = std::process::Command::new("git")
+        .args([
+            "show",
+            "6eeeac802936ad6cd983f199b90e2991cfd0376d:.github/workflows/rust.yml",
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let tree = std::process::Command::new("git")
+        .args([
+            "ls-tree",
+            "6eeeac802936ad6cd983f199b90e2991cfd0376d",
+            "--",
+            ".github/workflows/rust.yml",
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(git.status.success() && git.stdout==prior && tree.status.success() && tree.stdout==b"100644 blob 49dc0346f5c72f4d8f806006782bb0e2d2ec6682\t.github/workflows/rust.yml\n","T07 core fixture workflow prior Git bytes/mode/blob")?;
+    need(
+        core_fixture_workflow_frame(&claim, &prior, "0644", &inverse).is_err(),
+        "T07 core fixture workflow old-as-current accepted",
+    )?;
+    need(
+        core_fixture_workflow_frame(&claim, physical, "0600", &inverse).is_err(),
+        "T07 core fixture workflow wrong mode accepted",
+    )?;
+    let mut changed = physical.to_vec();
+    changed.push(0);
+    need(
+        core_fixture_workflow_frame(&claim, &changed, "0644", &inverse).is_err(),
+        "T07 core fixture workflow changed current accepted",
+    )?;
+    for key in ["path", "bytes", "sha256", "git_blob", "mode"] {
+        let mut wrong = claim.clone();
+        wrong[key] = json!("wrong");
+        need(
+            core_fixture_workflow_frame(&wrong, physical, "0644", &inverse).is_err(),
+            "T07 core fixture workflow wrong caller accepted",
+        )?;
+    }
+    for index in 0..2 {
+        for key in ["at", "remove_utf8", "insert_utf8"] {
+            let mut wrong = inverse.clone();
+            wrong[index][key] = json!("wrong");
+            need(
+                core_fixture_workflow_frame(&claim, physical, "0644", &wrong).is_err(),
+                "T07 core fixture workflow modified span accepted",
+            )?;
+        }
+    }
+    for which in 0..3 {
+        let mut wrong = inverse.clone();
+        let rows = wrong.as_array_mut().ok_or("core fixture workflow rows")?;
+        if which == 0 {
+            rows.remove(0);
+        } else if which == 1 {
+            rows.push(rows[0].clone());
+        } else {
+            rows.swap(0, 1);
+        }
+        need(
+            core_fixture_workflow_frame(&claim, physical, "0644", &wrong).is_err(),
+            "T07 core fixture workflow missing/duplicate/moved spans accepted",
+        )?;
+    }
+    Ok(prior)
+}
 const UPSTREAM_WORKFLOW_INVERSE: &str = r########"[{"at":19545,"insert_utf8":"      - name: Native scholarly adapters and Expat boundary qualification\n        run: cargo xtask check A06 --output target/rust-evidence/A06.json\n\n","remove_utf8":""},{"at":56385,"insert_utf8":"","remove_utf8":"      - name: Native scholarly adapters and Expat boundary qualification\n        env:\n          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR\n          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: /usr/bin/env -u SSL_CERT_FILE -u SSL_CERT_DIR\n        run: cargo xtask check A06 --output target/rust-evidence/A06.json\n\n"},{"at":68446,"insert_utf8":"","remove_utf8":"\n      - name: Build native upstream advisory view and capture actual metadata\n        shell: bash\n        run: |\n          set -euo pipefail\n          umask 077\n          evidence=target/rust-evidence/upstream-advisories\n          mkdir -p \"$evidence\"\n          test \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\"\n          test -z \"$(git status --porcelain)\"\n          cargo deny --version > \"$evidence/scanner-version.txt\"\n          cargo --version --verbose > \"$evidence/cargo-version.txt\"\n          rustc --version --verbose > \"$evidence/rustc-version.txt\"\n          cargo build --locked -p xtask --example upstream_advisory_view --message-format=json-render-diagnostics > \"$evidence/helper-build.jsonl\"\n          cargo metadata --locked --format-version 1 > \"$evidence/raw-metadata.json\" 2> \"$evidence/metadata.stderr\"\n          target/debug/examples/upstream_advisory_view derive \"$evidence/raw-metadata.json\" \"$evidence/view\"\n      - name: Prove private fork advisory coverage with the pinned scanner\n        shell: bash\n        run: |\n          set -euo pipefail\n          umask 077\n          evidence=target/rust-evidence/upstream-advisories\n          fixture=\"$evidence/fixtures\"\n          target/debug/examples/upstream_advisory_view fixtures \"$evidence/raw-metadata.json\" \"$fixture\"\n          cargo deny --version > \"$fixture/cargo-deny-version.stdout\"\n          while IFS=$'\\t' read -r name source config; do\n            source=\"$fixture/$source\"\n            config=\"$fixture/$config\"\n            test -n \"$name\" && test -d \"$source\" && test -f \"$config\"\n            git -C \"$source\" init --initial-branch=main\n            git -C \"$source\" add --all\n            git -C \"$source\" -c user.name='SlopSearX scanner fixture' -c user.email='scanner-fixture@example.invalid' commit -s -m 'Synthetic local advisory fixture'\n            cargo deny --config \"$config\" fetch db > \"$fixture/$name-fetch.stdout\" 2> \"$fixture/$name-fetch.stderr\"\n          done < \"$fixture/fixture-dbs.tsv\"\n          while IFS=$'\\t' read -r name config metadata; do\n            config=\"$fixture/$config\"\n            metadata=\"$fixture/$metadata\"\n            test -n \"$name\" && test -f \"$config\" && test -f \"$metadata\"\n            if cargo deny --format json --locked --offline --workspace --metadata-path \"$metadata\" --config \"$config\" check advisories > \"$fixture/$name.stdout\" 2> \"$fixture/$name.stderr\"; then\n              code=0\n            else\n              code=$?\n            fi\n            printf '%s\\n' \"$code\" > \"$fixture/$name.exit\"\n          done < \"$fixture/fixture-runs.tsv\"\n          target/debug/examples/upstream_advisory_view verify-fixtures \"$fixture\"\n      - name: Fetch fresh RustSec data and check upstream fork advisories\n        shell: bash\n        run: |\n          set -euo pipefail\n          umask 077\n          evidence=target/rust-evidence/upstream-advisories\n          if cargo deny --locked --workspace fetch db > \"$evidence/db-fetch.stdout\" 2> \"$evidence/db-fetch.stderr\"; then\n            SSX_AUDIT_FETCH_EXIT=0\n          else\n            SSX_AUDIT_FETCH_EXIT=$?\n          fi\n          SSX_AUDIT_SCAN_EXIT=not-run\n          if [ \"$SSX_AUDIT_FETCH_EXIT\" -eq 0 ]; then\n            if cargo deny --format json --locked --offline --workspace --metadata-path \"$evidence/view/upstream-advisory-metadata.json\" check advisories > \"$evidence/scan.stdout\" 2> \"$evidence/scan.stderr\"; then\n              SSX_AUDIT_SCAN_EXIT=0\n            else\n              SSX_AUDIT_SCAN_EXIT=$?\n            fi\n          fi\n          export SSX_AUDIT_FETCH_EXIT SSX_AUDIT_SCAN_EXIT\n          node <<'NODE'\n          const fs = require('node:fs'), path = require('node:path'), os = require('node:os');\n          const crypto = require('node:crypto'), cp = require('node:child_process');\n          const evidence = 'target/rust-evidence/upstream-advisories';\n          const need = (ok, why) => { if (!ok) throw Error(why); };\n          const hashFile = file => {\n            const info = fs.lstatSync(file);\n            need(info.isFile() && !info.isSymbolicLink() && info.size <= 32 * 1024 * 1024, `bounded regular evidence: ${file}`);\n            return { path: file, bytes: info.size, sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') };\n          };\n          const git = args => {\n            const value = cp.spawnSync('git', args, { encoding: 'utf8', timeout: 10000, maxBuffer: 65536 });\n            need(value.status === 0, `git evidence failed: ${args.join(' ')}`);\n            return value.stdout.trim();\n          };\n          const version = fs.readFileSync(`${evidence}/scanner-version.txt`, 'utf8').trim();\n          need(version === 'cargo-deny 0.20.2', 'pinned scanner version');\n          const source = git(['rev-parse', 'HEAD']);\n          need(source === process.env.GITHUB_SHA && git(['status', '--porcelain']) === '', 'source revision or clean tree changed');\n          const fetchExit = Number(process.env.SSX_AUDIT_FETCH_EXIT);\n          const scanExit = process.env.SSX_AUDIT_SCAN_EXIT === 'not-run' ? null : Number(process.env.SSX_AUDIT_SCAN_EXIT);\n          const databases = [];\n          if (fetchExit === 0) {\n            const dbRoot = path.join(process.env.CARGO_HOME || path.join(os.homedir(), '.cargo'), 'advisory-dbs');\n            const entries = fs.readdirSync(dbRoot, { withFileTypes: true });\n            need(entries.length <= 32, 'advisory database directory bound');\n            for (const entry of entries) {\n              if (!entry.isDirectory() || entry.isSymbolicLink()) continue;\n              const dir = path.join(dbRoot, entry.name);\n              const origin = git(['-C', dir, 'remote', 'get-url', 'origin']);\n              need(origin.replace(/\\/?$/, '').replace(/\\.git$/, '').toLowerCase() === 'https://github.com/rustsec/advisory-db', 'unexpected production advisory database origin');\n              databases.push({ path: dir, origin, commit: git(['-C', dir, 'rev-parse', 'HEAD']), tree: git(['-C', dir, 'rev-parse', 'HEAD^{tree}']) });\n            }\n            need(databases.length === 1, 'one freshly fetched production RustSec database required');\n          }\n          const files = [\n            'Cargo.toml', 'Cargo.lock', 'deny.toml',\n            'crates/xtask/examples/upstream_advisory_view.rs',\n            'docs/rust-rewrite/ci/upstream-fork-advisories.json',\n            `${evidence}/raw-metadata.json`, `${evidence}/view/upstream-advisory-metadata.json`,\n            `${evidence}/view/identity-receipt.json`, `${evidence}/db-fetch.stdout`, `${evidence}/db-fetch.stderr`,\n            ...[`${evidence}/scan.stdout`, `${evidence}/scan.stderr`].filter(file => fs.existsSync(file))\n          ].map(hashFile);\n          const receipt = {\n            schema: 1, scope: 'Inherited upstream Rust crate advisories for reviewed current path forks; not physical resolution, private-patch safety, native C advisory coverage, or shipping/TLS evidence',\n            source_revision: source, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT,\n            recorded_utc: new Date().toISOString(), scanner_version: version,\n            metadata_producer: { argv: ['cargo', 'metadata', '--locked', '--format-version', '1'], exit: 0 },\n            database_fetch: { argv: ['cargo', 'deny', '--locked', '--workspace', 'fetch', 'db'], exit: fetchExit },\n            scan: { argv: ['cargo', 'deny', '--format', 'json', '--locked', '--offline', '--workspace', '--metadata-path', `${evidence}/view/upstream-advisory-metadata.json`, 'check', 'advisories'], exit: scanExit, skipped_reason: scanExit === null ? 'fresh database fetch failed' : null },\n            databases, files\n          };\n          fs.writeFileSync(`${evidence}/fresh-scan-receipt.json`, JSON.stringify(receipt, null, 2) + '\\n');\n          NODE\n          test \"$SSX_AUDIT_FETCH_EXIT\" -eq 0\n          test \"$SSX_AUDIT_SCAN_EXIT\" = 0\n      - name: Retain upstream fork advisory coverage evidence\n        if: always()\n        uses: actions/upload-artifact@v7\n        with:\n          name: upstream-fork-advisories-${{ github.sha }}\n          path: target/rust-evidence/upstream-advisories/\n          if-no-files-found: error\n          retention-days: 14\n"}]"########;
 fn upstream_workflow_claim() -> Value {
     json!({"path":".github/workflows/rust.yml","bytes":76651,"sha256":"b4836eaab7d6ffcdb582fa25d5cf76b4ccc7f4f6126d19ca21ab64402a9c78e4","git_blob":"49dc0346f5c72f4d8f806006782bb0e2d2ec6682","mode":"0644"})
@@ -722,6 +849,10 @@ fn current_config(root: &Path, expected: &Value) -> Result<Vec<u8>, String> {
     let inverse: Value = serde_json::from_str(raw_inverse).map_err(|e| e.to_string())?;
     let mode = permissions(&source)?;
     let admitted = if path == ".github/workflows/rust.yml" {
+        let core: Value =
+            serde_json::from_str(CORE_FIXTURE_WORKFLOW_INVERSE).map_err(|e| e.to_string())?;
+        let physical =
+            core_fixture_workflow_frame(&core_fixture_workflow_claim(), &physical, &mode, &core)?;
         let outer: Value =
             serde_json::from_str(UPSTREAM_WORKFLOW_INVERSE).map_err(|e| e.to_string())?;
         upstream_workflow_frame(&upstream_workflow_claim(), &physical, &mode, &outer)?
@@ -786,6 +917,7 @@ pub(super) fn controls(root: &Path) -> Result<(), String> {
             let path = text(claim, "path")?;
             let physical = std::fs::read(root.join(path)).map_err(|e| e.to_string())?;
             let physical = if path == ".github/workflows/rust.yml" {
+                let physical = core_fixture_workflow_controls(root, &physical)?;
                 upstream_workflow_controls(root, &physical)?
             } else {
                 physical
