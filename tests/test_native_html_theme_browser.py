@@ -105,7 +105,12 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 page.get_by_label("Search").fill("climate & change")
                 page.get_by_label("Sources (comma-separated)").fill("openalex")
                 page.get_by_label("Publication date from").fill("2024-02-29")
+                page.get_by_label("Relative time range").select_option("week")
+                assert page.get_by_label("Publication date from").input_value() == ""
+                assert page.get_by_label("Publication date to").input_value() == ""
+                page.get_by_label("Publication date from").fill("2024-02-29")
                 page.get_by_label("Publication date to").fill("2024-02-29")
+                assert page.get_by_label("Relative time range").input_value() == ""
                 intercepted: list[str] = []
 
                 def capture_form_request(route: Any) -> None:

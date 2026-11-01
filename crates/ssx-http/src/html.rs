@@ -72,7 +72,7 @@ impl PublicHtml {
             ("Darker mode", "Use darker mode", "false")
         };
         format!(
-            "<!doctype html><html lang=\"en\" data-default-theme=\"{theme}\" data-theme=\"{theme}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{}</title><style>:root{{--page-bg:#191a18;--page-fg:#f4f0e8;--muted:#bbb;color-scheme:dark}}:root[data-theme=darker]{{--page-bg:#0b0c0b}}html,body{{background-color:var(--page-bg);color:var(--page-fg)}}body{{max-width:70rem;margin:3rem auto;padding:0 1rem;font:1rem/1.6 system-ui}}a{{color:#e5b567}}form{{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem;align-items:end}}form label{{display:block}}form input,form button{{box-sizing:border-box;width:100%;font:inherit;padding:.7rem}}article{{margin:2rem 0;border-top:1px solid #555}}small{{color:var(--muted)}}</style></head><body><header><a href=\"/\">SlopSearX</a> <button type=\"button\" data-theme-toggle aria-label=\"{accessible_name}\" aria-pressed=\"{pressed}\">{label}</button></header><main>{body}</main><script>(()=>{{const root=document.documentElement;const button=document.querySelector('[data-theme-toggle]');const configured=root.dataset.defaultTheme;const valid=theme=>theme==='dark'||theme==='darker';const apply=theme=>{{root.dataset.theme=theme;const darker=theme==='darker';button.textContent=darker?'Dark mode':'Darker mode';button.setAttribute('aria-label',darker?'Use dark mode':'Use darker mode');button.setAttribute('aria-pressed',String(darker))}};let initial=valid(configured)?configured:'dark';try{{const stored=window.localStorage.getItem('slopsearx-theme');if(valid(stored))initial=stored}}catch(_){{}}apply(initial);button.addEventListener('click',()=>{{const next=root.dataset.theme==='darker'?'dark':'darker';apply(next);try{{window.localStorage.setItem('slopsearx-theme',next)}}catch(_){{}}}});for(const form of document.querySelectorAll('[data-search-form]')){{form.addEventListener('submit',()=>{{for(const input of form.querySelectorAll('input:not([type=hidden]):not([name=q])'))if(!input.value)input.removeAttribute('name')}})}}}})();</script></body></html>",
+            "<!doctype html><html lang=\"en\" data-default-theme=\"{theme}\" data-theme=\"{theme}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{}</title><style>:root{{--page-bg:#191a18;--page-fg:#f4f0e8;--muted:#bbb;color-scheme:dark}}:root[data-theme=darker]{{--page-bg:#0b0c0b}}html,body{{background-color:var(--page-bg);color:var(--page-fg)}}body{{max-width:70rem;margin:3rem auto;padding:0 1rem;font:1rem/1.6 system-ui}}a{{color:#e5b567}}form{{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem;align-items:end}}form label{{display:block}}form input,form select,form button{{box-sizing:border-box;width:100%;font:inherit;padding:.7rem}}article{{margin:2rem 0;border-top:1px solid #555}}small{{color:var(--muted)}}</style></head><body><header><a href=\"/\">SlopSearX</a> <button type=\"button\" data-theme-toggle aria-label=\"{accessible_name}\" aria-pressed=\"{pressed}\">{label}</button></header><main>{body}</main><script>(()=>{{const root=document.documentElement;const button=document.querySelector('[data-theme-toggle]');const configured=root.dataset.defaultTheme;const valid=theme=>theme==='dark'||theme==='darker';const apply=theme=>{{root.dataset.theme=theme;const darker=theme==='darker';button.textContent=darker?'Dark mode':'Darker mode';button.setAttribute('aria-label',darker?'Use dark mode':'Use darker mode');button.setAttribute('aria-pressed',String(darker))}};let initial=valid(configured)?configured:'dark';try{{const stored=window.localStorage.getItem('slopsearx-theme');if(valid(stored))initial=stored}}catch(_){{}}apply(initial);button.addEventListener('click',()=>{{const next=root.dataset.theme==='darker'?'dark':'darker';apply(next);try{{window.localStorage.setItem('slopsearx-theme',next)}}catch(_){{}}}});for(const form of document.querySelectorAll('[data-search-form]')){{const relative=form.querySelector('[name=time_range]');const absolute=form.querySelectorAll('[name=date_from],[name=date_to]');if(relative)relative.addEventListener('change',()=>{{if(relative.value)absolute.forEach(input=>input.value='')}});absolute.forEach(input=>input.addEventListener('input',()=>{{if(input.value&&relative)relative.value=''}}));form.addEventListener('submit',()=>{{for(const input of form.querySelectorAll('input:not([type=hidden]):not([name=q]),select'))if(!input.value)input.removeAttribute('name')}})}}}})();</script></body></html>",
             escape(title),
             accessible_name = accessible_name,
             pressed = pressed,
@@ -107,14 +107,21 @@ fn form(query: &str, request: Option<&SearchRequest>) -> String {
     let date_to = request
         .and_then(|r| r.date_to.as_deref())
         .unwrap_or_default();
+    let relative_options = ["day", "week", "month", "year"]
+        .into_iter()
+        .map(|value| {
+            let selected = if time_range == value { " selected" } else { "" };
+            format!("<option value=\"{value}\"{selected}>{value}</option>")
+        })
+        .collect::<String>();
     let language = request.map_or("en", |r| r.language.as_str());
     let safesearch = request.map_or(0, |r| r.safesearch);
     format!(
-        "<form action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required><label for=\"engines\">Sources (comma-separated)</label><input id=\"engines\" name=\"engines\" value=\"{}\" autocomplete=\"off\"><label for=\"categories\">Categories (comma-separated)</label><input id=\"categories\" name=\"categories\" value=\"{}\" autocomplete=\"off\"><label for=\"time_range\">Relative time range</label><input id=\"time_range\" name=\"time_range\" value=\"{}\"><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
+        "<form action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required><label for=\"engines\">Sources (comma-separated)</label><input id=\"engines\" name=\"engines\" value=\"{}\" autocomplete=\"off\"><label for=\"categories\">Categories (comma-separated)</label><input id=\"categories\" name=\"categories\" value=\"{}\" autocomplete=\"off\"><label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
         escape(query),
         escape(&engines),
         escape(&categories),
-        escape(time_range),
+        relative_options,
         escape(date_from),
         escape(date_to),
         escape(language),
@@ -354,6 +361,19 @@ mod date_portal_tests {
             assert!(html.contains(&format!("format={format}")));
         }
         assert!(!html.contains("data-date-filter-status"));
+    }
+
+    #[test]
+    fn relative_time_control_uses_supported_ranges_and_preserves_selection() {
+        let request = SearchRequest {
+            time_range: Some("week".into()),
+            ..Default::default()
+        };
+        let html = form("climate", Some(&request));
+        for range in ["day", "week", "month", "year"] {
+            assert!(html.contains(&format!("<option value=\"{range}\"")));
+        }
+        assert!(html.contains("<option value=\"week\" selected>week</option>"));
     }
 
     #[test]
