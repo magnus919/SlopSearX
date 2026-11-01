@@ -358,7 +358,7 @@ impl Stage {
             self.name.as_str(),
             AtFlags::AT_SYMLINK_NOFOLLOW,
         ) {
-            Ok(stat) if stat.st_dev as u64 == self.dev && stat.st_ino as u64 == self.ino => {
+            Ok(stat) if stat.st_dev as u64 == self.dev && stat.st_ino == self.ino => {
                 unlinkat(&self.parent, self.name.as_str(), UnlinkatFlags::NoRemoveDir)
                     .map_err(io::Error::from)?;
                 self.pending = false;

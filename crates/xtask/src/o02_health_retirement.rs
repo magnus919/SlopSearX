@@ -656,8 +656,8 @@ const OPS_INPUTS: &[(&str, usize, &str)] = &[
     ),
     (
         "crates/ssx-ops/src/promotion/files.rs",
-        13442,
-        "66334e671132afd62fb3ff3099fbb5d987631e92a5987d8f0863534616f4a454",
+        13435,
+        "8677b92143c744421a404c45b155c513afd1a1a7c260cf568b8c5abc01c47d83",
     ),
     (
         "crates/ssx-ops/src/promotion/tests.rs",
