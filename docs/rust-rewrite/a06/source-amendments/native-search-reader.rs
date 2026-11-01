@@ -427,7 +427,7 @@ fn a12_readiness_document(root: &Path) -> Result<Value> {
     need(
         capsule.mode == 0o644
             && digest(&capsule.bytes)
-                == "5aaede6e57eeb76bc492ddbefedee4dcd322147ff347206492ebcbce7738a5a0",
+                == "a1370bb9517e102f9cba3da06875a45c0a108b2bed3f361b5310be6b0b78dfae",
         "A12 readiness capsule identity",
     )?;
     serde_json::from_slice(&capsule.bytes).map_err(|e| e.to_string())
@@ -438,16 +438,16 @@ fn a12_readiness_payload(doc: &Value, physical: &Material) -> Result<Material> {
             && doc["before_sha256"]
                 == "8a4a5543bac835042288ace42f7abe1b9be923c21df97fcf267b2f843a096ec9"
             && doc["after_sha256"]
-                == "0e2edab64c736469dc2ee9117686d9344138b9a2168e75f8cca73077ee29cb49"
+                == "485213883050542a5d4d3d388ff0a0cd7a6f08d022f0747c31cbb70ffb1ec499"
             && doc["before_bytes"] == 60291
-            && doc["after_bytes"] == 63162,
+            && doc["after_bytes"] == 63526,
         "A12 readiness closed source tuple",
     )?;
     need(
         physical.mode == 0o644
-            && physical.bytes.len() == 63162
+            && physical.bytes.len() == 63526
             && digest(&physical.bytes)
-                == "0e2edab64c736469dc2ee9117686d9344138b9a2168e75f8cca73077ee29cb49",
+                == "485213883050542a5d4d3d388ff0a0cd7a6f08d022f0747c31cbb70ffb1ec499",
         "A12 readiness current physical identity",
     )?;
     let current = std::str::from_utf8(&physical.bytes).map_err(|e| e.to_string())?;

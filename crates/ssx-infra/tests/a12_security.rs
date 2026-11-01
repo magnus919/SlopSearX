@@ -798,7 +798,7 @@ fn absolute_context_bounds_admission_and_releases_its_future() {
 fn context_and_configured_deadline_each_drop_actual_inflight_exchange() {
     for kind in KINDS {
         for configured in [false, true] {
-            tokio::runtime::Builder::new_current_thread()
+            let (e, h, w, q) = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
                 .start_paused(true)
                 .build()
@@ -837,8 +837,8 @@ fn context_and_configured_deadline_each_drop_actual_inflight_exchange() {
                     .unwrap();
                     assert_eq!(w.calls.load(Ordering::SeqCst), 1);
                     assert_eq!(w.active.load(Ordering::SeqCst), 1);
-                    // Sample after readiness: exceed the existing winning timer without
-                    // overshooting the next same-engine recovery's std-derived deadline.
+                    // Sample after readiness to expire the selected winning timer.
+                    // Recovery below uses a fresh runtime with a normal clock.
                     let expiry =
                         tokio::time::Instant::from_std(Instant::now() + Duration::from_secs(60));
                     tokio::time::advance(expiry.duration_since(tokio::time::Instant::now())).await;
@@ -848,7 +848,16 @@ fn context_and_configured_deadline_each_drop_actual_inflight_exchange() {
                     whole(r, EngineStatus::Timeout, vec![], None);
                     assert_eq!(w.calls.load(Ordering::SeqCst), 1);
                     assert_eq!(w.active.load(Ordering::SeqCst), 0);
-                    // The adapter releases only its own session, preserving its caller's HTTP owner.
+                    // Quiescence is proven before this runtime is dropped.
+                    (e, h, w, q)
+                });
+            // Keep the same engine and HTTP owner, but remove the advanced test
+            // clock before its next std::Instant-derived configured deadline.
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(async {
                     w.block.store(false, Ordering::SeqCst);
                     let r = e.search(&q).await;
                     whole(r, EngineStatus::Ok, expected(kind), None);
