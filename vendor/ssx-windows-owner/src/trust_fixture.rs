@@ -15,7 +15,7 @@ use std::{
 use windows_sys::Win32::{Storage::FileSystem::*, System::SystemInformation::GetSystemDirectoryW};
 
 pub const TRUST_SCRIPT_SHA256: &str =
-    "aa3da5695f82d7f0736e02d23da08abdce09b1fac4a4f70e1a36bf1b9a69fba9";
+    "ec7ba51fef8c033441661de38383f2ac2dfe7c5497fbb4c09eb2e307b03ff1b3";
 const SCRIPT: &str = "crates/ssx-gateway/tests/platform_support/trust-store.ps1";
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TrustFixtureOperation {
@@ -265,7 +265,7 @@ fn admit_trust(
     let script = workspace.join(SCRIPT);
     let held = vec![
         hold(&application, None, 64 * 1024 * 1024)?,
-        hold(&script, Some(script_digest()), 1904)?,
+        hold(&script, Some(script_digest()), 2923)?,
         hold(&root.join("ca.der"), Some(expected_ca), 64 * 1024)?,
     ];
     Ok(AdmittedTrust {

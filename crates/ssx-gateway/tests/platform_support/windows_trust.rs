@@ -822,7 +822,7 @@ mod tests {
             "SSX_TRUST_SCRIPT bytes={} sha256={script_hash} crlf_pairs={crlf_pairs}",
             original.len()
         );
-        assert_eq!(original.len(), 1904, "fixed trust script byte count");
+        assert_eq!(original.len(), 2923, "fixed trust script byte count");
         assert_eq!(
             script_hash, TRUST_SCRIPT_SHA256,
             "fixed trust script digest"
