@@ -580,7 +580,8 @@ fn original_execution(root: &Path, coverage: &Value) -> Result<()> {
         "empty original assertion ownership/evidence binding",
     )
 }
-pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
+// Exact source-only admission used by the native gate before any child command.
+fn source_admission(root: &Path) -> Result<Value> {
     let bytes =
         fs::read(root.join("docs/rust-rewrite/t02/coverage.json")).map_err(|e| e.to_string())?;
     require(
@@ -614,6 +615,10 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
             )?;
         }
     }
+    Ok(coverage)
+}
+pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
+    let coverage = source_admission(root)?;
     let chunks = load(&root.join("docs/rust-rewrite/t02/oracle/source-http-chunks.json"))?;
     let mut source_bytes = Vec::new();
     for part in chunks["parts"]
@@ -822,7 +827,7 @@ mod tests {
     use super::*;
     #[test]
     fn missing_duplicate_extra_and_source_drift_fail_closed() {
-        source_successor::controls(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap();
+        source_admission(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap();
         let records = load(
             &Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("../../docs/rust-rewrite/t02/coverage.json"),
