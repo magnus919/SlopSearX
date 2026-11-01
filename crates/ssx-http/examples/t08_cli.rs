@@ -359,8 +359,17 @@ mod unix {
             }
         }
         let calls = lines(&out.join("adapter-calls.jsonl"));
-        assert_eq!(calls[before]["page"].to_string(), pages[0]);
-        assert_eq!(calls[before + 1]["page"].to_string(), pages[1]);
+        assert_eq!(calls[before]["page_text"].as_str(), Some(pages[0]));
+        assert_eq!(calls[before + 1]["page_text"].as_str(), Some(pages[1]));
+        // The generic receipt reader uses serde_json; use the already native
+        // lossless parser for raw numeric lexemes instead of narrowing via f64.
+        let exact_calls = fs::read_to_string(out.join("adapter-calls.jsonl"))
+            .unwrap()
+            .lines()
+            .map(|line| ssx_json::from_str::<ssx_json::Value>(line).unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(exact_calls[before]["page"].to_string(), pages[0]);
+        assert_eq!(exact_calls[before + 1]["page"].to_string(), pages[1]);
         for (id, args) in [
             (
                 "unknown-engine",
@@ -418,6 +427,7 @@ mod unix {
             assert_eq!(outcome["error_message"], message);
             records.push(record);
         }
+        let adapter_calls_raw = fs::read_to_string(out.join("adapter-calls.jsonl")).unwrap();
         let calls = lines(&out.join("adapter-calls.jsonl"));
         native.0.kill().unwrap();
         let native_exit = wait(&mut native, 5);
@@ -474,7 +484,7 @@ mod unix {
         let mut upstream = upstream;
         upstream.thread.take().unwrap().join().unwrap();
         drop(upstream);
-        fs::write(out.join("completed.json"),serde_json::to_vec_pretty(&json!({"scope":"native production-component composition, not production startup/distribution","cli_binary":image,"cli_sha256":sha(&image),"server_binary":server,"server_sha256":sha(&server),"valkey_sha256":sha(&valkey),"records":records,"adapter_calls":calls,"upstream_requests":requests,"server_exit":native_exit.to_string(),"valkey_exit":valkey_exit.to_string(),"private_socket_retired":!socket.exists(),"server_and_valkey_waited":true,"upstream_joined":true,"upstream_page_support":false})).unwrap()).unwrap();
+        fs::write(out.join("completed.json"),serde_json::to_vec_pretty(&json!({"scope":"native production-component composition, not production startup/distribution","cli_binary":image,"cli_sha256":sha(&image),"server_binary":server,"server_sha256":sha(&server),"valkey_sha256":sha(&valkey),"records":records,"adapter_calls":calls,"adapter_calls_raw":adapter_calls_raw,"upstream_requests":requests,"server_exit":native_exit.to_string(),"valkey_exit":valkey_exit.to_string(),"private_socket_retired":!socket.exists(),"server_and_valkey_waited":true,"upstream_joined":true,"upstream_page_support":false})).unwrap()).unwrap();
     }
 }
 #[cfg(unix)]

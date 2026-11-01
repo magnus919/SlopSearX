@@ -35,7 +35,7 @@ impl SearchEngine for RecordedAdapter {
     fn search<'a>(&'a self, request: &'a SearchRequest) -> PortFuture<'a, AdapterResponse> {
         Box::pin(async move {
             let response = self.inner.search(request).await;
-            writeln!(self.calls.lock().unwrap(), "{}", json!({"query":request.query,"page":request.page,"status":response.status,"error_message":response.error_message})).unwrap();
+            writeln!(self.calls.lock().unwrap(), "{}", json!({"query":request.query,"page":request.page,"page_text":request.page.to_string(),"status":response.status,"error_message":response.error_message})).unwrap();
             response
         })
     }
