@@ -294,6 +294,9 @@ fn freeze(root: &Path, inventory: &Value) -> Result<Vec<(String, String)>> {
         .collect()
 }
 fn original_source(root: &Path, row: &Value) -> Result<Vec<u8>> {
+    if let Some(prior) = crate::o02_health_retirement::historical_python_source(root, row)? {
+        return Ok(prior);
+    }
     if let Some(prior) = crate::snapshot_fixture_amendment::w03(root, row)? {
         return Ok(prior);
     }
@@ -528,6 +531,22 @@ mod snapshot_fixture_tests {
     fn snapshot_fixture_amendment_actual_w03_original_source_consumer() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let pins = read(&root, "docs/rust-rewrite/w03/oracle-pins.json").unwrap();
+        // Exercise every actual pre-command source row, including later O02 amendments.
+        for row in pins["sources"].as_array().unwrap() {
+            assert_eq!(digest(&original_source(&root, row).unwrap()), row["sha256"]);
+        }
+        let deployment = pins["sources"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["path"] == "tests/test_deployment_artifacts.py")
+            .unwrap();
+        let mut changed = deployment.clone();
+        changed["sha256"] = json!("wrong");
+        assert!(original_source(&root, &changed).is_err());
+        changed = deployment.clone();
+        changed["extra"] = json!(true);
+        assert!(original_source(&root, &changed).is_err());
         let row = &pins["sources"][170];
         assert_eq!(row["path"], json!("tests/test_coverage_pipeline_inputs.py"));
         assert_eq!(digest(&original_source(&root, row).unwrap()), row["sha256"]);
