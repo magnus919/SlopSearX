@@ -27,6 +27,7 @@ mod f13;
 mod f14;
 mod f15;
 mod o01;
+mod o02_health_retirement;
 mod o03;
 mod o06;
 mod replay;
@@ -299,10 +300,10 @@ fn source_snapshot(root: &Path, records: &mut Vec<Value>) -> Result<Vec<Value>> 
 }
 fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
     let path = root.join(format!("crates/xtask/fixtures/{id}.json"));
-    let f: Fixture = serde_json::from_slice(
-        &fs::read(&path).map_err(|e| format!("missing fixture {}: {e}", path.display()))?,
-    )
-    .map_err(|e| format!("malformed fixture: {e}"))?;
+    let fixture_bytes =
+        fs::read(&path).map_err(|e| format!("missing fixture {}: {e}", path.display()))?;
+    let f: Fixture =
+        serde_json::from_slice(&fixture_bytes).map_err(|e| format!("malformed fixture: {e}"))?;
     validate_fixture(&f, id)?;
     let tracked = command(root, "git", &["ls-files", "-z"], records)?;
     let required: BTreeSet<_> = tracked
@@ -323,12 +324,33 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         })
         .map(str::to_string)
         .collect();
-    let provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();
+    let retired = id == "F01"
+        && f.sources
+            .iter()
+            .any(|s| s.path == o02_health_retirement::PATH);
+    if retired {
+        let indexed = tracked
+            .split('\0')
+            .filter(|p| !p.is_empty())
+            .map(str::to_string)
+            .collect();
+        o02_health_retirement::authenticate(root, &fixture_bytes, &indexed)?;
+    }
+    let mut provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();
+    if retired {
+        provided.remove(o02_health_retirement::PATH);
+    }
     if required.is_empty() || required != provided {
         return Err("source fixture coverage is incomplete or unexpected".into());
     }
 
     for s in &f.sources {
+        if retired && s.path == o02_health_retirement::PATH {
+            continue;
+        }
+        if retired && o02_health_retirement::successor(root, &s.path, &s.git_blob)? {
+            continue;
+        }
         if id == "F01" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {
             continue;
         }
@@ -361,6 +383,9 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
             })
             .map(str::to_string)
             .collect();
+        if retired {
+            paths.remove(o02_health_retirement::PATH);
+        }
         if paths.is_empty() || paths != expected {
             return Err("Python source inventory differs from tracked source set".into());
         }
@@ -972,6 +997,9 @@ mod tests {
     }
     #[test]
     fn missing_empty_malformed_stale_and_incomplete_fail() {
+        let current = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        source_check(&current, "F01", &mut vec![]).unwrap();
+        o02_health_retirement::controls(&current).unwrap();
         let root = std::env::temp_dir().join(format!("ssx-xtask-negative-{}", std::process::id()));
         fs::create_dir_all(root.join("crates/xtask/fixtures")).unwrap();
         let fixture = root.join("crates/xtask/fixtures/F01.json");
