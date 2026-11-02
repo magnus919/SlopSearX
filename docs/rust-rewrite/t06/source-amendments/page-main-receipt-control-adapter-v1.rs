@@ -352,6 +352,33 @@ const W08_REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.js
 const T06_REGISTRAR: &str = "crates/xtask/src/t06.rs";
 const W08_JOIN: &str = "docs/rust-rewrite/snapshot-fixture-amendment/w08-page-join-v1.json";
 const W08_JOIN_SHA: &str = "2201b3d459bc0e386d3fb847a02a23f5f30fcf4b7e82ca85fd056bead5567847";
+fn w07_registry_to_w08(physical: &[u8], mode: u32) -> Result<Vec<u8>> {
+    inverse(
+        &Row {
+            path: W08_REGISTRY.into(),
+            prior: Material {
+                sha256: "a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d"
+                    .into(),
+                bytes: 21848,
+                mode: 0o644,
+            },
+            prior_git_blob: "ead390da6eae22e2aa94f66b954efae101342151".into(),
+            current: Material {
+                sha256: "4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7"
+                    .into(),
+                bytes: 21848,
+                mode: 0o644,
+            },
+            edits: vec![Edit {
+                current_offset: 19299,
+                old: "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n".into(),
+                new: "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n".into(),
+            }],
+        },
+        physical,
+        mode,
+    )
+}
 fn current_operand(root: &Path, row: &CurrentRow, supplied: &[u8], mode: u32) -> Result<Vec<u8>> {
     if row.path == T06_REGISTRAR {
         let physical = row
@@ -388,6 +415,7 @@ fn current_operand(root: &Path, row: &CurrentRow, supplied: &[u8], mode: u32) ->
         mode == 0o644 && actual_mode == mode && physical == supplied,
         "outer receipt registry is not physical current",
     )?;
+    let physical = w07_registry_to_w08(&physical, mode)?;
     let (capsule, capsule_mode) = regular(root, W08_JOIN)?;
     need(
         capsule_mode == 0o644 && digest(&capsule) == W08_JOIN_SHA,
@@ -649,6 +677,19 @@ fn current_controls(root: &Path) -> Result<()> {
         let (physical, mode) = regular(root, &row.path)?;
         let logical = current_operand(root, row, &physical, mode)?;
         if row.path == W08_REGISTRY {
+            let w08_physical = w07_registry_to_w08(&physical, mode)?;
+            need(
+                w08_physical.len() == 21848
+                    && digest(&w08_physical)
+                        == "a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d",
+                "outer registry exact W07 generation projection differs",
+            )?;
+            let mut changed_pin = physical.clone();
+            changed_pin[19299] ^= 1;
+            need(
+                w07_registry_to_w08(&changed_pin, mode).is_err(),
+                "outer registry unreviewed T06 pin generation accepted",
+            )?;
             need(
                 logical != physical,
                 "outer registry projection must be nonvacuous",
